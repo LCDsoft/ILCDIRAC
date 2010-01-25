@@ -8,7 +8,7 @@ Created on Jan 15, 2010
 @author: sposs
 '''
 import os, urllib
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+#from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 import tarfile
 
@@ -94,16 +94,19 @@ def CheckInstallSoftware(app,config,area):
   appVersion = app[1]
   app_tar = appName+appVersion+"tar.gz"
   
-  rm = ReplicaManager()
+  #rm = ReplicaManager()
   
   #NOTE: must cd to LOCAL area directory (install_project requirement)
   if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
-    res = rm.getFile('%s%s' %(SoftTarBallLFN,app_tar))
+    #res = rm.getFile('%s%s' %(SoftTarBallLFN,app_tar))
+    res = {}
+    res['OK'] = True
     if not res["OK"]:
         return res
   if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
     DIRAC.gLogger.error('%s%s could not be downloaded' %(SoftTarBallLFN,app_tar))
     return False
+
   app_tar_to_untar = TarFile(app_tar)
   app_tar_to_untar.extractall()
   
