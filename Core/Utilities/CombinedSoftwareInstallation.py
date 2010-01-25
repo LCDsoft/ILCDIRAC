@@ -10,7 +10,7 @@ Created on Jan 15, 2010
 import os, urllib
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
-import TarFile
+import tarfile
 
 
 SoftTarBallLFN = "/lcd/.../.../.../.../"
