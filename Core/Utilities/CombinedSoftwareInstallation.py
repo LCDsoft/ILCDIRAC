@@ -82,7 +82,7 @@ class CombinedSoftwareInstallation:
 
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      result = CheckInstallSoftware(app,self.jobConfig)
+      result = CheckInstallSoftware(app,self.jobConfig,self.localArea)
       if not result:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
