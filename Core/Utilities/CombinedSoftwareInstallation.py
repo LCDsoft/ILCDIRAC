@@ -6,15 +6,17 @@ more or less the same functionality : installs software
 Created on Jan 15, 2010
 
 @author: sposs
+@aauthor: pmajewsk
 '''
-import os, urllib
+import os, urllib2
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 import tarfile
 
 
-SoftTarBallLFN = "/lcd/.../.../.../.../"
-
+#SoftTarBallLFN = "/lcd/.../.../.../.../"
+#SoftTarBallLFN = "/afs/cern.ch/eng/clic/data/software/"
+TarBallURL = "http://www.cern.ch/lcd-data/software/"
 
 class CombinedSoftwareInstallation:
 
@@ -56,6 +58,7 @@ class CombinedSoftwareInstallation:
 
     self.sharedArea = SharedArea()
     self.localArea  = LocalArea()
+    self.mySiteRoot = '%s:%s' %(self.localArea,self.sharedArea)
     
   def execute(self):
     """
@@ -78,7 +81,7 @@ class CombinedSoftwareInstallation:
 
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      result = CheckInstallSoftware(app,self.jobConfig)
+      result = CheckInstallSoftware(app,self.jobConfig,self.mySiteRoot)
       if not result:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
@@ -92,22 +95,31 @@ def CheckInstallSoftware(app,config,area):
   """
   appName    = app[0]
   appVersion = app[1]
-  app_tar = appName+appVersion+"tar.gz"
+  #app_tar = appName+appVersion+".tar.gz"
+  app_tar = appName+appVersion+".tgz"
+
   
   #rm = ReplicaManager()
   
   #NOTE: must cd to LOCAL area directory (install_project requirement)
-  if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
-    #res = rm.getFile('%s%s' %(SoftTarBallLFN,app_tar))
-    res = {}
-    res['OK'] = True
-    if not res["OK"]:
-        return res
-  if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
-    DIRAC.gLogger.error('%s%s could not be downloaded' %(SoftTarBallLFN,app_tar))
-    return False
+#  if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
+#    #res = rm.getFile('%s%s' %(SoftTarBallLFN,app_tar))
+#    res = {}
+#    res['OK'] = True
+#    if not res["OK"]:
+#        return res
+#  if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
+#    DIRAC.gLogger.error('%s%s could not be downloaded' %(SoftTarBallLFN,app_tar))
+#    #print('%s/%s' %(os.getcwd(),app_tar))
+#    return False
 
-  app_tar_to_untar = TarFile(app_tar)
+#downloading file from url
+  tarball = urllib2.urlopen(TarBallURL + app_tar)
+  output = open(app_tar,'wb')
+  output.write(tarball.read())
+  output.close()
+
+  app_tar_to_untar = tarfile.open(app_tar)
   app_tar_to_untar.extractall()
   
   try:
