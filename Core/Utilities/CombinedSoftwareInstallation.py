@@ -126,10 +126,6 @@ def CheckInstallSoftware(app,config,area):
   if not os.path.exists("%s/%s"%(os.getcwd(),tarball)):
     DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
     return False
-  ###Once the file is downloaded, untar it
-  #output = open(app_tar,'wb')
-  #output.write(tarball.read())
-  #output.close()
 
   app_tar_to_untar = tarfile.open(app_tar)
   app_tar_to_untar.extractall()
