@@ -10,7 +10,7 @@ Created on Jan 15, 2010
 @author: sposs
 @aauthor: pmajewsk
 '''
-import os, urllib2
+import os, urllib
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 import tarfile
@@ -119,7 +119,7 @@ def CheckInstallSoftware(app,config,area):
     try :
       #Copy the file locally, don't try to read from remote, soooo slow
       #Use string conversion %s%s to set the address, makes the system more stable
-      tarball,headers = urllib2.urlretrieve("%s%s"%(TarBallURL,app_tar))
+      tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar))
     except:
       DIRAC.gLogger.exception()
       return False
