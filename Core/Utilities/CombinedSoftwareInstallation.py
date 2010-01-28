@@ -3,6 +3,8 @@
 Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, has
 more or less the same functionality : installs software
 
+BE PARANOIAC !!!
+
 Created on Jan 15, 2010
 
 @author: sposs
@@ -58,7 +60,6 @@ class CombinedSoftwareInstallation:
 
     self.sharedArea = SharedArea()
     self.localArea  = LocalArea()
-    self.mySiteRoot = '%s:%s' %(self.localArea,self.sharedArea)
     
   def execute(self):
     """
@@ -81,7 +82,7 @@ class CombinedSoftwareInstallation:
 
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      result = CheckInstallSoftware(app,self.jobConfig,self.mySiteRoot)
+      result = CheckInstallSoftware(app,self.jobConfig)
       if not result:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
@@ -113,15 +114,27 @@ def CheckInstallSoftware(app,config,area):
 #    #print('%s/%s' %(os.getcwd(),app_tar))
 #    return False
 
-#downloading file from url
-  tarball = urllib2.urlopen(TarBallURL + app_tar)
-  output = open(app_tar,'wb')
-  output.write(tarball.read())
-  output.close()
+#downloading file from url, but don't do if file is already there.
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar)):
+    try :
+      #Copy the file locally, don't try to read from remote, soooo slow
+      #Use string conversion %s%s to set the address, makes the system more stable
+      tarball,headers = urllib2.urlretrieve("%s%s"%(TarBallURL,app_tar))
+    except:
+      DIRAC.gLogger.exception()
+      return False
+  if not os.path.exists("%s/%s"%(os.getcwd(),tarball)):
+    DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
+    return False
+  ###Once the file is downloaded, untar it
+  #output = open(app_tar,'wb')
+  #output.write(tarball.read())
+  #output.close()
 
   app_tar_to_untar = tarfile.open(app_tar)
   app_tar_to_untar.extractall()
   
+  #remove now useless tar ball
   try:
     os.unlink(app_tar)
   except:
