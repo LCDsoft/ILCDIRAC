@@ -9,6 +9,7 @@ from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from DIRAC.Core.DISET.RPCClient                          import RPCClient
 from LCDDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation  import MySiteRoot
+from LCDDIRAC.Core.Utilities.PrepareSteeringFile import PrepareSteeringFile
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig, List
 
 import DIRAC
@@ -26,7 +27,8 @@ class MokkaAnalysis(ModuleBase):
         self.debug = True
         self.log = gLogger.getSubLogger( "MokkaAnalysis" )
         self.result = S_ERROR()
-        self.optfile = ''
+        self.steeringFile = ''
+        self.stdhepFile = ''
         self.run_number = 0
         self.firstEventNumber = 1
         self.jobID = None
@@ -61,8 +63,11 @@ class MokkaAnalysis(ModuleBase):
         if self.step_commons.has_key('numberOfEvents'):
             self.numberOfEvents = self.step_commons['numberOfEvents']
 
-        if self.step_commons.has_key('optionsFile'):
-            self.optionsFile = self.step_commons['optionsFile']
+        if self.step_commons.has_key("steeringFile"):
+            self.steeringFile = self.step_commons['steeringFile']
+
+        if self.step_commons.has_key('stdhepFile'):
+            self.stdhepFile = self.step_commons['stdhepFile']
 
         if self.step_commons.has_key('optionsLine'):
             self.optionsLine = self.step_commons['optionsLine']
@@ -70,8 +75,8 @@ class MokkaAnalysis(ModuleBase):
         if self.step_commons.has_key('optionsLinePrev'):
             self.optionsLinePrev = self.step_commons['optionsLinePrev']
 
-        if self.step_commons.has_key('generatorName'):
-            self.generator_name = self.step_commons['generatorName']
+        #if self.step_commons.has_key('generatorName'):
+        #    self.generator_name = self.step_commons['generatorName']
 
         if self.step_commons.has_key('extraPackages'):
             self.extraPackages = self.step_commons['extraPackages']
@@ -120,6 +125,15 @@ class MokkaAnalysis(ModuleBase):
             localArea = string.split(sharedArea,':')[0]
         self.log.info('Setting local software area to %s' %localArea)
 
+        ###steering file that will be used to run
+        mokkasteer = "mokka.steer"
+        ###prepare steering file
+        steerok = False
+        steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.stdhepFile,self.numberOfEvents)
+        if not steerok:
+            self.log.error('Failed to create MOKKA steering file')
+            return S_ERROR('Failed to create MOKKA steering file')
+
         scriptName = 'Mokka_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
 
         if os.path.exists(scriptName): os.remove(scriptName)
@@ -128,7 +142,19 @@ class MokkaAnalysis(ModuleBase):
         script.write('#####################################################################\n')
         script.write('# Dynamically generated script to run a production or analysis job. #\n')
         script.write('#####################################################################\n')
-        comm = "Mokka dosomethingto be done"
+        script.write("g4releases=%s/geant4/releases\n"%(sharedArea))
+        script.write("G4SYSTEM=Linux-g++\n")
+        script.write("G4INSTALL=$g4releases/share/$g4version\n")
+        script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
+        script.write('G4LEDATA="$g4releases/share/data/G4EMLOW6.4"\n')
+        script.write('G4NEUTRONHPDATA="$g4releases/share/data/G4NDL3.13"\n')
+        script.write('G4LEVELGAMMADATA="$g4releases/share/data/PhotonEvaporation2.0"\n')
+        script.write('G4RADIOACTIVEDATA="$g4releases/share/data/RadioactiveDecay3.2"\n')
+        script.write('G4ELASTICDATA="$g4releases/share/data/G4ELASTIC1.1"\n')
+        script.write('G4ABLADATA="$g4releases/share/data/G4ABLA3.0"\n')
+        script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ELASTICDATA G4ABLADATA\n")
+
+        comm = "Mokka %s"%mokkasteer
         print "Command : %s"%(comm)
         script.write(comm)
         script.write('declare -x appstatus=$?\n')
