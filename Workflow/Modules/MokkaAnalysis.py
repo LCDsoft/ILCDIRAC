@@ -92,7 +92,7 @@ class MokkaAnalysis(ModuleBase):
         """
         self.resolveInputVariables()
         if not self.systemConfig:
-            self.result = S_ERROR( 'No LHCb platform selected' )
+            self.result = S_ERROR( 'No LCD platform selected' )
         elif not self.applicationLog:
             self.result = S_ERROR( 'No Log file provided' )
 
@@ -156,20 +156,20 @@ class MokkaAnalysis(ModuleBase):
 
         failed = False
         if status != 0:
-            self.log.error( "%s execution completed with errors:" % self.applicationName )
+            self.log.error( "Mokka execution completed with errors:" )
             failed = True
         else:
-            self.log.info( "%s execution completed succesfully:" % self.applicationName )
+            self.log.info( "Mokka execution completed successfully")
 
         if failed==True:
             self.log.error( "==================================\n StdError:\n" )
             self.log.error( self.stdError )
             #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-            self.log.error('%s Exited With Status %s' %(self.applicationName,status))
-            return S_ERROR('%s Exited With Status %s' %(self.applicationName,status))
+            self.log.error('Mokka Exited With Status %s' %(status))
+            return S_ERROR('Mokka Exited With Status %s' %(status))
         # Still have to set the application status e.g. user job case.
-        self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
-        return S_OK('%s %s Successful' %(self.applicationName,self.applicationVersion))
+        self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
+        return S_OK('Mokka %s Successful' %(self.applicationVersion))
 
     #############################################################################
     def redirectLogOutput(self, fd, message):
