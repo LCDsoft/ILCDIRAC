@@ -91,6 +91,22 @@ class CombinedSoftwareInstallation:
 
     return DIRAC.S_OK()
 
+def MySiteRoot():
+    """Returns the MySiteRoot for the current local and / or shared areas.
+    Needed by MokkaAnalysis and MarlinAnalysis modules
+    """
+    mySiteRoot = ''
+    localArea=LocalArea()
+    if not localArea:
+        DIRAC.gLogger.error( 'Failed to determine Local SW Area' )
+        return mySiteRoot
+    sharedArea=SharedArea()
+    if not sharedArea:
+        DIRAC.gLogger.error( 'Failed to determine Shared SW Area' )
+        return localArea
+    mySiteRoot = '%s:%s' %(localArea,sharedArea)
+    return mySiteRoot
+
 def CheckInstallSoftware(app,config,area):
   """Will perform a local area installation
   """
