@@ -1,0 +1,3 @@
+"""
+   LCDDIRAC.WorkflowLib.Module package
+"""
