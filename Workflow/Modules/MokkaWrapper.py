@@ -125,6 +125,35 @@ class MokkaWrapper:
         
         #return S_OK('Mokka-wrapper %s Successful' %(self.applicationVersion))
         return S_OK('OK')
+    
+    #############################################################################
+    def mysqlCleanUp(self):
+        
+        DIRAC.gLogger.verbose('clean up db')
+        #for now:
+        MySQLcleanUpComm = '/tmp/' + os.environ.get('UID_TMP') + '/mysql-cleanup.sh'
+        self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+        
+        resultTuple = self.result['Value']
+
+        status = resultTuple[0]
+        self.log.info( "Status after the application execution is %s" % str( status ) )
+        failed = False
+        if status != 0:
+            self.log.error( "mysql-cleanup execution completed with errors:" )
+            failed = True
+        else:
+            self.log.info( "mysql-cleanup execution completed successfully")
+
+        if failed==True:
+            self.log.error( "==================================\n StdError:\n" )
+            self.log.error( self.stdError )
+            #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+            self.log.error('mysql-cleanup Exited With Status %s' %(status))
+            return S_ERROR('mysql-cleanup Exited With Status %s' %(status))
+
+        
+    #############################################################################
         
     #############################################################################
     def redirectLogOutput(self, fd, message):
@@ -140,3 +169,4 @@ class MokkaWrapper:
         if fd == 1:
             self.stdError += message
     #############################################################################
+
