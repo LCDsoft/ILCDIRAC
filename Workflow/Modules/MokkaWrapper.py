@@ -10,33 +10,32 @@ Created on Feb 1, 2010
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
 from DIRAC.Core.Utilities.Subprocess import shellCall
 import DIRAC
-import os,sys,re
+import os,sys,re, tempfile
 
 class MokkaWrapper:
-    def __init__(self,argumentsDict):
-        self.MokkaDumpFile = {}
-        if not argumentsDict.has_key('MokkaDumpFile'):
-            DIRAC.gLogger.error('No sql dump file specified')
-        self.MokkaDumpFile = argumentsDict['MokkaDumpFile']
-        if not argumentsDict.has_key('MokkaTMPDir'):
-            DIRAC.gLogger.error('No MokkaTMPDir specified')
-        self.MokkaTMPDir = argumentsDict['MokkaTMPDir']
-        if not os.path.exists("%s/%s"%(os.getcwd(),self.MokkaTMPDir)):
-            os.mkdir(unicode(self.MokkaTMPDir))
-        if not argumentsDict.has_key('MokkaDumpFile'):
-            DIRAC.gLogger.error('No sql dump file specified')
-        if not argumentsDict.has_key('applicationLog'):
-            DIRAC.gLogger.error('No applicationLog defined')
-        self.applicationLog = argumentsDict['applicationLog'] 
-        if not argumentsDict.has_key('stdError'):
-            DIRAC.gLogger.error('No stdError defined')
-        self.stdError = argumentsDict['stdError']
+    def __init__(self):
+            
+        self.MokkaDumpFile = 'CLICMokkaDB.sql'
+        
+        self.MokkaTMPDir = ''
+        try:
+            self.MokkaTMPDir = tempfile.mkdtemp('','TMP',os.getcwd())
+        except:
+            DIRAC.gLogger.exception()
+            return false            
+        
+        self.applicationLog = 'mysql.log'
+         
+        self.stdError = 'mysql_err.log'
         
         self.log = gLogger.getSubLogger( "Mokka-wrapper" )
-                        
-    def execute(self):
+        
+        self.mysqlInstalDir = ''           
+                       
+    def mysqlSetup(self):
+        """ """
         DIRAC.gLogger.verbose('setup local mokka database')
-        comm = 'mokkadbscripts/mysql-local-db-dump-setup.sh -p ' + os.getcwd() + '/' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
+        comm = 'mokkadbscripts/mysql-local-db-dump-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
         self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
         resultTuple = self.result['Value']
@@ -66,13 +65,13 @@ class MokkaWrapper:
         if not self.MokkaTMPDir[-1] == '/':
             self.MokkaTMPDir += '/'
                 
-        self.MokkaTMPDir += os.environ.get('UID_TMP')
+        self.mysqlInstalDir = self.MokkaTMPDir + os.environ.get('UID_TMP')
         
         #init db
         DIRAC.gLogger.verbose('add all privilages for user consult')
         #mysql command:
         MySQLcomm = 'mysql4grid/bin/mysql'
-        MySQLparams = ' --socket ' + self.MokkaTMPDir + '/' + '/mysql.sock' + ' -e "GRANT ALL PRIVILEGES ON *.* TO \'consult\'@\'localhost\' IDENTIFIED BY \'consult\';"'
+        MySQLparams = ' --socket ' + self.mysqlInstalDir + '/' + '/mysql.sock' + ' -e "GRANT ALL PRIVILEGES ON *.* TO \'consult\'@\'localhost\' IDENTIFIED BY \'consult\';"'
                 
         self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
@@ -87,7 +86,7 @@ class MokkaWrapper:
         else:
             self.log.info( "mysql execution completed successfully")
 
-        if failed==True:
+        if failed:
             self.log.error( "==================================\n StdError:\n" )
             self.log.error( self.stdError )
             #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
@@ -99,7 +98,7 @@ class MokkaWrapper:
         #test query
         DIRAC.gLogger.verbose('test query to mysql')
         MySQLcomm = 'mysql'
-        MySQLparams = ' --socket ' + self.MokkaTMPDir + '/' + '/mysql.sock' + ' -uconsult -pconsult -e "show databases;"'
+        MySQLparams = ' --socket ' + self.mysqlInstalDir + '/' + '/mysql.sock' + ' -uconsult -pconsult -e "show databases;"'
         
         self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
@@ -114,7 +113,7 @@ class MokkaWrapper:
         else:
             self.log.info( "mysql client execution completed successfully")
 
-        if failed==True:
+        if failed:
             self.log.error( "==================================\n StdError:\n" )
             self.log.error( self.stdError )
             #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
@@ -132,6 +131,7 @@ class MokkaWrapper:
         DIRAC.gLogger.verbose('clean up db')
         #for now:
         MySQLcleanUpComm = '/tmp/' + os.environ.get('UID_TMP') + '/mysql-cleanup.sh'
+            
         self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
         resultTuple = self.result['Value']
@@ -152,6 +152,12 @@ class MokkaWrapper:
             self.log.error('mysql-cleanup Exited With Status %s' %(status))
             return S_ERROR('mysql-cleanup Exited With Status %s' %(status))
 
+        try:
+            DIRAC.gLogger.verbose('Removing tmp dir')
+            os.rmdir(self.MokkaTMPDir)
+        except:
+            DIRAC.gLogger.exception()
+            return S_ERROR('Removing tmp dir failed')
         
     #############################################################################
         
