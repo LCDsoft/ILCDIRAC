@@ -1,0 +1,142 @@
+'''
+Wrapper script to run mokka with a local database setup 
+Based on Jan Engels bash script
+
+Created on Feb 1, 2010
+
+@author: pmajewsk
+'''
+
+from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
+from DIRAC.Core.Utilities.Subprocess import shellCall
+import DIRAC
+import os,sys,re
+
+class MokkaWrapper:
+    def __init__(self,argumentsDict):
+        self.MokkaDumpFile = {}
+        if not argumentsDict.has_key('MokkaDumpFile'):
+            DIRAC.gLogger.error('No sql dump file specified')
+        self.MokkaDumpFile = argumentsDict['MokkaDumpFile']
+        if not argumentsDict.has_key('MokkaTMPDir'):
+            DIRAC.gLogger.error('No MokkaTMPDir specified')
+        self.MokkaTMPDir = argumentsDict['MokkaTMPDir']
+        if not os.path.exists("%s/%s"%(os.getcwd(),self.MokkaTMPDir)):
+            os.mkdir(unicode(self.MokkaTMPDir))
+        if not argumentsDict.has_key('MokkaDumpFile'):
+            DIRAC.gLogger.error('No sql dump file specified')
+        if not argumentsDict.has_key('applicationLog'):
+            DIRAC.gLogger.error('No applicationLog defined')
+        self.applicationLog = argumentsDict['applicationLog'] 
+        if not argumentsDict.has_key('stdError'):
+            DIRAC.gLogger.error('No stdError defined')
+        self.stdError = argumentsDict['stdError']
+        
+        self.log = gLogger.getSubLogger( "Mokka-wrapper" )
+                        
+    def execute(self):
+        DIRAC.gLogger.verbose('setup local mokka database')
+        comm = 'mokkadbscripts/mysql-local-db-dump-setup.sh -p ' + os.getcwd() + '/' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
+        self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+        
+        resultTuple = self.result['Value']
+
+        status = resultTuple[0]
+        self.log.info( "Status after the application execution is %s" % str( status ) )
+        failed = False
+        if status != 0:
+            self.log.error( "mokka-wrapper execution completed with errors:" )
+            failed = True
+        else:
+            self.log.info( "mokka-wrapper execution completed successfully")
+
+        if failed==True:
+            self.log.error( "==================================\n StdError:\n" )
+            self.log.error( self.stdError )
+            #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+            self.log.error('mokka-wrapper Exited With Status %s' %(status))
+            return S_ERROR('mokka-wrapper Exited With Status %s' %(status))
+        # Still have to set the application status e.g. user job case.
+        #self.setApplicationStatus('mokka-wrapper %s Successful' %(self.applicationVersion))
+        #return S_OK('mokka-wrapper %s Successful' %(self.applicationVersion))
+
+        if os.environ.get('UID_TMP') == type('None'):
+            DIRAC.gLogger.error('No UID_TMP known')
+        
+        if not self.MokkaTMPDir[-1] == '/':
+            self.MokkaTMPDir += '/'
+                
+        self.MokkaTMPDir += os.environ.get('UID_TMP')
+        
+        #init db
+        DIRAC.gLogger.verbose('add all privilages for user consult')
+        #mysql command:
+        MySQLcomm = 'mysql4grid/bin/mysql'
+        MySQLparams = ' --socket ' + self.MokkaTMPDir + '/' + '/mysql.sock' + ' -e "GRANT ALL PRIVILEGES ON *.* TO \'consult\'@\'localhost\' IDENTIFIED BY \'consult\';"'
+                
+        self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+        
+        resultTuple = self.result['Value']
+
+        status = resultTuple[0]
+        self.log.info( "Status after the application execution is %s" % str( status ) )
+        failed = False
+        if status != 0:
+            self.log.error( "mysql execution completed with errors:" )
+            failed = True
+        else:
+            self.log.info( "mysql execution completed successfully")
+
+        if failed==True:
+            self.log.error( "==================================\n StdError:\n" )
+            self.log.error( self.stdError )
+            #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+            self.log.error('mysql Exited With Status %s' %(status))
+            return S_ERROR('mysql Exited With Status %s' %(status))
+        # Still have to set the application status e.g. user job case.
+        #self.setApplicationStatus('mokka-wrapper %s Successful' %(self.applicationVersion))
+        
+        #test query
+        DIRAC.gLogger.verbose('test query to mysql')
+        MySQLcomm = 'mysql'
+        MySQLparams = ' --socket ' + self.MokkaTMPDir + '/' + '/mysql.sock' + ' -uconsult -pconsult -e "show databases;"'
+        
+        self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+        
+        resultTuple = self.result['Value']
+
+        status = resultTuple[0]
+        self.log.info( "Status after the application execution is %s" % str( status ) )
+        failed = False
+        if status != 0:
+            self.log.error( "mysql client execution completed with errors:" )
+            failed = True
+        else:
+            self.log.info( "mysql client execution completed successfully")
+
+        if failed==True:
+            self.log.error( "==================================\n StdError:\n" )
+            self.log.error( self.stdError )
+            #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+            self.log.error('mysql Exited With Status %s' %(status))
+            return S_ERROR('mysql Exited With Status %s' %(status))
+        # Still have to set the application status e.g. user job case.
+        #self.setApplicationStatus('mysql client %s Successful' %(self.applicationVersion))
+        
+        #return S_OK('Mokka-wrapper %s Successful' %(self.applicationVersion))
+        return S_OK('OK')
+        
+    #############################################################################
+    def redirectLogOutput(self, fd, message):
+        sys.stdout.flush()
+        if message:
+            if re.search('INFO Evt',message): print message
+        if self.applicationLog:
+            log = open(self.applicationLog,'a')
+            log.write(message+'\n')
+            log.close()
+        else:
+            self.log.error("Application Log file not defined")
+        if fd == 1:
+            self.stdError += message
+    #############################################################################
