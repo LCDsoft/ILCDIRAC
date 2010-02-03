@@ -14,14 +14,17 @@ import os,sys,re, tempfile
 
 class MokkaWrapper:
     def __init__(self):
+        """Set initial variables"""
             
         self.MokkaDumpFile = 'CLICMokkaDB.sql'
         
         self.MokkaTMPDir = ''
+        
+        """create tmp dir and track it"""
         try:
             self.MokkaTMPDir = tempfile.mkdtemp('','TMP',os.getcwd())
-        except:
-            DIRAC.gLogger.exception()
+        except IOError, (errno,streerror):
+            DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
             return false            
         
         self.applicationLog = 'mysql.log'
@@ -33,7 +36,7 @@ class MokkaWrapper:
         self.mysqlInstalDir = ''           
                        
     def mysqlSetup(self):
-        """ """
+        """Setup mysql locally in local tmp dir """
         DIRAC.gLogger.verbose('setup local mokka database')
         comm = 'mokkadbscripts/mysql-local-db-dump-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
         self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
@@ -127,6 +130,7 @@ class MokkaWrapper:
     
     #############################################################################
     def mysqlCleanUp(self):
+        """Does mysql cleanup command. Remove socket and tmpdir with mysql db."""
         
         DIRAC.gLogger.verbose('clean up db')
         #for now:
@@ -155,14 +159,15 @@ class MokkaWrapper:
         try:
             DIRAC.gLogger.verbose('Removing tmp dir')
             os.rmdir(self.MokkaTMPDir)
-        except:
-            DIRAC.gLogger.exception()
+        except IOError, (errno,streerror):
+            DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
             return S_ERROR('Removing tmp dir failed')
         
     #############################################################################
         
     #############################################################################
     def redirectLogOutput(self, fd, message):
+        """Redirecting logging output to file specified."""
         sys.stdout.flush()
         if message:
             if re.search('INFO Evt',message): print message
