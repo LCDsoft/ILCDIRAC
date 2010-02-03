@@ -24,8 +24,7 @@ class MokkaWrapper:
         try:
             self.MokkaTMPDir = tempfile.mkdtemp('','TMP',os.getcwd())
         except IOError, (errno,streerror):
-            DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
-            return false            
+            DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
         self.applicationLog = 'mysql.log'
          
