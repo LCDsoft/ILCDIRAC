@@ -13,10 +13,12 @@ import DIRAC
 import os,sys,re, tempfile
 
 class MokkaWrapper:
-    def __init__(self):
+    def __init__(self,mokkadump=''):
         """Set initial variables"""
-            
         self.MokkaDumpFile = 'CLICMokkaDB.sql'
+        
+        if(len(mokkadump)>0):
+          self.MokkaDumpFile = mokkadump
         
         self.MokkaTMPDir = ''
         
