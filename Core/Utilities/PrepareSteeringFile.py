@@ -10,21 +10,29 @@ Created on Jan 29, 2010
 '''
 
 
-def PrepareSteeringFile(inputSteering,outputSteering,stdhepFile,nbOfRuns,outputlcio):
-    macfile = file("mokkamac.mac","w")
-    macfile.write("/generator/generator %s\n"%stdhepFile)
-    macfile.write("/run/beamOn %s\n"%nbOfRuns)
-    macfile.close()
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio):
+  macfile = file("mokkamac.mac","w")
+  macfile.write("/generator/generator %s\n"%stdhepFile)
+  macfile.write("/run/beamOn %s\n"%nbOfRuns)
+  macfile.close()
     
-    input = file(inputSteering,"r")
-    output = file(str(outputSteering),"w")
-    for line in input:
-        if line.find("/Mokka/init/initialMacroFile")<0:
-            if line.find("lcioFilename")<0:
-                if line.find("#")<0:
-                    output.write(line)
-    output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
-    output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
-    output.close()
-    return True
+  input = file(inputSteering,"r")
+  output = file(str(outputSteering),"w")
+  for line in input:
+    if line.find("/Mokka/init/initialMacroFile")<0:
+      if line.find("lcioFilename")<0:
+        if line.find("#")<0:
+          if detectormodel:
+            if line.find("/Mokka/init/detectorModel")<0:
+              output.write(line)
+          else:
+            output.write(line)
+  if detectormodel:
+    output.write("/Mokka/init/detectorModel %s"%detectormodel)
+      
+  output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
+  output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
+  output.write("/Mokka/init/startEventNumber %d"%startFrom)
+  output.close()
+  return True
 
