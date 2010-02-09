@@ -146,7 +146,7 @@ class LCDJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     return S_OK()
     
-  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio):
+  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio,logFile=''):
     """ Define Marlin step
      Example usage:
 
@@ -164,6 +164,71 @@ class LCDJob(Job):
       @param inputslcio: path to input slcio, list of strings or string
       @type inputslcio: string or list      
     """
+    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'logFile':logFile}
+    if not type(appVersion) in types.StringTypes:
+      return self._reportError('Expected string for version',__name__,**kwargs)
+    if not type(xmlfile) in types.StringTypes:
+      return self._reportError('Expected string for xml file',__name__,**kwargs)
+    if not type(gearfile) in types.StringTypes:
+      return self._reportError('Expected string for gear file',__name__,**kwargs)
+    if not type(inputslcio) in types.StringTypes:
+      return self._reportError('Expected string for input slcio file',__name__,**kwargs)
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'Marlin_%s.log' %(appVersion)
+    self.addToOutputSandbox.append(logName)
+
+    if os.path.exists(xmlfile):
+      self.log.verbose('Found specified XML file %s'%xmlfile)
+      self.addToInputSandbox.append(xmlfile)
+    else:
+      return self._reportError('Specified XML file %s does not exist' %(xmlfile),__name__,**kwargs)
+    
+    if os.path.exists(gearfile):
+      self.log.verbose('Found specified GEAR file %s'%gearfile)
+      self.addToInputSandbox.append(gearfile)
+    else:
+      return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
+
+    if(inputslcio):
+      inputslcio = inputslcio.replace("LFN:","")
+      self.addToInputData.append(inputslcio)
+      
+    self.StepCount +=1
+    stepName = 'RunMarlin'
+
+    
+    ##now define MokkaAnalysis
+    moduleName = "MarlinAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('Marlin module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    step = StepDefinition('Marlin')
+    step.addModule(module)
+    moduleInstance = step.createModuleInstance('MarlinAnalysis','Marlin')
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance('Marlin',stepName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("applicationLog",logName)
+    currentApp = "Marlin.%s"appVersion
+
+    swPackages = 'SoftwarePackages'
+    description='LCD Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     return S_OK()
     
     
