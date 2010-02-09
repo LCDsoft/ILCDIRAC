@@ -37,18 +37,17 @@ class MokkaAnalysis(ModuleBase):
 
         self.systemConfig = ''
         self.applicationLog = ''
+        self.applicationVersion=''
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 1
         self.inputData = '' # to be resolved
         self.InputData = '' # from the (JDL WMS approach)
-        self.outputData = ''
-        self.generator_name=''
-        self.optfile_extra = ''
-        self.optionsLinePrev = ''
-        self.optionsLine = ''
-        self.extraPackages = ''
-        self.applicationType = ''
+        #self.outputData = ''
+        #self.generator_name=''
+        #self.optionsLinePrev = ''
+        #self.optionsLine = ''
+        #self.extraPackages = ''
         self.jobType = ''
 
 #############################################################################
@@ -111,12 +110,6 @@ class MokkaAnalysis(ModuleBase):
             self.result = S_ERROR( 'No LCD platform selected' )
         elif not self.applicationLog:
             self.result = S_ERROR( 'No Log file provided' )
-
-        if not self.result['OK']:
-            return self.result
-        if not self.optionsFile and not self.optionsLine:
-            self.log.warn( 'No options File nor options Line provided' )
-            self.result = S_OK()
 
         cwd = os.getcwd()
         self.root = gConfig.getValue('/LocalSite/Root',cwd)
