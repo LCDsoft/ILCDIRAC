@@ -213,11 +213,18 @@ class LCDJob(Job):
     moduleInstance = step.createModuleInstance('MarlinAnalysis','Marlin')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
-
+    step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
+    step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
+    step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
+    stepInstance.setValue("inputSlcio",inputslcio)
+    stepInstance.setValue("inputXML",xmlfile)
+    stepInstance.setValue("inputGEAR",gearfile)
+   
+    
     currentApp = "Marlin.%s"appVersion
 
     swPackages = 'SoftwarePackages'
