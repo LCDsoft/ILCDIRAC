@@ -171,8 +171,12 @@ class MokkaAnalysis(ModuleBase):
         #script.write('G4ELASTICDATA="$g4releases/share/data/G4ELASTIC1.1"\n')
         script.write('G4ABLADATA="$g4releases/sl4/g4data/g4dataABLA"\n')
         script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
-
-        comm = "Mokka %s"%mokkasteer
+        if(os.path.exists("lib")):
+          if os.environ.has_key('LD_LIBRARY_PATH'):
+            script.write('export LD_LIBRARY_PATH=lib:%s'%os.environ['LD_LIBRARY_PATH'])
+          else:
+            script.write('export LD_LIBRARY_PATH=lib')
+        comm = "mokka-wrapper.sh %s"%mokkasteer
         print "Command : %s"%(comm)
         script.write(comm)
         script.write('declare -x appstatus=$?\n')

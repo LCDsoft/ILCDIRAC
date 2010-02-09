@@ -13,8 +13,8 @@ from DIRAC.Interfaces.API.Job                       import Job
 from DIRAC.Core.Utilities.File                      import makeGuid
 from DIRAC.Core.Utilities.List                      import uniqueElements
 from DIRAC                                          import gConfig
-
-COMPONENT_NAME='/WorkflowLib/API/LCDJob'
+ 
+COMPONENT_NAME='/WorkflowLib/API/LCDJob' 
 
 class LCDJob(Job):
   def __init__(self,script=None):
@@ -26,21 +26,21 @@ class LCDJob(Job):
   
   def setMokka(self,appVersion,steeringFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',logFile=''):
     """Helper function.
-       Specify application for DIRAC workflows.
-       Applications can be Mokka or Marlin
+       Define Mokka step
        
-       optionFiles should be the path to the steering or xml file
+       steeringFile should be the path to the steering file
        All options files are automatically appended to the job input sandbox
        
-       Input data for application script must be specified here, please note that if this is set at the job level,
-       e.g. via setInputData() but not above, input data is not in the scope of the specified application.
-       Any input data specified at the step level that is not already specified at the job level is added automatically
-       as a requirement for the job.
+       inputStdhep is the path to the stdhep file to read. Can be LFN:
 
        Example usage:
 
        >>> job = LCDJob()
        >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputStdhep=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
+
+       Modified drivers (.so files) should be put in a 'lib' directory and input as inputdata:
+       >>> job.setInputData('lib')
+       This 'lib' directory will be prepended to LD_LIBRARY_PATH
 
        @param appVersion: Mokka version
        @type appVersion: string
@@ -146,8 +146,25 @@ class LCDJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     return S_OK()
     
-    
-    
+  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio):
+    """ Define Marlin step
+     Example usage:
+
+      >>> job = LCDJob()
+      >>> job.setMarlin("v00-17",xmlfile='myMarlin.xml',gearfile='GearFile.xml',inputslcio='input.slcio')
+      
+      If personal processors are needed, put them in a 'lib' directory, and do 
+      >>> job.setInputData('lib')
+      so that they get shipped to the grid site. All contents are prepended in MARLIN_DLL
+      
+      @param xmlfile: the marlin xml definition
+      @type xmlfile: string
+      @param gearfile: as the name suggests
+      @type gearfile: string
+      @param inputslcio: path to input slcio, list of strings or string
+      @type inputslcio: string or list      
+    """
+    return S_OK()
     
     
     
