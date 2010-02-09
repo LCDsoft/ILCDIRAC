@@ -138,8 +138,9 @@ class MokkaAnalysis(ModuleBase):
 
         ####Setup MySQL instance
         sqlwrapper = MokkaWrapper(self.dbslice)
-        sqlwrapper.mysqlSetup()
-        
+        result =sqlwrapper.mysqlSetup()
+        if not result['OK']:
+          return result
 
         ###steering file that will be used to run
         mokkasteer = "mokka.steer"
@@ -217,8 +218,9 @@ class MokkaAnalysis(ModuleBase):
             return S_ERROR('Mokka Exited With Status %s' %(status))
 
         ###cleanup after putting some dirt...
-        sqlwrapper.mysqlCleanUp()
-        
+        result = sqlwrapper.mysqlCleanUp()
+        if not result['OK']:
+          return result
         # Still have to set the application status e.g. user job case.
         self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
         return S_OK('Mokka %s Successful' %(self.applicationVersion))
