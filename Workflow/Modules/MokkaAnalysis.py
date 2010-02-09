@@ -130,7 +130,7 @@ class MokkaAnalysis(ModuleBase):
         self.log.info('Setting local software area to %s' %localArea)
 
         ####Setup MySQL instance
-        sqlwrapper = MokkaWrapper(self.dbslice)
+        sqlwrapper = SQLWrapper(self.dbslice)
         result =sqlwrapper.mysqlSetup()
         if not result['OK']:
           return result
