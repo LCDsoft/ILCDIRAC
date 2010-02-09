@@ -158,13 +158,15 @@ class SQLWrapper:
       self.log.error('mysql-cleanup Exited With Status %s' %(status))
       return S_ERROR('mysql-cleanup Exited With Status %s' %(status))
 
-    try:
-      DIRAC.gLogger.verbose('Removing tmp dir')
-      os.rmdir(self.MokkaTMPDir)
-    except IOError, (errno,streerror):
-      DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
-      return S_ERROR('Removing tmp dir failed')
-    return S_OK('OK')
+    #cleanup script also removes tmp
+    if (os.path.exists(self.MokkaTMPDir)):
+      try:
+        DIRAC.gLogger.verbose('Removing tmp dir')
+        os.rmdir(self.MokkaTMPDir)
+      except IOError, (errno,streerror):
+        DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
+        return S_ERROR('Removing tmp dir failed')
+      return S_OK('OK')
     #############################################################################
         
     #############################################################################
