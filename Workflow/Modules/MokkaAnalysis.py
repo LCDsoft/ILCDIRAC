@@ -41,8 +41,8 @@ class MokkaAnalysis(ModuleBase):
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 1
-        self.inputData = '' # to be resolved
-        self.InputData = '' # from the (JDL WMS approach)
+        #self.inputData = '' # to be resolved
+        #self.InputData = '' # from the (JDL WMS approach)
         #self.outputData = ''
         #self.generator_name=''
         #self.optionsLinePrev = ''
@@ -91,21 +91,24 @@ class MokkaAnalysis(ModuleBase):
       #if self.step_commons.has_key('extraPackages'):
       #    self.extraPackages = self.step_commons['extraPackages']
 
-      if self.workflow_commons.has_key('InputData'):
-          self.InputData = self.workflow_commons['InputData']
+      #if self.workflow_commons.has_key('InputData'):
+      #    self.InputData = self.workflow_commons['InputData']
 
-      if self.step_commons.has_key('inputData'):
-          self.inputData = self.step_commons['inputData']
+      #if self.step_commons.has_key('inputData'):
+      #    self.inputData = self.step_commons['inputData']
 
       if self.workflow_commons.has_key('JobType'):
           self.jobType = self.workflow_commons['JobType']
-
+      return S_OK('Parameters resolved')
     
     def execute(self):
         """
         Called by Agent
         """
-        self.resolveInputVariables()
+        result = self.resolveInputVariables()
+        if not result['OK']:
+          return result
+        
         if not self.systemConfig:
             self.result = S_ERROR( 'No LCD platform selected' )
         elif not self.applicationLog:
