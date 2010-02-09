@@ -68,11 +68,13 @@ class MarlinAnalysis(ModuleBase):
     Called by Agent
     """
     self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No LCD platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
-
+    if not self.result['OK']:
+      return self.result
     
     return S_OK('Marlin %s Successful' %(self.applicationVersion))
 
