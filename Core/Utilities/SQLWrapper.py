@@ -12,7 +12,7 @@ from DIRAC.Core.Utilities.Subprocess import shellCall
 import DIRAC
 import os,sys,re, tempfile
 
-class MokkaWrapper:
+class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql'):
     """Set initial variables"""
     self.MokkaDumpFile = dumpfile
@@ -36,7 +36,7 @@ class MokkaWrapper:
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
     DIRAC.gLogger.verbose('setup local mokka database')
-    comm = 'mokkadbscripts/mysql-local-db-dump-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
+    comm = 'mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
     resultTuple = self.result['Value']
@@ -60,13 +60,17 @@ class MokkaWrapper:
     #self.setApplicationStatus('mokka-wrapper %s Successful' %(self.applicationVersion))
     #return S_OK('mokka-wrapper %s Successful' %(self.applicationVersion))
 
-    if os.environ.get('UID_TMP') == type('None'):
+    if str(os.environ.get('UID_TMP')) == 'None':
       DIRAC.gLogger.error('No UID_TMP known')
+      self.UID_TMP = ''
+    else:
+      self.UID_TMP = str(os.environ.get('UID_TMP'))
+    
         
     if not self.MokkaTMPDir[-1] == '/':
       self.MokkaTMPDir += '/'
                 
-    self.mysqlInstalDir = self.MokkaTMPDir + os.environ.get('UID_TMP')
+    self.mysqlInstalDir = self.MokkaTMPDir + self.UID_TMP 
         
     #init db
     DIRAC.gLogger.verbose('add all privilages for user consult')
@@ -132,7 +136,7 @@ class MokkaWrapper:
         
     DIRAC.gLogger.verbose('clean up db')
     #for now:
-    MySQLcleanUpComm = '/tmp/' + os.environ.get('UID_TMP') + '/mysql-cleanup.sh'
+    MySQLcleanUpComm = self.MokkaTMPDir + self.UID_TMP + '/mysql-cleanup.sh'
             
     self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
