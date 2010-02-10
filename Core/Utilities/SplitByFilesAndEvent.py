@@ -3,7 +3,7 @@
 '''
 LCDDIRAC.Core.Utilities.SplitByFilesAndEvents
 
-Based on Dirac.SplitByFiles, but adding the splitting by number of events
+Based on Dirac.SplitByFiles idea, but doing the splitting by number of events
 Gives a list of dictionaries
 
 
