@@ -10,11 +10,11 @@ from DIRAC.Core.DISET.RPCClient                          import RPCClient
 from LCDDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation  import MySiteRoot
 from LCDDIRAC.Core.Utilities.PrepareSteeringFile         import PrepareSteeringFile
-rom LCDDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
+from LCDDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig, List
 
 import DIRAC
-import shutil, re, string, os, sys, time, glob 
+import re, os, sys
 
 
 class MokkaAnalysis(ModuleBase):
