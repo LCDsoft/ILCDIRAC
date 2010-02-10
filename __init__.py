@@ -1,4 +1,4 @@
-# $HeadURL: $
+# $HeadURL$
 
 
 from pkgutil import extend_path
