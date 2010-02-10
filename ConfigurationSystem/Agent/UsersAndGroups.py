@@ -1,5 +1,5 @@
 # $HeadURL$
-# $Id : $
+# $Id$
 
 __RCSID__ = "$Id$"
 """
@@ -52,7 +52,7 @@ class UsersAndGroups( AgentModule ):
         return False
     #Execute the call
     cmdEnv = dict( os.environ )
-    cmdEnv['LFC_HOST'] = 'lfc-lhcb.cern.ch'
+    cmdEnv['LFC_HOST'] = 'lfc-lcd.cern.ch'
     if os.path.isfile( self.proxyLocation ):
       cmdEnv[ 'X509_USER_PROXY' ] = self.proxyLocation
     lfcDNs = []

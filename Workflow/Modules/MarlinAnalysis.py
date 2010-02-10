@@ -1,5 +1,5 @@
 # $HeadURL$
-# $Id : $
+# $Id$
 '''
 LCDDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
