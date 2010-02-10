@@ -171,8 +171,7 @@ class LCDJob(Job):
       return self._reportError('Expected string for xml file',__name__,**kwargs)
     if not type(gearfile) in types.StringTypes:
       return self._reportError('Expected string for gear file',__name__,**kwargs)
-    if not type(inputslcio) in types.StringTypes:
-      return self._reportError('Expected string for input slcio file',__name__,**kwargs)
+ 
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
@@ -195,8 +194,15 @@ class LCDJob(Job):
       return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
 
     if(inputslcio):
-      inputslcio = inputslcio.replace("LFN:","")
-      self.addToInputData.append(inputslcio)
+      if not type(inputslcio) in types.StringTypes:
+        inputslcio = [inputslcio]
+      if not type(inputslcio)==type([]):
+        return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
+      for i in xrange(len(inputslcio)):
+        inputslcio[i] = inputslcio[i].replace('LFN:','')
+      inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+      inputslcioStr = string.join(inputslcio,';') 
+      self.addToInputData.append(inputslcioStr)
       
     self.StepCount +=1
     stepName = 'RunMarlin'
