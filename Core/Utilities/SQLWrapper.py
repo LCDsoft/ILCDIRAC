@@ -15,21 +15,21 @@ import os,sys,re, tempfile
 class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql'):
     """Set initial variables"""
-    self.MokkaDumpFile = dumpfile
+    self.MokkaDumpFile = os.path.basename(dumpfile)
       
     self.MokkaTMPDir = ''
         
     """create tmp dir and track it"""
     try:
         self.MokkaTMPDir = tempfile.mkdtemp('','TMP',os.getcwd())
-    except IOError, (errno,streerror):
+    except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
     self.applicationLog = 'mysql.log'
          
     self.stdError = 'mysql_err.log'
         
-    self.log = gLogger.getSubLogger( "Mokka-wrapper" )
+    self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
     self.mysqlInstalDir = ''           
                        
@@ -163,7 +163,7 @@ class SQLWrapper:
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
         os.rmdir(self.MokkaTMPDir)
-      except IOError, (errno,streerror):
+      except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
         return S_ERROR('Removing tmp dir failed')
       return S_OK('OK')
