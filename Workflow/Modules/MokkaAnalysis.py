@@ -136,12 +136,12 @@ class MokkaAnalysis(ModuleBase):
         self.log.error( 'MySiteRoot Not found' )
         return S_ERROR(' MySiteRoot Not Found')
 
-      mySiteRoot=sharedArea
-      self.log.info('MYSITEROOT is %s' %mySiteRoot)
-      localArea = sharedArea
-      if re.search(':',sharedArea):
-        localArea = string.split(sharedArea,':')[0]
-      self.log.info('Setting local software area to %s' %localArea)
+      #mySiteRoot=sharedArea
+      #self.log.info('MYSITEROOT is %s' %mySiteRoot)
+      #localArea = sharedArea
+      #if re.search(':',sharedArea):
+      #  localArea = string.split(sharedArea,':')[0]
+      #self.log.info('Setting local software area to %s' %localArea)
 
       ####Setup MySQL instance
       sqlwrapper = SQLWrapper(self.dbslice)
