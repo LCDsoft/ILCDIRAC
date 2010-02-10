@@ -152,6 +152,10 @@ class MokkaAnalysis(ModuleBase):
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
       ###prepare steering file
+      #first, I need to take the stdhep file, stripped of its path (possible LFN)
+      self.stdhepFile = os.path.basename(self.stdhepFile)
+      ##idem for steering file
+      self.steeringFile = os.path.basename(self.steeringFile)
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,self.numberOfEvents,self.startFrom)
       if not steerok:
         self.log.error('Failed to create MOKKA steering file')
