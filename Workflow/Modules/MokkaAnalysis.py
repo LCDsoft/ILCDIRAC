@@ -11,7 +11,7 @@ from LCDDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation  import MySiteRoot
 from LCDDIRAC.Core.Utilities.PrepareSteeringFile         import PrepareSteeringFile
 from LCDDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
-from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig, List
+from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC
 import re, os, sys
