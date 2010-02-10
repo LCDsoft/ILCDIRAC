@@ -1,3 +1,6 @@
+# $HeadURL$
+# $Id : $
+
 '''
 
 Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, has

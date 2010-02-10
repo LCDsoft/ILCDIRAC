@@ -1,9 +1,11 @@
+# $HeadURL$
+# $Id : $
 #!/usr/bin/env python
 ########################################################################
 # File :   lcd-proxy-init.py
 # Author : Adrian Casajus, adapted for LCD by S POSS
 ########################################################################
-__RCSID__   = "$Id: lcd-proxy-init.py 18858 2010-01-13 sposs $"
+__RCSID__   = "$Id$"
 __VERSION__ = "$Revision: 1. $"
 
 import sys
