@@ -88,7 +88,57 @@ class MarlinAnalysis(ModuleBase):
       self.log.error('Something went wrong with XML generation')
       return S_ERROR('Something went wrong with XML generation')
     
+    scriptName = 'Marlin_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
+    if os.path.exists(scriptName): os.remove(scriptName)
+    script = open(scriptName,'w')
+    script.write('#!/bin/sh \n')
+    script.write('#####################################################################\n')
+    script.write('# Dynamically generated script to run a production or analysis job. #\n')
+    script.write('#####################################################################\n')
+    if(os.path.exists("lib")):
+      if os.environ.has_key('LD_LIBRARY_PATH'):
+        script.write('export LD_LIBRARY_PATH=lib:%s'%os.environ['LD_LIBRARY_PATH'])
+      else:
+        script.write('export LD_LIBRARY_PATH=lib')
     
+    ###Here fill the blanks
+    
+    script.write('declare -x appstatus=$?\n')
+    script.write('where\n')
+    script.write('quit\n')
+    script.write('EOF\n')
+    script.write('exit $appstatus\n')
+
+    script.close()
+    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
+
+    os.chmod(scriptName,0755)
+    comm = 'sh -c "./%s"' %scriptName
+    self.setApplicationStatus('Marlin %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
+    self.stdError = ''
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
+    resultTuple = self.result['Value']
+
+    status = resultTuple[0]
+    # stdOutput = resultTuple[1]
+    # stdError = resultTuple[2]
+    self.log.info( "Status after the application execution is %s" % str( status ) )
+
+    failed = False
+    if status != 0:
+      self.log.error( "Marlin execution completed with errors:" )
+      failed = True
+    else:
+      self.log.info( "Marlin execution completed successfully")
+
+    if failed==True:
+      self.log.error( "==================================\n StdError:\n" )
+      self.log.error( self.stdError )
+      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+      self.log.error('Marlin Exited With Status %s' %(status))
+      return S_ERROR('Marlin Exited With Status %s' %(status))
+    self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))
     return S_OK('Marlin %s Successful' %(self.applicationVersion))
 
   def redirectLogOutput(self, fd, message):
