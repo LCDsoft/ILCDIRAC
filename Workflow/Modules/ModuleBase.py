@@ -1,9 +1,11 @@
+# $HeadURL$
+# $Id : $
 """ ModuleBase - base class for LCD workflow modules. 
 Stolen by S. Poss from LHCbSystem.Workflow.Modules
 
 """
 
-__RCSID__ = "$Id: ModuleBase.py 1 2010-01-29 sposs $"
+__RCSID__ = "$Id$"
 
 from DIRAC  import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager

@@ -1,3 +1,5 @@
+# $HeadURL$
+# $Id : $
 ########################################################################
 # File :   InputDataResolution.py
 # Author : S Poss, based on S Paterson
@@ -13,7 +15,7 @@
 
 """
 
-__RCSID__ = "$Id: InputDataResolution.py 18700 2009-11-30 13:48:50Z paterson $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.ModuleFactory                             import ModuleFactory
 from DIRAC                                                          import S_OK, S_ERROR, gConfig, gLogger

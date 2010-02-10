@@ -1,3 +1,6 @@
+# $HeadURL$
+# $Id : $
+
 '''
 LCDDIRAC.ConfigurattionSystem.Agent
 

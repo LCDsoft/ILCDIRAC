@@ -1,4 +1,7 @@
-__RCSID__ = "$Id: UsersAndGroups.py 18926 2009-12-02 18:25:56Z acasajus $"
+# $HeadURL$
+# $Id : $
+
+__RCSID__ = "$Id$"
 """
   Update Users and Groups from VOMS on CS : special LCD flavour, by s Poss
 """

@@ -1,3 +1,5 @@
+# $HeadURL$
+# $Id : $
 '''
 Wrapper script to run mokka with a local database setup 
 Based on Jan Engels bash script
