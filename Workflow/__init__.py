@@ -1,0 +1,3 @@
+"""
+LCDDIRAC.Workflow package
+"""
