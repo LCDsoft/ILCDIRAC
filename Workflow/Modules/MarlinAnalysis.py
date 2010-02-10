@@ -5,12 +5,13 @@ Created on Feb 9, 2010
 
 @author: sposs
 '''
-import os,sys,re
+import os,sys,re,string
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from LCDDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation import MySiteRoot
+from LCDDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareXMLFile
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
@@ -75,6 +76,18 @@ class MarlinAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
+    runonslcio = []
+    for inputfile in self.inputSLCIO:
+      runonslcio.append(os.path.basename(inputfile))
+    listofslcio = string.join(runonslcio, ' ')
+    
+    finalXML = "marlinxml.xml"
+    
+    res = PrepareXMLFile(finalXML,self.inputXML,listofslcio)
+    if not res:
+      self.log.error('Something went wrong with XML generation')
+      return S_ERROR('Something went wrong with XML generation')
+    
     
     return S_OK('Marlin %s Successful' %(self.applicationVersion))
 
