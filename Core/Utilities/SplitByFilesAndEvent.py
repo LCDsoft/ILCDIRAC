@@ -12,14 +12,14 @@ Created on Feb 10, 2010
 @author: sposs
 '''
 
-def SplitByFilesAndEvents(listoffiles,evtsperfile):
+def SplitByFilesAndEvents(listoffiles,evtsperjob):
   list = []
   startfromevt = 1
   for files in listoffiles:
     dict = {}
     dict['file']=files
     dict['startFrom'] = startfromevt
-    startfromevt+=evtsperfile
+    startfromevt+=evtsperjob
     startfromevt+=1
     list.append(dict)
   return list
