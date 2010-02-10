@@ -1,5 +1,5 @@
 # $HeadURL$
-# $Id : $
+# $Id$
 '''
 LCDDIRAC.Core.Utilities.PrepareSteeringFile
 
