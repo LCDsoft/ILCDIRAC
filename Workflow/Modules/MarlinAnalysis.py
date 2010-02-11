@@ -99,10 +99,16 @@ class MarlinAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     if(os.path.exists("MarlinLibs")):
       if os.environ.has_key('MARLIN_DLL'):
-        script.write('export MARLIN_DLL=MarlinLibs/libLCFIVertex.so:MarlinLibs/libMarlinReco.so:MarlinLibs/libPandoraPFA.so:MarlinLibs/libSiliconDigi.so:MarlinLibs/libCEDViewer.so:MarlinLibs/libOverlay.so:MarlinLibs/libMarlinTPC.so%s'%os.environ['MARLIN_DLL'])
+        marlindll = ""
+        for d in os.listdir("MarlinLibs"):
+          marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
+        script.write('export MARLIN_DLL=%s:%s'%marlindll%os.environ['MARLIN_DLL'])
       else:
-        script.write('export MARLIN_DLL=MarlinLibs')
-    
+        marlindll = ""
+        for d in os.listdir("MarlinLibs"):
+          marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
+        script.write('export MARLIN_DLL=%s:'%marlindll)
+          
     if os.environ.has_key('LD_LIBRARY_PATH'):
         script.write('export LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
     else:
