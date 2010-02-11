@@ -115,7 +115,7 @@ def CheckInstallSoftware(app,config,area):
   """
   appName    = app[0]
   appVersion = app[1]
-  app_tar = DIRAC.gConfig.getValue('/AvailableTarBalls/%s/%s/%s'%(config,appName,appVersion),'')
+  app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s'%(config,appName,appVersion),'')
   if not app_tar:
     DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
     return False
