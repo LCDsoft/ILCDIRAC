@@ -97,11 +97,24 @@ class MarlinAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    if(os.path.exists("lib")):
-      if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('export LD_LIBRARY_PATH=lib:%s'%os.environ['LD_LIBRARY_PATH'])
+    if(os.path.exists("MarlinLibs")):
+      if os.environ.has_key('MARLIN_DLL'):
+        script.write('export MARLIN_DLL=MarlinLibs/libLCFIVertex.so:MarlinLibs/libMarlinReco.so:MarlinLibs/libPandoraPFA.so:MarlinLibs/libSiliconDigi.so:MarlinLibs/libCEDViewer.so:MarlinLibs/libOverlay.so:MarlinLibs/libMarlinTPC.so%s'%os.environ['MARLIN_DLL'])
       else:
-        script.write('export LD_LIBRARY_PATH=lib')
+        script.write('export MARLIN_DLL=MarlinLibs')
+    
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+        script.write('export LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
+    else:
+        script.write('export LD_LIBRARY_PATH=./')
+        
+    if (os.path.exists("MarlinLibs/Marlin")):
+      if (os.path.exists(finalXML)):
+        #check
+        script.write('./MarlinLibs/Marlin -c $1')
+        #real run
+        script.write('./MarlinLibs/Marlin $1')
+        
     
     ###Here fill the blanks
     
@@ -115,7 +128,7 @@ class MarlinAnalysis(ModuleBase):
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
 
     os.chmod(scriptName,0755)
-    comm = 'sh -c "./%s"' %scriptName
+    comm = 'sh -c "./%s %s"' %scriptName %finalXML
     self.setApplicationStatus('Marlin %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
     self.stdError = ''
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
