@@ -18,7 +18,6 @@ from DIRAC                                                import S_OK, S_ERROR, 
 import DIRAC
 
 
-
 class MarlinAnalysis(ModuleBase):
   """ Define the Marlin analysis part of the workflow
   """
@@ -102,7 +101,7 @@ class MarlinAnalysis(ModuleBase):
         marlindll = ""
         for d in os.listdir("MarlinLibs"):
           marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
-        script.write('export MARLIN_DLL=%s:%s'%marlindll%os.environ['MARLIN_DLL'])
+        script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
       else:
         marlindll = ""
         for d in os.listdir("MarlinLibs"):
@@ -120,10 +119,7 @@ class MarlinAnalysis(ModuleBase):
         script.write('./MarlinLibs/Marlin -c $1')
         #real run
         script.write('./MarlinLibs/Marlin $1')
-        
-    
-    ###Here fill the blanks
-    
+            
     script.write('declare -x appstatus=$?\n')
     script.write('where\n')
     script.write('quit\n')
