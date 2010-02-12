@@ -173,7 +173,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('#####################################################################\n')
       #if(os.path.exists(sharedArea+"/initILCSOFT.sh")):
       #    script.write("%s/initILCSOFT.sh"%sharedArea)
-      script.write("g4releases=%s/ilcsoft\n"%(sharedArea))
+      script.write("g4releases=lddlib\n")#%(sharedArea))
       script.write("G4SYSTEM=Linux-g++\n")
       script.write("G4INSTALL=$g4releases/share/$g4version\n")
       script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
