@@ -4,8 +4,10 @@
 LCDDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
 Created on Feb 9, 2010
+Modified on Feb 10, 2010
 
 @author: sposs
+@author: pmajewsk
 '''
 import os,sys,re,string
  
@@ -101,18 +103,43 @@ class MarlinAnalysis(ModuleBase):
         marlindll = ""
         for d in os.listdir("MarlinLibs"):
           marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
-        script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
+        #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
+        marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
         marlindll = ""
         for d in os.listdir("MarlinLibs"):
           marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
-        script.write('export MARLIN_DLL=%s:'%marlindll)
+        #script.write('export MARLIN_DLL=%s:'%marlindll)
+        marlindll="%s"%(marlindll)
+
+    #user libs
+    userlib = ""
+    if(os.path.exists("lib")):      
+      for d in os.listdir("lib"):
+          userlib = userlib + "lib/%s"%d + ":" 
+      
+    temp=marlindll.split(":")
+    temp2=userlib.split(":")
+    
+    for x in temp2:
+      try:
+        temp.remove(x)
+      except:
+        pass
+    userlib=""
+    for x in temp2:
+      userlib=userlib + x + ":"
+      
+    marlindll = "%s%s"%(marlindll,userlib)
+    
+    if (marlindll.__len__() != 0):
+      script.write('export MARLIN_DLL=%s:'%marlindll)
           
     if os.environ.has_key('LD_LIBRARY_PATH'):
         script.write('export LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
     else:
         script.write('export LD_LIBRARY_PATH=./')
-        
+                 
     if (os.path.exists("MarlinLibs/Marlin")):
       if (os.path.exists(finalXML)):
         #check
