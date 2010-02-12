@@ -14,8 +14,8 @@ from DIRAC.Core.Workflow.Step                       import *
 from DIRAC.Core.Workflow.Workflow                   import *
 from DIRAC.Core.Workflow.WorkflowReader             import *
 from DIRAC.Interfaces.API.Job                       import Job
-from DIRAC.Core.Utilities.File                      import makeGuid
-from DIRAC.Core.Utilities.List                      import uniqueElements
+#from DIRAC.Core.Utilities.File                      import makeGuid
+#from DIRAC.Core.Utilities.List                      import uniqueElements
 from DIRAC                                          import gConfig
  
 COMPONENT_NAME='/WorkflowLib/API/LCDJob' 
@@ -51,7 +51,7 @@ class LCDJob(Job):
        @param optionsFiles: Path to steering file
        @type optionsFiles: string or list
        @param inputStdhep: Input stdhep (if a subset of the overall input data for a given job is required)
-       @type inputStdhep: single LFN or list of LFNs
+       @type inputStdhep: single LFN
        @param detectorModel: Mokka detector model to use (if different from steering file)
        @type detectorModel: string
        @param nbOfEvents: Number of events to process in Mokka
