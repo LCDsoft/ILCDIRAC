@@ -23,85 +23,85 @@ class UsersAndGroups( AgentModule ):
     print self.getLFCRegisteredDNs()
     return S_OK()
   
-  def __generateProxy( self ):
-    self.log.info( "Generating proxy..." )
-    certLoc = Locations.getHostCertificateAndKeyLocation()
-    if not certLoc:
-      self.log.error( "Can not find certificate!" )
-      return False
-    chain = X509Chain.X509Chain()
-    result = chain.loadChainFromFile( certLoc[0] )
-    if not result[ 'OK' ]:
-      self.log.error( "Can not load certificate file", "%s : %s" % ( certLoc[0], result[ 'Message' ] ) )
-      return False
-    result = chain.loadKeyFromFile( certLoc[1] )
-    if not result[ 'OK' ]:
-      self.log.error( "Can not load key file", "%s : %s" % ( certLoc[1], result[ 'Message' ] ) )
-      return False
-    result = chain.generateProxyToFile( self.proxyLocation, 3600 )
-    if not result[ 'OK' ]:
-      self.log.error( "Could not generate proxy file", result[ 'Message' ] )
-      return False
-    self.log.info( "Proxy generated" )
-    return True
+#  def __generateProxy( self ):
+#    self.log.info( "Generating proxy..." )
+#    certLoc = Locations.getHostCertificateAndKeyLocation()
+#    if not certLoc:
+#      self.log.error( "Can not find certificate!" )
+#      return False
+#    chain = X509Chain.X509Chain()
+#    result = chain.loadChainFromFile( certLoc[0] )
+#    if not result[ 'OK' ]:
+#      self.log.error( "Can not load certificate file", "%s : %s" % ( certLoc[0], result[ 'Message' ] ) )
+#      return False
+#    result = chain.loadKeyFromFile( certLoc[1] )
+#    if not result[ 'OK' ]:
+#      self.log.error( "Can not load key file", "%s : %s" % ( certLoc[1], result[ 'Message' ] ) )
+#      return False
+#    result = chain.generateProxyToFile( self.proxyLocation, 3600 )
+#    if not result[ 'OK' ]:
+#      self.log.error( "Could not generate proxy file", result[ 'Message' ] )
+#      return False
+#    self.log.info( "Proxy generated" )
+#    return True
     
-  def getLFCRegisteredDNs( self ):
-    #Request a proxy
-    if gConfig._useServerCertificate():
-      if not self.__generateProxy():
-        return False
-    #Execute the call
-    cmdEnv = dict( os.environ )
-    cmdEnv['LFC_HOST'] = 'lfc-lcd.cern.ch'
-    if os.path.isfile( self.proxyLocation ):
-      cmdEnv[ 'X509_USER_PROXY' ] = self.proxyLocation
-    lfcDNs = []
-    try:
-      retlfc = Subprocess.systemCall( 0, ( 'lfc-listusrmap', ), env = cmdEnv )
-      if not retlfc['OK']:
-        self.log.fatal( 'Can not get LFC User List', retlfc['Message'] )
-        return retlfc
-      if retlfc['Value'][0]:
-        self.log.fatal( 'Can not get LFC User List', retlfc['Value'][2] )
-        return S_ERROR( "lfc-listusrmap failed" )
-      else:
-        for item in List.fromChar( retlfc['Value'][1], '\n' ):
-          dn = item.split( ' ', 1 )[1]
-          lfcDNs.append( dn )
-      return S_OK( lfcDNs )
-    finally:
-      if os.path.isfile( self.proxyLocation ):
-        self.log.info( "Destroying proxy..." )
-        os.unlink( self.proxyLocation )
+#  def getLFCRegisteredDNs( self ):
+#    #Request a proxy
+#    if gConfig._useServerCertificate():
+#      if not self.__generateProxy():
+#        return False
+#    #Execute the call
+#    cmdEnv = dict( os.environ )
+#    cmdEnv['LFC_HOST'] = 'lfc-lcd.cern.ch'
+#    if os.path.isfile( self.proxyLocation ):
+#      cmdEnv[ 'X509_USER_PROXY' ] = self.proxyLocation
+#    lfcDNs = []
+#    try:
+#      retlfc = Subprocess.systemCall( 0, ( 'lfc-listusrmap', ), env = cmdEnv )
+#      if not retlfc['OK']:
+#        self.log.fatal( 'Can not get LFC User List', retlfc['Message'] )
+#        return retlfc
+#      if retlfc['Value'][0]:
+#        self.log.fatal( 'Can not get LFC User List', retlfc['Value'][2] )
+#        return S_ERROR( "lfc-listusrmap failed" )
+#      else:
+#        for item in List.fromChar( retlfc['Value'][1], '\n' ):
+#          dn = item.split( ' ', 1 )[1]
+#          lfcDNs.append( dn )
+#      return S_OK( lfcDNs )
+#    finally:
+#      if os.path.isfile( self.proxyLocation ):
+#        self.log.info( "Destroying proxy..." )
+#        os.unlink( self.proxyLocation )
 
-  def checkLFCRegisteredUsers( self, usersData ):
-    self.log.info( "Checking LFC registered users" )
-    usersToBeRegistered = {}
-    result = self.getLFCRegisteredDNs()
-    if not result[ 'OK' ]:
-      self.log.error( "Could not get a list of registered DNs from LFC", result[ 'Message' ] )
-      return result
-    lfcDNs = result[ 'Value' ]
-    for user in usersData:
-      if usersData[ user ][ 'DN' ] not in lfcDNs:
-        self.log.info( 'DN %s need to be registered in LFC for user %s' % ( usersData[user]['DN'], user ) )
-        if user not in usersToBeRegistered:
-          usersToBeRegistered[ user ] = []
-        usersToBeRegistered[ user ].append( usersData[user]['DN'] )
-
-    address = self.am_getOption( 'MailTo', 'lhcb-vo-admin@cern.ch' )
-    fromAddress = self.am_getOption( 'mailFrom', 'Joel.Closier@cern.ch' )
-    if usersToBeRegistered:
-      subject = 'New LFC Users found'
-      self.log.info( subject, ", ".join( usersToBeRegistered ) )
-      body = 'Command to add new entries into LFC: \n'
-      body += 'login to volhcb11 and run : \n'
-      body += 'source /afs/cern.ch/lhcb/software/releases/LBSCRIPTS/prod/InstallArea/scripts/LbLogin.csh \n\n'
-      for lfcuser in usersToBeRegistered:
-        for lfc_dn in usersToBeRegistered[lfcuser]:
-          body += 'add_DN_LFC --userDN="' + lfc_dn.strip() + '" --nickname=' + lfcuser + '\n'
-
-    NotificationClient().sendMail( address, 'UsersAndGroupsAgent: %s' % subject, body, fromAddress )
+#  def checkLFCRegisteredUsers( self, usersData ):
+#    self.log.info( "Checking LFC registered users" )
+#    usersToBeRegistered = {}
+#    result = self.getLFCRegisteredDNs()
+#    if not result[ 'OK' ]:
+#      self.log.error( "Could not get a list of registered DNs from LFC", result[ 'Message' ] )
+#      return result
+#    lfcDNs = result[ 'Value' ]
+#    for user in usersData:
+#      if usersData[ user ][ 'DN' ] not in lfcDNs:
+#        self.log.info( 'DN %s need to be registered in LFC for user %s' % ( usersData[user]['DN'], user ) )
+#        if user not in usersToBeRegistered:
+#          usersToBeRegistered[ user ] = []
+#        usersToBeRegistered[ user ].append( usersData[user]['DN'] )
+#
+#    address = self.am_getOption( 'MailTo', 'lcd-vo-admin@cern.ch' )
+#    fromAddress = self.am_getOption( 'mailFrom', 'stephane.poss@cern.ch' )
+#    if usersToBeRegistered:
+#      subject = 'New LFC Users found'
+#      self.log.info( subject, ", ".join( usersToBeRegistered ) )
+#      body = 'Command to add new entries into LFC: \n'
+#      body += 'login to volcd01 and run : \n'
+#      body += 'source /afs/cern.ch/lhcb/software/releases/LBSCRIPTS/prod/InstallArea/scripts/LbLogin.csh \n\n'
+#      for lfcuser in usersToBeRegistered:
+#        for lfc_dn in usersToBeRegistered[lfcuser]:
+#          body += 'add_DN_LFC --userDN="' + lfc_dn.strip() + '" --nickname=' + lfcuser + '\n'
+#
+#    NotificationClient().sendMail( address, 'UsersAndGroupsAgent: %s' % subject, body, fromAddress )
 
   def execute( self ):
 
@@ -278,9 +278,9 @@ class UsersAndGroups( AgentModule ):
     self.log.info( "Configuration committed" )
 
     #LFC Check
-    if self.am_getOption( "LFCCheckEnabled", True ):
-      result = self.checkLFCRegisteredUsers( usersData )
-      if not result[ 'OK' ]:
-        return result
+    #if self.am_getOption( "LFCCheckEnabled", True ):
+    #  result = self.checkLFCRegisteredUsers( usersData )
+    #  if not result[ 'OK' ]:
+    #    return result
 
     return S_OK()
