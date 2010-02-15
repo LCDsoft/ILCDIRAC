@@ -12,11 +12,11 @@ Modified on Feb 10, 2010
 import os,sys,re,string
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from DIRAC.Core.DISET.RPCClient                           import RPCClient
+#from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from LCDDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation import MySiteRoot
+#from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation import MySiteRoot
 from LCDDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareXMLFile
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                import S_OK, S_ERROR, gLogger
 import DIRAC
 
 
@@ -132,7 +132,7 @@ class MarlinAnalysis(ModuleBase):
       
     marlindll = "%s%s"%(marlindll,userlib)
     
-    if (marlindll.__len__() != 0):
+    if (len(marlindll) != 0):
       script.write('export MARLIN_DLL=%s:'%marlindll)
           
     if os.environ.has_key('LD_LIBRARY_PATH'):
