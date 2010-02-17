@@ -173,24 +173,24 @@ class MokkaAnalysis(ModuleBase):
       script.write('#####################################################################\n')
       #if(os.path.exists(sharedArea+"/initILCSOFT.sh")):
       #    script.write("%s/initILCSOFT.sh"%sharedArea)
-      script.write("g4releases=lddlib\n")#%(sharedArea))
-      script.write("G4SYSTEM=Linux-g++\n")
-      script.write("G4INSTALL=$g4releases/share/$g4version\n")
-      script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
-      script.write('G4LEDATA="$g4releases/sl4/g4data/g4dataEMLOW"\n')
-      script.write('G4NEUTRONHPDATA="$g4releases/sl4/g4data/g4dataNDL"\n')
-      script.write('G4LEVELGAMMADATA="$g4releases/sl4/g4data/g4dataPhotonEvap"\n')
-      script.write('G4RADIOACTIVEDATA="$g4releases/sl4/g4data/g4dataRadiativeDecay"\n')
+      script.write("declare -x g4releases=./lddlib\n")#%(sharedArea))
+      script.write("declare -x G4SYSTEM=Linux-g++\n")
+      script.write("declare -x G4INSTALL=$g4releases/share/$g4version\n")
+      #script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
+      script.write('declare -x G4LEDATA="$g4releases/sl4/g4data/g4dataEMLOW"\n')
+      script.write('declare -x G4NEUTRONHPDATA="$g4releases/sl4/g4data/g4dataNDL"\n')
+      script.write('declare -x G4LEVELGAMMADATA="$g4releases/sl4/g4data/g4dataPhotonEvap"\n')
+      script.write('declare -x G4RADIOACTIVEDATA="$g4releases/sl4/g4data/g4dataRadiativeDecay"\n')
       ###No such data on the GRID (???)
       #script.write('G4ELASTICDATA="$g4releases/share/data/G4ELASTIC1.1"\n')
-      script.write('G4ABLADATA="$g4releases/sl4/g4data/g4dataABLA"\n')
-      script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
-      if(os.path.exists("lib")):
+      script.write('declare -x G4ABLADATA="$g4releases/sl4/g4data/g4dataABLA"\n')
+      #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
+      if(os.path.exists("./lib")):
         if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('export LD_LIBRARY_PATH=lib:lddlib:%s'%os.environ['LD_LIBRARY_PATH'])
+          script.write('declare -x LD_LIBRARY_PATH=./lib:./lddlib:%s'%os.environ['LD_LIBRARY_PATH'])
         else:
-          script.write('export LD_LIBRARY_PATH=lib:lddlib')
-      script.write("export PATH=lddlib:%s"%os.environ['PATH'])
+          script.write('declare -x LD_LIBRARY_PATH=./lib:./lddlib')
+      script.write("declare -x PATH=./lddlib:%s"%os.environ['PATH'])
       comm = "./mokkadbscripts/mokka-wrapper.sh %s"%mokkasteer
       print "Command : %s"%(comm)
       script.write(comm)
