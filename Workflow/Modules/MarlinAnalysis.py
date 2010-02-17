@@ -139,7 +139,18 @@ class MarlinAnalysis(ModuleBase):
         script.write('declare -x LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
     else:
         script.write('declare -x LD_LIBRARY_PATH=./')
-                 
+    script.write('echo =============================\n')
+    script.write('echo LD_LIBRARY_PATH is\n')
+    script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
+    script.write('echo =============================\n')
+    script.write('echo PATH is\n')
+    script.write('echo $PATH | tr ":" "\n"\n')
+    script.write('echo =============================\n')
+    script.write('echo MARLIN_DLL is\n')
+    script.write('echo $MARLIN_DLL | tr ":" "\n"\n')
+    script.write('env | sort >> localEnv.log\n')      
+    script.write('echo =============================\n')
+
     if (os.path.exists("MarlinLibs/Marlin")):
       if (os.path.exists(finalXML)):
         #check

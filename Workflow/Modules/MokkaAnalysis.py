@@ -191,6 +191,16 @@ class MokkaAnalysis(ModuleBase):
         else:
           script.write('declare -x LD_LIBRARY_PATH=./lib:./lddlib')
       script.write("declare -x PATH=./lddlib:%s"%os.environ['PATH'])
+      
+      script.write('echo =============================\n')
+      script.write('echo LD_LIBRARY_PATH is\n')
+      script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
+      script.write('echo =============================\n')
+      script.write('echo PATH is\n')
+      script.write('echo $PATH | tr ":" "\n"\n')
+      script.write('env | sort >> localEnv.log\n')      
+      script.write('echo =============================\n')
+      
       comm = "./mokkadbscripts/mokka-wrapper.sh %s"%mokkasteer
       print "Command : %s"%(comm)
       script.write(comm)
