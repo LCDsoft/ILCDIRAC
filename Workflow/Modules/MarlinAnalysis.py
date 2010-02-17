@@ -133,12 +133,12 @@ class MarlinAnalysis(ModuleBase):
     marlindll = "%s%s"%(marlindll,userlib)
     
     if (len(marlindll) != 0):
-      script.write('export MARLIN_DLL=%s:'%marlindll)
+      script.write('declare -x MARLIN_DLL=%s:'%marlindll)
           
     if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('export LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
+        script.write('declare -x LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
     else:
-        script.write('export LD_LIBRARY_PATH=./')
+        script.write('declare -x LD_LIBRARY_PATH=./')
                  
     if (os.path.exists("MarlinLibs/Marlin")):
       if (os.path.exists(finalXML)):
