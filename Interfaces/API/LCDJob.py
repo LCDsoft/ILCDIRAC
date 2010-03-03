@@ -138,7 +138,7 @@ class LCDJob(Job):
     if(dbslice):
       stepInstance.setValue("dbSlice",dbslice)
     stepInstance.setValue("applicationLog",logName)
-    currentApp = "Mokka.%s"appVersion
+    currentApp = "Mokka.%s"%appVersion
     swPackages = 'SoftwarePackages'
     description='LCD Software Packages to be installed'
     if not self.workflow.findParameter(swPackages):
@@ -235,7 +235,7 @@ class LCDJob(Job):
     stepInstance.setValue("inputGEAR",gearfile)
    
     
-    currentApp = "Marlin.%s"appVersion
+    currentApp = "Marlin.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
     description='LCD Software Packages to be installed'
