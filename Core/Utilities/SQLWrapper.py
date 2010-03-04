@@ -23,6 +23,9 @@ class SQLWrapper:
       self.MokkaDumpFile = "%s/%s"%(softwareDir,self.MokkaDumpFile)
     else:
       self.MokkaDumpFile = "./"+os.path.basename(dumpfile)
+    if not os.environ.has_key('MOKKA_DUMP_FILE'):
+      os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
+      
     self.MokkaTMPDir = ''
     self.softDir = softwareDir
         
