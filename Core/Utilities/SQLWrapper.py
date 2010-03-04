@@ -17,6 +17,8 @@ import os,sys,re, tempfile
 class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql'):
     """Set initial variables"""
+    if(len(dumpfile)<1):
+      dumpfile='CLICMokkaDB.sql'
     self.MokkaDumpFile = os.path.basename(dumpfile)
       
     self.MokkaTMPDir = ''
@@ -38,6 +40,11 @@ class SQLWrapper:
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
     DIRAC.gLogger.verbose('setup local mokka database')
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+      os.environ['LD_LIBRARY_PATH']='./mysql4grid/lib64/mysql:%s'%os.environ['LD_LIBRARY_PATH']
+    else:
+      os.environ['LD_LIBRARY_PATH']='./mysql4grid/lib64/mysql'
+    os.environ['PATH']='./mysql4grid/bin:%s'%os.environ['PATH']
     comm = 'mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
