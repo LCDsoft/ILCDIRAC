@@ -18,9 +18,9 @@ class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
     """Set initial variables"""
     if(len(dumpfile)<1):
-      dumpfile= softwareDir+'CLICMokkaDB.sql'
+      dumpfile= 'CLICMokkaDB.sql'
     self.MokkaDumpFile = os.path.basename(dumpfile)
-    
+    self.MokkaDumpFile = "%s/%s"%(softwareDir,self.MokkaDumpFile)
     self.MokkaTMPDir = ''
     self.softDir = softwareDir
         
