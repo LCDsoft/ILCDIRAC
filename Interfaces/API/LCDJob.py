@@ -131,7 +131,7 @@ class LCDJob(Job):
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Mokka',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
-    tepInstance.setValue("steeringFile",steeringFile)
+    stepInstance.setValue("steeringFile",steeringFile)
     stepInstance.setValue("stdhepFile",inputStdhep)
     if(detectorModel):
       stepInstance.setValue("detectorModel",detectorModel)
