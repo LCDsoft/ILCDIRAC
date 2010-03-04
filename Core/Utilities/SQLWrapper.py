@@ -42,6 +42,9 @@ class SQLWrapper:
                        
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
+    ##go to software directory to be able to run, thanks to mysql-local-db-setup.sh
+    initialDir= os.getcwd()
+    os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s'%(self.softDir,os.environ['LD_LIBRARY_PATH'])
@@ -138,14 +141,15 @@ class SQLWrapper:
       return S_ERROR('mysql Exited With Status %s' %(status))
     # Still have to set the application status e.g. user job case.
     #self.setApplicationStatus('mysql client %s Successful' %(self.applicationVersion))
-        
+    os.chdir(initialDir)
     #return S_OK('Mokka-wrapper %s Successful' %(self.applicationVersion))
     return S_OK('OK')
     
     #############################################################################
   def mysqlCleanUp(self):
     """Does mysql cleanup command. Remove socket and tmpdir with mysql db."""
-        
+    currentdir = os.getcwd()
+    os.chdir(self.softDir)
     DIRAC.gLogger.verbose('clean up db')
     #for now:
     MySQLcleanUpComm = self.MokkaTMPDir + self.UID_TMP + '/mysql-cleanup.sh'
@@ -178,6 +182,7 @@ class SQLWrapper:
       except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
         return S_ERROR('Removing tmp dir failed')
+      os.chdir(currentdir)
       return S_OK('OK')
     #############################################################################
         
