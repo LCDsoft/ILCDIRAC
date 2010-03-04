@@ -14,7 +14,7 @@ import os,sys,re,string
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from LCDDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-#from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation import MySiteRoot
+from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from LCDDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareXMLFile
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 import DIRAC
@@ -79,6 +79,17 @@ class MarlinAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
+    
+    marlinDir = 'MarlinLibs'
+    mySoftwareRoot = ''
+    localArea = LocalArea()
+    sharedArea = SharedArea()
+    if os.path.exists('%s%s%s' %(localArea,os.sep,marlinDir)):
+      mySoftwareRoot = localArea
+    if os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
+      mySoftwareRoot = sharedArea
+    
+    
     runonslcio = []
     for inputfile in self.inputSLCIO:
       runonslcio.append(os.path.basename(inputfile))
@@ -102,21 +113,21 @@ class MarlinAnalysis(ModuleBase):
       if os.environ.has_key('MARLIN_DLL'):
         marlindll = ""
         for d in os.listdir("MarlinLibs"):
-          marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
+          marlindll = mySoftwareRoot+ '/' + marlindll + "MarlinLibs/%s"%d + ":" 
         #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
         marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
         marlindll = ""
         for d in os.listdir("MarlinLibs"):
-          marlindll = marlindll + "MarlinLibs/%s"%d + ":" 
+          marlindll = mySoftwareRoot+ '/' + marlindll + "MarlinLibs/%s"%d + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
         marlindll="%s"%(marlindll)
 
     #user libs
     userlib = ""
-    if(os.path.exists("lib")):      
+    if(os.path.exists("./lib")):      
       for d in os.listdir("lib"):
-          userlib = userlib + "lib/%s"%d + ":" 
+          userlib = userlib + "./lib/%s"%d + ":" 
       
     temp=marlindll.split(":")
     temp2=userlib.split(":")
@@ -133,12 +144,12 @@ class MarlinAnalysis(ModuleBase):
     marlindll = "%s%s"%(marlindll,userlib)
     
     if (len(marlindll) != 0):
-      script.write('declare -x MARLIN_DLL=%s:'%marlindll)
+      script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
           
     if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('declare -x LD_LIBRARY_PATH=./:%s'%os.environ['LD_LIBRARY_PATH'])
+        script.write('declare -x LD_LIBRARY_PATH=./:%s\n'%os.environ['LD_LIBRARY_PATH'])
     else:
-        script.write('declare -x LD_LIBRARY_PATH=./')
+        script.write('declare -x LD_LIBRARY_PATH=./\n')
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
@@ -151,12 +162,12 @@ class MarlinAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
 
-    if (os.path.exists("MarlinLibs/Marlin")):
+    if (os.path.exists("%s/MarlinLibs/Marlin"%mySoftwareRoot)):
       if (os.path.exists(finalXML)):
         #check
-        script.write('./MarlinLibs/Marlin -c $1')
+        script.write('%s/MarlinLibs/Marlin -c $1'%mySoftwareRoot)
         #real run
-        script.write('./MarlinLibs/Marlin $1')
+        script.write('%s/MarlinLibs/Marlin $1'%mySoftwareRoot)
             
     script.write('declare -x appstatus=$?\n')
     script.write('where\n')
