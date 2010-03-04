@@ -10,7 +10,7 @@ Created on Jan 29, 2010
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from DIRAC.Core.DISET.RPCClient                          import RPCClient
 from LCDDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
-from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation  import MySiteRoot
+from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from LCDDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
 from LCDDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
@@ -132,17 +132,19 @@ class MokkaAnalysis(ModuleBase):
       self.log.info( "Executing Mokka %s"%(self.applicationVersion))
       self.log.info("Platform for job is %s" % ( self.systemConfig ) )
       self.log.info("Root directory for job is %s" % ( self.root ) )
-      sharedArea = MySiteRoot()
-      if sharedArea == '':
-        self.log.error( 'MySiteRoot Not found' )
-        return S_ERROR(' MySiteRoot Not Found')
 
-      #mySiteRoot=sharedArea
-      #self.log.info('MYSITEROOT is %s' %mySiteRoot)
-      #localArea = sharedArea
-      #if re.search(':',sharedArea):
-      #  localArea = string.split(sharedArea,':')[0]
-      #self.log.info('Setting local software area to %s' %localArea)
+      mokkaDir = 'lddlib'
+      mySoftwareRoot = ''
+      localArea = LocalArea()
+      sharedArea = SharedArea()
+      if os.path.exists('%s%s%s' %(localArea,os.sep,mokkaDir)):
+        mySoftwareRoot = localArea
+      if os.path.exists('%s%s%s' %(sharedArea,os.sep,mokkaDir)):
+        mySoftwareRoot = sharedArea
+        
+      if not mySoftwareRoot:
+        self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(mokkaDir,localArea,sharedArea))
+        return S_ERROR('Failed to discover software')
 
       ####Setup MySQL instance
       sqlwrapper = SQLWrapper(self.dbslice)
@@ -172,7 +174,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('#####################################################################\n')
       #if(os.path.exists(sharedArea+"/initILCSOFT.sh")):
       #    script.write("%s/initILCSOFT.sh"%sharedArea)
-      script.write("declare -x g4releases=./lddlib\n")#%(sharedArea))
+      script.write("declare -x g4releases=%s/%s\n" %(mySoftwareRoot,mokkaDir))
       script.write("declare -x G4SYSTEM=Linux-g++\n")
       script.write("declare -x G4INSTALL=$g4releases/share/$g4version\n")
       #script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
@@ -186,10 +188,10 @@ class MokkaAnalysis(ModuleBase):
       #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
       if(os.path.exists("./lib")):
         if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('declare -x LD_LIBRARY_PATH=./lib:./lddlib:%s'%os.environ['LD_LIBRARY_PATH'])
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s:%s'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
-          script.write('declare -x LD_LIBRARY_PATH=./lib:./lddlib')
-      script.write("declare -x PATH=./lddlib:%s"%os.environ['PATH'])
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s' %(mySoftwareRoot,mokkaDir))
+      script.write("declare -x PATH=%s/%s:%s"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
       
       script.write('echo =============================\n')
       script.write('echo LD_LIBRARY_PATH is\n')
@@ -200,7 +202,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('env | sort >> localEnv.log\n')      
       script.write('echo =============================\n')
       
-      comm = "./mokkadbscripts/mokka-wrapper.sh %s"%mokkasteer
+      comm = "%s/mokkadbscripts/mokka-wrapper.sh %s" %(mySoftwareRoot,mokkasteer)
       print "Command : %s"%(comm)
       script.write(comm)
       script.write('declare -x appstatus=$?\n')
