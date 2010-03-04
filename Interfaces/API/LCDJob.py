@@ -120,6 +120,7 @@ class LCDJob(Job):
     step.addModule(module)
     moduleInstance = step.createModuleInstance('MokkaAnalysis','Mokka')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("steeringFile","","string","","",False,False,"Name of the steering file"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
     step.addParameter(Parameter("detectorModel","","string","","",False,False,"Name of the detector model"))
     step.addParameter(Parameter("numberOfEvents",10000,"int","","",False,False,"Number of events to process"))
@@ -130,6 +131,7 @@ class LCDJob(Job):
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Mokka',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
+    tepInstance.setValue("steeringFile",steeringFile)
     stepInstance.setValue("stdhepFile",inputStdhep)
     if(detectorModel):
       stepInstance.setValue("detectorModel",detectorModel)
