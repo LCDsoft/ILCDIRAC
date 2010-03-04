@@ -17,16 +17,19 @@ import os,sys,re, tempfile
 class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
     """Set initial variables"""
+    self.MokkaDumpFile = ""
     if(len(dumpfile)<1):
       dumpfile= 'CLICMokkaDB.sql'
-    self.MokkaDumpFile = os.path.basename(dumpfile)
+      self.MokkaDumpFile = "%s/%s"%(softwareDir,self.MokkaDumpFile)
+    else:
+      self.MokkaDumpFile = "./"+os.path.basename(dumpfile)
     self.MokkaDumpFile = "%s/%s"%(softwareDir,self.MokkaDumpFile)
     self.MokkaTMPDir = ''
     self.softDir = softwareDir
         
     """create tmp dir and track it"""
     try:
-        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',os.getcwd())
+        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.softDir)
     except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
@@ -52,7 +55,7 @@ class SQLWrapper:
     resultTuple = self.result['Value']
 
     status = resultTuple[0]
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     failed = False
     if status != 0:
       self.log.error( "mokka-wrapper execution completed with errors:" )
@@ -60,7 +63,7 @@ class SQLWrapper:
     else:
       self.log.info( "mokka-wrapper execution completed successfully")
 
-    if failed==True:
+    if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
