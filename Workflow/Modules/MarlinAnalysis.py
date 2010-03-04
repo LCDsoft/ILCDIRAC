@@ -109,15 +109,14 @@ class MarlinAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
+    marlindll = ""
     if(os.path.exists("MarlinLibs")):
       if os.environ.has_key('MARLIN_DLL'):
-        marlindll = ""
         for d in os.listdir("MarlinLibs"):
           marlindll = mySoftwareRoot+ '/' + marlindll + "MarlinLibs/%s"%d + ":" 
         #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
         marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
-        marlindll = ""
         for d in os.listdir("MarlinLibs"):
           marlindll = mySoftwareRoot+ '/' + marlindll + "MarlinLibs/%s"%d + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
