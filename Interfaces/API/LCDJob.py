@@ -152,7 +152,7 @@ class LCDJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     return S_OK()
     
-  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio,logFile=''):
+  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio=None,logFile=''):
     """ Define Marlin step
      Example usage:
 
@@ -200,15 +200,15 @@ class LCDJob(Job):
       return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
 
     if(inputslcio):
-      if not type(inputslcio) in types.StringTypes:
+      if type(inputslcio) in types.StringTypes:
         inputslcio = [inputslcio]
       if not type(inputslcio)==type([]):
         return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
       for i in xrange(len(inputslcio)):
         inputslcio[i] = inputslcio[i].replace('LFN:','')
-      inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+      #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
       inputslcioStr = string.join(inputslcio,';') 
-      self.addToInputData.append(inputslcioStr)
+      self.addToInputSandbox.append(inputslcioStr)
       
     self.StepCount +=1
     stepName = 'RunMarlin'
@@ -220,9 +220,9 @@ class LCDJob(Job):
     module.setDescription('Marlin module definition')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
     module.setBody(body)
-    moduleInstance = step.createModuleInstance('MarlinAnalysis','Marlin')
     step = StepDefinition('Marlin')
     step.addModule(module)
+    moduleInstance = step.createModuleInstance('MarlinAnalysis','Marlin')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
