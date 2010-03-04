@@ -12,7 +12,7 @@ Created on Jan 29, 2010
 '''
 
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio):
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio=None):
   macfile = file("mokkamac.mac","w")
   macfile.write("/generator/generator %s\n"%stdhepFile)
   macfile.write("/run/beamOn %s\n"%nbOfRuns)
@@ -22,19 +22,25 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
   output = file(str(outputSteering),"w")
   for line in input:
     if line.find("/Mokka/init/initialMacroFile")<0:
-      if line.find("/Mokka/init/dbHost")<0:
+      if outputlcio:
         if line.find("lcioFilename")<0:
           if line.find("#")<0:
             if detectormodel:
               if line.find("/Mokka/init/detectorModel")<0:
                 output.write(line)
-            else:
+              else:
+                output.write(line)
+      else:
+        if line.find("#")<0:
+          if detectormodel:
+            if line.find("/Mokka/init/detectorModel")<0:
               output.write(line)
   if detectormodel:
     output.write("/Mokka/init/detectorModel %s"%detectormodel)
       
   output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
-  output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
+  if outputlcio:
+    output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
   output.write("/Mokka/init/startEventNumber %d"%startFrom)
   output.close()
   return True
