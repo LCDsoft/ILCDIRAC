@@ -15,13 +15,14 @@ import DIRAC
 import os,sys,re, tempfile
 
 class SQLWrapper:
-  def __init__(self,dumpfile='CLICMokkaDB.sql'):
+  def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
     """Set initial variables"""
     if(len(dumpfile)<1):
       dumpfile='CLICMokkaDB.sql'
     self.MokkaDumpFile = os.path.basename(dumpfile)
-      
+    
     self.MokkaTMPDir = ''
+    self.softDir = softwareDir
         
     """create tmp dir and track it"""
     try:
@@ -41,11 +42,11 @@ class SQLWrapper:
     """Setup mysql locally in local tmp dir """
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH']='./mysql4grid/lib64/mysql:%s'%os.environ['LD_LIBRARY_PATH']
+      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s'%(self.softDir,os.environ['LD_LIBRARY_PATH'])
     else:
-      os.environ['LD_LIBRARY_PATH']='./mysql4grid/lib64/mysql'
-    os.environ['PATH']='./mysql4grid/bin:%s'%os.environ['PATH']
-    comm = 'mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
+      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql'%self.softDir
+    os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
+    comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
     resultTuple = self.result['Value']
@@ -84,7 +85,7 @@ class SQLWrapper:
     #init db
     DIRAC.gLogger.verbose('add all privilages for user consult')
     #mysql command:
-    MySQLcomm = 'mysql4grid/bin/mysql'
+    MySQLcomm = 'mysql'
     MySQLparams = ' --socket ' + self.mysqlInstalDir + '/' + '/mysql.sock' + ' -e "GRANT ALL PRIVILEGES ON *.* TO \'consult\'@\'localhost\' IDENTIFIED BY \'consult\';"'
                 
     self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
