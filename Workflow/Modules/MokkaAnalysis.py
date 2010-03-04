@@ -129,7 +129,6 @@ class MokkaAnalysis(ModuleBase):
 
       cwd = os.getcwd()
       self.root = gConfig.getValue('/LocalSite/Root',cwd)
-      self.log.debug(self.version)
       self.log.info( "Executing Mokka %s"%(self.applicationVersion))
       self.log.info("Platform for job is %s" % ( self.systemConfig ) )
       self.log.info("Root directory for job is %s" % ( self.root ) )
