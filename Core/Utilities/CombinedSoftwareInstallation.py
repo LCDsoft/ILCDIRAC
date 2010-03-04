@@ -112,6 +112,7 @@ def MySiteRoot():
 def CheckInstallSoftware(app,config,area):
   """Will perform a local area installation
   """
+  os.chdir(area)
   appName    = app[0]
   appVersion = app[1]
   appName = appName.lower()
