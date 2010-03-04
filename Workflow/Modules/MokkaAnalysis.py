@@ -191,6 +191,12 @@ class MokkaAnalysis(ModuleBase):
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s\n' %(mySoftwareRoot,mokkaDir))
+      else:
+        if os.environ.has_key('LD_LIBRARY_PATH'):
+         script.write('declare -x LD_LIBRARY_PATH=./lddLib:%s\n'%os.environ['LD_LIBRARY_PATH'])
+        else:
+         script.write('declare -x LD_LIBRARY_PATH=./lddLib\n')          
+          
       script.write("declare -x PATH=%s/%s:%s\n"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
       
       script.write('echo =============================\n')
