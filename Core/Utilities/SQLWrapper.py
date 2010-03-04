@@ -18,7 +18,7 @@ class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
     """Set initial variables"""
     if(len(dumpfile)<1):
-      dumpfile='CLICMokkaDB.sql'
+      dumpfile= softwareDir+'CLICMokkaDB.sql'
     self.MokkaDumpFile = os.path.basename(dumpfile)
     
     self.MokkaTMPDir = ''
@@ -83,7 +83,7 @@ class SQLWrapper:
     self.mysqlInstalDir = self.MokkaTMPDir + self.UID_TMP 
         
     #init db
-    DIRAC.gLogger.verbose('add all privilages for user consult')
+    DIRAC.gLogger.verbose('add all privileges for user consult')
     #mysql command:
     MySQLcomm = 'mysql'
     MySQLparams = ' --socket ' + self.mysqlInstalDir + '/' + '/mysql.sock' + ' -e "GRANT ALL PRIVILEGES ON *.* TO \'consult\'@\'localhost\' IDENTIFIED BY \'consult\';"'
