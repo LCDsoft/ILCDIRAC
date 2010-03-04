@@ -133,7 +133,7 @@ class MokkaAnalysis(ModuleBase):
       self.log.info("Platform for job is %s" % ( self.systemConfig ) )
       self.log.info("Root directory for job is %s" % ( self.root ) )
 
-      mokkaDir = 'lddlib'
+      mokkaDir = 'lddLib'
       mySoftwareRoot = ''
       localArea = LocalArea()
       sharedArea = SharedArea()
