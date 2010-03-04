@@ -35,6 +35,8 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
           if detectormodel:
             if line.find("/Mokka/init/detectorModel")<0:
               output.write(line)
+          else:
+            output.write(line)
   if detectormodel:
     output.write("/Mokka/init/detectorModel %s"%detectormodel)
       
