@@ -76,12 +76,11 @@ class CombinedSoftwareInstallation:
       return DIRAC.S_ERROR( 'No architecture requested' )
     
     if not self.jobConfig in self.ceConfigs:
-      if not self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
-        DIRAC.gLogger.info( 'Assume locally running job' )
-        return DIRAC.S_OK()
-      else:
+      if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
         DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
         return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
+      else:
+        DIRAC.gLogger.info( 'Assume locally running job, will install software in /LocalSite/LocalArea=%s' %(self.localArea))
 
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
