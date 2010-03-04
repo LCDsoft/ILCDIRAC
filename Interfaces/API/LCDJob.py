@@ -74,9 +74,9 @@ class LCDJob(Job):
       return self._reportError('Expected string for stdhep file',__name__,**kwargs)
     if not type(detectorModel) in types.StringTypes:
       return self._reportError('Expected string for detector model',__name__,**kwargs)
-    if not type(nbOfEvents) in types.IntType:
+    if not type(nbOfEvents) == types.IntType:
       return self._reportError('Expected int for NbOfEvents',__name__,**kwargs)
-    if not type(startFrom) in types.IntType:
+    if not type(startFrom) == types.IntType:
       return self._reportError('Expected int for StartFrom',__name__,**kwargs)
     if not type(dbslice) in types.StringTypes:
       return self._reportError('Expected string for DB slice name',__name__,**kwargs)
@@ -122,8 +122,8 @@ class LCDJob(Job):
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
     step.addParameter(Parameter("detectorModel","","string","","",False,False,"Name of the detector model"))
-    step.addParameter(Parameter("numberOfEvents","","int","","",False,False,"Number of events to process"))
-    step.addParameter(Parameter("startFrom","","int","","",False,False,"Event in Stdhep file to start from"))
+    step.addParameter(Parameter("numberOfEvents",10000,"int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("startFrom",0,"int","","",False,False,"Event in Stdhep file to start from"))
     step.addParameter(Parameter("dbSlice","","string","","",False,False,"Name of the DB slice to use"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     
