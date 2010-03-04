@@ -188,10 +188,10 @@ class MokkaAnalysis(ModuleBase):
       #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
       if(os.path.exists("./lib")):
         if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s:%s'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
-          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s' %(mySoftwareRoot,mokkaDir))
-      script.write("declare -x PATH=%s/%s:%s"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s\n' %(mySoftwareRoot,mokkaDir))
+      script.write("declare -x PATH=%s/%s:%s\n"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
       
       script.write('echo =============================\n')
       script.write('echo LD_LIBRARY_PATH is\n')
