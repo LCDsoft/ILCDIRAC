@@ -91,7 +91,8 @@ class MarlinAnalysis(ModuleBase):
     
     
     runonslcio = []
-    for inputfile in self.inputSLCIO:
+    inputfilelist = self.inputSLCIO.split(";")
+    for inputfile in inputfilelist:
       runonslcio.append(os.path.basename(inputfile))
     listofslcio = string.join(runonslcio, ' ')
     
@@ -165,9 +166,9 @@ class MarlinAnalysis(ModuleBase):
     if (os.path.exists("%s/MarlinLibs/Executable/Marlin"%mySoftwareRoot)):
       if (os.path.exists(finalXML)):
         #check
-        script.write('%s/MarlinLibs/Executable/Marlin -c $1'%mySoftwareRoot)
+        script.write('%s/MarlinLibs/Executable/Marlin -c %s'%(mySoftwareRoot,finalXML))
         #real run
-        script.write('%s/MarlinLibs/Executable/Marlin $1'%mySoftwareRoot)
+        script.write('%s/MarlinLibs/Executable/Marlin %s'(%mySoftwareRoot,finalXML))
             
     script.write('declare -x appstatus=$?\n')
     #script.write('where\n')
