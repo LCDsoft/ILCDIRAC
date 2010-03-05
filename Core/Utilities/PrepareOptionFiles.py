@@ -49,7 +49,8 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
 
 def PrepareXMLFile(finalxml,inputXML,inputSLCIO):
   outxml = file(finalxml,'w')
-  for line in inputXML:
+  inputxml = file(inputXML,"r")
+  for line in inputxml:
     #if line.find("<!--")<0:
     if line.find("LCIOInputFiles")<0:
       outxml.write(line)
