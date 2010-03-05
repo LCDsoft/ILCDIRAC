@@ -50,10 +50,10 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
 def PrepareXMLFile(finalxml,inputXML,inputSLCIO):
   outxml = file(finalxml,'w')
   for line in inputXML:
-    if line.find("<!--")<0:
-      if line.find("LCIOInputFiles")<0:
-        outxml.write(line)
-      else:
-        outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>'%inputSLCIO)
+    #if line.find("<!--")<0:
+    if line.find("LCIOInputFiles")<0:
+      outxml.write(line)
+    else:
+      outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>'%inputSLCIO)
   outxml.close()
   return True
