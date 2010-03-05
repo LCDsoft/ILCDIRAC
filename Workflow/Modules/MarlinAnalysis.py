@@ -168,7 +168,7 @@ class MarlinAnalysis(ModuleBase):
         #check
         script.write('%s/MarlinLibs/Executable/Marlin -c %s'%(mySoftwareRoot,finalXML))
         #real run
-        script.write('%s/MarlinLibs/Executable/Marlin %s'(%mySoftwareRoot,finalXML))
+        script.write('%s/MarlinLibs/Executable/Marlin %s'%(mySoftwareRoot,finalXML))
             
     script.write('declare -x appstatus=$?\n')
     #script.write('where\n')
