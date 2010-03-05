@@ -110,16 +110,16 @@ class MarlinAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     marlindll = ""
-    if(os.path.exists("%s/MarlinLibs"%mySoftwareRoot)):
+    if(os.path.exists("%s/MarlinLibs/MARLIN_DLL"%mySoftwareRoot)):
       if os.environ.has_key('MARLIN_DLL'):
-        for d in os.listdir("%s/MarlinLibs"%mySoftwareRoot):
-          if not d=="Marlin":
-            marlindll = marlindll + "%s/MarlinLibs/%s"%(mySoftwareRoot,d) + ":" 
+        for d in os.listdir("%s/MarlinLibs/MARLIN_DLL"%mySoftwareRoot):
+          if d!="Marlin":
+            marlindll = marlindll + "%s/MarlinLibs/MARLIN_DLL/%s"%(mySoftwareRoot,d) + ":" 
         #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
         marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
-        for d in os.listdir("%s/MarlinLibs"%mySoftwareRoot):
-          marlindll = marlindll + "%s/MarlinLibs/%s"%(mySoftwareRoot,d) + ":" 
+        for d in os.listdir("%s/MarlinLibs/MARLIN_DLL"%mySoftwareRoot):
+          marlindll = marlindll + "%s/MarlinLibs/MARLIN_DLL/%s"%(mySoftwareRoot,d) + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
         marlindll="%s"%(marlindll)
 
@@ -147,9 +147,9 @@ class MarlinAnalysis(ModuleBase):
       script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
           
     if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('declare -x LD_LIBRARY_PATH=./:%s\n'%os.environ['LD_LIBRARY_PATH'])
+        script.write('declare -x LD_LIBRARY_PATH=%s/MarlinLibs/LDLibs:%s\n'%(mySoftwareRoot,os.environ['LD_LIBRARY_PATH']))
     else:
-        script.write('declare -x LD_LIBRARY_PATH=./\n')
+        script.write('declare -x LD_LIBRARY_PATH=%s/MarlinLibs/LDLibs\n'%(mySoftwareRoot))
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
@@ -162,17 +162,17 @@ class MarlinAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
 
-    if (os.path.exists("%s/MarlinLibs/Marlin"%mySoftwareRoot)):
+    if (os.path.exists("%s/MarlinLibs/Executable/Marlin"%mySoftwareRoot)):
       if (os.path.exists(finalXML)):
         #check
-        script.write('%s/MarlinLibs/Marlin -c $1'%mySoftwareRoot)
+        script.write('%s/MarlinLibs/Executable/Marlin -c $1'%mySoftwareRoot)
         #real run
-        script.write('%s/MarlinLibs/Marlin $1'%mySoftwareRoot)
+        script.write('%s/MarlinLibs/Executable/Marlin $1'%mySoftwareRoot)
             
     script.write('declare -x appstatus=$?\n')
-    script.write('where\n')
-    script.write('quit\n')
-    script.write('EOF\n')
+    #script.write('where\n')
+    #script.write('quit\n')
+    #script.write('EOF\n')
     script.write('exit $appstatus\n')
 
     script.close()
