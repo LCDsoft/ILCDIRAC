@@ -110,15 +110,16 @@ class MarlinAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     marlindll = ""
-    if(os.path.exists("MarlinLibs")):
+    if(os.path.exists("%s/MarlinLibs"%mySoftwareRoot)):
       if os.environ.has_key('MARLIN_DLL'):
-        for d in os.listdir("MarlinLibs"):
-          marlindll = mySoftwareRoot+ '/' + marlindll + "MarlinLibs/%s"%d + ":" 
+        for d in os.listdir("%s/MarlinLibs"%mySoftwareRoot):
+          if not d=="Marlin":
+            marlindll = marlindll + "%s/MarlinLibs/%s"%(mySoftwareRoot,d) + ":" 
         #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
         marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
-        for d in os.listdir("MarlinLibs"):
-          marlindll = mySoftwareRoot+ '/' + marlindll + "MarlinLibs/%s"%d + ":" 
+        for d in os.listdir("%s/MarlinLibs"%mySoftwareRoot):
+          marlindll = marlindll + "%s/MarlinLibs/%s"%(mySoftwareRoot,d) + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
         marlindll="%s"%(marlindll)
 
@@ -178,7 +179,7 @@ class MarlinAnalysis(ModuleBase):
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
 
     os.chmod(scriptName,0755)
-    comm = 'sh -c "./%s %s"' %scriptName %finalXML
+    comm = 'sh -c "./%s %s"' %(scriptName,finalXML)
     self.setApplicationStatus('Marlin %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
     self.stdError = ''
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
