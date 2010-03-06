@@ -93,9 +93,10 @@ class MarlinAnalysis(ModuleBase):
     #runonslcio = []
     #inputfilelist = self.inputSLCIO.split(";")
     #print "input file list ",inputfilelist
-    #for inputfile in inputfilelist:
-    #  runonslcio.append(os.path.basename(inputfile))
-    listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
+    listofslcio = ''
+    for inputfile in self.inputSLCIO:
+      listofslcio += listofslcio+" "+inputfile
+    #listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
     
     finalXML = "marlinxml.xml"
     
