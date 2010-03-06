@@ -202,6 +202,7 @@ class LCDJob(Job):
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
         inputslcio = [inputslcio]
+      print "input slcio",inputslcio
       if not type(inputslcio)==type([]):
         return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
       for i in xrange(len(inputslcio)):
