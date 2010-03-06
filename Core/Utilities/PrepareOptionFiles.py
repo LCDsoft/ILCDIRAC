@@ -55,6 +55,6 @@ def PrepareXMLFile(finalxml,inputXML,inputSLCIO):
     if line.find("LCIOInputFiles")<0:
       outxml.write(line)
     else:
-      outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>'%inputSLCIO)
+      outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>\n'%inputSLCIO)
   outxml.close()
   return True
