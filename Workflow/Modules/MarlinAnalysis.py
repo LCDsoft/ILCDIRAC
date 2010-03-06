@@ -90,12 +90,12 @@ class MarlinAnalysis(ModuleBase):
       mySoftwareRoot = sharedArea
     
     
-    runonslcio = []
-    inputfilelist = self.inputSLCIO.split(";")
-    print "input file list ",inputfilelist
-    for inputfile in inputfilelist:
-      runonslcio.append(os.path.basename(inputfile))
-    listofslcio = string.join(runonslcio, ' ')
+    #runonslcio = []
+    #inputfilelist = self.inputSLCIO.split(";")
+    #print "input file list ",inputfilelist
+    #for inputfile in inputfilelist:
+    #  runonslcio.append(os.path.basename(inputfile))
+    listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
     
     finalXML = "marlinxml.xml"
     
