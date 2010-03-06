@@ -202,16 +202,12 @@ class LCDJob(Job):
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
         inputslcio = [inputslcio]
-      print "input slcio",inputslcio
       if not type(inputslcio)==type([]):
         return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
-      print "input slcio",inputslcio
       for i in xrange(len(inputslcio)):
         inputslcio[i] = inputslcio[i].replace('LFN:','')
       #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
-      print "input slcio",inputslcio
       inputslcioStr = string.join(inputslcio,';')
-      print "input slcio",inputslcioStr
       self.addToInputSandbox.append(inputslcioStr)
       
     self.StepCount +=1
@@ -236,7 +232,7 @@ class LCDJob(Job):
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
-    stepInstance.setValue("inputSlcio",inputslcio)
+    stepInstance.setValue("inputSlcio",inputslcioStr)
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
    

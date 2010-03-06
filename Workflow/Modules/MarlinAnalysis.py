@@ -94,10 +94,10 @@ class MarlinAnalysis(ModuleBase):
     #runonslcio = []
     #inputfilelist = self.inputSLCIO.split(";")
     #print "input file list ",inputfilelist
-    listofslcio = ''
+    listofslcio = self.inputSLCIO.replace(";", " ")
     #for inputfile in self.inputSLCIO:
     #  listofslcio += listofslcio+" "+inputfile
-    listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
+    #listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
     
     finalXML = "marlinxml.xml"
     
