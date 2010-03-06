@@ -209,7 +209,9 @@ class LCDJob(Job):
       for i in xrange(len(inputslcio)):
         inputslcio[i] = inputslcio[i].replace('LFN:','')
       #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
-      inputslcioStr = string.join(inputslcio,';') 
+      print "input slcio",inputslcio
+      inputslcioStr = string.join(inputslcio,';')
+      print "input slcio",inputslcioStr
       self.addToInputSandbox.append(inputslcioStr)
       
     self.StepCount +=1
