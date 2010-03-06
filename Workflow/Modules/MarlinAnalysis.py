@@ -89,12 +89,14 @@ class MarlinAnalysis(ModuleBase):
     if os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
       mySoftwareRoot = sharedArea
     
-    print "input ",self.inputSLCIO
-    print "type ",type(self.inputSLCIO) 
-    #runonslcio = []
-    #inputfilelist = self.inputSLCIO.split(";")
+
+    runonslcio = []
+    inputfilelist = self.inputSLCIO.split(";")
+    for inputfile in inputfilelist:
+      runonslcio.append(os.path.basename(inputfile))
     #print "input file list ",inputfilelist
-    listofslcio = self.inputSLCIO.replace(";", " ")
+    #listofslcio = self.inputSLCIO.replace(";", " ")
+    listofslcio = string.join(runonslcio," ")
     #for inputfile in self.inputSLCIO:
     #  listofslcio += listofslcio+" "+inputfile
     #listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
