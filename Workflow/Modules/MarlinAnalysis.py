@@ -92,6 +92,7 @@ class MarlinAnalysis(ModuleBase):
     
     runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
+    print "input file list ",inputfilelist
     for inputfile in inputfilelist:
       runonslcio.append(os.path.basename(inputfile))
     listofslcio = string.join(runonslcio, ' ')
