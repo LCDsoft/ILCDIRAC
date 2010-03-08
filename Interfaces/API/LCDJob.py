@@ -208,7 +208,7 @@ class LCDJob(Job):
         inputslcio[i] = inputslcio[i].replace('LFN:','')
       inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
       inputslcioStr = string.join(inputslcio,';')
-      self.addToInputData.append(inputslcioStr)
+      self.addToInputSandbox.append(inputslcioStr)
       
     self.StepCount +=1
     stepName = 'RunMarlin'
