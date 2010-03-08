@@ -28,7 +28,7 @@ class MarlinAnalysis(ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.debug = True
-    self.log = gLogger.getSubLogger( "MokkaAnalysis" )
+    self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.inputSLCIO = ''
     self.inputXML=''
