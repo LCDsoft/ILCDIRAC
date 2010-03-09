@@ -17,6 +17,8 @@ import os, urllib
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 import tarfile
+from LCDDIRAC.Core.Utilities.DetectOS import NativeMachine
+natOS = NativeMachine()
 
 
 #SoftTarBallLFN = "/lcd/.../.../.../.../"
@@ -54,6 +56,8 @@ class CombinedSoftwareInstallation:
     self.jobConfig = ''
     if self.job.has_key( 'SystemConfig' ):
       self.jobConfig = self.job['SystemConfig']
+    else:
+      self.jobConfig = natOS.CMTSupportedConfig()[0]
 
     self.ceConfigs = []
     if self.ce.has_key('CompatiblePlatforms'):
