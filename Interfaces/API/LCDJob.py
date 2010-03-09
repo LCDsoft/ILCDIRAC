@@ -98,11 +98,11 @@ class LCDJob(Job):
 
     if(inputStdhep):
       inputStdhep = inputStdhep.replace("LFN:","")
-      self.addToInputData.append(inputStdhep)
+      self.addToInputSandbox.append(inputStdhep)
       
     if(dbslice):
       if(os.path.exists(dbslice)):
-        self.addToInputData.append(dbslice)
+        self.addToInputSandbox.append(dbslice)
       else:
         return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
 
