@@ -135,11 +135,7 @@ class SQLWrapper:
       failed = True
     else:
       self.log.info( "mysql client execution completed successfully")
-      
-    #test
-    mokatmpdir = "declare -x MOKKA_TMP_DIR=" + self.mysqlInstalDir
-    shellCall(0,mokatmpdir,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-
+   
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
