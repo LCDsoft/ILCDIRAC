@@ -83,7 +83,7 @@ class CombinedSoftwareInstallation:
 
     found_config = False
         
-    DIRAC.gLogger.info("Found ceConfigs %s"%string.join(self.ceConfigs,","))
+    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s"%(string.join(self.ceConfigs,","),self.jobConfig))
     res = DIRAC.gConfig.getSections('/Operations/AvailableTarBalls')
     if not res['OK']:
       return res
