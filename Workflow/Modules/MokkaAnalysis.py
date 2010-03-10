@@ -208,7 +208,8 @@ class MokkaAnalysis(ModuleBase):
       script.write('env | sort >> localEnv.log\n')      
       script.write('echo =============================\n')
       
-      comm = "%s/mokkadbscripts/mokka-wrapper.sh %s %s" %(mySoftwareRoot,mokkasteer)%sqlwrapper.MokkaTMPDir
+      #comm = "%s/mokkadbscripts/mokka-wrapper.sh %s %s" %(mySoftwareRoot,mokkasteer)%sqlwrapper.MokkaTMPDir
+      comm = "%s/mokkadbscripts/mokka-wrapper.sh %s %s" %(mokkasteer,sqlwrapper.MokkaTMPDir)
       print "Command : %s"%(comm)
       script.write(comm)
       script.write('declare -x appstatus=$?\n')
