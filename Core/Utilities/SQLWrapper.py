@@ -61,7 +61,7 @@ class SQLWrapper:
     
     safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data  --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir)
     #comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
-    comm = "mysql_install_db  %s"%(safe_options)
+    comm = "mysql_install_db  %s"%(safe_options) 
     print "Executing %s"%comm
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
