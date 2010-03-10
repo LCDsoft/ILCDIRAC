@@ -90,7 +90,9 @@ class CombinedSoftwareInstallation:
     else:
       supported_systems = res['Value']
       for ceConfig in self.ceConfigs:
+        print "ce config %s"%ceConfig
         for supp_systems in supported_systems:
+          print "supported system %s"%supp_systems
           if ceConfig is supp_systems:
             self.jobConfig = ceConfig
             print "found system %s"%ceConfig
