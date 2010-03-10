@@ -58,12 +58,14 @@ class CombinedSoftwareInstallation:
       self.jobConfig = self.job['SystemConfig']
     else:
       self.jobConfig = natOS.CMTSupportedConfig()[0]
-
+      
     self.ceConfigs = []
     if self.ce.has_key('CompatiblePlatforms'):
       self.ceConfigs = self.ce['CompatiblePlatforms']
       if type(self.ceConfigs) == type(''):
         self.ceConfigs = [self.ceConfigs]
+    #else:
+    self.ceConfigs = natOS.CMTSupportedConfig()
 
     self.sharedArea = SharedArea()
     self.localArea  = LocalArea()
