@@ -42,7 +42,9 @@ class SQLWrapper:
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
     self.mysqlInstalDir = ''           
-                       
+  def getMokkaTMPDIR(self):
+    return self.MokkaTMPDir
+       
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
     ##go to software directory to be able to run, thanks to mysql-local-db-setup.sh
