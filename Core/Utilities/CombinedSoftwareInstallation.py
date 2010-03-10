@@ -80,25 +80,23 @@ class CombinedSoftwareInstallation:
     if not self.jobConfig:
       DIRAC.gLogger.error( 'No architecture requested' )
       return DIRAC.S_ERROR( 'No architecture requested' )
-    
+
+    found_config = False
+        
     DIRAC.gLogger.info("Found ceConfigs %s"%string.join(self.ceConfigs,","))
     res = DIRAC.gConfig.getSections('/Operations/AvailableTarBalls')
-    print res
-    
     if not res['OK']:
       return res
     else:
       supported_systems = res['Value']
       for ceConfig in self.ceConfigs:
-        print "ce config %s"%ceConfig
         for supp_systems in supported_systems:
-          print "supported system %s"%supp_systems
           if ceConfig == supp_systems:
             self.jobConfig = ceConfig
-            print "found system %s"%ceConfig
+            found_config=True
             break
           
-    if not self.jobConfig in self.ceConfigs:
+    if not found_config:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
         DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
         return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
