@@ -208,10 +208,12 @@ class MokkaAnalysis(ModuleBase):
       script.write('env | sort >> localEnv.log\n')      
       script.write('echo =============================\n')
       
+      ##Tear appart this mokka-wrapper
+      script.write('%s/%s/Mokka -hlocalhost:%s/mysql.sock $*'%(mySoftwareRoot,mokkasteer,sqlwrapper.getMokkaTMPDIR()))
       comm = "%s/mokkadbscripts/mokka-wrapper.sh %s %s\n" %(mySoftwareRoot,mokkasteer,sqlwrapper.getMokkaTMPDIR())
       
       print "Command : %s"%(comm)
-      script.write(comm)
+      #script.write(comm)
       script.write('declare -x appstatus=$?\n')
       #script.write('where\n')
       #script.write('quit\n')
