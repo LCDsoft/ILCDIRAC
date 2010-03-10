@@ -193,9 +193,9 @@ class MokkaAnalysis(ModuleBase):
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s\n' %(mySoftwareRoot,mokkaDir))
       else:
         if os.environ.has_key('LD_LIBRARY_PATH'):
-         script.write('declare -x LD_LIBRARY_PATH=./lddLib:%s\n'%os.environ['LD_LIBRARY_PATH'])
+         script.write('declare -x LD_LIBRARY_PATH=%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
-         script.write('declare -x LD_LIBRARY_PATH=./lddLib\n')          
+         script.write('declare -x LD_LIBRARY_PATH=%s/%s\n'%(mySoftwareRoot,mokkaDir))          
           
       script.write("declare -x PATH=%s/%s:%s\n"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
       
@@ -213,9 +213,9 @@ class MokkaAnalysis(ModuleBase):
       print "Command : %s"%(comm)
       script.write(comm)
       script.write('declare -x appstatus=$?\n')
-      script.write('where\n')
-      script.write('quit\n')
-      script.write('EOF\n')
+      #script.write('where\n')
+      #script.write('quit\n')
+      #script.write('EOF\n')
 
       script.write('exit $appstatus\n')
 
