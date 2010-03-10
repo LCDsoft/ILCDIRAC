@@ -42,6 +42,7 @@ class SQLWrapper:
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
     self.mysqlInstalDir = ''           
+    
   def getMokkaTMPDIR(self):
     return self.MokkaTMPDir
        
@@ -97,8 +98,9 @@ class SQLWrapper:
     #mysql command:
     MySQLcomm = 'mysql'
     MySQLparams = ' --socket ' + self.mysqlInstalDir + '/' + '/mysql.sock' + ' -e "GRANT ALL PRIVILEGES ON *.* TO \'consult\'@\'localhost\' IDENTIFIED BY \'consult\';"'
-                
-    self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    comm = MySQLcomm + MySQLparams
+    print "MySQLcomm %s"%comm
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
     resultTuple = self.result['Value']
 
@@ -124,8 +126,10 @@ class SQLWrapper:
     DIRAC.gLogger.verbose('test query to mysql')
     MySQLcomm = 'mysql'
     MySQLparams = ' --socket ' + self.mysqlInstalDir + '/' + '/mysql.sock' + ' -uconsult -pconsult -e "show databases;"'
-        
-    self.result = shellCall(0,MySQLcomm + MySQLparams,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    comm = MySQLcomm + MySQLparams
+    print "MySQLcomm %s"%comm
+         
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
     resultTuple = self.result['Value']
 
