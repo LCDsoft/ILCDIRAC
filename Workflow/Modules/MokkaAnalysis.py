@@ -250,9 +250,12 @@ class MokkaAnalysis(ModuleBase):
         return S_ERROR('Mokka Exited With Status %s' %(status))
 
       ###cleanup after putting some dirt...
+      #for now cleanup is executed by mokka-wrapper.sh on exit or kill
+      """
       result = sqlwrapper.mysqlCleanUp()
       if not result['OK']:
         return result
+      """
       # Still have to set the application status e.g. user job case.
       self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
       return S_OK('Mokka %s Successful' %(self.applicationVersion))
