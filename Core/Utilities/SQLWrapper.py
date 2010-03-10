@@ -54,9 +54,9 @@ class SQLWrapper:
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s'%(self.softDir,os.environ['LD_LIBRARY_PATH'])
+      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s'%(self.softDir,self.softDir,os.environ['LD_LIBRARY_PATH'])
     else:
-      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql'%self.softDir
+      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64'%(self.softDir,self.softDir)
     os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
     safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data  --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.MokkaTMPDir,self.MokkaTMPDir,self.MokkaTMPDir)
     #comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
@@ -80,7 +80,7 @@ class SQLWrapper:
       self.log.error( self.stdError )
       #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('SQLwrapper Exited With Status %s' %(status))
-      return S_ERROR('SQLwrapper Exited With Status %s' %(status))
+      #return S_ERROR('SQLwrapper Exited With Status %s' %(status))
     # Still have to set the application status e.g. user job case.
     #self.setApplicationStatus('mokka-wrapper %s Successful' %(self.applicationVersion))
     #return S_OK('mokka-wrapper %s Successful' %(self.applicationVersion))
