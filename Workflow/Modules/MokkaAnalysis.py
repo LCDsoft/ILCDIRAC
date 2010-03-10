@@ -209,7 +209,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('echo =============================\n')
       
       ##Tear appart this mokka-wrapper
-      script.write('%s/%s/Mokka -hlocalhost:%s/mysql.sock $*'%(mySoftwareRoot,mokkasteer,sqlwrapper.getMokkaTMPDIR()))
+      script.write('%s/%s/Mokka -hlocalhost:%s/mysql.sock %s'%(mySoftwareRoot,mokkaDir,sqlwrapper.getMokkaTMPDIR(),mokkasteer))
       comm = "%s/mokkadbscripts/mokka-wrapper.sh %s %s\n" %(mySoftwareRoot,mokkasteer,sqlwrapper.getMokkaTMPDIR())
       
       print "Command : %s"%(comm)
