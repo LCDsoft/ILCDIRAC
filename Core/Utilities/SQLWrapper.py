@@ -58,6 +58,7 @@ class SQLWrapper:
     else:
       os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64'%(self.softDir,self.softDir)
     os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
+    
     safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data  --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir)
     #comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
     comm = "mysql_install_db  %s"%(safe_options)
