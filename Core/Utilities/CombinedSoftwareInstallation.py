@@ -13,7 +13,7 @@ Created on Jan 15, 2010
 @author: sposs
 @aauthor: pmajewsk
 '''
-import os, urllib
+import os, urllib, string
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 import tarfile
@@ -81,6 +81,7 @@ class CombinedSoftwareInstallation:
       DIRAC.gLogger.error( 'No architecture requested' )
       return DIRAC.S_ERROR( 'No architecture requested' )
     
+    DIRAC.gLogger.info("Found ceConfigs %s"%string.join(self.ceConfigs,","))
     if not self.jobConfig in self.ceConfigs:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
         DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
