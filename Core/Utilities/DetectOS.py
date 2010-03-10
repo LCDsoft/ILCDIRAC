@@ -110,7 +110,7 @@ def getConfig(architecture, platformtype, compiler, debug=False):
         elif architecture == "amd64" :
             architecture = "x86_64"
         cmtconfig = "-".join([architecture, platformtype, compiler, "opt"])
-        if platformtype == "slc4" or platformtype == "slc3" or platformtype == "osx105":
+        if platformtype == "slc5" or platformtype == "slc4" or platformtype == "slc3" or platformtype == "osx105":
             if architecture in arch_runtime_compatiblity["ia32"] :
                 architecture = "ia32"
             elif architecture == "x86_64" :
