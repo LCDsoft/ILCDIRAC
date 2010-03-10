@@ -93,6 +93,7 @@ class CombinedSoftwareInstallation:
         for supp_systems in supported_systems:
           if ceConfig is supp_systems:
             self.jobConfig = ceConfig
+            print "found system %s"%ceConfig
             break
           
     if not self.jobConfig in self.ceConfigs:
