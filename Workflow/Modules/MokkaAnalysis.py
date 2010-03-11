@@ -186,6 +186,7 @@ class MokkaAnalysis(ModuleBase):
       #script.write('G4ELASTICDATA="$g4releases/share/data/G4ELASTIC1.1"\n')
       script.write('declare -x G4ABLADATA="$g4releases/sl4/g4data/g4dataABLA"\n')
       #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
+            
       if(os.path.exists("./lib")):
         if os.environ.has_key('LD_LIBRARY_PATH'):
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
@@ -246,7 +247,7 @@ class MokkaAnalysis(ModuleBase):
         self.log.error( "==================================\n StdError:\n" )
         self.log.error( self.stdError) 
         #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-        result = sqlwrapper.mysqlCleanUp()
+        #result = sqlwrapper.mysqlCleanUp()
         self.log.error('Mokka Exited With Status %s' %(status))
         return S_ERROR('Mokka Exited With Status %s' %(status))
 
@@ -257,7 +258,7 @@ class MokkaAnalysis(ModuleBase):
       if not result['OK']:
         return result
       """
-      result = sqlwrapper.mysqlCleanUp()
+      #result = sqlwrapper.mysqlCleanUp()
       # Still have to set the application status e.g. user job case.
       self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
       return S_OK('Mokka %s Successful' %(self.applicationVersion))
