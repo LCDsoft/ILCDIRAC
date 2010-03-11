@@ -97,7 +97,7 @@ class SQLWrapper:
     self.log.verbose( 'Execution command: %s' % ( command ) )
   
     outputFile = "mysqld_thread.log"
-    errorFiile = "mysqld_thread.err"
+    errorFile = "mysqld_thread.err"
     exeEnv = dict( os.environ )
     
     exeThread = ExecutionThread( spObject, command, outputFile, errorFile, exeEnv )
