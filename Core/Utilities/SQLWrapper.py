@@ -101,7 +101,7 @@ class SQLWrapper:
     ###changing root pass
     mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password %s"%(self.MokkaTMPDir,self.rootpass)
     print "running %s"%mysqladmincomm
-    self.result = shellCall(0,mysqldadmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     status = resultTuple[0]
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysqladmin execution is %s" % str( status ) )
