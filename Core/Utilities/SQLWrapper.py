@@ -14,6 +14,8 @@ from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
 import DIRAC
 import os,sys,re, tempfile, threading, time
 
+EXECUTION_RESULT = {}
+
 class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
     """Set initial variables"""
