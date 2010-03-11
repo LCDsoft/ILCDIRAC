@@ -110,8 +110,8 @@ class SQLWrapper:
     
     if not mysqldPID:
         return S_ERROR( 'Payload process could not start after 5 seconds' )
-    else:
-      return S_ERROR( 'Path to executable %s not found' % ( executable ) )
+    #else:
+     # return S_ERROR( 'Path to executable  not found')
 
     #mysqld_run = file("mysqld_run.sh","w")
     #mysqld_run.write("mysqld_safe %s &"%safe_options)
