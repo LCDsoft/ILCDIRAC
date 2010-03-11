@@ -10,9 +10,9 @@ Created on Feb 1, 2010
 '''
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
-from DIRAC.Core.Utilities.Subprocess import shellCall
+from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
 import DIRAC
-import os,sys,re, tempfile
+import os,sys,re, tempfile, threading
 
 class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
@@ -90,6 +90,18 @@ class SQLWrapper:
     ###Now run mysqld
     os.chdir("%s/mysql4grid"%(self.softDir))
     print "running mysqld_safe %s"%safe_options
+    
+    spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
+    command = 'mysqld_safe %s'%safe_options
+    self.log.verbose( 'Execution command: %s' % ( command ) )
+  
+    exeThread = ExecutionThread( spObject, command, outputFile, errorFile, exeEnv )
+    exeThread.start()
+    time.sleep( 5 )
+    mysqldPID = spObject.getChildPID()
+    
+    print "mysqld run with pid: %s"%mysqldPID
+    
     mysqld_run = file("mysqld_run.sh","w")
     mysqld_run.write("mysqld_safe %s &"%safe_options)
     mysqld_run.close()
@@ -294,3 +306,69 @@ class SQLWrapper:
       self.stdError += message
     #############################################################################
 
+class ExecutionThread( threading.Thread ):
+
+  #############################################################################
+  def __init__( self, spObject, cmd, stdoutFile, stderrFile, exeEnv ):
+    threading.Thread.__init__( self )
+    self.cmd = cmd
+    self.spObject = spObject
+    self.outputLines = []
+    
+    self.stdout = stdoutFile
+    self.stderr = stderrFile
+    self.exeEnv = exeEnv
+
+  #############################################################################
+  def run( self ):
+    # FIXME: why local intances of object variables are created?
+    cmd = self.cmd
+    spObject = self.spObject
+    start = time.time()
+    initialStat = os.times()
+    output = spObject.systemCall( cmd, env = self.exeEnv, callbackFunction = self.sendOutput, shell = True )
+    EXECUTION_RESULT['Thread'] = output
+    timing = time.time() - start
+    EXECUTION_RESULT['Timing'] = timing
+    finalStat = os.times()
+    EXECUTION_RESULT['CPU'] = []
+    for i in range( len( finalStat ) ):
+      EXECUTION_RESULT['CPU'].append( finalStat[i] - initialStat[i] )
+
+  #############################################################################
+  def getCurrentPID( self ):
+    return self.spObject.getChildPID()
+
+  #############################################################################
+  def sendOutput( self, stdid, line ):
+    if stdid == 0 and self.stdout:
+      outputFile = open( self.stdout, 'a+' )
+      print >> outputFile, line
+      outputFile.close()
+    elif stdid == 1 and self.stderr:
+      errorFile = open( self.stderr, 'a+' )
+      print >> errorFile, line
+      errorFile.close()
+    self.outputLines.append( line )
+    size = len( self.outputLines )
+    if size > self.maxPeekLines:
+      # reduce max size of output peeking
+      self.outputLines.pop( 0 )
+
+  #############################################################################
+  def getOutput( self, lines = 0 ):
+    if self.outputLines:
+      #restrict to smaller number of lines for regular
+      #peeking by the watchdog
+      # FIXME: this is multithread, thus single line would be better
+      if lines:
+        size = len( self.outputLines )
+        cut = size - lines
+        self.outputLines = self.outputLines[cut:]
+
+      result = S_OK()
+      result['Value'] = self.outputLines
+    else:
+      result = S_ERROR( 'No Job output found' )
+
+    return result
