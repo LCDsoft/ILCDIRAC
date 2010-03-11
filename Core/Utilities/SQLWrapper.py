@@ -96,6 +96,10 @@ class SQLWrapper:
     command = 'mysqld_safe %s'%safe_options
     self.log.verbose( 'Execution command: %s' % ( command ) )
   
+    outputFile = "mysqld_thread.log"
+    errorFiile = "mysqld_thread.err"
+    exeEnv = dict( os.environ )
+    
     exeThread = ExecutionThread( spObject, command, outputFile, errorFile, exeEnv )
     exeThread.start()
     time.sleep( 5 )
@@ -103,16 +107,21 @@ class SQLWrapper:
     
     print "mysqld run with pid: %s"%mysqldPID
     
-    mysqld_run = file("mysqld_run.sh","w")
-    mysqld_run.write("mysqld_safe %s &"%safe_options)
-    mysqld_run.close()
-    mysqldcomm = "mysqld_safe %s &"%safe_options
+    if not payloadPID:
+        return S_ERROR( 'Payload process could not start after 5 seconds' )
+    else:
+      return S_ERROR( 'Path to executable %s not found' % ( executable ) )
+
+    #mysqld_run = file("mysqld_run.sh","w")
+    #mysqld_run.write("mysqld_safe %s &"%safe_options)
+    #mysqld_run.close()
+    #mysqldcomm = "mysqld_safe %s &"%safe_options
     #mysqldcomm = "chmod u+x mysqld_run.sh; ./mysqld_run.sh"
-    self.result = shellCall(0,mysqldcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    resultTuple = self.result['Value']
-    status = resultTuple[0]
+    #self.result = shellCall(0,mysqldcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #resultTuple = self.result['Value']
+    #status = resultTuple[0]
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
-    self.log.info( "Status after the mysql_safe execution is %s" % str( status ) )
+    #self.log.info( "Status after the mysql_safe execution is %s" % str( status ) )
     ###go back to previous dir
     os.chdir("%s"%(self.softDir))
     
