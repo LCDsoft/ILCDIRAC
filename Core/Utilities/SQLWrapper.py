@@ -100,7 +100,7 @@ class SQLWrapper:
     os.chdir("%s"%(self.softDir))
     
     ###changing root pass
-    mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password %s"%(self.MokkaTMPDir,self.rootpass)
+    mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
     print "running %s"%mysqladmincomm
     self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
