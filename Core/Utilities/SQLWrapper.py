@@ -93,7 +93,7 @@ class SQLWrapper:
     mysqld_run = file("mysqld_run.sh","w")
     mysqld_run.write("mysqld_safe %s &"%safe_options)
     mysqld_run.close()
-    mysqldcomm = "mysqld_safe %s "%safe_options
+    mysqldcomm = "mysqld_safe %s &"%safe_options
     #mysqldcomm = "chmod u+x mysqld_run.sh; ./mysqld_run.sh"
     self.result = shellCall(0,mysqldcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
