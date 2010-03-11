@@ -152,10 +152,12 @@ class MarlinAnalysis(ModuleBase):
     if (len(marlindll) != 0):
       script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
           
+    script.write('declare -x ROOTSYS=%s/MarlinLibs/ROOT'%(mySoftwareRoot))
     if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('declare -x LD_LIBRARY_PATH=%s/MarlinLibs/LDLibs:%s\n'%(mySoftwareRoot,os.environ['LD_LIBRARY_PATH']))
+        script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/MarlinLibs/LDLibs:%s\n'%(mySoftwareRoot,os.environ['LD_LIBRARY_PATH']))
     else:
-        script.write('declare -x LD_LIBRARY_PATH=%s/MarlinLibs/LDLibs\n'%(mySoftwareRoot))
+        script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/MarlinLibs/LDLibs\n'%(mySoftwareRoot))
+    
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
