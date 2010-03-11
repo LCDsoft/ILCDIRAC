@@ -244,8 +244,9 @@ class MokkaAnalysis(ModuleBase):
 
       if failed==True:
         self.log.error( "==================================\n StdError:\n" )
-        self.log.error( self.stdError )
+        self.log.error( self.stdError) 
         #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+        result = sqlwrapper.mysqlCleanUp()
         self.log.error('Mokka Exited With Status %s' %(status))
         return S_ERROR('Mokka Exited With Status %s' %(status))
 
@@ -256,6 +257,7 @@ class MokkaAnalysis(ModuleBase):
       if not result['OK']:
         return result
       """
+      result = sqlwrapper.mysqlCleanUp()
       # Still have to set the application status e.g. user job case.
       self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
       return S_OK('Mokka %s Successful' %(self.applicationVersion))
