@@ -113,7 +113,7 @@ class SQLWrapper:
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = ""; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE Host != \"%\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
