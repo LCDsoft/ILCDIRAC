@@ -118,7 +118,8 @@ class SQLWrapper:
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
     
     ##get the intial DB
-    init_db_file = file("%s/setup.sql"%self.MokkaTMPDir,"w")
+    init_db_file_name = "%s/setup.sql"%self.MokkaTMPDir
+    init_db_file = file(init_db_file_name,"w")
     init_db_file.write("-- DEFAULT DATABASE SETUP SCRIPT -------------------------------------\n")
     init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$USER'@'localhost' WITH GRANT OPTION;\n")
     init_db_file.write("GRANT SELECT ON *.* TO '$read_user'@'localhost';\n")
@@ -127,7 +128,7 @@ class SQLWrapper:
     init_db_file.write("-- -------------------------------------------------------------------")
     init_db_file.close
 
-    lastmysqlcomm = "mysql --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,init_db_file)
+    lastmysqlcomm = "mysql --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,init_db_file_name)
     print "running %s"%lastmysqlcomm
     self.result = shellCall(0,lastmysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
