@@ -228,7 +228,7 @@ class SQLWrapper:
     self.log.info( "Status after the application execution is %s" % str( status ) )
     ##kill mysql
     mysqlkillcomm = "cat %s/mysql.pid | kill"%(self.MokkaTMPDir)
-    self.result = shellCall(0,mysqlkillomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0,mysqlkillcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     resultTuple = self.result['Value']
 
