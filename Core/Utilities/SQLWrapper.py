@@ -92,6 +92,7 @@ class SQLWrapper:
     print "running mysqld_safe %s"%safe_options
     mysqldcomm = "mysqld_safe %s"%safe_options
     self.result = shellCall(0,mysqldcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
     status = resultTuple[0]
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql_safe execution is %s" % str( status ) )
@@ -102,6 +103,7 @@ class SQLWrapper:
     mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password %s"%(self.MokkaTMPDir,self.rootpass)
     print "running %s"%mysqladmincomm
     self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
     status = resultTuple[0]
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysqladmin execution is %s" % str( status ) )
@@ -110,6 +112,7 @@ class SQLWrapper:
     mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,self.MokkaDumpFile)
     print "running %s"%mysqlcomm
     self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
     status = resultTuple[0]
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
