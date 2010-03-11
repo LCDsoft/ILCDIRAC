@@ -115,8 +115,8 @@ class SQLWrapper:
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE Host != \"%\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE Host != \"%\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
+    #self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     ###calling mysql
     mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,self.MokkaDumpFile)
@@ -130,7 +130,7 @@ class SQLWrapper:
     comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=%s/mysql.sock <<< 'SHOW VARIABLES;' "%(self.MokkaTMPDir)
     self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
 
-     ##get the intial DB
+    ##get the intial DB
 #    init_db_file_name = "%s/setup.sql"%self.MokkaTMPDir
 #    init_db_file = file(init_db_file_name,"w")
 #    init_db_file.write("-- DEFAULT DATABASE SETUP SCRIPT -------------------------------------\n")
