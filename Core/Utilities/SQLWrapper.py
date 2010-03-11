@@ -90,7 +90,8 @@ class SQLWrapper:
     ###Now run mysqld
     os.chdir("%s/mysql4grid"%(self.softDir))
     print "running mysqld_safe %s"%safe_options
-    
+    #example
+    self.bufferLimit = 10485760
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
     command = 'mysqld_safe %s'%safe_options
     self.log.verbose( 'Execution command: %s' % ( command ) )
