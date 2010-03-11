@@ -12,7 +12,7 @@ Created on Feb 1, 2010
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
 from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
 import DIRAC
-import os,sys,re, tempfile, threading
+import os,sys,re, tempfile, threading, time
 
 class SQLWrapper:
   def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
