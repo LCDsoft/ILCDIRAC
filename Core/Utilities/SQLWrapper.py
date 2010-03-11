@@ -90,7 +90,7 @@ class SQLWrapper:
     ###Now run mysqld
     os.chdir("%s/mysql4grid"%(self.softDir))
     print "running mysqld_safe %s"%safe_options
-    mysqldcomm = "mysqld_safe %s"%safe_options
+    mysqldcomm = "mysqld_safe %s &"%safe_options
     self.result = shellCall(0,mysqldcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
