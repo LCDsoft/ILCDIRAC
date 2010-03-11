@@ -101,7 +101,7 @@ class SQLWrapper:
     
     ###changing root pass
     mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
-    print "running %s"%mysqladmincomm
+    print "Running %s"%mysqladmincomm
     self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
@@ -117,6 +117,24 @@ class SQLWrapper:
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
     
+    ##get the intial DB
+    init_db_file = "%s/setup.sql"%self.MokkaTMPDir
+    defdbcomm = "default_db_setup > %s"%(init_db_file)
+    print "running %s"%defdbcomm
+    self.result = shellCall(0,defdbcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
+    status = resultTuple[0]
+    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
+    self.log.info( "Status after the default_db execution is %s" % str( status ) )
+    
+    lastmysqlcomm = "mysql --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,init_db_file)
+    print "running %s"%lastmysqlcomm
+    self.result = shellCall(0,lastmysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
+    status = resultTuple[0]
+    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
+    self.log.info( "Status after the last mysql execution is %s" % str( status ) )
+   
     
 #    if str(os.environ.get('UID_TMP')) == 'None':
 #      DIRAC.gLogger.error('No UID_TMP known')
