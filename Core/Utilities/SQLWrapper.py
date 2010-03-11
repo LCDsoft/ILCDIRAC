@@ -99,8 +99,9 @@ class SQLWrapper:
     outputFile = "mysqld_thread.log"
     errorFile = "mysqld_thread.err"
     exeEnv = dict( os.environ )
+    maxPeekLines = 20
     
-    exeThread = ExecutionThread( spObject, command, outputFile, errorFile, exeEnv )
+    exeThread = ExecutionThread( spObject, command, maxPeekLines, outputFile, errorFile, exeEnv )
     exeThread.start()
     time.sleep( 5 )
     mysqldPID = spObject.getChildPID()
@@ -319,12 +320,12 @@ class SQLWrapper:
 class ExecutionThread( threading.Thread ):
 
   #############################################################################
-  def __init__( self, spObject, cmd, stdoutFile, stderrFile, exeEnv ):
+  def __init__( self, spObject, cmd, maxPeekLines, stdoutFile, stderrFile, exeEnv ):
     threading.Thread.__init__( self )
     self.cmd = cmd
     self.spObject = spObject
     self.outputLines = []
-    
+    self.maxPeekLines = maxPeekLines
     self.stdout = stdoutFile
     self.stderr = stderrFile
     self.exeEnv = exeEnv
