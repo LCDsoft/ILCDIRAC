@@ -108,6 +108,16 @@ class SQLWrapper:
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysqladmin execution is %s" % str( status ) )
     
+    ###taken from https://svnsrv.desy.de/viewvc/ilctools/gridtools/trunk/MokkaGridScripts/runjob.sh?revision=268&view=markup
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' "%(self.MokkaTMPDir,self.rootpass)
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' "%(self.MokkaTMPDir,self.rootpass)
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = ""; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE Host != \"%\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    
     ###calling mysql
     mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,self.MokkaDumpFile)
     print "running %s"%mysqlcomm
@@ -116,26 +126,29 @@ class SQLWrapper:
     status = resultTuple[0]
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
-    
-    ##get the intial DB
-    init_db_file_name = "%s/setup.sql"%self.MokkaTMPDir
-    init_db_file = file(init_db_file_name,"w")
-    init_db_file.write("-- DEFAULT DATABASE SETUP SCRIPT -------------------------------------\n")
-    init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$USER'@'localhost' WITH GRANT OPTION;\n")
-    init_db_file.write("GRANT SELECT ON *.* TO '$read_user'@'localhost';\n")
-    init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$write_user'@'localhost';\n")
-    init_db_file.write("FLUSH PRIVILEGES;\n")
-    init_db_file.write("-- -------------------------------------------------------------------")
-    init_db_file.close
+    ### now test
+    comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=%s/mysql.sock <<< 'SHOW VARIABLES;' "%(self.MokkaTMPDir)
+    self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
 
-    lastmysqlcomm = "mysql --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,init_db_file_name)
-    print "running %s"%lastmysqlcomm
-    self.result = shellCall(0,lastmysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    resultTuple = self.result['Value']
-    status = resultTuple[0]
-    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
-    self.log.info( "Status after the last mysql execution is %s" % str( status ) )
-   
+     ##get the intial DB
+#    init_db_file_name = "%s/setup.sql"%self.MokkaTMPDir
+#    init_db_file = file(init_db_file_name,"w")
+#    init_db_file.write("-- DEFAULT DATABASE SETUP SCRIPT -------------------------------------\n")
+#    init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$USER'@'localhost' WITH GRANT OPTION;\n")
+#    init_db_file.write("GRANT SELECT ON *.* TO '$read_user'@'localhost';\n")
+#    init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$write_user'@'localhost';\n")
+#    init_db_file.write("FLUSH PRIVILEGES;\n")
+#    init_db_file.write("-- -------------------------------------------------------------------")
+#    init_db_file.close
+#
+#    lastmysqlcomm = "mysql --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,init_db_file_name)
+#    print "running %s"%lastmysqlcomm
+#    self.result = shellCall(0,lastmysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+#    resultTuple = self.result['Value']
+#    status = resultTuple[0]
+#    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
+#    self.log.info( "Status after the last mysql execution is %s" % str( status ) )
+#   
     
 #    if str(os.environ.get('UID_TMP')) == 'None':
 #      DIRAC.gLogger.error('No UID_TMP known')
@@ -228,7 +241,7 @@ class SQLWrapper:
     status = resultTuple[0]
     self.log.info( "Status after the application execution is %s" % str( status ) )
     ##kill mysql
-    mysqlkillcomm = "cat %s/mysql.pid | kill"%(self.MokkaTMPDir)
+    mysqlkillcomm = "cat %s/mysql.p id | kill"%(self.MokkaTMPDir)
     self.result = shellCall(0,mysqlkillcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     resultTuple = self.result['Value']
