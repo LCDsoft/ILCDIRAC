@@ -118,15 +118,15 @@ class SQLWrapper:
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
     
     ##get the intial DB
-    init_db_file = "%s/setup.sql"%self.MokkaTMPDir
-    defdbcomm = "default_db_setup > %s"%(init_db_file)
-    print "running %s"%defdbcomm
-    self.result = shellCall(0,defdbcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    resultTuple = self.result['Value']
-    status = resultTuple[0]
-    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
-    self.log.info( "Status after the default_db execution is %s" % str( status ) )
-    
+    init_db_file = file("%s/setup.sql"%self.MokkaTMPDir,"w")
+    init_db_file.write("-- DEFAULT DATABASE SETUP SCRIPT -------------------------------------\n")
+    init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$USER'@'localhost' WITH GRANT OPTION;\n")
+    init_db_file.write("GRANT SELECT ON *.* TO '$read_user'@'localhost';\n")
+    init_db_file.write("GRANT ALL PRIVILEGES ON *.* TO '$write_user'@'localhost';\n")
+    init_db_file.write("FLUSH PRIVILEGES;\n")
+    init_db_file.write("-- -------------------------------------------------------------------")
+    init_db_file.close
+
     lastmysqlcomm = "mysql --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,init_db_file)
     print "running %s"%lastmysqlcomm
     self.result = shellCall(0,lastmysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
