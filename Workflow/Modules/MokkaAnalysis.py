@@ -149,8 +149,8 @@ class MokkaAnalysis(ModuleBase):
       ####Setup MySQL instance
       sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot)
       result =sqlwrapper.mysqlSetup()
-      if not result['OK']:
-        return result
+      #if not result['OK']:
+        #return result
 
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
