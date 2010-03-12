@@ -66,9 +66,9 @@ class SQLWrapper:
     os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
     self.exeEnv = dict( os.environ )
     
-    safe_options =  "--no-defaults --skip-networking --socket=mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.softDir,self.MokkaTMPDir)
+    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir)
     #comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
-    comm = "%s/mysql4grid/bin/mysql_install_db  %s"%(self.softDir,safe_options) 
+    comm = "%s/mysql4grid/bin/mysql_install_db %s"%(self.softDir,safe_options) 
     self.log.verbose("Running %s"%comm)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
@@ -126,7 +126,7 @@ class SQLWrapper:
     #os.chdir("%s"%(self.softDir))
     
     ###changing root pass
-    mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=mysql.sock -uroot password '%s'"%(self.rootpass)
+    mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
     self.log.verbose("Running %s"%mysqladmincomm)
     self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
@@ -135,17 +135,17 @@ class SQLWrapper:
     self.log.info( "Status after the mysqladmin execution is %s" % str( status ) )
     
     ###taken from https://svnsrv.desy.de/viewvc/ilctools/gridtools/trunk/MokkaGridScripts/runjob.sh?revision=268&view=markup
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' "%(self.rootpass)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' "%(self.rootpass)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' "%(self.rootpass)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE Host != \"%\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
     #self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     ###calling mysql
-    mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=mysql.sock -uroot -p%s < %s"%(self.rootpass,self.MokkaDumpFile)
+    mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,self.MokkaDumpFile)
     self.log.verbose("running %s"%mysqlcomm)
     self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
@@ -153,7 +153,7 @@ class SQLWrapper:
     #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
     ### now test
-    comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=mysql.sock <<< 'SHOW VARIABLES;' "#%(self.MokkaTMPDir)
+    comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=%s/mysql.sock <<< 'SHOW VARIABLES;' "%(self.MokkaTMPDir)
     self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
 
     ##get the intial DB
