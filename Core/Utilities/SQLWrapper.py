@@ -55,7 +55,6 @@ class SQLWrapper:
        
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
-    ##go to software directory to be able to run, thanks to mysql-local-db-setup.sh
     initialDir= os.getcwd()
     os.chdir(os.path.join(self.softDir,"mysql4grid"))
     DIRAC.gLogger.verbose('setup local mokka database')
@@ -66,8 +65,7 @@ class SQLWrapper:
     os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
     self.exeEnv = dict( os.environ )
     
-    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir)
-    #comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
+    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
     comm = "%s/mysql4grid/bin/mysql_install_db %s"%(self.softDir,safe_options) 
     self.log.verbose("Running %s"%comm)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
@@ -75,7 +73,6 @@ class SQLWrapper:
     resultTuple = self.result['Value']
 
     status = resultTuple[0]
-    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql_install_db execution is %s" % str( status ) )
     failed = False
     if status != 0:
@@ -87,13 +84,8 @@ class SQLWrapper:
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('SQLwrapper Exited With Status %s' %(status))
-      #return S_ERROR('SQLwrapper Exited With Status %s' %(status))
-    # Still have to set the application status e.g. user job case.
-    #self.setApplicationStatus('mokka-wrapper %s Successful' %(self.applicationVersion))
-    #return S_OK('mokka-wrapper %s Successful' %(self.applicationVersion))
-
+ 
     ###Now run mysqld in thread
     #os.chdir("%s/mysql4grid"%(self.softDir))
     self.log.verbose("Running mysqld_safe %s"%safe_options)
@@ -112,26 +104,13 @@ class SQLWrapper:
     
     self.log.verbose("MySQLd run with pid: %s"%self.mysqldPID)
 
-    #mysqld_run = file("mysqld_run.sh","w")
-    #mysqld_run.write("mysqld_safe %s &"%safe_options)
-    #mysqld_run.close()
-    #mysqldcomm = "mysqld_safe %s &"%safe_options
-    #mysqldcomm = "chmod u+x mysqld_run.sh; ./mysqld_run.sh"
-    #self.result = shellCall(0,mysqldcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    #resultTuple = self.result['Value']
-    #status = resultTuple[0]
-    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
-    #self.log.info( "Status after the mysql_safe execution is %s" % str( status ) )
-    ###go back to previous dir
-    #os.chdir("%s"%(self.softDir))
-    
+   
     ###changing root pass
     mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
     self.log.verbose("Running %s"%mysqladmincomm)
     self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
-    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysqladmin execution is %s" % str( status ) )
     
     ###taken from https://svnsrv.desy.de/viewvc/ilctools/gridtools/trunk/MokkaGridScripts/runjob.sh?revision=268&view=markup
@@ -150,7 +129,6 @@ class SQLWrapper:
     self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
-    #self.log.info( "Status after the mysql-local-db-setup execution is %s" % str( status ) )
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
     ### now test
     comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=%s/mysql.sock <<< 'SHOW VARIABLES;' "%(self.MokkaTMPDir)
@@ -241,10 +219,9 @@ class SQLWrapper:
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('mysql Exited With Status %s' %(status))
+      self.log.error('MySQL setup Exited With Status %s' %(status))
       os.chdir(initialDir)
-      return S_ERROR('mysql Exited With Status %s' %(status))
+      return S_ERROR('MySQL setup Exited With Status %s' %(status))
     # Still have to set the application status e.g. user job case.
     #self.setApplicationStatus('mysql client %s Successful' %(self.applicationVersion))
     os.chdir(initialDir)
@@ -257,8 +234,6 @@ class SQLWrapper:
     currentdir = os.getcwd()
     os.chdir(os.path.join(self.softDir,"mysql4grid"))
     DIRAC.gLogger.verbose('clean up db')
-    #for now:
-    #MySQLcleanUpComm = self.MokkaTMPDir + self.UID_TMP + '/mysql-cleanup.sh'
     MySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown"%(self.MokkaTMPDir,self.rootpass)
             
     self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
@@ -268,27 +243,26 @@ class SQLWrapper:
     status = resultTuple[0]
     self.log.info( "Status after the application execution is %s" % str( status ) )
     ##kill mysql
-    mysqlkillcomm = "cat mysql.pid | kill -9 "#%(self.MokkaTMPDir)
+    #mysqlkillcomm = "cat mysql.pid | kill -9 "#%(self.MokkaTMPDir)
     #mysqlkillcomm = "kill -9 %s"%(self.mysqldPID)
     #self.result = shellCall(0,mysqlkillcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
-    resultTuple = self.result['Value']
+    #resultTuple = self.result['Value']
 
-    status = resultTuple[0]
-    self.log.info( "Status after the application execution is %s" % str( status ) )    
+    #status = resultTuple[0]
+    #self.log.info( "Status after the application execution is %s" % str( status ) )    
     failed = False
     if status != 0:
-      self.log.error( "mysql-cleanup execution completed with errors:" )
+      self.log.error( "MySQL-cleanup execution completed with errors:" )
       failed = True
     else:
-      self.log.info( "mysql-cleanup execution completed successfully")
+      self.log.info( "MySQL-cleanup execution completed successfully")
 
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('mysql-cleanup Exited With Status %s' %(status))
-      return S_ERROR('mysql-cleanup Exited With Status %s' %(status))
+      self.log.error('MySQL-cleanup Exited With Status %s' %(status))
+      return S_ERROR('MySQL-cleanup Exited With Status %s' %(status))
 
     #cleanup script also removes tmp
     if (os.path.exists(self.MokkaTMPDir)):
