@@ -269,7 +269,7 @@ class SQLWrapper:
     ##kill mysql
     mysqlkillcomm = "cat %s/mysql.pid | kill -9 "%(self.MokkaTMPDir)
     #mysqlkillcomm = "kill -9 %s"%(self.mysqldPID)
-    self.result = shellCall(0,mysqlkillcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #self.result = shellCall(0,mysqlkillcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     resultTuple = self.result['Value']
 
