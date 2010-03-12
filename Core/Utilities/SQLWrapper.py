@@ -38,7 +38,7 @@ class SQLWrapper:
     
     
     self.initialDir= os.getcwd()
-    os.chdir(self.softDir)
+    #os.chdir(self.softDir)
 
     """create tmp dir and track it"""
     try:
@@ -55,10 +55,11 @@ class SQLWrapper:
     self.bufferLimit = 10485760   
     self.maxPeekLines = 20      
 
-    os.chdir(self.initialDir)
+    #os.chdir(self.initialDir)
   def getMokkaTMPDIR(self):
-    return os.path.join(self.initialDir,self.MokkaTMPDir)
-       
+    #return os.path.join(self.initialDir,self.MokkaTMPDir)
+    return os.path.join(self.MokkaTMPDir)
+      
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
     #initialDir= os.getcwd()
