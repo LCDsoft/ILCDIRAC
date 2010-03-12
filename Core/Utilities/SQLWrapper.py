@@ -44,7 +44,12 @@ class SQLWrapper:
         
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
-    self.mysqlInstalDir = ''           
+    self.mysqlInstalDir = ''  
+    
+    #mysqld threading
+    self.bufferLimit = 10485760   
+    self.exeEnv = dict( os.environ )
+    self.maxPeekLines = 20      
     
   def getMokkaTMPDIR(self):
     return self.MokkaTMPDir
@@ -89,31 +94,25 @@ class SQLWrapper:
     #self.setApplicationStatus('mokka-wrapper %s Successful' %(self.applicationVersion))
     #return S_OK('mokka-wrapper %s Successful' %(self.applicationVersion))
 
-    ###Now run mysqld
+    ###Now run mysqld in thread
     os.chdir("%s/mysql4grid"%(self.softDir))
     print "running mysqld_safe %s"%safe_options
-    #example
-    self.bufferLimit = 10485760
+
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
     command = 'mysqld_safe %s'%safe_options
     self.log.verbose( 'Execution command: %s' % ( command ) )
-  
-    outputFile = "mysqld_thread.log"
-    errorFile = "mysqld_thread.err"
-    exeEnv = dict( os.environ )
-    maxPeekLines = 20
-    
-    exeThread = ExecutionThread( spObject, command, maxPeekLines, outputFile, errorFile, exeEnv )
+        
+    exeThread = ExecutionThread( spObject, command, self.maxPeekLines, self.applicationLog, self.stdError, self.exeEnv )
     exeThread.start()
     time.sleep( 5 )
-    mysqldPID = spObject.getChildPID()
+    self.mysqldPID = spObject.getChildPID()
+       
+    if not self.mysqldPID:
+        return S_ERROR( ' MySQLd process could not start after 5 seconds' )
+    else:
+      return S_ERROR( 'MySQLd stard failed')
     
-    print "mysqld run with pid: %s"%mysqldPID
-    
-    if not mysqldPID:
-        return S_ERROR( 'Payload process could not start after 5 seconds' )
-    #else:
-     # return S_ERROR( 'Path to executable  not found')
+    print "MySQLd run with pid: %s"%mysqldPID
 
     #mysqld_run = file("mysqld_run.sh","w")
     #mysqld_run.write("mysqld_safe %s &"%safe_options)
@@ -270,7 +269,8 @@ class SQLWrapper:
     status = resultTuple[0]
     self.log.info( "Status after the application execution is %s" % str( status ) )
     ##kill mysql
-    mysqlkillcomm = "cat %s/mysql.p id | kill"%(self.MokkaTMPDir)
+    #mysqlkillcomm = "cat %s/mysql.p id | kill"%(self.MokkaTMPDir)
+    mysqlkillcomm = "kill -9 %s"%(self.mysqldPID)
     self.result = shellCall(0,mysqlkillcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     resultTuple = self.result['Value']
