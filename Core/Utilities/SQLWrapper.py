@@ -109,8 +109,6 @@ class SQLWrapper:
        
     if not self.mysqldPID:
         return S_ERROR( 'MySQLd process could not start after 5 seconds' )
-    else:
-      return S_ERROR( 'MySQLd stard failed')
     
     print "MySQLd run with pid: %s"%mysqldPID
 
