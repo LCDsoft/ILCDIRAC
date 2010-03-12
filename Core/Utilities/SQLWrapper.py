@@ -68,7 +68,7 @@ class SQLWrapper:
     
     safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir)
     #comm = self.softDir+'/mokkadbscripts/mysql-local-db-setup.sh -p ' + self.MokkaTMPDir + ' -d ' + self.MokkaDumpFile
-    comm = "%s/mysql4grid/mysql_install_db  %s"%(self.softDir,safe_options) 
+    comm = "%s/mysql4grid/bin/mysql_install_db  %s"%(self.softDir,safe_options) 
     print "Executing %s"%comm
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
@@ -99,7 +99,7 @@ class SQLWrapper:
     print "running mysqld_safe %s"%safe_options
 
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
-    command = '%s/mysql4grid/mysqld_safe %s'%(self.softDir,safe_options)
+    command = '%s/mysql4grid/bin/mysqld_safe %s'%(self.softDir,safe_options)
     self.log.verbose( 'Execution command: %s' % ( command ) )
         
     exeThread = ExecutionThread( spObject, command, self.maxPeekLines, self.applicationLog, self.stdError, self.exeEnv )
