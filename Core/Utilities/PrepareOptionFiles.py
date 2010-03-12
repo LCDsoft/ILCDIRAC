@@ -22,24 +22,26 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
   output = file(str(outputSteering),"w")
   for line in input:
     if line.find("/Mokka/init/initialMacroFile")<0:
-      if outputlcio:
-        if line.find("lcioFilename")<0:
+      if line.find("/Mokka/init/BatchMode")<0:
+        if outputlcio:
+          if line.find("lcioFilename")<0:
+            if line.find("#")<0:
+              if detectormodel:
+                if line.find("/Mokka/init/detectorModel")<0:
+                  output.write(line)
+                else:
+                  output.write(line)
+        else:
           if line.find("#")<0:
             if detectormodel:
               if line.find("/Mokka/init/detectorModel")<0:
                 output.write(line)
-              else:
-                output.write(line)
-      else:
-        if line.find("#")<0:
-          if detectormodel:
-            if line.find("/Mokka/init/detectorModel")<0:
+            else:
               output.write(line)
-          else:
-            output.write(line)
   if detectormodel:
     output.write("/Mokka/init/detectorModel %s"%detectormodel)
-      
+
+  output.write("/Mokka/init/BatchMode true\n")
   output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
   if outputlcio:
     output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
