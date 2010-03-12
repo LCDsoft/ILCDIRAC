@@ -243,11 +243,11 @@ class SQLWrapper:
     DIRAC.gLogger.verbose('clean up db')
     MySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown"%(self.MokkaTMPDir,self.rootpass)
             
-    self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     resultTuple = self.result['Value']
 
-    status = resultTuple[0]
+    status = 0#resultTuple[0]
     self.log.info( "Status after the application execution is %s" % str( status ) )
     ##kill mysql
     #mysqlkillcomm = "cat mysql.pid | kill -9 "#%(self.MokkaTMPDir)
