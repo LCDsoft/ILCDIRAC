@@ -83,10 +83,10 @@ class SQLWrapper:
     self.log.info( "Status after the mysql_install_db execution is %s" % str( status ) )
     failed = False
     if status != 0:
-      self.log.error( "SQLwrapper execution completed with errors:" )
+      self.log.error( "mysql_install_db execution completed with errors:" )
       failed = True
     else:
-      self.log.info( "SQLwrapper execution completed successfully")
+      self.log.info( "mysql_install_db execution completed successfully")
 
     if failed:
       self.log.error( "==================================\n StdError:\n" )
@@ -106,8 +106,8 @@ class SQLWrapper:
     time.sleep( 5 )
     self.mysqldPID = spObject.getChildPID()
        
-    if not self.mysqldPID:
-        return S_ERROR( 'MySQLd process could not start after 5 seconds' )
+    #if not self.mysqldPID:
+        #return S_ERROR( 'MySQLd process could not start after 5 seconds' )
     
     self.log.verbose("MySQLd run with pid: %s"%self.mysqldPID)
 
