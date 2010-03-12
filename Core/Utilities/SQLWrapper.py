@@ -29,21 +29,24 @@ class SQLWrapper:
       os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
       
     self.MokkaTMPDir = ''
+    self.applicationLog = '%s/mysql.log'%(os.getcwd())
+         
+    self.stdError = '%s/mysql_err.log'%(os.getcwd())
+ 
     self.softDir = softwareDir
     self.rootpass = "rootpass"
+    
+    
     self.initialDir= os.getcwd()
     os.chdir(self.softDir)
 
     """create tmp dir and track it"""
     try:
-        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.softDir)
+        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',"")#self.softDir)
     except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
-    self.applicationLog = '%s/mysql.log'%(os.getcwd())
-         
-    self.stdError = '%s/mysql_err.log'%(os.getcwd())
-        
+       
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
     self.mysqlInstalDir = ''  
@@ -59,7 +62,7 @@ class SQLWrapper:
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
     #initialDir= os.getcwd()
-    os.chdir(os.path.join(self.softDir))
+    os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s'%(self.softDir,self.softDir,os.environ['LD_LIBRARY_PATH'])
