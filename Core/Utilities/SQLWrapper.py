@@ -22,9 +22,9 @@ class SQLWrapper:
     self.MokkaDumpFile = ""
     if(len(dumpfile)<1):
       dumpfile= 'CLICMokkaDB.sql'
-      self.MokkaDumpFile = "%s/%s"%(softwareDir,self.MokkaDumpFile)
+      self.MokkaDumpFile = "%s/%s"%(softwareDir,dumpfile)
     else:
-      self.MokkaDumpFile = "./"+os.path.basename(dumpfile)
+      self.MokkaDumpFile = "./%s"%(os.path.basename(dumpfile))
     if not os.environ.has_key('MOKKA_DUMP_FILE'):
       os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
       
