@@ -38,9 +38,9 @@ class SQLWrapper:
     except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
-    self.applicationLog = 'mysql.log'
+    self.applicationLog = '%s/mysql.log'%(os.getcwd())
          
-    self.stdError = 'mysql_err.log'
+    self.stdError = '%s/mysql_err.log'%(os.getcwd())
         
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
@@ -99,7 +99,7 @@ class SQLWrapper:
     print "running mysqld_safe %s"%safe_options
 
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
-    command = '%s/mysql4grid/bin/mysqld_safe %s'%(self.softDir,safe_options)
+    command = 'mysqld_safe %s'%(self.softDir,safe_options)
     self.log.verbose( 'Execution command: %s' % ( command ) )
         
     exeThread = ExecutionThread( spObject, command, self.maxPeekLines, self.applicationLog, self.stdError, self.exeEnv )
