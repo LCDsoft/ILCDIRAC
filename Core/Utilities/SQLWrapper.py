@@ -94,11 +94,13 @@ class SQLWrapper:
       self.log.error('SQLwrapper Exited With Status %s' %(status))
  
     ###Now run mysqld in thread
-    #os.chdir("%s/mysql4grid"%(self.softDir))
+    os.chdir("%s/mysql4grid"%(self.softDir))
+    
+    
     self.log.verbose("Running mysqld_safe %s"%safe_options)
 
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
-    command = 'mysqld_safe %s'%(safe_options)
+    command = '%s/mysql4grid/bin/mysqld_safe %s'%(self.softDir,safe_options)
     self.log.verbose( 'Execution command: %s' % ( command ) )
         
     exeThread = ExecutionThread( spObject, command, self.maxPeekLines, self.applicationLog, self.stdError, self.exeEnv )
@@ -111,6 +113,15 @@ class SQLWrapper:
     
     self.log.verbose("MySQLd run with pid: %s"%self.mysqldPID)
 
+
+    ####Have to sleep for a while to let time for the socket to wake up
+    sleepComm = """
+while [ -z "$socket_grep" ] ; do
+    socket_grep=$(netstat -ln 2>/dev/null | grep "%s/mysql.sock")
+    echo -n .
+    sleep 1
+done 
+"""%(self.MokkaTMPDir)
    
     ###changing root pass
     mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
