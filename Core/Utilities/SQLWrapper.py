@@ -42,7 +42,7 @@ class SQLWrapper:
 
     """create tmp dir and track it"""
     try:
-        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',"")#self.softDir)
+        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.softDir)
     except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
