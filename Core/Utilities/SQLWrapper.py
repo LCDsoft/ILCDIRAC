@@ -17,7 +17,7 @@ import os,sys,re, tempfile, threading, time
 EXECUTION_RESULT = {}
 
 class SQLWrapper:
-  def __init__(self,dumpfile='CLICMokkaDB.sql',softwareDir='./'):
+  def __init__(self,dumpfile='',softwareDir='./'):
     """Set initial variables"""
     self.MokkaDumpFile = ""
     if(len(dumpfile)<1):
