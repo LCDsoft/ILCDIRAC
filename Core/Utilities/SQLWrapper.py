@@ -99,7 +99,7 @@ class SQLWrapper:
     print "running mysqld_safe %s"%safe_options
 
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
-    command = 'mysqld_safe %s'%(self.softDir,safe_options)
+    command = 'mysqld_safe %s'%(safe_options)
     self.log.verbose( 'Execution command: %s' % ( command ) )
         
     exeThread = ExecutionThread( spObject, command, self.maxPeekLines, self.applicationLog, self.stdError, self.exeEnv )
