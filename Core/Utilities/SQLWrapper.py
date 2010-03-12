@@ -31,10 +31,12 @@ class SQLWrapper:
     self.MokkaTMPDir = ''
     self.softDir = softwareDir
     self.rootpass = "rootpass"
-    
+    self.initialDir= os.getcwd()
+    os.chdir(self.softDir)
+
     """create tmp dir and track it"""
     try:
-        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.softDir)
+        self.MokkaTMPDir = tempfile.mkdtemp('','TMP')#,self.softDir)
     except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
@@ -49,14 +51,15 @@ class SQLWrapper:
     #mysqld threading
     self.bufferLimit = 10485760   
     self.maxPeekLines = 20      
-    
+
+    os.chdir(self.initialDir)
   def getMokkaTMPDIR(self):
-    return self.MokkaTMPDir
+    return os.path.join(self.initialDir,self.MokkaTMPDir)
        
   def mysqlSetup(self):
     """Setup mysql locally in local tmp dir """
-    initialDir= os.getcwd()
-    os.chdir(os.path.join(self.softDir,"mysql4grid"))
+    #initialDir= os.getcwd()
+    os.chdir(os.path.join(self.softDir))
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s'%(self.softDir,self.softDir,os.environ['LD_LIBRARY_PATH'])
@@ -66,7 +69,7 @@ class SQLWrapper:
     self.exeEnv = dict( os.environ )
     
     safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
-    comm = "%s/mysql4grid/bin/mysql_install_db %s"%(self.softDir,safe_options) 
+    comm = "mysql_install_db %s"%(safe_options) 
     self.log.verbose("Running %s"%comm)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
         
@@ -220,11 +223,11 @@ class SQLWrapper:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       self.log.error('MySQL setup Exited With Status %s' %(status))
-      os.chdir(initialDir)
+      os.chdir(self.initialDir)
       return S_ERROR('MySQL setup Exited With Status %s' %(status))
     # Still have to set the application status e.g. user job case.
     #self.setApplicationStatus('mysql client %s Successful' %(self.applicationVersion))
-    os.chdir(initialDir)
+    os.chdir(self.initialDir)
     #return S_OK('Mokka-wrapper %s Successful' %(self.applicationVersion))
     return S_OK('OK')
     
