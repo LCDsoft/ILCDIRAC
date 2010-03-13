@@ -17,7 +17,7 @@ import os,sys,re, tempfile, threading, time
 EXECUTION_RESULT = {}
 
 class SQLWrapper:
-  def __init__(self,dumpfile='',softwareDir='./'):
+  def __init__(self,dumpfile='',softwareDir='./',mokkaDBroot=''):
     """Set initial variables"""
     self.MokkaDumpFile = ""
     if(len(dumpfile)<1):
@@ -42,7 +42,7 @@ class SQLWrapper:
 
     """create tmp dir and track it"""
     try:
-        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.softDir)
+        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
     except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
         
