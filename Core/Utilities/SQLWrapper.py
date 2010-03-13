@@ -41,6 +41,7 @@ class SQLWrapper:
     #os.chdir(self.softDir)
 
     """create tmp dir and track it"""
+    os.makedirs(mokkaDBroot)
     try:
         self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
     except IOError, (errno,strerror):
