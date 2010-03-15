@@ -123,7 +123,7 @@ while [ -z "$socket_grep" ] ; do
     sleep 1
 done 
 """%(self.MokkaTMPDir)
-   
+    self.result = shellCall(0,sleepComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     ###changing root pass
     mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
     self.log.verbose("Running %s"%mysqladmincomm)
