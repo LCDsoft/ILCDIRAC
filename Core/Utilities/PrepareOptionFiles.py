@@ -25,14 +25,16 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
       if line.find("/Mokka/init/BatchMode")<0:
         if outputlcio:
           if line.find("lcioFilename")<0:
-            if line.find("#")>1:
+            #if line.find("#")>1:
               if detectormodel:
                 if line.find("/Mokka/init/detectorModel")<0:
                   output.write(line)
                 else:
                   output.write(line)
+              else:
+                output.write(line)
         else:
-          if line.find("#")==1:
+          #if line.find("#")==1:
             if detectormodel:
               if line.find("/Mokka/init/detectorModel")<0:
                 output.write(line)
