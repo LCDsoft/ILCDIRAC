@@ -41,7 +41,6 @@ class SQLWrapper:
     #os.chdir(self.softDir)
 
     """create tmp dir and track it"""
-    print "This is the folder to create %s"%mokkaDBroot
     try :
       os.makedirs(mokkaDBroot)
     except :
