@@ -35,14 +35,14 @@ class SQLWrapper:
  
     self.softDir = softwareDir
     self.rootpass = "rootpass"
-    
+    self.mokkaDBroot = mokkaDBroot
     
     self.initialDir= os.getcwd()
     #os.chdir(self.softDir)
 
     """create tmp dir and track it"""
     try :
-      os.makedirs(mokkaDBroot)
+      os.makedirs(self.mokkaDBroot)
     except :
       pass
     try:
@@ -290,10 +290,10 @@ done
     if (os.path.exists(self.MokkaTMPDir)):
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
-        #os.rmdir(self.MokkaTMPDir)
+        os.removedirs(self.mokkaDBroot)
       except IOError, (errno,strerror):
         DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
-        return S_ERROR('Removing tmp dir failed')
+        #return S_ERROR('Removing tmp dir failed')
       os.chdir(currentdir)
       return S_OK('OK')
     #############################################################################
