@@ -147,7 +147,7 @@ class MokkaAnalysis(ModuleBase):
         return S_ERROR('Failed to discover software')
 
       ####Setup MySQL instance
-      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/sposs/MokkaDBRoot")#mySoftwareRoot)
+      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
       result =sqlwrapper.mysqlSetup()
       #if not result['OK']:
         #return result
