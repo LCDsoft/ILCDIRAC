@@ -155,7 +155,7 @@ class LCDJob(Job):
       if not currentApp in string.split(apps,';'):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
-    self.ioDict[self.stepCount]=stepInstance.getName()
+    self.ioDict[self.StepCount]=stepInstance.getName()
     return S_OK()
     
   def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio=None,logFile=''):
@@ -263,7 +263,7 @@ class LCDJob(Job):
       if not currentApp in string.split(apps,';'):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
-    self.ioDict[self.stepCount]=stepInstance.getName()
+    self.ioDict[self.StepCount]=stepInstance.getName()
     return S_OK()
     
     
