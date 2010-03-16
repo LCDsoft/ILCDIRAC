@@ -280,6 +280,9 @@ while [ -n "$socket_grep" ] ; do
 done 
 """%(self.MokkaTMPDir)
     self.result = shellCall(0,sleepComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+
+    os.chdir(currentdir)
+
     status = resultTuple[0]
     #self.log.info( "Status after the application execution is %s" % str( status ) )    
     failed = False
@@ -303,7 +306,6 @@ done
       except IOError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
-      os.chdir(currentdir)
       return S_OK('OK')
     #############################################################################
         
