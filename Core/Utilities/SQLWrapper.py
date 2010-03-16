@@ -306,7 +306,7 @@ done
       except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
-      return S_OK('OK')
+    return S_OK('OK')
     #############################################################################
         
     #############################################################################
