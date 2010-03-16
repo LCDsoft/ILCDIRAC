@@ -227,12 +227,14 @@ class LCDJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
     step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
-    step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+    if(inputslcio):
+      step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
-    stepInstance.setValue("inputSlcio",inputslcioStr)
+    if(inputslcio):
+      stepInstance.setValue("inputSlcio",inputslcioStr)
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
    
