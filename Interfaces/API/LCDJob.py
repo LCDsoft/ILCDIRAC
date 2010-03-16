@@ -27,8 +27,9 @@ class LCDJob(Job):
     Job.__init__(self,script)
     self.importLocation = 'LCDDIRAC.Workflow.Modules'
     self.StepCount = 0
+    self.ioDict = {}
   
-  def setMokka(self,appVersion,steeringFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',logFile=''):
+  def setMokka(self,appVersion,steeringFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile=''):
     """Helper function.
        Define Mokka step
        
@@ -65,7 +66,7 @@ class LCDJob(Job):
        
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'DBSlice':dbslice,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(steeringFile) in types.StringTypes:
@@ -127,6 +128,7 @@ class LCDJob(Job):
     step.addParameter(Parameter("startFrom",0,"int","","",False,False,"Event in Stdhep file to start from"))
     step.addParameter(Parameter("dbSlice","","string","","",False,False,"Name of the DB slice to use"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
     
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Mokka',stepName)
@@ -140,6 +142,9 @@ class LCDJob(Job):
     if(dbslice):
       stepInstance.setValue("dbSlice",dbslice)
     stepInstance.setValue("applicationLog",logName)
+    if(outputFile):
+      stepInstance.setValue('outputFile',outputFile)
+      
     currentApp = "Mokka.%s"%appVersion
     swPackages = 'SoftwarePackages'
     description='LCD Software Packages to be installed'
@@ -150,6 +155,7 @@ class LCDJob(Job):
       if not currentApp in string.split(apps,';'):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict[self.stepCount]=stepInstance.getName()
     return S_OK()
     
   def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio=None,logFile=''):
@@ -199,6 +205,7 @@ class LCDJob(Job):
     else:
       return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
 
+    inputslcioStr =''
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
         inputslcio = [inputslcio]
@@ -209,7 +216,7 @@ class LCDJob(Job):
       inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
       inputslcioStr = string.join(inputslcio,';')
       self.addToInputSandbox.append(inputslcioStr)
-      
+
     self.StepCount +=1
     stepName = 'RunMarlin'
 
@@ -227,14 +234,18 @@ class LCDJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
     step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
-    if(inputslcio):
-      step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+    step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
-    if(inputslcio):
+    if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
+    else:
+      if not self.ioDict.has_key(self.StepCount-1):
+        raise TypeError,'Expected previously defined Gaudi step for input data'
+      stepInstance.setLink('inputSlcio',self.ioDict[self.StepCount-1],'outputfile')
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
    
@@ -250,6 +261,7 @@ class LCDJob(Job):
       if not currentApp in string.split(apps,';'):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict[self.stepCount]=stepInstance.getName()
     return S_OK()
     
     
