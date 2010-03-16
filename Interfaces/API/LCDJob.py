@@ -243,8 +243,6 @@ class LCDJob(Job):
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
-      print self.ioDict
-      print self.StepCount
       if not self.ioDict.has_key(self.StepCount-1):
         raise TypeError,'Expected previously defined Mokka step for input data'
       stepInstance.setLink('inputSlcio',self.ioDict[self.StepCount-1],'outputFile')
