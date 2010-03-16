@@ -42,7 +42,10 @@ class SQLWrapper:
 
     """create tmp dir and track it"""
     print "This is the folder to create %s"%mokkaDBroot
-    os.makedirs(mokkaDBroot)
+    try :
+      os.makedirs(mokkaDBroot)
+    except :
+      pass
     try:
         self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
     except IOError, (errno,strerror):
