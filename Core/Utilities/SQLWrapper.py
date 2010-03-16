@@ -303,7 +303,7 @@ done
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
         os.removedirs(self.mokkaDBroot)
-      except IOError, (errno,strerror):
+      except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
       return S_OK('OK')
