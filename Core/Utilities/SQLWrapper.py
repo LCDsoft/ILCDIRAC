@@ -263,7 +263,7 @@ done
     resultTuple = self.result['Value']
 
     status = resultTuple[0]
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    self.log.info( "Status after the shutdown execution is %s" % str( status ) )
     ##kill mysql
     #mysqlkillcomm = "cat mysql.pid | kill -9 "#%(self.MokkaTMPDir)
     #mysqlkillcomm = "kill -9 %s"%(self.mysqldPID)
@@ -271,7 +271,16 @@ done
     
     #resultTuple = self.result['Value']
 
-    #status = resultTuple[0]
+    ####Have to sleep for a while to let time for the socket to go away
+    sleepComm = """
+while [ -n "$socket_grep" ] ; do
+    socket_grep=$(netstat -ln 2>/dev/null | grep "%s/mysql.sock")
+    echo -n .
+    sleep 1
+done 
+"""%(self.MokkaTMPDir)
+    self.result = shellCall(0,sleepComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    status = resultTuple[0]
     #self.log.info( "Status after the application execution is %s" % str( status ) )    
     failed = False
     if status != 0:
@@ -292,7 +301,7 @@ done
         DIRAC.gLogger.verbose('Removing tmp dir')
         os.removedirs(self.mokkaDBroot)
       except IOError, (errno,strerror):
-        DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))
+        DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
       os.chdir(currentdir)
       return S_OK('OK')
