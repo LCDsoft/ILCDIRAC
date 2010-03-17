@@ -52,7 +52,8 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
   return True
 
 def PrepareXMLFile(finalxml,inputXML,inputSLCIO,numberofevts):
-  tree = ElementTree.parse(inputXML)
+  tree = ElementTree()
+  tree.parse(inputXML)
   params = tree.findall('global/parameter')
   for param in params:
     if param.attrib.has_key('name'):
