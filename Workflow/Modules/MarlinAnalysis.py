@@ -40,6 +40,7 @@ class MarlinAnalysis(ModuleBase):
     self.applicationLog = ''
     self.applicationVersion=''
     self.jobType = ''
+    self.evtstoprocess = ''
     
   def resolveInputVariables(self):
     """ Resolve all input variables for the module here.
@@ -65,6 +66,9 @@ class MarlinAnalysis(ModuleBase):
       
     if self.workflow_commons.has_key('JobType'):
       self.jobType = self.workflow_commons['JobType']
+      
+    if self.workflow_commons.has_key('EvtsToProcess'):
+      self.evtstoprocess = self.workflow_commons['EvtsToProcess']
       
       
   def execute(self):
@@ -103,7 +107,7 @@ class MarlinAnalysis(ModuleBase):
     
     finalXML = "marlinxml.xml"
     
-    res = PrepareXMLFile(finalXML,self.inputXML,listofslcio)
+    res = PrepareXMLFile(finalXML,self.inputXML,listofslcio,self.evtstoprocess)
     if not res:
       self.log.error('Something went wrong with XML generation')
       return S_ERROR('Something went wrong with XML generation')

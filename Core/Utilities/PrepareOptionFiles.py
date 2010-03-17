@@ -10,7 +10,7 @@ Created on Jan 29, 2010
 
 @author: sposs
 '''
-
+from xml.etree.ElementTree import ElementTree
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio=None):
   macfile = file("mokkamac.mac","w")
@@ -51,14 +51,25 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
   output.close()
   return True
 
-def PrepareXMLFile(finalxml,inputXML,inputSLCIO):
-  outxml = file(finalxml,'w')
-  inputxml = file(inputXML,"r")
-  for line in inputxml:
+def PrepareXMLFile(finalxml,inputXML,inputSLCIO,numberofevts):
+  tree = ElementTree.parse(inputXML)
+  params = tree.findall('global/parameter')
+  for param in params:
+    if param.attrib.has_key('name'):
+      if param.attrib['name']=='LCIOInputFiles':
+        param.text = inputSLCIO
+      if len(numberofevts)>0:
+        if param.attrib['name']=='MaxRecordNumber':
+          if param.attrib.has_key('value'):
+            param.attrib['value'] = numberofevts
+  #outxml = file(finalxml,'w')
+  #inputxml = file(inputXML,"r")
+  #for line in inputxml:
     #if line.find("<!--")<0:
-    if line.find("LCIOInputFiles")<0:
-      outxml.write(line)
-    else:
-      outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>\n'%inputSLCIO)
-  outxml.close()
+  #  if line.find("LCIOInputFiles")<0:
+  #    outxml.write(line)
+  #  else:
+  #    outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>\n'%inputSLCIO)
+  #outxml.close()
+  tree.write(finalxml)
   return True

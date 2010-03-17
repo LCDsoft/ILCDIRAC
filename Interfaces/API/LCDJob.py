@@ -158,7 +158,7 @@ class LCDJob(Job):
     self.ioDict[self.StepCount]=stepInstance.getName()
     return S_OK()
     
-  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio=None,logFile=''):
+  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio=None,evtstoprocess=None,logFile=''):
     """ Define Marlin step
      Example usage:
 
@@ -174,9 +174,11 @@ class LCDJob(Job):
       @param gearfile: as the name suggests
       @type gearfile: string
       @param inputslcio: path to input slcio, list of strings or string
-      @type inputslcio: string or list      
+      @type inputslcio: string or list
+      @param evtstoprocess: number of events to process
+      @type evtstoprocess: int or string
     """
-    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
@@ -235,6 +237,7 @@ class LCDJob(Job):
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
     step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+    step.addParameter(Parameter("EvtsToProcess","","string","","",False,False,"Nunmber of events to proccess"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
@@ -248,8 +251,9 @@ class LCDJob(Job):
       stepInstance.setLink('inputSlcio',self.ioDict[self.StepCount-1],'outputFile')
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
-   
-    
+    if(evtstoprocess):
+      stepInstance.setValue("EvtsToProcess",str(evtstoprocess))
+
     currentApp = "Marlin.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
