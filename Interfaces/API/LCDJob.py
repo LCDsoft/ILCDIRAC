@@ -257,7 +257,7 @@ class LCDJob(Job):
       if self.ioDict.has_key(self.StepCount-1):
         stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
       else :
-        stepInstance.setValue("EvtsToProcess",'')
+        stepInstance.setValue("EvtsToProcess",-1)
         
     currentApp = "Marlin.%s"%appVersion
 
