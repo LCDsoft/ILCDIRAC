@@ -124,14 +124,19 @@ def getConfig(architecture, platformtype, compiler, debug=False):
 
 # officially supported binaries
 binary_opt_list = ["slc3_ia32_gcc323",
-                   "slc4_ia32_gcc34", "slc4_amd64_gcc34","slc5_amd64_gcc43",
+                   "slc4_ia32_gcc34", 
+                   "slc4_amd64_gcc34",
+                   "slc5_amd64_gcc43",
                    "x86_64-slc5-gcc43-opt",
                    "win32_vc71"]
 # future possible supported binaries
-extra_binary_opt_list = ["x86_64-slc5-gcc34-opt", "i686-slc5-gcc34-opt",
+extra_binary_opt_list = ["x86_64-slc5-gcc34-opt", 
+                         "i686-slc5-gcc34-opt",
                          "i686-slc5-gcc43-opt",
-                         "i686-winxp-vc90-opt", "x86_64-winxp-vc90-opt",
-                         "osx105_ia32_gcc401", "x86_64-osx106-gcc42-opt"]
+                         "i686-winxp-vc90-opt", 
+                         "x86_64-winxp-vc90-opt",
+                         "osx105_ia32_gcc401", 
+                         "x86_64-osx106-gcc42-opt"]
 
 binary_dbg_list = [ getBinaryDbg(x) for x in binary_opt_list ]
 extra_binary_dbg_list = [ getBinaryDbg(x) for x in extra_binary_opt_list ]
