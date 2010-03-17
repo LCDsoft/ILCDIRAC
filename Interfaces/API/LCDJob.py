@@ -237,7 +237,7 @@ class LCDJob(Job):
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
     step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
-    step.addParameter(Parameter("EvtsToProcess","","int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
