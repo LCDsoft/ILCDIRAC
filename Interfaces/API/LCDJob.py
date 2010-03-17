@@ -237,7 +237,7 @@ class LCDJob(Job):
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
     step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
-    step.addParameter(Parameter("EvtsToProcess","","int","","",False,False,"Nunmber of events to proccess"))
+    step.addParameter(Parameter("EvtsToProcess","","int","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
@@ -254,10 +254,11 @@ class LCDJob(Job):
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
     else:
-      if not self.ioDict.has_key(self.StepCount-1):
-        raise TypeError,'Expected previously defined Mokka step for input number of events to process'
-      stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
-      
+      if self.ioDict.has_key(self.StepCount-1):
+        stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
+      else :
+        stepInstance.setValue("EvtsToProcess",'')
+        
     currentApp = "Marlin.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
