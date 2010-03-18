@@ -210,7 +210,7 @@ class LCDJob(Job):
       if self.ioDict.has_key(self.StepCount-1):
         gearfile="GearOutput.xml"
       else:
-        return self._reportError('As Mokka do not run before, you need to specify GearFile nad have it in the current directory')
+        return self._reportError('As Mokka do not run before, you need to specify GearFile and have it in the current directory')
 
     inputslcioStr =''
     if(inputslcio):
