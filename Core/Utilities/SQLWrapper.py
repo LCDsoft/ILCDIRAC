@@ -302,7 +302,7 @@ done
     if (os.path.exists(self.MokkaTMPDir)):
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
-        os.removedirs(self.mokkaDBroot)
+        os.rmdir(self.mokkaDBroot)
       except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
