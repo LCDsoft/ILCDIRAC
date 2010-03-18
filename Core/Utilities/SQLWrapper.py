@@ -12,7 +12,7 @@ Created on Feb 1, 2010
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
 from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
 import DIRAC
-import os,sys,re, tempfile, threading, time
+import os,sys,re, tempfile, threading, time, shutil
 
 EXECUTION_RESULT = {}
 
@@ -302,7 +302,7 @@ done
     if (os.path.exists(self.MokkaTMPDir)):
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
-        os.rmdir(self.mokkaDBroot)
+        shutil.rmtree(self.mokkaDBroot,True)
       except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
