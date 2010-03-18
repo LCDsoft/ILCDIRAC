@@ -183,8 +183,9 @@ class LCDJob(Job):
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
       return self._reportError('Expected string for xml file',__name__,**kwargs)
-    if not type(gearfile) in types.StringTypes:
-      return self._reportError('Expected string for gear file',__name__,**kwargs)
+    #if not type(gearfile) in types.StringTypes:
+    #  return self._reportError('Expected string for gear file',__name__,**kwargs)
+    
  
     if logFile:
       if type(logFile) in types.StringTypes:
