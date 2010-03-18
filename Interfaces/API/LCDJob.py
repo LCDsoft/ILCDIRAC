@@ -81,6 +81,8 @@ class LCDJob(Job):
       return self._reportError('Expected int for StartFrom',__name__,**kwargs)
     if not type(dbslice) in types.StringTypes:
       return self._reportError('Expected string for DB slice name',__name__,**kwargs)
+ 
+    self.StepCount +=1
     
     if logFile:
       if type(logFile) in types.StringTypes:
@@ -107,7 +109,6 @@ class LCDJob(Job):
       else:
         return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
 
-    self.StepCount +=1
     stepName = 'RunMokka'
 
     
