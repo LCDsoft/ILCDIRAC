@@ -186,7 +186,8 @@ class LCDJob(Job):
     #if not type(gearfile) in types.StringTypes:
     #  return self._reportError('Expected string for gear file',__name__,**kwargs)
     
- 
+    self.StepCount +=1
+     
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
@@ -225,7 +226,7 @@ class LCDJob(Job):
       inputslcioStr = string.join(inputslcio,';')
       self.addToInputSandbox.append(inputslcioStr)
 
-    self.StepCount +=1
+
     stepName = 'RunMarlin'
 
     
