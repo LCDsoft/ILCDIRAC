@@ -153,8 +153,8 @@ done
     status = resultTuple[0]
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
     ### now test
-    comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=%s/mysql.sock <<< 'SHOW VARIABLES;' "%(self.MokkaTMPDir)
-    self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #comm = "mysql --no-defaults -uconsult -pconsult -hlocalhost --socket=%s/mysql.sock <<< 'SHOW VARIABLES;' "%(self.MokkaTMPDir)
+    #self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
 
     ##get the intial DB
 #    init_db_file_name = "%s/setup.sql"%self.MokkaTMPDir
