@@ -158,7 +158,7 @@ class LCDJob(Job):
     self.ioDict[self.StepCount]=stepInstance.getName()
     return S_OK()
     
-  def setMarlin(self,appVersion,xmlfile,gearfile,inputslcio=None,evtstoprocess=None,logFile=''):
+  def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile=''):
     """ Define Marlin step
      Example usage:
 
@@ -171,7 +171,7 @@ class LCDJob(Job):
       
       @param xmlfile: the marlin xml definition
       @type xmlfile: string
-      @param gearfile: as the name suggests
+      @param gearfile: as the name suggests, not needed if Mokka is ran before
       @type gearfile: string
       @param inputslcio: path to input slcio, list of strings or string
       @type inputslcio: string or list
@@ -200,12 +200,17 @@ class LCDJob(Job):
       self.addToInputSandbox.append(xmlfile)
     else:
       return self._reportError('Specified XML file %s does not exist' %(xmlfile),__name__,**kwargs)
-    
-    if os.path.exists(gearfile):
-      self.log.verbose('Found specified GEAR file %s'%gearfile)
-      self.addToInputSandbox.append(gearfile)
+    if gearfile:
+      if os.path.exists(gearfile):
+        self.log.verbose('Found specified GEAR file %s'%gearfile)
+        self.addToInputSandbox.append(gearfile)
+      else:
+        return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
     else:
-      return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
+      if self.ioDict.has_key(self.StepCount-1):
+        gearfile="GearOutput.xml"
+      else:
+        return self._reportError('As Mokka do not run before, you need to specify GearFile nad have it in the current directory')
 
     inputslcioStr =''
     if(inputslcio):
