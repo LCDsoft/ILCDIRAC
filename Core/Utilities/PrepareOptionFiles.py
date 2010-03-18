@@ -51,7 +51,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
   output.close()
   return True
 
-def PrepareXMLFile(finalxml,inputXML,inputSLCIO,numberofevts):
+def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts):
   tree = ElementTree()
   tree.parse(inputXML)
   params = tree.findall('global/parameter')
@@ -63,6 +63,9 @@ def PrepareXMLFile(finalxml,inputXML,inputSLCIO,numberofevts):
         if param.attrib['name']=='MaxRecordNumber':
           if param.attrib.has_key('value'):
             param.attrib['value'] = numberofevts
+      if param.attrib['name']=="GearXMLFile":
+        if param.attrib.has_key('value'):
+          param.attrib['value'] = inputGEAR
   #outxml = file(finalxml,'w')
   #inputxml = file(inputXML,"r")
   #for line in inputxml:
