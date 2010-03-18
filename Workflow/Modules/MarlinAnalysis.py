@@ -108,7 +108,7 @@ class MarlinAnalysis(ModuleBase):
     
     finalXML = "marlinxml.xml"
     
-    res = PrepareXMLFile(finalXML,self.inputXML,listofslcio,self.evtstoprocess)
+    res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess)
     if not res:
       self.log.error('Something went wrong with XML generation')
       return S_ERROR('Something went wrong with XML generation')
