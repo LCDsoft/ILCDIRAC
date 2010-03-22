@@ -40,7 +40,7 @@ class ILCJob(Job):
 
        Example usage:
 
-       >>> job = LCDJob()
+       >>> job = ILCJob()
        >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputStdhep=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
 
        Modified drivers (.so files) should be put in a 'lib' directory and input as inputdata:
@@ -163,7 +163,7 @@ class ILCJob(Job):
     """ Define Marlin step
      Example usage:
 
-      >>> job = LCDJob()
+      >>> job = ILCJob()
       >>> job.setMarlin("v00-17",xmlfile='myMarlin.xml',gearfile='GearFile.xml',inputslcio='input.slcio')
       
       If personal processors are needed, put them in a 'lib' directory, and do 
