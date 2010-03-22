@@ -25,7 +25,7 @@ class LCDJob(Job):
     """Instantiates the Workflow object and some default parameters.
     """
     Job.__init__(self,script)
-    self.importLocation = 'LCDDIRAC.Workflow.Modules'
+    self.importLocation = 'ILCDIRAC.Workflow.Modules'
     self.StepCount = 0
     self.ioDict = {}
   
@@ -148,7 +148,7 @@ class LCDJob(Job):
       
     currentApp = "Mokka.%s"%appVersion
     swPackages = 'SoftwarePackages'
-    description='LCD Software Packages to be installed'
+    description='ILC Software Packages to be installed'
     if not self.workflow.findParameter(swPackages):
       self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
     else:
