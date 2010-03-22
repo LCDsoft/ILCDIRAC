@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 '''
-LCDDIRAC.Interfaces.API.LCDJob : equivalent of LHCbJob for LCD group and applications.
+ILCDIRAC.Interfaces.API.ILCJob : equivalent of LHCbJob for ILC group and applications.
 
 Created on Feb 8, 2010
 
