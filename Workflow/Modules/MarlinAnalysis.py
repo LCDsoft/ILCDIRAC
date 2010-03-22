@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 '''
-LCDDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
+ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
 Created on Feb 9, 2010
 Modified on Feb 10, 2010
@@ -13,9 +13,9 @@ import os,sys,re,string
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
-from LCDDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
-from LCDDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareXMLFile
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 import DIRAC
 

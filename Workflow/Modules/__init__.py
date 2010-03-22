@@ -1,5 +1,5 @@
 # $HeadURL$
 # $Id$
 """
-   LCDDIRAC.WorkflowLib.Modules package
+   ILCDIRAC.WorkflowLib.Modules package
 """

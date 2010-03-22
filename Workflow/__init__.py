@@ -1,5 +1,5 @@
 # $HeadURL$
 # $Id$
 """
-LCDDIRAC.Workflow package
+ILCDIRAC.Workflow package
 """

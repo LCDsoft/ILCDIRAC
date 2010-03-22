@@ -9,10 +9,10 @@ Created on Jan 29, 2010
 '''
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from DIRAC.Core.DISET.RPCClient                          import RPCClient
-from LCDDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
-from LCDDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
-from LCDDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
-from LCDDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
+from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
+from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC

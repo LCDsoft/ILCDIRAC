@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 '''
-LCDDIRAC.Core.Utilities.SplitByFilesAndEvents
+ILCDIRAC.Core.Utilities.SplitByFilesAndEvents
 
 Based on Dirac.SplitByFiles idea, but doing the splitting by number of events
 Gives a list of dictionaries

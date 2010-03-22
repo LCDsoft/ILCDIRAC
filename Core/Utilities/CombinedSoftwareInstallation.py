@@ -17,7 +17,7 @@ import os, urllib, string
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 import tarfile
-from LCDDIRAC.Core.Utilities.DetectOS import NativeMachine
+from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
 natOS = NativeMachine()
 
 

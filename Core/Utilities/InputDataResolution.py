@@ -23,7 +23,7 @@ import DIRAC
 
 import os,sys,re,string,types
 
-COMPONENT_NAME='LCDInputDataResolution'
+COMPONENT_NAME='ILCInputDataResolution'
 
 class InputDataResolution:
 
@@ -68,7 +68,7 @@ class InputDataResolution:
   #############################################################################
   def __resolveInputData(self):
     """This method controls the execution of the DIRAC input data modules according
-       to the LHCb VO policy defined in the configuration service.
+       to the ILC VO policy defined in the configuration service.
     """
     if self.arguments['Configuration'].has_key('SiteName'):
       site = self.arguments['Configuration']['SiteName']
