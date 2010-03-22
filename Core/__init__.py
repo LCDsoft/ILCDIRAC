@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 """
-   LCDDIRAC.Core package
+   ILCDIRAC.Core package
 
    This contains the LCD specific Core.
    

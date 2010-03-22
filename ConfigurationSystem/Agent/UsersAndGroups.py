@@ -3,7 +3,7 @@
 
 __RCSID__ = "$Id$"
 """
-  Update Users and Groups from VOMS on CS : special LCD flavour, by s Poss
+  Update Users and Groups from VOMS on CS : special ILC flavour, by s Poss
 """
 import os
 from DIRAC.Core.Base.AgentModule                     import AgentModule

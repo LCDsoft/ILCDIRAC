@@ -1,6 +1,6 @@
 # $HeadURL$
 # $Id$
-""" ModuleBase - base class for LCD workflow modules. 
+""" ModuleBase - base class for ILC workflow modules. 
 Stolen by S. Poss from LHCbSystem.Workflow.Modules
 
 """

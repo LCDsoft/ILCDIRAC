@@ -1,4 +1,4 @@
-""" General LCD platform configuration, based on LHCb version"""
+""" General ILC platform configuration, based on LHCb version"""
 
 import sys, platform, os
 import re

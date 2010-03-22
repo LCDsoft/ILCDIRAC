@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 '''
-LCDDIRAC.Core.Utilities.PrepareSteeringFile
+ILCDIRAC.Core.Utilities.PrepareSteeringFile
 
 This provides a set of methods to prepare the Mokka steering files : 
 the .mac file is created and set into the initial steering file

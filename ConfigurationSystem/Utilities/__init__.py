@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 '''
-LCDDIRAC.Core.Utilities
+ILCDIRAC.Core.Utilities
 
 Created on Jan 13, 2010
 

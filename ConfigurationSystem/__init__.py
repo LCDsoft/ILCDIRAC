@@ -2,7 +2,7 @@
 # $Id$
 
 """
-   LCDDIRAC.ConfigurationSystem package
+   ILCDIRAC.ConfigurationSystem package
 
 """
 

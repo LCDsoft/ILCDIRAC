@@ -1,9 +1,9 @@
 # $HeadURL$
 # $Id$
 '''
-LCDDIRAC.Core.Utilities package
+ILCDIRAC.Core.Utilities package
 
-   This contains the LCD specific Core Utilities.
+   This contains the ILC specific Core Utilities.
    
 Created on Jan 15, 2010
 

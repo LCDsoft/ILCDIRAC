@@ -1,7 +1,7 @@
 # $HeadURL$
 # $Id$
 """
-LCDDIRAC.Interfaces package
+ILCDIRAC.Interfaces package
 
    This contains the LCD specific API plugins for DIRAC.
    
