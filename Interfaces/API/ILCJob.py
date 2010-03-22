@@ -18,7 +18,7 @@ from DIRAC.Interfaces.API.Job                       import Job
 #from DIRAC.Core.Utilities.List                      import uniqueElements
 from DIRAC                                          import gConfig
  
-COMPONENT_NAME='/WorkflowLib/API/LCDJob' 
+COMPONENT_NAME='/WorkflowLib/API/ILCJob' 
 
 class LCDJob(Job):
   def __init__(self,script=None):
