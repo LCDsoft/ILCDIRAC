@@ -20,7 +20,7 @@ from DIRAC                                          import gConfig
  
 COMPONENT_NAME='/WorkflowLib/API/ILCJob' 
 
-class LCDJob(Job):
+class ILCJob(Job):
   def __init__(self,script=None):
     """Instantiates the Workflow object and some default parameters.
     """
