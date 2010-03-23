@@ -71,7 +71,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
           param.attrib['value'] = inputGEAR
       if not debug:
         if param.attrib['name']=='Verbosity':
-          param.text = "MESSAGE"
+          param.text = "SILENT"
 
   #outxml = file(finalxml,'w')
   #inputxml = file(inputXML,"r")
