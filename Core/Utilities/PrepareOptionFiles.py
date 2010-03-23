@@ -12,7 +12,7 @@ Created on Jan 29, 2010
 '''
 from xml.etree.ElementTree import ElementTree
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio=None,debug):
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,debug,outputlcio=None):
   macfile = file("mokkamac.mac","w")
   macfile.write("/generator/generator %s\n"%stdhepFile)
   macfile.write("/run/beamOn %s\n"%nbOfRuns)
