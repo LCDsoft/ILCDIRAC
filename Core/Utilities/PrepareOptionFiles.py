@@ -44,7 +44,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
     output.write("/Mokka/init/detectorModel %s\n"%detectormodel)
   
   if not debug:
-    output.write("/Mokka/init/printLevel 0/n")
+    output.write("/Mokka/init/printLevel 0\n")
 
   output.write("/Mokka/init/BatchMode true\n")
   output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
