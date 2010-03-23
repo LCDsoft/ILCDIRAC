@@ -29,7 +29,7 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
   
-  def setMokka(self,appVersion,steeringFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile=''):
+  def setMokka(self,appVersion,steeringFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
     """Helper function.
        Define Mokka step
        
@@ -63,10 +63,12 @@ class ILCJob(Job):
        @type dbslice: string
        @param logFile: Optional log file name
        @type logFile: string
+       @param debug: By default, change printout level to least verbosity
+       @type debug: bool
        
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(steeringFile) in types.StringTypes:
@@ -130,6 +132,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("dbSlice","","string","","",False,False,"Name of the DB slice to use"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
     
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Mokka',stepName)
@@ -145,7 +148,7 @@ class ILCJob(Job):
     stepInstance.setValue("applicationLog",logName)
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
-      
+    stepInstance.setValue('debug',debug)
     currentApp = "Mokka.%s"%appVersion
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
@@ -159,7 +162,7 @@ class ILCJob(Job):
     self.ioDict[self.StepCount]=stepInstance.getName()
     return S_OK()
     
-  def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile=''):
+  def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False):
     """ Define Marlin step
      Example usage:
 
@@ -178,8 +181,10 @@ class ILCJob(Job):
       @type inputslcio: string or list
       @param evtstoprocess: number of events to process
       @type evtstoprocess: int or string
+      @param debug: By default, change printout level to least verbosity
+      @type debug: bool
     """
-    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile,'debug':debug}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
@@ -246,6 +251,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Marlin',stepName)
@@ -266,6 +272,7 @@ class ILCJob(Job):
         stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
       else :
         stepInstance.setValue("EvtsToProcess",-1)
+    stepInstance.setValue("debug",debug)
         
     currentApp = "Marlin.%s"%appVersion
 

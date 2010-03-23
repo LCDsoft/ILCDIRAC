@@ -52,7 +52,7 @@ class MokkaAnalysis(ModuleBase):
         #self.optionsLine = ''
         #self.extraPackages = ''
         self.jobType = ''
-
+        self.debug = False
 #############################################################################
     def resolveInputVariables(self):
       """ Resolve all input variables for the module here.
@@ -87,6 +87,8 @@ class MokkaAnalysis(ModuleBase):
 
       if self.step_commons.has_key('dbSlice'):
         self.dbslice = self.step_commons['dbSlice']
+      if self.step_commons.has_key('debug'):
+        self.debug = self.step_commons['debug']
           
       #if self.step_commons.has_key('generatorName'):
       #    self.generator_name = self.step_commons['generatorName']
@@ -102,6 +104,7 @@ class MokkaAnalysis(ModuleBase):
 
       if self.workflow_commons.has_key('JobType'):
           self.jobType = self.workflow_commons['JobType']
+          
       return S_OK('Parameters resolved')
     
     def execute(self):
@@ -159,7 +162,7 @@ class MokkaAnalysis(ModuleBase):
       self.stdhepFile = os.path.basename(self.stdhepFile)
       ##idem for steering file
       self.steeringFile = os.path.basename(self.steeringFile)
-      steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,self.numberOfEvents,self.startFrom)
+      steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,self.numberOfEvents,self.startFrom,self.debug)
       if not steerok:
         self.log.error('Failed to create MOKKA steering file')
         return S_ERROR('Failed to create MOKKA steering file')
