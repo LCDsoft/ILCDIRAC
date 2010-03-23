@@ -41,6 +41,7 @@ class MarlinAnalysis(ModuleBase):
     self.applicationVersion=''
     self.jobType = ''
     self.evtstoprocess = ''
+    self.debug = False
     
   def resolveInputVariables(self):
     """ Resolve all input variables for the module here.
@@ -70,14 +71,15 @@ class MarlinAnalysis(ModuleBase):
     if self.step_commons.has_key('EvtsToProcess'):
       if(self.step_commons['EvtsToProcess']>0):
         self.evtstoprocess = str(self.step_commons['EvtsToProcess'])
-      
+    if self.step_commons.has_key('debug'):
+      self.debug =  self.step_commons['debug']
+    return S_OK('Parameters resolved')
       
   def execute(self):
     """
     Called by Agent
     """
-    self.resolveInputVariables()
-    self.result = S_OK()
+    self.result =self.resolveInputVariables()
     if not self.systemConfig:
       self.result = S_ERROR( 'No LCD platform selected' )
     elif not self.applicationLog:
@@ -108,7 +110,7 @@ class MarlinAnalysis(ModuleBase):
     
     finalXML = "marlinxml.xml"
     
-    res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess)
+    res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.debug)
     if not res:
       self.log.error('Something went wrong with XML generation')
       return S_ERROR('Something went wrong with XML generation')

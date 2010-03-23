@@ -12,7 +12,7 @@ Created on Jan 29, 2010
 '''
 from xml.etree.ElementTree import ElementTree
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio=None):
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,outputlcio=None,debug):
   macfile = file("mokkamac.mac","w")
   macfile.write("/generator/generator %s\n"%stdhepFile)
   macfile.write("/run/beamOn %s\n"%nbOfRuns)
@@ -42,6 +42,9 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
               output.write(line)
   if detectormodel:
     output.write("/Mokka/init/detectorModel %s"%detectormodel)
+  
+  if not debug:
+    output.write("/Mokka/init/printLevel 0 ")
 
   output.write("/Mokka/init/BatchMode true\n")
   output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
@@ -51,7 +54,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
   output.close()
   return True
 
-def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts):
+def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   tree = ElementTree()
   tree.parse(inputXML)
   params = tree.findall('global/parameter')
@@ -66,6 +69,10 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts):
       if param.attrib['name']=="GearXMLFile":
         if param.attrib.has_key('value'):
           param.attrib['value'] = inputGEAR
+      if not debug:
+        if param.attrib['name']=='Verbosity':
+          param.text = "SILENT"
+
   #outxml = file(finalxml,'w')
   #inputxml = file(inputXML,"r")
   #for line in inputxml:
