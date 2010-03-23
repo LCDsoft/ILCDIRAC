@@ -7,7 +7,7 @@ Created on Feb 8, 2010
 
 @author: sposs
 '''
-import os, types, string
+import string
 from DIRAC.Core.Workflow.Parameter                  import *
 from DIRAC.Core.Workflow.Module                     import *
 from DIRAC.Core.Workflow.Step                       import *
@@ -16,7 +16,7 @@ from DIRAC.Core.Workflow.WorkflowReader             import *
 from DIRAC.Interfaces.API.Job                       import Job
 #from DIRAC.Core.Utilities.File                      import makeGuid
 #from DIRAC.Core.Utilities.List                      import uniqueElements
-from DIRAC                                          import gConfig
+#from DIRAC                                          import gConfig
  
 COMPONENT_NAME='/WorkflowLib/API/ILCJob' 
 
