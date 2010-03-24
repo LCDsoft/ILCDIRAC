@@ -83,7 +83,7 @@ class ILCJob(Job):
       return self._reportError('Expected int for StartFrom',__name__,**kwargs)
     if not type(dbslice) in types.StringTypes:
       return self._reportError('Expected string for DB slice name',__name__,**kwargs)
-    if not type(debug) in types.BooleanType:
+    if not type(debug) == types.BooleanType:
       return self._reportError('Expected bool for debug',__name__,**kwargs)
  
     self.StepCount +=1
@@ -193,7 +193,7 @@ class ILCJob(Job):
       return self._reportError('Expected string for xml file',__name__,**kwargs)
     #if not type(gearfile) in types.StringTypes:
     #  return self._reportError('Expected string for gear file',__name__,**kwargs)
-    if not type(debug) in types.BooleanType:
+    if not type(debug) == types.BooleanType:
       return self._reportError('Expected bool for debug',__name__,**kwargs)
     
     self.StepCount +=1
