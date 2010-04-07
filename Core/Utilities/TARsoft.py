@@ -39,8 +39,25 @@ def TARinstall(app,config,area):
   if appName=="slic":
     members = app_tar_to_untar.getmembers()
     fileexample = members[0].name
-    folder = fileexample.split("/")[0]
-    os.environ['SLIC_DIR']=folder
+    basefolder = fileexample.split("/")[0]
+    os.environ['SLIC_DIR']= basefolder
+    slicv = ''
+    lcddv = ''
+    xercesv = ''
+    for mem in members:
+      if mem.name.find('/packages/slic/')>0:
+        slicv = mem.name.split("/")[3]
+      if mem.name.find('/packages/lcdd/')>0:
+        lcddv = mem.name.split("/")[3]
+      if mem.name.find('/packages/xerces/')>0:
+        xercesv = mem.name.split("/")[3]
+    if slicv:
+      os.environ['SLIC_VERSION'] = slicv
+    if xercesv:
+      os.environ['XERCES_VERSION']= xercesv
+    if lcddv:
+      os.environ['LCDD_VERSION'] = lcddv
+
   #remove now useless tar ball
   try:
     os.unlink(app_tar)
