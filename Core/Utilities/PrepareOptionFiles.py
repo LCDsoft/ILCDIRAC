@@ -84,3 +84,11 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   #outxml.close()
   tree.write(finalxml)
   return True
+
+def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,outputlcio=None):
+  inputmacfile = file(inputmac,'r')
+  output = file(outputmac,'w')
+
+  inputmacfile.close()
+  output.close()
+  return True
