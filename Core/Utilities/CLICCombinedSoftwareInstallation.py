@@ -11,8 +11,8 @@ New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD 
 import os, string
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC 
-from ILCDIRAC.Core.Utilities.ILDsoft import install
-from ILCDIRAC.Core.Utilities.SiDsoft import install
+from ILCDIRAC.Core.Utilities.TARsoft import TARinstall
+from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall 
 from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
 natOS = NativeMachine()
 
@@ -94,10 +94,10 @@ class CLICCombinedSoftwareInstallation:
         DIRAC.gLogger.info( 'Assume locally running job, will install software in /LocalSite/LocalArea=%s' %(self.localArea))
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      if app[0].lower=="marlin" or app[0].lower=="mokka":
-        res = ILDsoft.install(app,self.jobConfig,self.localArea)
-      if app[0].lower=="slic" or app[0].lower=="lcsim":
-        res = SiDsoft.install(app,self.jobConfig,self.localArea)
+      if app[0].lower=="marlin" or app[0].lower=="mokka" or app[0].lower=="slic" :
+        res = TARinstall(app,self.jobConfig,self.localArea)
+      if app[0].lower=="lcsim":
+        res = JAVAinstall(app,self.jobConfig,self.localArea)
       if not res:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
