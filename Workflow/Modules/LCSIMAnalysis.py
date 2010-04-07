@@ -1,0 +1,115 @@
+'''
+ILCDIRAC.Workflow.Modules.LcsimAnalysis Called by Job Agent. 
+
+Created on Apr 7, 2010
+
+@author: sposs
+'''
+import os, sys, re
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+#from DIRAC.Core.DISET.RPCClient                           import RPCClient
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+import DIRAC
+
+class LCSIMAnalysis(ModuleBase):
+  def __init__(self):
+    ModuleBase.__init__(self)
+    self.enable = True
+    self.STEP_NUMBER = ''
+    self.log = gLogger.getSubLogger( "LCSIMAnalysis" )
+    self.result = S_ERROR()
+    self.systemConfig = ''
+    self.applicationLog = ''
+    self.applicationVersion=''
+    
+  def resolveInputVariables(self):
+    if self.workflow_commons.has_key('SystemConfig'):
+        self.systemConfig = self.workflow_commons['SystemConfig']
+
+    if self.step_commons.has_key('applicationVersion'):
+        self.applicationVersion = self.step_commons['applicationVersion']
+        self.applicationLog = self.step_commons['applicationLog']
+
+    return S_OK('Parameters resolved')
+
+  def execute(self):
+    """
+    Called by Agent
+    """
+    self.result =self.resolveInputVariables()
+    if not self.systemConfig:
+      self.result = S_ERROR( 'No LCD platform selected' )
+    elif not self.applicationLog:
+      self.result = S_ERROR( 'No Log file provided' )
+    if not self.result['OK']:
+      return self.result
+    lcsimDir = 'lcsim'
+    mySoftwareRoot = ''
+    localArea = LocalArea()
+    sharedArea = SharedArea()
+    if os.path.exists('%s%s%s' %(localArea,os.sep,lcsimDir)):
+      mySoftwareRoot = localArea
+    if os.path.exists('%s%s%s' %(sharedArea,os.sep,lcsimDir)):
+      mySoftwareRoot = sharedArea
+    if not mySoftwareRoot:
+      self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsimDir,localArea,sharedArea))
+      return S_ERROR('Failed to discover software')
+    
+    scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
+    if os.path.exists(scriptName): os.remove(scriptName)
+    script = open(scriptName,'w')
+    script.write('#!/bin/sh \n')
+    script.write('#####################################################################\n')
+    script.write('# Dynamically generated script to run a production or analysis job. #\n')
+    script.write('#####################################################################\n')
+      
+      
+    script.close()
+    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
+
+    os.chmod(scriptName,0755)
+    comm = 'sh -c "./%s"' %scriptName
+    self.setApplicationStatus('LCSIM %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
+    self.stdError = ''
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
+    resultTuple = self.result['Value']
+
+    status = resultTuple[0]
+    # stdOutput = resultTuple[1]
+    # stdError = resultTuple[2]
+    self.log.info( "Status after the application execution is %s" % str( status ) )
+
+    failed = False
+    if status != 0:
+      self.log.error( "LCSIM execution completed with errors:" )
+      failed = True
+    else:
+      self.log.info( "LCSIM execution completed successfully")
+
+    if failed:
+      self.log.error( "==================================\n StdError:\n" )
+      self.log.error( self.stdError) 
+      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+      self.log.error('LCSIM Exited With Status %s' %(status))
+      return S_ERROR('LCSIM Exited With Status %s' %(status))    
+    return S_OK('LCSIM %s Successful' %(self.applicationVersion))
+
+    #############################################################################
+    def redirectLogOutput(self, fd, message):
+      sys.stdout.flush()
+      if message:
+        if re.search('INFO Evt',message): print message
+      if self.applicationLog:
+        log = open(self.applicationLog,'a')
+        log.write(message+'\n')
+        log.close()
+      else:
+        self.log.error("Application Log file not defined")
+      if fd == 1:
+        self.stdError += message
+    #############################################################################
+    
