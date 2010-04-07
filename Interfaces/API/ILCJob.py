@@ -292,5 +292,9 @@ class ILCJob(Job):
     self.ioDict[self.StepCount]=stepInstance.getName()
     return S_OK()
     
-    
+  def setSLIC(self,appVersion):
+    pass    
+  
+  def setLCSIM(self,appVersion):
+    pass    
     
