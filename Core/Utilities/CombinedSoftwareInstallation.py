@@ -23,7 +23,6 @@ natOS = NativeMachine()
 
 #SoftTarBallLFN = "/lcd/.../.../.../.../"
 #SoftTarBallLFN = "/afs/cern.ch/eng/clic/data/software/"
-TarBallURL = "http://www.cern.ch/lcd-data/software/"
 
 class CombinedSoftwareInstallation:
 
@@ -137,7 +136,7 @@ def CheckInstallSoftware(app,config,area):
   appName    = app[0]
   appVersion = app[1]
   appName = appName.lower()
-  app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s'%(config,appName,appVersion),'')
+  app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
   if not app_tar:
     DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
     return False
@@ -160,6 +159,10 @@ def CheckInstallSoftware(app,config,area):
 #    return False
 
 #downloading file from url, but don't do if file is already there.
+  TarBallURL = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/TarBallURL'%(config,appName),'')
+  if not TarBallURL:
+    DIRAC.gLogger.error('Could not find TarBallURL in CS for %s %s'%(appName,appVersion))
+    return DIRAC.S_ERROR('Could not find TarBallURL in CS')
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar)):
     try :
       DIRAC.gLogger.debug("Downloading software", '%s_%s' %(appName,appVersion))

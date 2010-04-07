@@ -94,11 +94,11 @@ class CLICCombinedSoftwareInstallation:
         DIRAC.gLogger.info( 'Assume locally running job, will install software in /LocalSite/LocalArea=%s' %(self.localArea))
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      if app[0].lower=="marlin" or app[0].lower=="mokka" or app[0].lower=="slic" :
+      if app[0].lower()=="marlin" or app[0].lower()=="mokka" or app[0].lower()=="slic" :
         res = TARinstall(app,self.jobConfig,self.localArea)
-      if app[0].lower=="lcsim":
+      if app[0].lower()=="lcsim":
         res = JAVAinstall(app,self.jobConfig,self.localArea)
-      if not res:
+      if not res['OK']:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
       else:
