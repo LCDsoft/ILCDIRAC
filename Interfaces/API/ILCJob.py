@@ -230,9 +230,9 @@ class ILCJob(Job):
         inputslcio = [inputslcio]
       if not type(inputslcio)==type([]):
         return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
-      for i in xrange(len(inputslcio)):
-        inputslcio[i] = inputslcio[i].replace('LFN:','')
-      inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+      #for i in xrange(len(inputslcio)):
+      #  inputslcio[i] = inputslcio[i].replace('LFN:','')
+      #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
       inputslcioStr = string.join(inputslcio,';')
       self.addToInputSandbox.append(inputslcioStr)
 
