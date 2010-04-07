@@ -36,7 +36,11 @@ def TARinstall(app,config,area):
 
   app_tar_to_untar = tarfile.open(app_tar)
   app_tar_to_untar.extractall()
-  
+  if appName=="slic":
+    members = app_tar_to_untar.getmembers()
+    fileexample = members[0].name
+    folder = fileexample.split("/")[0]
+    os.environ['SLIC_DIR']=folder
   #remove now useless tar ball
   try:
     os.unlink(app_tar)
