@@ -53,6 +53,15 @@ class SLICAnalysis(ModuleBase):
       self.detectorModel = self.step_commons['detectorModel']
     
     return S_OK('Parameters resolved')
+  def unzip_file_into_dir(self,file, dir):
+    zfobj = zipfile.ZipFile(file)
+    for name in zfobj.namelist():
+      if name.endswith('/'):
+        os.mkdir(os.path.join(dir, name))
+      else:
+        outfile = open(os.path.join(dir, name), 'wb')
+        outfile.write(zfobj.read(name))
+        outfile.close()
   
   def execute(self):
     """
@@ -171,26 +180,17 @@ class SLICAnalysis(ModuleBase):
     return S_OK('SLIC %s Successful' %(self.applicationVersion))
 
     #############################################################################
-    def redirectLogOutput(self, fd, message):
-      sys.stdout.flush()
-      if message:
-        if re.search('INFO Evt',message): print message
-      if self.applicationLog:
-        log = open(self.applicationLog,'a')
-        log.write(message+'\n')
-        log.close()
-      else:
-        self.log.error("Application Log file not defined")
-      if fd == 1:
-        self.stdError += message
+  def redirectLogOutput(self, fd, message):
+    sys.stdout.flush()
+    if message:
+      if re.search('INFO Evt',message): print message
+    if self.applicationLog:
+      log = open(self.applicationLog,'a')
+      log.write(message+'\n')
+      log.close()
+    else:
+      self.log.error("Application Log file not defined")
+    if fd == 1:
+      self.stdError += message
     #############################################################################
     
-    def unzip_file_into_dir(file, dir):
-      zfobj = zipfile.ZipFile(file)
-      for name in zfobj.namelist():
-        if name.endswith('/'):
-          os.mkdir(os.path.join(dir, name))
-        else:
-          outfile = open(os.path.join(dir, name), 'wb')
-          outfile.write(zfobj.read(name))
-          outfile.close()
