@@ -385,7 +385,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
     
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('Mokka',stepName)
+    stepInstance = self.workflow.createStepInstance('SLIC',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("inputmacFile",macFile)
     stepInstance.setValue("stdhepFile",inputStdhep)
