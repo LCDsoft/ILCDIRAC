@@ -25,7 +25,9 @@ class LCSIMAnalysis(ModuleBase):
     self.applicationLog = ''
     self.applicationVersion=''
     self.sourcedir = ''
-    
+    if os.environ.has_key('JOBID'):
+      self.jobID = os.environ['JOBID']
+     
   def resolveInputVariables(self):
     if self.workflow_commons.has_key('SystemConfig'):
       self.systemConfig = self.workflow_commons['SystemConfig']

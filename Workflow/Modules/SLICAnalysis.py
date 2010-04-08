@@ -28,6 +28,8 @@ class SLICAnalysis(ModuleBase):
     self.stdhepFile = ''
     self.detectorModel = ''
     self.inmacFile = ''
+    if os.environ.has_key('JOBID'):
+      self.jobID = os.environ['JOBID']
     
   def resolveInputVariables(self):
     if self.workflow_commons.has_key('SystemConfig'):
