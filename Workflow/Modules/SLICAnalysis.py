@@ -139,8 +139,8 @@ class SLICAnalysis(ModuleBase):
     script.write('declare -x G4RADIOACTIVEDATA=$(ls -d $GEANT4_DATA_ROOT/RadioactiveDecay*)\n')
     script.write('declare -x G4LEDATA=$(ls -d $GEANT4_DATA_ROOT/G4EMLOW*)\n')
     script.write('declare -x G4NEUTRONHPDATA=$(ls -d $GEANT4_DATA_ROOT/G4NDL*)\n')
-    script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/$s\n'%(mySoftwareRoot,os.environ['LCDD_VERSION']))
-    script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl'%(mySoftwareRoot,os.environ['SLIC_VERSION']))
+    script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/%s\n'%(mySoftwareRoot,os.environ['LCDD_VERSION']))
+    script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n'%(mySoftwareRoot,os.environ['SLIC_VERSION']))
     
     comm = '%s/packages/slic/%s/bin/Linux-g++/slic -P $PARTICLE_TBL -m %s'%(mySoftwareRoot,os.environ['SLIC_VERSION'],slicmac)
     print comm
