@@ -16,7 +16,7 @@ from ILCDIRAC.Core.Utilities.TARsoft import TARinstall
 from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
 natOS = NativeMachine()
 
-class CLICCombinedSoftwareInstallation:
+class CombinedSoftwareInstallation:
   def __init__(self,argumentsDict):
     """ Standard constructor
     """
