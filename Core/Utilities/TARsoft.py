@@ -12,7 +12,7 @@ def TARinstall(app,config,area):
   appName    = app[0]
   appVersion = app[1]
   appName = appName.lower()
-  app_tar = os.path.basename(DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),''))
+  app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
   if not app_tar:
     DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
     return DIRAC.S_ERROR('Could not find tar ball for %s %s'%(appName,appVersion))
@@ -21,20 +21,22 @@ def TARinstall(app,config,area):
     DIRAC.gLogger.error('Could not find TarBallURL in CS for %s %s'%(appName,appVersion))
     return DIRAC.S_ERROR('Could not find TarBallURL in CS')
   #downloading file from url, but don't do if file is already there.
-  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar)):
+  app_tar_base=os.path.basename(app_tar)  
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
     try :
       DIRAC.gLogger.debug("Downloading software", '%s_%s' %(appName,appVersion))
       #Copy the file locally, don't try to read from remote, soooo slow
       #Use string conversion %s%s to set the address, makes the system more stable
-      tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar),app_tar)
+      tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar),app_tar_base)
     except:
       DIRAC.gLogger.exception()
       return DIRAC.S_ERROR('Exception during url retrieve')
-  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar)):
+
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
     DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
     return DIRAC.S_ERROR('Failed to download software')
 
-  app_tar_to_untar = tarfile.open(app_tar)
+  app_tar_to_untar = tarfile.open(app_tar_base)
   app_tar_to_untar.extractall()
   if appName=="slic":
     members = app_tar_to_untar.getmembers()
