@@ -12,7 +12,7 @@ def TARinstall(app,config,area):
   appName    = app[0]
   appVersion = app[1]
   appName = appName.lower()
-  app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
+  app_tar = os.path.basename(DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),''))
   if not app_tar:
     DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
     return DIRAC.S_ERROR('Could not find tar ball for %s %s'%(appName,appVersion))
