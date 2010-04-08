@@ -107,7 +107,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
               output.write(line)
         
   if detector:
-    output.write("/lcdd/url %s\n"%detector)
+    output.write("/lcdd/url %s.lcdd\n"%detector)
   if outputlcio:
     output.write("/lcio/filename %s\n"%outputlcio)
   output.write("/generator/filename %s\n"%stdhep)
