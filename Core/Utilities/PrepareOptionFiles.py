@@ -85,10 +85,34 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   tree.write(finalxml)
   return True
 
-def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,outputlcio=None):
+def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None):
   inputmacfile = file(inputmac,'r')
   output = file(outputmac,'w')
-
+  for line in inputmacfile:
+    if line.find("/generator/filename")<0:
+      if line.find("/generator/skipEvents")<0:
+        if line.find("/run/beamOn")<0:
+          if detector:
+            if line.find("/lcdd/url")< 0:
+              if outputlcio:
+                if line.find("/lcio/filename")<0:
+                  output.write(line)
+              else:
+                output.write(line)
+          else :
+            if outputlcio:
+              if line.find("/lcio/filename")<0:
+                output.write(line)
+            else:
+              output.write(line)
+        
+  if detector:
+    output.write("/lcdd/url %s\n"%detector)
+  if outputlcio:
+    output.write("/lcio/filename %s\n"%outputlcio)
+  output.write("/generator/filename %s\n"%stdhep)
+  output.write("/generator/skipEvents %s\n"%startfrom)
+  output.write("/run/beamOn %s\n"%nbevts)
   inputmacfile.close()
   output.close()
   return True

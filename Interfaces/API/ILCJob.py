@@ -49,10 +49,10 @@ class ILCJob(Job):
 
        @param appVersion: Mokka version
        @type appVersion: string
-       @param optionsFiles: Path to steering file
-       @type optionsFiles: string or list
+       @param steeringFile: Path to steering file
+       @type steeringFile: string or list
        @param inputStdhep: Input stdhep (if a subset of the overall input data for a given job is required)
-       @type inputStdhep: single LFN
+       @type inputStdhep: single file
        @param detectorModel: Mokka detector model to use (if different from steering file)
        @type detectorModel: string
        @param nbOfEvents: Number of events to process in Mokka
@@ -104,7 +104,7 @@ class ILCJob(Job):
       return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
 
     if(inputStdhep):
-      inputStdhep = inputStdhep.replace("LFN:","")
+      #inputStdhep = inputStdhep.replace("LFN:","")
       self.addToInputSandbox.append(inputStdhep)
       
     if(dbslice):
@@ -161,7 +161,7 @@ class ILCJob(Job):
       if not currentApp in string.split(apps,';'):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
-    self.ioDict[self.StepCount]=stepInstance.getName()
+    self.ioDict["MokkaStep"]=stepInstance.getName()
     return S_OK()
     
   def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False):
@@ -264,9 +264,9 @@ class ILCJob(Job):
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
-      if not self.ioDict.has_key(self.StepCount-1):
+      if not self.ioDict.has_key("MokkaStep"):
         raise TypeError,'Expected previously defined Mokka step for input data'
-      stepInstance.setLink('inputSlcio',self.ioDict[self.StepCount-1],'outputFile')
+      stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
     if(evtstoprocess):
@@ -289,12 +289,122 @@ class ILCJob(Job):
       if not currentApp in string.split(apps,';'):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
-    self.ioDict[self.StepCount]=stepInstance.getName()
+    self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion):
-    pass    
+  def setSLIC(self,appVersion,macFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
+    """Helper function.
+       Define SLIC step
+       
+       macFile should be the path to the mac file
+       All options files are automatically appended to the job input sandbox
+       
+       inputStdhep is the path to the stdhep file to read. Can be LFN:
+
+       Example usage:
+
+       >>> job = ILCJob()
+       >>> job.setSLIC('v2r8p0',macFile='clic01_SiD.mac',inputStdhep=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='slic.log')
+
+       @param appVersion: SLIC version
+       @type appVersion: string
+       @param macFile: Path to mac file
+       @type macFile: string or list
+       @param inputStdhep: Input stdhep (if a subset of the overall input data for a given job is required)
+       @type inputStdhep: single file
+       @param detectorModel: SLIC detector model to use (if different from mac file)
+       @type detectorModel: string
+       @param nbOfEvents: Number of events to process in Mokka
+       @type nbOfEvents: int
+       @param startFrom: Event number in the file to start reading from
+       @type startFrom: int
+       @param outputFile: Name of the expected output file produced, to be passed to LCSIM
+       @type outputFile: string 
+       @param logFile: Optional log file name
+       @type logFile: string
+       
+    """
+    
+    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile}
+    if not type(appVersion) in types.StringTypes:
+      return self._reportError('Expected string for version',__name__,**kwargs)
+    if not type(macFile) in types.StringTypes:
+      return self._reportError('Expected string for mac file',__name__,**kwargs)
+    if not type(inputStdhep) in types.StringTypes:
+      return self._reportError('Expected string for stdhep file',__name__,**kwargs)
+    if not type(detectorModel) in types.StringTypes:
+      return self._reportError('Expected string for detector model',__name__,**kwargs)
+    if not type(nbOfEvents) == types.IntType:
+      return self._reportError('Expected int for NbOfEvents',__name__,**kwargs)
+    if not type(startFrom) == types.IntType:
+      return self._reportError('Expected int for StartFrom',__name__,**kwargs)
+     
+    self.StepCount +=1
+    
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'SLIC_%s.log' %(appVersion)
+    self.addToOutputSandbox.append(logName)
+      
+    if os.path.exists(macFile):
+      self.log.verbose('Found specified mac file %s'%macFile)
+      self.addToInputSandbox.append(macFile)
+    else:
+      return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
+
+    if(inputStdhep):
+      self.addToInputSandbox.append(inputStdhep)    
+
+    stepName = 'RunSLIC'
+
+    
+    ##now define MokkaAnalysis
+    moduleName = "SLICAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('SLIC module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    step = StepDefinition('SLIC')
+    step.addModule(module)
+    moduleInstance = step.createModuleInstance('SLICAnalysis','SLIC')
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("inputmacFile","","string","","",False,False,"Name of the mac file"))
+    step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
+    step.addParameter(Parameter("detectorModel","","string","","",False,False,"Name of the detector model"))
+    step.addParameter(Parameter("numberOfEvents",10000,"int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("startFrom",0,"int","","",False,False,"Event in Stdhep file to start from"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+    
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance('Mokka',stepName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("inputmacFile",macFile)
+    stepInstance.setValue("stdhepFile",inputStdhep)
+    if(detectorModel):
+      stepInstance.setValue("detectorModel",detectorModel)
+    stepInstance.setValue("numberOfEvents",nbOfEvents)
+    stepInstance.setValue("startFrom",startFrom)
+    stepInstance.setValue("applicationLog",logName)
+    if(outputFile):
+      stepInstance.setValue('outputFile',outputFile)
+    currentApp = "SLIC.%s"%appVersion
+    swPackages = 'SoftwarePackages'
+    description='ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict["SLICStep"]=stepInstance.getName()
+    return S_OK()
   
-  def setLCSIM(self,appVersion):
+  def setLCSIM(self,appVersion,inputSlcio=None,evtstoprocess=None,logFile=''):
     pass    
     
