@@ -59,10 +59,10 @@ def TARinstall(app,config,area):
       os.environ['LCDD_VERSION'] = lcddv
 
   #remove now useless tar ball
-  try:
-    os.unlink(app_tar)
-  except:
-    DIRAC.gLogger.exception()
+  #try:
+  #  os.unlink(app_tar)
+  #except:
+  #  DIRAC.gLogger.exception()
   return DIRAC.S_OK()
 
 def remove():
