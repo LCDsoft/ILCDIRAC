@@ -25,6 +25,7 @@ class LCSIMAnalysis(ModuleBase):
     self.applicationLog = ''
     self.applicationVersion=''
     self.sourcedir = ''
+    self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
      
