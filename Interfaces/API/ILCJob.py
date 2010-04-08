@@ -405,6 +405,114 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,inputSlcio=None,evtstoprocess=None,logFile=''):
-    pass    
+  def setLCSIM(self,appVersion,sourceDir,args=None,inputslcio=None,evtstoprocess=None,logFile=''):
+    """Helper function.
+       Define LCSIM step
+       
+       sourceDir should be the path to the source directory used, can be tar ball
+       All options files are automatically appended to the job input sandbox
+       
+       Example usage:
+
+       >>> job = ILCJob()
+       >>> job.setLCSIM('',sourceDir='analysis.tar.gz',inputslcio=['LFN:/lcd/event/data/somedata.slcio'],logFile='lcsim.log')
+
+       @param appVersion: LCSIM version
+       @type appVersion: string
+       @param sourceDir: Path to source directory (or tar.gz)
+       @type sourceDir: string
+       @param inputslcio: path to input slcio, list of strings or string
+       @type inputslcio: string or list
+       @param logFile: Optional log file name
+       @type logFile: string
+    """
+    kwargs = {'appVersion':appVersion,'sourceDir':sourceDir,'args':args,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
+    if not type(appVersion) in types.StringTypes:
+      return self._reportError('Expected string for version',__name__,**kwargs)
+    if not type(sourceDir) in types.StringTypes:
+      return self._reportError('Expected string for source dir',__name__,**kwargs)
+    if not type(args) in types.StringTypes:
+      return self._reportError('Expected string for optional args', __name__,**kwargs)
+    #if not type(gearfile) in types.StringTypes:
+    #  return self._reportError('Expected string for gear file',__name__,**kwargs)
+    inputslcioStr =''
+    if(inputslcio):
+      if type(inputslcio) in types.StringTypes:
+        inputslcio = [inputslcio]
+      if not type(inputslcio)==type([]):
+        return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
+      #for i in xrange(len(inputslcio)):
+      #  inputslcio[i] = inputslcio[i].replace('LFN:','')
+      #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+      inputslcioStr = string.join(inputslcio,';')
+      self.addToInputSandbox.append(inputslcioStr)         
+
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'Marlin_%s.log' %(appVersion)
+    self.addToOutputSandbox.append(logName)
+
+    self.addToInputSandbox.append(sourceDir)
+    sourcename = os.path.basename(sourceDir)
+    
+
+    self.StepCount +=1
+    stepName = 'RunLCSIM'
+
+    
+    ##now define LCSIMAnalysis
+    moduleName = "LCSIMAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('LCSIM module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    step = StepDefinition('LCSIM')
+    step.addModule(module)
+    moduleInstance = step.createModuleInstance('LCSIMAnalysis','LCSIM')
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("sourceDir","","string","","",False,False,"Name of the source directory to use"))
+    step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+    step.addParameter(Parameter("addArgs","","string","","",False,False,"Optional arguments to pass to java"))
+    step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
+
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("applicationLog",logName)
+    stepInstance.setValue("sourceDir",sourcename)
+    
+    if(inputslcioStr):
+      stepInstance.setValue("inputSlcio",inputslcioStr)
+    else:
+      if not self.ioDict.has_key("SLICStep"):
+        raise TypeError,'Expected previously defined Mokka step for input data'
+      stepInstance.setLink('inputSlcio',self.ioDict["SLICStep"],'outputFile')
+    if(evtstoprocess):
+      stepInstance.setValue("EvtsToProcess",evtstoprocess)
+    else:
+      if self.ioDict.has_key(self.StepCount-1):
+        stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
+      else :
+        stepInstance.setValue("EvtsToProcess",-1)
+    if args:
+      stepInstance.setValue("addArgs",args)
+      
+    currentApp = "LCSIM.%s"%appVersion
+
+    swPackages = 'SoftwarePackages'
+    description='LCD Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict["LCSIMStep"]=stepInstance.getName()    
+    return S_OK()
     

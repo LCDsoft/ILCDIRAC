@@ -5,7 +5,7 @@ Created on Apr 7, 2010
 
 @author: sposs
 '''
-import os, sys, re
+import os, sys, re, tarfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
@@ -24,14 +24,19 @@ class LCSIMAnalysis(ModuleBase):
     self.systemConfig = ''
     self.applicationLog = ''
     self.applicationVersion=''
+    self.sourcedir = ''
     
   def resolveInputVariables(self):
     if self.workflow_commons.has_key('SystemConfig'):
-        self.systemConfig = self.workflow_commons['SystemConfig']
+      self.systemConfig = self.workflow_commons['SystemConfig']
 
     if self.step_commons.has_key('applicationVersion'):
-        self.applicationVersion = self.step_commons['applicationVersion']
-        self.applicationLog = self.step_commons['applicationLog']
+      self.applicationVersion = self.step_commons['applicationVersion']
+      self.applicationLog = self.step_commons['applicationLog']
+
+    if self.step_commons.has_key('sourceDir'):
+      self.sourcedir = self.step_commons['sourceDir']
+      
 
     return S_OK('Parameters resolved')
 
@@ -57,7 +62,14 @@ class LCSIMAnalysis(ModuleBase):
     if not mySoftwareRoot:
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsimDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
-    
+
+    if tarfile.is_tarfile(self.sourcedir) :
+      untarred_sourcedir = tarfile.open(self.sourcedir,'r')
+      sourcedir = untarred_sourcedir.getmembers()[0].split("/")[0]
+      untarred_sourcedir.close()
+    else :
+      sourcedir = self.sourcedir
+      
     scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
     script = open(scriptName,'w')
@@ -65,8 +77,18 @@ class LCSIMAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-      
-      
+    for lib in os.path("%s/GeomConverter/target/lib"%(mySoftwareRoot)):
+      script.write("declare -x CLASSPATH=$CLASSPATH:%s\n"%lib)
+    script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
+    script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
+    script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
+    script.write("declare -x JAVALIBPATH=$SOURCEPATH/util\n")
+    
+    comm = "java -Xmx1536m -Xms1536m -Djava.library.path=$JAVALIBPATH -classpath $CLASSPATH:$BINPATH $PROGRAMMLINE"
+    print comm
+    script.write(comm)
+    script.write('declare -x appstatus=$?\n')
+    script.write('exit $appstatus\n')    
     script.close()
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
 
