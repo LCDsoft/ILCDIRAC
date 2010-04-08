@@ -1,22 +1,31 @@
+# $HeadURL$
+# $Id$
 
 '''
 
-Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, 
+Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, has
+more or less the same functionality : installs software
 
-New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD soft
+BE PARANOIAC !!!
+
+Created on Jan 15, 2010
 
 @author: sposs
 @aauthor: pmajewsk
 '''
-import os, string
+import os, urllib, string
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-import DIRAC 
-from ILCDIRAC.Core.Utilities.TARsoft import TARinstall
-#from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall 
+import DIRAC
+import tarfile
 from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
 natOS = NativeMachine()
 
-class CLICCombinedSoftwareInstallation:
+
+#SoftTarBallLFN = "/lcd/.../.../.../.../"
+#SoftTarBallLFN = "/afs/cern.ch/eng/clic/data/software/"
+
+class CombinedSoftwareInstallation:
+
   def __init__(self,argumentsDict):
     """ Standard constructor
     """
@@ -92,19 +101,93 @@ class CLICCombinedSoftwareInstallation:
         return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
       else:
         DIRAC.gLogger.info( 'Assume locally running job, will install software in /LocalSite/LocalArea=%s' %(self.localArea))
+
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      #if app[0].lower()=="marlin" or app[0].lower()=="mokka" or app[0].lower()=="slic" :
-      res = TARinstall(app,self.jobConfig,self.localArea)
-      #if app[0].lower()=="lcsim":
-      #  res = JAVAinstall(app,self.jobConfig,self.localArea)
-      if not res['OK']:
+      result = CheckInstallSoftware(app,self.jobConfig,self.localArea)
+      if not result:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
       else:
         DIRAC.gLogger.info('%s was successfully installed for %s' %(app,self.jobConfig))
+
     return DIRAC.S_OK()
+
+def MySiteRoot():
+    """Returns the MySiteRoot for the current local and / or shared areas.
+    Needed by MokkaAnalysis and MarlinAnalysis modules
+    """
+    mySiteRoot = ''
+    localArea=LocalArea()
+    if not localArea:
+        DIRAC.gLogger.error( 'Failed to determine Local SW Area' )
+        return mySiteRoot
+    sharedArea=SharedArea()
+    if not sharedArea:
+        DIRAC.gLogger.error( 'Failed to determine Shared SW Area' )
+        return localArea
+    mySiteRoot = '%s:%s' %(localArea,sharedArea)
+    return mySiteRoot
+
+def CheckInstallSoftware(app,config,area):
+  """Will perform a local area installation
+  """
+  os.chdir(area)
+  appName    = app[0]
+  appVersion = app[1]
+  appName = appName.lower()
+  app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
+  if not app_tar:
+    DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
+    return False
+  #app_tar = appName+appVersion+".tar.gz"
+  #app_tar = appName+appVersion+".tgz"
+
   
+  #rm = ReplicaManager()
+  
+  #NOTE: must cd to LOCAL area directory (install_project requirement)
+#  if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
+#    #res = rm.getFile('%s%s' %(SoftTarBallLFN,app_tar))
+#    res = {}
+#    res['OK'] = True
+#    if not res["OK"]:
+#        return res
+#  if not os.path.exists('%s/%s' %(os.getcwd(),app_tar)):
+#    DIRAC.gLogger.error('%s%s could not be downloaded' %(SoftTarBallLFN,app_tar))
+#    #print('%s/%s' %(os.getcwd(),app_tar))
+#    return False
+
+#downloading file from url, but don't do if file is already there.
+  TarBallURL = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/TarBallURL'%(config,appName),'')
+  if not TarBallURL:
+    DIRAC.gLogger.error('Could not find TarBallURL in CS for %s %s'%(appName,appVersion))
+    return DIRAC.S_ERROR('Could not find TarBallURL in CS')
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar)):
+    try :
+      DIRAC.gLogger.debug("Downloading software", '%s_%s' %(appName,appVersion))
+      #Copy the file locally, don't try to read from remote, soooo slow
+      #Use string conversion %s%s to set the address, makes the system more stable
+      tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar),app_tar)
+    except:
+      DIRAC.gLogger.exception()
+      return False
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar)):
+    DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
+    return False
+
+  app_tar_to_untar = tarfile.open(app_tar)
+  app_tar_to_untar.extractall()
+  
+  #remove now useless tar ball
+  try:
+    os.unlink(app_tar)
+  except:
+    DIRAC.gLogger.exception()
+
+  return True
+
+          
 def log( n, line ):
   DIRAC.gLogger.info( line )
     
@@ -191,4 +274,3 @@ def LocalArea():
         DIRAC.gLogger.error( 'Cannot create:', localArea )
         localArea = ''
   return localArea
-      
