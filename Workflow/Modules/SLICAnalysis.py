@@ -28,6 +28,7 @@ class SLICAnalysis(ModuleBase):
     self.stdhepFile = ''
     self.detectorModel = ''
     self.inmacFile = ''
+    self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
     
