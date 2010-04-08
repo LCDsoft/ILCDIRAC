@@ -96,9 +96,9 @@ class SLICAnalysis(ModuleBase):
     localArea = LocalArea()
     sharedArea = SharedArea()
     if os.path.exists('%s%s%s' %(localArea,os.sep,slicDir)):
-      mySoftwareRoot = localArea
+      mySoftwareRoot = '%s%s%s' %(localArea,os.sep,slicDir)
     if os.path.exists('%s%s%s' %(sharedArea,os.sep,slicDir)):
-      mySoftwareRoot = sharedArea
+      mySoftwareRoot = '%s%s%s' %(sharedArea,os.sep,slicDir)
     if not mySoftwareRoot:
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
