@@ -65,13 +65,17 @@ class SLICAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
-    if not os.environ.has_key('SLCI_DIR'):
+    if not os.environ.has_key('SLIC_DIR'):
+      self.log.error('SLIC_DIR not found, probably the software installation failed')
       return S_ERROR('SLIC_DIR not found, probably the software installation failed')
     if not os.environ.has_key('SLIC_VERSION'):
+      self.log.error('SLIC_VERSION not found, probably the software installation failed')
       return S_ERROR('SLIC_VERSION not found, probably the software installation failed')
     if not os.environ.has_key('LCDD_VERSION'):
+      self.log.error('LCDD_VERSION not found, probably the software installation failed')
       return S_ERROR('LCDD_VERSION not found, probably the software installation failed')
     if not os.environ.has_key('XERCES_VERSION'):
+      self.log.error('XERCES_VERSION not found, probably the software installation failed')
       return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
 
 
