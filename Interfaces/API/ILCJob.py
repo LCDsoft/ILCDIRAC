@@ -292,7 +292,7 @@ class ILCJob(Job):
     self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion,macFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
+  def setSLIC(self,appVersion,macFile,inputStdhep,detectorModel,nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
     """Helper function.
        Define SLIC step
        
@@ -312,9 +312,9 @@ class ILCJob(Job):
        @type macFile: string or list
        @param inputStdhep: Input stdhep (if a subset of the overall input data for a given job is required)
        @type inputStdhep: single file
-       @param detectorModel: SLIC detector model to use (if different from mac file)
+       @param detectorModel: SLIC detector model to use (if different from mac file), must be base name of zip file found on http://lcsim.org/detectors
        @type detectorModel: string
-       @param nbOfEvents: Number of events to process in Mokka
+       @param nbOfEvents: Number of events to process in SLIC
        @type nbOfEvents: int
        @param startFrom: Event number in the file to start reading from
        @type startFrom: int
@@ -358,6 +358,10 @@ class ILCJob(Job):
 
     if(inputStdhep):
       self.addToInputSandbox.append(inputStdhep)    
+    
+    detectormodeltouse = os.path.basename(detectorModel).rstrip(".zip")
+    if os.path.exists(detectorModel):
+      self.addToInputSandbox(detectorModel)
 
     stepName = 'RunSLIC'
 
@@ -386,7 +390,7 @@ class ILCJob(Job):
     stepInstance.setValue("inputmacFile",macFile)
     stepInstance.setValue("stdhepFile",inputStdhep)
     if(detectorModel):
-      stepInstance.setValue("detectorModel",detectorModel)
+      stepInstance.setValue("detectorModel",detectormodeltouse)
     stepInstance.setValue("numberOfEvents",nbOfEvents)
     stepInstance.setValue("startFrom",startFrom)
     stepInstance.setValue("applicationLog",logName)

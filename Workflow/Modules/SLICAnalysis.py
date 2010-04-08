@@ -5,13 +5,13 @@ Created on Apr 7, 2010
 
 @author: sposs
 '''
-import os,sys,re
+import os,sys,re, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
-from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
 class SLICAnalysis(ModuleBase):
@@ -87,8 +87,22 @@ class SLICAnalysis(ModuleBase):
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
 
-    slicmac = 'slicmac.mac'
+    #retrieve detector model from web
+    detector_url = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels','')
+    if not detector_url:
+      self.log.error('Could not find in CS the URL for detector model')
+      return S_ERROR('Could not find in CS the URL for detector model')
 
+    if not os.path.exists(self.detectorModel+".zip"):
+      detmodel,headers = urllib.urlretrieve("%s%s"%(detector_url,self.detectorModel+".zip"),self.detectorModel+".zip")
+    if not os.path.exists(self.detectorModel+".zip"):
+      self.log.error('Detector model %s was not found neither locally nor on the web, exiting'%self.detectorModel)
+      return S_ERROR('Detector model %s was not found neither locally nor on the web, exiting'%self.detectorModel)
+    
+    #unzip detector model
+    self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
+    
+    slicmac = 'slicmac.mac'
     macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel)
     if not macok:
       self.log.error('Failed to create SLIC mac file')
@@ -166,3 +180,13 @@ class SLICAnalysis(ModuleBase):
       if fd == 1:
         self.stdError += message
     #############################################################################
+    
+    def unzip_file_into_dir(file, dir):
+      zfobj = zipfile.ZipFile(file)
+      for name in zfobj.namelist():
+        if name.endswith('/'):
+          os.mkdir(os.path.join(dir, name))
+        else:
+          outfile = open(os.path.join(dir, name), 'wb')
+          outfile.write(zfobj.read(name))
+          outfile.close()
