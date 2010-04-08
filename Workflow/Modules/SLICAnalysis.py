@@ -89,7 +89,7 @@ class SLICAnalysis(ModuleBase):
 
     slicmac = 'slicmac.mac'
 
-    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom)
+    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel)
     if not macok:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
