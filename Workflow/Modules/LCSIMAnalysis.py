@@ -87,7 +87,7 @@ class LCSIMAnalysis(ModuleBase):
     script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
     script.write("declare -x JAVALIBPATH=$SOURCEPATH/util\n")
     
-    comm = "java -Xmx1536m -Xms1536m -Djava.library.path=$JAVALIBPATH -classpath $CLASSPATH:$BINPATH $PROGRAMMLINE"
+    comm = "java -Xmx1536m -Xms1536m -Djava.library.path=$JAVALIBPATH -classpath $CLASSPATH:$BINPATH $PROGRAMMLINE\n"
     print comm
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
