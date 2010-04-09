@@ -147,7 +147,7 @@ class SLICAnalysis(ModuleBase):
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
-    comm = '%s/packages/slic/%s/bin/Linux-g++/slic -P $PARTICLE_TBL -m %s'%(mySoftwareRoot,os.environ['SLIC_VERSION'],slicmac)
+    comm = '%s/packages/slic/%s/bin/Linux-g++/slic -P $PARTICLE_TBL -m %s\n'%(mySoftwareRoot,os.environ['SLIC_VERSION'],slicmac)
     print comm
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
