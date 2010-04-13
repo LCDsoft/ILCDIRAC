@@ -5,13 +5,13 @@ Created on Apr 7, 2010
 
 @author: sposs
 '''
-import os, sys, re, tarfile
+import os, sys, re, string
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
-from DIRAC                                                import S_OK, S_ERROR, gLogger
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile
+from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
 class LCSIMAnalysis(ModuleBase):
@@ -25,6 +25,8 @@ class LCSIMAnalysis(ModuleBase):
     self.applicationLog = ''
     self.applicationVersion=''
     self.sourcedir = ''
+    self.xmlfile = ''
+    self.self.inputSLCIO = ''
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -39,7 +41,9 @@ class LCSIMAnalysis(ModuleBase):
 
     if self.step_commons.has_key('sourceDir'):
       self.sourcedir = self.step_commons['sourceDir']
-      
+    if self.step_commons.has_key('lcsimFile'):
+      self.xmlfile = self.step_commons['lcsimFile']
+    
 
     return S_OK('Parameters resolved')
 
@@ -66,13 +70,29 @@ class LCSIMAnalysis(ModuleBase):
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsimDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
 
-    if tarfile.is_tarfile(self.sourcedir) :
-      untarred_sourcedir = tarfile.open(self.sourcedir,'r')
-      sourcedir = untarred_sourcedir.getmembers()[0].split("/")[0]
-      untarred_sourcedir.close()
-    else :
-      sourcedir = self.sourcedir
-      
+    #if tarfile.is_tarfile(self.sourcedir) :
+    #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
+    #  sourcedir = untarred_sourcedir.getmembers()[0].split("/")[0]
+    #  untarred_sourcedir.close()
+    #else :
+    #  sourcedir = self.sourcedir
+    runonslcio = []
+    inputfilelist = self.inputSLCIO.split(";")
+    for inputfile in inputfilelist:
+      runonslcio.append(os.path.basename(inputfile))
+
+    #look for lcsim filename
+    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"LCSIM",self.applicationVersion),'')
+    if not lcsim_name:
+      self.log.error("Could not find lcsim file name from CS")
+      return S_ERROR("Could not find lcsim file name from CS")
+    
+    lcsimfile = "job.lcsim"
+    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio)
+    if not xmlfileok:
+      self.log.error("Could not treat input lcsim file")
+      return S_ERROR("Error parsing input lcsim file")
+    
     scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
     script = open(scriptName,'w')
@@ -80,14 +100,14 @@ class LCSIMAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    for lib in os.path("%s/GeomConverter/target/lib"%(mySoftwareRoot)):
-      script.write("declare -x CLASSPATH=$CLASSPATH:%s\n"%lib)
-    script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
-    script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
-    script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
-    script.write("declare -x JAVALIBPATH=$SOURCEPATH/util\n")
+    #for lib in os.path("%s/GeomConverter/target/lib"%(mySoftwareRoot)):
+    #  script.write("declare -x CLASSPATH=$CLASSPATH:%s\n"%lib)
+    #script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
+    #script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
+    #script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
+    #script.write("declare -x JAVALIBPATH=$SOURCEPATH/util\n")
     
-    comm = "java -Xmx1536m -Xms1536m -Djava.library.path=$JAVALIBPATH -classpath $CLASSPATH:$BINPATH $PROGRAMMLINE\n"
+    comm = "java -server -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,self.xmlfile)
     print comm
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
