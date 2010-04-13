@@ -36,7 +36,7 @@ def TARinstall(app,config,area):
     DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
     return DIRAC.S_ERROR('Failed to download software')
 
-  if tarfile.is_tarfile(app_tar_base):
+  if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
     app_tar_to_untar = tarfile.open(app_tar_base)
     app_tar_to_untar.extractall()
     if appName=="slic":
