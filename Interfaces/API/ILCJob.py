@@ -16,7 +16,7 @@ from DIRAC.Core.Workflow.WorkflowReader             import *
 from DIRAC.Interfaces.API.Job                       import Job
 #from DIRAC.Core.Utilities.File                      import makeGuid
 #from DIRAC.Core.Utilities.List                      import uniqueElements
-#from DIRAC                                          import gConfig
+from DIRAC                                          import gConfig
  
 COMPONENT_NAME='/WorkflowLib/API/ILCJob' 
 
@@ -494,7 +494,7 @@ class ILCJob(Job):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
       if not self.ioDict.has_key("SLICStep"):
-        raise TypeError,'Expected previously defined Mokka step for input data'
+        raise TypeError,'Expected previously defined SLIC step for input data'
       stepInstance.setLink('inputSlcio',self.ioDict["SLICStep"],'outputFile')
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
@@ -519,4 +519,4 @@ class ILCJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     self.ioDict["LCSIMStep"]=stepInstance.getName()    
     return S_OK()
-    
+ 
