@@ -22,7 +22,7 @@ class DiracILC(Dirac):
     """
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     
-  def submit(self,job,mode):
+  def submit(self,job,mode = 'wms'):
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages").getValue()
     res = S_OK()
