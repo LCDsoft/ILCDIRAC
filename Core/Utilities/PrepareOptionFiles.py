@@ -11,6 +11,7 @@ Created on Jan 29, 2010
 @author: sposs
 '''
 from xml.etree.ElementTree import ElementTree
+from xml.etree.ElementTree import Element
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,debug,outputlcio=None):
   macfile = file("mokkamac.mac","w")
@@ -115,4 +116,42 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output.write("/run/beamOn %s\n"%nbevts)
   inputmacfile.close()
   output.close()
+  return True
+
+def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,debug=False):
+  tree = ElementTree()
+  tree.parse(inputlcsim)
+  ##handle the input slcio file list
+  filesinlcsim = tree.find("inputFiles")
+  if filesinlcsim:
+    filesinlcsim.clear()
+    set = Element("fileSet")
+    for slcio in inputslcio:
+      newfile = Element('file')
+      newfile.text = slcio
+      set.append(newfile)
+    filesinlcsim.append(set)
+  else:
+    baseelem = tree.find("lcsim")
+    filesinlcsim = Element("inputFiles")
+    set = Element("fileSet")
+    for slcio in inputslcio:
+      newfile = Element('file')
+      newfile.text = slcio
+      set.append(newfile)
+    filesinlcsim.append(set)
+    baseelem.append(filesinlcsim)
+    
+  #handle verbosity
+  if debug:
+    debugline = tree.find("verbose")
+    if debugline :
+      debugline.text = 'true'
+    else:
+      control = tree.find('control')
+      debugelem = Element('verbose')
+      debugelem.text = 'true'
+      control.append(debugelem)
+      
+  tree.write(outputlcsim)
   return True
