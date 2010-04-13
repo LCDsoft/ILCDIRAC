@@ -12,7 +12,7 @@ from DIRAC import gConfig, S_ERROR, S_OK
 import string
 
 
-COMPONENT_NAME='DiracLHCb'
+COMPONENT_NAME='DiracILC'
 
 class DiracILC(Dirac):
   """ 
@@ -31,7 +31,7 @@ class DiracILC(Dirac):
       vers = appver.slit(".")[1:]#all the others
       vers = string.join(vers,".")
       res = self._checkapp(sysconf,app,vers)
-    if not res['Ok']:
+    if not res['OK']:
       return res
     return Dirac.submit(job,mode)
   
