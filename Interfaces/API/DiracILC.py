@@ -8,7 +8,7 @@ Created on Apr 13, 2010
 '''
 from DIRAC.Interfaces.API.Dirac                     import Dirac
 from DIRAC.Interfaces.API.Job                     import Job
-from DIRAC import gConfig, S_ERROR, S_OK
+from DIRAC import gConfig, S_ERROR, S_OK, gLogger
 import string
 
 
@@ -20,23 +20,26 @@ class DiracILC(Dirac):
   def __init__(self, WithRepo=False, RepoLocation=''):
     """Internal initialization of the DIRAC API.
     """
+    #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
+    self.log = gLogger
     
-  def submit(self,job,mode = 'wms'):
+  def checkparams(self,job):
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages").getValue()
     res = S_OK()
-    for appver in apps.slit(";"):
-      app = appver.slit(".")[0]#first element
-      vers = appver.slit(".")[1:]#all the others
+    for appver in apps.split(";"):
+      app = appver.split(".")[0]#first element
+      vers = appver.split(".")[1:]#all the others
       vers = string.join(vers,".")
       res = self._checkapp(sysconf,app,vers)
-    if not res['OK']:
-      return res
-    return Dirac.submit(job,mode)
+      if not res['OK']:
+        return res
+    return res
   
   def _checkapp(self,config,appName,appVersion):
     app_version= gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
     if not app_version:
-      return S_ERROR("Could not find the specified software %s_%s for %s"%(appName,appVersion,config))
+      self.log.error("Could not find the specified software %s_%s for %s, check in CS"%(appName,appVersion,config))
+      return S_ERROR("Could not find the specified software %s_%s for %s, check in CS"%(appName,appVersion,config))
     return S_OK()
