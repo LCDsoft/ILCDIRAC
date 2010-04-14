@@ -409,7 +409,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,sourceDir,args=None,inputslcio=None,evtstoprocess=None,logFile=''):
+  def setLCSIM(self,appVersion,inputXML,inputslcio=None,evtstoprocess=None,logFile=''):
     """Helper function.
        Define LCSIM step
        
@@ -419,26 +419,22 @@ class ILCJob(Job):
        Example usage:
 
        >>> job = ILCJob()
-       >>> job.setLCSIM('',sourceDir='analysis.tar.gz',inputslcio=['LFN:/lcd/event/data/somedata.slcio'],logFile='lcsim.log')
+       >>> job.setLCSIM('',inputXML='mylcsim.lcsim',inputslcio=['LFN:/lcd/event/data/somedata.slcio'],logFile='lcsim.log')
 
        @param appVersion: LCSIM version
        @type appVersion: string
-       @param sourceDir: Path to source directory (or tar.gz)
-       @type sourceDir: string
+       @param inputXML: Path to xml file
+       @type inputXML: string
        @param inputslcio: path to input slcio, list of strings or string
        @type inputslcio: string or list
        @param logFile: Optional log file name
        @type logFile: string
     """
-    kwargs = {'appVersion':appVersion,'sourceDir':sourceDir,'args':args,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'inputXML':inputXML,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
-    if not type(sourceDir) in types.StringTypes:
+    if not type(inputXML) in types.StringTypes:
       return self._reportError('Expected string for source dir',__name__,**kwargs)
-    if not type(args) in types.StringTypes:
-      return self._reportError('Expected string for optional args', __name__,**kwargs)
-    #if not type(gearfile) in types.StringTypes:
-    #  return self._reportError('Expected string for gear file',__name__,**kwargs)
     inputslcioStr =''
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
@@ -460,9 +456,7 @@ class ILCJob(Job):
       logName = 'Marlin_%s.log' %(appVersion)
     self.addToOutputSandbox.append(logName)
 
-    self.addToInputSandbox.append(sourceDir)
-    sourcename = os.path.basename(sourceDir)
-    
+    self.addToInputSandbox(inputXML)
 
     self.StepCount +=1
     stepName = 'RunLCSIM'
@@ -479,17 +473,16 @@ class ILCJob(Job):
     moduleInstance = step.createModuleInstance('LCSIMAnalysis','LCSIM')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
-    step.addParameter(Parameter("sourceDir","","string","","",False,False,"Name of the source directory to use"))
+    step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the source directory to use"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
-    step.addParameter(Parameter("addArgs","","string","","",False,False,"Optional arguments to pass to java"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
-    stepInstance.setValue("sourceDir",sourcename)
-    
+    stepInstance.setValue("inputXML",inputXML)
+
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
@@ -499,12 +492,10 @@ class ILCJob(Job):
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
     else:
-      if self.ioDict.has_key(self.StepCount-1):
-        stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
+      if self.ioDict.has_key("SLICStep"):
+        stepInstance.setLink('EvtsToProcess',self.ioDict["SLICStep"],'numberOfEvents')
       else :
         stepInstance.setValue("EvtsToProcess",-1)
-    if args:
-      stepInstance.setValue("addArgs",args)
       
     currentApp = "LCSIM.%s"%appVersion
 
