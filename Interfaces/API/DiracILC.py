@@ -29,9 +29,9 @@ class DiracILC(Dirac):
     apps = job.workflow.findParameter("SoftwarePackages").getValue()
     res = S_OK()
     for appver in apps.split(";"):
-      app = appver.split(".")[0]#first element
+      app = appver.split(".")[0].lower()#first element
       vers = appver.split(".")[1:]#all the others
-      vers = string.join(vers,".")
+      vers = string.join(vers,".").lower()
       res = self._checkapp(sysconf,app,vers)
       if not res['OK']:
         return res

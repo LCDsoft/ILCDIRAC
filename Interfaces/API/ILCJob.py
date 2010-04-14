@@ -219,7 +219,7 @@ class ILCJob(Job):
       else:
         return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
     else:
-      if self.ioDict.has_key(self.StepCount-1):
+      if self.ioDict.has_key("MokkaStep"):
         gearfile="GearOutput.xml"
       else:
         return self._reportError('As Mokka do not run before, you need to specify GearFile and have it in the current directory')
