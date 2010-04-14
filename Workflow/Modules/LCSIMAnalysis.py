@@ -39,8 +39,8 @@ class LCSIMAnalysis(ModuleBase):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
 
-    if self.step_commons.has_key('sourceDir'):
-      self.sourcedir = self.step_commons['sourceDir']
+    if self.step_commons.has_key('inputXML'):
+      self.xmlfile = self.step_commons['inputXML']
     if self.step_commons.has_key('lcsimFile'):
       self.xmlfile = self.step_commons['lcsimFile']
     
