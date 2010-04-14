@@ -24,6 +24,9 @@ class DiracILC(Dirac):
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     self.log = gLogger
     
+  def preSubmissionChecks(self,job,mode):
+    return self.checkparams(job)
+    
   def checkparams(self,job):
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages").getValue()
