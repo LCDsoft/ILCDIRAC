@@ -409,7 +409,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,inputXML,inputslcio=None,evtstoprocess=None,logFile=''):
+  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,logFile=''):
     """Helper function.
        Define LCSIM step
        
@@ -423,18 +423,18 @@ class ILCJob(Job):
 
        @param appVersion: LCSIM version
        @type appVersion: string
-       @param inputXML: Path to xml file
-       @type inputXML: string
+       @param xmlfile: Path to xml file
+       @type xmlfile: string
        @param inputslcio: path to input slcio, list of strings or string
        @type inputslcio: string or list
        @param logFile: Optional log file name
        @type logFile: string
     """
-    kwargs = {'appVersion':appVersion,'inputXML':inputXML,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
-    if not type(inputXML) in types.StringTypes:
-      return self._reportError('Expected string for source dir',__name__,**kwargs)
+    if not type(xmlfile) in types.StringTypes:
+      return self._reportError('Expected string for XML file dir',__name__,**kwargs)
     inputslcioStr =''
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
@@ -456,7 +456,7 @@ class ILCJob(Job):
       logName = 'Marlin_%s.log' %(appVersion)
     self.addToOutputSandbox.append(logName)
 
-    self.addToInputSandbox(inputXML)
+    self.addToInputSandbox(xmlfile)
 
     self.StepCount +=1
     stepName = 'RunLCSIM'
@@ -481,7 +481,7 @@ class ILCJob(Job):
     stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
-    stepInstance.setValue("inputXML",inputXML)
+    stepInstance.setValue("inputXML",xmlfile)
 
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
