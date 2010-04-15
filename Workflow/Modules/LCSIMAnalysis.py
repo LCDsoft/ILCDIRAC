@@ -113,7 +113,7 @@ class LCSIMAnalysis(ModuleBase):
     #script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
     #script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
     #script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
-    script.write("declare -x JAVALIBPATH=./")
+    script.write("declare -x JAVALIBPATH=./\n")
     if os.path.exists("lib"):
       script.write("declare -x JAVALIBPATH=./lib\n")
     
