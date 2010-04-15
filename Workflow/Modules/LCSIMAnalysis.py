@@ -86,9 +86,16 @@ class LCSIMAnalysis(ModuleBase):
     if not lcsim_name:
       self.log.error("Could not find lcsim file name from CS")
       return S_ERROR("Could not find lcsim file name from CS")
-    
+
+    ##Collect jar files to put in classspath
+    jars = []
+    if os.path.exists("lib"):
+      for libs in os.listdir("lib"):
+        if os.path.basename(libs).find(".jar")>0:
+          jars.append(os.path.abspath(os.path.join("lib",libs)))
+          
     lcsimfile = "job.lcsim"
-    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio)
+    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars)
     if not xmlfileok:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")

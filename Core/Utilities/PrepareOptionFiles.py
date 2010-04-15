@@ -118,30 +118,38 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output.close()
   return True
 
-def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,debug=False):
+def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,debug=False):
   tree = ElementTree()
   tree.parse(inputlcsim)
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
   if filesinlcsim:
     filesinlcsim.clear()
-    set = Element("fileSet")
-    for slcio in inputslcio:
-      newfile = Element('file')
-      newfile.text = slcio
-      set.append(newfile)
-    filesinlcsim.append(set)
   else:
     baseelem = tree.find("lcsim")
     filesinlcsim = Element("inputFiles")
-    set = Element("fileSet")
-    for slcio in inputslcio:
-      newfile = Element('file')
-      newfile.text = slcio
-      set.append(newfile)
-    filesinlcsim.append(set)
     baseelem.append(filesinlcsim)
-    
+  set = Element("fileSet")
+  for slcio in inputslcio:
+    newfile = Element('file')
+    newfile.text = slcio
+    set.append(newfile)
+  filesinlcsim.append(set)
+
+  if jars:
+    if len(jars)>0:
+      classpath = tree.find("classpath")
+      if classpath:
+        classpath.clear()
+      else:
+        baseelem = tree.find("lcsim")
+        classpath = Element("classpath")    
+        baseelem.append(classpath)
+      for jar in jars:
+        newjar = Element("jar")
+        newjar.text = jar
+        classpath.append(newjar)
+        
   #handle verbosity
   if debug:
     debugline = tree.find("verbose")
@@ -151,7 +159,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,debug=False):
       control = tree.find('control')
       debugelem = Element('verbose')
       debugelem.text = 'true'
-      control.append(debugelem)
+      control.append(debugelem)        
       
   tree.write(outputlcsim)
   return True
