@@ -93,6 +93,7 @@ class LCSIMAnalysis(ModuleBase):
       for libs in os.listdir("lib"):
         if os.path.basename(libs).find(".jar")>0:
           jars.append(os.path.abspath(os.path.join("lib",libs)))
+      os.environ['LD_LIBRARY_PATH']= "./lib:%s"%(os.environ['LD_LIBRARY_PATH'])
           
     lcsimfile = "job.lcsim"
     xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars)
@@ -112,9 +113,11 @@ class LCSIMAnalysis(ModuleBase):
     #script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
     #script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
     #script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
-    #script.write("declare -x JAVALIBPATH=$SOURCEPATH/util\n")
+    script.write("declare -x JAVALIBPATH=./")
+    if os.path.exists("lib"):
+      script.write("declare -x JAVALIBPATH=./lib\n")
     
-    comm = "java -server -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,self.xmlfile)
+    comm = "java -server -Djava.library.path=$JAVALIBPATH -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,self.xmlfile)
     print comm
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
