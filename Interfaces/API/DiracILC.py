@@ -25,15 +25,24 @@ class DiracILC(Dirac):
     self.log = gLogger
     
   def preSubmissionChecks(self,job,mode):
-    if job:
-      return self.checkparams(job)
-    else:
-      return S_ERROR("Job not defined, something failed in the job creation.")
+    return self._do_check(job)
     
   def checkparams(self,job):
+    try:
+      formulationErrors = job._getErrors()
+    except Exception, x:
+      self.log.verbose( 'Could not obtain job errors:%s' % ( x ) )
+      formulationErrors = {}
+
+    if formulationErrors:
+      for method, errorList in formulationErrors.items():
+        self.log.error( '>>>> Error in %s() <<<<\n%s' % ( method, string.join( errorList, '\n' ) ) )
+      return S_ERROR( formulationErrors )
+    return self._do_check(job)
+  
+  def _do_check(self,job):  
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages").getValue()
-    res = S_OK()
     for appver in apps.split(";"):
       app = appver.split(".")[0].lower()#first element
       vers = appver.split(".")[1:]#all the others
