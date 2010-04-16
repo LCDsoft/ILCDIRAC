@@ -342,8 +342,9 @@ class ILCJob(Job):
     kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
-    if not type(macFile) in types.StringTypes:
-      return self._reportError('Expected string for mac file',__name__,**kwargs)
+    if macFile:
+      if not type(macFile) in types.StringTypes:
+        return self._reportError('Expected string for mac file',__name__,**kwargs)
     if inputGenfile:
       if not type(inputGenfile) in types.StringTypes:
         return self._reportError('Expected string for generator file',__name__,**kwargs)
