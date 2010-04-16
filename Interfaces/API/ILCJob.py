@@ -29,19 +29,19 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
   
-  def setMokka(self,appVersion,steeringFile,inputStdhep,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,inputMac = None,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
     """Helper function.
        Define Mokka step
        
        steeringFile should be the path to the steering file
        All options files are automatically appended to the job input sandbox
        
-       inputStdhep is the path to the stdhep file to read. Can be LFN:
+       inputGenfile is the path to the generator file to read. Can be LFN:
 
        Example usage:
 
        >>> job = ILCJob()
-       >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputStdhep=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
+       >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputGenfile=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
 
        Modified drivers (.so files) should be put in a 'lib' directory and input as inputdata:
        >>> job.setInputData('lib')
@@ -51,8 +51,10 @@ class ILCJob(Job):
        @type appVersion: string
        @param steeringFile: Path to steering file
        @type steeringFile: string or list
-       @param inputStdhep: Input stdhep (if a subset of the overall input data for a given job is required)
-       @type inputStdhep: single file
+       @param inputGenfile: Input generator file
+       @type inputStdhep: string
+       @param inputMac: Input mac file
+       @type inputMac: string
        @param detectorModel: Mokka detector model to use (if different from steering file)
        @type detectorModel: string
        @param nbOfEvents: Number of events to process in Mokka
@@ -68,13 +70,17 @@ class ILCJob(Job):
        
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
+    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputGenfile,'inputMac':inputMac,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(steeringFile) in types.StringTypes:
       return self._reportError('Expected string for steering file',__name__,**kwargs)
-    if not type(inputStdhep) in types.StringTypes:
-      return self._reportError('Expected string for stdhep file',__name__,**kwargs)
+    if inputGenfile:
+      if not type(inputGenfile) in types.StringTypes:
+        return self._reportError('Expected string for generator file',__name__,**kwargs)
+    if inputMac:
+      if not type(inputMac) in types.StringTypes:
+        return self._reportError('Expected string for mac file',__name__,**kwargs)
     if not type(detectorModel) in types.StringTypes:
       return self._reportError('Expected string for detector model',__name__,**kwargs)
     if not type(nbOfEvents) == types.IntType:
@@ -103,15 +109,19 @@ class ILCJob(Job):
     else:
       return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
 
-    if(inputStdhep):
-      #inputStdhep = inputStdhep.replace("LFN:","")
-      self.addToInputSandbox.append(inputStdhep)
+    if(inputGenfile):
+      self.addToInputSandbox.append(inputGenfile)
+    if(inputMac):
+      self.addToInputSandbox.append(inputMac)
       
     if(dbslice):
       if(os.path.exists(dbslice)):
         self.addToInputSandbox.append(dbslice)
       else:
         return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
+
+    if not inputGenfile and not inputMac:
+      return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
 
     stepName = 'RunMokka'
 
@@ -128,6 +138,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("steeringFile","","string","","",False,False,"Name of the steering file"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
+    step.addParameter(Parameter("macFile","","string","","",False,False,"Name of the mac file"))
     step.addParameter(Parameter("detectorModel","","string","","",False,False,"Name of the detector model"))
     step.addParameter(Parameter("numberOfEvents",10000,"int","","",False,False,"Number of events to process"))
     step.addParameter(Parameter("startFrom",0,"int","","",False,False,"Event in Stdhep file to start from"))
@@ -140,7 +151,10 @@ class ILCJob(Job):
     stepInstance = self.workflow.createStepInstance('Mokka',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("steeringFile",steeringFile)
-    stepInstance.setValue("stdhepFile",inputStdhep)
+    if inputGenfile:
+      stepInstance.setValue("stdhepFile",inputGenfile)
+    if inputMac:
+      stepInstance.setValue("macFile",inputMac)
     if(detectorModel):
       stepInstance.setValue("detectorModel",detectorModel)
     stepInstance.setValue("numberOfEvents",nbOfEvents)
@@ -292,26 +306,26 @@ class ILCJob(Job):
     self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion,macFile,inputStdhep,detectorModel,nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
+  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel,nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
     """Helper function.
        Define SLIC step
        
        macFile should be the path to the mac file
        All options files are automatically appended to the job input sandbox
        
-       inputStdhep is the path to the stdhep file to read. Can be LFN:
+       inputGenfile is the path to the generator file to read. Can be LFN:
 
        Example usage:
 
        >>> job = ILCJob()
-       >>> job.setSLIC('v2r8p0',macFile='clic01_SiD.mac',inputStdhep=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='slic.log')
+       >>> job.setSLIC('v2r8p0',macFile='clic01_SiD.mac',inputGenfile=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='slic.log')
 
        @param appVersion: SLIC version
        @type appVersion: string
        @param macFile: Path to mac file
        @type macFile: string or list
-       @param inputStdhep: Input stdhep (if a subset of the overall input data for a given job is required)
-       @type inputStdhep: single file
+       @param inputGenfile: Input generator file
+       @type inputGenfile: string
        @param detectorModel: SLIC detector model to use (if different from mac file), must be base name of zip file found on http://lcsim.org/detectors
        @type detectorModel: string
        @param nbOfEvents: Number of events to process in SLIC
@@ -325,13 +339,14 @@ class ILCJob(Job):
        
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputStdhep':inputStdhep,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(macFile) in types.StringTypes:
       return self._reportError('Expected string for mac file',__name__,**kwargs)
-    if not type(inputStdhep) in types.StringTypes:
-      return self._reportError('Expected string for stdhep file',__name__,**kwargs)
+    if inputGenfile:
+      if not type(inputGenfile) in types.StringTypes:
+        return self._reportError('Expected string for generator file',__name__,**kwargs)
     if not type(detectorModel) in types.StringTypes:
       return self._reportError('Expected string for detector model',__name__,**kwargs)
     if not type(nbOfEvents) == types.IntType:
@@ -349,15 +364,19 @@ class ILCJob(Job):
     else:
       logName = 'SLIC_%s.log' %(appVersion)
     self.addToOutputSandbox.append(logName)
-      
-    if os.path.exists(macFile):
-      self.log.verbose('Found specified mac file %s'%macFile)
-      self.addToInputSandbox.append(macFile)
-    else:
-      return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
 
-    if(inputStdhep):
-      self.addToInputSandbox.append(inputStdhep)    
+    if macFile:  
+      if os.path.exists(macFile):
+        self.log.verbose('Found specified mac file %s'%macFile)
+        self.addToInputSandbox.append(macFile)
+      else:
+        return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
+
+    if(inputGenfile):
+      self.addToInputSandbox.append(inputGenfile)    
+
+    if not macFile and not inputGenfile:
+      return self._reportError("No mac file nor generator file specified, can not do anything",__name__,**kwargs )
     
     detectormodeltouse = os.path.basename(detectorModel).rstrip(".zip")
     if os.path.exists(detectorModel):
@@ -387,8 +406,10 @@ class ILCJob(Job):
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('SLIC',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
-    stepInstance.setValue("inputmacFile",macFile)
-    stepInstance.setValue("stdhepFile",inputStdhep)
+    if macFile:
+      stepInstance.setValue("inputmacFile",macFile)
+    if inputGenfile:
+      stepInstance.setValue("stdhepFile",inputGenfile)
     if(detectorModel):
       stepInstance.setValue("detectorModel",detectormodeltouse)
     stepInstance.setValue("numberOfEvents",nbOfEvents)

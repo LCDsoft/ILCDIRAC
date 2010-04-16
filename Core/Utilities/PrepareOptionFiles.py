@@ -13,11 +13,16 @@ Created on Jan 29, 2010
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nbOfRuns,startFrom,debug,outputlcio=None):
-  macfile = file("mokkamac.mac","w")
-  macfile.write("/generator/generator %s\n"%stdhepFile)
-  macfile.write("/run/beamOn %s\n"%nbOfRuns)
-  macfile.close()
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
+  macname = "mokkamac.mac"
+  if len(mac)<1:
+    macfile = file(macname,"w")
+    if len(stdhepFile)>0:
+      macfile.write("/generator/generator %s\n"%stdhepFile)
+    macfile.write("/run/beamOn %s\n"%nbOfRuns)
+    macfile.close()
+  else:
+    macname = mac
     
   input = file(inputSteering,"r")
   output = file(str(outputSteering),"w")
@@ -48,7 +53,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,nb
     output.write("/Mokka/init/printLevel 0\n")
 
   output.write("/Mokka/init/BatchMode true\n")
-  output.write("/Mokka/init/initialMacroFile mokkamac.mac\n")
+  output.write("/Mokka/init/initialMacroFile %s\n"%macname)
   if outputlcio:
     output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
   output.write("/Mokka/init/startEventNumber %d"%startFrom)
