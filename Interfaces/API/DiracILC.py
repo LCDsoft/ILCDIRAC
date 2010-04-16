@@ -25,7 +25,10 @@ class DiracILC(Dirac):
     self.log = gLogger
     
   def preSubmissionChecks(self,job,mode):
-    return self.checkparams(job)
+    if job:
+      return self.checkparams(job)
+    else:
+      return S_ERROR("Job not defined, something failed in the job creation.")
     
   def checkparams(self,job):
     sysconf = job.systemConfig
