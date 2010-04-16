@@ -32,6 +32,7 @@ class MokkaAnalysis(ModuleBase):
         self.result = S_ERROR()
         self.steeringFile = ''
         self.stdhepFile = ''
+        self.macFile = ''
         self.run_number = 0
         self.firstEventNumber = 1
         self.jobID = None
@@ -74,7 +75,9 @@ class MokkaAnalysis(ModuleBase):
         self.steeringFile = self.step_commons['steeringFile']
 
       if self.step_commons.has_key('stdhepFile'):
-        self.stdhepFile = self.step_commons['stdhepFile']
+        self.macFile = self.step_commons['stdhepFile']
+      if self.step_commons.has_key('macFile'):
+        self.macFile = self.step_commons['macFile']
 
       if self.step_commons.has_key('detectorModel'):
         self.detectorModel = self.step_commons['detectorModel']
@@ -159,10 +162,13 @@ class MokkaAnalysis(ModuleBase):
       mokkasteer = "mokka.steer"
       ###prepare steering file
       #first, I need to take the stdhep file, stripped of its path (possible LFN)
-      self.stdhepFile = os.path.basename(self.stdhepFile)
+      if len(self.stdhepFile)>0:
+        self.stdhepFile = os.path.basename(self.stdhepFile)
+      if len(self.macFile)>0:
+        self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
       self.steeringFile = os.path.basename(self.steeringFile)
-      steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,self.numberOfEvents,self.startFrom,self.debug)
+      steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,self.macFile,self.numberOfEvents,self.startFrom,self.debug)
       if not steerok:
         self.log.error('Failed to create MOKKA steering file')
         return S_ERROR('Failed to create MOKKA steering file')
