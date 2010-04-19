@@ -29,7 +29,7 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
   
-  def setMokka(self,appVersion,steeringFile,inputGenfile=None,inputMac = None,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
     """Helper function.
        Define Mokka step
        
@@ -52,9 +52,9 @@ class ILCJob(Job):
        @param steeringFile: Path to steering file
        @type steeringFile: string or list
        @param inputGenfile: Input generator file
-       @type inputStdhep: string
-       @param inputMac: Input mac file
-       @type inputMac: string
+       @type inputGenfile: string
+       @param macFile: Input mac file
+       @type macFile: string
        @param detectorModel: Mokka detector model to use (if different from steering file)
        @type detectorModel: string
        @param nbOfEvents: Number of events to process in Mokka
@@ -70,7 +70,7 @@ class ILCJob(Job):
        
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputStdhep':inputGenfile,'inputMac':inputMac,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
+    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(steeringFile) in types.StringTypes:
@@ -78,8 +78,8 @@ class ILCJob(Job):
     if inputGenfile:
       if not type(inputGenfile) in types.StringTypes:
         return self._reportError('Expected string for generator file',__name__,**kwargs)
-    if inputMac:
-      if not type(inputMac) in types.StringTypes:
+    if macFile:
+      if not type(macFile) in types.StringTypes:
         return self._reportError('Expected string for mac file',__name__,**kwargs)
     if not type(detectorModel) in types.StringTypes:
       return self._reportError('Expected string for detector model',__name__,**kwargs)
@@ -111,8 +111,8 @@ class ILCJob(Job):
 
     if(inputGenfile):
       self.addToInputSandbox.append(inputGenfile)
-    if(inputMac):
-      self.addToInputSandbox.append(inputMac)
+    if(macFile):
+      self.addToInputSandbox.append(macFile)
       
     if(dbslice):
       if(os.path.exists(dbslice)):
@@ -120,7 +120,7 @@ class ILCJob(Job):
       else:
         return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
 
-    if not inputGenfile and not inputMac:
+    if not inputGenfile and not macFile:
       return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
 
     stepName = 'RunMokka'
@@ -153,8 +153,8 @@ class ILCJob(Job):
     stepInstance.setValue("steeringFile",steeringFile)
     if inputGenfile:
       stepInstance.setValue("stdhepFile",inputGenfile)
-    if inputMac:
-      stepInstance.setValue("macFile",inputMac)
+    if macFile:
+      stepInstance.setValue("macFile",macFile)
     if(detectorModel):
       stepInstance.setValue("detectorModel",detectorModel)
     stepInstance.setValue("numberOfEvents",nbOfEvents)
@@ -306,7 +306,7 @@ class ILCJob(Job):
     self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel,nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
+  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
     """Helper function.
        Define SLIC step
        
