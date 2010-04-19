@@ -54,7 +54,7 @@ for physicalFile in castorFiles:
     data = f.read(128)
     md5.update(data)
   
-  res = ilcdirac.addFile(lfn,localfile,se,fileGuid=md5.digest(),printOutput=printOutput)
+  res = ilcdirac.addFile(lfn,localfile,se,fileGuid=md5.digest())
   if os.path.exists(localFile): os.remove(localFile)
   if not res['OK']:
     gLogger.error("Failed to upload %s to grid." % physicalFile,res['Message'])
