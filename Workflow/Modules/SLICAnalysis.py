@@ -119,6 +119,10 @@ class SLICAnalysis(ModuleBase):
     self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
     
     slicmac = 'slicmac.mac'
+    if len(self.stdhepFile)>0:
+      self.stdhepFile = os.path.basename(self.stdhepFile)
+    if len(self.inmacFile)>0:
+      self.inmacFile = os.path.basename(self.inmacFile)
     macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel)
     if not macok:
       self.log.error('Failed to create SLIC mac file')
