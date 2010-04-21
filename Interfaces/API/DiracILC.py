@@ -18,16 +18,32 @@ class DiracILC(Dirac):
   """ 
   """
   def __init__(self, WithRepo=False, RepoLocation=''):
-    """Internal initialization of the DIRAC API.
+    """Internal initialization of the ILCDIRAC API.
     """
     #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     self.log = gLogger
     
   def preSubmissionChecks(self,job,mode):
+    """Overridden method from DIRAC.Interfaces.API.Dirac
+    
+    Checks from CS that required software packages are available.
+    @param job: job definition.
+    @param mode: submission mode, not used here. 
+    
+    @return: S_OK() or S_ERROR()
+    """
     return self._do_check(job)
     
   def checkparams(self,job):
+    """Helper method
+    
+    Method used for stand alone checks of job integrity. Calls the formulation error checking of the job
+    
+    Actually checks that all input are available and checks that the required software packages are available in the CS
+    @param job: job object
+    @return: S_OK() or S_ERROR()  
+    """
     try:
       formulationErrors = job._getErrors()
     except Exception, x:
