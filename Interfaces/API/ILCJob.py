@@ -50,6 +50,8 @@ class ILCJob(Job):
        >>> job = ILCJob()
        >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputGenfile=['LFN:/ilc/some/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
 
+       If macFile is not specified, nbOfEvents must be.
+       
        Modified drivers (.so files) should be put in a 'lib' directory and input as inputdata:
        
        >>> job.setInputData('lib')
@@ -120,10 +122,16 @@ class ILCJob(Job):
       return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
 
     if(inputGenfile):
-      self.addToInputSandbox.append(inputGenfile)
+      if os.path.exists(inputGenfile):
+        self.addToInputSandbox.append(inputGenfile)
+      else:
+        return self._reportError('Specified input generator file %s does not exist' %(inputGenfile),__name__,**kwargs)
     if(macFile):
-      self.addToInputSandbox.append(macFile)
-      
+      if os.path.exists(macFile):
+        self.addToInputSandbox.append(macFile)
+      else:
+        return self._reportError('Specified input mac file %s does not exist' %(macFile),__name__,**kwargs)
+        
     if(dbslice):
       if(os.path.exists(dbslice)):
         self.addToInputSandbox.append(dbslice)
@@ -392,15 +400,18 @@ class ILCJob(Job):
         return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
 
     if(inputGenfile):
-      self.addToInputSandbox.append(inputGenfile)    
+      if os.path.exists(inputGenfile):
+        self.addToInputSandbox.append(inputGenfile)    
+      else:
+        return self._reportError("Input generator file %s cannot be found"%(inputGenfile),__name__,**kwargs )
 
     if not macFile and not inputGenfile:
-      return self._reportError("No mac file nor generator file specified, can not do anything",__name__,**kwargs )
+      return self._reportError("No mac file nor generator file specified, cannot do anything",__name__,**kwargs )
     
     detectormodeltouse = os.path.basename(detectorModel).rstrip(".zip")
     if os.path.exists(detectorModel):
       self.addToInputSandbox(detectorModel)
-
+      
     stepName = 'RunSLIC'
 
     
@@ -497,8 +508,11 @@ class ILCJob(Job):
       logName = 'Marlin_%s.log' %(appVersion)
     self.addToOutputSandbox.append(logName)
 
-    self.addToInputSandbox(xmlfile)
-
+    if os.path.exists(xmlfile):
+      self.addToInputSandbox(xmlfile)
+    else:
+      return self._reportError("Cannot find specified input xml file %s, please fix !"%(xmlfile),__name__,**kwargs)
+    
     self.StepCount +=1
     stepName = 'RunLCSIM'
 
