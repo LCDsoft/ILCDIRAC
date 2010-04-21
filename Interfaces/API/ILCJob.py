@@ -133,7 +133,7 @@ class ILCJob(Job):
         return self._reportError('Specified input mac file %s does not exist' %(macFile),__name__,**kwargs)
         
     if(dbslice):
-      if dbslice.lower().find("lfn:"):
+      if dbslice.lower().find("lfn:")>-1:
         self.addToInputSandbox.append(dbslice)
       else:
         if(os.path.exists(dbslice)):
@@ -404,7 +404,7 @@ class ILCJob(Job):
         return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
 
     if(inputGenfile):
-      if inputGenfile.lower().find("lfn:"):
+      if inputGenfile.lower().find("lfn:")>-1:
         self.addToInputSandbox.append(inputGenfile)    
       else:
         if os.path.exists(inputGenfile):
