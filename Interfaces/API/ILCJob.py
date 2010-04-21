@@ -39,8 +39,9 @@ class ILCJob(Job):
     """Helper function.
        Define Mokka step
        
-       steeringFile should be the path to the steering file
-       All options files are automatically appended to the job input sandbox
+       steeringFile should be the path to the steering file.
+       
+       All options files are automatically appended to the job input sandbox.
        
        inputGenfile is the path to the generator file to read. Can be LFN:
 
@@ -50,7 +51,9 @@ class ILCJob(Job):
        >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputGenfile=['LFN:/ilc/some/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
 
        Modified drivers (.so files) should be put in a 'lib' directory and input as inputdata:
+       
        >>> job.setInputData('lib')
+       
        This 'lib' directory will be prepended to LD_LIBRARY_PATH
 
        @param appVersion: Mokka version
@@ -198,7 +201,9 @@ class ILCJob(Job):
       >>> job.setMarlin("v00-17",xmlfile='myMarlin.xml',gearfile='GearFile.xml',inputslcio='input.slcio')
       
       If personal processors are needed, put them in a 'lib' directory, and do 
+      
       >>> job.setInputData('lib')
+      
       so that they get shipped to the grid site. All contents are prepended in MARLIN_DLL
       
       @param xmlfile: the marlin xml definition
@@ -323,6 +328,7 @@ class ILCJob(Job):
        Define SLIC step
        
        macFile should be the path to the mac file
+       
        All options files are automatically appended to the job input sandbox
        
        inputGenfile is the path to the generator file to read. Can be LFN:
@@ -448,6 +454,7 @@ class ILCJob(Job):
        Define LCSIM step
        
        sourceDir should be the path to the source directory used, can be tar ball
+       
        All options files are automatically appended to the job input sandbox
        
        Example usage:
