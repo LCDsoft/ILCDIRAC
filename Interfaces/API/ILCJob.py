@@ -404,10 +404,13 @@ class ILCJob(Job):
         return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
 
     if(inputGenfile):
-      if os.path.exists(inputGenfile):
+      if inputGenfile.lower.find("lfn:"):
         self.addToInputSandbox.append(inputGenfile)    
       else:
-        return self._reportError("Input generator file %s cannot be found"%(inputGenfile),__name__,**kwargs )
+        if os.path.exists(inputGenfile):
+          self.addToInputSandbox.append(inputGenfile)    
+        else:
+          return self._reportError("Input generator file %s cannot be found"%(inputGenfile),__name__,**kwargs )
 
     if not macFile and not inputGenfile:
       return self._reportError("No mac file nor generator file specified, cannot do anything",__name__,**kwargs )
