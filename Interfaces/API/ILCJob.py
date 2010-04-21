@@ -1,12 +1,18 @@
 # $HeadURL$
 # $Id$
-'''
-ILCDIRAC.Interfaces.API.ILCJob : equivalent of LHCbJob for ILC group and applications.
+"""
+  ILCJob : Job definition API for the ILC community
+  
+  Inherits from Job class in DIRAC.Interfaces.API.Job.py
+  
+  Add ILC specific application support
 
-Created on Feb 8, 2010
+  See tutorial slides for usage, and this doc for full review of possibilities.
 
-@author: sposs
-'''
+  Created on Feb 8, 2010
+
+  @author: Stephane Poss and Przemyslaw Majewski
+"""
 import string
 from DIRAC.Core.Workflow.Parameter                  import *
 from DIRAC.Core.Workflow.Module                     import *
@@ -29,7 +35,7 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
   
-  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=10000,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
     """Helper function.
        Define Mokka step
        
@@ -83,8 +89,9 @@ class ILCJob(Job):
         return self._reportError('Expected string for mac file',__name__,**kwargs)
     if not type(detectorModel) in types.StringTypes:
       return self._reportError('Expected string for detector model',__name__,**kwargs)
-    if not type(nbOfEvents) == types.IntType:
-      return self._reportError('Expected int for NbOfEvents',__name__,**kwargs)
+    if nbOfEvents:
+      if not type(nbOfEvents) == types.IntType:
+        return self._reportError('Expected int for NbOfEvents',__name__,**kwargs)
     if not type(startFrom) == types.IntType:
       return self._reportError('Expected int for StartFrom',__name__,**kwargs)
     if not type(dbslice) in types.StringTypes:
@@ -123,6 +130,10 @@ class ILCJob(Job):
     if not inputGenfile and not macFile:
       return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
 
+    if not macFile:
+      if not nbOfEvents:
+        return self._reportError("No nbOfEvents specified and no mac file given, please specify either one",__name__,**kwargs )
+
     stepName = 'RunMokka'
 
     
@@ -157,7 +168,8 @@ class ILCJob(Job):
       stepInstance.setValue("macFile",macFile)
     if(detectorModel):
       stepInstance.setValue("detectorModel",detectorModel)
-    stepInstance.setValue("numberOfEvents",nbOfEvents)
+    if nbOfEvents:
+      stepInstance.setValue("numberOfEvents",nbOfEvents)
     stepInstance.setValue("startFrom",startFrom)
     if(dbslice):
       stepInstance.setValue("dbSlice",dbslice)
