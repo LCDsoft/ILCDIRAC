@@ -404,7 +404,7 @@ class ILCJob(Job):
         return self._reportError('Specified mac file %s does not exist' %(macFile),__name__,**kwargs)
 
     if(inputGenfile):
-      if inputGenfile.lower.find("lfn:"):
+      if inputGenfile.lower().find("lfn:"):
         self.addToInputSandbox.append(inputGenfile)    
       else:
         if os.path.exists(inputGenfile):
