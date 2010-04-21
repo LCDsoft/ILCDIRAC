@@ -78,7 +78,7 @@ class ILCJob(Job):
        @type logFile: string
        @param debug: By default, change printout level to least verbosity
        @type debug: bool
-       
+       @return: S_OK() or S_ERROR()
     """
     
     kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
@@ -133,10 +133,13 @@ class ILCJob(Job):
         return self._reportError('Specified input mac file %s does not exist' %(macFile),__name__,**kwargs)
         
     if(dbslice):
-      if(os.path.exists(dbslice)):
+      if dbslice.lower().find("lfn:"):
         self.addToInputSandbox.append(dbslice)
       else:
-        return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
+        if(os.path.exists(dbslice)):
+          self.addToInputSandbox.append(dbslice)
+        else:
+          return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
 
     if not inputGenfile and not macFile:
       return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
@@ -224,6 +227,7 @@ class ILCJob(Job):
       @type evtstoprocess: int or string
       @param debug: By default, change printout level to least verbosity
       @type debug: bool
+      @return: S_OK() or S_ERROR()
     """
     kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile,'debug':debug}
     if not type(appVersion) in types.StringTypes:
@@ -344,7 +348,7 @@ class ILCJob(Job):
        Example usage:
 
        >>> job = ILCJob()
-       >>> job.setSLIC('v2r8p0',macFile='clic01_SiD.mac',inputGenfile=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='slic.log')
+       >>> job.setSLIC('v2r8p0',macFile='clic01_SiD.mac',inputGenfile=['LFN:/ilc/some/event/data/somedata.stdhep'],nbOfEvents=100,logFile='slic.log')
 
        @param appVersion: SLIC version
        @type appVersion: string
@@ -362,7 +366,7 @@ class ILCJob(Job):
        @type outputFile: string 
        @param logFile: Optional log file name
        @type logFile: string
-       
+       @return: S_OK() or S_ERROR()
     """
     
     kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile}
@@ -481,6 +485,7 @@ class ILCJob(Job):
        @type inputslcio: string or list
        @param logFile: Optional log file name
        @type logFile: string
+       @return: S_OK() or S_ERROR()
     """
     kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
