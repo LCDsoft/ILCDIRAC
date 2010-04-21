@@ -41,7 +41,7 @@ class ILCJob(Job):
        Example usage:
 
        >>> job = ILCJob()
-       >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputGenfile=['/lcd/event/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
+       >>> job.setMokka('v00-01',steeringFile='clic01_ILD.steer',inputGenfile=['LFN:/ilc/some/data/somedata.stdhep'],nbOfEvents=100,logFile='mokka.log')
 
        Modified drivers (.so files) should be put in a 'lib' directory and input as inputdata:
        >>> job.setInputData('lib')
@@ -60,7 +60,7 @@ class ILCJob(Job):
        @param nbOfEvents: Number of events to process in Mokka
        @type nbOfEvents: int
        @param startFrom: Event number in the file to start reading from
-       @typr startFrom: int
+       @type startFrom: int
        @param dbslice: MySQL database slice to use different geometry, needed if not standard
        @type dbslice: string
        @param logFile: Optional log file name
@@ -180,7 +180,7 @@ class ILCJob(Job):
     
   def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False):
     """ Define Marlin step
-     Example usage:
+      Example usage:
 
       >>> job = ILCJob()
       >>> job.setMarlin("v00-17",xmlfile='myMarlin.xml',gearfile='GearFile.xml',inputslcio='input.slcio')
