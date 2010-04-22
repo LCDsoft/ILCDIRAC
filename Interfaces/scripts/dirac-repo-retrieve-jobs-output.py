@@ -23,4 +23,6 @@ dirac=Dirac(True, repoLocation)
 exitCode = 0
 dirac.monitorRepository(False)
 dirac.retrieveRepositorySandboxes()
+dirac.retrieveRepositoryData()
+
 DIRAC.exit(exitCode)
