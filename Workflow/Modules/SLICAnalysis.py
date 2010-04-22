@@ -28,6 +28,7 @@ class SLICAnalysis(ModuleBase):
     self.stdhepFile = ''
     self.detectorModel = ''
     self.inmacFile = ''
+    self.outputslcio = ''
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -53,9 +54,13 @@ class SLICAnalysis(ModuleBase):
       self.inmacFile = self.step_commons['inputmacFile']
 
     if self.step_commons.has_key('detectorModel'):
-      self.detectorModel = self.step_commons['detectorModel']
+      self.detectorModel = self.step_commons['detectorModel'] 
+      
+    if self.step_commons.has_key('outputFile'):
+      self.outputslcio = self.step_commons['outputFile'] 
     
     return S_OK('Parameters resolved')
+  
   def unzip_file_into_dir(self,file, dir):
     zfobj = zipfile.ZipFile(file)
     for name in zfobj.namelist():
@@ -123,7 +128,7 @@ class SLICAnalysis(ModuleBase):
       self.stdhepFile = os.path.basename(self.stdhepFile)
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
-    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel)
+    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.outputslcio)
     if not macok:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
