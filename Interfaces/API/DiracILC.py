@@ -7,7 +7,9 @@ Created on Apr 13, 2010
 @author: sposs
 '''
 from DIRAC.Interfaces.API.Dirac                     import Dirac
-from DIRAC.Interfaces.API.Job                     import Job
+from DIRAC.Interfaces.API.Job                       import Job
+from DIRAC.Core.Utilities.List                      import breakListIntoChunks, sortList
+
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
 import string
 
@@ -55,6 +57,23 @@ class DiracILC(Dirac):
         self.log.error( '>>>> Error in %s() <<<<\n%s' % ( method, string.join( errorList, '\n' ) ) )
       return S_ERROR( formulationErrors )
     return self._do_check(job)
+
+  def retrieveRepositoryOutputDataLFNs(self,requestedStates = ['Done']):
+    list = []
+    if not self.jobRepo:
+      gLogger.warn( "No repository is initialised" )
+      return S_OK()
+    jobs = self.jobRepo.readRepository()['Value']
+    for jobID in sortList( jobs.keys() ):
+      jobDict = jobs[jobID]
+      if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
+        if ( jobDict.has_key( 'OutputData' ) and ( not int( jobDict['OutputData'] ) ) ) or ( not jobDict.has_key( 'OutputData' ) ):
+          params = self.getParameters(jobID)
+          if params['OK']:
+            if params['Value'].has_key('UploadedOutputData'):
+              lfn = params['Value']['UploadedOutputData']
+              list.append(lfn)
+    return list
   
   def _do_check(self,job):  
     sysconf = job.systemConfig
@@ -74,3 +93,4 @@ class DiracILC(Dirac):
       self.log.error("Could not find the specified software %s_%s for %s, check in CS"%(appName,appVersion,config))
       return S_ERROR("Could not find the specified software %s_%s for %s, check in CS"%(appName,appVersion,config))
     return S_OK()
+  
