@@ -68,7 +68,7 @@ class DiracILC(Dirac):
       jobDict = jobs[jobID]
       if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
         if ( jobDict.has_key( 'OutputData' ) and ( not int( jobDict['OutputData'] ) ) ) or ( not jobDict.has_key( 'OutputData' ) ):
-          params = self.getParameters(jobID)
+          params = self.parameters(int(jobID))
           if params['OK']:
             if params['Value'].has_key('UploadedOutputData'):
               lfn = params['Value']['UploadedOutputData']
