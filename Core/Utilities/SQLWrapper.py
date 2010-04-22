@@ -8,7 +8,7 @@ Called from ILCDIRAC.Workflow.Modules.MokkaAnalysis
 
 Created on Feb 1, 2010
 
-@author: pmajewsk
+@author: Przemyslaw Majewski and Stephane Poss
 '''
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
@@ -31,9 +31,9 @@ class SQLWrapper:
       os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
       
     self.MokkaTMPDir = ''
-    self.applicationLog = '%s/mysql.log'%(os.getcwd())
+    self.applicationLog = '%s/mysqllog'%(os.getcwd())
          
-    self.stdError = '%s/mysql_err.log'%(os.getcwd())
+    self.stdError = '%s/mysql_errlog'%(os.getcwd())
  
     self.softDir = softwareDir
     self.rootpass = "rootpass"
