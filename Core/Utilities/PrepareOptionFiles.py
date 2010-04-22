@@ -1,19 +1,44 @@
 # $HeadURL$
 # $Id$
 '''
-ILCDIRAC.Core.Utilities.PrepareSteeringFile
+ILCDIRAC.Core.Utilities.PrepareOptionFiles
 
-This provides a set of methods to prepare the Mokka steering files : 
-the .mac file is created and set into the initial steering file
+This provides a set of methods to prepare the option files needed by the ILC applications.
 
 Created on Jan 29, 2010
 
-@author: sposs
+@author: Stephane Poss
 '''
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
+  """Writes out a steering file for Mokka
+  
+  Using specified parameters in the job definition passed from MokkaAnalysis
+  
+  @param inputSteering: input steering file name
+  @type inputSteering: string
+  @param outputSteering: new steering file that will be used by Mokka
+  @type outputSteering: string
+  @param detectormodel: detector model to use from the DB
+  @type detectormodel: string
+  @param stdhepFile: generator file name to put in the mac file, if needed
+  @type stdhepFile: string
+  @param mac: input mac file
+  @type mac: string
+  @param nbOfRuns: number of runs to use
+  @type nbOfRuns: string
+  @param startFrom: First event to read from the generator file
+  @type startFrom: int
+  @param debug: overwrite default print level, if set to True, don't change input steering parameter
+  @type debug: bool
+  @param outputlcio: output slcio file name, not used
+  @type outputlcio: string
+  
+  @return True
+  
+  """
   macname = "mokkamac.mac"
   if len(mac)<1:
     macfile = file(macname,"w")
@@ -61,6 +86,23 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   return True
 
 def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
+  """Write out a xml file for Marlin
+  
+  Takes in input the specified job parameters for Marlin application given from MarlinAnalysis
+  
+  @param finalxml: name of the xml file that will be used by Marlin
+  @type finalxml: string
+  @param inputXML: name of the provided input XML file
+  @type inputXML: string
+  @param inputSLCIO: input slcio file list
+  @type inputSLCIO: list of strings
+  @param numberofevts: number of events to process
+  @type numberofevts: int
+  @param debug: set to True to use given mode, otherwise set verbosity to SILENT
+  @type debug: bool
+  @return: True
+  
+  """
   tree = ElementTree()
   tree.parse(inputXML)
   params = tree.findall('global/parameter')
@@ -92,6 +134,27 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   return True
 
 def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None):
+  """Writes out a mac file for SLIC
+  
+  Takes the parameters passed from SLICAnalysis to define a new mac file if none was provided
+  
+  @param inputmac: name of the specified mac file
+  @type inputmac: string
+  @param outputmac: name of the final mac file used by SLIC
+  @type outputmac: string
+  @param stdhep: name of the generator file to use
+  @type stdhep: string
+  @param nbevts: number of events to process
+  @type nbevts: string
+  @param startfrom: event nu,ber to start from in the generator file
+  @type startfrom: string
+  @param detector: Detector model to use.  
+  @type detector: string
+  @param outputlcio: name of the produced output slcio file, this is useful when combined with setOutputData of ILCJob class
+  @type outputlcio: string
+
+  @return: True
+  """
   inputmacfile = file(inputmac,'r')
   output = file(outputmac,'w')
   for line in inputmacfile:
@@ -124,6 +187,23 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   return True
 
 def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,debug=False):
+  """Writes out a lcsim file for LCSIM
+  
+  Takes the parameters passed from LCSIMAnalysis
+  
+  @param inputlcsim: name of the provided lcsim
+  @type inputlcsim: string
+  @param outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in LCSIMAnalysis
+  @type outputlcsim: string
+  @param inputslcio: list of slcio files on which LCSIM should run
+  @type inputslcio: list of string
+  @param jars: list of jar files that should be added in the classpath definition
+  @type jars: list of strings
+  @param debug: By default set verbosity to true
+  @type debug: bool
+  
+  @return: True
+  """
   tree = ElementTree()
   tree.parse(inputlcsim)
   ##handle the input slcio file list
