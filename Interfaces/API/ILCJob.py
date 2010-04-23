@@ -27,6 +27,15 @@ from DIRAC                                          import gConfig
 COMPONENT_NAME='/WorkflowLib/API/ILCJob' 
 
 class ILCJob(Job):
+  """Main ILC job definition utility
+  
+  Each application is configured using specific interface
+  
+  The needed files are passed to the setInputSandbox method
+  
+  Each application corresponds to a module that is called from the JobAgent, on the worker node. This module is defined below by modulename. 
+  All available modules can be found in ILCDIRAC.Worflow.Modules.
+  """
   def __init__(self,script=None):
     """Instantiates the Workflow object and some default parameters.
     """
