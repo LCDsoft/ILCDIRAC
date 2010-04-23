@@ -9,7 +9,7 @@ Created on Jan 29, 2010
 '''
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from DIRAC.Core.DISET.RPCClient                          import RPCClient
-from DIRAC.Workflow.Modules.ModuleBase                import ModuleBase
+from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
@@ -207,9 +207,9 @@ class MokkaAnalysis(ModuleBase):
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s\n' %(mySoftwareRoot,mokkaDir))
       else:
         if os.environ.has_key('LD_LIBRARY_PATH'):
-         script.write('declare -x LD_LIBRARY_PATH=%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
+          script.write('declare -x LD_LIBRARY_PATH=%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
-         script.write('declare -x LD_LIBRARY_PATH=%s/%s\n'%(mySoftwareRoot,mokkaDir))          
+          script.write('declare -x LD_LIBRARY_PATH=%s/%s\n'%(mySoftwareRoot,mokkaDir))          
           
       script.write("declare -x PATH=%s/%s:%s\n"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
       

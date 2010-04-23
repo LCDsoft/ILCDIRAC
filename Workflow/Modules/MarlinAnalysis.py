@@ -3,6 +3,8 @@
 '''
 ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
+Define the Marlin analysis part of the workflow
+
 Created on Feb 9, 2010
 Modified on Feb 10, 2010
 
@@ -12,7 +14,7 @@ import os,sys,re,string
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
-from DIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -20,8 +22,6 @@ import DIRAC
 
 
 class MarlinAnalysis(ModuleBase):
-  """ Define the Marlin analysis part of the workflow
-  """
   def __init__(self):
     ModuleBase.__init__(self)
     self.enable = True

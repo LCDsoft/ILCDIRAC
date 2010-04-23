@@ -8,7 +8,7 @@ Created on Apr 7, 2010
 import os,sys,re, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
-from DIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
+from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
