@@ -35,7 +35,6 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   @type debug: bool
   @param outputlcio: output slcio file name, not used
   @type outputlcio: string
-  
   @return True
   
   """
