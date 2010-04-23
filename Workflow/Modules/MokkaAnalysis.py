@@ -251,7 +251,8 @@ class MokkaAnalysis(ModuleBase):
 
       ###Now change the name of Mokka output to the specified filename
       if os.path.exists("out.slcio"):
-        os.rename("out.slcio", self.outputFile)
+        if len(self.outputFile)>0:
+          os.rename("out.slcio", self.outputFile)
 
       failed = False
       if status != 0:
