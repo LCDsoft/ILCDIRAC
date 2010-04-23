@@ -1,13 +1,11 @@
 
-'''
-
+"""
 Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, 
 
 New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD soft
 
-@author: sposs
-@aauthor: pmajewsk
-'''
+@author: Stephane Poss and Przemyslaw Majewski
+"""
 import os, string
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC 
@@ -55,6 +53,7 @@ class CombinedSoftwareInstallation:
       if type(self.ceConfigs) == type(''):
         self.ceConfigs = [self.ceConfigs]
     #else:
+    ### Use always the list of compatible platform.
     self.ceConfigs = natOS.CMTSupportedConfig()
 
     self.sharedArea = SharedArea()
@@ -79,6 +78,7 @@ class CombinedSoftwareInstallation:
       return res
     else:
       supported_systems = res['Value']
+      ###look in CS if specified platform has software available. Normally consistency check is done at submission time
       for ceConfig in self.ceConfigs:
         for supp_systems in supported_systems:
           if ceConfig == supp_systems:
@@ -94,10 +94,7 @@ class CombinedSoftwareInstallation:
         DIRAC.gLogger.info( 'Assume locally running job, will install software in /LocalSite/LocalArea=%s' %(self.localArea))
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      #if app[0].lower()=="marlin" or app[0].lower()=="mokka" or app[0].lower()=="slic" :
       res = TARinstall(app,self.jobConfig,self.localArea)
-      #if app[0].lower()=="lcsim":
-      #  res = JAVAinstall(app,self.jobConfig,self.localArea)
       if not res['OK']:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
         return DIRAC.S_ERROR('Failed to install software')
@@ -112,6 +109,7 @@ def SharedArea():
   """
    Discover location of Shared SW area
    This area is populated by a tool independent of the DIRAC jobs
+   Not used yet in ILC DIRAC, but should be
   """
   sharedArea = ''
   if os.environ.has_key('VO_ILC_SW_DIR'):
@@ -169,6 +167,7 @@ def LocalArea():
    Discover Location of Local SW Area.
    This area is populated by DIRAC job Agent for jobs needing SW not present
    in the Shared Area.
+   Currently is always the location used as the software is not in the shared area.
   """
   if DIRAC.gConfig.getValue('/LocalSite/LocalArea',''):
     localArea = DIRAC.gConfig.getValue('/LocalSite/LocalArea')
