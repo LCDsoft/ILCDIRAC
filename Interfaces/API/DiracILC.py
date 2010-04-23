@@ -1,11 +1,10 @@
-'''
-
+"""
 DiracILC is the API to use to submit jobs in the ILC VO
 
 Created on Apr 13, 2010
 
-@author: sposs
-'''
+@author: Stephane Poss
+"""
 from DIRAC.Interfaces.API.Dirac                     import Dirac
 from DIRAC.Interfaces.API.Job                       import Job
 from DIRAC.Core.Utilities.List                      import breakListIntoChunks, sortList
@@ -59,6 +58,14 @@ class DiracILC(Dirac):
     return self._do_check(job)
 
   def retrieveRepositoryOutputDataLFNs(self,requestedStates = ['Done']):
+    """Helper function
+    
+    Get the list of uploaded output data for a set of jobs in a repository
+    
+    @param requestedStates: List of states requested for filtering the list
+    @type requestedStates: list of strings
+    @return: list
+    """
     list = []
     if not self.jobRepo:
       gLogger.warn( "No repository is initialised" )
