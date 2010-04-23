@@ -47,7 +47,7 @@ class MokkaAnalysis(ModuleBase):
         self.startFrom = 1
         #self.inputData = '' # to be resolved
         #self.InputData = '' # from the (JDL WMS approach)
-        #self.outputData = ''
+        self.outputFile = ''
         #self.generator_name=''
         #self.optionsLinePrev = ''
         #self.optionsLine = ''
@@ -87,6 +87,8 @@ class MokkaAnalysis(ModuleBase):
         self.dbslice = self.step_commons['dbSlice']
       if self.step_commons.has_key('debug'):
         self.debug = self.step_commons['debug']
+      if self.step_commons.has_key("outputFile"):
+        self.outputFile = self.step_commons["outputFile"]
           
       #if self.step_commons.has_key('generatorName'):
       #    self.generator_name = self.step_commons['generatorName']
@@ -246,6 +248,10 @@ class MokkaAnalysis(ModuleBase):
       # stdOutput = resultTuple[1]
       # stdError = resultTuple[2]
       self.log.info( "Status after the application execution is %s" % str( status ) )
+
+      ###Now change the name of Mokka output to the specified filename
+      if os.path.exists("out.slcio"):
+        os.rename("out.slcio", self.outputFile)
 
       failed = False
       if status != 0:
