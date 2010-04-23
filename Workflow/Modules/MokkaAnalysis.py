@@ -9,7 +9,7 @@ Created on Jan 29, 2010
 '''
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from DIRAC.Core.DISET.RPCClient                          import RPCClient
-from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
+from DIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
