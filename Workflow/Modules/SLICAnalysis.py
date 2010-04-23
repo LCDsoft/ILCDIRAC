@@ -1,9 +1,9 @@
 '''
-ILCDIRAC.Workflow.Modules.SlicAnalysis Called by Job Agent. 
+ILCDIRAC.Workflow.Modules.SLICAnalysis Called by Job Agent. 
 
 Created on Apr 7, 2010
 
-@author: sposs
+@author: Stephane Poss
 '''
 import os,sys,re, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
@@ -15,6 +15,9 @@ from DIRAC                                                import S_OK, S_ERROR, 
 import DIRAC
 
 class SLICAnalysis(ModuleBase):
+  """
+  Specific Module to run a SLIC job.
+  """
   def __init__(self):
     ModuleBase.__init__(self)
     self.enable = True
@@ -34,6 +37,9 @@ class SLICAnalysis(ModuleBase):
       self.jobID = os.environ['JOBID']
     
   def resolveInputVariables(self):
+    """ Resolve all input variables for the module here.
+    @return: S_OK()
+    """
     if self.workflow_commons.has_key('SystemConfig'):
         self.systemConfig = self.workflow_commons['SystemConfig']
 
@@ -62,6 +68,8 @@ class SLICAnalysis(ModuleBase):
     return S_OK('Parameters resolved')
   
   def unzip_file_into_dir(self,file, dir):
+    """Used to unzip the downloaded detector model
+    """
     zfobj = zipfile.ZipFile(file)
     for name in zfobj.namelist():
       if name.endswith('/'):
@@ -74,10 +82,18 @@ class SLICAnalysis(ModuleBase):
   def execute(self):
     """
     Called by Agent
+    
+    First get the environment variables that should have been set during installation
+    
+    Then download the detector model, using CS query
+    
+    After that, prepare the mac file
+    
+    Run SLIC on this mac File and catch the exit status
     """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:
-      self.result = S_ERROR( 'No LCD platform selected' )
+      self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
@@ -195,6 +211,8 @@ class SLICAnalysis(ModuleBase):
 
     #############################################################################
   def redirectLogOutput(self, fd, message):
+    """Catch the stdout of the application
+    """
     sys.stdout.flush()
     if message:
       if re.search('INFO Evt',message): print message

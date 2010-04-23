@@ -6,8 +6,7 @@ ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
 Created on Feb 9, 2010
 Modified on Feb 10, 2010
 
-@author: sposs
-@author: pmajewsk
+@author: Stephane Poss and Przemyslaw Majewski
 '''
 import os,sys,re,string
  
@@ -45,6 +44,7 @@ class MarlinAnalysis(ModuleBase):
     
   def resolveInputVariables(self):
     """ Resolve all input variables for the module here.
+    @return: S_OK()
     """
     if self.workflow_commons.has_key('SystemConfig'):
       self.systemConfig = self.workflow_commons['SystemConfig']
@@ -78,10 +78,18 @@ class MarlinAnalysis(ModuleBase):
   def execute(self):
     """
     Called by Agent
+    
+    First, resolve where the soft was installed
+    
+    Secondly, prepare the list of file to feed Marlin with
+    
+    Then create the XML file on which Marlin has to run, done by PrepareOptionFiles
+    
+    Finally, run Marlin and catch the exit code
     """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:
-      self.result = S_ERROR( 'No LCD platform selected' )
+      self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
@@ -235,6 +243,8 @@ class MarlinAnalysis(ModuleBase):
     return S_OK('Marlin %s Successful' %(self.applicationVersion))
 
   def redirectLogOutput(self, fd, message):
+    """Catch the output from the application
+    """
     sys.stdout.flush()
     if message:
       if re.search('INFO Evt',message): print message

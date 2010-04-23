@@ -5,7 +5,7 @@ Mokka analysis module. Called by Job Agent.
 
 Created on Jan 29, 2010
 
-@author: sposs
+@author: Stephane Poss and Przemyslaw Majewski
 '''
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from DIRAC.Core.DISET.RPCClient                          import RPCClient
@@ -20,9 +20,9 @@ import re, os, sys
 
 
 class MokkaAnalysis(ModuleBase):
-    '''
+    """
     Specific Module to run a Mokka job.
-    '''
+    """
     def __init__(self):
         ModuleBase.__init__(self)
         self.enable = True
@@ -57,6 +57,7 @@ class MokkaAnalysis(ModuleBase):
 #############################################################################
     def resolveInputVariables(self):
       """ Resolve all input variables for the module here.
+      @return: S_OK()
       """
       if self.workflow_commons.has_key('SystemConfig'):
           self.systemConfig = self.workflow_commons['SystemConfig']
@@ -82,12 +83,6 @@ class MokkaAnalysis(ModuleBase):
       if self.step_commons.has_key('detectorModel'):
         self.detectorModel = self.step_commons['detectorModel']
 
-      #if self.step_commons.has_key('optionsLine'):
-      #    self.optionsLine = self.step_commons['optionsLine']
-
-      #if self.step_commons.has_key('optionsLinePrev'):
-      #    self.optionsLinePrev = self.step_commons['optionsLinePrev']
-
       if self.step_commons.has_key('dbSlice'):
         self.dbslice = self.step_commons['dbSlice']
       if self.step_commons.has_key('debug'):
@@ -111,8 +106,15 @@ class MokkaAnalysis(ModuleBase):
       return S_OK('Parameters resolved')
     
     def execute(self):
-      """
-      Called by Agent
+      """ Called by Agent
+      
+      First, read the application parameters that where defined in ILCJob, and stored in the job definition
+      
+      Then setup the SQL server and run it in the background
+      
+      Finally launch Mokka and catch its return status
+      @return: S_OK(), S_ERROR()
+      
       """
       result = self.resolveInputVariables()
       if not result['OK']:
@@ -126,7 +128,7 @@ class MokkaAnalysis(ModuleBase):
       self.result = S_OK()
        
       if not self.systemConfig:
-        self.result = S_ERROR( 'No LCD platform selected' )
+        self.result = S_ERROR( 'No ILC platform selected' )
       elif not self.applicationLog:
         self.result = S_ERROR( 'No Log file provided' )
 
@@ -262,11 +264,11 @@ class MokkaAnalysis(ModuleBase):
 
       ###cleanup after putting some dirt...
       #for now cleanup is executed by mokka-wrapper.sh on exit or kill
-      """
-      result = sqlwrapper.mysqlCleanUp()
-      if not result['OK']:
-        return result
-      """
+      
+      #result = sqlwrapper.mysqlCleanUp()
+      #if not result['OK']:
+      #  return result
+      
       result = sqlwrapper.mysqlCleanUp()
       # Still have to set the application status e.g. user job case.
       self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
@@ -274,9 +276,9 @@ class MokkaAnalysis(ModuleBase):
 
     #############################################################################
     def redirectLogOutput(self, fd, message):
+      """Used to catch the application print outs
+      """
       sys.stdout.flush()
-      if message:
-        if re.search('INFO Evt',message): print message
       if self.applicationLog:
         log = open(self.applicationLog,'a')
         log.write(message+'\n')
