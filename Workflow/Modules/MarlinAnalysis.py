@@ -22,6 +22,8 @@ import DIRAC
 
 
 class MarlinAnalysis(ModuleBase):
+  """Define the Marlin analysis part of the workflow
+  """
   def __init__(self):
     ModuleBase.__init__(self)
     self.enable = True
@@ -86,6 +88,7 @@ class MarlinAnalysis(ModuleBase):
     Then create the XML file on which Marlin has to run, done by PrepareOptionFiles
     
     Finally, run Marlin and catch the exit code
+    @return: S_OK(), S_ERROR()
     """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:
