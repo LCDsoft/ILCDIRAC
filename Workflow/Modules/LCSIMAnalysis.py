@@ -1,9 +1,9 @@
 '''
-ILCDIRAC.Workflow.Modules.LcsimAnalysis Called by Job Agent. 
+ILCDIRAC.Workflow.Modules.LCSIMAnalysis Called by Job Agent. 
 
 Created on Apr 7, 2010
 
-@author: sposs
+@author: Stephane Poss
 '''
 import os, sys, re, string
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
@@ -15,6 +15,8 @@ from DIRAC                                                import S_OK, S_ERROR, 
 import DIRAC
 
 class LCSIMAnalysis(ModuleBase):
+  """Define the LCSIM analysis part of the workflow
+  """
   def __init__(self):
     ModuleBase.__init__(self)
     self.enable = True
@@ -32,6 +34,9 @@ class LCSIMAnalysis(ModuleBase):
       self.jobID = os.environ['JOBID']
      
   def resolveInputVariables(self):
+    """ Resolve all input variables for the module here.
+    @return: S_OK()
+    """
     if self.workflow_commons.has_key('SystemConfig'):
       self.systemConfig = self.workflow_commons['SystemConfig']
 
@@ -44,16 +49,21 @@ class LCSIMAnalysis(ModuleBase):
     if self.step_commons.has_key('lcsimFile'):
       self.xmlfile = self.step_commons['lcsimFile']
     
-
     return S_OK('Parameters resolved')
 
   def execute(self):
     """
     Called by Agent
+    
+    First prepare the list of files to run on
+    
+    Then set the lcsim file using PrepareOptionFiles
+    
+    Finally run java and catch the exit code
     """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:
-      self.result = S_ERROR( 'No LCD platform selected' )
+      self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
