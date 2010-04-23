@@ -90,6 +90,7 @@ class SLICAnalysis(ModuleBase):
     After that, prepare the mac file
     
     Run SLIC on this mac File and catch the exit status
+    @return: S_OK(), S_ERROR()
     """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:

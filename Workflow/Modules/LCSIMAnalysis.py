@@ -60,6 +60,7 @@ class LCSIMAnalysis(ModuleBase):
     Then set the lcsim file using PrepareOptionFiles
     
     Finally run java and catch the exit code
+    @return: S_OK(), S_ERROR()
     """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:

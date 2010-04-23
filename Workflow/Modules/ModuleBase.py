@@ -74,6 +74,10 @@ class ModuleBase(object):
   #############################################################################
   def setJobParameter(self,name,value, sendFlag = True):
     """Wraps around setJobParameter of state update client
+    @param name: job parameter 
+    @param value: value of the job parameter
+    @param sendFlag: passed to setJobParameter
+    @return: S_OK(), S_ERROR()
     """
     if not self.jobID:
       return S_OK('JobID not defined') # e.g. running locally prior to submission
@@ -112,7 +116,12 @@ class ModuleBase(object):
 
   #############################################################################
   def setFileStatus(self,production,lfn,status):
-    """ set the file status for the given production in the Production Database
+    """ Set the file status for the given production in the Production Database\
+    
+    @param production: production ID
+    @param lfn: logical file name of the file that needs status change
+    @param status: status to set
+    @return: S_OK(), S_ERROR()
     """
     self.log.verbose('setFileStatus(%s,%s,%s)' %(production,lfn,status))
 
@@ -132,6 +141,11 @@ class ModuleBase(object):
   #############################################################################
   def setReplicaProblematic(self,lfn,se,pfn='',reason='Access failure'):
     """ Set replica status to Problematic in the File Catalog
+    @param lfn: lfn of the problematic file
+    @param se: storage element
+    @param pfn: physical file name
+    @param reason: as name suggests...
+    @return: S_OK()
     """
 
     rm = ReplicaManager()
@@ -155,14 +169,14 @@ class ModuleBase(object):
   def getCandidateFiles(self,outputList,outputLFNs,fileMask):
     """ Returns list of candidate files to upload, check if some outputs are missing.
         
-        outputList has the following structure:
-          [ ('outputDataType':'','outputDataSE':'','outputDataName':'') , (...) ] 
+      @param outputList: has the following structure:
+      [ ('outputDataType':'','outputDataSE':'','outputDataName':'') , (...) ] 
           
-        outputLFNs is the list of output LFNs for the job
+      @param outputLFNs: list of output LFNs for the job
         
-        fileMask is the output file extensions to restrict the outputs to
+      @param fileMask:  output file extensions to restrict the outputs to
         
-        returns dictionary containing type, SE and LFN for files restricted by mask
+      @return: dictionary containing type, SE and LFN for files restricted by mask
     """
     fileInfo = {}
     for outputFile in outputList:
@@ -210,10 +224,11 @@ class ModuleBase(object):
   def getFileMetadata(self,candidateFiles):
     """Returns the candidate file dictionary with associated metadata.
     
-       The input candidate files dictionary has the structure:
-       {'lfn':'','type':'','workflowSE':''}
+    @param candidateFiles: The input candidate files dictionary has the structure:
+    {'lfn':'','type':'','workflowSE':''}
        
-       this also assumes the files are in the current working directory.
+    This also assumes the files are in the current working directory.
+    @return: File Metadata
     """
     #Retrieve the POOL File GUID(s) for any final output files
     self.log.info('Will search for POOL GUIDs for: %s' %(string.join(candidateFiles.keys(),', ')))
