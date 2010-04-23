@@ -1,7 +1,9 @@
 '''
+Function to dowload and untar the applications, called from CombinedSoftwareInstallation
+
 Created on Apr 7, 2010
 
-@author: sposs
+@author: Stephane Poss
 '''
 import DIRAC
 

@@ -1,4 +1,8 @@
-""" General ILC platform configuration, based on LHCb version"""
+""" 
+General ILC platform configuration, based on LHCb version
+
+Called from CombinedSoftwareInstallation
+"""
 
 import sys, platform, os
 import re
