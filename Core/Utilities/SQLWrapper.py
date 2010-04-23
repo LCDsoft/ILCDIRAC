@@ -20,7 +20,16 @@ EXECUTION_RESULT = {}
 
 class SQLWrapper:
   def __init__(self,dumpfile='',softwareDir='./',mokkaDBroot=''):
-    """Set initial variables"""
+    """Set initial variables
+    
+    @param dumpfile: name of the sql dump that should be used if not default
+    @type dumpfile: string
+    @param softwareDir: path to the location of the software installation
+    @type softwareDir: string
+    @param mokkaDBroot: path to the place where the DB will live
+    @type mokkaDBroot: string
+    
+    """
     self.MokkaDumpFile = ""
     if(len(dumpfile)<1):
       dumpfile= 'CLICMokkaDB.sql'
@@ -42,7 +51,7 @@ class SQLWrapper:
     self.initialDir= os.getcwd()
     #os.chdir(self.softDir)
 
-    """create tmp dir and track it"""
+    #"""create tmp dir and track it"""
     try :
       os.makedirs(self.mokkaDBroot)
     except :
@@ -67,7 +76,8 @@ class SQLWrapper:
     return os.path.join(self.MokkaTMPDir)
       
   def mysqlSetup(self):
-    """Setup mysql locally in local tmp dir """
+    """Setup mysql locally in local tmp dir 
+    """
     #initialDir= os.getcwd()
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
@@ -254,7 +264,10 @@ done
     
     #############################################################################
   def mysqlCleanUp(self):
-    """Does mysql cleanup command. Remove socket and tmpdir with mysql db."""
+    """Does mysql cleanup. Remove socket and tmpdir with mysql db.
+    
+    Called at the end of Mokka execution, whatever the status is.
+    """
     currentdir = os.getcwd()
     os.chdir(os.path.join(self.softDir,"mysql4grid"))
     DIRAC.gLogger.verbose('clean up db')
@@ -313,10 +326,11 @@ done
         
     #############################################################################
   def redirectLogOutput(self, fd, message):
-    """Redirecting logging output to file specified."""
+    """Redirecting logging output to file specified.
+    
+    Should not be accessed from somewhere else.
+    """
     sys.stdout.flush()
-    if message:
-      if re.search('INFO Evt',message): print message
     if self.applicationLog:
       log = open(self.applicationLog,'a')
       log.write(message+'\n')
@@ -328,7 +342,8 @@ done
     #############################################################################
 
 class ExecutionThread( threading.Thread ):
-
+  """ Threading class used to run the mysqld server
+  """
   #############################################################################
   def __init__( self, spObject, cmd, maxPeekLines, stdoutFile, stderrFile, exeEnv ):
     threading.Thread.__init__( self )
