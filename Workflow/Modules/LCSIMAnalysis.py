@@ -69,16 +69,22 @@ class LCSIMAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
-    lcsimDir = 'lcsim'
+    
+    #look for lcsim filename
+    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"LCSIM",self.applicationVersion),'')
+    if not lcsim_name:
+      self.log.error("Could not find lcsim file name from CS")
+      return S_ERROR("Could not find lcsim file name from CS")
+    
     mySoftwareRoot = ''
     localArea = LocalArea()
     sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,lcsimDir)):
+    if os.path.exists('%s%s%s' %(localArea,os.sep,lcsim_name)):
       mySoftwareRoot = localArea
-    if os.path.exists('%s%s%s' %(sharedArea,os.sep,lcsimDir)):
+    if os.path.exists('%s%s%s' %(sharedArea,os.sep,lcsim_name)):
       mySoftwareRoot = sharedArea
     if not mySoftwareRoot:
-      self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsimDir,localArea,sharedArea))
+      self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsim_name,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
 
     #if tarfile.is_tarfile(self.sourcedir) :
@@ -92,11 +98,6 @@ class LCSIMAnalysis(ModuleBase):
     for inputfile in inputfilelist:
       runonslcio.append(os.path.basename(inputfile))
 
-    #look for lcsim filename
-    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"LCSIM",self.applicationVersion),'')
-    if not lcsim_name:
-      self.log.error("Could not find lcsim file name from CS")
-      return S_ERROR("Could not find lcsim file name from CS")
 
     ##Collect jar files to put in classspath
     jars = []
