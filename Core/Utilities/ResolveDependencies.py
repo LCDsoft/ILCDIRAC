@@ -18,13 +18,21 @@ def resolveDeps(sysconfig,appli,appversion):
       else:
         gLogger.error("Retrieving dependency version for %s failed, skipping to next !"%(dep))
         continue
-      dep_tar = gConfig.getOption('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(sysconfig,dep,depvers),'')
-      if dep_tar['OK']:
-        depsarray.append(dep_tar["Value"])
-      else:
-        gLogger.error("Dependency %s version %s is not defined in CS, please check !"%(dep["app"],dep["version"]))         
+      depdict ={}
+      depdict["app"] = dep
+      depdict["version"]=depvers
+      depsarray.append(depdict)
   else:
     gLogger.verbose("Could not find any dependency, ignoring")
   return depsarray
 
-  
+def resolveDepsTar(sysconfig,appli,appversion):
+  deparray = resolveDeps(sysconfig,appli,appversion)
+  depsarray = []
+  for dep in deparray:
+    dep_tar = gConfig.getOption('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(sysconfig,dep["app"],dep["version"]),'')
+    if dep_tar['OK']:
+      depsarray.append(dep_tar["Value"])
+    else:
+      gLogger.error("Dependency %s version %s is not defined in CS, please check !"%(dep["app"],dep["version"]))         
+  return depsarray
