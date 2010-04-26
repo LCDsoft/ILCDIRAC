@@ -22,6 +22,9 @@ def resolveDeps(sysconfig,appli,appversion):
       depdict["app"] = dep
       depdict["version"]=depvers
       depsarray.append(depdict)
+      ##resolve recursive dependencies
+      depsofdeps=resolveDeps(sysconfig,dep,depvers)
+      depsarray.extend(depsofdeps)
   else:
     gLogger.verbose("Could not find any dependency, ignoring")
   return depsarray
