@@ -98,8 +98,6 @@ class LCSIMAnalysis(ModuleBase):
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
           else:
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
-      else:
-        self.log.error("Dependency %s version %s is not defined in CS, please check !"%(dep["app"],dep["version"]))         
     
     
     #if tarfile.is_tarfile(self.sourcedir) :
