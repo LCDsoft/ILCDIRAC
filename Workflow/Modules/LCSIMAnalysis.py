@@ -11,7 +11,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile
-from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
@@ -89,7 +89,7 @@ class LCSIMAnalysis(ModuleBase):
       return S_ERROR('Failed to discover software')
 
     ### Resolve dependencies
-    deps = resolveDeps(self.systemConfig,"lcsim",self.applicationVersion)
+    deps = resolveDepsTar(self.systemConfig,"lcsim",self.applicationVersion)
     for dep in deps:
       if os.path.exists(os.path.join(mySoftwareRoot,dep.rstrip(".tgz").rstrip(".tar.gz"))):
         depfolder = dep.rstrip(".tgz").rstrip(".tar.gz")
