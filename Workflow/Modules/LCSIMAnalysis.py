@@ -11,6 +11,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
@@ -71,7 +72,7 @@ class LCSIMAnalysis(ModuleBase):
       return self.result
     
     #look for lcsim filename
-    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"LCSIM",self.applicationVersion),'')
+    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"lcsim",self.applicationVersion),'')
     if not lcsim_name:
       self.log.error("Could not find lcsim file name from CS")
       return S_ERROR("Could not find lcsim file name from CS")
@@ -87,6 +88,20 @@ class LCSIMAnalysis(ModuleBase):
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsim_name,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
 
+    ### Resolve dependencies
+    deps = resolveDeps(self.systemConfig,"lcsim",self.applicationVersion)
+    for dep in deps:
+      if os.path.exists(os.path.join(mySoftwareRoot,dep.rstrip(".tgz").rstrip(".tar.gz"))):
+        depfolder = dep.rstrip(".tgz").rstrip(".tar.gz")
+        if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
+          if os.environ.has_key("LD_LIBRARY_PATH"):
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
+          else:
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
+      else:
+        self.log.error("Dependency %s version %s is not defined in CS, please check !"%(dep["app"],dep["version"]))         
+    
+    
     #if tarfile.is_tarfile(self.sourcedir) :
     #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
     #  sourcedir = untarred_sourcedir.getmembers()[0].split("/")[0]
