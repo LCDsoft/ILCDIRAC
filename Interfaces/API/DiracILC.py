@@ -16,7 +16,9 @@ import string
 COMPONENT_NAME='DiracILC'
 
 class DiracILC(Dirac):
-  """ 
+  """DiracILC is VO specific API Dirac
+  
+  Adding specific ILC functionalities to the Dirac class, and implement the preSubmissionChecks method
   """
   def __init__(self, WithRepo=False, RepoLocation=''):
     """Internal initialization of the ILCDIRAC API.
@@ -88,7 +90,7 @@ class DiracILC(Dirac):
     for appver in apps.split(";"):
       app = appver.split(".")[0].lower()#first element
       vers = appver.split(".")[1:]#all the others
-      vers = string.join(vers,".").lower()
+      vers = string.join(vers,".")
       res = self._checkapp(sysconf,app,vers)
       if not res['OK']:
         return res

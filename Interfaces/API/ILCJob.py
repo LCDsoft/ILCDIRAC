@@ -526,7 +526,7 @@ class ILCJob(Job):
     self.addToOutputSandbox.append(logName)
 
     if os.path.exists(xmlfile):
-      self.addToInputSandbox(xmlfile)
+      self.addToInputSandbox.append(xmlfile)
     else:
       return self._reportError("Cannot find specified input xml file %s, please fix !"%(xmlfile),__name__,**kwargs)
     
