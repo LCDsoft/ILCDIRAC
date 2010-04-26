@@ -6,10 +6,24 @@ Created on Apr 7, 2010
 @author: Stephane Poss
 '''
 import DIRAC
-
+from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
 import os, urllib, tarfile
 
 def TARinstall(app,config,area):
+  appName    = app[0]
+  appVersion = app[1]
+  deps = resolveDeps(config,appName,appVersion)
+  depapp = []
+  for dep in deps:
+    depapp[0] = dep["app"]
+    depapp[1] = dep["version"]
+    res = install(depapp,config,area)
+    if not res['OK']:
+      DIRAC.gLogger.error("Could not install dependency %s %s"%(dep["app"],dep["version"]))
+  res = install(app,config,area)
+  return res
+
+def install(app,config,area):  
   os.chdir(area)
   appName    = app[0]
   appVersion = app[1]
