@@ -1,7 +1,7 @@
 '''
 ILCDIRAC.Workflow.Modules.LCSIMAnalysis Called by Job Agent. 
 
-Created on Apr 7, 2010
+@since: Apr 7, 2010
 
 @author: Stephane Poss
 '''
@@ -59,13 +59,14 @@ class LCSIMAnalysis(ModuleBase):
 
   def execute(self):
     """
-    Called by Agent
+    Called by JobAgent
     
-    First prepare the list of files to run on
-    
-    Then set the lcsim file using PrepareOptionFiles
-    
-    Finally run java and catch the exit code
+    Execute the following:
+      - prepend in the LD_LIBRARY_PATH any lib directory of any dependency (e.g. root)
+      - put the aliasproperties file in $HOME/.lcisim, where HOME is either the real home or the software directory if real home is not defined
+      - prepare the list of files to run on
+      - set the lcsim file using L{PrepareLCSIMFile}
+      - run java and catch the exit code
     @return: S_OK(), S_ERROR()
     """
     self.result =self.resolveInputVariables()

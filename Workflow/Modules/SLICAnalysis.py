@@ -1,7 +1,7 @@
 '''
 ILCDIRAC.Workflow.Modules.SLICAnalysis Called by Job Agent. 
 
-Created on Apr 7, 2010
+@since:  Apr 7, 2010
 
 @author: Stephane Poss
 '''
@@ -81,15 +81,13 @@ class SLICAnalysis(ModuleBase):
   
   def execute(self):
     """
-    Called by Agent
+    Called by JobAgent
     
-    First get the environment variables that should have been set during installation
-    
-    Then download the detector model, using CS query
-    
-    After that, prepare the mac file
-    
-    Run SLIC on this mac File and catch the exit status
+    Execute the following:
+      - get the environment variables that should have been set during installation
+      - download the detector model, using CS query to fetch the address
+      - prepare the mac file using L{PrepareMacFile}
+      - run SLIC on this mac File and catch the exit status
     @return: S_OK(), S_ERROR()
     """
     self.result =self.resolveInputVariables()

@@ -5,6 +5,8 @@ Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module,
 
 New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD soft
 
+@since: Feb 4, 2010
+
 @author: Stephane Poss and Przemyslaw Majewski
 """
 import os, string
@@ -66,8 +68,9 @@ class CombinedSoftwareInstallation:
     self.localArea  = LocalArea()
     
   def execute(self):
-    """
-     Main method of the class executed by DIRAC jobAgent
+    """ Main method of the class executed by DIRAC jobAgent
+
+     To install the applications, calls L{TARsoft}
     """
     if not self.apps:
       # There is nothing to do

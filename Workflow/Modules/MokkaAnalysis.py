@@ -3,7 +3,7 @@
 '''
 Mokka analysis module. Called by Job Agent. 
 
-Created on Jan 29, 2010
+@since:  Jan 29, 2010
 
 @author: Stephane Poss and Przemyslaw Majewski
 '''
@@ -110,11 +110,11 @@ class MokkaAnalysis(ModuleBase):
     def execute(self):
       """ Called by Agent
       
-      First, read the application parameters that where defined in ILCJob, and stored in the job definition
-      
-      Then setup the SQL server and run it in the background
-      
-      Finally launch Mokka and catch its return status
+      Executes the following:
+        - read the application parameters that where defined in ILCJob, and stored in the job definition
+        - setup the SQL server and run it in the background, via a call to L{SQLWrapper}
+        - prepare the steering fie using L{PrepareSteeringFile}
+        - run Mokka and catch its return status
       @return: S_OK(), S_ERROR()
       
       """

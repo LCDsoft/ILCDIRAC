@@ -1,7 +1,7 @@
 """
 DiracILC is the API to use to submit jobs in the ILC VO
 
-Created on Apr 13, 2010
+@since:  Apr 13, 2010
 
 @author: Stephane Poss
 """
