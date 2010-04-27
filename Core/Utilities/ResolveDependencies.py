@@ -26,7 +26,7 @@ def resolveDeps(sysconfig,appli,appversion):
       depsofdeps=resolveDeps(sysconfig,dep,depvers)
       depsarray.extend(depsofdeps)
   else:
-    gLogger.verbose("Could not find any dependency, ignoring")
+    gLogger.verbose("Could not find any dependency for %s %s, ignoring"%(appli,appversion))
   return depsarray
 
 def resolveDepsTar(sysconfig,appli,appversion):

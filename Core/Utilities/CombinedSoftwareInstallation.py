@@ -43,8 +43,8 @@ class CombinedSoftwareInstallation:
       if len(app)>2:
         tempapp = app
         app=[]
-        app[0] = tempapp[0]
-        app[1] = string.join(tempapp[1:], ".")
+        app.append(tempapp[0])
+        app.append(string.join(tempapp[1:], "."))
       self.apps.append(app)
 
     self.jobConfig = ''
