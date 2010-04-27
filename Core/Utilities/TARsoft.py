@@ -1,5 +1,7 @@
 '''
-Function to dowload and untar the applications, called from CombinedSoftwareInstallation
+Function to download and untar the applications, called from CombinedSoftwareInstallation
+
+Also installs all dependencies for the applications
 
 Created on Apr 7, 2010
 
