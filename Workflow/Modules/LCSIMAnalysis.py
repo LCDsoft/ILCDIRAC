@@ -29,7 +29,7 @@ class LCSIMAnalysis(ModuleBase):
     self.applicationVersion=''
     self.sourcedir = ''
     self.xmlfile = ''
-    self.self.inputSLCIO = ''
+    self.inputSLCIO = ''
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -49,6 +49,8 @@ class LCSIMAnalysis(ModuleBase):
       self.xmlfile = self.step_commons['inputXML']
     if self.step_commons.has_key('lcsimFile'):
       self.xmlfile = self.step_commons['lcsimFile']
+    if self.step_commons.has_key("inputSlcio"):
+      self.inputSLCIO = self.step_commons["inputSlcio"]
     
     return S_OK('Parameters resolved')
 
