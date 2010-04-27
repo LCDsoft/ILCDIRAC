@@ -476,7 +476,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,logFile=''):
+  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, logFile=''):
     """Helper function.
        Define LCSIM step
        
@@ -499,7 +499,7 @@ class ILCJob(Job):
        @type logFile: string
        @return: S_OK() or S_ERROR()
     """
-    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
@@ -515,6 +515,18 @@ class ILCJob(Job):
       #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
       inputslcioStr = string.join(inputslcio,';')
       self.addToInputSandbox.append(inputslcioStr)         
+
+    if aliasproperties:
+      if not type(aliasproperties) in types.StringTypes:
+        return self._reportError('Expected string for alias properties file',__name__,**kwargs)
+      else:
+        if aliasproperties.lower().find("lfn:"):
+          self.addToInputSandbox.append(aliasproperties)
+        else:
+          if os.path.exists(aliasproperties):
+            self.addToInputSandbox.append(aliasproperties)
+          else:
+            return self._reportError("Could not find alias properties files specified %s"%(aliasproperties), __name__,**kwargs)
 
     if logFile:
       if type(logFile) in types.StringTypes:
@@ -547,6 +559,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the source directory to use"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+    step.addParameter(Parameter("aliasproperties","","string","","",False,False,"Name of the alias properties file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
@@ -554,6 +567,9 @@ class ILCJob(Job):
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
     stepInstance.setValue("inputXML",xmlfile)
+
+    if aliasproperties:
+      stepInstance.setValue("aliasproperties",aliasproperties)
 
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)

@@ -5,7 +5,7 @@ Created on Apr 7, 2010
 
 @author: Stephane Poss
 '''
-import os, sys, re, string
+import os, sys, re, shutil
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
@@ -30,6 +30,7 @@ class LCSIMAnalysis(ModuleBase):
     self.sourcedir = ''
     self.xmlfile = ''
     self.inputSLCIO = ''
+    self.aliasproperties = ''
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -51,7 +52,9 @@ class LCSIMAnalysis(ModuleBase):
       self.xmlfile = self.step_commons['lcsimFile']
     if self.step_commons.has_key("inputSlcio"):
       self.inputSLCIO = self.step_commons["inputSlcio"]
-    
+    if self.step_commons.has_key("aliasproperties"):
+      self.aliasproperties = self.step_commons["aliasproperties"]
+      
     return S_OK('Parameters resolved')
 
   def execute(self):
@@ -102,6 +105,16 @@ class LCSIMAnalysis(ModuleBase):
           else:
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
     
+    if self.aliasproperties:
+      if os.environ.has_key("HOME"):
+        homedir = os.environ["HOME"]
+      else:
+        homedir = mySoftwareRoot
+        os.environ["HOME"]=mySoftwareRoot
+        
+      aliasproperties = os.path.basename(self.aliasproperties)
+      if os.path.exists(aliasproperties):
+        shutil.copy(aliasproperties,os.path.join(homedir,aliasproperties))
     
     #if tarfile.is_tarfile(self.sourcedir) :
     #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
