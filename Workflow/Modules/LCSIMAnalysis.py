@@ -114,7 +114,8 @@ class LCSIMAnalysis(ModuleBase):
         
       aliasproperties = os.path.basename(self.aliasproperties)
       if os.path.exists(aliasproperties):
-        shutil.copy(aliasproperties,os.path.join(homedir,aliasproperties))
+        os.mkdir(os.path.join(homedir,".lcsim"))
+        shutil.copy(aliasproperties,os.path.join(homedir,".lcsim",aliasproperties))
     
     #if tarfile.is_tarfile(self.sourcedir) :
     #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
