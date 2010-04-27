@@ -3,7 +3,7 @@
 """
 Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, 
 
-New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD soft
+New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD soft, and all dependencies
 
 @since: Feb 4, 2010
 
@@ -20,6 +20,10 @@ natOS = NativeMachine()
 class CombinedSoftwareInstallation:
   def __init__(self,argumentsDict):
     """ Standard constructor
+    
+    Defines, from dictionary of job parameters passed, a set of members to hold e.g. the applications and the system config
+    
+    Also determines the SharedArea and LocalArea.
     """
     self.job = {}
     if argumentsDict.has_key('Job'):
@@ -70,7 +74,11 @@ class CombinedSoftwareInstallation:
   def execute(self):
     """ Main method of the class executed by DIRAC jobAgent
 
-     To install the applications, calls L{TARsoft}
+    Executes the following:
+      - look for the compatible platforms in the CS, see if one matches request
+      - install the applications, calls L{TARsoft}
+
+    @return: S_OK(), S_ERROR()
     """
     if not self.apps:
       # There is nothing to do
@@ -136,7 +144,6 @@ def SharedArea():
     if not os.path.isdir( sharedArea ):
       DIRAC.gLogger.error( 'Missing Shared Area Directory:', sharedArea )
       sharedArea = ''
-
   return sharedArea
 
 def CreateSharedArea():
