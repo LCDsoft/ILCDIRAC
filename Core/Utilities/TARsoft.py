@@ -10,13 +10,13 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
 import os, urllib, tarfile
 
 def TARinstall(app,config,area):
-  appName    = app[0]
+  appName    = app[0].lower()
   appVersion = app[1]
   deps = resolveDeps(config,appName,appVersion)
   depapp = []
   for dep in deps:
-    depapp[0] = dep["app"]
-    depapp[1] = dep["version"]
+    depapp.append(dep["app"])
+    depapp.append(dep["version"])
     res = install(depapp,config,area)
     if not res['OK']:
       DIRAC.gLogger.error("Could not install dependency %s %s"%(dep["app"],dep["version"]))
