@@ -40,6 +40,11 @@ class CombinedSoftwareInstallation:
     for app in apps:
       DIRAC.gLogger.verbose( 'Requested Package %s' % app )
       app = tuple(app.split('.'))
+      if len(app)>2:
+        tempapp = app
+        app=[]
+        app[0] = tempapp[0]
+        app[1] = string.join(tempapp[1:], ".")
       self.apps.append(app)
 
     self.jobConfig = ''
