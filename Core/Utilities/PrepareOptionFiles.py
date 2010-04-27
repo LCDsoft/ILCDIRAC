@@ -15,7 +15,7 @@ from xml.etree.ElementTree import Element
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
   
-  Using specified parameters in the job definition passed from MokkaAnalysis
+  Using specified parameters in the job definition passed from L{MokkaAnalysis}
   
   @param inputSteering: input steering file name
   @type inputSteering: string
@@ -87,7 +87,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
 def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   """Write out a xml file for Marlin
   
-  Takes in input the specified job parameters for Marlin application given from MarlinAnalysis
+  Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
   
   @param finalxml: name of the xml file that will be used by Marlin
   @type finalxml: string
@@ -135,7 +135,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
 def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None):
   """Writes out a mac file for SLIC
   
-  Takes the parameters passed from SLICAnalysis to define a new mac file if none was provided
+  Takes the parameters passed from L{SLICAnalysis} to define a new mac file if none was provided
   
   @param inputmac: name of the specified mac file
   @type inputmac: string
@@ -192,7 +192,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,debug=False):
   
   @param inputlcsim: name of the provided lcsim
   @type inputlcsim: string
-  @param outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in LCSIMAnalysis
+  @param outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in L{LCSIMAnalysis}
   @type outputlcsim: string
   @param inputslcio: list of slcio files on which LCSIM should run
   @type inputslcio: list of string

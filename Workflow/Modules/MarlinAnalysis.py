@@ -5,8 +5,7 @@ ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
 
 Define the Marlin analysis part of the workflow
 
-Created on Feb 9, 2010
-Modified on Feb 10, 2010
+@since: Feb 9, 2010
 
 @author: Stephane Poss and Przemyslaw Majewski
 '''
@@ -81,13 +80,11 @@ class MarlinAnalysis(ModuleBase):
     """
     Called by Agent
     
-    First, resolve where the soft was installed
-    
-    Secondly, prepare the list of file to feed Marlin with
-    
-    Then create the XML file on which Marlin has to run, done by PrepareOptionFiles
-    
-    Finally, run Marlin and catch the exit code
+    Execute the following:
+      - resolve where the soft was installed
+      - prepare the list of file to feed Marlin with
+      - create the XML file on which Marlin has to run, done by L{PrepareXMLFile}
+      - run Marlin and catch the exit code
     @return: S_OK(), S_ERROR()
     """
     self.result =self.resolveInputVariables()

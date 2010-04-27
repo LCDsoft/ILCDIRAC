@@ -5,7 +5,7 @@ Set of functions used to resolve the applications' dependencies, looking into th
 
 Works recursively
 
-Created on Apr 26, 2010
+@since: Apr 26, 2010
 
 @author: Stephane Poss
 '''
@@ -50,7 +50,7 @@ def resolveDeps(sysconfig,appli,appversion):
 def resolveDepsTar(sysconfig,appli,appversion):
   """ Return the dependency tar ball name, if available
   
-  Uses same parameters as resolveDeps.
+  Uses same parameters as L{resolveDeps}.
   @return: array of strings
   """
   deparray = resolveDeps(sysconfig,appli,appversion)

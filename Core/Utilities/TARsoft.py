@@ -3,7 +3,7 @@ Function to download and untar the applications, called from CombinedSoftwareIns
 
 Also installs all dependencies for the applications
 
-Created on Apr 7, 2010
+@since:  Apr 7, 2010
 
 @author: Stephane Poss
 '''

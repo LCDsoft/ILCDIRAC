@@ -9,7 +9,7 @@
 
   See tutorial slides for usage, and this doc for full review of possibilities.
 
-  Created on Feb 8, 2010
+  @since: Feb 8, 2010
 
   @author: Stephane Poss and Przemyslaw Majewski
 """
