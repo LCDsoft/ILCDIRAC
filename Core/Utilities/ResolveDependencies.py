@@ -1,12 +1,29 @@
 '''
+ILCDIRAC.Core.Utilities.ResolveDependencies
+
+Set of functions used to resolve the applications' dependencies, looking into the CS
+
+Works recursively
+
 Created on Apr 26, 2010
 
-@author: sposs
+@author: Stephane Poss
 '''
 
 from DIRAC import gConfig,gLogger
 
 def resolveDeps(sysconfig,appli,appversion):
+  """ Resolve the dependencies
+  
+  @param sysconfig: system configuration
+  @type sysconfig: string
+  @param appli: application name
+  @type appli: string
+  @param appversion: application version
+  @type appversion: string
+  
+  @return: array of dictionaries
+  """
   deps = gConfig.getSections('/Operations/AvailableTarBalls/%s/%s/%s/Dependencies'%(sysconfig,appli,appversion),'')
   depsarray = []
   if deps['OK']:
@@ -31,6 +48,11 @@ def resolveDeps(sysconfig,appli,appversion):
   return depsarray
 
 def resolveDepsTar(sysconfig,appli,appversion):
+  """ Return the dependency tar ball name, if available
+  
+  Uses same parameters as resolveDeps.
+  @return: array of strings
+  """
   deparray = resolveDeps(sysconfig,appli,appversion)
   depsarray = []
   for dep in deparray:

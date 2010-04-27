@@ -495,6 +495,8 @@ class ILCJob(Job):
        @type xmlfile: string
        @param inputslcio: path to input slcio, list of strings or string
        @type inputslcio: string or list
+       @param aliasproperties: Path to the alias.properties file name that will be used
+       @type aliasproperties: string
        @param logFile: Optional log file name
        @type logFile: string
        @return: S_OK() or S_ERROR()
