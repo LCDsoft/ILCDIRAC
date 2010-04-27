@@ -18,6 +18,7 @@ def resolveDeps(sysconfig,appli,appversion):
       else:
         gLogger.error("Retrieving dependency version for %s failed, skipping to next !"%(dep))
         continue
+      gLogger.verbose("Found dependency %s %s"%(appli,appversion))
       depdict ={}
       depdict["app"] = dep
       depdict["version"]=depvers
