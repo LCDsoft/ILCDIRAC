@@ -200,7 +200,7 @@ class ILCJob(Job):
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
     stepInstance.setValue('debug',debug)
-    currentApp = "Mokka.%s"%appVersion
+    currentApp = "mokka.%s"%appVersion
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
     if not self.workflow.findParameter(swPackages):
@@ -330,7 +330,7 @@ class ILCJob(Job):
         stepInstance.setValue("EvtsToProcess",-1)
     stepInstance.setValue("debug",debug)
         
-    currentApp = "Marlin.%s"%appVersion
+    currentApp = "marlin.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
     description='LCD Software Packages to be installed'
@@ -463,7 +463,7 @@ class ILCJob(Job):
     stepInstance.setValue("applicationLog",logName)
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
-    currentApp = "SLIC.%s"%appVersion
+    currentApp = "slic.%s"%appVersion
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
     if not self.workflow.findParameter(swPackages):
@@ -587,7 +587,7 @@ class ILCJob(Job):
       else :
         stepInstance.setValue("EvtsToProcess",-1)
       
-    currentApp = "LCSIM.%s"%appVersion
+    currentApp = "lcsim.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
     description='LCD Software Packages to be installed'
