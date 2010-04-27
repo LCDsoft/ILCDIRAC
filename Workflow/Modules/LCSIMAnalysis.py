@@ -96,6 +96,7 @@ class LCSIMAnalysis(ModuleBase):
       if os.path.exists(os.path.join(mySoftwareRoot,dep.rstrip(".tgz").rstrip(".tar.gz"))):
         depfolder = dep.rstrip(".tgz").rstrip(".tar.gz")
         if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
+          self.log.verbose("Found lib folder in %s"%(depfolder))
           if os.environ.has_key("LD_LIBRARY_PATH"):
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
           else:
@@ -180,18 +181,18 @@ class LCSIMAnalysis(ModuleBase):
       return S_ERROR('LCSIM Exited With Status %s' %(status))    
     return S_OK('LCSIM %s Successful' %(self.applicationVersion))
 
-    #############################################################################
-    def redirectLogOutput(self, fd, message):
-      sys.stdout.flush()
-      if message:
-        if re.search('INFO Evt',message): print message
-      if self.applicationLog:
-        log = open(self.applicationLog,'a')
-        log.write(message+'\n')
-        log.close()
-      else:
-        self.log.error("Application Log file not defined")
-      if fd == 1:
-        self.stdError += message
+  #############################################################################
+  def redirectLogOutput(self, fd, message):
+    sys.stdout.flush()
+    if message:
+      if re.search('INFO Evt',message): print message
+    if self.applicationLog:
+      log = open(self.applicationLog,'a')
+      log.write(message+'\n')
+      log.close()
+    else:
+      self.log.error("Application Log file not defined")
+    if fd == 1:
+      self.stdError += message
     #############################################################################
     
