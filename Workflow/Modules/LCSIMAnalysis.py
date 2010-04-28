@@ -68,7 +68,7 @@ class LCSIMAnalysis(ModuleBase):
       - prepend in the LD_LIBRARY_PATH any lib directory of any dependency (e.g. root)
       - put the aliasproperties file in $HOME/.lcisim, where HOME is either the real home or the software directory if real home is not defined
       - prepare the list of files to run on
-      - set the cacheDirectory
+      - set the cacheDirectory and put in there the alias.properties
       - set the lcsim file using L{PrepareLCSIMFile}
       - run java and catch the exit code
     @return: S_OK(), S_ERROR()
@@ -110,30 +110,7 @@ class LCSIMAnalysis(ModuleBase):
           else:
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
     
-    #if self.aliasproperties:
-    #  if os.environ.has_key("HOME"):
-    #    homedir = os.environ["HOME"]
-    #  else:
-    #    homedir = mySoftwareRoot
-    #    os.environ["HOME"]=mySoftwareRoot
-    #    
-    #  if os.path.exists(aliasproperties):
-    #    if not os.path.exists(os.path.join(homedir,".lcsim")):
-    #      try:
-    #        os.mkdir(os.path.join(homedir,".lcsim"))
-    #      except:
-    #        self.log.error("Could not create .lcsim in $HOME folder")
-    #    if os.path.exists(os.path.join(homedir,".lcsim")):
-    #      shutil.copy(aliasproperties,os.path.join(homedir,".lcsim",aliasproperties))
-    #    if not os.path.exists(os.path.join(homedir,".lcsim",aliasproperties)):
-    #      self.log.error("alias.properties was not copied !")
-    
-    #if tarfile.is_tarfile(self.sourcedir) :
-    #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
-    #  sourcedir = untarred_sourcedir.getmembers()[0].split("/")[0]
-    #  untarred_sourcedir.close()
-    #else :
-    #  sourcedir = self.sourcedir
+
     runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
     for inputfile in inputfilelist:
