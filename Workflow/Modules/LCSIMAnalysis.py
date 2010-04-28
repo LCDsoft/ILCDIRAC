@@ -65,6 +65,7 @@ class LCSIMAnalysis(ModuleBase):
       - prepend in the LD_LIBRARY_PATH any lib directory of any dependency (e.g. root)
       - put the aliasproperties file in $HOME/.lcisim, where HOME is either the real home or the software directory if real home is not defined
       - prepare the list of files to run on
+      - set the cacheDirectory
       - set the lcsim file using L{PrepareLCSIMFile}
       - run java and catch the exit code
     @return: S_OK(), S_ERROR()
@@ -137,7 +138,6 @@ class LCSIMAnalysis(ModuleBase):
       self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
       runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
 
-    cachedir = os.getcwd()
 
     ##Collect jar files to put in classspath
     jars = []
@@ -146,6 +146,9 @@ class LCSIMAnalysis(ModuleBase):
         if os.path.basename(libs).find(".jar")>0:
           jars.append(os.path.abspath(os.path.join("lib",libs)))
       os.environ['LD_LIBRARY_PATH']= "./lib:%s"%(os.environ['LD_LIBRARY_PATH'])
+
+    ###Define cache directory as local folder
+    cachedir = os.getcwd()
           
     lcsimfile = "job.lcsim"
     xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir)
