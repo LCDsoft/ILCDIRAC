@@ -117,7 +117,8 @@ class MarlinAnalysis(ModuleBase):
     #listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
     
     finalXML = "marlinxml.xml"
-    
+    self.inputGEAR = os.path.basename(self.inputGEAR)
+    self.inputXML = os.path.basename(self.inputXML)
     res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.debug)
     if not res:
       self.log.error('Something went wrong with XML generation')
