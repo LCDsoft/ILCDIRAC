@@ -176,7 +176,7 @@ class LCSIMAnalysis(ModuleBase):
     script.write('echo =========\n')
     
     comm = "java -server -Djava.library.path=$JAVALIBPATH -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,lcsimfile)
-    print comm
+    self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')    
