@@ -117,7 +117,6 @@ class LCSIMAnalysis(ModuleBase):
     #    homedir = mySoftwareRoot
     #    os.environ["HOME"]=mySoftwareRoot
     #    
-    #  aliasproperties = os.path.basename(self.aliasproperties)
     #  if os.path.exists(aliasproperties):
     #    if not os.path.exists(os.path.join(homedir,".lcsim")):
     #      try:
@@ -151,7 +150,14 @@ class LCSIMAnalysis(ModuleBase):
       os.environ['LD_LIBRARY_PATH']= "./lib:%s"%(os.environ['LD_LIBRARY_PATH'])
 
     ###Define cache directory as local folder
+    aliasproperties = os.path.basename(self.aliasproperties)
     cachedir = os.getcwd()
+    try:
+      os.mkdir(os.path.join(cachedir,".lcsim"))
+    except:
+      self.log.error("Could not create .lcsim folder !")
+    if os.path.exists(os.path.join(cachedir,".lcsim")):
+      shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
           
     lcsimfile = "job.lcsim"
     xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
@@ -178,7 +184,7 @@ class LCSIMAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
     
-    comm = "java -server -Djava.library.path=$JAVALIBPATH -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,lcsimfile)
+    comm = "java -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s/%s %s\n"%(cachedir,mySoftwareRoot,lcsim_name,lcsimfile)
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')

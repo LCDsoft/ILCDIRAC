@@ -132,7 +132,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   tree.write(finalxml)
   return True
 
-def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None):
+def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None,debug = False):
   """Writes out a mac file for SLIC
   
   Takes the parameters passed from L{SLICAnalysis} to define a new mac file if none was provided
