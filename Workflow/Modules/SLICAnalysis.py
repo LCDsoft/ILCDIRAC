@@ -32,6 +32,7 @@ class SLICAnalysis(ModuleBase):
     self.detectorModel = ''
     self.inmacFile = ''
     self.outputslcio = ''
+    self.debug = False
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -64,6 +65,8 @@ class SLICAnalysis(ModuleBase):
       
     if self.step_commons.has_key('outputFile'):
       self.outputslcio = self.step_commons['outputFile'] 
+    if self.step_commons.has_key('debug'):
+      self.debug =  self.step_commons['debug']
     
     return S_OK('Parameters resolved')
   
@@ -143,7 +146,7 @@ class SLICAnalysis(ModuleBase):
       self.stdhepFile = os.path.basename(self.stdhepFile)
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
-    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.outputslcio)
+    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.outputslcio,self.debug)
     if not macok:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
