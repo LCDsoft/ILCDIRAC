@@ -121,7 +121,8 @@ class LCSIMAnalysis(ModuleBase):
           self.log.error("Could not create .lcsim in $HOME folder")
         if os.path.exists(os.path.join(homedir,".lcsim")):
           shutil.copy(aliasproperties,os.path.join(homedir,".lcsim",aliasproperties))
-
+        if not os.path.exists(os.path.join(homedir,".lcsim",aliasproperties)):
+          self.log.error("alias.properties was not copied !")
     
     #if tarfile.is_tarfile(self.sourcedir) :
     #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
