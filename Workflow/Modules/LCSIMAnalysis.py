@@ -31,6 +31,7 @@ class LCSIMAnalysis(ModuleBase):
     self.xmlfile = ''
     self.inputSLCIO = ''
     self.aliasproperties = ''
+    self.debug = False
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -54,6 +55,8 @@ class LCSIMAnalysis(ModuleBase):
       self.inputSLCIO = self.step_commons["inputSlcio"]
     if self.step_commons.has_key("aliasproperties"):
       self.aliasproperties = self.step_commons["aliasproperties"]
+    if self.step_commons.has_key('debug'):
+      self.debug =  self.step_commons['debug']
       
     return S_OK('Parameters resolved')
 
@@ -151,7 +154,7 @@ class LCSIMAnalysis(ModuleBase):
     cachedir = os.getcwd()
           
     lcsimfile = "job.lcsim"
-    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir)
+    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
     if not xmlfileok:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")

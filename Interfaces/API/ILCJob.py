@@ -344,7 +344,7 @@ class ILCJob(Job):
     self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile=''):
+  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile='',debug = False):
     """Helper function.
        Define SLIC step
        
@@ -378,7 +378,7 @@ class ILCJob(Job):
        @return: S_OK() or S_ERROR()
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile,'debug':debug}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if macFile:
@@ -393,6 +393,8 @@ class ILCJob(Job):
       return self._reportError('Expected int for NbOfEvents',__name__,**kwargs)
     if not type(startFrom) == types.IntType:
       return self._reportError('Expected int for StartFrom',__name__,**kwargs)
+    if not type(debug) == types.BooleanType:
+      return self._reportError('Expected bool for debug',__name__,**kwargs)
      
     self.StepCount +=1
     
@@ -448,6 +450,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("startFrom",0,"int","","",False,False,"Event in Stdhep file to start from"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
     
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('SLIC',stepName)
@@ -461,6 +464,7 @@ class ILCJob(Job):
     stepInstance.setValue("numberOfEvents",nbOfEvents)
     stepInstance.setValue("startFrom",startFrom)
     stepInstance.setValue("applicationLog",logName)
+    stepInstance.setValue("debug",debug)
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
     currentApp = "slic.%s"%appVersion
@@ -476,7 +480,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, logFile=''):
+  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, logFile='', debug = False):
     """Helper function.
        Define LCSIM step
        
@@ -501,7 +505,7 @@ class ILCJob(Job):
        @type logFile: string
        @return: S_OK() or S_ERROR()
     """
-    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile}
+    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile, 'debug':debug}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
@@ -517,6 +521,8 @@ class ILCJob(Job):
       #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
       inputslcioStr = string.join(inputslcio,';')
       self.addToInputSandbox.append(inputslcioStr)         
+    if not type(debug) == types.BooleanType:
+      return self._reportError('Expected bool for debug',__name__,**kwargs)
 
     if aliasproperties:
       if not type(aliasproperties) in types.StringTypes:
@@ -563,12 +569,14 @@ class ILCJob(Job):
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     step.addParameter(Parameter("aliasproperties","","string","","",False,False,"Name of the alias properties file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
     stepInstance.setValue("inputXML",xmlfile)
+    stepInstance.setValue("debug",debug)
 
     if aliasproperties:
       stepInstance.setValue("aliasproperties",aliasproperties)
