@@ -132,6 +132,7 @@ class LCSIMAnalysis(ModuleBase):
     runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
     for inputfile in inputfilelist:
+      self.log.info("Will try using %s"%(os.path.basename(inputfile)))
       runonslcio.append(os.path.basename(inputfile))
 
 
