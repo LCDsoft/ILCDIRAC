@@ -106,24 +106,24 @@ class LCSIMAnalysis(ModuleBase):
           else:
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
     
-    if self.aliasproperties:
-      if os.environ.has_key("HOME"):
-        homedir = os.environ["HOME"]
-      else:
-        homedir = mySoftwareRoot
-        os.environ["HOME"]=mySoftwareRoot
-        
-      aliasproperties = os.path.basename(self.aliasproperties)
-      if os.path.exists(aliasproperties):
-        if not os.path.exists(os.path.join(homedir,".lcsim")):
-          try:
-            os.mkdir(os.path.join(homedir,".lcsim"))
-          except:
-            self.log.error("Could not create .lcsim in $HOME folder")
-        if os.path.exists(os.path.join(homedir,".lcsim")):
-          shutil.copy(aliasproperties,os.path.join(homedir,".lcsim",aliasproperties))
-        if not os.path.exists(os.path.join(homedir,".lcsim",aliasproperties)):
-          self.log.error("alias.properties was not copied !")
+    #if self.aliasproperties:
+    #  if os.environ.has_key("HOME"):
+    #    homedir = os.environ["HOME"]
+    #  else:
+    #    homedir = mySoftwareRoot
+    #    os.environ["HOME"]=mySoftwareRoot
+    #    
+    #  aliasproperties = os.path.basename(self.aliasproperties)
+    #  if os.path.exists(aliasproperties):
+    #    if not os.path.exists(os.path.join(homedir,".lcsim")):
+    #      try:
+    #        os.mkdir(os.path.join(homedir,".lcsim"))
+    #      except:
+    #        self.log.error("Could not create .lcsim in $HOME folder")
+    #    if os.path.exists(os.path.join(homedir,".lcsim")):
+    #      shutil.copy(aliasproperties,os.path.join(homedir,".lcsim",aliasproperties))
+    #    if not os.path.exists(os.path.join(homedir,".lcsim",aliasproperties)):
+    #      self.log.error("alias.properties was not copied !")
     
     #if tarfile.is_tarfile(self.sourcedir) :
     #  untarred_sourcedir = tarfile.open(self.sourcedir,'r')
@@ -134,9 +134,10 @@ class LCSIMAnalysis(ModuleBase):
     runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
     for inputfile in inputfilelist:
-      self.log.info("Will try using %s"%(os.path.basename(inputfile)))
+      self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
       runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
 
+    cachedir = os.getcwd()
 
     ##Collect jar files to put in classspath
     jars = []
@@ -147,7 +148,7 @@ class LCSIMAnalysis(ModuleBase):
       os.environ['LD_LIBRARY_PATH']= "./lib:%s"%(os.environ['LD_LIBRARY_PATH'])
           
     lcsimfile = "job.lcsim"
-    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars)
+    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir)
     if not xmlfileok:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")
@@ -167,6 +168,9 @@ class LCSIMAnalysis(ModuleBase):
     script.write("declare -x JAVALIBPATH=./\n")
     if os.path.exists("lib"):
       script.write("declare -x JAVALIBPATH=./lib\n")
+    script.write('echo =========\n')
+    script.write('env | sort >> localEnv.log\n')
+    script.write('echo =========\n')
     
     comm = "java -server -Djava.library.path=$JAVALIBPATH -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,lcsimfile)
     print comm

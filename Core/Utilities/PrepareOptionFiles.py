@@ -185,7 +185,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output.close()
   return True
 
-def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,debug=False):
+def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None, debug=False):
   """Writes out a lcsim file for LCSIM
   
   Takes the parameters passed from LCSIMAnalysis
@@ -244,6 +244,16 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,debug=False):
       debugelem = Element('verbose')
       debugelem.text = 'true'
       control.append(debugelem)        
+
+  if cachedir:
+    cachedirline= tree.find("cacheDirectory")
+    if cachedirline:
+      cachedirline.text = cachedir
+    else:
+      control = tree.find('control')
+      cachedirelem = Element("cacheDirectory")
+      cachedirelem.text = cachedir
+      control.append(cachedirelem)
       
   tree.write(outputlcsim)
   return True
