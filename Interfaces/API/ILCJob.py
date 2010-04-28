@@ -536,7 +536,7 @@ class ILCJob(Job):
       else:
         return self._reportError('Expected string for log file name',__name__,**kwargs)
     else:
-      logName = 'Marlin_%s.log' %(appVersion)
+      logName = 'LCSIM_%s.log' %(appVersion)
     self.addToOutputSandbox.append(logName)
 
     if os.path.exists(xmlfile):
