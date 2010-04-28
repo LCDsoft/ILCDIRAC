@@ -165,7 +165,7 @@ class LCSIMAnalysis(ModuleBase):
     if os.path.exists("lib"):
       script.write("declare -x JAVALIBPATH=./lib\n")
     
-    comm = "java -server -Djava.library.path=$JAVALIBPATH -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,self.xmlfile)
+    comm = "java -server -Djava.library.path=$JAVALIBPATH -jar %s/%s %s\n"%(mySoftwareRoot,lcsim_name,lcsimfile)
     print comm
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
