@@ -198,6 +198,8 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   @type inputslcio: list of string
   @param jars: list of jar files that should be added in the classpath definition
   @type jars: list of strings
+  @param cachedir: folder that holds the cache directory, instead of Home
+  @type cachedir: string
   @param debug: By default set verbosity to true
   @type debug: bool
   
