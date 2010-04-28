@@ -11,6 +11,8 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
@@ -125,6 +127,18 @@ class SLICAnalysis(ModuleBase):
     if not mySoftwareRoot:
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
+
+    ### Resolve dependencies
+    deps = resolveDepsTar(self.systemConfig,"slic",self.applicationVersion)
+    for dep in deps:
+      if os.path.exists(os.path.join(mySoftwareRoot,dep.rstrip(".tgz").rstrip(".tar.gz"))):
+        depfolder = dep.rstrip(".tgz").rstrip(".tar.gz")
+        if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
+          self.log.verbose("Found lib folder in %s"%(depfolder))
+          if os.environ.has_key("LD_LIBRARY_PATH"):
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
+          else:
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
 
     #retrieve detector model from web
     detector_url = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels','')

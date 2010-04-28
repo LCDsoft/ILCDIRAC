@@ -16,6 +16,8 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 import DIRAC
 
@@ -104,6 +106,17 @@ class MarlinAnalysis(ModuleBase):
     if os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
       mySoftwareRoot = sharedArea
     
+    ### Resolve dependencies
+    deps = resolveDepsTar(self.systemConfig,"marlin",self.applicationVersion)
+    for dep in deps:
+      if os.path.exists(os.path.join(mySoftwareRoot,dep.rstrip(".tgz").rstrip(".tar.gz"))):
+        depfolder = dep.rstrip(".tgz").rstrip(".tar.gz")
+        if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
+          self.log.verbose("Found lib folder in %s"%(depfolder))
+          if os.environ.has_key("LD_LIBRARY_PATH"):
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
+          else:
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
 
     runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
