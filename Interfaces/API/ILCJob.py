@@ -31,7 +31,7 @@ class ILCJob(Job):
   
   Each application is configured using specific interface
   
-  The needed files are passed to the setInputSandbox method
+  The needed files are passed to the L{setInputSandbox} method
   
   Each application corresponds to a module that is called from the JobAgent, on the worker node. This module is defined below by modulename. 
   All available modules can be found in ILCDIRAC.Worflow.Modules.
@@ -243,8 +243,9 @@ class ILCJob(Job):
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
       return self._reportError('Expected string for xml file',__name__,**kwargs)
-    #if not type(gearfile) in types.StringTypes:
-    #  return self._reportError('Expected string for gear file',__name__,**kwargs)
+    if gearfile:
+      if not type(gearfile) in types.StringTypes:
+        return self._reportError('Expected string for gear file',__name__,**kwargs)
     if not type(debug) == types.BooleanType:
       return self._reportError('Expected bool for debug',__name__,**kwargs)
     
@@ -274,7 +275,7 @@ class ILCJob(Job):
       if self.ioDict.has_key("MokkaStep"):
         gearfile="GearOutput.xml"
       else:
-        return self._reportError('As Mokka do not run before, you need to specify GearFile and have it in the current directory')
+        return self._reportError('As Mokka do not run before, you need to specify gearfile')
 
     inputslcioStr =''
     if(inputslcio):
@@ -333,7 +334,7 @@ class ILCJob(Job):
     currentApp = "marlin.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
-    description='LCD Software Packages to be installed'
+    description='ILC Software Packages to be installed'
     if not self.workflow.findParameter(swPackages):
       self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
     else:
@@ -375,6 +376,7 @@ class ILCJob(Job):
        @type outputFile: string 
        @param logFile: Optional log file name
        @type logFile: string
+       @param debug: not used yet
        @return: S_OK() or S_ERROR()
     """
     
@@ -503,6 +505,8 @@ class ILCJob(Job):
        @type aliasproperties: string
        @param logFile: Optional log file name
        @type logFile: string
+       @param debug: set to True to have verbosity set to 1
+       @type debug: bool
        @return: S_OK() or S_ERROR()
     """
     kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile, 'debug':debug}
@@ -598,7 +602,7 @@ class ILCJob(Job):
     currentApp = "lcsim.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
-    description='LCD Software Packages to be installed'
+    description='ILC Software Packages to be installed'
     if not self.workflow.findParameter(swPackages):
       self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
     else:
