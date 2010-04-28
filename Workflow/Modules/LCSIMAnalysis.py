@@ -66,7 +66,6 @@ class LCSIMAnalysis(ModuleBase):
     
     Execute the following:
       - prepend in the LD_LIBRARY_PATH any lib directory of any dependency (e.g. root)
-      - put the aliasproperties file in $HOME/.lcisim, where HOME is either the real home or the software directory if real home is not defined
       - prepare the list of files to run on
       - set the cacheDirectory and put in there the alias.properties
       - set the lcsim file using L{PrepareLCSIMFile}
