@@ -157,6 +157,7 @@ class LCSIMAnalysis(ModuleBase):
     except:
       self.log.error("Could not create .lcsim folder !")
     if os.path.exists(os.path.join(cachedir,".lcsim")):
+      self.log.verbose("Copy alias.properties file in %s"%(os.path.join(cachedir,".lcsim")))
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
           
     lcsimfile = "job.lcsim"
@@ -164,6 +165,8 @@ class LCSIMAnalysis(ModuleBase):
     if not xmlfileok:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")
+    else:
+      self.log.verbose("File job.lcsim created properly")
     
     scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
