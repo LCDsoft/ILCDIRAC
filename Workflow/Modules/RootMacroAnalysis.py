@@ -77,6 +77,8 @@ class RootMacroAnalysis(ModuleBase):
     #  mySoftwareRoot = localArea
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
+    if len(self.macro)<1:
+      return S_ERROR("Macro file not defined")
      
     self.macro = os.path.basename(self.macro)
 
@@ -111,6 +113,7 @@ class RootMacroAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
     comm = "root -b -q %s\(%s\) \n"%(self.macro,self.args)
+    self.log.info("Will run %s"%(comm))
     script.write(comm)
     
     script.write('declare -x appstatus=$?\n')
