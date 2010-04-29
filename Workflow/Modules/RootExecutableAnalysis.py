@@ -111,7 +111,8 @@ class RootExecutableAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    comm = "%s %s \n"%(self.appli,self.args)
+    script.write("chown u+x %s\n"%self.appli)
+    comm = "./%s %s \n"%(self.appli,self.args)
     script.write(comm)
     
     script.write('declare -x appstatus=$?\n')
