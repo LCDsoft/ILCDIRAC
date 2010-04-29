@@ -42,8 +42,8 @@ class RootExecutableAnalysis(ModuleBase):
     if self.step_commons.has_key('applicationVersion'):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
-    if self.step_commons.has_key("appli"):
-      self.appli = self.step_commons["appli"]
+    if self.step_commons.has_key("script"):
+      self.appli = self.step_commons["script"]
     if self.step_commons.has_key("args"):
       self.args = self.step_commons["args"]
 

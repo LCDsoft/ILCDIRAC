@@ -41,8 +41,8 @@ class RootMacroAnalysis(ModuleBase):
     if self.step_commons.has_key('applicationVersion'):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
-    if self.step_commons.has_key("macro"):
-      self.macro = self.step_commons["macro"]
+    if self.step_commons.has_key("script"):
+      self.macro = self.step_commons["script"]
     if self.step_commons.has_key("args"):
       self.args = self.step_commons["args"]
 
