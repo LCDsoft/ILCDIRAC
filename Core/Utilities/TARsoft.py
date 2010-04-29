@@ -78,7 +78,11 @@ def install(app,config,area):
         os.environ['XERCES_VERSION']= xercesv
       if lcddv:
         os.environ['LCDD_VERSION'] = lcddv
-
+    elif appName=="root":
+      members = app_tar_to_untar.getmembers()
+      fileexample = members[0].name
+      basefolder = fileexample.split("/")[0]
+      os.environ['ROOTSYS']= basefolder
   #remove now useless tar ball
   #try:
   #  os.unlink(app_tar)
