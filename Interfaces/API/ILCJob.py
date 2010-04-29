@@ -612,4 +612,90 @@ class ILCJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     self.ioDict["LCSIMStep"]=stepInstance.getName()    
     return S_OK()
- 
+  
+  def setRootMacro(self,appVersion, scriptpath,args=None,logFile=''):
+    """Define root macro or executable execution
+    @param version: ROOT version to use
+    @type version: string
+    @param scriptpath: path to macro file or executable
+    @type scriptpath: string
+    @param args: arguments to pass to the macro or executable
+    @type args: string
+    @return: S_OK,S_ERROR
+    
+    """
+    kwargs = {'appVersion':appVersion,"macropath":scriptpath,"args":args,"logFile":logFile}
+    
+    if not type(appVersion) in types.StringTypes:
+      return self._reportError('Expected string for version',__name__,**kwargs)
+    if not type(scriptpath) in types.StringTypes:
+      return self._reportError('Expected string for macro path',__name__,**kwargs)
+    if args:
+      if not type(args) in types.StringTypes:
+        return self._reportError('Expected string for arguments',__name__,**kwargs)
+
+    if scriptpath.find("lfn:")>-1:
+      self.addToInputSandbox.append(scriptpath)
+    else:
+      if os.path.exists(scriptpath):
+        self.addToInputSandbox.append(scriptpath)
+      else:
+        return self._reportError("Could not find specified macro %s"%scriptpath,__name__,**kwargs)
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'ROOT_%s.log' %(appVersion)
+    self.addToOutputSandbox.append(logName)
+    
+    self.StepCount +=1
+    stepName = 'RunRootMacro'
+    moduleName = self._rootType(scriptpath)#"RootMacroAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('Root Macro module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    step = StepDefinition('RootMacro')
+    step.addModule(module)
+    moduleInstance = step.createModuleInstance('RootMacroAnalysis','RootMacro')
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("macro","","string","","",False,False,"Name of the source directory to use"))
+    step.addParameter(Parameter("args","","string","","",False,False,"Name of the input slcio file"))
+
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("applicationLog",logName)
+    stepInstance.setValue("script",scriptpath)
+    if args:
+      stepInstance.setValue("args",args)
+
+
+      
+    currentApp = "root.%s"%appVersion
+
+    swPackages = 'SoftwarePackages'
+    description='ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict["RootStep"]=stepInstance.getName()    
+
+    return S_OK() 
+  
+  def _rootType(self,name):
+    modname = ''
+    
+    if name.endswith((".C",".cc",".cxx",".c")): 
+      modname = "RootMacroAnalysis"
+    else:
+      modname = "RootExecutableAnalysis"
+    return modname
+  
