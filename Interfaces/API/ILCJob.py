@@ -613,10 +613,10 @@ class ILCJob(Job):
     self.ioDict["LCSIMStep"]=stepInstance.getName()    
     return S_OK()
   
-  def setRootMacro(self,appVersion, scriptpath,args=None,logFile=''):
+  def setRootAppli(self,appVersion, scriptpath,args=None,logFile=''):
     """Define root macro or executable execution
-    @param version: ROOT version to use
-    @type version: string
+    @param appVersion: ROOT version to use
+    @type appVersion: string
     @param scriptpath: path to macro file or executable
     @type scriptpath: string
     @param args: arguments to pass to the macro or executable
