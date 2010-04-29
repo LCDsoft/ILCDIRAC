@@ -618,7 +618,9 @@ class ILCJob(Job):
     Example usage:
 
     >>> job = ILCJob()
-    >>> job.setRootAppli('v5.26',scriptpath="myscript.C")
+    >>> job.setRootAppli('v5.26',scriptpath="myscript.C",args="34,56,\\\"a_string\\\"")
+  
+    Mind the escape characters \ so that the quotes are properly used 
 
     @param appVersion: ROOT version to use
     @type appVersion: string
@@ -664,14 +666,14 @@ class ILCJob(Job):
     module.setBody(body)
     step = StepDefinition('RootMacro')
     step.addModule(module)
-    moduleInstance = step.createModuleInstance('RootMacroAnalysis','RootMacro')
+    moduleInstance = step.createModuleInstance(moduleName,'RootMacro')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
-    step.addParameter(Parameter("macro","","string","","",False,False,"Name of the source directory to use"))
+    step.addParameter(Parameter("script","","string","","",False,False,"Name of the source directory to use"))
     step.addParameter(Parameter("args","","string","","",False,False,"Name of the input slcio file"))
 
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
+    stepInstance = self.workflow.createStepInstance('RootMacro',stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
     stepInstance.setValue("script",scriptpath)

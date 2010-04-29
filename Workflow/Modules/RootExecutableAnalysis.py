@@ -78,6 +78,8 @@ class RootExecutableAnalysis(ModuleBase):
     #  mySoftwareRoot = localArea
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
+    if len(self.appli)<1:
+      return S_ERROR("Executable file not defined")
      
     self.appli = os.path.basename(self.appli)
 
@@ -113,6 +115,7 @@ class RootExecutableAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write("chown u+x %s\n"%self.appli)
     comm = "./%s %s \n"%(self.appli,self.args)
+    self.log.info("Will run %s"%(comm))
     script.write(comm)
     
     script.write('declare -x appstatus=$?\n')
