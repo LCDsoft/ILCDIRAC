@@ -615,6 +615,11 @@ class ILCJob(Job):
   
   def setRootAppli(self,appVersion, scriptpath,args=None,logFile=''):
     """Define root macro or executable execution
+    Example usage:
+
+    >>> job = ILCJob()
+    >>> job.setRootAppli('v5.26',scriptpath="myscript.C")
+
     @param appVersion: ROOT version to use
     @type appVersion: string
     @param scriptpath: path to macro file or executable
