@@ -82,7 +82,7 @@ def install(app,config,area):
       members = app_tar_to_untar.getmembers()
       fileexample = members[0].name
       basefolder = fileexample.split("/")[0]
-      os.environ['ROOTSYS']= basefolder
+      os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
   #remove now useless tar ball
   #try:
   #  os.unlink(app_tar)
