@@ -615,12 +615,18 @@ class ILCJob(Job):
   
   def setRootAppli(self,appVersion, scriptpath,args=None,logFile=''):
     """Define root macro or executable execution
+    
     Example usage:
 
     >>> job = ILCJob()
-    >>> job.setRootAppli('v5.26',scriptpath="myscript.C",args="34,56,\\\"a_string\\\"")
+    >>> job.setRootAppli('v5.26',scriptpath="myscript.C",args="34,56,\\\\\\\"a_string\\\\\\\"}")
   
-    Mind the escape characters \ so that the quotes are properly used 
+    Mind the escape characters \ so that the quotes are properly used. If not that many \ the  
+    call
+    
+    root -b -q myscript.C\\(34,56,\\"a_string\\"\\)
+    
+    will fail
 
     @param appVersion: ROOT version to use
     @type appVersion: string
