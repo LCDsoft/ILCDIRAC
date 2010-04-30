@@ -41,7 +41,7 @@ def install(app,config,area):
   
   #Check if folder is already there:
   folder_name = app_tar.rstrip(".tgz").rstrip(".tar.gz")
-  if os.path.exists(folder_name):
+  if os.path.exists(folder_name) and not appName =="slic":
     DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
     return DIRAC.S_OK()
   
