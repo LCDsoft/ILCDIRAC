@@ -94,7 +94,7 @@ class LCSIMAnalysis(ModuleBase):
     if os.path.exists('%s%s%s' %(sharedArea,os.sep,lcsim_name)):
       mySoftwareRoot = sharedArea
     if not mySoftwareRoot:
-      self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(lcsim_name,localArea,sharedArea))
+      self.log.error('Application %s was not found in either the local area %s or shared area %s' %(lcsim_name,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
 
     ### Resolve dependencies
