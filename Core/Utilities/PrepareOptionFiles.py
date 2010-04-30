@@ -105,9 +105,11 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   tree = ElementTree()
   tree.parse(inputXML)
   params = tree.findall('global/parameter')
+  lciolistfound = False
   for param in params:
     if param.attrib.has_key('name'):
       if param.attrib['name']=='LCIOInputFiles':
+        lciolistfound = True
         param.text = inputSLCIO
       if len(numberofevts)>0:
         if param.attrib['name']=='MaxRecordNumber':
@@ -119,7 +121,13 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
       if not debug:
         if param.attrib['name']=='Verbosity':
           param.text = "SILENT"
-
+  if not lciolistfound:
+    name = {}
+    name["name"]="LCIOInputFiles"
+    lciolist = Element("parameter",name)
+    lciolist.text = inputSLCIO
+    globparams = tree.find("global")
+    globparams.append(lciolist)
   #outxml = file(finalxml,'w')
   #inputxml = file(inputXML,"r")
   #for line in inputxml:
