@@ -155,7 +155,7 @@ class MarlinAnalysis(ModuleBase):
         marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
         for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
-          marlindll = marlindll + "%s//MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
+          marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
         marlindll="%s"%(marlindll)
 
@@ -167,17 +167,20 @@ class MarlinAnalysis(ModuleBase):
       
     temp=marlindll.split(":")
     temp2=userlib.split(":")
-    
     for x in temp2:
-      try:
-        temp.remove(x)
-      except:
-        pass
-    userlib=""
-    for x in temp2:
-      userlib=userlib + x + ":"
+      doublelib = "%s/MARLIN_DLL/"%(myMarlinDir)+os.path.basename(x)
+      if doublelib in temp:
+        self.log.verbose("Duplicated lib found, removing %s"%doublelib)
+        try:
+          temp.remove(doublelib)
+        except:
+          pass
+    #userlib=""
+    #for x in temp2:
+    #  userlib=userlib + x + ":"
       
-    marlindll = "%s%s"%(marlindll,userlib)
+    marlindll = "%s%s"%(string.join(temp,":"),userlib)
+    
     
     if (len(marlindll) != 0):
       script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
