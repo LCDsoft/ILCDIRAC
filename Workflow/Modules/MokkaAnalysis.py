@@ -145,7 +145,9 @@ class MokkaAnalysis(ModuleBase):
       self.log.info("Platform for job is %s" % ( self.systemConfig ) )
       self.log.info("Root directory for job is %s" % ( self.root ) )
 
-      mokkaDir = 'lddLib'
+      mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"mokka",self.applicationVersion),'')
+      mokkaDir = mokkaDir.rstrip(".tgz").rstrip(".tar.gz")
+      mokkaDir = 'lddLib' ###Temporary while mokka tar ball are not redone.
       mySoftwareRoot = ''
       localArea = LocalArea()
       sharedArea = SharedArea()
@@ -153,7 +155,8 @@ class MokkaAnalysis(ModuleBase):
         mySoftwareRoot = localArea
       if os.path.exists('%s%s%s' %(sharedArea,os.sep,mokkaDir)):
         mySoftwareRoot = sharedArea
-        
+      myMokkaDir = os.path.join(mySoftwareRoot,mokkaDir)
+      
       if not mySoftwareRoot:
         self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(mokkaDir,localArea,sharedArea))
         return S_ERROR('Failed to discover software')
@@ -201,7 +204,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('#####################################################################\n')
       #if(os.path.exists(sharedArea+"/initILCSOFT.sh")):
       #    script.write("%s/initILCSOFT.sh"%sharedArea)
-      script.write("declare -x g4releases=%s/%s\n" %(mySoftwareRoot,mokkaDir))
+      script.write("declare -x g4releases=%s\n" %(myMokkaDir))
       script.write("declare -x G4SYSTEM=Linux-g++\n")
       script.write("declare -x G4INSTALL=$g4releases/share/$g4version\n")
       #script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
@@ -216,16 +219,16 @@ class MokkaAnalysis(ModuleBase):
             
       if(os.path.exists("./lib")):
         if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s:%s\n'%(myMokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
-          script.write('declare -x LD_LIBRARY_PATH=./lib:%s/%s\n' %(mySoftwareRoot,mokkaDir))
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' %(myMokkaDir))
       else:
         if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('declare -x LD_LIBRARY_PATH=%s/%s:%s\n'%(mySoftwareRoot,mokkaDir,os.environ['LD_LIBRARY_PATH']))
+          script.write('declare -x LD_LIBRARY_PATH=%s:%s\n'%(myMokkaDir,os.environ['LD_LIBRARY_PATH']))
         else:
-          script.write('declare -x LD_LIBRARY_PATH=%s/%s\n'%(mySoftwareRoot,mokkaDir))          
+          script.write('declare -x LD_LIBRARY_PATH=%s\n'%(myMokkaDir))          
           
-      script.write("declare -x PATH=%s/%s:%s\n"%(mySoftwareRoot,mokkaDir,os.environ['PATH']))
+      script.write("declare -x PATH=%s:%s\n"%(myMokkaDir,os.environ['PATH']))
       
       script.write('echo =============================\n')
       script.write('echo LD_LIBRARY_PATH is\n')
@@ -237,7 +240,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('echo =============================\n')
       
       ##Tear appart this mokka-wrapper
-      comm = '%s/%s/Mokka -hlocalhost:%s/mysql.sock %s\n'%(mySoftwareRoot,mokkaDir,sqlwrapper.getMokkaTMPDIR(),mokkasteer)
+      comm = '%s/Mokka -hlocalhost:%s/mysql.sock %s\n'%(myMokkaDir,sqlwrapper.getMokkaTMPDIR(),mokkasteer)
       print "Command : %s"%(comm)
       script.write(comm)
       script.write('declare -x appstatus=$?\n')

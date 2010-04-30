@@ -18,7 +18,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
 
@@ -97,7 +97,8 @@ class MarlinAnalysis(ModuleBase):
     if not self.result['OK']:
       return self.result
     
-    marlinDir = 'MarlinLibs'
+    marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"marlin",self.applicationVersion),'')
+    marlinDir = marlinDir.rstrip(".tgz").rstrip(".tar.gz")
     mySoftwareRoot = ''
     localArea = LocalArea()
     sharedArea = SharedArea()
@@ -105,7 +106,7 @@ class MarlinAnalysis(ModuleBase):
       mySoftwareRoot = localArea
     if os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
       mySoftwareRoot = sharedArea
-    
+    myMarlinDir = os.path.join(mySoftwareRoot,marlinDir)
     ### Resolve dependencies
     deps = resolveDepsTar(self.systemConfig,"marlin",self.applicationVersion)
     for dep in deps:
@@ -145,16 +146,16 @@ class MarlinAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     marlindll = ""
-    if(os.path.exists("%s/MarlinLibs/MARLIN_DLL"%mySoftwareRoot)):
+    if(os.path.exists("%s/MARLIN_DLL"%myMarlinDir)):
       if os.environ.has_key('MARLIN_DLL'):
-        for d in os.listdir("%s/MarlinLibs/MARLIN_DLL"%mySoftwareRoot):
+        for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
           if d!="Marlin":
-            marlindll = marlindll + "%s/MarlinLibs/MARLIN_DLL/%s"%(mySoftwareRoot,d) + ":" 
+            marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
         #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
         marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
       else:
-        for d in os.listdir("%s/MarlinLibs/MARLIN_DLL"%mySoftwareRoot):
-          marlindll = marlindll + "%s/MarlinLibs/MARLIN_DLL/%s"%(mySoftwareRoot,d) + ":" 
+        for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
+          marlindll = marlindll + "%s//MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
         marlindll="%s"%(marlindll)
 
@@ -181,11 +182,11 @@ class MarlinAnalysis(ModuleBase):
     if (len(marlindll) != 0):
       script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
           
-    script.write('declare -x ROOTSYS=%s/MarlinLibs/ROOT\n'%(mySoftwareRoot))
+    script.write('declare -x ROOTSYS=%s/ROOT\n'%(myMarlinDir))
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/MarlinLibs/LDLibs:%s\n'%(mySoftwareRoot,os.environ['LD_LIBRARY_PATH']))
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,os.environ['LD_LIBRARY_PATH']))
     else:
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/MarlinLibs/LDLibs\n'%(mySoftwareRoot))
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myMarlinDir))
     script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
@@ -211,12 +212,12 @@ class MarlinAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
 
-    if (os.path.exists("%s/MarlinLibs/Executable/Marlin"%mySoftwareRoot)):
+    if (os.path.exists("%s/Executable/Marlin"%myMarlinDir)):
       if (os.path.exists(finalXML)):
         #check
-        script.write('%s/MarlinLibs/Executable/Marlin -c %s\n'%(mySoftwareRoot,finalXML))
+        script.write('%s/Executable/Marlin -c %s\n'%(myMarlinDir,finalXML))
         #real run
-        script.write('%s/MarlinLibs/Executable/Marlin %s\n'%(mySoftwareRoot,finalXML))
+        script.write('%s/Executable/Marlin %s\n'%(myMarlinDir,finalXML))
             
     script.write('declare -x appstatus=$?\n')
     #script.write('where\n')
