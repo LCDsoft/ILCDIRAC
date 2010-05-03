@@ -147,7 +147,7 @@ class MokkaAnalysis(ModuleBase):
 
       mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"mokka",self.applicationVersion),'')
       mokkaDir = mokkaDir.rstrip(".tgz").rstrip(".tar.gz")
-      mokkaDir = 'lddLib' ###Temporary while mokka tar ball are not redone.
+      #mokkaDir = 'lddLib' ###Temporary while mokka tar ball are not redone.
       mySoftwareRoot = ''
       localArea = LocalArea()
       sharedArea = SharedArea()
