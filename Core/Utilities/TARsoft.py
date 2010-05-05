@@ -63,7 +63,11 @@ def install(app,config,area):
 
   if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
     app_tar_to_untar = tarfile.open(app_tar_base)
-    app_tar_to_untar.extractall()
+    try:
+      app_tar_to_untar.extractall()
+    except Exception, e:
+      DIRAC.gLogger.error("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
+      return DIRAC.S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
     if appName=="slic":
       members = app_tar_to_untar.getmembers()
       fileexample = members[0].name
