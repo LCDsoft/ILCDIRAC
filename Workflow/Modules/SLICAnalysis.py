@@ -141,19 +141,26 @@ class SLICAnalysis(ModuleBase):
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
 
     #retrieve detector model from web
-    detector_url = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels','')
-    if not detector_url:
+    detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])
+    if len(detector_urls[0])<1:
       self.log.error('Could not find in CS the URL for detector model')
       return S_ERROR('Could not find in CS the URL for detector model')
 
     if not os.path.exists(self.detectorModel+".zip"):
-      detmodel,headers = urllib.urlretrieve("%s%s"%(detector_url,self.detectorModel+".zip"),self.detectorModel+".zip")
+      for detector_url in detector_urls:
+        detmodel,headers = urllib.urlretrieve("%s%s"%(detector_url,self.detectorModel+".zip"),self.detectorModel+".zip")
+        try :
+          self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
+          break
+        except:
+          continue
+
     if not os.path.exists(self.detectorModel+".zip"):
       self.log.error('Detector model %s was not found neither locally nor on the web, exiting'%self.detectorModel)
       return S_ERROR('Detector model %s was not found neither locally nor on the web, exiting'%self.detectorModel)
     
     #unzip detector model
-    self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
+    #self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
     
     slicmac = 'slicmac.mac'
     if len(self.stdhepFile)>0:
