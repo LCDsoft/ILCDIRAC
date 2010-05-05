@@ -19,15 +19,6 @@ def usage():
   print 'Usage: %s <PLATFORM> <NAME> <VERSION>' %(Script.scriptName)
   DIRAC.exit(2)
 
-def changeCS(path,val):
-  val.sort()
-  result = diracAdmin.csModifyValue(path,string.join(val,', '))
-  print result
-  if not result['OK']:
-    print "Cannot modify value of %s" %path
-    print result['Message']
-    DIRAC.exit(255)
-
 if len(args) < 3:
   usage()
 
@@ -52,7 +43,7 @@ if not av_apps['OK']:
   print "Could not find all applications available in CS"
   DIRAC.exit(255)
 
-if appName in av_apps['Value']:
+if appName.lower() in av_apps['Value']:
   versions = gConfig.getSections("%s/%s/%s"%(softwareSection,platform,appName),[])
   if not versions['OK']:
     print "Could not find all versions available in CS"
@@ -61,7 +52,7 @@ if appName in av_apps['Value']:
     print 'Application %s %s for %s already in CS, nothing to do'%(appName,appVersion,platform)
     DIRAC.exit(0)
 else:
-  result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName,appVersion),"%s%s.tgz"%(appName,appVersion))
+  result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),"%s%s.tgz"%(appName,appVersion))
   modifiedCS = True
 
 #Commit the changes if nothing has failed and the CS has been modified
