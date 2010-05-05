@@ -161,9 +161,10 @@ class MarlinAnalysis(ModuleBase):
 
     #user libs
     userlib = ""
-    if(os.path.exists("./lib")):      
-      for d in os.listdir("lib"):
-          userlib = userlib + "./lib/%s"%d + ":" 
+    if(os.path.exists("./lib")):
+      if os.path.exists("./lib/marlin_dll"):
+        for d in os.listdir("lib/marlin_dll"):
+          userlib = userlib + "./lib/marlin_dll/%s"%d + ":" 
       
     temp=marlindll.split(":")
     temp2=userlib.split(":")
@@ -190,6 +191,9 @@ class MarlinAnalysis(ModuleBase):
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,os.environ['LD_LIBRARY_PATH']))
     else:
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myMarlinDir))
+    if os.path.exists("./lib/lddlib"):
+      script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:%s'%os.environ['LD_LIBRARY_PATH'])
+      
     script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
