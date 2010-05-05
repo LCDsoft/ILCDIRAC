@@ -1,4 +1,6 @@
 '''
+Add specified software in CS. Allows not using the web interface, therefore reduces the error rate.
+
 Created on May 5, 2010
 
 @author: sposs
