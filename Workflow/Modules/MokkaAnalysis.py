@@ -78,7 +78,7 @@ class MokkaAnalysis(ModuleBase):
         self.steeringFile = self.step_commons['steeringFile']
 
       if self.step_commons.has_key('stdhepFile'):
-        self.macFile = self.step_commons['stdhepFile']
+        self.stdhepFile = self.step_commons['stdhepFile']
       if self.step_commons.has_key('macFile'):
         self.macFile = self.step_commons['macFile']
 
