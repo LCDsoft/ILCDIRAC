@@ -223,7 +223,7 @@ class MokkaAnalysis(ModuleBase):
       add_env = gConfig.getOptionsDict("/Operations/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar"%(self.systemConfig,"mokka",self.applicationVersion))
       if add_env['OK']:
         for key in add_env['Value'].keys:
-          script.write('declare -x %s=%s/%s\n'%(key,add_env['Value'][key],mySoftwareRoot))
+          script.write('declare -x %s=%s/%s\n'%(key,mySoftwareRoot,add_env['Value'][key]))
       else:
         self.log.verbose("No additional environment variables needed for this application")
       
