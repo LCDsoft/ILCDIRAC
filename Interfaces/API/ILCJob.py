@@ -131,10 +131,14 @@ class ILCJob(Job):
       return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
 
     if(inputGenfile):
-      if os.path.exists(inputGenfile):
-        self.addToInputSandbox.append(inputGenfile)
+      if inputGenfile.lower().find("lfn:")>-1:
+        self.addToInputSandbox.append(inputGenfile)    
       else:
-        return self._reportError('Specified input generator file %s does not exist' %(inputGenfile),__name__,**kwargs)
+        if os.path.exists(inputGenfile):
+          self.addToInputSandbox.append(inputGenfile)    
+        else:
+          return self._reportError('Specified input generator file %s does not exist' %(inputGenfile),__name__,**kwargs)
+      
     if(macFile):
       if os.path.exists(macFile):
         self.addToInputSandbox.append(macFile)
