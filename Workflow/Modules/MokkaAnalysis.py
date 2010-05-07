@@ -317,6 +317,8 @@ class MokkaAnalysis(ModuleBase):
       """Used to catch the application print outs
       """
       sys.stdout.flush()
+      if message:
+        if re.search('>>> Event',message): print message
       if self.applicationLog:
         log = open(self.applicationLog,'a')
         log.write(message+'\n')
