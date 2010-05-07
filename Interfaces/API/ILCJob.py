@@ -133,11 +133,10 @@ class ILCJob(Job):
     if(inputGenfile):
       if inputGenfile.lower().find("lfn:")>-1:
         self.addToInputSandbox.append(inputGenfile)    
+      elif os.path.exists(inputGenfile):
+        self.addToInputSandbox.append(inputGenfile)    
       else:
-        if os.path.exists(inputGenfile):
-          self.addToInputSandbox.append(inputGenfile)    
-        else:
-          return self._reportError('Specified input generator file %s does not exist' %(inputGenfile),__name__,**kwargs)
+        return self._reportError('Specified input generator file %s does not exist' %(inputGenfile),__name__,**kwargs)
       
     if(macFile):
       if os.path.exists(macFile):
@@ -148,11 +147,10 @@ class ILCJob(Job):
     if(dbslice):
       if dbslice.lower().find("lfn:")>-1:
         self.addToInputSandbox.append(dbslice)
+      elif(os.path.exists(dbslice)):
+        self.addToInputSandbox.append(dbslice)
       else:
-        if(os.path.exists(dbslice)):
-          self.addToInputSandbox.append(dbslice)
-        else:
-          return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
+        return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
 
     if not inputGenfile and not macFile:
       return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
@@ -269,6 +267,7 @@ class ILCJob(Job):
       self.addToInputSandbox.append(xmlfile)
     else:
       return self._reportError('Specified XML file %s does not exist' %(xmlfile),__name__,**kwargs)
+    
     if gearfile:
       if os.path.exists(gearfile):
         self.log.verbose('Found specified GEAR file %s'%gearfile)
@@ -423,11 +422,10 @@ class ILCJob(Job):
     if(inputGenfile):
       if inputGenfile.lower().find("lfn:")>-1:
         self.addToInputSandbox.append(inputGenfile)    
+      elif os.path.exists(inputGenfile):
+        self.addToInputSandbox.append(inputGenfile)    
       else:
-        if os.path.exists(inputGenfile):
-          self.addToInputSandbox.append(inputGenfile)    
-        else:
-          return self._reportError("Input generator file %s cannot be found"%(inputGenfile),__name__,**kwargs )
+        return self._reportError("Input generator file %s cannot be found"%(inputGenfile),__name__,**kwargs )
 
     if not macFile and not inputGenfile:
       return self._reportError("No mac file nor generator file specified, cannot do anything",__name__,**kwargs )
@@ -535,14 +533,12 @@ class ILCJob(Job):
     if aliasproperties:
       if not type(aliasproperties) in types.StringTypes:
         return self._reportError('Expected string for alias properties file',__name__,**kwargs)
+      elif aliasproperties.lower().find("lfn:"):
+        self.addToInputSandbox.append(aliasproperties)
+      elif os.path.exists(aliasproperties):
+        self.addToInputSandbox.append(aliasproperties)
       else:
-        if aliasproperties.lower().find("lfn:"):
-          self.addToInputSandbox.append(aliasproperties)
-        else:
-          if os.path.exists(aliasproperties):
-            self.addToInputSandbox.append(aliasproperties)
-          else:
-            return self._reportError("Could not find alias properties files specified %s"%(aliasproperties), __name__,**kwargs)
+        return self._reportError("Could not find alias properties files specified %s"%(aliasproperties), __name__,**kwargs)
 
     if logFile:
       if type(logFile) in types.StringTypes:
@@ -595,6 +591,7 @@ class ILCJob(Job):
       if not self.ioDict.has_key("SLICStep"):
         raise TypeError,'Expected previously defined SLIC step for input data'
       stepInstance.setLink('inputSlcio',self.ioDict["SLICStep"],'outputFile')
+
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
     else:
@@ -653,11 +650,11 @@ class ILCJob(Job):
 
     if scriptpath.find("lfn:")>-1:
       self.addToInputSandbox.append(scriptpath)
+    elif os.path.exists(scriptpath):
+      self.addToInputSandbox.append(scriptpath)
     else:
-      if os.path.exists(scriptpath):
-        self.addToInputSandbox.append(scriptpath)
-      else:
-        return self._reportError("Could not find specified macro %s"%scriptpath,__name__,**kwargs)
+      return self._reportError("Could not find specified macro %s"%scriptpath,__name__,**kwargs)
+    
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
@@ -709,7 +706,6 @@ class ILCJob(Job):
   
   def _rootType(self,name):
     modname = ''
-    
     if name.endswith((".C",".cc",".cxx",".c")): 
       modname = "RootMacroAnalysis"
     else:
