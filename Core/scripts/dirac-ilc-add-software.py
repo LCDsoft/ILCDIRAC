@@ -8,6 +8,7 @@ Created on May 5, 2010
 from DIRAC.FrameworkSystem.Client.NotificationClient     import NotificationClient
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC import gConfig
+import DIRAC
 from DIRAC.Core.Base import Script
 import string
 
