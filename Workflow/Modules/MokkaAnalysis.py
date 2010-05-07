@@ -218,7 +218,15 @@ class MokkaAnalysis(ModuleBase):
       #script.write('G4ELASTICDATA="$g4releases/share/data/G4ELASTIC1.1"\n')
       script.write('declare -x G4ABLADATA="$g4releases/sl4/g4data/g4dataABLA"\n')
       #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
-            
+      
+      #### Do something with the additional environment variables
+      add_env = gConfig.getOptionsDict("/Operations/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar"%(self.systemConfig,"mokka",self.applicationVersion))
+      if add_env['OK']:
+        for key in add_env['Value'].keys:
+          script.write('declare -x %s=%s/%s\n'%(key,add_env['Value'][key],mySoftwareRoot))
+      else:
+        self.log.verbose("No additional environment variables needed for this application")
+      
       if(os.path.exists("./lib")):
         if os.environ.has_key('LD_LIBRARY_PATH'):
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s:%s\n'%(myMokkaDir,os.environ['LD_LIBRARY_PATH']))
