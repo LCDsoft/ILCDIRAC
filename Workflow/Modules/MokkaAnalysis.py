@@ -282,11 +282,13 @@ class MokkaAnalysis(ModuleBase):
           os.rename("out.slcio", self.outputFile)
 
       failed = False
-      if status != 0:
+      if not status == 0 and not status==106 :
         self.log.error( "Mokka execution completed with errors:" )
         failed = True
+      elif status==106:
+        self.log.info( "Mokka execution reached end of input generator file")
       else:
-        self.log.info( "Mokka execution completed successfully")
+        self.log.info( "Mokka execution finished successfully")
 
       if failed==True:
         self.log.error( "==================================\n StdError:\n" )
@@ -306,6 +308,8 @@ class MokkaAnalysis(ModuleBase):
       result = sqlwrapper.mysqlCleanUp()
       # Still have to set the application status e.g. user job case.
       self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
+      if status==106:
+        return S_OK('Mokka %s reached end of input generator file' %(self.applicationVersion))
       return S_OK('Mokka %s Successful' %(self.applicationVersion))
 
     #############################################################################
