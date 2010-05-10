@@ -307,9 +307,10 @@ class MokkaAnalysis(ModuleBase):
       
       result = sqlwrapper.mysqlCleanUp()
       # Still have to set the application status e.g. user job case.
-      self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
       if status==106:
+        self.setApplicationStatus('Mokka %s reached end of input generator file' %(self.applicationVersion))
         return S_OK('Mokka %s reached end of input generator file' %(self.applicationVersion))
+      self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
       return S_OK('Mokka %s Successful' %(self.applicationVersion))
 
     #############################################################################
