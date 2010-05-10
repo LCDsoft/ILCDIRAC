@@ -72,8 +72,8 @@ class MarlinAnalysis(ModuleBase):
       self.jobType = self.workflow_commons['JobType']
       
     if self.step_commons.has_key('EvtsToProcess'):
-      if(self.step_commons['EvtsToProcess']>0):
-        self.evtstoprocess = str(self.step_commons['EvtsToProcess'])
+      self.evtstoprocess = str(self.step_commons['EvtsToProcess'])
+      
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
     return S_OK('Parameters resolved')
