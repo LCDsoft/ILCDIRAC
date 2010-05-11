@@ -19,7 +19,6 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
-import DIRAC
 
 
 class MarlinAnalysis(ModuleBase):
