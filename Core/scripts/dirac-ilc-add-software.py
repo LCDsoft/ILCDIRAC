@@ -47,13 +47,16 @@ if not av_apps['OK']:
   DIRAC.exit(255)
 
 if appName.lower() in av_apps['Value']:
-  versions = gConfig.getSections("%s/%s/%s"%(softwareSection,platform,appName),[])
+  versions = gConfig.getSections("%s/%s/%s"%(softwareSection,platform,appName.lower()),[])
   if not versions['OK']:
     print "Could not find all versions available in CS"
     DIRAC.exit(255)
   if appVersion in versions['Value']:
-    print 'Application %s %s for %s already in CS, nothing to do'%(appName,appVersion,platform)
+    print 'Application %s %s for %s already in CS, nothing to do'%(appName.lower(),appVersion,platform)
     DIRAC.exit(0)
+  else:
+    result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),"%s%s.tgz"%(appName,appVersion))
+    modifiedCS = True
 else:
   result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),"%s%s.tgz"%(appName,appVersion))
   modifiedCS = True
