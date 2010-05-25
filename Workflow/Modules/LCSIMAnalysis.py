@@ -132,7 +132,7 @@ class LCSIMAnalysis(ModuleBase):
       os.mkdir(os.path.join(cachedir,".lcsim"))
     except:
       self.log.error("Could not create .lcsim folder !")
-    if os.path.exists(os.path.join(cachedir,".lcsim")):
+    if os.path.exists(os.path.join(cachedir,".lcsim")) and os.path.exists(aliasproperties):
       self.log.verbose("Copy alias.properties file in %s"%(os.path.join(cachedir,".lcsim")))
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
           
