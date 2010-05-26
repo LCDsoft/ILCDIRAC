@@ -239,7 +239,7 @@ class SLICAnalysis(ModuleBase):
     """
     sys.stdout.flush()
     if message:
-      if re.search('INFO Evt',message): print message
+      if re.search('BeginEvent',message): print message
     if self.applicationLog:
       log = open(self.applicationLog,'a')
       log.write(message+'\n')
