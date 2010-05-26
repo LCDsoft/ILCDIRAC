@@ -33,6 +33,7 @@ class LCSIMAnalysis(ModuleBase):
     self.aliasproperties = ''
     self.debug = False
     self.jobID = None
+    self.printoutflag = ''
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
      
@@ -137,8 +138,8 @@ class LCSIMAnalysis(ModuleBase):
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
           
     lcsimfile = "job.lcsim"
-    xmlfileok = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
-    if not xmlfileok:
+    self.printoutflag = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
+    if not self.printoutflag:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")
     else:
@@ -203,7 +204,7 @@ class LCSIMAnalysis(ModuleBase):
   def redirectLogOutput(self, fd, message):
     sys.stdout.flush()
     if message:
-      if re.search('INFO Evt',message): print message
+      if re.search(self.printoutflag,message): print message
     if self.applicationLog:
       log = open(self.applicationLog,'a')
       log.write(message+'\n')
