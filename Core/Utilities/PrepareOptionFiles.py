@@ -211,8 +211,10 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   @param debug: By default set verbosity to true
   @type debug: bool
   
-  @return: True
+  @return: string
   """
+  printtext = ''
+
   tree = ElementTree()
   tree.parse(inputlcsim)
   ##handle the input slcio file list
@@ -264,6 +266,52 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
       cachedirelem = Element("cacheDirectory")
       cachedirelem.text = cachedir
       control.append(cachedirelem)
-      
+
+  drivers = tree.findall("drivers/driver")      
+  eventInterval = tree.find("drivers/driver/eventInterval")
+  if eventInterval:
+    evtint = eventInterval.text
+    if int(evtint)<10:    
+      eventInterval.text = "10"
+  else:
+    notdriver = True
+    for driver in drivers:
+      if driver.attrib.has_key("type"):
+        if driver.attrib["type"]=="org.lcsim.job.EventMarkerDriver" :
+          eventInterval = Element("eventInterval")
+          eventInterval.text = "10"
+          driver.append(eventInterval)
+          notdriver = False
+    if notdriver:
+      drivers = tree.find("drivers")
+      propdict = {}
+      propdict['name']='evtMarker'
+      propdict['type']='org.lcsim.job.EventMarkerDriver'
+      eventmarker = Element("driver",propdict)
+      eventInterval = Element("eventInterval")
+      eventInterval.text = "10"
+      eventmarker.append(eventInterval)
+      drivers.append(eventmarker)
+      execut = tree.find("execute")
+      if(execut):
+        evtmarkattrib = {}
+        evtmarkattrib['name']="evtMarker"
+        evtmark= Element("driver",evtmarkattrib)
+        execut.append(evtmark)
+        
+  #drivers = tree.findall("drivers/driver")      
+
+  mark = tree.find("drivers/driver/marker")
+  if mark:
+    printtext = mark.text
+  else:
+    for driver in drivers:
+      if driver.attrib.has_key("type"):
+        if driver.attrib["type"]=="org.lcsim.job.EventMarkerDriver" :
+          marker = Element("marker")
+          marker.text = "LCSIM"
+          driver.append(marker)
+          printtext = marker.text
+  
   tree.write(outputlcsim)
-  return True
+  return printtext
