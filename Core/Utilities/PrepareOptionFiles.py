@@ -223,12 +223,12 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
     baseelem = tree.find("lcsim")
     filesinlcsim = Element("inputFiles")
     baseelem.append(filesinlcsim)
-  set = Element("fileSet")
+  #set = Element("fileSet")
   for slcio in inputslcio:
     newfile = Element('file')
     newfile.text = slcio
-    set.append(newfile)
-  filesinlcsim.append(set)
+    filesinlcsim.append(newfile)
+  #filesinlcsim.append(set)
 
   if jars:
     if len(jars)>0:
