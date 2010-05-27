@@ -25,6 +25,8 @@ exitCode = 0
 dirac.monitorRepository(False)
 lfns = []
 lfns = dirac.retrieveRepositoryOutputDataLFNs()
+print "lfnlist=["
 for lfn in lfns :
-  print "LFN:%s"%lfn
+  print "LFN:%s,"%lfn
+print "]"
 DIRAC.exit(exitCode)
