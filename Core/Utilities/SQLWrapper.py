@@ -58,8 +58,8 @@ class SQLWrapper:
       pass
     try:
         self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
-    except IOError, (errno,strerror):
-        DIRAC.gLogger.exception("I/O error({0}): {1}".format(errno, strerror))   
+    except Exception, x:
+        DIRAC.gLogger.exception("Exception error: %s"%(x))   
         
        
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
