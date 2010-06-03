@@ -79,6 +79,8 @@ class SQLWrapper:
     """Setup mysql locally in local tmp dir 
     """
     #initialDir= os.getcwd()
+    if not os.path.exists(self.MokkaTMPDir):
+      return S_ERROR("MokkaTMP dir is not available")
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
