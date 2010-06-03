@@ -57,9 +57,9 @@ class SQLWrapper:
     except :
       pass
     try:
-        self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
+      self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
     except Exception, x:
-        DIRAC.gLogger.exception("Exception error: %s"%(x))   
+      DIRAC.gLogger.error("Exception error: %s"%(x))   
         
        
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
