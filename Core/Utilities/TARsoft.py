@@ -31,6 +31,8 @@ def install(app,config,area):
   appVersion = app[1]
   appName = appName.lower()
   app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
+  overwrite = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/Overwrite'%(config,appName,appVersion),False)
+  
   if not app_tar:
     DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
     return DIRAC.S_ERROR('Could not find tar ball for %s %s'%(appName,appVersion))
@@ -41,7 +43,10 @@ def install(app,config,area):
   
   #Check if folder is already there:
   folder_name = app_tar.rstrip(".tgz").rstrip(".tar.gz")
-  if os.path.exists(folder_name) and not appName =="slic":
+  if appName =="slic":
+    folder_name= "%s%s"%(appName,appVersion)
+  if os.path.exists(folder_name):
+    # and not appName =="slic":
     DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
     return DIRAC.S_OK()
   
@@ -69,9 +74,15 @@ def install(app,config,area):
       DIRAC.gLogger.error("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
       return DIRAC.S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
     if appName=="slic":
+      slicname = "%s%s"%(appName,appVersion)
+      try:
+        os.rename("slic", slicname)
+      except:
+        return DIRAC.S_ERROR("Could not rename slic directory")
       members = app_tar_to_untar.getmembers()
       fileexample = members[0].name
-      basefolder = fileexample.split("/")[0]
+      #basefolder = fileexample.split("/")[0]
+      basefolder = slicname
       os.environ['SLIC_DIR']= basefolder
       slicv = ''
       lcddv = ''
