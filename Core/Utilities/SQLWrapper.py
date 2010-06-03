@@ -309,20 +309,22 @@ done
     else:
       self.log.info( "MySQL-cleanup execution completed successfully")
 
-    if failed==True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
-      self.log.error('MySQL-cleanup Exited With Status %s' %(status))
-      return S_ERROR('MySQL-cleanup Exited With Status %s' %(status))
-
     #cleanup script also removes tmp
     if (os.path.exists(self.MokkaTMPDir)):
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
         shutil.rmtree(self.mokkaDBroot,True)
+        shutil.rmtree(self.MokkaTMPDir)
       except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
+
+    if failed:
+      self.log.error( "==================================\n StdError:\n" )
+      self.log.error( self.stdError )
+      self.log.error('MySQL-cleanup Exited With Status %s' %(status))
+      return S_ERROR('MySQL-cleanup Exited With Status %s' %(status))
+
     return S_OK('OK')
     #############################################################################
         
