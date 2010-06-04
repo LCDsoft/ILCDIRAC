@@ -96,7 +96,7 @@ class SQLWrapper:
     os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
     self.exeEnv = dict( os.environ )
     
-    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaDataDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
+    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaTMPDir,self.MokkaDataDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
     comm = "mysql_install_db %s"%(safe_options) 
     self.log.verbose("Running %s"%comm)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
