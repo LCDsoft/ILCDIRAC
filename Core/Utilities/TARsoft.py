@@ -25,7 +25,8 @@ def TARinstall(app,config,area):
   res = install(app,config,area)
   return res
 
-def install(app,config,area):  
+def install(app,config,area):
+  curdir = os.getcwd()
   os.chdir(area)
   appName    = app[0]
   appVersion = app[1]
@@ -45,14 +46,19 @@ def install(app,config,area):
   folder_name = app_tar.rstrip(".tgz").rstrip(".tar.gz")
   if appName =="slic":
     folder_name= "%s%s"%(appName,appVersion)
+  appli_exists = False
   if os.path.exists(folder_name):
     # and not appName =="slic":
     DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
-    return DIRAC.S_OK()
+    appli_exists = True
+    if overwrite:
+      appli_exists = False
+    #os.chdir(curdir)
+    #return DIRAC.S_OK()
   
   #downloading file from url, but don't do if file is already there.
   app_tar_base=os.path.basename(app_tar)  
-  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
     try :
       DIRAC.gLogger.debug("Downloading software", '%s_%s' %(appName,appVersion))
       #Copy the file locally, don't try to read from remote, soooo slow
@@ -60,56 +66,72 @@ def install(app,config,area):
       tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar),app_tar_base)
     except:
       DIRAC.gLogger.exception()
+      os.chdir(curdir)
       return DIRAC.S_ERROR('Exception during url retrieve')
 
-  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
+  if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
     DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
+    os.chdir(curdir)
     return DIRAC.S_ERROR('Failed to download software')
 
-  if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
-    app_tar_to_untar = tarfile.open(app_tar_base)
-    try:
-      app_tar_to_untar.extractall()
-    except Exception, e:
-      DIRAC.gLogger.error("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
-      return DIRAC.S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
-    if appName=="slic":
-      slicname = "%s%s"%(appName,appVersion)
+  if not appli_exists:
+    if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
+      app_tar_to_untar = tarfile.open(app_tar_base)
       try:
-        os.rename("slic", slicname)
-      except:
-        return DIRAC.S_ERROR("Could not rename slic directory")
-      members = app_tar_to_untar.getmembers()
-      fileexample = members[0].name
-      #basefolder = fileexample.split("/")[0]
-      basefolder = slicname
-      os.environ['SLIC_DIR']= basefolder
-      slicv = ''
-      lcddv = ''
-      xercesv = ''
-      for mem in members:
-        if mem.name.find('/packages/slic/')>0:
-          slicv = mem.name.split("/")[3]
-        if mem.name.find('/packages/lcdd/')>0:
-          lcddv = mem.name.split("/")[3]
-        if mem.name.find('/packages/xerces/')>0:
-          xercesv = mem.name.split("/")[3]
-      if slicv:
-        os.environ['SLIC_VERSION'] = slicv
-      if xercesv:
-        os.environ['XERCES_VERSION']= xercesv
-      if lcddv:
-        os.environ['LCDD_VERSION'] = lcddv
-    elif appName=="root":
-      members = app_tar_to_untar.getmembers()
-      fileexample = members[0].name
-      basefolder = fileexample.split("/")[0]
-      os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
-    #remove now useless tar ball
+        app_tar_to_untar.extractall()
+      except Exception, e:
+        DIRAC.gLogger.error("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
+        os.chdir(curdir)
+        return DIRAC.S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
+      if appName=="slic":
+        slicname = "%s%s"%(appName,appVersion)      
+        members = app_tar_to_untar.getmembers()
+        fileexample = members[0].name
+        basefolder = fileexample.split("/")[0]
+        try:
+          os.rename(basefolder, slicname)
+        except:
+          os.chdir(curdir)
+          return DIRAC.S_ERROR("Could not rename slic directory")
+  if appName=="slic":
+    basefolder = folder_name
+    os.environ['SLIC_DIR']= basefolder
+    slicv = ''
+    lcddv = ''
+    xercesv = ''
+    try:
+      slicv = os.listdir(os.path.join(basefolder,'packages/slic/'))[0]
+      lcddv = os.listdir(os.path.join(basefolder,'packages/lcdd/'))[0]
+      xercesv =os.listdir(os.path.join(basefolder,'packages/xerces/'))[0]
+    except:
+      os.chdir(curdir)
+      return DIRAC.S_ERROR("Could not resolve slic env variables, folder content does not match usual pattern")
+    #for mem in members:
+    #  if mem.name.find('/packages/slic/')>0:
+    #    slicv = mem.name.split("/")[3]
+    #  if mem.name.find('/packages/lcdd/')>0:
+    #    lcddv = mem.name.split("/")[3]
+    #  if mem.name.find('/packages/xerces/')>0:
+    #    xercesv = mem.name.split("/")[3]
+    if slicv:
+      os.environ['SLIC_VERSION'] = slicv
+    if xercesv:
+      os.environ['XERCES_VERSION']= xercesv
+    if lcddv:
+      os.environ['LCDD_VERSION'] = lcddv
+  elif appName=="root":
+    #members = app_tar_to_untar.getmembers()
+    #fileexample = members[0].name
+    basefolder = folder_name
+    #fileexample.split("/")[0]
+    os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
+  #remove now useless tar ball
+  if os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
     try:
       os.unlink(app_tar_base)
     except:
       DIRAC.gLogger.error("Could not remove tar ball")
+  os.chdir(curdir)
   return DIRAC.S_OK()
 
 def remove():
