@@ -191,7 +191,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   finaltext += "\n"
   if detector:
     output.write("/lcdd/url %s.lcdd\n"%detector)
-  output.write("/run/initialize")
+  output.write("/run/initialize\n")
   if outputlcio:
     output.write("/lcio/filename %s\n"%outputlcio)
   output.write(finaltext)
