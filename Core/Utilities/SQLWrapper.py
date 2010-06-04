@@ -60,7 +60,11 @@ class SQLWrapper:
       self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
     except Exception, x:
       DIRAC.gLogger.error("Exception error: %s"%(x))   
-        
+    self.MokkaDataDir = os.path.join(self.initialDir,"data")
+    try:
+      os.mkdir(self.MokkaDataDir)
+    except:
+      DIRAC.gLogger.error("Could not create data dir")    
        
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
         
@@ -81,6 +85,8 @@ class SQLWrapper:
     #initialDir= os.getcwd()
     if not os.path.exists(self.MokkaTMPDir):
       return S_ERROR("MokkaTMP dir is not available")
+    if not os.path.exists(self.MokkaDataDir):
+      return S_ERROR("Mokka Data dir is not available")    
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     if os.environ.has_key('LD_LIBRARY_PATH'):
@@ -90,7 +96,7 @@ class SQLWrapper:
     os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
     self.exeEnv = dict( os.environ )
     
-    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s/data --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaTMPDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
+    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaDataDir,self.MokkaTMPDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
     comm = "mysql_install_db %s"%(safe_options) 
     self.log.verbose("Running %s"%comm)
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
@@ -315,6 +321,7 @@ done
         DIRAC.gLogger.verbose('Removing tmp dir')
         shutil.rmtree(self.mokkaDBroot,True)
         shutil.rmtree(self.MokkaTMPDir)
+        shutil.rmtree(self.MokkaDataDir)
       except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
