@@ -11,6 +11,7 @@ Created on Jan 29, 2010
 '''
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
+import string
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
@@ -164,28 +165,36 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   """
   inputmacfile = file(inputmac,'r')
   output = file(outputmac,'w')
+  finaltext = ""
   for line in inputmacfile:
     if line.find("/generator/filename")<0:
       if line.find("/generator/skipEvents")<0:
-        if line.find("/run/beamOn")<0:
-          if detector:
-            if line.find("/lcdd/url")< 0:
+        if line.find("/run/initialize")<0:
+          if line.find("/run/beamOn")<0:
+            if detector:
+              if line.find("/lcdd/url")< 0:
+                if outputlcio:
+                  if line.find("/lcio/filename")<0:
+                    #output.write(line)
+                    finaltext = string.join([finaltext,line],"\n")
+                else:
+                  #output.write(line)
+                  finaltext = string.join([finaltext,line],"\n")
+            else :
               if outputlcio:
                 if line.find("/lcio/filename")<0:
-                  output.write(line)
+                  #output.write(line)
+                  finaltext = string.join([finaltext,line],"\n")
               else:
-                output.write(line)
-          else :
-            if outputlcio:
-              if line.find("/lcio/filename")<0:
-                output.write(line)
-            else:
-              output.write(line)
-        
+                #output.write(line)
+                finaltext = string.join([finaltext,line],"\n")
+  finaltext += "\n"
   if detector:
     output.write("/lcdd/url %s.lcdd\n"%detector)
+  output.write("/run/initialize")
   if outputlcio:
     output.write("/lcio/filename %s\n"%outputlcio)
+  output.write(finaltext)
   output.write("/generator/filename %s\n"%stdhep)
   output.write("/generator/skipEvents %s\n"%startfrom)
   output.write("/run/beamOn %s\n"%nbevts)
