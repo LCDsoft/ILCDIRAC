@@ -257,7 +257,7 @@ class MarlinAnalysis(ModuleBase):
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+      self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('Marlin Exited With Status %s' %(status))
       return S_ERROR('Marlin Exited With Status %s' %(status))
     self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))

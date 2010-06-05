@@ -195,9 +195,10 @@ class LCSIMAnalysis(ModuleBase):
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError) 
-      #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
+      self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('LCSIM Exited With Status %s' %(status))
-      return S_ERROR('LCSIM Exited With Status %s' %(status))    
+      return S_ERROR('LCSIM Exited With Status %s' %(status))
+    self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
     return S_OK('LCSIM %s Successful' %(self.applicationVersion))
 
   #############################################################################
