@@ -43,6 +43,7 @@ class MokkaAnalysis(ModuleBase):
 
         self.systemConfig = ''
         self.applicationLog = ''
+        self.applicationName = 'Mokka'
         self.applicationVersion=''
         self.dbslice = ''
         self.numberOfEvents = 0
