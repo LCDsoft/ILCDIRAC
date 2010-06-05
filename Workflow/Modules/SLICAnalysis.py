@@ -28,6 +28,7 @@ class SLICAnalysis(ModuleBase):
     self.result = S_ERROR()
     self.systemConfig = ''
     self.applicationLog = ''
+    self.applicationName = 'SLIC'
     self.applicationVersion=''
     self.startFrom = 0
     self.stdhepFile = ''

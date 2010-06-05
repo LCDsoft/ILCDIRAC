@@ -33,6 +33,7 @@ class LCSIMAnalysis(ModuleBase):
     self.aliasproperties = ''
     self.debug = False
     self.jobID = None
+    self.applicationName = 'LCSIM'
     self.printoutflag = ''
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']

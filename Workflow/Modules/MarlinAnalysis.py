@@ -34,6 +34,7 @@ class MarlinAnalysis(ModuleBase):
     self.inputSLCIO = ''
     self.inputXML=''
     self.inputGEAR =''
+    self.applicationName = "Marlin"
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
