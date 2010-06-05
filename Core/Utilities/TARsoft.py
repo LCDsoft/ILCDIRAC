@@ -127,10 +127,11 @@ def install(app,config,area):
     os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
   #remove now useless tar ball
   if os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
-    try:
-      os.unlink(app_tar_base)
-    except:
-      DIRAC.gLogger.error("Could not remove tar ball")
+    if app_tar_base.find(".jar")<0:
+      try:
+        os.unlink(app_tar_base)
+      except:
+        DIRAC.gLogger.error("Could not remove tar ball")
   os.chdir(curdir)
   return DIRAC.S_OK()
 
