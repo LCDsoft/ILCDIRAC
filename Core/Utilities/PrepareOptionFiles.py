@@ -197,7 +197,8 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   if outputlcio:
     output.write("/lcio/filename %s\n"%outputlcio)
   output.write(finaltext)
-  output.write("/generator/filename %s\n"%stdhep)
+  if len(stdhep)>0:
+    output.write("/generator/filename %s\n"%stdhep)
   output.write("/generator/skipEvents %s\n"%startfrom)
   output.write("/run/beamOn %s\n"%nbevts)
   inputmacfile.close()
