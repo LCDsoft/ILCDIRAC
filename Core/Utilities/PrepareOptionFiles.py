@@ -170,6 +170,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
     if line.find("/generator/filename")<0:
       if line.find("/generator/skipEvents")<0:
         #if line.find("/run/initialize")<0:
+        if line.find("/lcio/path")<0:
           if line.find("/run/beamOn")<0:
             if detector:
               if line.find("/lcdd/url")< 0:
