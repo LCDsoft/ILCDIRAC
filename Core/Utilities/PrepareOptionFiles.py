@@ -185,7 +185,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
                 if line.find("/lcio/filename")<0:
                   #output.write(line)
                   listtext.append(line)
-              else:
+              else: 
                 #output.write(line)
                 listtext.append(line)
 
