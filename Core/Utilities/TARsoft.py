@@ -9,6 +9,7 @@ Also installs all dependencies for the applications
 '''
 import DIRAC
 from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
+from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import os, urllib, tarfile
 
 def TARinstall(app,config,area):
@@ -59,15 +60,22 @@ def install(app,config,area):
   #downloading file from url, but don't do if file is already there.
   app_tar_base=os.path.basename(app_tar)  
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
-    try :
-      DIRAC.gLogger.debug("Downloading software", '%s_%s' %(appName,appVersion))
-      #Copy the file locally, don't try to read from remote, soooo slow
-      #Use string conversion %s%s to set the address, makes the system more stable
-      tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar),app_tar_base)
-    except:
-      DIRAC.gLogger.exception()
-      os.chdir(curdir)
-      return DIRAC.S_ERROR('Exception during url retrieve')
+    if TarBallURL.find("http://")>-1:
+      try :
+        DIRAC.gLogger.debug("Downloading software", '%s_%s' %(appName,appVersion))
+        #Copy the file locally, don't try to read from remote, soooo slow
+        #Use string conversion %s%s to set the address, makes the system more stable
+        tarball,headers = urllib.urlretrieve("%s%s"%(TarBallURL,app_tar),app_tar_base)
+      except:
+        DIRAC.gLogger.exception()
+        os.chdir(curdir)
+        return DIRAC.S_ERROR('Exception during url retrieve')
+    else:
+      rm = ReplicaManager()
+      res = rm.getFile("%s%s"%(TarBallURL,app_tar))
+      if not res['OK']:
+        os.chdir(curdir)
+        return DIRAC.S_ERROR('Exception during url retrieve')
 
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
     DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
