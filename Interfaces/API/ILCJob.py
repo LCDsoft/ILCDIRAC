@@ -432,7 +432,7 @@ class ILCJob(Job):
     
     detectormodeltouse = os.path.basename(detectorModel).rstrip(".zip")
     if os.path.exists(detectorModel):
-      self.addToInputSandbox(detectorModel)
+      self.addToInputSandbox.append(detectorModel)
       
     stepName = 'RunSLIC'
 
