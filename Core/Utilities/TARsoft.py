@@ -75,7 +75,7 @@ def install(app,config,area):
       res = rm.getFile("%s%s"%(TarBallURL,app_tar))
       if not res['OK']:
         os.chdir(curdir)
-        return DIRAC.S_ERROR('Exception during url retrieve')
+        return res
 
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
     DIRAC.gLogger.error('Failed to download software','%s_%s' %(appName,appVersion))
