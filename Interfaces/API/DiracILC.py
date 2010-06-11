@@ -94,12 +94,27 @@ class DiracILC(Dirac):
       res = self._checkapp(sysconf,app,vers)
       if not res['OK']:
         return res
-    return res
+    outputpathparam = job.workflow.findParameter("OutputPath")
+    if outputpathparam:
+      outputpath = outputpathparam.getValue()
+      res = self._checkoutputpath(outputpath)
+      return res
+    return S_OK()
   
   def _checkapp(self,config,appName,appVersion):
     app_version= gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
     if not app_version:
       self.log.error("Could not find the specified software %s_%s for %s, check in CS"%(appName,appVersion,config))
       return S_ERROR("Could not find the specified software %s_%s for %s, check in CS"%(appName,appVersion,config))
+    return S_OK()
+  
+  def _checkoutputpath(self,path):
+    if path.find("//")>-1 or path.find("/./")>-1 or path.find("/../")>-1:
+      self.log.error("OutputPath of setOutputData() contains invalid characters, please remove any //, /./, or /../")
+      return S_ERROR("Invalid path")
+    path = path.rstrip()
+    if path[-1]=="/":
+      self.log.error("Please strip trailing / from outputPath in setOutputData()")
+      return S_ERROR("Invalid path")
     return S_OK()
   
