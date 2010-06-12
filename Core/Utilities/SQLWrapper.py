@@ -49,30 +49,35 @@ class SQLWrapper:
     self.mokkaDBroot = mokkaDBroot
     
     self.initialDir= os.getcwd()
+    self.log = gLogger.getSubLogger( "SQL-wrapper" )
+    
+    self.mysqlInstalDir = ''  
+    
+    #mysqld threading
+    self.bufferLimit = 10485760   
+    self.maxPeekLines = 20      
+  
+  def makedirs(self):
     #os.chdir(self.softDir)
 
     #"""create tmp dir and track it"""
     try :
       os.makedirs(self.mokkaDBroot)
     except :
-      pass
+      self.log.error("Could not create mokkaDBroot.")
+      return S_ERROR("Could not create mokkaDBroot.")
     try:
-      self.MokkaTMPDir = tempfile.mkdtemp('','TMP',mokkaDBroot)
+      self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.mokkaDBroot)
     except Exception, x:
-      DIRAC.gLogger.error("Exception error: %s"%(x))   
+      self.log.error("Exception error: %s"%(x))
+      return S_ERROR("Exception error: %s"%(x))
     self.MokkaDataDir = os.path.join(self.initialDir,"data")
     try:
       os.mkdir(self.MokkaDataDir)
     except:
-      DIRAC.gLogger.error("Could not create data dir")    
-       
-    self.log = gLogger.getSubLogger( "SQL-wrapper" )
-        
-    self.mysqlInstalDir = ''  
-    
-    #mysqld threading
-    self.bufferLimit = 10485760   
-    self.maxPeekLines = 20      
+      self.log.error("Could not create data dir")
+      return S_ERROR("Could not create data dir")  
+  return S_OK()
 
     #os.chdir(self.initialDir)
   def getMokkaTMPDIR(self):
