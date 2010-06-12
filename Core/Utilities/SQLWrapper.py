@@ -77,7 +77,7 @@ class SQLWrapper:
     except:
       self.log.error("Could not create data dir")
       return S_ERROR("Could not create data dir")  
-  return S_OK()
+    return S_OK()
 
     #os.chdir(self.initialDir)
   def getMokkaTMPDIR(self):
