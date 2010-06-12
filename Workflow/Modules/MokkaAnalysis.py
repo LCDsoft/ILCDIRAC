@@ -176,6 +176,9 @@ class MokkaAnalysis(ModuleBase):
 
       ####Setup MySQL instance
       sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
+      result = sqlwrapper.makedirs()
+      if not result['OK']:
+        return result
       result =sqlwrapper.mysqlSetup()
       if not result['OK']:
         return result
