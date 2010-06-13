@@ -178,9 +178,11 @@ class MokkaAnalysis(ModuleBase):
       sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
       result = sqlwrapper.makedirs()
       if not result['OK']:
+        self.setApplicationStatus('MySQL setup failed to create directories.')
         return result
       result =sqlwrapper.mysqlSetup()
       if not result['OK']:
+        self.setApplicationStatus('MySQL setup failed.')
         return result
 
       ###steering file that will be used to run
@@ -278,7 +280,8 @@ class MokkaAnalysis(ModuleBase):
       status = resultTuple[0]
       # stdOutput = resultTuple[1]
       # stdError = resultTuple[2]
-      self.log.info( "Status after the application execution is %s" % str( status ) )
+      self.log.info( "Status after Mokka execution is %s" % str( status ) )
+      result = sqlwrapper.mysqlCleanUp()
 
       ###Now change the name of Mokka output to the specified filename
       if os.path.exists("out.slcio"):
@@ -298,8 +301,8 @@ class MokkaAnalysis(ModuleBase):
         self.log.error( "==================================\n StdError:\n" )
         self.log.error( self.stdError) 
         #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-        result = sqlwrapper.mysqlCleanUp()
         self.log.error('Mokka Exited With Status %s' %(status))
+        self.setApplicationStatus('Mokka Exited With Status %s' %(status))
         return S_ERROR('Mokka Exited With Status %s' %(status))
 
       ###cleanup after putting some dirt...
@@ -308,8 +311,6 @@ class MokkaAnalysis(ModuleBase):
       #result = sqlwrapper.mysqlCleanUp()
       #if not result['OK']:
       #  return result
-      
-      result = sqlwrapper.mysqlCleanUp()
       # Still have to set the application status e.g. user job case.
       if status==106:
         self.setApplicationStatus('Mokka %s reached end of input generator file' %(self.applicationVersion))
