@@ -121,11 +121,19 @@ class MarlinAnalysis(ModuleBase):
 
     runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
+    filemissing = False
     for inputfile in inputfilelist:
+      if not os.path.exists(os.path.basename(inputfile)):
+        filemissing=True
       runonslcio.append(os.path.basename(inputfile))
     #print "input file list ",inputfilelist
     #listofslcio = self.inputSLCIO.replace(";", " ")
     listofslcio = string.join(runonslcio," ")
+    
+    if filemissing:
+      self.setApplicationStatus('Marlin: missing slcio file')
+      return S_ERROR('Missing slcio file!')
+    
     #for inputfile in self.inputSLCIO:
     #  listofslcio += listofslcio+" "+inputfile
     #listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
@@ -136,6 +144,7 @@ class MarlinAnalysis(ModuleBase):
     res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.debug)
     if not res:
       self.log.error('Something went wrong with XML generation')
+      self.setApplicationStatus('Marlin: something went wrong with XML generation')
       return S_ERROR('Something went wrong with XML generation')
     
     scriptName = 'Marlin_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
