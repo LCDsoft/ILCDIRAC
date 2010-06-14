@@ -18,7 +18,13 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC
-import re, os, sys, tempfile
+
+import re, os, sys
+
+#random string generator 
+import string
+from random import choice
+
 
 
 class MokkaAnalysis(ModuleBase):
@@ -175,13 +181,11 @@ class MokkaAnalysis(ModuleBase):
               os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
 
       ####Setup MySQL instance
-      try:
-        mokkaDBinstall = tempfile.mkdtemp('','MokkaDBRoot-')
-      except Exception, x:
-        self.log.error("Exception error: %s"%(x))
-        return S_ERROR("Exception error: %s"%(x))
+      
+      MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + MokkaAnalysis.GenPasswd(self, 8);
+      
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
-      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,mokkaDBinstall)#mySoftwareRoot)
+      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
       result = sqlwrapper.makedirs()
       if not result['OK']:
         self.setApplicationStatus('MySQL setup failed to create directories.')
@@ -341,4 +345,5 @@ class MokkaAnalysis(ModuleBase):
         self.stdError += message
     #############################################################################
 
-        
+    def GenPasswd(self, length=8, chars=string.letters + string.digits):
+      return ''.join([choice(chars) for i in range(length)])
