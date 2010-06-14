@@ -75,9 +75,9 @@ class SQLWrapper:
     self.MokkaDataDir = os.path.join(self.initialDir,"data")
     try:
       os.mkdir(self.MokkaDataDir)
-    except:
-      self.log.error("Could not create data dir")
-      return S_ERROR("Could not create data dir")  
+    except Exception, x:
+      self.log.error("Could not create data dir, exception %s"%(x))
+      return S_ERROR("Could not create data dir, exception %s"%(x))  
     return S_OK()
 
     #os.chdir(self.initialDir)
