@@ -64,9 +64,9 @@ class SQLWrapper:
     if not os.path.exists(self.mokkaDBroot):
       try :
         os.makedirs(self.mokkaDBroot)
-      except :
-        self.log.error("Could not create mokkaDBroot.")
-        return S_ERROR("Could not create mokkaDBroot.")
+      except Exception, x:
+        self.log.error("Could not create mokkaDBroot, exception %s."%(x))
+        return S_ERROR("Could not create mokkaDBroot, exception %s."%(x))
     try:
       self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.mokkaDBroot)
     except Exception, x:
