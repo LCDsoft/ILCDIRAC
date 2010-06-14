@@ -18,7 +18,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC
-import re, os, sys
+import re, os, sys, tempfile
 
 
 class MokkaAnalysis(ModuleBase):
@@ -175,7 +175,13 @@ class MokkaAnalysis(ModuleBase):
               os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
 
       ####Setup MySQL instance
-      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
+      try:
+        mokkaDBinstall = tempfile.mkdtemp('','MokkaDBRoot-')
+      except Exception, x:
+        self.log.error("Exception error: %s"%(x))
+        return S_ERROR("Exception error: %s"%(x))
+      #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
+      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,mokkaDBinstall)#mySoftwareRoot)
       result = sqlwrapper.makedirs()
       if not result['OK']:
         self.setApplicationStatus('MySQL setup failed to create directories.')
