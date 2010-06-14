@@ -61,11 +61,12 @@ class SQLWrapper:
     #os.chdir(self.softDir)
 
     #"""create tmp dir and track it"""
-    try :
-      os.makedirs(self.mokkaDBroot)
-    except :
-      self.log.error("Could not create mokkaDBroot.")
-      return S_ERROR("Could not create mokkaDBroot.")
+    if not os.path.exists(self.mokkaDBroot):
+      try :
+        os.makedirs(self.mokkaDBroot)
+      except :
+        self.log.error("Could not create mokkaDBroot.")
+        return S_ERROR("Could not create mokkaDBroot.")
     try:
       self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.mokkaDBroot)
     except Exception, x:
