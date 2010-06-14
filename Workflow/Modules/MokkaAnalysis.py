@@ -182,7 +182,7 @@ class MokkaAnalysis(ModuleBase):
 
       ####Setup MySQL instance
       
-      MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + MokkaAnalysis.GenPasswd(self, 8);
+      MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + self.GenPasswd(self, 8);
       
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
       sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
