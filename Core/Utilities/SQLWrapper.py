@@ -326,8 +326,8 @@ done
       try:
         DIRAC.gLogger.verbose('Removing tmp dir')
         shutil.rmtree(self.mokkaDBroot,True)
-        shutil.rmtree(self.MokkaTMPDir,True)
-        shutil.rmtree(self.MokkaDataDir,True)
+        #shutil.rmtree(self.MokkaTMPDir,True)
+        #shutil.rmtree(self.MokkaDataDir,True)
       except OSError, (errno,strerror):
         DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
