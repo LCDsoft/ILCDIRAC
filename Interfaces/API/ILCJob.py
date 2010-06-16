@@ -168,9 +168,16 @@ class ILCJob(Job):
     module.setDescription('Mokka module definition')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
     module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)    
     step = StepDefinition('Mokka')
     step.addModule(module)
-    moduleInstance = step.createModuleInstance('MokkaAnalysis','Mokka')
+    step.createModuleInstance('MokkaAnalysis','Mokka')
+    step.createModuleInstance('UserJobFinalization','Mokka')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("steeringFile","","string","","",False,False,"Name of the steering file"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
@@ -302,9 +309,16 @@ class ILCJob(Job):
     module.setDescription('Marlin module definition')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
     module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)        
     step = StepDefinition('Marlin')
     step.addModule(module)
-    moduleInstance = step.createModuleInstance('MarlinAnalysis','Marlin')
+    step.createModuleInstance('MarlinAnalysis','Marlin')
+    step.createModuleInstance('UserJobFinalization','Marlin')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
@@ -443,9 +457,16 @@ class ILCJob(Job):
     module.setDescription('SLIC module definition')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
     module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)
     step = StepDefinition('SLIC')
     step.addModule(module)
-    moduleInstance = step.createModuleInstance('SLICAnalysis','SLIC')
+    step.createModuleInstance('SLICAnalysis','SLIC')
+    step.createModuleInstance('UserJobFinalization','SLIC')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("inputmacFile","","string","","",False,False,"Name of the mac file"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
@@ -564,9 +585,16 @@ class ILCJob(Job):
     module.setDescription('LCSIM module definition')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
     module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)            
     step = StepDefinition('LCSIM')
     step.addModule(module)
-    moduleInstance = step.createModuleInstance('LCSIMAnalysis','LCSIM')
+    step.createModuleInstance('LCSIMAnalysis','LCSIM')
+    step.createModuleInstance('UserJobFinalization','LCSIM')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the source directory to use"))
@@ -703,7 +731,57 @@ class ILCJob(Job):
     self.ioDict["RootStep"]=stepInstance.getName()    
 
     return S_OK() 
-  
+  #############################################################################
+  def setOutputData(self,lfns,OutputSE=[],OutputPath=''):
+    """Helper function, used in preference to Job.setOutputData() for ILC.
+
+       For specifying output data to be registered in Grid storage.  If a list
+       of OutputSEs are specified the job wrapper will try each in turn until
+       successful.
+
+       Example usage:
+
+       >>> job = Job()
+       >>> job.setOutputData(['Ntuple.root'])
+
+       @param lfns: Output data file or files
+       @type lfns: Single string or list of strings ['','']
+       @param OutputSE: Optional parameter to specify the Storage
+       @param OutputPath: Optional parameter to specify the Path in the Storage
+       Element to store data or files, e.g. CERN-tape
+       @type OutputSE: string or list
+       @type OutputPath: string
+    """
+    kwargs = {'lfns':lfns,'OutputSE':OutputSE,'OutputPath':OutputPath}    
+    if type(lfns)==list and len(lfns):
+      outputDataStr = string.join(lfns,';')
+      description = 'List of output data files'
+      self._addParameter(self.workflow,'UserOutputData','JDL',outputDataStr,description)
+    elif type(lfns)==type(" "):
+      description = 'Output data file'
+      self._addParameter(self.workflow,'UserOutputData','JDL',lfns,description)
+    else:
+      return self._reportError('Expected file name string or list of file names for output data',**kwargs) 
+    
+    if OutputSE:
+      description = 'User specified Output SE'
+      if type(OutputSE) in types.StringTypes:
+        OutputSE = [OutputSE]
+      elif type(OutputSE) != types.ListType:
+        return self._reportError('Expected string or list for OutputSE',**kwargs)         
+      OutputSE = ';'.join(OutputSE)
+      self._addParameter(self.workflow,'UserOutputSE','JDL',OutputSE,description)
+
+    if OutputPath:
+      description = 'User specified Output Path'
+      if not type(OutputPath) in types.StringTypes:
+        return self._reportError('Expected string for OutputPath',**kwargs)
+      # Remove leading "/" that might cause problems with os.path.join
+      while OutputPath[0] == '/': OutputPath=OutputPath[1:]
+      self._addParameter(self.workflow,'UserOutputPath','JDL',OutputPath,description)
+
+    return S_OK()
+    
   def _rootType(self,name):
     modname = ''
     if name.endswith((".C",".cc",".cxx",".c")): 
