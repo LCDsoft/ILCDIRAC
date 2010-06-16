@@ -694,14 +694,21 @@ class ILCJob(Job):
     
     self.StepCount +=1
     stepName = 'RunRootMacro'
-    moduleName = self._rootType(scriptpath)#"RootMacroAnalysis"
-    module = ModuleDefinition(moduleName)
+    rootmoduleName = self._rootType(scriptpath)#"RootMacroAnalysis"
+    module = ModuleDefinition(rootmoduleName)
     module.setDescription('Root Macro module definition')
-    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    body = 'from %s.%s import %s\n' %(self.importLocation,rootmoduleName,rootmoduleName)
     module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)                
     step = StepDefinition('RootMacro')
     step.addModule(module)
-    moduleInstance = step.createModuleInstance(moduleName,'RootMacro')
+    step.createModuleInstance(rootmoduleName,'RootMacro')
+    step.createModuleInstance('UserJobFinalization','RootMacro')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("script","","string","","",False,False,"Name of the source directory to use"))
