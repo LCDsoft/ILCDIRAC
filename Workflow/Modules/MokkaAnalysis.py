@@ -182,7 +182,7 @@ class MokkaAnalysis(ModuleBase):
 
       ####Setup MySQL instance
       
-      MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + self.GenPasswd(8);
+      MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + self.GenRandString(8);
       
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
       sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
@@ -345,5 +345,5 @@ class MokkaAnalysis(ModuleBase):
         self.stdError += message
     #############################################################################
 
-    def GenPasswd(self, length=8, chars=string.letters + string.digits):
+    def GenRandString(self, length=8, chars=string.letters + string.digits):
       return ''.join([choice(chars) for i in range(length)])
