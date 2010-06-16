@@ -177,6 +177,7 @@ class ILCJob(Job):
     step = StepDefinition('Mokka')
     step.addModule(module)
     step.addModule(userData)
+    step.createModuleInstance('MokkaAnalysis','Mokka')
     step.createModuleInstance('UserJobFinalization','Mokka')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("steeringFile","","string","","",False,False,"Name of the steering file"))
