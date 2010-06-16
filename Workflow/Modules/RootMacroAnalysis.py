@@ -165,4 +165,5 @@ class RootMacroAnalysis(ModuleBase):
     else:
       self.log.error("Application Log file not defined")
     if fd == 1:
-      self.stdError += message  
+      self.stdError += message
+
