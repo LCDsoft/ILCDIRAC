@@ -58,6 +58,8 @@ class SQLWrapper:
     self.maxPeekLines = 20      
   
   def makedirs(self):
+    """Method to create all necessary directories for MySQL
+    """
     #os.chdir(self.softDir)
 
     #"""create tmp dir and track it"""
@@ -82,6 +84,8 @@ class SQLWrapper:
 
     #os.chdir(self.initialDir)
   def getMokkaTMPDIR(self):
+    """ Get the location of the TMPDIR, where the socket is.
+    """
     #return os.path.join(self.initialDir,self.MokkaTMPDir)
     return os.path.join(self.MokkaTMPDir)
       
