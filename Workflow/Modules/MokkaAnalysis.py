@@ -346,4 +346,6 @@ class MokkaAnalysis(ModuleBase):
     #############################################################################
 
     def GenRandString(self, length=8, chars=string.letters + string.digits):
+      """Return random string of 8 chars
+      """
       return ''.join([choice(chars) for i in range(length)])
