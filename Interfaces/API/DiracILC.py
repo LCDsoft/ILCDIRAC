@@ -76,7 +76,7 @@ class DiracILC(Dirac):
     for jobID in sortList( jobs.keys() ):
       jobDict = jobs[jobID]
       if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
-        if ( jobDict.has_key( 'OutputData' ) and ( not int( jobDict['OutputData'] ) ) ) or ( not jobDict.has_key( 'OutputData' ) ):
+        if ( jobDict.has_key( 'UserOutputData' ) and ( not int( jobDict['UserOutputData'] ) ) ) or ( not jobDict.has_key( 'UserOutputData' ) ):
           params = self.parameters(int(jobID))
           if params['OK']:
             if params['Value'].has_key('UploadedOutputData'):
@@ -94,7 +94,7 @@ class DiracILC(Dirac):
       res = self._checkapp(sysconf,app,vers)
       if not res['OK']:
         return res
-    outputpathparam = job.workflow.findParameter("OutputPath")
+    outputpathparam = job.workflow.findParameter("UserOutputPath")
     if outputpathparam:
       outputpath = outputpathparam.getValue()
       res = self._checkoutputpath(outputpath)
