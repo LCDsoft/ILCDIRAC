@@ -211,7 +211,9 @@ class ModuleBase(object):
 
       if not candidateFiles.keys():
         return S_OK({}) #nothing to do
-
+    else:
+      #do not apply mask to files
+      candidateFiles = fileInfo
     #Sanity check all final candidate metadata keys are present (return S_ERROR if not)
     mandatoryKeys = ['type','workflowSE','lfn'] #filedict is used for requests
     for fileName,metadata in candidateFiles.items():
