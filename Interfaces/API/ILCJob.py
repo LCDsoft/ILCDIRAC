@@ -160,6 +160,9 @@ class ILCJob(Job):
         return self._reportError("No nbOfEvents specified and no mac file given, please specify either one",__name__,**kwargs )
 
     stepName = 'RunMokka'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('Mokka',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
 
     
     ##now define MokkaAnalysis
@@ -302,6 +305,9 @@ class ILCJob(Job):
 
 
     stepName = 'RunMarlin'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('Marlin',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
 
     
     ##now define MokkaAnalysis
@@ -451,6 +457,9 @@ class ILCJob(Job):
       self.addToInputSandbox.append(detectorModel)
       
     stepName = 'RunSLIC'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('SLIC',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
 
     
     ##now define MokkaAnalysis
@@ -580,6 +589,9 @@ class ILCJob(Job):
     
     self.StepCount +=1
     stepName = 'RunLCSIM'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('LCSIM',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
 
     
     ##now define LCSIMAnalysis
