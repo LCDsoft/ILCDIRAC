@@ -99,6 +99,12 @@ class DiracILC(Dirac):
       outputpath = outputpathparam.getValue()
       res = self._checkoutputpath(outputpath)
       return res
+    useroutputdata = job.workflow.findParameter("UserOutputData")
+    useroutputsandbox = job.addToOutputSandbox
+    if useroutputdata:
+      res = self._checkdataconsistency(useroutputdata, useroutputsandbox)
+      return res
+            
     return S_OK()
   
   def _checkapp(self,config,appName,appVersion):
@@ -116,5 +122,16 @@ class DiracILC(Dirac):
     if path[-1]=="/":
       self.log.error("Please strip trailing / from outputPath in setOutputData()")
       return S_ERROR("Invalid path")
+    return S_OK()
+  
+  def _checkdataconsistency(self,useroutputdata,useroutputsandbox):
+    for data in useroutputdata:
+      for item in useroutputsandbox:
+        if data==item:
+          self.log.error("Output data and sandbox should not contain the same things.")
+          return S_ERROR("Output data and sandbox should not contain the same things.")
+      if data.find("*")>-1:
+        self.log.error("Remove wildcard characters from output data definition: must be exact files")
+        return S_ERROR("Wildcard character in OutputData definition")
     return S_OK()
   
