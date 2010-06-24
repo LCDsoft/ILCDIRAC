@@ -69,12 +69,12 @@ def constructProductionLFNs(paramDict):
 
   #Get all LFN(s) to both output data and BK lists at this point (fine for BK)
   outputData = []
-  bkLFNs = []
+  #bkLFNs = []
   debugLFNs = []
   for fileTuple in fileTupleList:
     lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfConfigName,str(productionID).zfill(8))
     outputData.append(lfn)
-    bkLFNs.append(lfn)
+    #bkLFNs.append(lfn)
     if debugRoot:
       debugLFNs.append(_makeProductionLfn(str(jobID).zfill(8),debugRoot,fileTuple,wfConfigName,str(productionID).zfill(8)))
 
@@ -91,17 +91,17 @@ def constructProductionLFNs(paramDict):
   #Strip output data according to file mask
   if wfMask:
     newOutputData = []
-    newBKLFNs = []
+    #newBKLFNs = []
     for od in outputData:
       for i in wfMask:
         if re.search('.%s$' %i,od):
           if not od in newOutputData:
             newOutputData.append(od)
             
-    for bk in bkLFNs:
-      newBKLFNs.append(bk)
+    #for bk in bkLFNs:
+    #  newBKLFNs.append(bk)
     outputData = newOutputData
-    bkLFNs = newBKLFNs
+    #bkLFNs = newBKLFNs
 
   if not outputData:
     gLogger.info('No output data LFN(s) constructed')
@@ -109,11 +109,12 @@ def constructProductionLFNs(paramDict):
     gLogger.verbose('Created the following output data LFN(s):\n%s' %(string.join(outputData,'\n')))
   gLogger.verbose('Log file path is:\n%s' %logFilePath[0])
   gLogger.verbose('Log target path is:\n%s' %logTargetPath[0])
-  if bkLFNs:
-    gLogger.verbose('BookkeepingLFN(s) are:\n%s' %(string.join(bkLFNs,'\n')))
+  #if bkLFNs:
+  #  gLogger.verbose('BookkeepingLFN(s) are:\n%s' %(string.join(bkLFNs,'\n')))
   if debugLFNs:
     gLogger.verbose('DebugLFN(s) are:\n%s' %(string.join(debugLFNs,'\n')))
-  jobOutputs = {'ProductionOutputData':outputData,'LogFilePath':logFilePath,'LogTargetPath':logTargetPath,'BookkeepingLFNs':bkLFNs,'DebugLFNs':debugLFNs}
+  jobOutputs = {'ProductionOutputData':outputData,'LogFilePath':logFilePath,'LogTargetPath':logTargetPath,#'BookkeepingLFNs':bkLFNs,
+                'DebugLFNs':debugLFNs}
   return S_OK(jobOutputs)
 
 #############################################################################
@@ -236,31 +237,31 @@ def _getLFNRoot(lfn,namespace='',configVersion=0):
   """
   return the root path of a given lfn
 
-  eg : /lhcb/data/CCRC08/00009909 = getLFNRoot(/lhcb/data/CCRC08/00009909/DST/0000/00009909_00003456_2.dst)
-  eg : /lhcb/MC/<year>/  = getLFNRoot(None)
+  eg : /ilc/data/CCRC08/00009909 = getLFNRoot(/lhcb/data/CCRC08/00009909/DST/0000/00009909_00003456_2.dst)
+  eg : /ilc/prod/<year>/  = getLFNRoot(None)
   """
-  dataTypes = gConfig.getValue('/Operations/Bookkeeping/FileTypes',[])
-  gLogger.verbose('DataTypes retrieved from /Operations/Bookkeeping/FileTypes are:\n%s' %(string.join(dataTypes,', ')))
+  #dataTypes = gConfig.getValue('/Operations/Bookkeeping/FileTypes',[])
+  #gLogger.verbose('DataTypes retrieved from /Operations/Bookkeeping/FileTypes are:\n%s' %(string.join(dataTypes,', ')))
   LFN_ROOT=''  
   gLogger.verbose('wf lfn: %s, namespace: %s, configVersion: %s' %(lfn,namespace,configVersion))
   if not lfn:
-    LFN_ROOT = '/lhcb/%s/%s' %(namespace,configVersion)
+    LFN_ROOT = '/ilc/%s/%s' %(namespace,configVersion)
     gLogger.verbose('LFN_ROOT will be %s' %(LFN_ROOT))
     return LFN_ROOT
   
   lfn = [fname.replace(' ','').replace('LFN:','') for fname in lfn.split(';')]
   lfnroot = lfn[0].split('/')
   for part in lfnroot:
-    if not part in dataTypes:
-      LFN_ROOT+='/%s' %(part)  
-    else:
-      break
+  #  if not part in dataTypes:
+    LFN_ROOT+='/%s' %(part)  
+  #  else:
+  #    break
   
   if re.search('//',LFN_ROOT):
     LFN_ROOT = LFN_ROOT.replace('//','/')
        
   if namespace.lower() in ('test','debug'):
-    tmpLfnRoot = LFN_ROOT.split(os.path.sep)
+    tmpLfnRoot = LFN_ROOT.split("/")
     if len(tmpLfnRoot)>2:
       tmpLfnRoot[2] = namespace
     else:
