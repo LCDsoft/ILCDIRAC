@@ -44,18 +44,18 @@ class JobPathResolution:
       self.log.warn('No CS ConfigPath defined')
       return S_ERROR('JobPathResoulution Failure')
 
-    self.log.verbose('Attempting to resolve job path for LHCb')
+    self.log.verbose('Attempting to resolve job path for ILC')
     job = self.arguments['JobID']
     classadJob = self.arguments['ClassAd']
 
     inputData = classadJob.get_expression('InputData').replace('"','').replace('Unknown','')
     if inputData:
       self.log.info('Job %s has input data requirement' % (job))
-      ilcPath += 'InputData,'
+      ilcPath += 'InputData'
 
 
     if not ilcPath:
-      self.log.info('No LHCb specific optimizers to be added')
+      self.log.info('No ILC specific optimizers to be added')
 
     return S_OK(ilcPath)
 
