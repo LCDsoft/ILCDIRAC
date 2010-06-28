@@ -32,6 +32,8 @@ class LCSIMAnalysis(ModuleBase):
     self.sourcedir = ''
     self.xmlfile = ''
     self.inputSLCIO = ''
+    self.InputData = '' # from the (JDL WMS approach)
+
     self.aliasproperties = ''
     self.debug = False
     self.jobID = None
@@ -57,11 +59,19 @@ class LCSIMAnalysis(ModuleBase):
       self.xmlfile = self.step_commons['lcsimFile']
     if self.step_commons.has_key("inputSlcio"):
       self.inputSLCIO = self.step_commons["inputSlcio"]
+    if self.workflow_commons.has_key('InputData'):
+      self.InputData = self.workflow_commons['InputData']
+
     if self.step_commons.has_key("aliasproperties"):
       self.aliasproperties = self.step_commons["aliasproperties"]
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
-      
+    if len(self.inputSLCIO)==0 and not len(self.InputData)==0:
+      inputfiles = self.InputData.split(";")
+      for files in inputfiles:
+        if files.lower().find(".slcio")>-1:
+          self.inputSLCIO += files+";"
+      self.inputSLCIO = self.inputSLCIO.rstrip(";")      
     return S_OK('Parameters resolved')
 
   def execute(self):

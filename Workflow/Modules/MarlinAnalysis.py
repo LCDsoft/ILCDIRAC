@@ -33,6 +33,7 @@ class MarlinAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.inputSLCIO = ''
+    self.InputData = '' # from the (JDL WMS approach)
     self.inputXML=''
     self.inputGEAR =''
     self.applicationName = "Marlin"
@@ -62,6 +63,8 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('inputSlcio'):
       self.inputSLCIO =self.step_commons['inputSlcio']
+    if self.workflow_commons.has_key('InputData'):
+      self.InputData = self.workflow_commons['InputData']
       
     if self.step_commons.has_key('inputXML'):
       self.inputXML=self.step_commons['inputXML']
@@ -77,6 +80,13 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
+    if len(self.inputSlcio)==0 and not len(self.InputData)==0:
+      inputfiles = self.InputData.split(";")
+      for files in inputfiles:
+        if files.lower().find(".slcio")>-1:
+          self.inputSlcio += files+";"
+      self.inputSlcio = self.inputSlcio.rstrip(";")
+            
     return S_OK('Parameters resolved')
       
   def execute(self):
