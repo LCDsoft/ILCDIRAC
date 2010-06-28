@@ -14,6 +14,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,Shar
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
 
@@ -205,9 +206,11 @@ class MokkaAnalysis(ModuleBase):
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
       ###prepare steering file
-      #first, I need to take the stdhep file, stripped of its path (possible LFN)
+      #first, I need to take the stdhep file, find its path (possible LFN)
+      
       if len(self.stdhepFile)>0:
-        self.stdhepFile = os.path.basename(self.stdhepFile)
+        #self.stdhepFile = os.path.basename(self.stdhepFile)
+        self.stdhepFile = resolveIFpaths(self.stdhepFile)[0]
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
