@@ -12,6 +12,8 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
+
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
@@ -112,11 +114,16 @@ class LCSIMAnalysis(ModuleBase):
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
     
 
-    runonslcio = []
+    #runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
-    for inputfile in inputfilelist:
-      self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
-      runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
+    res = resolveIFpaths(inputfilelist)
+    if not res['OK']:
+      self.setApplicationStatus('LCSIM: missing slcio file')
+      return S_ERROR('Missing slcio file!')
+    runonslcio = res['Value']
+    #for inputfile in inputfilelist:
+    #  self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
+    #  runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
 
 
     ##Collect jar files to put in classspath

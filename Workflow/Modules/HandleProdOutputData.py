@@ -138,6 +138,7 @@ class HandleProdOutputData(ModuleBase):
                                     self.attributesdict['DetectorModel'],self.attributesdict['DataType'],self.attributesdict['EvtType'],
                                     self.attributesdict['ProdID'],file],"/")
         datatohandle[file]={'lfn':lfnpath,'type':'gen','workflowSE':self.destination}
+        
     result = self.getFileMetadata(datatohandle)
     if not result['OK']:
       self.setApplicationStatus(result['Message'])

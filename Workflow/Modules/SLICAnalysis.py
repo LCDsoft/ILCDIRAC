@@ -12,6 +12,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -166,7 +167,11 @@ class SLICAnalysis(ModuleBase):
     
     slicmac = 'slicmac.mac'
     if len(self.stdhepFile)>0:
-      self.stdhepFile = os.path.basename(self.stdhepFile)
+      res = resolveIFpaths([self.stdhepFile])
+      if not res['OK']:
+        self.log.error("Generator file not found")
+        return res
+      self.stdhepFile = res['Value'][0]
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
     macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.outputslcio,self.debug)
