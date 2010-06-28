@@ -17,6 +17,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 
@@ -119,20 +120,21 @@ class MarlinAnalysis(ModuleBase):
           else:
             os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
 
-    runonslcio = []
+    #runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
-    filemissing = False
-    for inputfile in inputfilelist:
-      if not os.path.exists(os.path.basename(inputfile)):
-        filemissing=True
-      runonslcio.append(os.path.basename(inputfile))
+    res = resolveIFpaths(inputfilelist)
+    if not res['OK']:
+      self.setApplicationStatus('Marlin: missing slcio file')
+      return S_ERROR('Missing slcio file!')
+    runonslcio = res['Value']
+    #for inputfile in inputfilelist:
+    #  if not os.path.exists(os.path.basename(inputfile)):
+    #    filemissing=True
+    #  runonslcio.append(os.path.basename(inputfile))
     #print "input file list ",inputfilelist
     #listofslcio = self.inputSLCIO.replace(";", " ")
     listofslcio = string.join(runonslcio," ")
     
-    if filemissing:
-      self.setApplicationStatus('Marlin: missing slcio file')
-      return S_ERROR('Missing slcio file!')
     
     #for inputfile in self.inputSLCIO:
     #  listofslcio += listofslcio+" "+inputfile
