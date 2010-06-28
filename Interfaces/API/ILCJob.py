@@ -152,8 +152,8 @@ class ILCJob(Job):
       else:
         return self._reportError('Specified DB slice %s does not exist'%dbslice,__name__,**kwargs)
 
-    if not inputGenfile and not macFile:
-      return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
+    #if not inputGenfile and not macFile:
+    #  return self._reportError('No generator file nor mac file specified, please check what you want to run',__name__,**kwargs)
 
     if not macFile:
       if not nbOfEvents:
