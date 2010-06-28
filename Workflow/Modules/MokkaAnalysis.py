@@ -54,8 +54,8 @@ class MokkaAnalysis(ModuleBase):
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 1
-        #self.inputData = '' # to be resolved
-        #self.InputData = '' # from the (JDL WMS approach)
+        self.inputData = '' # to be resolved
+        self.InputData = '' # from the (JDL WMS approach)
         self.outputFile = ''
         #self.generator_name=''
         #self.optionsLinePrev = ''
@@ -86,6 +86,7 @@ class MokkaAnalysis(ModuleBase):
 
       if self.step_commons.has_key('stdhepFile'):
         self.stdhepFile = self.step_commons['stdhepFile']
+      
       if self.step_commons.has_key('macFile'):
         self.macFile = self.step_commons['macFile']
 
@@ -105,15 +106,21 @@ class MokkaAnalysis(ModuleBase):
       #if self.step_commons.has_key('extraPackages'):
       #    self.extraPackages = self.step_commons['extraPackages']
 
-      #if self.workflow_commons.has_key('InputData'):
-      #    self.InputData = self.workflow_commons['InputData']
+      if self.workflow_commons.has_key('InputData'):
+          self.InputData = self.workflow_commons['InputData']
 
       #if self.step_commons.has_key('inputData'):
-      #    self.inputData = self.step_commons['inputData']
+      #  self.inputData = self.step_commons['inputData']
 
       if self.workflow_commons.has_key('JobType'):
-          self.jobType = self.workflow_commons['JobType']
-          
+        self.jobType = self.workflow_commons['JobType']
+      if len(self.stdhepFile)==0 and not len(self.InputData)==0:
+        inputfiles = self.InputData.split(";")
+        for files in inputfiles:
+          if files.lower().find(".stdhep")>-1 or files.lower().find(".hepevt")>-1:
+            self.stdhepFile = files
+            break
+        
       return S_OK('Parameters resolved')
     
     def execute(self):
