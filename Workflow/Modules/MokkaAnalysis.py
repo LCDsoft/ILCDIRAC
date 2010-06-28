@@ -210,7 +210,7 @@ class MokkaAnalysis(ModuleBase):
       
       if len(self.stdhepFile)>0:
         #self.stdhepFile = os.path.basename(self.stdhepFile)
-        self.stdhepFile = resolveIFpaths(self.stdhepFile)[0]
+        self.stdhepFile = resolveIFpaths([self.stdhepFile])[0]
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
