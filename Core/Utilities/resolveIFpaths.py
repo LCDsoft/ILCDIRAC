@@ -18,12 +18,12 @@ def resolveIFpaths(inputfiles):
   for f in listoffiles:
     filefound = False
     if os.path.exists(f):
-      listofpaths.append(f)
+      listofpaths.append(os.getcwd()+os.sep+f)
       filefound=True
     else:
       for dir in listofdirs:
         if os.path.exists(os.getcwd()+os.sep+dir+os.sep+f):
-          listofpaths.append(dir+os.sep+f)
+          listofpaths.append(os.getcwd()+os.sep+dir+os.sep+f)
           listofdirs.remove(dir)
           filefound = True
           break
