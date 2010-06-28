@@ -33,6 +33,8 @@ class SLICAnalysis(ModuleBase):
     self.applicationVersion=''
     self.startFrom = 0
     self.stdhepFile = ''
+    self.InputData = '' # from the (JDL WMS approach)
+    
     self.detectorModel = ''
     self.inmacFile = ''
     self.outputslcio = ''
@@ -60,6 +62,8 @@ class SLICAnalysis(ModuleBase):
 
     if self.step_commons.has_key('stdhepFile'):
       self.stdhepFile = self.step_commons['stdhepFile']
+    if self.workflow_commons.has_key('InputData'):
+      self.InputData = self.workflow_commons['InputData']
       
     if self.step_commons.has_key("inputmacFile"):
       self.inmacFile = self.step_commons['inputmacFile']
@@ -71,7 +75,14 @@ class SLICAnalysis(ModuleBase):
       self.outputslcio = self.step_commons['outputFile'] 
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
-    
+      
+    if len(self.stdhepFile)==0 and not len(self.InputData)==0:
+      inputfiles = self.InputData.split(";")
+      for files in inputfiles:
+        if files.lower().find(".stdhep")>-1 or files.lower().find(".hepevt")>-1:
+          self.stdhepFile = files
+          break
+          
     return S_OK('Parameters resolved')
   
   def unzip_file_into_dir(self,file, dir):
