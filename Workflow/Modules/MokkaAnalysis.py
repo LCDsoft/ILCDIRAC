@@ -210,7 +210,11 @@ class MokkaAnalysis(ModuleBase):
       
       if len(self.stdhepFile)>0:
         #self.stdhepFile = os.path.basename(self.stdhepFile)
-        self.stdhepFile = resolveIFpaths([self.stdhepFile])[0]
+        res = resolveIFpaths([self.stdhepFile])
+        if not res['OK']:
+          self.log.error("Generator file not found")
+          return res
+        self.stdhepFile = res['Value'][0]
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
