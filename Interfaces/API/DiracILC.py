@@ -102,7 +102,7 @@ class DiracILC(Dirac):
     useroutputdata = job.workflow.findParameter("UserOutputData")
     useroutputsandbox = job.addToOutputSandbox
     if useroutputdata:
-      res = self._checkdataconsistency(useroutputdata, useroutputsandbox)
+      res = self._checkdataconsistency(useroutputdata.getValue(), useroutputsandbox)
       return res
             
     return S_OK()
@@ -125,6 +125,7 @@ class DiracILC(Dirac):
     return S_OK()
   
   def _checkdataconsistency(self,useroutputdata,useroutputsandbox):
+    useroutputdata = useroutputdata.split(";")
     for data in useroutputdata:
       for item in useroutputsandbox:
         if data==item:
