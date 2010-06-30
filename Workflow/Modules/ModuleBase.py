@@ -181,11 +181,11 @@ class ModuleBase(object):
     """
     fileInfo = {}
     for outputFile in outputList:
-      if outputFile.has_key('outputDataType') and outputFile.has_key('outputDataSE') and outputFile.has_key('outputDataName'):
-        fname = outputFile['outputDataName']
+      if outputFile.has_key('outputFile') and outputFile.has_key('outputDataSE') and outputFile.has_key('outputPath'):
+        fname = outputFile['outputFile']
         fileSE = outputFile['outputDataSE']
-        fileType= outputFile['outputDataType']
-        fileInfo[fname] = {'type':fileType,'workflowSE':fileSE}
+        filePath= outputFile['outputPath']
+        fileInfo[fname] = {'path':filePath,'workflowSE':fileSE}
       else:
         self.log.error('Ignoring malformed output data specification',str(outputFile))
 
