@@ -201,8 +201,8 @@ class ModuleBase(object):
         return S_ERROR('Output Data Not Found')
 
     #Check the list of files against the output file mask (if it exists)
-    candidateFiles = {}
-    if fileMask:
+    #candidateFiles = {}
+    #if fileMask:
       ##nothing to do yet, as FileMask is not used
       #for fileName,metadata in fileInfo.items():
       #  if metadata['type'].lower() in fileMask or fileName.split('.')[-1] in fileMask:
@@ -212,10 +212,11 @@ class ModuleBase(object):
 
       #if not candidateFiles.keys():
       #  return S_OK({}) #nothing to do
-      pass
-    else:
+    #  candidateFiles = fileInfo
+    #else:
       #do not apply mask to files
-      candidateFiles = fileInfo
+      
+    candidateFiles = fileInfo
     #Sanity check all final candidate metadata keys are present (return S_ERROR if not)
     mandatoryKeys = ['path','workflowSE','lfn'] #filedict is used for requests
     for fileName,metadata in candidateFiles.items():
@@ -230,7 +231,7 @@ class ModuleBase(object):
     """Returns the candidate file dictionary with associated metadata.
     
     @param candidateFiles: The input candidate files dictionary has the structure:
-    {'lfn':'','type':'','workflowSE':''}
+    {'lfn':'','path':'','workflowSE':''}
        
     This also assumes the files are in the current working directory.
     @return: File Metadata

@@ -36,7 +36,7 @@ class UploadOutputData(ModuleBase):
     #List all parameters here
     self.inputData = []
     self.outputDataFileMask = ''
-    #self.outputMode='Any' #or 'Local' for reco case
+    self.outputMode='Any' #or 'Local' for reco case
     self.outputList = []
     self.request = None
     self.PRODUCTION_ID=None
@@ -78,8 +78,8 @@ class UploadOutputData(ModuleBase):
     if self.workflow_commons.has_key('outputList'):
       self.outputList = self.workflow_commons['outputList']
 
-    #if self.workflow_commons.has_key('outputMode'):
-    #  self.outputMode = self.workflow_commons['outputMode']
+    if self.workflow_commons.has_key('outputMode'):
+      self.outputMode = self.workflow_commons['outputMode']
 
     if self.workflow_commons.has_key('outputDataFileMask'):
         self.outputDataFileMask = self.workflow_commons['outputDataFileMask']
