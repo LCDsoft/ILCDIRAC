@@ -203,19 +203,21 @@ class ModuleBase(object):
     #Check the list of files against the output file mask (if it exists)
     candidateFiles = {}
     if fileMask:
-      for fileName,metadata in fileInfo.items():
-        if metadata['type'].lower() in fileMask or fileName.split('.')[-1] in fileMask:
-          candidateFiles[fileName]=metadata
-        else:
-          self.log.info('Output file %s was produced but will not be treated (outputDataFileMask is %s)' %(fileName,string.join(self.outputDataFileMask,', ')))
+      ##nothing to do yet, as FileMask is not used
+      #for fileName,metadata in fileInfo.items():
+      #  if metadata['type'].lower() in fileMask or fileName.split('.')[-1] in fileMask:
+      #    candidateFiles[fileName]=metadata
+      #  else:
+      #    self.log.info('Output file %s was produced but will not be treated (outputDataFileMask is %s)' %(fileName,string.join(self.outputDataFileMask,', ')))
 
-      if not candidateFiles.keys():
-        return S_OK({}) #nothing to do
+      #if not candidateFiles.keys():
+      #  return S_OK({}) #nothing to do
+      pass
     else:
       #do not apply mask to files
       candidateFiles = fileInfo
     #Sanity check all final candidate metadata keys are present (return S_ERROR if not)
-    mandatoryKeys = ['type','workflowSE','lfn'] #filedict is used for requests
+    mandatoryKeys = ['path','workflowSE','lfn'] #filedict is used for requests
     for fileName,metadata in candidateFiles.items():
       for key in mandatoryKeys:
         if not metadata.has_key(key):
