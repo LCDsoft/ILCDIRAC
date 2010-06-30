@@ -29,7 +29,8 @@ def constructProductionLFNs(paramDict):
 #  wfMode = paramDict['dataType']
   #wfLfnprefix=paramDict['lfnprefix']
   #wfLfnpostfix=paramDict['lfnpostfix']
-  wfMask = paramDict['outputDataFileMask']
+  wfMask = ""
+  # wfMask = paramDict['outputDataFileMask']
   if not type(wfMask)==type([]):
     wfMask = [i.lower().strip() for i in wfMask.split(';')]
   wfType=paramDict['JobType']
