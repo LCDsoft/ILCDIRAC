@@ -139,7 +139,7 @@ class UserJobFinalization(ModuleBase):
     #workflow and all the parameters needed to upload them.
     outputList = []
     for i in self.userOutputData:
-      outputList.append({'outputDataType':string.upper(string.split(i,'.')[-1]),'outputDataSE':self.userOutputSE,'outputDataName':os.path.basename(i)})
+      outputList.append({'outputPath':string.upper(string.split(i,'.')[-1]),'outputDataSE':self.userOutputSE,'outputFile':os.path.basename(i)})
 
     userOutputLFNs = []
     if self.userOutputData:
