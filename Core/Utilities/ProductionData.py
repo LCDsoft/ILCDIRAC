@@ -19,7 +19,7 @@ def constructProductionLFNs(paramDict):
       LFN construction is tidied.  This works using the workflow commons for
       on the fly construction.
   """
-  keys = ['PRODUCTION_ID','JOB_ID','dataType','JobType','outputList']
+  keys = ['PRODUCTION_ID','JOB_ID','JobType','outputList']
   for k in keys:
     if not paramDict.has_key(k):
       return S_ERROR('%s not defined' %k)
@@ -116,7 +116,7 @@ def constructProductionLFNs(paramDict):
   #  gLogger.verbose('BookkeepingLFN(s) are:\n%s' %(string.join(bkLFNs,'\n')))
   if debugLFNs:
     gLogger.verbose('DebugLFN(s) are:\n%s' %(string.join(debugLFNs,'\n')))
-  jobOutputs = {'ProductionOutputData':outputData,'LogFilePath':logFilePath,'LogTargetPath':logTargetPath,#'BookkeepingLFNs':bkLFNs,
+  jobOutputs = {'ProductionOutputData':outputData,'LogFilePath':logFilePath,'LogTargetPath':logTargetPath,
                 'DebugLFNs':debugLFNs}
   return S_OK(jobOutputs)
 
