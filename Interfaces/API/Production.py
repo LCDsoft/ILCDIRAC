@@ -94,7 +94,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 
   def addMokkaStep(self,appvers,steeringfile,detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
     self.StepCount +=1
-    mokkaStep = ModuleDefinition('MokkaStep')
+    mokkaStep = ModuleDefinition('MokkaAnalysis')
     mokkaStep.setDescription('Mokka step: simulation in ILD-like geometries context')
     body = string.replace(self.importLine,'<MODULE>','MokkaAnalysis')
     mokkaStep.setBody(body)
@@ -106,7 +106,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
      
     MokkaAppDefn = StepDefinition('Mokka_App_Step')
     MokkaAppDefn.addModule(mokkaStep)
-    MokkaAppDefn.createModuleInstance('MokkaStep', 'MokkaApp')
+    MokkaAppDefn.createModuleInstance('MokkaAnalysis', 'MokkaApp')
     MokkaAppDefn.addModule(createoutputlist)
     MokkaAppDefn.createModuleInstance('CreateOutputList','compOutputDataList')
     self._addParameter(MokkaAppDefn,'applicationVersion','string','','ApplicationVersion')
@@ -117,6 +117,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(MokkaAppDefn,"outputPath","string","","Output data path")
     self._addParameter(MokkaAppDefn,"outputFile","string","","output file name")
     self._addParameter(MokkaAppDefn,'listoutput',"list",[],"list of output file name")
+    self.workflow.addStep(MokkaAppDefn)
     mstep = self.workflow.createStepInstance('Mokka_App_Step','Mokka')
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('steeringFile',steeringfile)
