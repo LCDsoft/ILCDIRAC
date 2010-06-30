@@ -92,7 +92,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       self.log.debug('Setting parameter %s = %s' %(name,parameterValue))
       self._addParameter(self.workflow,name,parameterType,parameterValue,description)
 
-  def addMokkaStep(self,appvers,steeringfile,detectormodel,numberofevents,outputfile,outputpath,outputSE):
+  def addMokkaStep(self,appvers,steeringfile,detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
     self.StepCount +=1
     mokkaStep = ModuleDefinition('MokkaStep')
     mokkaStep.setDescription('Mokka step: simulation in ILD-like geometries context')
@@ -175,3 +175,96 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       apps = removeEmptyElements(apps)
       apps = string.join(apps,';')
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+  #############################################################################
+  def setFileMask(self,fileMask):
+    """Output data related parameters.
+    """
+    if type(fileMask)==type([]):
+      fileMask = string.join(fileMask,';')
+    self._setParameter('outputDataFileMask','string',fileMask,'outputDataFileMask')
+
+  #############################################################################
+  def setWorkflowName(self,name):
+    """Set workflow name.
+    """
+    self.workflow.setName(name)
+    self.name = name
+
+  #############################################################################
+  def setWorkflowDescription(self,desc):
+    """Set workflow name.
+    """
+    self.workflow.setDescription(desc)
+
+  #############################################################################
+  def setProdType(self,prodType):
+    """Set prod type.
+    """
+    if not prodType in self.prodTypes:
+      raise TypeError,'Prod must be one of %s' %(string.join(self.prodTypes,', '))
+    self.setType(prodType)
+
+  #############################################################################
+  def banTier1s(self):
+    """ Sets Tier1s as banned.
+    """
+    self.setBannedSites(self.tier1s)
+
+  #############################################################################
+  def setTargetSite(self,site):
+    """ Sets destination for all jobs.
+    """
+    self.setDestination(site)
+
+  #############################################################################
+  def setOutputMode(self,outputMode):
+    """ Sets output mode for all jobs, this can be 'Local' or 'Any'.
+    """
+    if not outputMode.lower().capitalize() in ('Local','Any'):
+      raise TypeError,'Output mode must be Local or Any'
+    self._setParameter('outputMode','string',outputMode.lower().capitalize(),'SEResolutionPolicy')
+  #############################################################################
+  def setProdPriority(self,priority):
+    """ Sets destination for all jobs.
+    """
+    self._setParameter('Priority','JDL',str(priority),'UserPriority')
+
+  #############################################################################
+  def setProdGroup(self,group):
+    """ Sets a user defined tag for the production as appears on the monitoring page
+    """
+    self.prodGroup = group
+
+  #############################################################################
+  def setProdPlugin(self,plugin):
+    """ Sets the plugin to be used to creating the production jobs
+    """
+    self.plugin = plugin
+
+  #############################################################################
+  def setInputFileMask(self,fileMask):
+    """ Sets the input data selection when using file mask.
+    """
+    self.inputFileMask = fileMask
+
+  #############################################################################
+  #############################################################################
+  def setJobFileGroupSize(self,files):
+    """ Sets the number of files to be input to each job created.
+    """
+    self.jobFileGroupSize = files
+
+  #############################################################################
+  #############################################################################
+  def setWorkflowString(self, wfString):
+    """ Uses the supplied string to create the workflow
+    """
+    self.workflow = fromXMLString(wfString)
+    self.name = self.workflow.getName()
+
+  #############################################################################
+  def disableCPUCheck(self):
+    """ Uses the supplied string to create the workflow
+    """
+    self._setParameter('DisableCPUCheck','JDL','True','DisableWatchdogCPUCheck')
+  
