@@ -99,7 +99,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','MokkaAnalysis')
     mokkaStep.setBody(body)
     
-    createoutputlist = ModuleDefinition('CreateOutputList')
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
     createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
     body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
     createoutputlist.setBody(body)
@@ -108,7 +108,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     MokkaAppDefn.addModule(mokkaStep)
     MokkaAppDefn.createModuleInstance('MokkaAnalysis', 'MokkaApp')
     MokkaAppDefn.addModule(createoutputlist)
-    MokkaAppDefn.createModuleInstance('CreateOutputList','compOutputDataList')
+    MokkaAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
     self._addParameter(MokkaAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(MokkaAppDefn,"steeringFile","string","","Name of the steering file")
     self._addParameter(MokkaAppDefn,"detectorModel","string","",'Detector Model')
@@ -123,7 +123,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('steeringFile',steeringfile)
     mstep.setValue("detectorModel",detectormodel)
     mstep.setValue("numberOfEvents",numberofevents)
-    mstep.setValue('applicationLog', '@{applicationName}_@{STEP_ID}.log')
+    mstep.setValue('applicationLog', 'Mokka_@{STEP_ID}.log')
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     outputList=[]
