@@ -6,7 +6,7 @@ Created on Jun 30, 2010
 __RCSID__ = "$Id: ComputeOutputDataList sposs"
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
-from Dirac import gLogger, S_OK
+from DIRAC import gLogger, S_OK
 
 class ComputeOutputDataList(ModuleBase):
   def __init__(self):
