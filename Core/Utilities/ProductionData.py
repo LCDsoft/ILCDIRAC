@@ -52,7 +52,7 @@ def constructProductionLFNs(paramDict):
     #  fileName[index]=str(productionID).zfill(8)
     #if not fileName[index+1]==str(jobID).zfill(8):
     #  fileName[index+1]=str(jobID).zfill(8)
-    fileTupleList.append(info['outputPath'],fileName)
+    fileTupleList.append((info['outputPath'],fileName))
 
   lfnRoot = ''
   debugRoot = ''
