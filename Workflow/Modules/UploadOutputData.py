@@ -173,7 +173,7 @@ class UploadOutputData(ModuleBase):
     if not self.failoverTest:
       for fileName,metadata in final.items():
         self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, string.join(metadata['resolvedSE'],', ')))
-        result = failoverTransfer.transferAndRegisterFile(fileName,metadata['localpath'],metadata['lfn'],metadata['resolvedSE'],fileGUID=metadata['guid'],fileCatalog='LcgFileCatalogCombined')
+        result = failoverTransfer.transferAndRegisterFile(fileName,metadata['localpath'],metadata['lfn'],metadata['resolvedSE'],fileGUID=metadata['guid'],fileCatalog='FileCatalog')
         if not result['OK']:
           self.log.error('Could not transfer and register %s with metadata:\n %s' %(fileName,metadata))
           failover[fileName]=metadata
