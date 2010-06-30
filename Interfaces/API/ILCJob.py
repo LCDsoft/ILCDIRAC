@@ -350,8 +350,8 @@ class ILCJob(Job):
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
     else:
-      if self.ioDict.has_key(self.StepCount-1):
-        stepInstance.setLink('EvtsToProcess',self.ioDict[self.StepCount-1],'numberOfEvents')
+      if self.ioDict.has_key("MokkaStep"):
+        stepInstance.setLink('EvtsToProcess',self.ioDict["MokkaStep"],'numberOfEvents')
       else :
         stepInstance.setValue("EvtsToProcess",-1)
     stepInstance.setValue("debug",debug)
