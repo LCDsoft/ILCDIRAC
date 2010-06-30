@@ -99,9 +99,16 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','MokkaAnalysis')
     mokkaStep.setBody(body)
     
+    createoutputlist = ModuleDefinition('CreateOutputList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    createoutputlist.setBody(body)
+     
     MokkaAppDefn = StepDefinition('Mokka_App_Step')
     MokkaAppDefn.addModule(mokkaStep)
     MokkaAppDefn.createModuleInstance('MokkaStep', 'MokkaApp')
+    MokkaAppDefn.addModule(createoutputlist)
+    MokkaAppDefn.createModuleInstance('CreateOutputList','compOutputDataList')
     self._addParameter(MokkaAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(MokkaAppDefn,"steeringFile","string","","Name of the steering file")
     self._addParameter(MokkaAppDefn,"detectorModel","string","",'Detector Model')
@@ -133,6 +140,25 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return
 
   def addLCSIMStep(self):
+    return
+  
+  def addFinalizationStep(self,uploadData=False):
+    dataUpload = ModuleDefinition('UploadOutputData')
+    dataUpload.setDescription('Uploads the output data')
+    self._addParameter(dataUpload,'Enable','bool','True','EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
+    dataUpload.setBody(body)
+
+
+    finalization = StepDefinition('Job_Finalization')
+    dataUpload.setLink('Enable','self','UploadEnable')
+    finalization.addModule(dataUpload)
+    finalization.createModuleInstance('UploadOutputData','dataUpload')
+    self._addParameter(finalization,'UploadEnable','bool',str(uploadData),'EnableFlag')
+    self.workflow.addStep(finalization)
+    finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
+    finalizeStep.setValue('UploadEnable',uploadData)
+
     return
   #############################################################################
   def __addSoftwarePackages(self,nameVersion):
