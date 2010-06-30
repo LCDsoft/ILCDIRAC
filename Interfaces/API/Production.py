@@ -61,7 +61,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.setCPUTime('600000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
-    self.setFileMask('dummy')
+    self.setFileMask('')
 
     #version control
     self._setParameter('productionVersion','string',self.prodVersion,'ProdAPIVersion')
@@ -146,7 +146,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
   def addFinalizationStep(self,uploadData=False):
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
-    self._addParameter(dataUpload,'Enable','bool','True','EnableFlag')
+    self._addParameter(dataUpload,'Enable','bool','False','EnableFlag')
     body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
     dataUpload.setBody(body)
 
@@ -156,6 +156,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalization.addModule(dataUpload)
     finalization.createModuleInstance('UploadOutputData','dataUpload')
     self._addParameter(finalization,'UploadEnable','bool',str(uploadData),'EnableFlag')
+    
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
     finalizeStep.setValue('UploadEnable',uploadData)
