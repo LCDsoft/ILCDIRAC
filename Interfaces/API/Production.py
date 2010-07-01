@@ -9,9 +9,9 @@ from DIRAC.Core.Workflow.Workflow                     import *
 from ILCDIRAC.Interfaces.API.DiracILC                       import DiracILC
 from DIRAC.Core.Utilities.List                        import removeEmptyElements
 
-from ILCDIRAC.Interfaces.API.ILCJob                           import *
+from ILCDIRAC.Interfaces.API.ILCJob                           import ILCJob
 from DIRAC                                          import gConfig, gLogger, S_OK, S_ERROR
-import string
+import string, shutil
 
  
 class Production(ILCJob): 
@@ -134,14 +134,135 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["MokkaStep"]=mstep.getName()
     return S_OK()
   
-  def addMarlinStep(self):
-    return
+  def addMarlinStep(self,appVers,inputXML="",inputGEAR=None,inputslcio=None,outputfile="",outputpath="",outputSE=""):
+    inputslcioStr =''
+    if(inputslcio):
+      if type(inputslcio) in types.StringTypes:
+        inputslcio = [inputslcio]
+      #for i in xrange(len(inputslcio)):
+      #  inputslcio[i] = inputslcio[i].replace('LFN:','')
+      #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+      inputslcioStr = string.join(inputslcio,';')    
+    if not inputGEAR:
+      if self.ioDict.has_key("MokkaStep"):
+        inputGEAR="GearOutput.xml"
+      else:
+        return self._reportError('As Mokka do not run before, you need to specify gearfile')
+    
+    self.StepCount +=1
+    marlinStep = ModuleDefinition('MarlinAnalysis')
+    marlinStep.setDescription('Marlin step: reconstruction in ILD like detectors')
+    body = string.replace(self.importLine,'<MODULE>','MarlinAnalysis')
+    marlinStep.setBody(body)
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    createoutputlist.setBody(body)
+     
+    MarlinAppDefn = StepDefinition('Marlin_App_Step')
+    MarlinAppDefn.addModule(marlinStep)
+    MarlinAppDefn.createModuleInstance('MarlinAnalysis', 'MarlinApp')
+    MarlinAppDefn.addModule(createoutputlist)
+    MarlinAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    self._addParameter(MarlinAppDefn,'applicationVersion','string','','ApplicationVersion')
+    self._addParameter(MarlinAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(MarlinAppDefn,"inputXML","string","","Name of the input XML file")
+    self._addParameter(MarlinAppDefn,"inputGEAR","string","","Name of the input GEAR file")
+    self._addParameter(MarlinAppDefn,"inputSlcio","string","","List of input SLCIO files")
+    self._addParameter(MarlinAppDefn,"outputPath","string","","Output data path")
+    self._addParameter(MarlinAppDefn,"outputFile","string","","output file name")
+    self._addParameter(MarlinAppDefn,'listoutput',"list",[],"list of output file name")    
+    self.workflow.addStep(MarlinAppDefn)
+    mstep = self.workflow.createStepInstance('Marlin_App_Step','Marlin')
+    mstep.setValue('applicationVersion',appVers)    
+    mstep.setValue('applicationLog', 'Marlin_@{STEP_ID}.log')
+    if(inputslcioStr):
+      mstep.setValue("inputSlcio",inputslcioStr)
+    else:
+      if not self.ioDict.has_key("MokkaStep"):
+        raise TypeError,'Expected previously defined Mokka step for input data'
+      mstep.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+    mstep.setValue("inputXML",inputXML)
+    mstep.setValue("inputGEAR",inputGEAR)
+    mstep.setValue("outputFile",outputfile)
+    mstep.setValue("outputPath",outputpath)
+    outputList=[]
+    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
+    mstep.setValue('listoutput',(outputList))
 
-  def addSLICStep(self):
-    return
+    self.__addSoftwarePackages('marlin.%s' %(appVers))
+    self.ioDict["MarlinStep"]=mstep.getName()
+    return S_OK()
 
-  def addLCSIMStep(self):
-    return
+  def addSLICStep(self,appVers,outputfile="",outputpath="",outputSE=""):
+    self.StepCount +=1
+    slicStep = ModuleDefinition('SLICAnalysis')
+    slicStep.setDescription('SLIC step: simulation in SiD like detectors')
+    body = string.replace(self.importLine,'<MODULE>','SLICAnalysis')
+    slicStep.setBody(body)
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    createoutputlist.setBody(body)
+     
+    slicAppDefn = StepDefinition('SLIC_App_Step')
+    slicAppDefn.addModule(slicStep)
+    slicAppDefn.createModuleInstance('SLICAnalysis', 'SLICApp')
+    slicAppDefn.addModule(createoutputlist)
+    slicAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    self._addParameter(slicAppDefn,'applicationVersion','string','','ApplicationVersion')
+    self._addParameter(slicAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(slicAppDefn,"outputPath","string","","Output data path")
+    self._addParameter(slicAppDefn,"outputFile","string","","output file name")
+    self._addParameter(slicAppDefn,'listoutput',"list",[],"list of output file name")    
+    self.workflow.addStep(slicAppDefn)
+    mstep = self.workflow.createStepInstance('SLIC_App_Step','SLIC')
+    mstep.setValue('applicationVersion',appVers)    
+    mstep.setValue('applicationLog', 'Slic_@{STEP_ID}.log')
+    mstep.setValue("outputFile",outputfile)
+    mstep.setValue("outputPath",outputpath)
+    outputList=[]
+    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
+    mstep.setValue('listoutput',(outputList))
+
+    self.__addSoftwarePackages('slic.%s' %(appVers))
+    self.ioDict["SLICStep"]=mstep.getName()
+    return S_OK()
+
+  def addLCSIMStep(self,appVers,outputfile="",outputpath="",outputSE=""):
+    self.StepCount +=1
+    LCSIMStep = ModuleDefinition('LCSIMAnalysis')
+    LCSIMStep.setDescription('LCSIM step: reconstruction in SiD like detectors')
+    body = string.replace(self.importLine,'<MODULE>','LCSIMAnalysis')
+    LCSIMStep.setBody(body)
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    createoutputlist.setBody(body)
+     
+    LCSIMAppDefn = StepDefinition('LCSIM_App_Step')
+    LCSIMAppDefn.addModule(LCSIMStep)
+    LCSIMAppDefn.createModuleInstance('LCSIMAnalysis', 'LCSIMApp')
+    LCSIMAppDefn.addModule(createoutputlist)
+    LCSIMAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    self._addParameter(LCSIMAppDefn,'applicationVersion','string','','ApplicationVersion')
+    self._addParameter(LCSIMAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(LCSIMAppDefn,"outputPath","string","","Output data path")
+    self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
+    self._addParameter(LCSIMAppDefn,'listoutput',"list",[],"list of output file name")    
+    self.workflow.addStep(LCSIMAppDefn)
+    mstep = self.workflow.createStepInstance('LCSIM_App_Step','LCSIM')
+    mstep.setValue('applicationVersion',appVers)    
+    mstep.setValue('applicationLog', 'LCSIM_@{STEP_ID}.log')
+    mstep.setValue("outputFile",outputfile)
+    mstep.setValue("outputPath",outputpath)
+    outputList=[]
+    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
+    mstep.setValue('listoutput',(outputList))
+
+    self.__addSoftwarePackages('lcsim.%s' %(appVers))
+    self.ioDict["LCSIMStep"]=mstep.getName()
+    return S_OK()
   
   def addFinalizationStep(self,uploadData=False):
     dataUpload = ModuleDefinition('UploadOutputData')
@@ -177,6 +298,26 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       apps = removeEmptyElements(apps)
       apps = string.join(apps,';')
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+  #############################################################################
+  def createWorkflow(self):
+    """ Create XML for local testing.
+    """
+    name = '%s.xml' % self.name
+    if os.path.exists(name):
+      shutil.move(name,'%s.backup' %name)
+    self.workflow.toXMLFile(name)
+  #############################################################################
+  def runLocal(self):
+    """ Create XML workflow for local testing then reformulate as a job and run locally.
+    """
+    name = '%s.xml' % self.name
+    if os.path.exists(name):
+      shutil.move(name,'%s.backup' %name)
+    self.workflow.toXMLFile(name)
+    j = ILCJob(name)
+    d = DiracILC()
+    return d.submit(j,mode='local')
+
   #############################################################################
   def setFileMask(self,fileMask):
     """Output data related parameters.
