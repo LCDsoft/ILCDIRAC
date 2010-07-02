@@ -88,12 +88,12 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
-    if len(self.inputSlcio)==0 and not len(self.InputData)==0:
+    if len(self.inputSLCIO)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
           self.inputSlcio += files+";"
-      self.inputSlcio = self.inputSlcio.rstrip(";")
+      self.inputSLCIO = self.inputSLCIO.rstrip(";")
             
     return S_OK('Parameters resolved')
       
