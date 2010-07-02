@@ -83,7 +83,7 @@ class MarlinAnalysis(ModuleBase):
     if self.step_commons.has_key('outputREC'):
       self.outputREC = self.step_commons['outputREC']
     if self.step_commons.has_key('outputDST'):
-      self.outputREC = self.step_commons['outputDST']
+      self.outputDST = self.step_commons['outputDST']
       
       
     if self.step_commons.has_key('debug'):

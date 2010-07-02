@@ -133,15 +133,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
     globparams.append(lciolist)
-  #outxml = file(finalxml,'w')
-  #inputxml = file(inputXML,"r")
-  #for line in inputxml:
-    #if line.find("<!--")<0:
-  #  if line.find("LCIOInputFiles")<0:
-  #    outxml.write(line)
-  #  else:
-  #    outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>\n'%inputSLCIO)
-  #outxml.close()
+
   params = tree.findall('processor')
   for param in params:
     if param.attrib.has_key('name'):
