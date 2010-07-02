@@ -19,7 +19,7 @@ class Production(ILCJob):
   def __init__(self,script=None):
     """Instantiates the Workflow object and some default parameters.
     """
-    Job.__init__(self,script) 
+    ILCJob.__init__(self,script) 
     self.prodVersion=__RCSID__
     self.csSection = '/Production/Defaults'
     self.StepCount = 0
