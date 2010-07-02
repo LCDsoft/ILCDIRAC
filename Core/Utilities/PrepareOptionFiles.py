@@ -85,7 +85,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   output.close()
   return True
 
-def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
+def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC,outputDST,debug):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
@@ -98,6 +98,10 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   @type inputSLCIO: list of strings
   @param numberofevts: number of events to process
   @type numberofevts: int
+  @param outputREC: file name of REC
+  @type outputREC: string
+  @param outputDST: file name of DST
+  @type outputDST: string
   @param debug: set to True to use given mode, otherwise set verbosity to SILENT
   @type debug: bool
   @return: True
@@ -138,6 +142,25 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,debug):
   #  else:
   #    outxml.write('<parameter name="LCIOInputFiles"> %s </parameter>\n'%inputSLCIO)
   #outxml.close()
+  params = tree.findall('processor')
+  for param in params:
+    if param.attrib.has_key('name'):
+      if len(outputREC)>0:
+        if param.attrib['name']=='MyLCIOOutputProcessor':
+          subparams = param.findall('parameter')
+          for subparam in subparams:
+            if subparam.attrib.has_key('name'):
+              if subparam.attrib['name']=='LCIOOutputFile':
+                subparam.text = outputREC
+      if len(outputDST)>0:
+        if param.attrib['name']=='DSTOutput':
+          subparams = param.findall('parameter')
+          for subparam in subparams:
+            if subparam.attrib.has_key('name'):
+              if subparam.attrib['name']=='LCIOOutputFile':
+                subparam.text = outputDST
+
+  
   tree.write(finalxml)
   return True
 
