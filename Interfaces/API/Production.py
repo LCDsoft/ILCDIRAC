@@ -134,7 +134,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["MokkaStep"]=mstep.getName()
     return S_OK()
   
-  def addMarlinStep(self,appVers,inputXML="",inputGEAR=None,inputslcio=None,outputfile="",outputpath="",outputSE=""):
+  def addMarlinStep(self,appVers,inputXML="",inputGEAR=None,inputslcio=None,outputRECfile="",outputRECpath="",outputDSTfile="",outputDSTpath="",outputSE=""):
     inputslcioStr =''
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
@@ -169,8 +169,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(MarlinAppDefn,"inputXML","string","","Name of the input XML file")
     self._addParameter(MarlinAppDefn,"inputGEAR","string","","Name of the input GEAR file")
     self._addParameter(MarlinAppDefn,"inputSlcio","string","","List of input SLCIO files")
-    self._addParameter(MarlinAppDefn,"outputPath","string","","Output data path")
-    self._addParameter(MarlinAppDefn,"outputFile","string","","output file name")
+    self._addParameter(MarlinAppDefn,"outputPathREC","string","","Output data path of REC")
+    self._addParameter(MarlinAppDefn,"outputREC","string","","output file name of REC")
+    self._addParameter(MarlinAppDefn,"outputPathDST","string","","Output data path of DST")
+    self._addParameter(MarlinAppDefn,"outputDST","string","","output file name of DST")
     self._addParameter(MarlinAppDefn,'listoutput',"list",[],"list of output file name")    
     self.workflow.addStep(MarlinAppDefn)
     mstep = self.workflow.createStepInstance('Marlin_App_Step','Marlin')
@@ -184,10 +186,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       mstep.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
     mstep.setValue("inputXML",inputXML)
     mstep.setValue("inputGEAR",inputGEAR)
-    mstep.setValue("outputFile",outputfile)
-    mstep.setValue("outputPath",outputpath)
+    mstep.setValue("outputREC",outputRECfile)
+    mstep.setValue("outputPathREC",outputRECpath)
+    mstep.setValue("outputDST",outputDSTfile)
+    mstep.setValue("outputPathDST",outputDSTpath)
     outputList=[]
-    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
+    outputList.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":outputSE})
+    outputList.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":outputSE})
     mstep.setValue('listoutput',(outputList))
 
     self.__addSoftwarePackages('marlin.%s' %(appVers))
