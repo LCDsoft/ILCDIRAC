@@ -36,6 +36,8 @@ class MarlinAnalysis(ModuleBase):
     self.InputData = '' # from the (JDL WMS approach)
     self.inputXML=''
     self.inputGEAR =''
+    self.outputREC = ''
+    self.outputDST = ''
     self.applicationName = "Marlin"
     self.jobID = None
     if os.environ.has_key('JOBID'):
@@ -77,6 +79,12 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('EvtsToProcess'):
       self.evtstoprocess = str(self.step_commons['EvtsToProcess'])
+      
+    if self.step_commons.has_key('outputREC'):
+      self.outputREC = self.step_commons['outputREC']
+    if self.step_commons.has_key('outputDST'):
+      self.outputREC = self.step_commons['outputDST']
+      
       
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
@@ -153,7 +161,7 @@ class MarlinAnalysis(ModuleBase):
     finalXML = "marlinxml.xml"
     self.inputGEAR = os.path.basename(self.inputGEAR)
     self.inputXML = os.path.basename(self.inputXML)
-    res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.debug)
+    res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
     if not res:
       self.log.error('Something went wrong with XML generation')
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
