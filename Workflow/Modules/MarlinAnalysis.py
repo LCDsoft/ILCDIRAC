@@ -9,7 +9,7 @@ Define the Marlin analysis part of the workflow
 
 @author: Stephane Poss and Przemyslaw Majewski
 '''
-import os,sys,re,string
+import os,sys,re,string, shutil
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
@@ -152,6 +152,15 @@ class MarlinAnalysis(ModuleBase):
     #print "input file list ",inputfilelist
     #listofslcio = self.inputSLCIO.replace(";", " ")
     listofslcio = string.join(runonslcio," ")
+
+    ##Handle PandoraSettings.xml
+    pandorasettings = 'PandoraSettings.xml'
+    if not os.path.exists(pandorasettings):
+      if os.path.exists(os.path.join(mySoftwareRoot,marlinDir,'Settings',pandorasettings)):
+        try:
+          shutil.copy(os.path.join(mySoftwareRoot,marlinDir,'Settings',pandorasettings),os.path.join(os.getcwd(),pandorasettings))
+        except Exception,x:
+          self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
     
     
     #for inputfile in self.inputSLCIO:
