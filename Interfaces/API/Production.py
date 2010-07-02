@@ -58,7 +58,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     """
     self.setType('MCSimulation')
     self.setSystemConfig(self.systemConfig)
-    self.setCPUTime('600000')
+    self.setCPUTime('300000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
     self.setFileMask('')
