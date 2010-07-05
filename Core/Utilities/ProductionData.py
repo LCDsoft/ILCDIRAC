@@ -86,7 +86,9 @@ def constructProductionLFNs(paramDict):
 
   #Get log file path - unique for all modules
   #logPath = _makeProductionPath(str(jobID).zfill(8),lfnRoot,'LOG',wfLfnprefix,str(productionID).zfill(8),log=True)
-  logPath = fileTuple[0]+"/LOG/"+str(productionID).zfill(8)
+  logPathtemp = fileTuple[0].split("/")
+  logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
+  logPath = logPathroot+"/LOG/"+str(productionID).zfill(8)
   logFilePath = ['%s/%s' %(logPath,str(jobID).zfill(8))]
   logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(jobID).zfill(8))]
   #[ aside, why does makeProductionPath not append the jobID itself ????
