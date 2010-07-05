@@ -125,31 +125,19 @@ def constructProductionLFNs(paramDict):
 def getLogPath(paramDict):
   """ Can construct log file paths even if job fails e.g. no output files available.
   """
-  keys = ['PRODUCTION_ID','JOB_ID','dataType','configVersion','JobType']
+  keys = ['PRODUCTION_ID','JOB_ID','LogFilePath']
   for k in keys:
     if not paramDict.has_key(k):
       return S_ERROR('%s not defined' %k)
 
   productionID = paramDict['PRODUCTION_ID']
   jobID = paramDict['JOB_ID']
-  wfConfigName = paramDict['dataType']
-  wfConfigVersion=paramDict['configVersion']
-  wfType=paramDict['JobType']
-  inputData=''
-  if paramDict.has_key('InputData'):
-    inputData=paramDict['InputData']
-
-  gLogger.verbose('wfConfigName = %s, wfConfigVersion = %s, wfType=%s' %(wfConfigName,wfConfigVersion,wfType))
-  lfnRoot = ''
-  if inputData:
-    lfnRoot = _getLFNRoot(inputData,wfType)
-  else:
-    lfnRoot = _getLFNRoot('',wfConfigName,wfConfigVersion)
-
-  #Get log file path - unique for all modules
-  logPath = _makeProductionPath(str(jobID).zfill(8),lfnRoot,'LOG',wfConfigName,str(productionID).zfill(8),log=True)
-  logFilePath = ['%s/%s' %(logPath,str(jobID).zfill(8))]
+  #need to built logPath from logFilePath, as it's not there, and must be as in method above
+  logPathtemp = paramDict['LogFilePath'].split("/")
+  logPath = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
+  logFilePath = paramDict['LogFilePath']
   logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(jobID).zfill(8))]
+  #Get log file path - unique for all modules
 
   gLogger.verbose('Log file path is:\n%s' %logFilePath)
   gLogger.verbose('Log target path is:\n%s' %logTargetPath)
