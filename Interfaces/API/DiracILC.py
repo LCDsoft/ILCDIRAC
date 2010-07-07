@@ -86,24 +86,28 @@ class DiracILC(Dirac):
   
   def _do_check(self,job):  
     sysconf = job.systemConfig
-    apps = job.workflow.findParameter("SoftwarePackages").getValue()
-    for appver in apps.split(";"):
-      app = appver.split(".")[0].lower()#first element
-      vers = appver.split(".")[1:]#all the others
-      vers = string.join(vers,".")
-      res = self._checkapp(sysconf,app,vers)
-      if not res['OK']:
-        return res
+    apps = job.workflow.findParameter("SoftwarePackages")
+    if apps:
+      apps = apps.getValue()
+      for appver in apps.split(";"):
+        app = appver.split(".")[0].lower()#first element
+        vers = appver.split(".")[1:]#all the others
+        vers = string.join(vers,".")
+        res = self._checkapp(sysconf,app,vers)
+        if not res['OK']:
+          return res
     outputpathparam = job.workflow.findParameter("UserOutputPath")
     if outputpathparam:
       outputpath = outputpathparam.getValue()
       res = self._checkoutputpath(outputpath)
-      return res
+      if not res['OK']:
+        return res
     useroutputdata = job.workflow.findParameter("UserOutputData")
     useroutputsandbox = job.addToOutputSandbox
     if useroutputdata:
       res = self._checkdataconsistency(useroutputdata.getValue(), useroutputsandbox)
-      return res
+      if not res['OK']: 
+        return res
             
     return S_OK()
   
