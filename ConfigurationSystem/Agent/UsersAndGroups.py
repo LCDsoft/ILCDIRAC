@@ -12,7 +12,7 @@ from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.Core.Security.VOMSService                 import VOMSService
 from DIRAC.Core.Security                             import Locations, X509Chain
 from DIRAC.Core.Utilities                            import List, Subprocess
-from DIRAC                                           import S_OK, S_ERROR, gConfig, Source
+from DIRAC                                           import S_OK, S_ERROR, gConfig
 
 class UsersAndGroups( AgentModule ):
 
@@ -20,7 +20,6 @@ class UsersAndGroups( AgentModule ):
     self.am_setOption( "PollingTime", 3600 * 6 ) # Every 6 hours
     self.vomsSrv = VOMSService()
     self.proxyLocation = os.path.join( self.am_getOption( "WorkDirectory" ), ".volatileId" )
-    print self.getLFCRegisteredDNs()
     return S_OK()
   
 #  def __generateProxy( self ):
