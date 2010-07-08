@@ -82,8 +82,8 @@ if appName.lower() in av_apps['Value']:
     if result['OK']:
       modifiedCS = True
       tarballurl = gConfig.getOption("%s/%s/%s/TarBallURL"%(softwareSection,platform,appName.lower()),"")
-      if len(tarballurl)>0:
-        res = upload(tarballurl,appTar)
+      if len(tarballurl['Value'])>0:
+        res = upload(tarballurl['Value'],appTar)
         if not res['OK']:
           print "Upload to %s failed"%tarballurl
           DIRAC.exit(255)
@@ -92,8 +92,8 @@ else:
   if result['OK']:  
     modifiedCS = True
     tarballurl = gConfig.getOption("%s/%s/%s/TarBallURL"%(softwareSection,platform,appName.lower()),"")
-    if len(tarballurl)>0:
-      res = upload(tarballurl,appTar)
+    if len(tarballurl['Value'])>0:
+      res = upload(tarballurl['Value'],appTar)
       if not res['OK']:
         print "Upload to %s failed"%tarballurl
         DIRAC.exit(255)
