@@ -130,7 +130,7 @@ def SharedArea():
   """
   sharedArea = ''
   if os.environ.has_key('VO_ILC_SW_DIR'):
-    sharedArea = os.path.join(os.environ['VO_ILC_SW_DIR'],'lcd')
+    sharedArea = os.environ['VO_ILC_SW_DIR']
     DIRAC.gLogger.debug( 'Using VO_ILC_SW_DIR at "%s"' % sharedArea )
     if os.environ['VO_ILC_SW_DIR'] == '.':
       if not os.path.isdir( 'lcd' ):
@@ -164,7 +164,7 @@ def CreateSharedArea():
     DIRAC.gLogger.error( 'VO_ILC_SW_DIR="%s" is not a directory' % sharedArea )
     return False
 
-  sharedArea = os.path.join( sharedArea, 'lcd' )
+  #sharedArea = os.path.join( sharedArea, 'lcd' )
   try:
     if os.path.isdir( sharedArea ) and not os.path.islink( sharedArea ) :
       return True
