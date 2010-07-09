@@ -286,7 +286,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
     finalizeStep.setValue('UploadEnable',uploadData)
-
+    
+    ##Hack until log server is available
+    self.addToOutputSandbox.append("*.log")
+    
     return
   #############################################################################
   def __addSoftwarePackages(self,nameVersion):
