@@ -43,7 +43,27 @@ class ILCJob(Job):
     self.importLocation = 'ILCDIRAC.Workflow.Modules'
     self.StepCount = 0
     self.ioDict = {}
-  
+
+  def setApplicationScript(self,appName,appVersion,script,log):
+    """ method needed by Ganga
+    """
+
+    self.addToOutputSandbox.append(log)
+    
+    self.addToInputSandbox.append(script)
+    
+    currentApp = "%s.%s"%(appName.lower(),appVersion)
+    swPackages = 'SoftwarePackages'
+    description='ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    return S_OK()          
+     
   def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
     """Helper function.
        Define Mokka step
