@@ -51,6 +51,52 @@ class ILCJob(Job):
     self.addToOutputSandbox.append(log)
     
     self.addToInputSandbox.append(script)
+
+    self.StepCount +=1
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %(appName,stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    
+    # Create the GaudiApplication script module first
+    moduleName = 'ApplicationScript'
+    module = ModuleDefinition(moduleName)
+    module.setDescription('An Application script module that can execute any provided script in the given project name and version environment')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with LHCb specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)
+    name = stepDefn
+    # Create Step definition
+    step = StepDefinition(name)
+    step.addModule(module)
+    step.addModule(userData)    
+    step.createModuleInstance('ApplicationScript',name)
+    step.createModuleInstance('UserJobFinalization',name)    
+        
+    # Define step parameters
+    step.addParameter(Parameter("applicationName","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the output file of the application"))
+    step.addParameter(Parameter("script","","string","","",False,False,"Script name"))
+
+    stepName = 'Run%sStep%s' %(appName,stepNumber)
+
+    self.workflow.addStep(step)
+    stepPrefix = '%s_' % stepName
+    self.currentStepPrefix = stepPrefix
+
+    # Define Step and its variables
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
+
+    stepInstance.setValue("applicationName",appName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("script",script)
+    stepInstance.setValue("applicationLog",log)
+
     
     currentApp = "%s.%s"%(appName.lower(),appVersion)
     swPackages = 'SoftwarePackages'
