@@ -5,7 +5,7 @@ Called from CombinedSoftwareInstallation
 """
 
 import sys, platform, os
-import re
+import re, logging
 # CMTCONFIG extraction
 
 def isNewStyleBinary(cmtconfig):
@@ -14,6 +14,10 @@ def isNewStyleBinary(cmtconfig):
     if len(cmtconfig.split("-")) > 1 :
         newstyle = True
     return newstyle
+  
+def isOldStyleBinary(cmtconfig):
+    """ check if the CMTCONFIG value is new styled """
+    return not isNewStyleBinary(cmtconfig)
 
 def isBinaryDbg(cmtconfig):
     """ check if the CMTCONFIG value is a debug one """
@@ -127,20 +131,54 @@ def getConfig(architecture, platformtype, compiler, debug=False):
     return cmtconfig
 
 # officially supported binaries
-binary_opt_list = ["slc3_ia32_gcc323",
-                   "slc4_ia32_gcc34", 
-                   "slc4_amd64_gcc34",
-                   "slc5_amd64_gcc43",
-                   "x86_64-slc5-gcc43-opt",
-                   "win32_vc71"]
+binary_opt_list = ["slc4_ia32_gcc34", 
+                   "x86_64-slc5-gcc43-opt"]
 # future possible supported binaries
-extra_binary_opt_list = ["x86_64-slc5-gcc34-opt", 
-                         "i686-slc5-gcc34-opt",
-                         "i686-slc5-gcc43-opt",
-                         "i686-winxp-vc90-opt", 
-                         "x86_64-winxp-vc90-opt",
-                         "osx105_ia32_gcc401", 
-                         "x86_64-osx106-gcc42-opt"]
+extra_binary_opt_list = ["x86_64-slc5-gcc34-opt"]
+
+def pathBinaryMatch(path, cmtconfig):
+    """ returns True if the path belong to the cmtconfig distribution
+    @param path: file/path to be tested
+    @param cmtconfig: target cmtconfig
+    """
+    selected = False
+    log = logging.getLogger()
+    if cmtconfig not in binary_list :
+        log.error("the value of CMTCONFIG %s is not supported" % cmtconfig)
+    else :
+        match_str = "%s" % cmtconfig
+        if isOldStyleBinary(cmtconfig) and isBinaryOpt(cmtconfig):
+            match_str = "%s(?!_dbg)" % cmtconfig
+        cfg_match = re.compile(match_str)
+        if cfg_match.search(path) :
+            selected = True
+    return selected
+
+def pathSharedMatch(path, cmtconfig=None):
+    """ select path with are not part of a binary distribution
+    @param path: file/dir path to be tested
+    @param cmtconfig: optional parameter to exclude specific files for a given cmtconfig
+    """
+    selected = True
+    for b in binary_list :
+        if pathBinaryMatch(path, b) :
+            selected = False
+            break
+    return selected
+
+def pathMatch(path, cmtconfig, shared=False):
+    """
+    return True if the path belong to the CMTCONFIG.
+    """
+    selected = False
+    if not shared :
+        selected = pathBinaryMatch(path, cmtconfig)
+    else :
+        selected = pathSharedMatch(path, cmtconfig)
+    return selected
+
+def pathFilter(pathlist, cmtconfig, shared=False):
+    return [ p for p in pathlist if pathMatch(p, cmtconfig, shared) ]
 
 binary_dbg_list = [ getBinaryDbg(x) for x in binary_opt_list ]
 extra_binary_dbg_list = [ getBinaryDbg(x) for x in extra_binary_opt_list ]
@@ -172,6 +210,12 @@ linux_flavour_aliases = {
                          "ub"   : ["Ubuntu"],
                          "ml"   : ["Mandriva Linux"]
                         }
+lsb_flavour_aliases   = {
+                         "sl"   : ["ScientificSL"],
+                         "slc"  : ["ScientificCERNSLC"],
+                         "fc"   : ["Fedora"],
+                         "co"   : ["CentOS"]
+                        }
 
 flavor_runtime_compatibility = {
                                 "slc5"  : ["slc5", "slc4"],
@@ -184,9 +228,9 @@ flavor_runtime_compatibility = {
                                 }
 
 arch_runtime_compatiblity = {
-                                "x86_64" : ["x86_64", "i686", "i586"],#, "i486", "i386"],
+                                "x86_64" : ["x86_64", "i686", "i586", "i486", "i386"],
                                 "ia64" :   ["ia64", "i686", "i586", "i486", "i386"],
-                                "ia32" :   ["ia32", "i486", "i386"],
+                                "ia32" :   ["ia32", "i686", "i586", "i486", "i386"],
                                 "i686" :   ["i686", "i586", "i486", "i386"],
                                 "i586" :   ["i586", "i486", "i386"],
                                 "i486" :   ["i486", "i386"],
@@ -222,7 +266,10 @@ class NativeMachine:
         self._osversion = None
         self._compversion = None
         self._compiler = None
-        self._sysinfo = platform.uname()
+        #self._sysinfo = platform.uname()
+        self._sysinfo = None
+        if hasattr(platform, "uname") :
+            self._sysinfo = platform.uname()
         if sys.platform == "win32" :
             self._arch = "32"
             self._ostype = "Windows"
