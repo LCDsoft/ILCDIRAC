@@ -190,9 +190,15 @@ class ILCJob(Job):
       logName = 'Mokka_%s.log' %(appVersion)
     self.addToOutputSandbox.append(logName)
       
-    if os.path.exists(steeringFile):
-      self.log.verbose('Found specified steering file %s'%steeringFile)
-      self.addToInputSandbox.append(steeringFile)
+    if steeringFile:
+      if os.path.exists(steeringFile):
+        self.log.verbose('Found specified steering file %s'%steeringFile)
+        self.addToInputSandbox.append(steeringFile)
+      elif steeringFile.lower().find("lfn:")>-1:
+        self.log.verbose('Found specified lfn to steering file %s'%steeringFile)
+        self.addToInputSandbox.append(steeringFile)
+      else:
+        return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
     else:
       return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
 
@@ -342,6 +348,9 @@ class ILCJob(Job):
     if os.path.exists(xmlfile):
       self.log.verbose('Found specified XML file %s'%xmlfile)
       self.addToInputSandbox.append(xmlfile)
+    elif xmlfile.lower().find("lfn:")>-1:
+      self.log.verbose('Found specified lfn to XML file %s'%xmlfile)
+      self.addToInputSandbox.append(xmlfile)      
     else:
       return self._reportError('Specified XML file %s does not exist' %(xmlfile),__name__,**kwargs)
     
