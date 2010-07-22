@@ -11,6 +11,7 @@ Created on Jan 29, 2010
 '''
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Comment
 import string
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
@@ -115,22 +116,32 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   tree = ElementTree()
   tree.parse(inputXML)
   params = tree.findall('global/parameter')
+  glob = tree.find('global')
   lciolistfound = False
   for param in params:
     if param.attrib.has_key('name'):
       if param.attrib['name']=='LCIOInputFiles':
         lciolistfound = True
+        com = Comment("input file list changed")
+        glob.insert(0,com)
         param.text = inputSLCIO
       if len(numberofevts)>0:
         if param.attrib['name']=='MaxRecordNumber':
           if param.attrib.has_key('value'):
             param.attrib['value'] = numberofevts
+            com = Comment("MaxRecordNumber changed")
+            glob.insert(0,com)
+            
       if param.attrib['name']=="GearXMLFile":
         if param.attrib.has_key('value'):
           param.attrib['value'] = inputGEAR
+          com = Comment("input gear changed")
+          glob.insert(0,com)
       if not debug:
         if param.attrib['name']=='Verbosity':
           param.text = "SILENT"
+          com = Comment("verbosity changed")
+          glob.insert(0,com)
   if not lciolistfound:
     name = {}
     name["name"]="LCIOInputFiles"
@@ -149,6 +160,8 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
             if subparam.attrib.has_key('name'):
               if subparam.attrib['name']=='LCIOOutputFile':
                 subparam.text = outputREC
+                com = Comment("REC file changed")
+                param.insert(0,com)
       if len(outputDST)>0:
         if param.attrib['name']=='DSTOutput':
           subparams = param.findall('parameter')
@@ -156,10 +169,12 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
             if subparam.attrib.has_key('name'):
               if subparam.attrib['name']=='LCIOOutputFile':
                 subparam.text = outputDST
-
+                com = Comment("DST file changed")
+                param.insert(0,com)
   
   tree.write(finalxml)
   return True
+
 
 def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None,debug = False):
   """Writes out a mac file for SLIC
