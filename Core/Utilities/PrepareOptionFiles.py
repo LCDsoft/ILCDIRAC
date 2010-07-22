@@ -72,15 +72,20 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
             else:
               output.write(line)
   if detectormodel:
+    output.write("#Set detector model to value specified")
     output.write("/Mokka/init/detectorModel %s\n"%detectormodel)
   
   if not debug:
+    output.write("#Set debug level to 1")
     output.write("/Mokka/init/printLevel 1\n")
-
+  output.write("#Set batch mode to true")
   output.write("/Mokka/init/BatchMode true\n")
+  output.write("#Set mac file to the one created on the site")
   output.write("/Mokka/init/initialMacroFile %s\n"%macname)
   if outputlcio:
+    output.write("#Set outputfile name to job specified")
     output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
+  output.write("#Set event start number to value given as job parameter")  
   output.write("/Mokka/init/startEventNumber %d"%startFrom)
   output.close()
   return True
