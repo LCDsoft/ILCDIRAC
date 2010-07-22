@@ -785,6 +785,9 @@ class ILCJob(Job):
     
     self.StepCount +=1
     stepName = 'RunRootMacro'
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
+    
     rootmoduleName = self._rootType(scriptpath)#"RootMacroAnalysis"
     module = ModuleDefinition(rootmoduleName)
     module.setDescription('Root Macro module definition')
