@@ -131,7 +131,7 @@ def getConfig(architecture, platformtype, compiler, debug=False):
     return cmtconfig
 
 # officially supported binaries
-binary_opt_list = ["x86_64-slc5-gcc43-opt","slc4_ia32_gcc34"]
+binary_opt_list = ["x86_64-slc5-gcc43-opt"]#,"slc4_ia32_gcc34"]
 # future possible supported binaries
 extra_binary_opt_list = ["x86_64-slc5-gcc34-opt"]
 
