@@ -417,9 +417,10 @@ class ILCJob(Job):
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
-      if not self.ioDict.has_key("MokkaStep"):
-        raise TypeError,'Expected previously defined Mokka step for input data'
-      stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+      if self.ioDict.has_key("MokkaStep"):
+        stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+        #raise TypeError,'Expected previously defined Mokka step for input data'
+      
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
     if(evtstoprocess):
