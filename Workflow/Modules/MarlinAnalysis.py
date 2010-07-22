@@ -92,7 +92,7 @@ class MarlinAnalysis(ModuleBase):
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
-          self.inputSlcio += files+";"
+          self.inputSLCIO += files+";"
       self.inputSLCIO = self.inputSLCIO.rstrip(";")
             
     return S_OK('Parameters resolved')
