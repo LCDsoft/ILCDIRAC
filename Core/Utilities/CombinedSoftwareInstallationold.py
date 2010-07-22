@@ -94,6 +94,8 @@ class CombinedSoftwareInstallation:
             self.jobConfig = ceConfig
             found_config=True
             break
+        if found_config:
+          break
           
     if not found_config:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
