@@ -117,14 +117,17 @@ class MarlinAnalysis(ModuleBase):
       return self.result
     
     marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"marlin",self.applicationVersion),'')
-    marlinDir = marlinDir.rstrip(".tgz").rstrip(".tar.gz")
+    marlinDir = marlinDir.replace(".tgz","").replace(".tar.gz","")
     mySoftwareRoot = ''
     localArea = LocalArea()
     sharedArea = SharedArea()
     if os.path.exists('%s%s%s' %(localArea,os.sep,marlinDir)):
       mySoftwareRoot = localArea
-    if os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
+    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
       mySoftwareRoot = sharedArea
+    else:
+      self.setApplicationStatus('Marlin: Could not find neither local area not shared area install')
+      return S_ERROR('Missing installation of Marlin!')
     myMarlinDir = os.path.join(mySoftwareRoot,marlinDir)
     ### Resolve dependencies
     deps = resolveDepsTar(self.systemConfig,"marlin",self.applicationVersion)
