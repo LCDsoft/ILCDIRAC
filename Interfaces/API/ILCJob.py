@@ -886,6 +886,35 @@ class ILCJob(Job):
       self._addParameter(self.workflow,'UserOutputPath','JDL',OutputPath,description)
 
     return S_OK()
+  def setBannedSites(self,sites):
+    """Helper function.
+
+       Can specify banned sites for job.  This can be useful
+       for debugging purposes but often limits the possible candidate sites
+       and overall system response time.
+
+       Example usage:
+
+       >>> job = ILCJob()
+       >>> job.setBannedSites(['LCG.DESY.de','LCG.KEK.jp'])
+
+       @param sites: single site string or list
+       @type sites: string or list
+    """
+    bannedsites = []
+    bannedsiteswp = self.workflow.findParameter("BannedSites")
+    if bannedsiteswp.getValue():
+      bannedsites = bannedsiteswp.getValue().split(";")
+    if type(sites) == list and len(sites):
+      bannedsites.extend(sites)
+    elif type(sites)==type(" "):
+      bannedsites.append(sites)
+    else:
+      kwargs = {'sites':sites} 
+      return self._reportError('Expected site string or list of sites',**kwargs)
+    description = 'Sites excluded by user'
+    self._addParameter(self.workflow,'BannedSites','JDLReqt',string.join(bannedsites,';'),description)
+    return S_OK()
     
   def _rootType(self,name):
     modname = ''
