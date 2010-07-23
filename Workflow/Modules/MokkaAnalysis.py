@@ -161,15 +161,18 @@ class MokkaAnalysis(ModuleBase):
       self.log.info("Root directory for job is %s" % ( self.root ) )
 
       mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"mokka",self.applicationVersion),'')
-      mokkaDir = mokkaDir.rstrip(".tgz").rstrip(".tar.gz")
+      mokkaDir = mokkaDir.replace(".tgz","").replace(".tar.gz","")
       #mokkaDir = 'lddLib' ###Temporary while mokka tar ball are not redone.
       mySoftwareRoot = ''
       localArea = LocalArea()
       sharedArea = SharedArea()
       if os.path.exists('%s%s%s' %(localArea,os.sep,mokkaDir)):
         mySoftwareRoot = localArea
-      if os.path.exists('%s%s%s' %(sharedArea,os.sep,mokkaDir)):
+      elif os.path.exists('%s%s%s' %(sharedArea,os.sep,mokkaDir)):
         mySoftwareRoot = sharedArea
+      else:
+        self.log.error("Mokka: could not find installation directory!")
+        return S_ERROR("Mokka installation could not be found")  
       myMokkaDir = os.path.join(mySoftwareRoot,mokkaDir)
       
       if not mySoftwareRoot:
