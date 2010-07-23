@@ -903,7 +903,7 @@ class ILCJob(Job):
     """
     bannedsites = []
     bannedsiteswp = self.workflow.findParameter("BannedSites")
-    if bannedsiteswp.getValue():
+    if bannedsiteswp:
       bannedsites = bannedsiteswp.getValue().split(";")
     if type(sites) == list and len(sites):
       bannedsites.extend(sites)
