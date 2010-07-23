@@ -44,7 +44,7 @@ def install(app,config,area):
     return DIRAC.S_ERROR('Could not find TarBallURL in CS')
   
   #Check if folder is already there:
-  folder_name = app_tar.rstrip(".tgz").rstrip(".tar.gz")
+  folder_name = app_tar.replace(".tgz","").replace(".tar.gz","")
   if appName =="slic":
     folder_name= "%s%s"%(appName,appVersion)
   appli_exists = False
