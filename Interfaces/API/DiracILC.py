@@ -108,12 +108,7 @@ class DiracILC(Dirac):
       res = self._checkdataconsistency(useroutputdata.getValue(), useroutputsandbox)
       if not res['OK']: 
         return res
-    #get list of banned sites for local installation
-    res = self._get_banned_sites()
-    if not res['OK']:
-      return res
-    if len(res['Value'])>0:
-      job.setBannedSites(res['Value'])
+
     return S_OK()
   
   def _checkapp(self,config,appName,appVersion):
@@ -144,9 +139,3 @@ class DiracILC(Dirac):
         self.log.error("Remove wildcard characters from output data definition: must be exact files")
         return S_ERROR("Wildcard character in OutputData definition")
     return S_OK()
-  def _get_banned_sites(self):
-    list = gConfig.getValue("/Operations/BannedSites",[])
-    #if not list:
-    #  self.log.error("Could not retrieve list of banned sites")
-    #  return S_ERROR("List of banned sites cannot be found")
-    return S_OK(list)
