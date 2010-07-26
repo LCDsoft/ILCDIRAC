@@ -21,7 +21,7 @@ modifiedCS = False
 mailadress = 'ilc-dirac@cern.ch'
 
 def usage():
-  print 'Usage: %s <PLATFORM> <NAME> <VERSION>' %(Script.scriptName)
+  print 'Usage: %s <PLATFORM> <NAME> <VERSION> [<COMMENT>]' %(Script.scriptName)
   DIRAC.exit(2)
 
 def upload(path,tarball):
@@ -50,9 +50,12 @@ softwareSection = "/Operations/AvailableTarBalls"
 platform = "%s"%args[0]
 appName = "%s"%args[1]
 appVersion = "%s"%args[2]
+comment = ""
+if len(args)>3:
+  comment = "%s"%args[3]
 appTar = "%s%s.tgz"%(appName,appVersion)
 subject = '%s %s add to DIRAC CS' %(args[1],args[2])
-msg = 'New application %s %s declared into Configuration service' %(args[1],args[2])
+msg = 'New application %s %s declared into Configuration service\n %s' %(args[1],args[2],comment)
 
 av_platforms = gConfig.getSections(softwareSection, [])
 if av_platforms['OK']:
