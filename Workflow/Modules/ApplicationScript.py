@@ -68,6 +68,8 @@ class ApplicationScript(ModuleBase):
     com.append(cmdSep)
     com.append('env | sort >> localEnv.log')
     com.append(cmdSep)
+    if os.path.exists("./lib"):
+      com.append('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH')
     com.append(command)
     com.append('declare -x appstatus=$?')
     com.append('exit $appstatus')
