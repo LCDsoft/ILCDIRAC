@@ -133,6 +133,11 @@ def install(app,config,area):
     basefolder = folder_name
     #fileexample.split("/")[0]
     os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+      os.environ['LD_LIBRARY_PATH'] = os.environ['ROOTSYS']+"/lib:"+ os.environ['LD_LIBRARY_PATH']
+    else:
+      os.environ['LD_LIBRARY_PATH'] = os.environ['ROOTSYS']+"/lib"
+    os.environ['PATH'] = os.environ['ROOTSYS']+"/bin:"+os.environ['PATH']
     os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
   #remove now useless tar ball
   if os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
