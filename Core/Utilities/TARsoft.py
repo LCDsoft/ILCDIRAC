@@ -133,7 +133,7 @@ def install(app,config,area):
     basefolder = folder_name
     #fileexample.split("/")[0]
     os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
-    os.environ['PYTHONPATH']=os.environ['ROOTSYS']+":"+os.environ["PYTHONPATH"]
+    os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
   #remove now useless tar ball
   if os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
     if app_tar_base.find(".jar")<0:
