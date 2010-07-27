@@ -20,6 +20,7 @@ class ApplicationScript(ModuleBase):
     self.applicationLog = ''
     self.applicationName = ''
     self.applicationVersion = ''
+    self.arguments = ''
 
   def resolveInputVariables(self):
     if self.step_commons.has_key('applicationName'):
@@ -33,6 +34,9 @@ class ApplicationScript(ModuleBase):
       print self.script
     else:
       self.log.warn('No script defined')
+    if self.step_commons.has_key('arguments'):
+      self.arguments = self.step_commons['arguments']
+      
     return S_OK()
 
   def execute(self):
@@ -87,7 +91,7 @@ class ApplicationScript(ModuleBase):
       self.log.info( "%s execution completed with application warning:" % os.path.basename(self.script) )
       self.log.info(self.stdError)
     else:
-      self.log.info( "%s execution completed succesfully:" % os.path.basename(self.script) )
+      self.log.info( "%s execution completed successfully:" % os.path.basename(self.script) )
 
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )

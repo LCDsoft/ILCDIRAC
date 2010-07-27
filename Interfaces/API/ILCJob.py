@@ -46,11 +46,11 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
 
-  def setApplicationScript(self,appName,appVersion,script,log):
+  def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None):
     """ method needed by Ganga
     """
-
-    self.addToOutputSandbox.append(log)
+    if log:
+      self.addToOutputSandbox.append(log)
     
     self.addToInputSandbox.append(script)
 
@@ -83,6 +83,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationName","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the output file of the application"))
+    step.addParameter(Parameter("arguments","","string","","",False,False,"arguments to pass to script"))
     step.addParameter(Parameter("script","","string","","",False,False,"Script name"))
 
     stepName = 'Run%sStep%s' %(appName,stepNumber)
@@ -97,7 +98,10 @@ class ILCJob(Job):
     stepInstance.setValue("applicationName",appName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("script",script)
-    stepInstance.setValue("applicationLog",log)
+    if arguments:
+      stepInstance.setValue("arguments",arguments)
+    if log: 
+      stepInstance.setValue("applicationLog",log)
 
     
     currentApp = "%s.%s"%(appName.lower(),appVersion)
