@@ -66,6 +66,8 @@ class ApplicationScript(ModuleBase):
     com.append(cmdSep)
     com.append('echo "Log file from execution of: %s"' %(command))
     com.append(cmdSep)
+    com.append('env | sort >> localEnv.log')
+    com.append(cmdSep)
     com.append(command)
     com.append('declare -x appstatus=$?')
     com.append('exit $appstatus')
