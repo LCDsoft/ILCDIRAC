@@ -47,7 +47,7 @@ class ILCJob(Job):
     self.ioDict = {}
 
   def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None):
-    """ method needed by Ganga
+    """ method needed by Ganga, and also for pyroot
     """
     if log:
       self.addToOutputSandbox.append(log)
