@@ -13,6 +13,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -73,6 +74,11 @@ class SLICAnalysis(ModuleBase):
       
     if self.step_commons.has_key('outputFile'):
       self.outputslcio = self.step_commons['outputFile'] 
+    if self.workflow_commons.has_key("PRODUCTION_ID"):
+      self.outputslcio = getProdFilename(self.outputslcio,self.workflow_commons["PRODUCTION_ID"],
+                                        self.workflow_commons["JOB_ID"])
+
+    
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
       
