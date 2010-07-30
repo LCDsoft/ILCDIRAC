@@ -18,6 +18,8 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
+
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 
@@ -82,8 +84,15 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('outputREC'):
       self.outputREC = self.step_commons['outputREC']
+      
     if self.step_commons.has_key('outputDST'):
       self.outputDST = self.step_commons['outputDST']
+      
+    if self.workflow_commons.has_key("PRODUCTION_ID"):
+      self.outputREC = getProdFilename(self.outputREC,self.workflow_commons["PRODUCTION_ID"],
+                                        self.workflow_commons["JOB_ID"])
+      self.outputDST = getProdFilename(self.outputDST,self.workflow_commons["PRODUCTION_ID"],
+                                        self.workflow_commons["JOB_ID"])
       
       
     if self.step_commons.has_key('debug'):

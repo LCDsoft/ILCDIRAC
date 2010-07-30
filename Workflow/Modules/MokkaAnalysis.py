@@ -15,6 +15,7 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFi
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 
 from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
 
@@ -100,6 +101,10 @@ class MokkaAnalysis(ModuleBase):
         self.debug = self.step_commons['debug']
       if self.step_commons.has_key("outputFile"):
         self.outputFile = self.step_commons["outputFile"]
+      
+      if self.workflow_commons.has_key("PRODUCTION_ID"):
+        self.outputFile = getProdFilename(self.outputFile,self.workflow_commons["PRODUCTION_ID"],
+                                          self.workflow_commons["JOB_ID"])
           
       #if self.step_commons.has_key('generatorName'):
       #    self.generator_name = self.step_commons['generatorName']
