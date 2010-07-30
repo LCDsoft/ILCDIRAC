@@ -9,6 +9,8 @@ __RCSID__ = "$Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $"
 
 import string,re,os,types,datetime
 
+from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
+
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 
 gLogger = gLogger.getSubLogger('ProductionData')
@@ -45,6 +47,8 @@ def constructProductionLFNs(paramDict):
   for info in outputList:
     #Nasty check on whether the created code parameters were not updated e.g. when changing defaults in a workflow
     fileName = info['outputFile']
+    #rename to take care of correct path
+    fileName = getProdFilename(fileName,productionID,jobID)
     #index=0
     #if not re.search('^\d',fileName[index]):
     #  index+=1
