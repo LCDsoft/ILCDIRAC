@@ -13,6 +13,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
