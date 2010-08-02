@@ -133,7 +133,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('listoutput',(outputList))
 
     self.__addSoftwarePackages('mokka.%s' %(appvers))   
-    self.__addParameter(self.workflow,"MokkaOutput","string",outputfile,"Mokka expected output file name")
+    self._addParameter(self.workflow,"MokkaOutput","string",outputfile,"Mokka expected output file name")
     self.ioDict["MokkaStep"]=mstep.getName()
     return S_OK()
   
