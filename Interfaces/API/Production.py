@@ -50,7 +50,7 @@ class Production(ILCJob):
 from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 """
     is_prod = "IS_PROD"
-    self._addParameter(self.workflow,is_prod,'bool',True,"This job is a production job")
+    self._addParameter(self.workflow,is_prod,'JDL',True,"This job is a production job")
     if not script:
       self.__setDefaults()
 
