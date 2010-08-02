@@ -8,7 +8,6 @@ Mokka analysis module. Called by Job Agent.
 @author: Stephane Poss and Przemyslaw Majewski
 '''
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
-from DIRAC.Core.DISET.RPCClient                          import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
@@ -73,6 +72,9 @@ class MokkaAnalysis(ModuleBase):
       if self.workflow_commons.has_key('SystemConfig'):
           self.systemConfig = self.workflow_commons['SystemConfig']
 
+      if self.workflow_commons.has_key('JobType'):
+        self.jobType = self.workflow_commons['JobType']
+
       if self.step_commons.has_key('applicationVersion'):
           self.applicationVersion = self.step_commons['applicationVersion']
           self.applicationLog = self.step_commons['applicationLog']
@@ -107,20 +109,12 @@ class MokkaAnalysis(ModuleBase):
           self.outputFile = getProdFilename(self.outputFile,self.workflow_commons["PRODUCTION_ID"],
                                             self.workflow_commons["JOB_ID"])
           
-      #if self.step_commons.has_key('generatorName'):
-      #    self.generator_name = self.step_commons['generatorName']
-
-      #if self.step_commons.has_key('extraPackages'):
-      #    self.extraPackages = self.step_commons['extraPackages']
-
       if self.workflow_commons.has_key('InputData'):
           self.InputData = self.workflow_commons['InputData']
 
       #if self.step_commons.has_key('inputData'):
       #  self.inputData = self.step_commons['inputData']
 
-      if self.workflow_commons.has_key('JobType'):
-        self.jobType = self.workflow_commons['JobType']
       if len(self.stdhepFile)==0 and not len(self.InputData)==0:
         inputfiles = self.InputData.split(";")
         for files in inputfiles:
