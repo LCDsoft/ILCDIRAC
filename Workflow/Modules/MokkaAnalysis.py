@@ -102,9 +102,10 @@ class MokkaAnalysis(ModuleBase):
       if self.step_commons.has_key("outputFile"):
         self.outputFile = self.step_commons["outputFile"]
       
-      if self.workflow_commons.has_key("PRODUCTION_ID"):
-        self.outputFile = getProdFilename(self.outputFile,self.workflow_commons["PRODUCTION_ID"],
-                                          self.workflow_commons["JOB_ID"])
+      if self.workflow_commons.has_key("IS_PROD"):
+        if self.workflow_commons["IS_PROD"]:
+          self.outputFile = getProdFilename(self.outputFile,self.workflow_commons["PRODUCTION_ID"],
+                                            self.workflow_commons["JOB_ID"])
           
       #if self.step_commons.has_key('generatorName'):
       #    self.generator_name = self.step_commons['generatorName']

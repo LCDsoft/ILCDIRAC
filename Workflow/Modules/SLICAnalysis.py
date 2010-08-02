@@ -74,9 +74,10 @@ class SLICAnalysis(ModuleBase):
       
     if self.step_commons.has_key('outputFile'):
       self.outputslcio = self.step_commons['outputFile'] 
-    if self.workflow_commons.has_key("PRODUCTION_ID"):
-      self.outputslcio = getProdFilename(self.outputslcio,self.workflow_commons["PRODUCTION_ID"],
-                                        self.workflow_commons["JOB_ID"])
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        self.outputslcio = getProdFilename(self.outputslcio,self.workflow_commons["PRODUCTION_ID"],
+                                           self.workflow_commons["JOB_ID"])
 
     
     if self.step_commons.has_key('debug'):
