@@ -67,6 +67,7 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('inputSlcio'):
       self.inputSLCIO =self.step_commons['inputSlcio']
+      
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
       
@@ -94,7 +95,9 @@ class MarlinAnalysis(ModuleBase):
                                          self.workflow_commons["JOB_ID"])
         self.outputDST = getProdFilename(self.outputDST,self.workflow_commons["PRODUCTION_ID"],
                                          self.workflow_commons["JOB_ID"])
-      
+        if self.workflow_commons.has_key("MokkaOutput"):
+          self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],self.workflow_commons["PRODUCTION_ID"],
+                                            self.workflow_commons["JOB_ID"])
       
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
