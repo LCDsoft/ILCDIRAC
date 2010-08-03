@@ -48,7 +48,7 @@ def constructProductionLFNs(paramDict):
     #Nasty check on whether the created code parameters were not updated e.g. when changing defaults in a workflow
     fileName = info['outputFile']
     #rename to take care of correct path
-    fileName = getProdFilename(fileName,productionID,jobID)
+    fileName = getProdFilename(fileName,int(productionID),int(jobID))
     #index=0
     #if not re.search('^\d',fileName[index]):
     #  index+=1
