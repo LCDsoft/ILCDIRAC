@@ -91,13 +91,13 @@ class MarlinAnalysis(ModuleBase):
       
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
-        self.outputREC = getProdFilename(self.outputREC,self.workflow_commons["PRODUCTION_ID"],
-                                         self.workflow_commons["JOB_ID"])
-        self.outputDST = getProdFilename(self.outputDST,self.workflow_commons["PRODUCTION_ID"],
-                                         self.workflow_commons["JOB_ID"])
+        self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
+                                         int(self.workflow_commons["JOB_ID"]))
+        self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
+                                         int(self.workflow_commons["JOB_ID"]))
         if self.workflow_commons.has_key("MokkaOutput"):
-          self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],self.workflow_commons["PRODUCTION_ID"],
-                                            self.workflow_commons["JOB_ID"])
+          self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+                                            int(self.workflow_commons["JOB_ID"]))
       
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
