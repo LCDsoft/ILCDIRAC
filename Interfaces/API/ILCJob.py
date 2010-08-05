@@ -856,7 +856,7 @@ class ILCJob(Job):
        @param lfns: Output data file or files
        @type lfns: Single string or list of strings ['','']
        @param OutputSE: Optional parameter to specify the Storage
-       @param OutputPath: Optional parameter to specify the Path in the Storage
+       @param OutputPath: Optional parameter to specify the Path in the Storage, postpented to /ilc/user/u/username/
        Element to store data or files, e.g. CERN-tape
        @type OutputSE: string or list
        @type OutputPath: string
