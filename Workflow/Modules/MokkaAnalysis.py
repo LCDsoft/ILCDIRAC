@@ -209,8 +209,7 @@ class MokkaAnalysis(ModuleBase):
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
       ###prepare steering file
-      #first, I need to take the stdhep file, find its path (possible LFN)
-      
+      #first, I need to take the stdhep file, find its path (possible LFN)      
       if len(self.stdhepFile)>0:
         #self.stdhepFile = os.path.basename(self.stdhepFile)
         res = resolveIFpaths([self.stdhepFile])
@@ -228,6 +227,12 @@ class MokkaAnalysis(ModuleBase):
       if not steerok:
         self.log.error('Failed to create MOKKA steering file')
         return S_ERROR('Failed to create MOKKA steering file')
+
+      ###Extra option depending on mokka version
+      mokkaextraoption = ""
+      if self.applicationVersion not in ["v07-02","v07-02fw","v07-02fwhp","MokkaRevision42","MokkaRevision43","MokkaRevision44",
+                                         "Revision45"]:
+        mokkaextraoption = "-U"
 
       scriptName = 'Mokka_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
 
@@ -283,7 +288,7 @@ class MokkaAnalysis(ModuleBase):
       script.write('echo =============================\n')
       
       ##Tear appart this mokka-wrapper
-      comm = '%s/Mokka -hlocalhost:%s/mysql.sock %s\n'%(myMokkaDir,sqlwrapper.getMokkaTMPDIR(),mokkasteer)
+      comm = '%s/Mokka %s -hlocalhost:%s/mysql.sock %s\n'%(myMokkaDir,mokkaextraoption,sqlwrapper.getMokkaTMPDIR(),mokkasteer)
       print "Command : %s"%(comm)
       script.write(comm)
       script.write('declare -x appstatus=$?\n')
