@@ -54,7 +54,7 @@ class MokkaAnalysis(ModuleBase):
         self.applicationVersion=''
         self.dbslice = ''
         self.numberOfEvents = 0
-        self.startFrom = 1
+        self.startFrom = 0
         self.inputData = '' # to be resolved
         self.InputData = '' # from the (JDL WMS approach)
         self.outputFile = ''
