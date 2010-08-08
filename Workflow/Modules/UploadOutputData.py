@@ -9,9 +9,10 @@ __RCSID__ = "$Id: UploadOutputData.py 25072 2010-05-11 12:18:24Z paterson $"
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
-from ILCDIRAC.Core.Utilities.ProductionData               import constructProductionLFNs
-from ILCDIRAC.Core.Utilities.ResolveSE                    import getDestinationSEList
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Core.Utilities.ProductionData                import constructProductionLFNs
+from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
+from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -39,7 +40,7 @@ class UploadOutputData(ModuleBase):
     self.outputMode='Any' #or 'Local' for reco case
     self.outputList = []
     self.request = None
-    self.PRODUCTION_ID=None
+    self.PRODUCTION_ID=""
 
   #############################################################################
   def resolveInputVariables(self):
@@ -60,6 +61,9 @@ class UploadOutputData(ModuleBase):
         self.log.warn('Test failover flag set to non-boolean value %s, setting to False' %self.failoverTest)
         self.failoverTest=False
 
+    if self.workflow_commons.has_key("PRODUCTION_ID"):
+      self.PRODUCTION_ID = self.workflow_commons["PRODUCTION_ID"]
+
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
       self.log.verbose('Found WMS JobID = %s' %self.jobID)
@@ -77,6 +81,14 @@ class UploadOutputData(ModuleBase):
 
     if self.workflow_commons.has_key('outputList'):
       self.outputList = self.workflow_commons['outputList']
+      olist = []
+      for obj in self.outputList:
+        appdict = {}
+        appdict['outputFile'] = getProdFilename(obj['outputFile'],int(self.PRODUCTION_ID),int(self.jobID))
+        appdict['outputDataSE'] = obj['outputDataSE']
+        appdict['outputPath'] = obj['outputPath']
+        olist.append(appdict)
+      self.outputList = olist
 
     if self.workflow_commons.has_key('outputMode'):
       self.outputMode = self.workflow_commons['outputMode']
