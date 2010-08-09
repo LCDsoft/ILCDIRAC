@@ -46,11 +46,12 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
 
-  def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None):
+  def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None,logInOutputData=False):
     """ method needed by Ganga, and also for pyroot
     """
     if log:
-      self.addToOutputSandbox.append(log)
+      if not logInOutputData:
+        self.addToOutputSandbox.append(log)
     
     self.addToInputSandbox.append(script)
 
@@ -116,7 +117,7 @@ class ILCJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     return S_OK()          
      
-  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
     """Helper function.
        Define Mokka step
        
@@ -159,10 +160,13 @@ class ILCJob(Job):
        @type logFile: string
        @param debug: By default, change printout level to least verbosity
        @type debug: bool
+       @param logInOutputData: If set to False (default) then automatically appended to output sandbox, if True, manually add it to OutputData
+       @type logInOutputData: bool
        @return: S_OK() or S_ERROR()
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,'logFile':logFile,'debug':debug}
+    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,
+              'logFile':logFile,'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(steeringFile) in types.StringTypes:
@@ -194,7 +198,8 @@ class ILCJob(Job):
         return self._reportError('Expected string for log file name',__name__,**kwargs)
     else:
       logName = 'Mokka_%s.log' %(appVersion)
-    self.addToOutputSandbox.append(logName)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
       
     if steeringFile:
       if os.path.exists(steeringFile):
@@ -304,7 +309,7 @@ class ILCJob(Job):
     self.ioDict["MokkaStep"]=stepInstance.getName()
     return S_OK()
     
-  def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False):
+  def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False,logInOutputData=False):
     """ Define Marlin step
       Example usage:
 
@@ -327,9 +332,11 @@ class ILCJob(Job):
       @type evtstoprocess: int or string
       @param debug: By default, change printout level to least verbosity
       @type debug: bool
+      @param logInOutputData: If set to False (default) then automatically appended to output sandbox, if True, manually add it to OutputData
+      @type logInOutputData: bool
       @return: S_OK() or S_ERROR()
     """
-    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile,'debug':debug}
+    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile,'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
@@ -349,7 +356,8 @@ class ILCJob(Job):
         return self._reportError('Expected string for log file name',__name__,**kwargs)
     else:
       logName = 'Marlin_%s.log' %(appVersion)
-    self.addToOutputSandbox.append(logName)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
 
     if os.path.exists(xmlfile):
       self.log.verbose('Found specified XML file %s'%xmlfile)
@@ -452,7 +460,7 @@ class ILCJob(Job):
     self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile='',debug = False):
+  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile='',debug = False,logInOutputData=False):
     """Helper function.
        Define SLIC step
        
@@ -484,10 +492,13 @@ class ILCJob(Job):
        @param logFile: Optional log file name
        @type logFile: string
        @param debug: not used yet
+       @param logInOutputData: If set to False (default) then automatically appended to output sandbox, if True, manually add it to OutputData
+       @type logInOutputData: bool
        @return: S_OK() or S_ERROR()
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile,'debug':debug}
+    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile,
+              'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if macFile:
@@ -514,7 +525,8 @@ class ILCJob(Job):
         return self._reportError('Expected string for log file name',__name__,**kwargs)
     else:
       logName = 'SLIC_%s.log' %(appVersion)
-    self.addToOutputSandbox.append(logName)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
 
     if macFile:  
       if os.path.exists(macFile):
@@ -599,7 +611,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, logFile='', debug = False):
+  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, logFile='', debug = False,logInOutputData=False):
     """Helper function.
        Define LCSIM step
        
@@ -624,9 +636,12 @@ class ILCJob(Job):
        @type logFile: string
        @param debug: set to True to have verbosity set to 1
        @type debug: bool
+       @param logInOutputData: If set to False (default) then automatically appended to output sandbox, if True, manually add it to OutputData
+       @type logInOutputData: bool
        @return: S_OK() or S_ERROR()
     """
-    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile, 'debug':debug}
+    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile, 
+              'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
     if not type(xmlfile) in types.StringTypes:
@@ -662,7 +677,8 @@ class ILCJob(Job):
         return self._reportError('Expected string for log file name',__name__,**kwargs)
     else:
       logName = 'LCSIM_%s.log' %(appVersion)
-    self.addToOutputSandbox.append(logName)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
 
     if os.path.exists(xmlfile):
       self.addToInputSandbox.append(xmlfile)
@@ -740,7 +756,7 @@ class ILCJob(Job):
     self.ioDict["LCSIMStep"]=stepInstance.getName()    
     return S_OK()
   
-  def setRootAppli(self,appVersion, scriptpath,args=None,logFile=''):
+  def setRootAppli(self,appVersion, scriptpath,args=None,logFile='',logInOutputData=False):
     """Define root macro or executable execution
     
     Example usage:
@@ -764,7 +780,7 @@ class ILCJob(Job):
     @return: S_OK,S_ERROR
     
     """
-    kwargs = {'appVersion':appVersion,"macropath":scriptpath,"args":args,"logFile":logFile}
+    kwargs = {'appVersion':appVersion,"macropath":scriptpath,"args":args,"logFile":logFile,"logInOutputData":logInOutputData}
     
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
@@ -788,7 +804,8 @@ class ILCJob(Job):
         return self._reportError('Expected string for log file name',__name__,**kwargs)
     else:
       logName = 'ROOT_%s.log' %(appVersion)
-    self.addToOutputSandbox.append(logName)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
     
     self.StepCount +=1
     stepName = 'RunRootMacro'
