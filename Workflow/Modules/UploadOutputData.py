@@ -106,8 +106,8 @@ class UploadOutputData(ModuleBase):
     if not result['OK']:
       self.log.error('Could not create production LFNs',result['Message'])
       return result
-    self.prodOutputLFNs=result['Value']['ProductionOutputData']
-
+    #self.prodOutputLFNs=result['Value']['ProductionOutputData']
+    self.prodOutputLFNs=self.workflow_commons['ProductionOutputData']
     if self.workflow_commons.has_key('InputData'):
       self.inputData = self.workflow_commons['InputData']
 
