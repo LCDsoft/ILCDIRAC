@@ -106,8 +106,13 @@ class MokkaAnalysis(ModuleBase):
       
       if self.workflow_commons.has_key("IS_PROD"):
         if self.workflow_commons["IS_PROD"]:
-          self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))
+          #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          #                                  int(self.workflow_commons["JOB_ID"]))
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_sim_"):
+              self.outputFile = os.path.basename(obj)
+              break
           
       if self.workflow_commons.has_key('InputData'):
           self.InputData = self.workflow_commons['InputData']
