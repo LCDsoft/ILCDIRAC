@@ -82,10 +82,11 @@ class UploadOutputData(ModuleBase):
     if self.workflow_commons.has_key('outputList'):
       self.outputList = self.workflow_commons['outputList']
       proddata = self.workflow_commons['ProductionOutputData'].split(";")
+      self.log.verbose("prod data : %s"%proddata )
       olist = []
       for obj in self.outputList:
         for prodfile in proddata:
-          if (obj['outputFile'].lower().count("_sim_") and prodfile.lower().count("_sim_")) or (obj['outputFile'].lower().count("_rec_") and prodfile.lower().count("_rec_")) or (obj['outputFile'].lower().count("_dst_") and prodfile.lower().count("_dst_")):
+          if (obj['outputFile'].lower().count("_sim") and prodfile.lower().count("_sim_")) or (obj['outputFile'].lower().count("_rec") and prodfile.lower().count("_rec_")) or (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
             appdict = obj
             appdict['outputFile'] = prodfile
             olist.append(appdict)
