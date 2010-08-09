@@ -84,7 +84,7 @@ class UploadOutputData(ModuleBase):
       olist = []
       for obj in self.outputList:
         appdict = obj
-        appdict['outputFile'] = getProdFilename(obj['outputFile'],int(self.PRODUCTION_ID),int(self.jobID))
+        appdict['outputFile'] = getProdFilename(obj['outputFile'],int(self.PRODUCTION_ID),int(self.workflow_commons["JOB_ID"]))
         olist.append(appdict)
       self.outputList = olist
 
