@@ -102,10 +102,10 @@ class UploadOutputData(ModuleBase):
         if not type(self.outputDataFileMask)==type([]):
           self.outputDataFileMask = [i.lower().strip() for i in self.outputDataFileMask.split(';')]
 
-    result = constructProductionLFNs(self.workflow_commons)
-    if not result['OK']:
-      self.log.error('Could not create production LFNs',result['Message'])
-      return result
+    #result = constructProductionLFNs(self.workflow_commons)
+    #if not result['OK']:
+    #  self.log.error('Could not create production LFNs',result['Message'])
+    #  return result
     #self.prodOutputLFNs=result['Value']['ProductionOutputData']
     self.prodOutputLFNs=self.workflow_commons['ProductionOutputData'].split(";")
     if self.workflow_commons.has_key('InputData'):
