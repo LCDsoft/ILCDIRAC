@@ -88,7 +88,7 @@ class UploadOutputData(ModuleBase):
         for prodfile in proddata:
           if (obj['outputFile'].lower().count("_sim") and prodfile.lower().count("_sim_")) or (obj['outputFile'].lower().count("_rec") and prodfile.lower().count("_rec_")) or (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
             appdict = obj
-            appdict['outputFile'] = prodfile
+            appdict['outputFile'] = os.path.basename(prodfile)
             olist.append(appdict)
             break
       self.outputList = olist
