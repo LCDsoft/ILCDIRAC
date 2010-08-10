@@ -90,6 +90,10 @@ if appName.lower() in av_apps['Value']:
         if not res['OK']:
           print "Upload to %s failed"%tarballurl
           DIRAC.exit(255)
+    result = diracAdmin.csSetOptionComment("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),comment)
+    if not res['OK']:
+      print "Error setting comment in CS"
+
 else:
   result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),appTar)
   if result['OK']:  
@@ -100,6 +104,9 @@ else:
       if not res['OK']:
         print "Upload to %s failed"%tarballurl
         DIRAC.exit(255)
+  result = diracAdmin.csSetOptionComment("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),comment)
+  if not res['OK']:
+    print "Error setting comment in CS"
 #Commit the changes if nothing has failed and the CS has been modified
 if modifiedCS:
   result = diracAdmin.csCommitChanges(False)
