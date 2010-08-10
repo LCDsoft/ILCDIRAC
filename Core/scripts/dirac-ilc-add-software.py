@@ -54,7 +54,7 @@ comment = ""
 if len(args)>3:
   comment = "%s"%args[3]
 appTar = "%s%s.tgz"%(appName,appVersion)
-subject = '%s %s add to DIRAC CS' %(args[1],args[2])
+subject = '%s %s added to DIRAC CS' %(args[1],args[2])
 msg = 'New application %s %s declared into Configuration service\n %s' %(args[1],args[2],comment)
 
 av_platforms = gConfig.getSections(softwareSection, [])
