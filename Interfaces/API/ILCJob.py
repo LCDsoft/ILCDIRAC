@@ -42,7 +42,8 @@ class ILCJob(Job):
     Job.__init__(self,script)
     self.importLocation = 'ILCDIRAC.Workflow.Modules'
     list = gConfig.getValue("/LocalSite/BannedSites",[])
-    self.setBannedSites(list)
+    if len(list):
+      self.setBannedSites(list)
     self.StepCount = 0
     self.ioDict = {}
 
