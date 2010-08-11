@@ -58,7 +58,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
   def __setDefaults(self):
     """Sets some default parameters.
     """
-    self.setType('MCSimulation')
+    self.setType('MCReconstruction')
     self.setSystemConfig(self.systemConfig)
     self.setCPUTime('300000')
     self.setLogLevel('verbose')
