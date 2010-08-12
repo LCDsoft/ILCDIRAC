@@ -281,7 +281,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
-    self._addParameter(dataUpload,'Enable','bool','False','EnableFlag')
+    self._addParameter(logUpload,'Enable','bool','False','EnableFlag')
     body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
     logUpload.setBody(body)
 
