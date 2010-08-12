@@ -49,8 +49,8 @@ class UploadOutputData(ModuleBase):
     self.log.verbose(self.workflow_commons)
     self.log.verbose(self.step_commons)
 
-    if self.step_commons.has_key('UploadEnable'):
-      self.enable=self.step_commons['UploadEnable']
+    if self.step_commons.has_key('Enable'):
+      self.enable=self.step_commons['Enable']
       if not type(self.enable)==type(True):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
         self.enable=False
