@@ -177,7 +177,7 @@ class UploadLogFile(ModuleBase):
         #storageElement = StorageElement(self.logSE)
         #pfn = storageElement.getPfnForLfn(self.logFilePath)['Value']
         #logURL = getPfnForProtocol(res['Value'],'http')['Value']
-        logURL = '<a href="http://lhcb-logs.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
+        logURL = '<a href="http://volcd01.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
         self.setJobParameter('Log URL',logURL)
         self.log.info('Logs for this job may be retrieved from %s' % logURL)
         return S_OK()
