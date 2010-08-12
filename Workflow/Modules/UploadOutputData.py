@@ -81,18 +81,20 @@ class UploadOutputData(ModuleBase):
 
     if self.workflow_commons.has_key('outputList'):
       self.outputList = self.workflow_commons['outputList']
-      proddata = self.workflow_commons['ProductionOutputData'].split(";")
-      self.log.verbose("prod data : %s"%proddata )
-      olist = []
-      for obj in self.outputList:
-        for prodfile in proddata:
-          if (obj['outputFile'].lower().count("_sim") and prodfile.lower().count("_sim_")) or (obj['outputFile'].lower().count("_rec") and prodfile.lower().count("_rec_")) or (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
-            appdict = obj
-            appdict['outputFile'] = os.path.basename(prodfile)
-            olist.append(appdict)
-            break
-      self.outputList = olist
-      self.log.verbose("OutputList : %s"%self.outputList)
+      if self.workflow_commons.has_key('ProductionOutputData'):
+        proddata = self.workflow_commons['ProductionOutputData'].split(";")
+        self.log.verbose("prod data : %s"%proddata )
+        olist = []
+        for obj in self.outputList:
+          for prodfile in proddata:
+            if (obj['outputFile'].lower().count("_sim") and prodfile.lower().count("_sim_")) or (obj['outputFile'].lower().count("_rec") and prodfile.lower().count("_rec_")) or (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
+              appdict = obj
+              appdict['outputFile'] = os.path.basename(prodfile)
+              olist.append(appdict)
+              break
+        self.outputList = olist
+        self.log.verbose("OutputList : %s"%self.outputList)
+        
 
     if self.workflow_commons.has_key('outputMode'):
       self.outputMode = self.workflow_commons['outputMode']
