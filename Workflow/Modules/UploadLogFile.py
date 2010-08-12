@@ -33,7 +33,8 @@ class UploadLogFile(ModuleBase):
     self.JOB_ID = None
     self.workflow_commons = None
     self.request = None
-
+    self.logFilePath = ""
+    self.logLFNPath = ""
     self.setup = gConfig.getValue('/DIRAC/Setup')
     self.logSE = gConfig.getValue('/Operations/LogStorage/%s/LogSE' %(self.setup),'LogSE')
     self.root = gConfig.getValue('/LocalSite/Root',os.getcwd())
