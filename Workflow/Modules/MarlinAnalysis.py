@@ -98,15 +98,24 @@ class MarlinAnalysis(ModuleBase):
         #if self.workflow_commons.has_key("MokkaOutput"):
         #  self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
         #                                    int(self.workflow_commons["JOB_ID"]))
-        outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-        for obj in outputlist:
-          if obj.lower().count("_rec_"):
-            self.outputREC = os.path.basename(obj)
-          elif obj.lower().count("_dst_"):
-            self.outputDST = os.path.basename(obj)
-          elif obj.lower().count("_sim_"):
-            self.inputSLCIO = os.path.basename(obj)
-
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_rec_"):
+              self.outputREC = os.path.basename(obj)
+            elif obj.lower().count("_dst_"):
+              self.outputDST = os.path.basename(obj)
+            elif obj.lower().count("_sim_"):
+              self.inputSLCIO = os.path.basename(obj)
+        else:
+          self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
+                                           int(self.workflow_commons["JOB_ID"]))
+          self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
+                                           int(self.workflow_commons["JOB_ID"]))
+          if self.workflow_commons.has_key("MokkaOutput"):
+            self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"]))
+          
         
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
