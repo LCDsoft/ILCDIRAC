@@ -180,6 +180,8 @@ class LCSIMAnalysis(ModuleBase):
     if os.path.exists("lib"):
       script.write("declare -x JAVALIBPATH=./lib\n")
     script.write('echo =========\n')
+    script.write('echo java version :\n')
+    script.write('java -version\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
     
