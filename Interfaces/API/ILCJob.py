@@ -373,6 +373,9 @@ class ILCJob(Job):
       if os.path.exists(gearfile):
         self.log.verbose('Found specified GEAR file %s'%gearfile)
         self.addToInputSandbox.append(gearfile)
+      elif gearfile.lower().count("lfn:")>0:
+        self.log.verbose('Found specified LFN to GEAR file %s'%gearfile)
+        self.addToInputSandbox.append(gearfile)
       else:
         return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
     else:
