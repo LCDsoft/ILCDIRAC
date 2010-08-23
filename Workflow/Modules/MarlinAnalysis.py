@@ -146,6 +146,11 @@ class MarlinAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
+
+    if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      return S_OK('Marlin should not proceed as previous step did not end properly')
+
     
     marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"marlin",self.applicationVersion),'')
     marlinDir = marlinDir.replace(".tgz","").replace(".tar.gz","")
