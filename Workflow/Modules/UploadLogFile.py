@@ -208,7 +208,7 @@ class UploadLogFile(ModuleBase):
       return S_OK()
 
     ############################################################
-    logURL = '<a href="http://volcd01.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
+    logURL = '<a href="http://ilc-logs.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
     self.setJobParameter('Log URL',logURL)
     self.log.info('Logs for this job may be retrieved from %s' % logURL)
 
