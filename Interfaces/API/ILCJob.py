@@ -117,8 +117,60 @@ class ILCJob(Job):
         apps += ';'+currentApp
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     return S_OK()          
+
+  def getSRMFile(self,filedict=None):
+    """ Helper function
+        Retrieve file or list of files based on its SRM path. Must be first step in workflow.
+        
+        Example usage:
+        
+        >>> job = ILCJob()
+        >>> fdict = {"file":"srm://srm-public.cern.ch/castor/cern.ch/grid/ilc/prod/clic/1tev/Z_uds/gen/0/nobeam_nobrem_0-200.stdhep","site":"CERN-SRM"}
+        >>> fdict = str(fdict)
+        >>> job.getSRMFile(fdict)
+        
+        If specified, possible to omit the input files in the next steps
+        
+        @param filedict: stringed Dictionary or list of stringed dictionaries 
+        @type filedict: "{}" or ["{}"]
+        @return: S_OK() or S_ERROR()
+    """
+    kwargs = {"filedict":filedict}
+    if not type(filedict) == type("") and not type(filedict) == type([]):
+      return self._reportError('Expected string or list of strings for filedict',__name__,**kwargs)
+    
+    self.StepCount +=1
+
+    stepName = 'GetSRM'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('GetSRM',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    ##now define MokkaAnalysis
+    moduleName = "GetSRMFile"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('GetSRM module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    
+    step = StepDefinition('GetSRM')
+    step.addModule(module)
+    step.createModuleInstance('GetSRMFile','GetSRM')
+    step.addParameter(Parameter("srmfiles","","string","","",False, False, "list of files to retrieve"))
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance('GetSRM',stepName)
+
+    files = ""
+    if type(filedict) == type(""):
+      filedict = [str(filedict)]
+    if type(filedict)==type([]):
+      files = string.join(filedict,";")
+    
+    stepInstance.setValue('srmfiles',files) 
+    self.ioDict["GetSRMStep"]=stepInstance.getName()
+    
+    return S_OK()
      
-  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=1,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=0,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
     """Helper function.
        Define Mokka step
        
