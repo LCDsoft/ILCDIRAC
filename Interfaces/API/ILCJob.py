@@ -450,15 +450,15 @@ class ILCJob(Job):
         return self._reportError('As Mokka do not run before, you need to specify gearfile')
 
     inputslcioStr =''
-    srmfile = False
+    srmflag = False
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
         if inputslcio.lower()== "srm":
           self.log.verbose("Will assume SRM file was set in getSRMFile before.")
-          srmfile = True
+          srmflag = True
         else:
           inputslcio = [inputslcio]
-      if not srmfile:
+      if not srmflag:
         if not type(inputslcio)==type([]):
           return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
         #for i in xrange(len(inputslcio)):
@@ -506,7 +506,7 @@ class ILCJob(Job):
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
-      if not srmfile:
+      if not srmflag:
         if self.ioDict.has_key("MokkaStep"):
           stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
       else:
