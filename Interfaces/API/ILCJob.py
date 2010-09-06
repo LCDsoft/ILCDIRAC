@@ -46,6 +46,7 @@ class ILCJob(Job):
       self.setBannedSites(list)
     self.StepCount = 0
     self.ioDict = {}
+    self.srms = ""
 
   def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None,logInOutputData=False):
     """ method needed by Ganga, and also for pyroot
@@ -166,6 +167,7 @@ class ILCJob(Job):
       files = string.join(filedict,";")
     
     stepInstance.setValue('srmfiles',files) 
+    self.srms = files
     self.ioDict["GetSRMStep"]=stepInstance.getName()
     
     return S_OK()
@@ -266,9 +268,13 @@ class ILCJob(Job):
     else:
       return self._reportError('Specified steering file %s does not exist' %(steeringFile),__name__,**kwargs)
 
+    srmflag = False
     if(inputGenfile):
       if inputGenfile.lower().find("lfn:")>-1:
-        self.addToInputSandbox.append(inputGenfile)    
+        self.addToInputSandbox.append(inputGenfile)
+      elif inputGenfile.lower() == "srm":
+        self.log.info("Found SRM flag, so will assume getSRMFile to have been called before")
+        srmflag = True
       elif os.path.exists(inputGenfile):
         self.addToInputSandbox.append(inputGenfile)    
       else:
@@ -335,7 +341,14 @@ class ILCJob(Job):
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("steeringFile",steeringFile)
     if inputGenfile:
-      stepInstance.setValue("stdhepFile",inputGenfile)
+      if not srmflag:
+        stepInstance.setValue("stdhepFile",inputGenfile)
+      else:
+        if not self.ioDict.has_key("GetSRMStep"):
+          return self._reportError("Could not find SRM step. Please check that getSRMFile is called before.",__name__,**kwargs)
+        else:
+          srms = self._sortSRM(self.srms)
+          stepInstance.setValue("stdhepFile",srms[0])
     if macFile:
       stepInstance.setValue("macFile",macFile)
     if(detectorModel):
@@ -437,16 +450,22 @@ class ILCJob(Job):
         return self._reportError('As Mokka do not run before, you need to specify gearfile')
 
     inputslcioStr =''
+    srmfile = False
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
-        inputslcio = [inputslcio]
-      if not type(inputslcio)==type([]):
-        return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
-      #for i in xrange(len(inputslcio)):
-      #  inputslcio[i] = inputslcio[i].replace('LFN:','')
-      #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
-      inputslcioStr = string.join(inputslcio,';')
-      self.addToInputSandbox.append(inputslcioStr)
+        if inputslcio.lower()== "srm":
+          self.log.verbose("Will assume SRM file was set in getSRMFile before.")
+          srmfile = True
+        else:
+          inputslcio = [inputslcio]
+      if not srmfile:
+        if not type(inputslcio)==type([]):
+          return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
+        #for i in xrange(len(inputslcio)):
+        #  inputslcio[i] = inputslcio[i].replace('LFN:','')
+        #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+        inputslcioStr = string.join(inputslcio,';')
+        self.addToInputSandbox.append(inputslcioStr)
 
 
     stepName = 'RunMarlin'
@@ -487,10 +506,15 @@ class ILCJob(Job):
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
-      if self.ioDict.has_key("MokkaStep"):
-        stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
-        #raise TypeError,'Expected previously defined Mokka step for input data'
-      
+      if not srmfile:
+        if self.ioDict.has_key("MokkaStep"):
+          stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+      else:
+        if not self.ioDict.has_key("GetSRMStep"):
+          return self._reportError("Could not find SRM step. Please check that getSRMFile is called before.",__name__,**kwargs)
+        else:
+          srms = self._sortSRM(self.srms)
+          stepInstance.setValue("inputSlcio",string.join(srms,";"))
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("inputGEAR",gearfile)
     if(evtstoprocess):
@@ -1000,4 +1024,13 @@ class ILCJob(Job):
     else:
       modname = "RootExecutableAnalysis"
     return modname
+  
+  def _sortSRM(self,srmfiles=""):
+    list = []
+    srmlist = srmfiles.split(";")
+    for srmdict in srmlist:
+      srm = eval(srmdict)['file']
+      list.append(srm)
+    return list
+  
   
