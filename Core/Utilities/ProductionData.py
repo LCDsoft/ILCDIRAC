@@ -40,7 +40,12 @@ def constructProductionLFNs(paramDict):
   inputData=''
   if paramDict.has_key('InputData'):
     inputData=paramDict['InputData']
-
+  res = gConfig.getOption("/DIRAC/VirtualOrganization","ilc")
+  if not res['OK']:
+    gLogger.error('Could not get VO from CS, assuming ilc')
+    vo = 'ilc'
+  else:
+    vo = res['Value']
   fileTupleList = []
   #gLogger.verbose('wfLfnprefix = %s, wfLfnpostfix = %s, wfMask = %s, wfType=%s' %(wfLfnprefix,wfLfnpostfix,wfMask,wfType))
   gLogger.verbose('outputList %s'%(outputList))
@@ -48,7 +53,7 @@ def constructProductionLFNs(paramDict):
     #Nasty check on whether the created code parameters were not updated e.g. when changing defaults in a workflow
     fileName = info['outputFile']
     #rename to take care of correct path
-    fileName = getProdFilename(fileName,int(productionID),int(jobID))
+    fileName = getProdFilename(fileName,int(productionID),int(jobID)/1000)
     #index=0
     #if not re.search('^\d',fileName[index]):
     #  index+=1
@@ -79,12 +84,12 @@ def constructProductionLFNs(paramDict):
   debugLFNs = []
   for fileTuple in fileTupleList:
     #lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8))
-    lfn = fileTuple[0]+"/"+str(productionID).zfill(8)+"/"+str(jobID).zfill(8)+"/"+fileTuple[1]
+    lfn = fileTuple[0]+"/"+str(productionID).zfill(8)+"/"+str(int(jobID)/1000).zfill(8)+"/"+fileTuple[1]
     outputData.append(lfn)
     #bkLFNs.append(lfn)
     if debugRoot:
       #debugLFNs.append(_makeProductionLfn(str(jobID).zfill(8),debugRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8)))
-      debugLFNs.append("/ilc/prod/debug/"+str(productionID).zfill(8))
+      debugLFNs.append("/"+vo+"/prod/debug/"+str(productionID).zfill(8))
   #if debugRoot:
   # debugLFNs.append(_makeProductionLfn(str(jobID).zfill(8),debugRoot,('%s_core' % str(jobID).zfill(8) ,'core'),wfLfnprefix,str(productionID).zfill(8)))
 
@@ -93,8 +98,8 @@ def constructProductionLFNs(paramDict):
   logPathtemp = fileTuple[0].split("/")
   logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
   logPath = logPathroot+"/LOG/"+str(productionID).zfill(8)
-  logFilePath = ['%s/%s' %(logPath,str(jobID).zfill(8))]
-  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(jobID).zfill(8))]
+  logFilePath = ['%s/%s' %(logPath,str(int(jobID)/1000).zfill(8))]
+  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(int(jobID)/1000).zfill(8))]
   #[ aside, why does makeProductionPath not append the jobID itself ????
   #  this is really only used in one place since the logTargetPath is just written to a text file (should be reviewed)... ]
 
@@ -142,7 +147,7 @@ def getLogPath(paramDict):
   logPathtemp = paramDict['LogFilePath'].split("/")
   logPath = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
   logFilePath = paramDict['LogFilePath']
-  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(jobID).zfill(8))]
+  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(int(jobID)/1000).zfill(8))]
   #Get log file path - unique for all modules
 
   gLogger.verbose('Log file path is:\n%s' %logFilePath)
@@ -155,16 +160,21 @@ def constructUserLFNs(jobID,owner,outputFiles,outputPath):
   """ This method is used to supplant the standard job wrapper output data policy
       for ILC.  The initial convention adopted for user output files is the following:
       If outputpath is not defined:
-      /ilc/user/<initial e.g. s>/<owner e.g. sposs>/<yearMonth e.g. 2010_02>/<subdir>/<fileName>
+      <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<yearMonth e.g. 2010_02>/<subdir>/<fileName>
       Otherwise:
-      ilc/user/<initial e.g. s>/<owner e.g. sposs>/<outputPath>/<fileName>
+      <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<outputPath>/<fileName>
   """
   initial = owner[:1]
   subdir = str(jobID/1000)  
   timeTup = datetime.date.today().timetuple() 
   yearMonth = '%s_%s' %(timeTup[0],string.zfill(str(timeTup[1]),2))
   outputLFNs = {}
-  
+  res = gConfig.getOption("/DIRAC/VirtualOrganization","ilc")
+  if not res['OK']:
+    gLogger.error('Could not get VO from CS, assuming ilc')
+    vo = 'ilc'
+  else:
+    vo = res['Value']
   #Strip out any leading or trailing slashes but allow fine structure
   if outputPath:
     outputPathList = string.split(outputPath,os.sep)
@@ -183,9 +193,9 @@ def constructUserLFNs(jobID,owner,outputFiles,outputPath):
     outputFile = outputFile.replace('LFN:','')
     lfn = ''
     if outputPath:
-      lfn = os.sep+os.path.join('ilc','user',initial,owner,outputPath+os.sep+os.path.basename(outputFile))
+      lfn = os.sep+os.path.join(vo,'user',initial,owner,outputPath+os.sep+os.path.basename(outputFile))
     else:
-      lfn = os.sep+os.path.join('ilc','user',initial,owner,yearMonth,subdir,str(jobID))+os.sep+os.path.basename(outputFile)
+      lfn = os.sep+os.path.join(vo,'user',initial,owner,yearMonth,subdir,str(jobID))+os.sep+os.path.basename(outputFile)
     outputLFNs[outputFile]=lfn
   
   outputData = outputLFNs.values()
