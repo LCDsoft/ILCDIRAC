@@ -272,7 +272,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["LCSIMStep"]=mstep.getName()
     return S_OK()
   
-  def addFinalizationStep(self,uploadData=False,uploadLog = False):
+  def addFinalizationStep(self,uploadData=False,uploadLog = False,registerData=False):
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
     self._addParameter(dataUpload,'Enable','bool','False','EnableFlag')
@@ -285,7 +285,12 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
     logUpload.setBody(body)
 
-
+    registerdata = ModuleDefinition('RegisterOutputData')
+    registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
+    self._addParameter(registerdata,'Enable','bool','False','EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','RegisterOutputData')
+    registerdata.setBody(body)
+ 
     finalization = StepDefinition('Job_Finalization')
     
     dataUpload.setLink('Enable','self','UploadEnable')
@@ -298,11 +303,16 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalization.createModuleInstance('UploadLogFile','logUpload')
     self._addParameter(finalization,'LogEnable','bool',str(uploadLog),'EnableFlag')
 
+    registerdata.setLink('Enable','self','LogEnable')
+    finalization.addModule(registerdata)
+    finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
+    self._addParameter(finalization,'RegisterEnable','bool',str(uploadLog),'EnableFlag')
 
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
     finalizeStep.setValue('UploadEnable',uploadData)
     finalizeStep.setValue('LogEnable',uploadLog)
+    finalizeStep.setValue('RegisterEnable',registerData)
 
     ##Hack until log server is available
     #self.addToOutputSandbox.append("*.log")
