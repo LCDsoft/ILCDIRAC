@@ -63,6 +63,7 @@ class RegisterOutputData(ModuleBase):
         meta['DetectorType']=elements[6]
         meta['Datatype']=elements[7]
         meta['ProdID'] = elements[8]
+      # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       for key,value in meta.items():
         res = self.fc.setMetadata(os.path.dirname(files),key,value)
         if not res['OK']:
