@@ -303,7 +303,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalization.createModuleInstance('UploadLogFile','logUpload')
     self._addParameter(finalization,'LogEnable','bool',str(uploadLog),'EnableFlag')
 
-    registerdata.setLink('Enable','self','LogEnable')
+    registerdata.setLink('Enable','self','RegisterEnable')
     finalization.addModule(registerdata)
     finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
     self._addParameter(finalization,'RegisterEnable','bool',str(uploadLog),'EnableFlag')
