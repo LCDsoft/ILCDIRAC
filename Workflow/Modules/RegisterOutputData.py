@@ -68,7 +68,7 @@ class RegisterOutputData(ModuleBase):
         res = self.fc.setMetadata(os.path.dirname(files),key,value)
         if not res['OK']:
           self.log.error('Could not register metadata %s, with value %s for %s'%(key, value, files))
-          return S_ERROR('Error registering file metadata')
+          return res
     
     return S_OK('Output data metadata registered in catalog')
   
