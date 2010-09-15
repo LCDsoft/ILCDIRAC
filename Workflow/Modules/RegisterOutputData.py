@@ -54,19 +54,19 @@ class RegisterOutputData(ModuleBase):
       elements = files.split("/")
       meta = {}
       meta['Machine']=elements[3]
-      machine = "".join(elements[0:4],"/")
+      machine = string.join(elements[0:4],"/")
       res = self.fc.setMetadata(machine,"Machine",elements[3])
       if not res['OK']:
         self.log.error('Could not register metadata Machine, with value %s for %s'%(elements[3],machine))
         return res
       meta['Energy']=elements[4]
-      energy = "".join(elements[0:5],"/")
+      energy = string.join(elements[0:5],"/")
       res = self.fc.setMetadata(energy,"Energy",elements[4])
       if not res['OK']:
         self.log.error('Could not register metadata Energy, with value %s for %s'%(elements[4],energy))
         return res      
       meta['EvtType']=elements[5]
-      evttype = "".join(elements[0:6],"/")
+      evttype = string.join(elements[0:6],"/")
       res = self.fc.setMetadata(evttype,"EvtType",elements[5])
       if not res['OK']:
         self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
@@ -74,13 +74,13 @@ class RegisterOutputData(ModuleBase):
       
       if elements[6].lower() == 'gen':
         meta['Datatype']=elements[6]
-        datatype = "".join(elements[0:7],"/")
+        datatype = string.join(elements[0:7],"/")
         res = self.fc.setMetadata(datatype,"Datatype",elements[6])
         if not res['OK']:
           self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[6],datatype))
           return res
         meta['ProdID'] = elements[7]
-        prodid = "".join(elements[0:8],"/")
+        prodid = string.join(elements[0:8],"/")
         res = self.fc.setMetadata(prodid,"ProdID",elements[7])
         if not res['OK']:
           self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[7],prodid))
@@ -88,19 +88,19 @@ class RegisterOutputData(ModuleBase):
         
       else:
         meta['DetectorType']=elements[6]
-        detectortype="".join(elements[0:7],"/")
+        detectortype=string.join(elements[0:7],"/")
         res = self.fc.setMetadata(detectortype,"DetectorType",elements[6])
         if not res['OK']:
           self.log.error('Could not register metadata DetectorType, with value %s for %s'%(elements[6],detectortype))
           return res
         meta['Datatype']=elements[7]
-        datatype = "".join(elements[0:8],"/")
+        datatype = string.join(elements[0:8],"/")
         res = self.fc.setMetadata(datatype,"Datatype",elements[7])
         if not res['OK']:
           self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[7],datatype))
           return res 
         meta['ProdID'] = elements[8]
-        prodid = "".join(elements[0:9],"/")
+        prodid = string.join(elements[0:9],"/")
         res = self.fc.setMetadata(prodid,"ProdID",elements[8])
         if not res['OK']:
           self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
