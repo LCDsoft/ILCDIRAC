@@ -315,7 +315,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalizeStep.setValue('RegisterEnable',registerData)
 
     ##Hack until log server is available
-    #self.addToOutputSandbox.append("*.log")
+    self.addToOutputSandbox.append("*.log")
     
     return
   #############################################################################
