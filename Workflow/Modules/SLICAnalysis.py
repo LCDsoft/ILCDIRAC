@@ -168,7 +168,11 @@ class SLICAnalysis(ModuleBase):
 
     if not os.path.exists(self.detectorModel+".zip"):
       for detector_url in detector_urls:
-        detmodel,headers = urllib.urlretrieve("%s%s"%(detector_url,self.detectorModel+".zip"),self.detectorModel+".zip")
+        try:
+          detmodel,headers = urllib.urlretrieve("%s%s"%(detector_url,self.detectorModel+".zip"),self.detectorModel+".zip")
+        except:
+          self.log.error("Download of detector model failed")
+          continue
         try:
           self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
           break
