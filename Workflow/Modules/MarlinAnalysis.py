@@ -235,7 +235,10 @@ class MarlinAnalysis(ModuleBase):
           marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
         marlindll="%s"%(marlindll)
-
+    else:
+      script.close()
+      self.log.error("MARLIN_DLL directory was not found, something went terribly wrong!")
+      return S_ERROR("Marlin: Error in installation somewhere")
     #user libs
     userlib = ""
     if(os.path.exists("./lib")):
@@ -305,7 +308,9 @@ class MarlinAnalysis(ModuleBase):
         script.write('%s/Executable/Marlin -c %s\n'%(myMarlinDir,finalXML))
         #real run
         script.write('%s/Executable/Marlin %s\n'%(myMarlinDir,finalXML))
-            
+    else:
+      self.log.error("Marlin executable is missing, something is wrong with the installation!")
+      return S_ERROR("Marlin executable is missing")
     script.write('declare -x appstatus=$?\n')
     #script.write('where\n')
     #script.write('quit\n')
