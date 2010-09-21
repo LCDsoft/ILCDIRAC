@@ -18,7 +18,7 @@ class ProcessList:
         self.cfg.createNewSection('Processes')
     else:
       self.OK = False  
-    written = self._writeRepository(self.location)
+    written = self._writeProcessList(self.location)
     if not written:
       self.OK = False
       
@@ -55,9 +55,7 @@ class ProcessList:
       return res
     
   def _addEntry(self,process,path):
-    res = self.cfg.createNewSection("Processes/%s"%process)
-    if not res['OK']:
-      return res
+    self.cfg.createNewSection("Processes/%s"%process)
     res = self.cfg.setOption("Processes/%s/TarBallCSPath"%process, path)
     return res    
   
@@ -74,7 +72,7 @@ class ProcessList:
     destination = self.location
     if alternativePath:
       destination = alternativePath
-    written = self._writeRepository(destination)
+    written = self._writeProcessList(destination)
     if not written:
       return S_ERROR("Failed to write repository")
     return S_OK(destination) 

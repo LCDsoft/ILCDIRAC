@@ -12,9 +12,9 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
 
-from DIRAC import gConfig
+from DIRAC import gConfig, S_ERROR,S_OK
 
-import os,tarfile
+import os,tarfile, shutil, sys, string
 
 Script.parseCommandLine( ignoreErrors = False )
 diracAdmin = DiracAdmin()
@@ -28,7 +28,7 @@ def usage():
   print 'Usage: %s <directory_where_whizard_is> <platform> <whizard_version> <beam_spectra_version>' % (Script.scriptName)
   DIRAC.exit(2)
 
-def upload(path,tarball):
+def upload(path,appTar):
   if not os.path.exists(appTar):
     print "File %s does not exists, cannot continue."%appTar
     return S_ERROR()
@@ -43,7 +43,7 @@ def upload(path,tarball):
     print "path %s was not forseen, location not known, upload to location yourself, and publish in CS manually"%path
     return S_ERROR()
   else:
-    res = rm.putAndRegister("%s%s"%(path,appTar),appTar,"CERN-SRM")
+    res = rm.putAndRegister("%s%s"%(path,os.path.basename(appTar)),appTar,"CERN-SRM")
     return res
   return S_OK()
 
@@ -80,20 +80,16 @@ if not path_to_process_list:
   print "Could not find process list Location in CS"
   DIRAC.exit(2)
 
-res = rm.getFile(path_to_process_list)
+res = rm.getFile(path_to_process_list['Value'])
 if not res['OK']:
   print "Error while getting process list from storage"
   DIRAC.exit(2)
 
-processlist = os.path.basename(path_to_process_list)
+processlist = os.path.basename(path_to_process_list['Value'])
 if not os.path.exists(processlist):
   print "Process list does not exist locally"
   DIRAC.exit(2)
 
-res = rm.removeFile(path_to_process_list)
-if not res['OK']:
-  print "Could not remove process list from storage, do it by hand"
-  DIRAC.exit(2)
 
 pl = ProcessList(processlist)
 
@@ -116,11 +112,15 @@ if whizprc_here==0:
   print "whizard.mdl not found in %s, please check"%whizard_location
   os.chdir(startdir)
   DIRAC.exit(2)
+  
+appTar = os.path.join(os.getcwd(),"whizard"+whizard_version+".tgz")
 
-appTar = tarfile.open("whizard"+whizard_version+".tgz","w:gz")
-appTar.add("whizard")
-appTar.add("whizard.prc")
-appTar.add("whizard.mdl")
+myappTar = tarfile.open(appTar,"w:gz")
+myappTar.add("whizard")
+myappTar.add("whizard.prc")
+myappTar.add("whizard.mdl")
+if os.path.exists('lib'):
+  shutil.rmtree('lib')
 os.mkdir('lib')
 os.chdir('lib')
 scriptName = file('ldd.sh',"w")
@@ -135,12 +135,23 @@ done
 cp $string . \n""")
 scriptName.close()
 comm = 'sh -c "./%s"' %(scriptName)
-result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-os.remove(scriptName)
+result = shellCall(0,comm,callbackFunction=redirectLogOutput,bufferLimit=20971520)
+os.remove("ldd.sh")
 os.chdir(whizard_location)
-appTar.add('lib')
-appTar.close()
+myappTar.add('lib')
+myappTar.close()
 tarballurl = {}
+
+av_platforms = gConfig.getSections(softwareSection, [])
+if av_platforms['OK']:
+  if not platform in av_platforms['Value']:
+    print "Platform %s unknown, available are %s."%(platform,string.join(av_platforms['Value'],", "))
+    print "If yours is missing add it in CS"
+    DIRAC.exit(255)
+else:
+  print "Could not find all platforms available in CS"
+  DIRAC.exit(255)
+
 av_apps = gConfig.getSections("%s/%s"%(softwareSection,platform),[])
 if not av_apps['OK']:
   print "Could not find all applications available in CS"
@@ -178,14 +189,21 @@ else:
 
 os.remove(appTar)
 
-processes= readPRCfile("whizard.prc")
+processes= readPRCFile("whizard.prc")
 for process in processes:
-  pl.setCSpath(process,tarballurl['Value'])
+  pl.setCSPath(process,tarballurl['Value']+os.path.basename(appTar))
 
 os.chdir(startdir)
 
 pl.writeProcessList()
-res = upload(processlist,processlistLocation)
+
+res = rm.removeFile(path_to_process_list['Value'])
+if not res['OK']:
+  print "Could not remove process list from storage, do it by hand"
+  DIRAC.exit(2)
+
+
+res = upload(os.path.dirname(path_to_process_list['Value'])+"/",processlist)
 if not res['OK']:
   print "something went wrong in the copy"
   DIRAC.exit(2)
