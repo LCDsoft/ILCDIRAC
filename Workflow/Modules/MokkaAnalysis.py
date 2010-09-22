@@ -196,8 +196,8 @@ class MokkaAnalysis(ModuleBase):
       ### Resolve dependencies
       deps = resolveDepsTar(self.systemConfig,"mokka",self.applicationVersion)
       for dep in deps:
-        if os.path.exists(os.path.join(mySoftwareRoot,dep.rstrip(".tgz").rstrip(".tar.gz"))):
-          depfolder = dep.rstrip(".tgz").rstrip(".tar.gz")
+        if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
+          depfolder = dep.replace(".tgz","").replace(".tar.gz","")
           if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
             self.log.verbose("Found lib folder in %s"%(depfolder))
             if os.environ.has_key("LD_LIBRARY_PATH"):
