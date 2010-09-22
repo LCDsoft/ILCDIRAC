@@ -14,6 +14,19 @@ from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import Comment
 import string
 
+
+def PrepareWhizardFile(input_in,randomseed,output_in):
+  inputfile = file(input_in,"r")  
+  outputfile = file(output_in,"w")
+  for line in inputfile:
+    if line.count("seed ="):
+      outputfile.write("seed = %s\n"%randomseed)
+    else:
+      outputfile.write(line)
+  inputfile.close()
+  outputfile.close()
+  return True
+
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
   

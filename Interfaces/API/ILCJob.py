@@ -186,6 +186,7 @@ class ILCJob(Job):
         return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
       else:
         cspath = self.processlist.getCSPath(process)
+        self.log.debug("Found process %s corresponding to %s"%(process,cspath))
         whiz_file = os.path.basename(cspath)
         version= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
     if not version:
@@ -225,12 +226,15 @@ class ILCJob(Job):
     step.createModuleInstance('UserJobFinalization','Whizard')
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))    
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Whizard',stepName)
     stepInstance.setValue("applicationVersion",version)
     stepInstance.setValue("applicationLog",logName)
-
+    if in_file:
+      stepInstance.setValue("InputFile",in_file)
+      
     currentApp = "whizard.%s"%version
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
