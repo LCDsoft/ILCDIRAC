@@ -55,7 +55,8 @@ class ProcessList:
       return res
     
   def _addEntry(self,processdic,path):
-    self.cfg.createNewSection("Processes/%s"%processdic['process'])
+    if not self.cfg.isSection("Processes/%s"%processdic['process']):
+      self.cfg.createNewSection("Processes/%s"%processdic['process'])
     self.cfg.setOption("Processes/%s/TarBallCSPath"%processdic['process'], path)
     self.cfg.setOption("Processes/%s/Detail"%processdic['process'], processdic['detail'])
     self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])

@@ -54,20 +54,23 @@ def redirectLogOutput(fd, message):
 def readPRCFile(prc):
   list = []
   myprc = file(prc)
+
   for process in myprc:
     if len(process.split()):
+      model = ""
       p = {}
       if process[0]=="#":
         continue
+      elif process.split()[0]=="model":
+        model = process.split()[1]
       elif not process.split()[0]=="model":
         p['process']=process.split()[0]
         p['detail'] = string.join(process.split()[1:3],"->")
         p['generator']=process.split()[3]
-      elif process.split()[0]=="model":
-        p['model'] = process.split()[1]
+        p['model'] = model
+        list.append(p)
       else:
         continue
-      list.append(p)
 
   return list
 
