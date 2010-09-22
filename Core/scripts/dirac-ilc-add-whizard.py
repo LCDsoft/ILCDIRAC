@@ -57,7 +57,10 @@ def readPRCFile(prc):
   for process in myprc:
     if len(process.split()):
       if not  process[0]=="#" and not process.split()[0]=="model":
-        list.append(process.split()[0])
+        p['process']=process.split()[0]
+        p['detail'] = string.join(process.split()[1:3],"->")
+        p['generator']=process.split()[3]
+        list.append(p)
   return list
 
   

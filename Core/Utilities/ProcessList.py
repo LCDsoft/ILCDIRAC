@@ -43,21 +43,24 @@ class ProcessList:
   def isOK(self):
     return self.OK
     
-  def setCSPath(self,process,path):
-    processExists = self._existsProcess(process)
+  def setCSPath(self,processdic,path):
+    processExists = self._existsProcess(processdic['process'])
     if not processExists:
-      res = self._addEntry(process, path)
+      res = self._addEntry(processdic, path)
       return res
     else:
-      gLogger.info("Process %s already defined in ProcessList, will replace it"%process)
-      self.cfg.deleteKey("Processes/%s"%process)
-      res = self._addEntry(process, path)
+      gLogger.info("Process %s already defined in ProcessList, will replace it"%processdic['process'])
+      self.cfg.deleteKey("Processes/%s"%processdic['process'])
+      res = self._addEntry(processdic, path)
       return res
     
-  def _addEntry(self,process,path):
-    self.cfg.createNewSection("Processes/%s"%process)
-    res = self.cfg.setOption("Processes/%s/TarBallCSPath"%process, path)
-    return res    
+  def _addEntry(self,processdic,path):
+    self.cfg.createNewSection("Processes/%s"%processdic['process'])
+    self.cfg.setOption("Processes/%s/TarBallCSPath"%processdic['process'], path)
+    self.cfg.setOption("Processes/%s/Detail"%processdic['process'], processdic['detail'])
+    self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])
+
+    return    
   
   def getCSPath(self,process):
     return self.cfg.getOption("Processes/%s/TarBallCSPath"%process, None)
