@@ -164,6 +164,10 @@ class MokkaAnalysis(ModuleBase):
       if not self.result['OK']:
         return self.result
 
+      if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+        self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+        return S_OK('Mokka should not proceed as previous step did not end properly')
+
       cwd = os.getcwd()
       self.root = gConfig.getValue('/LocalSite/Root',cwd)
       self.log.info( "Executing Mokka %s"%(self.applicationVersion))
