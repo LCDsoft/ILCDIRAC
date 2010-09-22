@@ -175,8 +175,8 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,randomseed=0,logFile=None,logInOutputData=False):
-    kwargs = {'logFile':logFile,"logInOutputData":logInOutputData}
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,randomseed=0,logFile=None,logInOutputData=False):
+    kwargs = {"nbevts":nbevts,'logFile':logFile,"logInOutputData":logInOutputData}
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
     if process:
@@ -191,6 +191,9 @@ class ILCJob(Job):
         version= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
     if not version:
       return self._reportError("Version has to be defined somewhere",__name__,**kwargs)
+
+    if not nbevts:
+      return self._reportError("Nb of evts has to be defined via nbevts",__name__,**kwargs)
 
     if logFile:
       if type(logFile) in types.StringTypes:
@@ -228,6 +231,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
     step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
+    step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Whizard',stepName)
@@ -236,7 +240,9 @@ class ILCJob(Job):
     if in_file:
       stepInstance.setValue("InputFile",in_file)
     if randomseed:
-        stepInstance.setValue("RandomSeed",randomseed)
+      stepInstance.setValue("RandomSeed",randomseed)
+    stepInstance.setValue("NbOfEvts",nbevts)
+    
     currentApp = "whizard.%s"%version
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
