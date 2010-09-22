@@ -59,11 +59,15 @@ class ProcessList:
     self.cfg.setOption("Processes/%s/TarBallCSPath"%processdic['process'], path)
     self.cfg.setOption("Processes/%s/Detail"%processdic['process'], processdic['detail'])
     self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])
-
     return    
   
   def getCSPath(self,process):
     return self.cfg.getOption("Processes/%s/TarBallCSPath"%process, None)
+
+  def getProcesses(self):
+    processesdict = self.cfg.getAsDict("Processes")
+    processes = processesdict.keys()
+    return processes
   
   def existsProcess(self,process):
     return S_OK(self._existsProcess(process))
