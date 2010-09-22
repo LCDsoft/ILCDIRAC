@@ -175,7 +175,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,logFile=None,logInOutputData=False):
+  def setWhizard(self,process=None,version=None,in_file=None,randomseed=0,logFile=None,logInOutputData=False):
     kwargs = {'logFile':logFile,"logInOutputData":logInOutputData}
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
@@ -227,6 +227,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))    
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
+    step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Whizard',stepName)
@@ -234,7 +235,8 @@ class ILCJob(Job):
     stepInstance.setValue("applicationLog",logName)
     if in_file:
       stepInstance.setValue("InputFile",in_file)
-      
+    if randomseed:
+        stepInstance.setValue("RandomSeed",randomseed)
     currentApp = "whizard.%s"%version
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'

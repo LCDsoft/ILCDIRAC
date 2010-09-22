@@ -46,11 +46,14 @@ class WhizardAnalysis(ModuleBase):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
  
-    if self.workflow.has_key('JOB_ID'):
+    if self.step_commons.has_key("RandomSeed"):
+      self.randomseed = self.step_commons['RandomSeed']
+    elif self.workflow.has_key('JOB_ID'):
       self.randomseed = int(self.workflow_commons["JOB_ID"])
 
     if self.step_commons.has_key("InputFile"):
       self.inFile = self.step_commons["InputFile"]
+      
 
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
