@@ -8,9 +8,11 @@ DiracILC is the API to use to submit jobs in the ILC VO
 from DIRAC.Interfaces.API.Dirac                     import Dirac
 from DIRAC.Interfaces.API.Job                       import Job
 from DIRAC.Core.Utilities.List                      import breakListIntoChunks, sortList
+from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
+from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
-import string
+import string,os
 
 
 COMPONENT_NAME='DiracILC'
@@ -26,6 +28,22 @@ class DiracILC(Dirac):
     #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     self.log = gLogger
+    self.software_versions = {}
+    processlistpath = gConfig.getOption("/LocalSite/ProcessListPath", None)
+    if not processlistpath['Value']:
+      gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to your dirac.cfg \
+                   the entry /LocalSite/ProcessListPath pointing to the file')
+      pathtofile = gConfig.getOption("/Operations/ProcessList/Location",None)
+      if not pathtofile['Value']:
+        gLogger.error("Could not get path to process list")
+        processlist = ""
+      else:
+        rm = ReplicaManager()
+        rm.getFile(pathtofile['Value'])
+        processlist=os.path.basename(pathtofile['Value'])   
+    else:
+      processlist = processlistpath['Value']
+    self.pl = ProcessList(processlist)
     
   def preSubmissionChecks(self,job,mode):
     """Overridden method from DIRAC.Interfaces.API.Dirac
@@ -59,6 +77,11 @@ class DiracILC(Dirac):
       return S_ERROR( formulationErrors )
     return self._do_check(job)
 
+  def giveProcessList(self):
+    """ Returns the list of Processes
+    """
+    return self.pl
+  
   def retrieveRepositoryOutputDataLFNs(self,requestedStates = ['Done']):
     """Helper function
     
@@ -84,7 +107,7 @@ class DiracILC(Dirac):
               list.append(lfn)
     return list
   
-  def _do_check(self,job):  
+  def _do_check(self,job):
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages")
     if apps:
