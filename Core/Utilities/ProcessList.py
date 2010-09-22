@@ -88,6 +88,6 @@ class ProcessList:
   def printProcesses(self):
     processesdict = self.cfg.getAsDict("Processes")
     for key,value in processesdict.items():
-      print "%s %s generated with %s in %s"%(key,value['detail'],value['generator'],value['model'])
+      print "%s: [%s], generated with '%s' with the model '%s'"%(key,value['Detail'],value['Generator'],value['Model'])
     
   
