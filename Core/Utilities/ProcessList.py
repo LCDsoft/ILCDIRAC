@@ -24,7 +24,7 @@ class ProcessList:
       
   def _writeProcessList(self,path):
     handle,tmpName = tempfile.mkstemp()
-    written = self.repo.writeToFile(tmpName)
+    written = self.cfg.writeToFile(tmpName)
     os.close(handle)
     if not written:
       if os.path.exists(tmpName):
