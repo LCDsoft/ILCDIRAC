@@ -173,7 +173,7 @@ if appName.lower() in av_apps['Value']:
     print 'Application %s %s for %s already in CS, nothing to do'%(appName.lower(),appVersion,platform)
     DIRAC.exit(0)
   else:
-    result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),appTar)
+    result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),os.path.basename(appTar))
     if result['OK']:
       modifiedCS = True
       tarballurl = gConfig.getOption("%s/%s/%s/TarBallURL"%(softwareSection,platform,appName.lower()),"")
@@ -184,7 +184,7 @@ if appName.lower() in av_apps['Value']:
           DIRAC.exit(255)
 
 else:
-  result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),appTar)
+  result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),os.path.basename(appTar))
   if result['OK']:  
     modifiedCS = True
     tarballurl = gConfig.getOption("%s/%s/%s/TarBallURL"%(softwareSection,platform,appName.lower()),"")
