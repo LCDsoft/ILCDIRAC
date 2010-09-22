@@ -29,11 +29,11 @@ class DiracILC(Dirac):
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     self.log = gLogger
     self.software_versions = {}
-    processlistpath = gConfig.getOption("/LocalSite/ProcessListPath", None)
+    processlistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
     if not processlistpath['Value']:
       gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to your dirac.cfg \
                    the entry /LocalSite/ProcessListPath pointing to the file')
-      pathtofile = gConfig.getOption("/Operations/ProcessList/Location",None)
+      pathtofile = gConfig.getOption("/Operations/ProcessList/Location","")
       if not pathtofile['Value']:
         gLogger.error("Could not get path to process list")
         processlist = ""
