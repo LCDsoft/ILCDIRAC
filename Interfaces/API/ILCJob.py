@@ -182,7 +182,7 @@ class ILCJob(Job):
     if process:
       if not self.processlist.existsProcess(process):
         self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
-        self.log.info("Available processes are:\n %s"%(string.join(self.processlist.getProcesses(),"\n")))
+        self.log.info("Available processes are:\n %s"%(self.processlist.printProcesses()))
         return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
       else:
         cspath = self.processlist.getCSPath(process)
