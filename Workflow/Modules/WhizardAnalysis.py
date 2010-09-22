@@ -7,6 +7,7 @@ from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFile
 
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
@@ -34,6 +35,7 @@ class WhizardAnalysis(ModuleBase):
     self.applicationLog = ''
     self.applicationVersion = ''
     self.applicationName = 'whizard'
+    self.randomseed = 0
     
     
   def resolveInputVariables(self):
@@ -43,6 +45,16 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key('applicationVersion'):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
+ 
+    if self.workflow.has_key('JOB_ID'):
+      self.randomseed = int(self.workflow_commons["JOB_ID"])
+
+    if self.step_commons.has_key("InputFile"):
+      self.inFile = self.step_commons["InputFile"]
+
+    if self.inFile == "whizard.in":
+      os.rename(self.inFile, "whizardnew.in")
+      self.inFile = "whizardnew.in"
     return S_OK()
 
   def execute(self):
@@ -91,6 +103,12 @@ class WhizardAnalysis(ModuleBase):
     os.environ['EBEAM'] = path_to_beam_spectra+"/ebeam_in_linker_000"
     os.environ['PBEAM'] = path_to_beam_spectra+"/pbeam_in_linker_000"
 
+    res = PrepareWhizardFile(self.inFile,self.randomseed,"whizard.in")
+    if not res:
+      self.log.error('Something went wrong with input file generation')
+      self.setApplicationStatus('Whizard: something went wrong with input file generation')
+      return S_ERROR('Something went wrong with whizard.in file generation')
+    
     scriptName = 'Whizard_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
     script = open(scriptName,'w')
