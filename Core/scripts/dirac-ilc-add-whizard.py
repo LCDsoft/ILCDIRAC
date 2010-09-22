@@ -60,6 +60,7 @@ def readPRCFile(prc):
         p['process']=process.split()[0]
         p['detail'] = string.join(process.split()[1:3],"->")
         p['generator']=process.split()[3]
+        p['model'] = process.split()[4]
         list.append(p)
   return list
 
