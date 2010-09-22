@@ -117,7 +117,7 @@ class ModuleBase(object):
 
   #############################################################################
   def setFileStatus(self,production,lfn,status):
-    """ Set the file status for the given production in the Production Database\
+    """ Set the file status for the given production in the Production Database
     
     @param production: production ID
     @param lfn: logical file name of the file that needs status change
@@ -127,7 +127,7 @@ class ModuleBase(object):
     self.log.verbose('setFileStatus(%s,%s,%s)' %(production,lfn,status))
 
     if not self.workflow_commons.has_key('FileReport'):
-      fileReport =  FileReport('ProductionManagement/ProductionManager')
+      fileReport =  FileReport('Transformation/TransformationManager')
       self.workflow_commons['FileReport'] = fileReport
 
     fileReport = self.workflow_commons['FileReport']
