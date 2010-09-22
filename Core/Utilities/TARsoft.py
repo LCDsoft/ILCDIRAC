@@ -101,10 +101,13 @@ def install(app,config,area):
         except:
           os.chdir(curdir)
           return DIRAC.S_ERROR("Could not rename slic directory")
-    dircontent = os.listdir(folder_name)
-    if not len(dircontent):
-      os.chdir(curdir)
-      return DIRAC.S_ERROR("Folder %s is empty, considering install as failed"%folder_name)
+    try:
+      dircontent = os.listdir(folder_name)
+      if not len(dircontent):
+        os.chdir(curdir)
+        return DIRAC.S_ERROR("Folder %s is empty, considering install as failed"%folder_name)
+    except:
+      pass
     
   if appName=="slic":
     basefolder = folder_name
