@@ -59,6 +59,7 @@ class ProcessList:
     self.cfg.setOption("Processes/%s/TarBallCSPath"%processdic['process'], path)
     self.cfg.setOption("Processes/%s/Detail"%processdic['process'], processdic['detail'])
     self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])
+    self.cfg.setOption("Processes/%s/Model"%processdic['process'], processdic['model'])
     return    
   
   def getCSPath(self,process):
@@ -83,4 +84,9 @@ class ProcessList:
     if not written:
       return S_ERROR("Failed to write repository")
     return S_OK(destination) 
+  def printProcesses(self):
+    processesdict = self.cfg.getAsDict("Processes")
+    for key,value in processesdict.items():
+      print "%s %s generated with %s in %s"%(key,value['detail'],value['generator'],value['model'])
+    
   
