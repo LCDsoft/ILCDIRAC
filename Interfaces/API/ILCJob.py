@@ -36,7 +36,7 @@ class ILCJob(Job):
   Each application corresponds to a module that is called from the JobAgent, on the worker node. This module is defined below by modulename. 
   All available modules can be found in ILCDIRAC.Worflow.Modules.
   """
-  def __init__(self,script=None):
+  def __init__(self,script=None,dirac=None):
     """Instantiates the Workflow object and some default parameters.
     """
     Job.__init__(self,script)
@@ -47,6 +47,9 @@ class ILCJob(Job):
     self.StepCount = 0
     self.ioDict = {}
     self.srms = ""
+    self.processlist = None
+    if dirac:
+      self.processlist = dirac.giveProcessList()
 
   def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None,logInOutputData=False):
     """ method needed by Ganga, and also for pyroot
@@ -170,6 +173,76 @@ class ILCJob(Job):
     self.srms = files
     self.ioDict["GetSRMStep"]=stepInstance.getName()
     
+    return S_OK()
+
+  def setWhizard(self,process=None,version=None,in_file=None,logFile=None,logInOutputData=False):
+    kwargs = {'logFile':logFile,"logInOutputData":logInOutputData}
+    if not self.processlist:
+      return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
+    if process:
+      if not self.processlist.existsProcess(process):
+        self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
+        self.log.info("Available processes are:\n %s"%(string.join(self.processlist.getProcesses(),"\n")))
+        return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
+      else:
+        cspath = self.processlist.getCSPath(process)
+        whiz_file = os.path.basename(cspath)
+        version= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
+    if not version:
+      return self._reportError("Version has to be defined somewhere",__name__,**kwargs)
+
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'Whizard_%s.log' %(version)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
+      
+    self.StepCount +=1
+    stepName = 'RunWhizard'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('Whizard',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
+    moduleName = "WhizardAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('Whizard module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)    
+    step = StepDefinition('Whizard')
+    step.addModule(module)
+    step.addModule(userData)
+    step.createModuleInstance('WhizardAnalysis','Whizard')
+    step.createModuleInstance('UserJobFinalization','Whizard')
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))    
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance('Whizard',stepName)
+    stepInstance.setValue("applicationVersion",version)
+    stepInstance.setValue("applicationLog",logName)
+
+    currentApp = "whizard.%s"%version
+    swPackages = 'SoftwarePackages'
+    description='ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict["WhizardStep"]=stepInstance.getName()
+
     return S_OK()
      
   def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=0,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
