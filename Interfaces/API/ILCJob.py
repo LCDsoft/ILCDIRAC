@@ -180,7 +180,6 @@ class ILCJob(Job):
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
     if process:
-      print self.processlist.existsProcess(process)
       if not self.processlist.existsProcess(process)['Value']:
         self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
         self.log.info("Available processes are:")
