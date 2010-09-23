@@ -231,7 +231,7 @@ if not res['OK']:
   DIRAC.exit(2)
 
 localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath","")
-if localprocesslistpath['OK']:
+if localprocesslistpath['Value']:
   try:
     shutil.copy(processlist, localprocesslistpath['Value'])
   except:
