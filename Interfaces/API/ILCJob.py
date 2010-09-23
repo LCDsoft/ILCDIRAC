@@ -186,7 +186,7 @@ class ILCJob(Job):
         return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
       else:
         cspath = self.processlist.getCSPath(process)
-        self.log.debug("Found process %s corresponding to %s"%(process,cspath))
+        self.log.info("Found process %s corresponding to %s"%(process,cspath))
         whiz_file = os.path.basename(cspath)
         version= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
     if not version:
