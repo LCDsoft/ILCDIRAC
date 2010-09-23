@@ -206,7 +206,14 @@ class ILCJob(Job):
       logName = 'Whizard_%s.log' %(version)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
-      
+    if in_file:
+      if in_file.lower().find("lfn:")>-1:
+        self.addToInputSandbox.append(in_file)
+      elif os.path.exists(in_file):
+        self.addToInputSandbox.append(in_file)    
+      else:
+        return self._reportError('Specified input generator file %s does not exist' %(in_file),__name__,**kwargs)
+        
     self.StepCount +=1
     stepName = 'RunWhizard'
     stepNumber = self.StepCount
