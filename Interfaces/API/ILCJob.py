@@ -36,7 +36,7 @@ class ILCJob(Job):
   Each application corresponds to a module that is called from the JobAgent, on the worker node. This module is defined below by modulename. 
   All available modules can be found in ILCDIRAC.Worflow.Modules.
   """
-  def __init__(self,script=None,dirac=None):
+  def __init__(self,script=None,processlist=None):
     """Instantiates the Workflow object and some default parameters.
     """
     Job.__init__(self,script)
@@ -48,8 +48,8 @@ class ILCJob(Job):
     self.ioDict = {}
     self.srms = ""
     self.processlist = None
-    if dirac:
-      self.processlist = dirac.giveProcessList()
+    if processlist:
+      self.processlist =processlist
 
   def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None,logInOutputData=False):
     """ method needed by Ganga, and also for pyroot
@@ -180,9 +180,11 @@ class ILCJob(Job):
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
     if process:
-      if not self.processlist.existsProcess(process):
+      print self.processlist.existsProcess(process)
+      if not self.processlist.existsProcess(process)['Value']:
         self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
-        self.log.info("Available processes are:\n %s"%(self.processlist.printProcesses()))
+        self.log.info("Available processes are:")
+        self.processlist.printProcesses()
         return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
       else:
         cspath = self.processlist.getCSPath(process)
@@ -239,6 +241,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))    
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
+    step.addParameter(Parameter("EvtType","","string","","",False,False,"Name of the whizard.in file"))
     step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
 
@@ -248,6 +251,8 @@ class ILCJob(Job):
     stepInstance.setValue("applicationLog",logName)
     if in_file:
       stepInstance.setValue("InputFile",in_file)
+    if process:
+      stepInstance.setValue("EvtType",process)
     if randomseed:
       stepInstance.setValue("RandomSeed",randomseed)
     stepInstance.setValue("NbOfEvts",nbevts)
