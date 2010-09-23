@@ -197,6 +197,8 @@ if appName.lower() in av_apps['Value']:
         if not res['OK']:
           print "Upload to %s failed"%tarballurl
           DIRAC.exit(255)
+    result = diracAdmin.csSetOption("%s/%s/%s/%s/Dependencies/beam_spectra/version"%(softwareSection,platform,appName.lower(),appVersion),beam_spectra_version)
+    
 
 else:
   result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall"%(softwareSection,platform,appName.lower(),appVersion),os.path.basename(appTar))
@@ -208,6 +210,7 @@ else:
       if not res['OK']:
         print "Upload to %s failed"%tarballurl
         DIRAC.exit(255)
+  result = diracAdmin.csSetOption("%s/%s/%s/%s/Dependencies/beam_spectra/version"%(softwareSection,platform,appName.lower(),appVersion),beam_spectra_version)
 
 os.remove(appTar)
 
