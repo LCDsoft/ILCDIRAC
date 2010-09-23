@@ -61,6 +61,7 @@ class ProcessList:
     self.cfg.setOption("Processes/%s/Detail"%processdic['process'], processdic['detail'])
     self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])
     self.cfg.setOption("Processes/%s/Model"%processdic['process'], processdic['model'])
+    self.cfg.setOption("Processes/%s/Restrictions"%processdic['process'], processdic['restrictions'])
     return    
   
   def getCSPath(self,process):
@@ -85,9 +86,10 @@ class ProcessList:
     if not written:
       return S_ERROR("Failed to write repository")
     return S_OK(destination) 
+  
   def printProcesses(self):
     processesdict = self.cfg.getAsDict("Processes")
     for key,value in processesdict.items():
-      print "%s: [%s], generated with '%s' with the model '%s'"%(key,value['Detail'],value['Generator'],value['Model'])
+      print "%s: [%s], generated with '%s' with the model '%s' using diagram restrictions %s"%(key,value['Detail'],value['Generator'],value['Model'],value['Restrictions'])
     
   
