@@ -58,7 +58,7 @@ class WhizardAnalysis(ModuleBase):
       self.Lumi = self.step_commons['Lumi']
 
     if self.step_commons.has_key("InputFile"):
-      self.inFile = self.step_commons["InputFile"]
+      self.inFile = os.path.basename(self.step_commons["InputFile"])
       
 
     if self.inFile == "whizard.in":
