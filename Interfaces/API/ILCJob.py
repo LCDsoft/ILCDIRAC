@@ -175,8 +175,8 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,randomseed=0,logFile=None,logInOutputData=False):
-    kwargs = {"nbevts":nbevts,'logFile':logFile,"logInOutputData":logInOutputData}
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,logFile=None,logInOutputData=False):
+    kwargs = {"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,'logFile':logFile,"logInOutputData":logInOutputData}
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
     if process:
@@ -192,9 +192,11 @@ class ILCJob(Job):
     if not version:
       return self._reportError("Version has to be defined somewhere",__name__,**kwargs)
 
-    if not nbevts:
-      return self._reportError("Nb of evts has to be defined via nbevts",__name__,**kwargs)
-
+    if not nbevts and not lumi:
+      return self._reportError("Nb of evts has to be defined via nbevts or luminosity via lumi",__name__,**kwargs)
+    if nbevts and lumi:
+      self.log.info('Nb of evts and lumi have been specified, only lumi will be taken into account')
+      
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
