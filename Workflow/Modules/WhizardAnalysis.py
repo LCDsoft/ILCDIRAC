@@ -52,6 +52,8 @@ class WhizardAnalysis(ModuleBase):
       self.randomseed = self.step_commons['RandomSeed']
     elif self.workflow.has_key('JOB_ID'):
       self.randomseed = int(self.workflow_commons["JOB_ID"])
+    elif self.jobID:
+      self.randomseed = self.jobID
 
     if self.step_commons.has_key('NbOfEvts'):
       self.NumberOfEvents = self.step_commons['NbOfEvts']
