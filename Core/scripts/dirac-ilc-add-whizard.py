@@ -54,23 +54,22 @@ def redirectLogOutput(fd, message):
 def readPRCFile(prc):
   list = []
   myprc = file(prc)
-
+  model = ""
   for process in myprc:
     if len(process.split()):
-      model = ""
-      p = {}
       elems = process.split()
       if process[0]=="#":
         continue
       elif elems[0]=="model":
         model = elems[1]
       elif not elems[0]=="model":
+        p = {}
         p['process']=elems[0]
         p['detail'] = string.join(elems[1:3],"->")
         p['generator']=elems[3]
-        p['restriction']="none"
+        p['restrictions']="none"
         if len(elems)>4:
-          p['restrictions']=elems[4:]
+          p['restrictions']=string.join(elems[4:]," ")
         p['model'] = model
         list.append(p)
       else:
@@ -139,10 +138,7 @@ if os.path.exists('lib'):
 scriptName = 'ldd.sh'
 script = file(scriptName,"w")
 script.write('#!/bin/bash \n')
-script.write("""echo =============================
-echo Running ldd on whizard
-echo =============================
-string1=$(ldd whizard | grep '=>' | sed 's/.*=>//g' | sed 's/(.*)//g')
+script.write("""string1=$(ldd whizard | grep '=>' | sed 's/.*=>//g' | sed 's/(.*)//g')
 string=""
 for file in $string1; do
   string=\"$file $string\"
@@ -150,6 +146,7 @@ done
 mkdir lib
 cp $string ./lib
 whizarddir=%s 
+rm -rf $whizarddir
 mkdir $whizarddir
 cp -r whizard whizard.prc whizard.mdl lib/ $whizarddir
 """%("whizard"+whizard_version))
@@ -232,6 +229,13 @@ res = upload(os.path.dirname(path_to_process_list['Value'])+"/",processlist)
 if not res['OK']:
   print "something went wrong in the copy"
   DIRAC.exit(2)
+
+localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath","")
+if localprocesslistpath:
+  try:
+    shutil.copy(processlist, localprocesslistpath)
+  except:
+    print "Copy of process list to %s failed!"%localprocesslistpath
 
 #Commit the changes if nothing has failed and the CS has been modified
 if modifiedCS:
