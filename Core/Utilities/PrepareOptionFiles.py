@@ -15,14 +15,16 @@ from xml.etree.ElementTree import Comment
 import string
 
 
-def PrepareWhizardFile(input_in,randomseed,nevts,output_in):
+def PrepareWhizardFile(input_in,randomseed,nevts,lumi,output_in):
   inputfile = file(input_in,"r")  
   outputfile = file(output_in,"w")
   for line in inputfile:
     if line.count("seed ="):
       outputfile.write(" seed = %s\n"%randomseed)
-    elif line.count("n_events ="):
-      outputfile.write(" n_events = %s"%nevts)
+    elif line.count("n_events =") and not lumi:
+      outputfile.write(" n_events = %s\n"%nevts)
+    elif lumi and line.count("luminosity ="):
+      outputfile.write(" luminosity = %s\n"%lumi)
     else:
       outputfile.write(line)
   inputfile.close()
