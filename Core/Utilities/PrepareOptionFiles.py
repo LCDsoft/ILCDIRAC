@@ -15,7 +15,7 @@ from xml.etree.ElementTree import Comment
 import string
 
 
-def PrepareWhizardFile(input_in,randomseed,nevts,lumi,output_in):
+def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
   inputfile = file(input_in,"r")  
   outputfile = file(output_in,"w")
   for line in inputfile:
@@ -25,6 +25,8 @@ def PrepareWhizardFile(input_in,randomseed,nevts,lumi,output_in):
       outputfile.write(" n_events = %s\n"%nevts)
     elif lumi and line.count("luminosity ="):
       outputfile.write(" luminosity = %s\n"%lumi)
+    elif line.count("write_events_file = ") and len(evttype):
+      outputfile.write(" write_events_file = \"%s\" \n"%evttype)
     else:
       outputfile.write(line)
   inputfile.close()

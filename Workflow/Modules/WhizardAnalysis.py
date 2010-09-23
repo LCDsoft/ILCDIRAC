@@ -36,6 +36,7 @@ class WhizardAnalysis(ModuleBase):
     self.applicationLog = ''
     self.applicationVersion = ''
     self.applicationName = 'whizard'
+    self.evttype = ""
     self.randomseed = 0
     
     
@@ -59,7 +60,9 @@ class WhizardAnalysis(ModuleBase):
 
     if self.step_commons.has_key("InputFile"):
       self.inFile = os.path.basename(self.step_commons["InputFile"])
-      
+    if self.step_commons.has_key("EvtType"):
+      self.evttype = os.path.basename(self.step_commons["EvtType"])
+       
 
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
@@ -112,7 +115,7 @@ class WhizardAnalysis(ModuleBase):
     os.environ['EBEAM'] = path_to_beam_spectra+"/ebeam_in_linker_000"
     os.environ['PBEAM'] = path_to_beam_spectra+"/pbeam_in_linker_000"
 
-    res = PrepareWhizardFile(self.inFile,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+    res = PrepareWhizardFile(self.inFile,self.evttype,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     if not res:
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
