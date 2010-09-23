@@ -231,11 +231,11 @@ if not res['OK']:
   DIRAC.exit(2)
 
 localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath","")
-if localprocesslistpath:
+if localprocesslistpath['OK']:
   try:
-    shutil.copy(processlist, localprocesslistpath)
+    shutil.copy(processlist, localprocesslistpath['Value'])
   except:
-    print "Copy of process list to %s failed!"%localprocesslistpath
+    print "Copy of process list to %s failed!"%localprocesslistpath['Value']
 
 #Commit the changes if nothing has failed and the CS has been modified
 if modifiedCS:
