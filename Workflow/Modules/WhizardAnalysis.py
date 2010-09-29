@@ -136,6 +136,8 @@ class WhizardAnalysis(ModuleBase):
     os.environ['EBEAM'] = path_to_beam_spectra+"/ebeam_in_linker_000"
     os.environ['PBEAM'] = path_to_beam_spectra+"/pbeam_in_linker_000"
 
+
+    ## Get from process file the proper whizard.in file
     if self.getProcessInFile:
       whizardin = ""
       res = self.obtainProcessList()
@@ -152,7 +154,12 @@ class WhizardAnalysis(ModuleBase):
       except:
         self.log.error("Could not copy %s.in from %s"%(whizardin,mySoftDir))
         return S_ERROR("Failed to obtain %s.in"%whizardin)
-    
+
+    ##Check existence of Les Houches input file
+    leshouchesfiles = False
+    if os.path.exists("%s/LesHouches.msugra_1.in"%(mySoftDir)):
+      leshouchesfiles = True
+      
     res = PrepareWhizardFile(self.inFile,self.evttype,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     if not res:
       self.log.error('Something went wrong with input file generation')
@@ -170,6 +177,8 @@ class WhizardAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
     script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
+    if leshouchesfiles:
+      script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
     script.write('whizard \n')
     script.write('declare -x appstatus=$?\n')    
