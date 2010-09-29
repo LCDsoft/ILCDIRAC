@@ -68,6 +68,9 @@ class ProcessList:
   def getCSPath(self,process):
     return self.cfg.getOption("Processes/%s/TarBallCSPath"%process, None)
 
+  def getInFile(self,process):
+    return self.cfg.getOption("Processes/%s/InFile"%process, None)
+
   def getProcesses(self):
     processesdict = self.cfg.getAsDict("Processes")
     processes = processesdict.keys()
