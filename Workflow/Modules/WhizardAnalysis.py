@@ -8,10 +8,12 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFile
+from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
-import os,re,sys
+import os,re,sys, shutil
 
 class WhizardAnalysis(ModuleBase):
   """
@@ -38,7 +40,20 @@ class WhizardAnalysis(ModuleBase):
     self.applicationName = 'whizard'
     self.evttype = ""
     self.randomseed = 0
-    
+    self.getProcessInFile = False
+    self.rm = ReplicaManager()
+    self.processlist = None
+
+  def obtainProcessList(self):
+    res = gConfig.getOption("/Operations/ProcessList/Location","")
+    if not res['OK']:
+      return res
+    processlistloc = res['Value']
+    res = self.rm.getFile(processlistloc)
+    if not res['OK']:
+      return res
+    self.processlist = ProcessList(os.path.basename(processlistloc))
+    return S_OK()
     
   def resolveInputVariables(self):
     if self.workflow_commons.has_key('SystemConfig'):
@@ -62,6 +77,10 @@ class WhizardAnalysis(ModuleBase):
 
     if self.step_commons.has_key("InputFile"):
       self.inFile = os.path.basename(self.step_commons["InputFile"])
+
+    if not len(self.inFile):
+      self.getProcessInFile = True
+      
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
        
@@ -117,6 +136,23 @@ class WhizardAnalysis(ModuleBase):
     os.environ['EBEAM'] = path_to_beam_spectra+"/ebeam_in_linker_000"
     os.environ['PBEAM'] = path_to_beam_spectra+"/pbeam_in_linker_000"
 
+    if self.getProcessInFile:
+      whizardin = ""
+      res = self.obtainProcessList()
+      if not res['OK']:
+        self.log.error("Could not obtain process list")
+        return res
+      whizardin = self.processlist.getInFile(self.evttype)
+      if not whizardin:
+        self.log.error("Whizard input file was not found in process list, cannot proceed")
+        return S_ERROR("Error while resolving whizard input file")
+      try:
+        shutil.copy("%s/%s"%(mySoftDir,whizardin), "./whizardnew.in")
+        self.inFile = "whizardnew.in"
+      except:
+        self.log.error("Could not copy %s.in from %s"%(whizardin,mySoftDir))
+        return S_ERROR("Failed to obtain %s.in"%whizardin)
+    
     res = PrepareWhizardFile(self.inFile,self.evttype,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     if not res:
       self.log.error('Something went wrong with input file generation')
