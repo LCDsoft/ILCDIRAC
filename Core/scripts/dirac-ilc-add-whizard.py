@@ -79,7 +79,7 @@ def readPRCFile(prc,inputlist):
   inputlist.extend(list)
   return inputlist
 
-def getDetailsFromPRC(prc,process):
+def getDetailsFromPRC(prc,processin):
   details = {}
   myprc = file(prc)
   model = ""
@@ -91,7 +91,7 @@ def getDetailsFromPRC(prc,process):
       elif elems[0]=="model":
         model = elems[1]
       elif not elems[0]=="model":
-        if elems[0]==process:
+        if elems[0]==processin:
           details['model']=model
           details['generator'] = elems[3]
           details['restrictions']="none"
@@ -153,16 +153,16 @@ if whizprc_here==0:
   os.chdir(startdir)
   DIRAC.exit(2)
 
-for file in folderlist:
-  if file.count(".in"):
-    infile = file(file,"r")
+for f in folderlist:
+  if f.count(".in"):
+    infile = file(f,"r")
     processdict = {}
     found_detail = False
     
     for line in infile:
       if line.count("decay_description"):
-        processdict["process"] = file.split(".in")[0]    
-        processdict["in_file"] = file
+        processdict["process"] = f.split(".in")[0]    
+        processdict["in_file"] = f
         processdict["detail"] = line.split("\"")[1]
         found_detail = True
       if line.count("process_id") and found_detail:
