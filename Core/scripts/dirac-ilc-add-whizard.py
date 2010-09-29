@@ -51,7 +51,7 @@ def redirectLogOutput(fd, message):
   sys.stdout.flush()
   print message
   
-def readPRCFile(prc):
+def readPRCFile(prc,inputlist):
   list = []
   myprc = file(prc)
   model = ""
@@ -71,12 +71,34 @@ def readPRCFile(prc):
         if len(elems)>4:
           p['restrictions']=string.join(elems[4:]," ")
         p['model'] = model
+        p['in_file']="whizard.in"
+        
         list.append(p)
       else:
         continue
+  inputlist.extend(list)
+  return inputlist
 
-  return list
-
+def getDetailsFromPRC(prc,process):
+  details = {}
+  myprc = file(prc)
+  model = ""
+  for process in myprc:
+    if len(process.split()):
+      elems = process.split()
+      if process[0]=="#":
+        continue
+      elif elems[0]=="model":
+        model = elems[1]
+      elif not elems[0]=="model":
+        if elems[0]==process:
+          details['model']=model
+          details['generator'] = elems[3]
+          details['restrictions']="none"
+          if len(elems)>4:
+            details['restrictions']=string.join(elems[4:]," ")
+          break
+  return details
   
 if len(args) < 3:
   usage()
@@ -112,7 +134,7 @@ if not os.path.exists(processlist):
 pl = ProcessList(processlist)
 
 startdir = os.getcwd()
-
+inputlist = []
 os.chdir(whizard_location)
 folderlist = os.listdir(os.getcwd())
 whiz_here = folderlist.count("whizard")
@@ -130,7 +152,28 @@ if whizprc_here==0:
   print "whizard.mdl not found in %s, please check"%whizard_location
   os.chdir(startdir)
   DIRAC.exit(2)
-  
+
+for file in folderlist:
+  if file.count(".in"):
+    infile = file(file,"r")
+    processdict = {}
+    found_detail = False
+    
+    for line in infile:
+      if line.count("decay_description"):
+        processdict["process"] = file.split(".in")[0]    
+        processdict["in_file"] = file
+        processdict["detail"] = line.split("\"")[1]
+        found_detail = True
+      if line.count("process_id") and found_detail:
+        process_id = line.split("\"")[1]
+        process_detail = getDetailsFromPRC("whizard.prc",process_id)  
+        processdict["model"] =   process_detail["model"]
+        processdict["generator"] = process_detail["generator"]
+        processdict["restrictions"] = process_detail["restrictions"]
+    if len(processdict.items()):
+      inputlist.append(processdict)    
+
 appTar = os.path.join(os.getcwd(),"whizard"+whizard_version+".tgz")
 
 if os.path.exists('lib'):
@@ -148,7 +191,7 @@ cp $string ./lib
 whizarddir=%s 
 rm -rf $whizarddir
 mkdir $whizarddir
-cp -r whizard whizard.prc whizard.mdl lib/ $whizarddir
+cp -r *.in whizard whizard.prc whizard.mdl lib/ $whizarddir
 """%("whizard"+whizard_version))
 script.close()
 os.chmod(scriptName,0755)
@@ -211,7 +254,7 @@ else:
 
 os.remove(appTar)
 
-processes= readPRCFile("whizard.prc")
+processes= readPRCFile("whizard.prc",inputlist)
 for process in processes:
   pl.setCSPath(process,tarballurl['Value']+os.path.basename(appTar))
 
