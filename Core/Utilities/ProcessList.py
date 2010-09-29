@@ -62,6 +62,7 @@ class ProcessList:
     self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])
     self.cfg.setOption("Processes/%s/Model"%processdic['process'], processdic['model'])
     self.cfg.setOption("Processes/%s/Restrictions"%processdic['process'], processdic['restrictions'])
+    self.cfg.setOption("Processes/%s/InFile"%processdic['process'], processdic['in_file'])
     return    
   
   def getCSPath(self,process):
