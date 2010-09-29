@@ -18,6 +18,7 @@ import string
 def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
   inputfile = file(input_in,"r")  
   outputfile = file(output_in,"w")
+  foundprocessid = False
   for line in inputfile:
     if line.count("seed ="):
       outputfile.write(" seed = %s\n"%randomseed)
@@ -27,8 +28,14 @@ def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
       outputfile.write(" luminosity = %s\n"%lumi)
     elif line.count("write_events_file = ") and len(evttype):
       outputfile.write(" write_events_file = \"%s\" \n"%evttype)
+    elif line.count("process_id"):
+      if len(line.split("\"")[1]):
+        foundprocessid = True
     else:
       outputfile.write(line)
+  if not foundprocessid:
+    pass
+  
   inputfile.close()
   outputfile.close()
   return True
