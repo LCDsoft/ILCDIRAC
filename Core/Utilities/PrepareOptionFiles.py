@@ -9,6 +9,9 @@ Created on Jan 29, 2010
 
 @author: Stephane Poss
 '''
+
+from DIRAC import S_OK,S_ERROR
+
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import Comment
@@ -38,7 +41,7 @@ def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
   
   inputfile.close()
   outputfile.close()
-  return True
+  return S_OK()
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
@@ -115,7 +118,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   output.write("#Set event start number to value given as job parameter\n")  
   output.write("/Mokka/init/startEventNumber %d"%startFrom)
   output.close()
-  return True
+  return S_OK()
 
 def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC,outputDST,debug):
   """Write out a xml file for Marlin
@@ -199,7 +202,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
                 param.insert(0,com)
   
   tree.write(finalxml)
-  return True
+  return S_OK()
 
 
 def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None,debug = False):
@@ -265,7 +268,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output.write("/run/beamOn %s\n"%nbevts)
   inputmacfile.close()
   output.close()
-  return True
+  return S_OK()
 
 def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None, debug=False):
   """Writes out a lcsim file for LCSIM

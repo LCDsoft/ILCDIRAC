@@ -238,7 +238,7 @@ class MokkaAnalysis(ModuleBase):
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.debug,
                                     self.outputFile)
-      if not steerok:
+      if not steerok['OK']:
         self.log.error('Failed to create MOKKA steering file')
         return S_ERROR('Failed to create MOKKA steering file')
 

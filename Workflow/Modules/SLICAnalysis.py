@@ -201,7 +201,7 @@ class SLICAnalysis(ModuleBase):
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
     macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.outputslcio,self.debug)
-    if not macok:
+    if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
     
