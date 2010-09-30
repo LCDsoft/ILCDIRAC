@@ -192,7 +192,6 @@ class WhizardAnalysis(ModuleBase):
     script.write('declare -x appstatus=$?\n')    
     script.close()
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
-
     os.chmod(scriptName,0755)
     comm = 'sh -c "./%s"' %(scriptName)    
     self.setApplicationStatus('Whizard %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
@@ -227,7 +226,7 @@ class WhizardAnalysis(ModuleBase):
     """
     sys.stdout.flush()
     if message:
-      if re.search('Writing events to file',message): print message
+      print message
     if self.applicationLog:
       log = open(self.applicationLog,'a')
       log.write(message+'\n')
