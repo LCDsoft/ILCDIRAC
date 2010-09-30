@@ -241,7 +241,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
     step.addParameter(Parameter("EvtType","","string","","",False,False,"Name of the whizard.in file"))
-    step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
+    if randomseed:
+      step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
 
     self.workflow.addStep(step)
