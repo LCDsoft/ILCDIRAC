@@ -161,7 +161,7 @@ class WhizardAnalysis(ModuleBase):
       leshouchesfiles = True
       
     res = PrepareWhizardFile(self.inFile,self.evttype,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
-    if not res:
+    if not res['OK']:
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
       return S_ERROR('Something went wrong with whizard.in file generation')
