@@ -198,9 +198,19 @@ class WhizardAnalysis(ModuleBase):
     self.stdError = ''
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
-    resultTuple = self.result['Value']
+    #resultTuple = self.result['Value']
 
-    status = resultTuple[0]
+    message = ""
+    ###Analyse log file
+    logfile = file(self.applicationLog)
+    for line in logfile:
+      if line.count("*** Fatal error:"):
+        status = 1
+        message = line
+        break
+      else:
+        status = 0
+
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
@@ -213,7 +223,7 @@ class WhizardAnalysis(ModuleBase):
 
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
+      self.log.error( message )
       self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('Whizard Exited With Status %s' %(status))
       return S_ERROR('Whizard Exited With Status %s' %(status))
