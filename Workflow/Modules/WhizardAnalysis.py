@@ -182,9 +182,9 @@ class WhizardAnalysis(ModuleBase):
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
     if foundproceesinwhizardin:
-      script.write('whizard \n')
+      script.write('whizard --simulation_input \'write_events_file = \"%s\"\'\n'%self.evttype)
     else:
-      script.write('whizard --process_input \"process_id =\"%s\"\"\n'%self.evttype)
+      script.write('whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\'\n'%(self.evttype,self.evttype))
     script.write('declare -x appstatus=$?\n')    
     script.close()
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
