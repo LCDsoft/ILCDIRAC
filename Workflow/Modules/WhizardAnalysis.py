@@ -165,6 +165,7 @@ class WhizardAnalysis(ModuleBase):
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
       return S_ERROR('Something went wrong with whizard.in file generation')
+    foundproceesinwhizardin = res['Value']
     
     scriptName = 'Whizard_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
@@ -180,7 +181,10 @@ class WhizardAnalysis(ModuleBase):
     if leshouchesfiles:
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
-    script.write('whizard \n')
+    if foundproceesinwhizardin:
+      script.write('whizard \n')
+    else:
+      script.write('whizard --process_input \"process_id =\"%s\"\"\n'%self.evttype)
     script.write('declare -x appstatus=$?\n')    
     script.close()
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
