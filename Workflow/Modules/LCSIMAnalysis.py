@@ -157,12 +157,13 @@ class LCSIMAnalysis(ModuleBase):
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
           
     lcsimfile = "job.lcsim"
-    self.printoutflag = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
-    if not self.printoutflag:
+    res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
+    if not res['OK']:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")
     else:
       self.log.verbose("File job.lcsim created properly")
+    self.printoutflag = res['Value']
     
     scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
