@@ -40,10 +40,8 @@ def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
 
   inputfile.close()
   outputfile.close()  
-  if not foundprocessid:
-    return S_OK(False)
 
-  return S_OK(True)
+  return S_OK(foundprocessid)
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
