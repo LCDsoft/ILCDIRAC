@@ -190,6 +190,8 @@ class WhizardAnalysis(ModuleBase):
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
+    script.write('exit $appstatus\n')
+    
     script.close()
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
     os.chmod(scriptName,0755)
