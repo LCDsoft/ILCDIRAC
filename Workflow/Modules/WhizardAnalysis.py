@@ -181,10 +181,13 @@ class WhizardAnalysis(ModuleBase):
     if leshouchesfiles:
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
+    comm = ""
     if foundproceesinwhizardin:
-      script.write('whizard --simulation_input \'write_events_file = \"%s\"\'\n'%self.evttype)
+      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\'\n'%self.evttype
     else:
-      script.write('whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\'\n'%(self.evttype,self.evttype))
+      comm= 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\'\n'%(self.evttype,self.evttype)
+    self.log.info("Will run %s"%comm)
+    script.write(comm)
     script.write('declare -x appstatus=$?\n')    
     script.close()
     if os.path.exists(self.applicationLog): os.remove(self.applicationLog)

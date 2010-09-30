@@ -10,7 +10,7 @@ Created on Jan 29, 2010
 @author: Stephane Poss
 '''
 
-from DIRAC import S_OK,S_ERROR
+from DIRAC import S_OK
 
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
@@ -32,16 +32,18 @@ def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
     elif line.count("write_events_file = ") and len(evttype):
       outputfile.write(" write_events_file = \"%s\" \n"%evttype)
     elif line.count("process_id"):
+      outputfile.write(line)
       if len(line.split("\"")[1]):
         foundprocessid = True
     else:
       outputfile.write(line)
-  if not foundprocessid:
-    pass
-  
+
   inputfile.close()
-  outputfile.close()
-  return S_OK()
+  outputfile.close()  
+  if not foundprocessid:
+    return S_OK(False)
+
+  return S_OK(True)
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
@@ -118,7 +120,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   output.write("#Set event start number to value given as job parameter\n")  
   output.write("/Mokka/init/startEventNumber %d"%startFrom)
   output.close()
-  return S_OK()
+  return S_OK(True)
 
 def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC,outputDST,debug):
   """Write out a xml file for Marlin
@@ -202,7 +204,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
                 param.insert(0,com)
   
   tree.write(finalxml)
-  return S_OK()
+  return S_OK(True)
 
 
 def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None,debug = False):
@@ -268,7 +270,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output.write("/run/beamOn %s\n"%nbevts)
   inputmacfile.close()
   output.close()
-  return S_OK()
+  return S_OK(True)
 
 def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None, debug=False):
   """Writes out a lcsim file for LCSIM
@@ -391,4 +393,4 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
           printtext = marker.text
   
   tree.write(outputlcsim)
-  return printtext
+  return S_OK(printtext)
