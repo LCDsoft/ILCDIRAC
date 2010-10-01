@@ -124,6 +124,7 @@ res = rm.getFile(path_to_process_list['Value'])
 if not res['OK']:
   print "Error while getting process list from storage"
   DIRAC.exit(2)
+print "done"
 
 processlist = os.path.basename(path_to_process_list['Value'])
 if not os.path.exists(processlist):
@@ -176,6 +177,7 @@ for f in folderlist:
 
 appTar = os.path.join(os.getcwd(),"whizard"+whizard_version+".tgz")
 
+print "Preparing Tar ball"
 if os.path.exists('lib'):
   shutil.rmtree('lib')
 scriptName = 'ldd.sh'
@@ -201,7 +203,8 @@ os.remove("ldd.sh")
 myappTar = tarfile.open(appTar,"w:gz")
 myappTar.add("whizard"+whizard_version)
 myappTar.close()
-
+print "Done"
+print "Registering new Tar Ball in CS"
 tarballurl = {}
 
 av_platforms = gConfig.getSections(softwareSection, [])
@@ -251,8 +254,11 @@ else:
         print "Upload to %s failed"%tarballurl
         DIRAC.exit(255)
   result = diracAdmin.csSetOption("%s/%s/%s/%s/Dependencies/beam_spectra/version"%(softwareSection,platform,appName.lower(),appVersion),beam_spectra_version)
+print "Done"
 
 os.remove(appTar)
+
+print "Preparing process list"
 
 processes= readPRCFile("whizard.prc",inputlist)
 for process in processes:
@@ -279,7 +285,7 @@ if localprocesslistpath['Value']:
     shutil.copy(processlist, localprocesslistpath['Value'])
   except:
     print "Copy of process list to %s failed!"%localprocesslistpath['Value']
-
+print "Done"
 #Commit the changes if nothing has failed and the CS has been modified
 if modifiedCS:
   result = diracAdmin.csCommitChanges(False)
