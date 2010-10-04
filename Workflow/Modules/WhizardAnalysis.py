@@ -47,7 +47,7 @@ class WhizardAnalysis(ModuleBase):
     self.rm = ReplicaManager()
     self.processlist = None
     self.jobindex = None
-
+    self.debug = False
 
   def obtainProcessList(self):
     """Internal function
@@ -101,6 +101,9 @@ class WhizardAnalysis(ModuleBase):
        
     if self.step_commons.kas_key("JobIndex"):
       self.jobindex = self.step_commons["JobIndex"]
+
+    if self.step_commons.has_key("debug"):
+      self.debug=self.step_commons["debug"]
 
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
@@ -215,11 +218,15 @@ class WhizardAnalysis(ModuleBase):
     if leshouchesfiles:
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
+    extracmd = ""
+    if not self.debug:
+      extracmd = "2>/dev/null" 
+      
     comm = ""
     if foundproceesinwhizardin:
-      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\'\n'%outputfilename
+      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\' %s\n'%(outputfilename,extracmd)
     else:
-      comm= 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\'\n'%(self.evttype,outputfilename)
+      comm= 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' %s\n'%(self.evttype,outputfilename,extracmd)
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
