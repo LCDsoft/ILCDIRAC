@@ -51,7 +51,7 @@ class WhizardAnalysis(ModuleBase):
     """Internal function
     
     Get the process list from storage if whizard.in was not provided
-    @return: S_OK(),S_ERROR()
+    @return: S_OK(), S_ERROR()
     """
     res = gConfig.getOption("/Operations/ProcessList/Location","")
     if not res['OK']:
@@ -270,4 +270,5 @@ class WhizardAnalysis(ModuleBase):
     else:
       self.log.error("Application Log file not defined")
     if fd == 1:
-      self.stdError += message    
+      self.stdError += message
+      
