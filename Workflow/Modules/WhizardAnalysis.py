@@ -46,6 +46,8 @@ class WhizardAnalysis(ModuleBase):
     self.getProcessInFile = False
     self.rm = ReplicaManager()
     self.processlist = None
+    self.jobindex = None
+
 
   def obtainProcessList(self):
     """Internal function
@@ -97,6 +99,8 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
        
+    if self.step_commons.kas_key("JobIndex"):
+      self.jobindex = self.step_commons["JobIndex"]
 
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
@@ -111,6 +115,7 @@ class WhizardAnalysis(ModuleBase):
       - resolve installation location
       - resolve dependencies location (beam_spectra)
       - get processlist if needed
+      - define output file name
       - prepare whizard.in
       - make magic
       
@@ -184,8 +189,12 @@ class WhizardAnalysis(ModuleBase):
     leshouchesfiles = False
     if os.path.exists("%s/LesHouches.msugra_1.in"%(mySoftDir)):
       leshouchesfiles = True
+
+    outputfilename = self.evttype
+    if self.jobindex:
+      outputfilename = outputfilename+"_"+self.jobindex
       
-    res = PrepareWhizardFile(self.inFile,self.evttype,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+    res = PrepareWhizardFile(self.inFile,outputfilename,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     if not res['OK']:
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
@@ -208,9 +217,9 @@ class WhizardAnalysis(ModuleBase):
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
     comm = ""
     if foundproceesinwhizardin:
-      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\'\n'%self.evttype
+      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\'\n'%outputfilename
     else:
-      comm= 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\'\n'%(self.evttype,self.evttype)
+      comm= 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\'\n'%(self.evttype,outputfilename)
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
