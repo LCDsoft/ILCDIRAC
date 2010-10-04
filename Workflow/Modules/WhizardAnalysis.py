@@ -99,7 +99,7 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
        
-    if self.step_commons.kas_key("JobIndex"):
+    if self.step_commons.has_key("JobIndex"):
       self.jobindex = self.step_commons["JobIndex"]
 
     if self.step_commons.has_key("debug"):
