@@ -175,7 +175,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,jobindex=None,logFile=None,logInOutputData=False):
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,jobindex=None,logFile=None,logInOutputData=False,debug=False):
     """Helper function
     
        Define Whizard step
@@ -211,10 +211,12 @@ class ILCJob(Job):
        @type logFile: string
        @param logInOutputData: put the log file in the OutputData, default is False
        @type logInOutputData: bool
-       
+       @param debug: print all in stdout, default is False
+       @type debug: bool
     """
     
-    kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,"jobindex":jobindex,'logFile':logFile,"logInOutputData":logInOutputData}
+    kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,
+              "jobindex":jobindex,'logFile':logFile,"logInOutputData":logInOutputData,"debug":debug}
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac.giveProcessList() instance to ILCJob.',__name__,**kwargs)
     if process:
@@ -284,6 +286,7 @@ class ILCJob(Job):
     if jobindex:
       step.addParameter(Parameter("JobIndex",0,"int","","",False,False,"job index to add in final file name"))
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
+    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Whizard',stepName)
@@ -298,6 +301,7 @@ class ILCJob(Job):
     if jobindex:
       stepInstance.setValue("JobIndex",jobindex)      
     stepInstance.setValue("NbOfEvts",nbevts)
+    stepInstance.setValue("debug",debug)
     
     currentApp = "whizard.%s"%version
     swPackages = 'SoftwarePackages'
