@@ -185,8 +185,8 @@ class WhizardAnalysis(ModuleBase):
         shutil.copy("%s/%s"%(mySoftDir,whizardin), "./whizardnew.in")
         self.inFile = "whizardnew.in"
       except:
-        self.log.error("Could not copy %s.in from %s"%(whizardin,mySoftDir))
-        return S_ERROR("Failed to obtain %s.in"%whizardin)
+        self.log.error("Could not copy %s from %s"%(whizardin,mySoftDir))
+        return S_ERROR("Failed to obtain %s"%whizardin)
 
     ##Check existence of Les Houches input file
     leshouchesfiles = False
@@ -195,7 +195,7 @@ class WhizardAnalysis(ModuleBase):
 
     outputfilename = self.evttype
     if self.jobindex:
-      outputfilename = outputfilename+"_"+self.jobindex
+      outputfilename = outputfilename+"_"+str(self.jobindex)
       
     res = PrepareWhizardFile(self.inFile,outputfilename,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     if not res['OK']:
@@ -240,7 +240,7 @@ class WhizardAnalysis(ModuleBase):
     self.stdError = ''
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
-    #resultTuple = self.result['Value']
+    resultTuple = self.result['Value']
 
     message = ""
     ###Analyse log file
@@ -253,8 +253,8 @@ class WhizardAnalysis(ModuleBase):
       else:
         status = 0
 
-    # stdOutput = resultTuple[1]
-    # stdError = resultTuple[2]
+    #stdOutput = resultTuple[1]
+    #stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
     failed = False
     if status != 0:
