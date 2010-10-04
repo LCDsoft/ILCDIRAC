@@ -194,7 +194,7 @@ class WhizardAnalysis(ModuleBase):
       leshouchesfiles = True
 
     outputfilename = self.evttype
-    if self.jobindex:
+    if type(self.jobindex)==type(0):
       outputfilename = outputfilename+"_"+str(self.jobindex)
       
     res = PrepareWhizardFile(self.inFile,outputfilename,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
