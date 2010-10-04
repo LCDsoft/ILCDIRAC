@@ -175,7 +175,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,logFile=None,logInOutputData=False):
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,jobindex=None,logFile=None,logInOutputData=False):
     """Helper function
     
        Define Whizard step
@@ -212,9 +212,9 @@ class ILCJob(Job):
        
     """
     
-    kwargs = {"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,'logFile':logFile,"logInOutputData":logInOutputData}
+    kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,"jobindex":jobindex,'logFile':logFile,"logInOutputData":logInOutputData}
     if not self.processlist:
-      return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
+      return self._reportError('Process list was not passed, please pass dirac.giveProcessList() instance to ILCJob.',__name__,**kwargs)
     if process:
       if not self.processlist.existsProcess(process)['Value']:
         self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
@@ -279,6 +279,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("EvtType","","string","","",False,False,"Name of the whizard.in file"))
     if randomseed:
       step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
+    if jobindex:
+      step.addParameter(Parameter("JobIndex",0,"int","","",False,False,"job index to add in final file name"))
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
 
     self.workflow.addStep(step)
@@ -291,6 +293,8 @@ class ILCJob(Job):
       stepInstance.setValue("EvtType",process)
     if randomseed:
       stepInstance.setValue("RandomSeed",randomseed)
+    if jobindex:
+      stepInstance.setValue("JobIndex",jobindex)      
     stepInstance.setValue("NbOfEvts",nbevts)
     
     currentApp = "whizard.%s"%version
