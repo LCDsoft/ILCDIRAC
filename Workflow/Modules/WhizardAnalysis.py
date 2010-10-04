@@ -1,4 +1,7 @@
+
 '''
+Whizard analysis module. Called by Job Agent. 
+
 Created on Sep 22, 2010
 
 @author: sposs
@@ -45,6 +48,11 @@ class WhizardAnalysis(ModuleBase):
     self.processlist = None
 
   def obtainProcessList(self):
+    """Internal function
+    
+    Get the process list from storage if whizard.in was not provided
+    @return: S_OK(),S_ERROR()
+    """
     res = gConfig.getOption("/Operations/ProcessList/Location","")
     if not res['OK']:
       return res
@@ -56,6 +64,10 @@ class WhizardAnalysis(ModuleBase):
     return S_OK()
     
   def resolveInputVariables(self):
+    """Resolve module input
+    @return: S_OK()
+    """
+    
     if self.workflow_commons.has_key('SystemConfig'):
       self.systemConfig = self.workflow_commons['SystemConfig']
       
@@ -92,6 +104,18 @@ class WhizardAnalysis(ModuleBase):
     return S_OK()
 
   def execute(self):
+    """ Called by Agent
+    
+    Executes the following
+      - resolve input variables
+      - resolve installation location
+      - resolve dependencies location (beam_spectra)
+      - get processlist if needed
+      - prepare whizard.in
+      - make magic
+      
+    @return: S_OK(), S_ERROR()
+    """
     self.result =self.resolveInputVariables()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
