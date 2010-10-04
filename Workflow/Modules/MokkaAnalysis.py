@@ -335,10 +335,10 @@ class MokkaAnalysis(ModuleBase):
           os.rename("out.slcio", self.outputFile)
 
       failed = False
-      if not status == 0 and not status==106 :
+      if not status == 0 and not status==106 and not status==10:
         self.log.error( "Mokka execution completed with errors:" )
         failed = True
-      elif status==106:
+      elif status==106 or status==10:
         self.log.info( "Mokka execution reached end of input generator file")
       else:
         self.log.info( "Mokka execution finished successfully")
