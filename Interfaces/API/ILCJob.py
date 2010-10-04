@@ -205,6 +205,8 @@ class ILCJob(Job):
        @type lumi: int
        @param randomseed: random seed to use. By default using current job ID
        @type randomseed: int
+       @param jobindex: index to add to output file names so that several job can be stored in the same ouput directory
+       @type jobindex: int
        @param logFile: log file name. Default is provided
        @type logFile: string
        @param logInOutputData: put the log file in the OutputData, default is False
