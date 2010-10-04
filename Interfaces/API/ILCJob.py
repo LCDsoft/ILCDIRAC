@@ -176,6 +176,41 @@ class ILCJob(Job):
     return S_OK()
 
   def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,logFile=None,logInOutputData=False):
+    """Helper function
+       Define Whizard step
+       
+       Two possibilities:
+       
+       1) process is specified 
+       
+       2) version and in_file are specified
+       
+       In the latter case, version is the whizard version to use and the in_file parameter is the path to the whizard.in to use.
+       
+       Example usage:
+
+       >>> job = ILCJob()
+       >>> job.setWhizard(process="ee_h_bb",nbevts=100)
+       
+       @param process: process id, if doers not exist, dirac prints out the known ones
+       @type process: string
+       @param version: version of whizard to use, e.g. SM or SUSY
+       @type version: string
+       @param in_file: path to whizard.in to use
+       @type in_file: string
+       @param nbevts: number of event to generate
+       @type nbevts: int
+       @param lumi: luminosity to generate
+       @type lumi: int
+       @param randomseed: random seed to use. By default using current job ID
+       @type randomseed: int
+       @param logFile: log file name. Default is provided
+       @type logFile: string
+       @param logInOutputData: put the log file in the OutputData, default is False
+       @type logInOutputData: bool
+       
+    """
+    
     kwargs = {"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,'logFile':logFile,"logInOutputData":logInOutputData}
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac instance to ILCJob.',__name__,**kwargs)
