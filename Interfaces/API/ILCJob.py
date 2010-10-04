@@ -177,6 +177,7 @@ class ILCJob(Job):
 
   def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,logFile=None,logInOutputData=False):
     """Helper function
+    
        Define Whizard step
        
        Two possibilities:

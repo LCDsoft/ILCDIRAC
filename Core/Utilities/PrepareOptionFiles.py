@@ -19,6 +19,24 @@ import string
 
 
 def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
+  """Prepares the whizard.in file to run
+  
+  Using specified parameters in the job definition passed from L{WhizardAnalysis}
+  
+  @param input_in: input whizard.in to modify
+  @type input_in: string
+  @param evttype: process type that will prepend stdhep output name
+  @type evttype: string
+  @param randomseed: random seed to use
+  @type randomseed: int
+  @param nevts: number of events to generate
+  @type nevts: int
+  @param lumi: luminosity to use
+  @type lumi: int
+  @param output_in: whizard.in output file name (usually whizard.in)
+  @type output_in: string
+  @return: S_OK()
+  """
   inputfile = file(input_in,"r")  
   outputfile = file(output_in,"w")
   foundprocessid = False
@@ -66,7 +84,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   @type debug: bool
   @param outputlcio: output slcio file name, not used
   @type outputlcio: string
-  @return True
+  @return: S_OK()
   
   """
   macname = "mokkamac.mac"
@@ -139,7 +157,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   @type outputDST: string
   @param debug: set to True to use given mode, otherwise set verbosity to SILENT
   @type debug: bool
-  @return: True
+  @return: S_OK()
   
   """
   tree = ElementTree()
@@ -225,7 +243,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   @param outputlcio: name of the produced output slcio file, this is useful when combined with setOutputData of ILCJob class
   @type outputlcio: string
 
-  @return: True
+  @return: S_OK()
   """
   inputmacfile = file(inputmac,'r')
   output = file(outputmac,'w')
@@ -288,7 +306,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   @param debug: By default set verbosity to true
   @type debug: bool
   
-  @return: string
+  @return: S_OK(string)
   """
   printtext = ''
 
