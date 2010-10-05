@@ -94,6 +94,67 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       self.log.debug('Setting parameter %s = %s' %(name,parameterValue))
       self._addParameter(self.workflow,name,parameterType,parameterValue,description)
 
+  def addWhizardStep(self,processlist,process,nbevts=0,lumi=0,outputpath="",outputSE=""):
+    appvers = ""
+
+    if process:
+      if not processlist.existsProcess(process)['Value']:
+        self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
+        self.log.info("Available processes are:")
+        processlist.printProcesses()
+        return S_ERROR('Process %s does not exist in any whizard version.'%process)
+      else:
+        cspath = processlist.getCSPath(process)
+        whiz_file = os.path.basename(cspath)
+        appvers= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
+        self.log.info("Found process %s corresponding to whizard%s"%(process,appvers))
+    else:
+      print "Process to generate was not specified"
+      return S_ERROR("Process to generate was not specified")
+    
+    
+    outputfile = process+"_gen.stdhep"
+    
+    self.StepCount +=1
+    whizardStep =     ModuleDefinition('WhizardAnalysis')
+    whizardStep.setDescription('Whizard step: generate the physics events')
+    body = string.replace(self.importLine,'<MODULE>','WhizardAnalysis')
+    whizardStep.setBody(body)
+    
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    createoutputlist.setBody(body)
+    
+    WhizardAppDefn = StepDefinition('Whizard_App_Step')
+    WhizardAppDefn.addModule(whizardStep)
+    WhizardAppDefn.createModuleInstance('Whizardanalysis',"WhizardApp")
+    WhizardAppDefn.addModule(createoutputlist)
+    WhizardAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    self._addParameter(WhizardAppDefn,'applicationVersion','string','','ApplicationVersion')
+    self._addParameter(WhizardAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(WhizardAppDefn,"EvtType","string","","Process to generate")
+    self._addParameter(WhizardAppDefn,"NbOfEvts","int",0,"Number of events to generate")
+    self._addParameter(WhizardAppDefn,"Lumi","int",0,"Number of events to generate")
+    self.workflow.addStep(WhizardAppDefn)
+    mstep = self.workflow.createStepInstance('Whizard_App_Step','Whizard')
+    mstep.setValue('applicationVersion',appvers)
+    mstep.setValue('applicationLog', 'Whizard_@{STEP_ID}.log')
+    mstep.setValue("EvtType",process)
+    mstep.setValue("NbOfEvts",nbevts)
+    mstep.setValue("Lumi",lumi)
+    mstep.setValue("outputFile",outputfile)
+    mstep.setValue("outputPath",outputpath)
+    
+    outputList=[]
+    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
+    mstep.setValue('listoutput',(outputList))
+
+    self.__addSoftwarePackages('whizard.%s' %(appvers))   
+    self._addParameter(self.workflow,"MokkaOutput","string",outputfile,"Mokka expected output file name")
+    self.ioDict["WhizardStep"]=mstep.getName()
+    return S_OK()
+
   def addMokkaStep(self,appvers,steeringfile,detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
     self.StepCount +=1
     mokkaStep = ModuleDefinition('MokkaAnalysis')
@@ -119,6 +180,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(MokkaAppDefn,"outputPath","string","","Output data path")
     self._addParameter(MokkaAppDefn,"outputFile","string","","output file name")
     self._addParameter(MokkaAppDefn,'listoutput',"list",[],"list of output file name")
+    self._addParameter(MokkaAppDefn,"stdhepFile","string","","Name of the stdhep file")
+
     self.workflow.addStep(MokkaAppDefn)
     mstep = self.workflow.createStepInstance('Mokka_App_Step','Mokka')
     mstep.setValue('applicationVersion',appvers)
@@ -126,6 +189,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue("detectorModel",detectormodel)
     mstep.setValue("numberOfEvents",numberofevents)
     mstep.setValue('applicationLog', 'Mokka_@{STEP_ID}.log')
+    
+    if self.ioDict.has_key("WhizardStep"):
+      mstep.setLink('stdhepFile',self.ioDict["WhizardStep"],'outputFile')
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     outputList=[]
@@ -202,7 +268,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["MarlinStep"]=mstep.getName()
     return S_OK()
 
-  def addSLICStep(self,appVers,outputfile="",outputpath="",outputSE=""):
+  def addSLICStep(self,appVers,inputmac="",detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
     self.StepCount +=1
     slicStep = ModuleDefinition('SLICAnalysis')
     slicStep.setDescription('SLIC step: simulation in SiD like detectors')
@@ -220,6 +286,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     slicAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
     self._addParameter(slicAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(slicAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(slicAppDefn,"detectorModel","string","","Name of the detector model")
+    self._addParameter(slicAppDefn,"inputmacFile","string","","Name of the mac file")
+    self._addParameter(slicAppDefn,"numberOfEvents","int",0,"Number of events to process")
     self._addParameter(slicAppDefn,"outputPath","string","","Output data path")
     self._addParameter(slicAppDefn,"outputFile","string","","output file name")
     self._addParameter(slicAppDefn,'listoutput',"list",[],"list of output file name")    
@@ -227,6 +296,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep = self.workflow.createStepInstance('SLIC_App_Step','SLIC')
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'Slic_@{STEP_ID}.log')
+    mstep.setValue("detectorModel",detectormodel)
+    mstep.setValue("numberOfEvents",numberofevents)
+    mstep.setValue("inputmacFile",inputmac)
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     outputList=[]
