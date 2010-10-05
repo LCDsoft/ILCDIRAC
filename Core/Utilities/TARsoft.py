@@ -10,7 +10,7 @@ Also installs all dependencies for the applications
 import DIRAC
 from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-import os, urllib, tarfile
+import os, urllib, tarfile, subprocess
 
 def TARinstall(app,config,area):
   appName    = app[0].lower()
@@ -147,6 +147,17 @@ def install(app,config,area):
       os.environ['LD_LIBRARY_PATH'] = os.environ['ROOTSYS']+"/lib"
     os.environ['PATH'] = os.environ['ROOTSYS']+"/bin:"+os.environ['PATH']
     os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
+  elif appName=="lcsim":
+    args = ['java',"-version"]
+    try:
+      p = subprocess.check_call(args)
+      if p:
+        os.chdir(curdir)
+        return DIRAC.S_ERROR("Something is wrong with Java")
+    except:
+      DIRAC.gLogger.error("Java was not found on this machine, cannot proceed")
+      os.chdir(curdir)
+      return DIRAC.S_ERROR("Java was not found on this machine, cannot proceed")
   #remove now useless tar ball
   if os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
     if app_tar_base.find(".jar")<0:
