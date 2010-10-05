@@ -175,7 +175,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,jobindex=None,logFile=None,logInOutputData=False,debug=False):
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
     """Helper function
     
        Define Whizard step
@@ -288,6 +288,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
     step.addParameter(Parameter("Lumi",0,"int","","",False,False,"Luminosity to  generate per job"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
+    step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance('Whizard',stepName)
@@ -304,7 +305,8 @@ class ILCJob(Job):
     stepInstance.setValue("NbOfEvts",nbevts)
     stepInstance.setValue("Lumi",lumi)
     stepInstance.setValue("debug",debug)
-    
+    if(outputFile):
+      stepInstance.setValue('outputFile',outputFile)    
     currentApp = "whizard.%s"%version
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
