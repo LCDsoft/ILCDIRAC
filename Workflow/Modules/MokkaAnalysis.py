@@ -113,7 +113,8 @@ class MokkaAnalysis(ModuleBase):
             for obj in outputlist:
               if obj.lower().count("_sim_"):
                 self.outputFile = os.path.basename(obj)
-                break
+              elif obj.lower().count("_gen_"):
+                self.stdhepFile = os.path.basename(obj)
           else:
             self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
