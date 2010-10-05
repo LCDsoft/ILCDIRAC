@@ -155,7 +155,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('listoutput',(outputList))
 
     self.__addSoftwarePackages('whizard.%s' %(appvers))   
-    self._addParameter(self.workflow,"MokkaOutput","string",outputfile,"Mokka expected output file name")
+    self._addParameter(self.workflow,"WhizardOutput","string",outputfile,"whizard expected output file name")
     self.ioDict["WhizardStep"]=mstep.getName()
     return S_OK()
 
