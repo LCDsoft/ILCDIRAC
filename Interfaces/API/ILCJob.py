@@ -286,6 +286,7 @@ class ILCJob(Job):
     if jobindex:
       step.addParameter(Parameter("JobIndex",0,"int","","",False,False,"job index to add in final file name"))
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
+    step.addParameter(Parameter("Lumi",0,"int","","",False,False,"Luminosity to  generate per job"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
 
     self.workflow.addStep(step)
@@ -301,6 +302,7 @@ class ILCJob(Job):
     if jobindex:
       stepInstance.setValue("JobIndex",jobindex)      
     stepInstance.setValue("NbOfEvts",nbevts)
+    stepInstance.setValue("Lumi",lumi)
     stepInstance.setValue("debug",debug)
     
     currentApp = "whizard.%s"%version
