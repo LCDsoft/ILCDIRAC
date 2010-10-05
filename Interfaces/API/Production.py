@@ -135,6 +135,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(WhizardAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(WhizardAppDefn,"EvtType","string","","Process to generate")
     self._addParameter(WhizardAppDefn,"NbOfEvts","int",0,"Number of events to generate")
+    self._addParameter(WhizardAppDefn,'listoutput',"list",[],"list of output file name")
+    self._addParameter(WhizardAppDefn,"outputPath","string","","Output data path")
+    self._addParameter(WhizardAppDefn,"outputFile","string","","output file name")
+
     self._addParameter(WhizardAppDefn,"Lumi","int",0,"Number of events to generate")
     self.workflow.addStep(WhizardAppDefn)
     mstep = self.workflow.createStepInstance('Whizard_App_Step','Whizard')
