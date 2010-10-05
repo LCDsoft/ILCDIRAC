@@ -118,7 +118,10 @@ class MokkaAnalysis(ModuleBase):
           else:
             self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
-            
+            if self.workflow_commons.has_key("WhizardOutput"):
+              self.inputSLCIO = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+                                                int(self.workflow_commons["JOB_ID"]))
+           
           
       if self.workflow_commons.has_key('InputData'):
           self.InputData = self.workflow_commons['InputData']
