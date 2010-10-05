@@ -128,7 +128,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     WhizardAppDefn = StepDefinition('Whizard_App_Step')
     WhizardAppDefn.addModule(whizardStep)
-    WhizardAppDefn.createModuleInstance('Whizardanalysis',"WhizardApp")
+    WhizardAppDefn.createModuleInstance('WhizardAnalysis',"WhizardApp")
     WhizardAppDefn.addModule(createoutputlist)
     WhizardAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
     self._addParameter(WhizardAppDefn,'applicationVersion','string','','ApplicationVersion')
