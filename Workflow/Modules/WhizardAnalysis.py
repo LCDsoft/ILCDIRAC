@@ -283,8 +283,8 @@ class WhizardAnalysis(ModuleBase):
       self.log.info( "Whizard execution completed successfully")
       ###Deal with output file
       if len(self.outputFile):
-        if os.path.exists(outputfilename):
-          os.rename(outputfilename, self.outputFile)
+        if os.path.exists(outputfilename+".001.stdhep"):
+          os.rename(outputfilename+".001.stdhep", self.outputFile)
       
 
     if failed==True:
