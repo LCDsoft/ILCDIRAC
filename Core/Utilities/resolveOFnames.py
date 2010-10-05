@@ -5,6 +5,11 @@ Created on Jul 30, 2010
 '''
 
 def getProdFilename(filename,prodID,jobID):
-  name = filename.split(".slcio")
-  outfile = name[0]+"_"+str(prodID)+"_"+str(jobID)+".slcio"
+  outfile = ""
+  if filename.count(".slcio"):
+    name = filename.split(".slcio")
+    outfile = name[0]+"_"+str(prodID)+"_"+str(jobID)+".slcio"
+  elif filename.count(".stdhep"):
+    name = filename.split(".stdhep")
+    outfile = name[0]+"_"+str(prodID)+"_"+str(jobID)+".stdhep"
   return outfile
