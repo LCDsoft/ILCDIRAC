@@ -187,7 +187,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('steeringFile',steeringfile)
     mstep.setValue("detectorModel",detectormodel)
-    mstep.setValue("numberOfEvents",numberofevents)
+    if self.ioDict.has_key("WhizardStep"):
+      mstep.setLink("numberOfEvents",self.ioDict["WhizardStep"],"NbOfEvts")
+    else:
+      mstep.setValue("numberOfEvents",numberofevents)
     mstep.setValue('applicationLog', 'Mokka_@{STEP_ID}.log')
     
     if self.ioDict.has_key("WhizardStep"):
