@@ -233,6 +233,9 @@ class WhizardAnalysis(ModuleBase):
     script.write('declare -x PATH=%s:$PATH\n'%mySoftDir)
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
+    script.write('echo Printing content of whizard.in \n')
+    script.write('cat whizard.in\n')
+    script.write('echo =============================\n')
     script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
     if leshouchesfiles:
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
