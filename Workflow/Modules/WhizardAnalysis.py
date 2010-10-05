@@ -13,6 +13,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFile
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
+from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
@@ -48,6 +49,7 @@ class WhizardAnalysis(ModuleBase):
     self.processlist = None
     self.jobindex = None
     self.debug = False
+    self.outputFile = ''
 
   def obtainProcessList(self):
     """Internal function
@@ -80,8 +82,7 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("RandomSeed"):
       self.randomseed = self.step_commons['RandomSeed']
     elif self.workflow_commons.has_key("IS_PROD"):  
-      if self.workflow_commons.has_key('JOB_ID'):
-        self.randomseed = int(self.workflow_commons["JOB_ID"])
+      self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
     elif self.jobID:
       self.randomseed = self.jobID
 
@@ -108,6 +109,24 @@ class WhizardAnalysis(ModuleBase):
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
       self.inFile = "whizardnew.in"
+    if self.step_commons.has_key("outputFile"):
+      self.outputFile = self.step_commons["outputFile"]
+ 
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                  int(self.workflow_commons["JOB_ID"]))
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_gen_"):
+              self.outputFile = os.path.basename(obj)
+              break
+        else:
+          self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                            int(self.workflow_commons["JOB_ID"]))
+ 
+      
     return S_OK()
 
   def execute(self):
@@ -262,6 +281,11 @@ class WhizardAnalysis(ModuleBase):
       failed = True
     else:
       self.log.info( "Whizard execution completed successfully")
+      ###Deal with output file
+      if len(self.outputFile):
+        if os.path.exists(outputfilename):
+          os.rename(outputfilename, self.outputFile)
+      
 
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
