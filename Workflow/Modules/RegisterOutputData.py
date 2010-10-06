@@ -18,6 +18,7 @@ class RegisterOutputData(ModuleBase):
     self.jobID = ''
     self.enable=True
     self.prodOutputLFNs =[]
+    self.swpackages = []
     self.fc = FileCatalogClient()
 
   def resolveInputVariables(self):
@@ -31,6 +32,9 @@ class RegisterOutputData(ModuleBase):
       self.prodOutputLFNs=self.workflow_commons['ProductionOutputData'].split(";")
     else:
       self.prodOutputLFNs = []
+      
+    if self.workflow_commons.has_key('SoftwarePackages'):
+      self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
     return S_OK('Parameters resolved')
   
   def execute(self):
