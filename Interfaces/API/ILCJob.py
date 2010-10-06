@@ -175,7 +175,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,randomseed=0,jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,energy=None,randomseed=0,jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
     """Helper function
     
        Define Whizard step
@@ -199,6 +199,8 @@ class ILCJob(Job):
        @type version: string
        @param in_file: path to whizard.in to use
        @type in_file: string
+       @param energy: CM energy to use
+       @type energy: int
        @param nbevts: number of event to generate
        @type nbevts: int
        @param lumi: luminosity to generate
@@ -215,7 +217,7 @@ class ILCJob(Job):
        @type debug: bool
     """
     
-    kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"lumi":lumi,"nbevts":nbevts,
+    kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"energy":energy,"lumi":lumi,"nbevts":nbevts,
               "jobindex":jobindex,'logFile':logFile,"logInOutputData":logInOutputData,"debug":debug}
     if not self.processlist:
       return self._reportError('Process list was not passed, please pass dirac.giveProcessList() instance to ILCJob.',__name__,**kwargs)
@@ -281,6 +283,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
     step.addParameter(Parameter("EvtType","","string","","",False,False,"Name of the whizard.in file"))
+    if energy:
+      step.addParameter(Parameter("Energy",0,"int","","",False,False,"Random seed to use"))
     if randomseed:
       step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
     if jobindex:
@@ -298,6 +302,8 @@ class ILCJob(Job):
       stepInstance.setValue("InputFile",in_file)
     if process:
       stepInstance.setValue("EvtType",process)
+    if energy:
+      stepInstance.setValue("Energy",energy)
     if randomseed:
       stepInstance.setValue("RandomSeed",randomseed)
     if jobindex:

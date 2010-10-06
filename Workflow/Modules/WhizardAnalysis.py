@@ -44,6 +44,7 @@ class WhizardAnalysis(ModuleBase):
     self.applicationName = 'whizard'
     self.evttype = ""
     self.randomseed = 0
+    self.energy = 3000
     self.getProcessInFile = False
     self.rm = ReplicaManager()
     self.processlist = None
@@ -79,6 +80,9 @@ class WhizardAnalysis(ModuleBase):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
  
+    if self.step_commons.has_key("Energy"):
+      self.energy = self.step_commons["Energy"]
+ 
     if self.step_commons.has_key("RandomSeed"):
       self.randomseed = self.step_commons['RandomSeed']
     elif self.workflow_commons.has_key("IS_PROD"):  
@@ -104,7 +108,7 @@ class WhizardAnalysis(ModuleBase):
       self.jobindex = int(self.step_commons["JobIndex"])
 
     if self.step_commons.has_key("debug"):
-      self.debug=self.step_commons["debug"]
+      self.debug = self.step_commons["debug"]
 
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
@@ -216,7 +220,7 @@ class WhizardAnalysis(ModuleBase):
     if type(self.jobindex)==type(0):
       outputfilename = outputfilename+"_"+str(self.jobindex)
       
-    res = PrepareWhizardFile(self.inFile,outputfilename,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+    res = PrepareWhizardFile(self.inFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     if not res['OK']:
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
