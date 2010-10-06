@@ -18,7 +18,7 @@ from xml.etree.ElementTree import Comment
 import string
 
 
-def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
+def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
   """Prepares the whizard.in file to run
   
   Using specified parameters in the job definition passed from L{WhizardAnalysis}
@@ -43,6 +43,8 @@ def PrepareWhizardFile(input_in,evttype,randomseed,nevts,lumi,output_in):
   for line in inputfile:
     if line.count("seed"):
       outputfile.write(" seed = %s\n"%randomseed)
+    elif line.count("sqrts"):
+      outputfile.write(" sqrts = %s\n"%energy)
     elif line.count("n_events") and not lumi:
       outputfile.write(" n_events = %s\n"%nevts)
     elif lumi and line.count("luminosity"):
