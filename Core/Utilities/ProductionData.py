@@ -8,6 +8,8 @@
 __RCSID__ = "$Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $"
 
 import string,re,os,types,datetime
+from DIRAC.Core.Security import CS
+from DIRAC.Core.Security.Misc import getProxyInfo
 
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 
@@ -84,7 +86,7 @@ def constructProductionLFNs(paramDict):
   debugLFNs = []
   for fileTuple in fileTupleList:
     #lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8))
-    lfn = fileTuple[0]+"/"+str(productionID).zfill(8)+"/"+str(int(jobID)/1000).zfill(8)+"/"+fileTuple[1]
+    lfn = fileTuple[0]+"/"+str(productionID).zfill(8)+"/"+str(int(jobID)/1000).zfill(3)+"/"+fileTuple[1]
     outputData.append(lfn)
     #bkLFNs.append(lfn)
     if debugRoot:
@@ -98,8 +100,8 @@ def constructProductionLFNs(paramDict):
   logPathtemp = fileTuple[0].split("/")
   logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
   logPath = logPathroot+"/LOG/"+str(productionID).zfill(8)
-  logFilePath = ['%s/%s' %(logPath,str(int(jobID)/1000).zfill(8))]
-  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(int(jobID)/1000).zfill(8))]
+  logFilePath = ['%s/%s' %(logPath,str(int(jobID)/1000).zfill(3))]
+  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(int(jobID)/1000).zfill(3))]
   #[ aside, why does makeProductionPath not append the jobID itself ????
   #  this is really only used in one place since the logTargetPath is just written to a text file (should be reviewed)... ]
 
@@ -147,7 +149,7 @@ def getLogPath(paramDict):
   logPathtemp = paramDict['LogFilePath'].split("/")
   logPath = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
   logFilePath = paramDict['LogFilePath']
-  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(int(jobID)/1000).zfill(8))]
+  logTargetPath = ['%s/%s_%s.tar' %(logPath,str(productionID).zfill(8),str(int(jobID)/1000).zfill(3))]
   #Get log file path - unique for all modules
 
   gLogger.verbose('Log file path is:\n%s' %logFilePath)
