@@ -5,6 +5,7 @@ Created on Sep 21, 2010
 '''
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.CFG import CFG
+from pprint import pprint
 import os, tempfile, shutil
 
 class ProcessList:
@@ -63,6 +64,10 @@ class ProcessList:
     self.cfg.setOption("Processes/%s/Model"%processdic['process'], processdic['model'])
     self.cfg.setOption("Processes/%s/Restrictions"%processdic['process'], processdic['restrictions'])
     self.cfg.setOption("Processes/%s/InFile"%processdic['process'], processdic['in_file'])
+    cross_section = 0
+    if processdic.has_key("cross_section"):
+      cross_section=processdic["cross_section"]
+    self.cfg.setOption("Processes/%s/CrossSection"%processdic['process'], cross_section)
     return    
   
   def getCSPath(self,process):
@@ -75,6 +80,10 @@ class ProcessList:
     processesdict = self.cfg.getAsDict("Processes")
     processes = processesdict.keys()
     return processes
+  
+  def getProcessesDict(self):
+    processesdict = self.cfg.getAsDict("Processes")
+    return processesdict
   
   def existsProcess(self,process):
     return S_OK(self._existsProcess(process))
@@ -93,7 +102,7 @@ class ProcessList:
   
   def printProcesses(self):
     processesdict = self.cfg.getAsDict("Processes")
-    for key,value in processesdict.items():
-      print "%s: [%s], generated with '%s' with the model '%s' using diagram restrictions %s"%(key,value['Detail'],value['Generator'],value['Model'],value['Restrictions'])
-    
+    #for key,value in processesdict.items():
+    #  print "%s: [%s], generated with '%s' with the model '%s' using diagram restrictions %s"%(key,value['Detail'],value['Generator'],value['Model'],value['Restrictions'])
+    pprint(processesdict)
   
