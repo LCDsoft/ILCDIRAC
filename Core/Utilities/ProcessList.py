@@ -43,31 +43,32 @@ class ProcessList:
     
   def isOK(self):
     return self.OK
+  
+  def updateProcessList(self,processes):
+    for process,dict in processes.items():
+      if not self._existsProcess(process):
+        res = self._addEntry(process,dict)
+        return res
+      else:
+        gLogger.info("Process %s already defined in ProcessList, will replace it"%process)
+        self.cfg.deleteKey("Processes/%s"%process)
+        res = self._addEntry(process,dict)
+        return res
+    return S_OK()
     
-  def setCSPath(self,processdic,path):
-    processExists = self._existsProcess(processdic['process'])
-    if not processExists:
-      res = self._addEntry(processdic, path)
-      return res
-    else:
-      gLogger.info("Process %s already defined in ProcessList, will replace it"%processdic['process'])
-      self.cfg.deleteKey("Processes/%s"%processdic['process'])
-      res = self._addEntry(processdic, path)
-      return res
-    
-  def _addEntry(self,processdic,path):
-    if not self.cfg.isSection("Processes/%s"%processdic['process']):
-      self.cfg.createNewSection("Processes/%s"%processdic['process'])
-    self.cfg.setOption("Processes/%s/TarBallCSPath"%processdic['process'], path)
-    self.cfg.setOption("Processes/%s/Detail"%processdic['process'], processdic['detail'])
-    self.cfg.setOption("Processes/%s/Generator"%processdic['process'], processdic['generator'])
-    self.cfg.setOption("Processes/%s/Model"%processdic['process'], processdic['model'])
-    self.cfg.setOption("Processes/%s/Restrictions"%processdic['process'], processdic['restrictions'])
-    self.cfg.setOption("Processes/%s/InFile"%processdic['process'], processdic['in_file'])
+  def _addEntry(self,process,processdic):
+    if not self.cfg.isSection("Processes/%s"%process):
+      self.cfg.createNewSection("Processes/%s"%process)
+    self.cfg.setOption("Processes/%s/TarBallCSPath"%process, processdic['TarBallPath'])
+    self.cfg.setOption("Processes/%s/Detail"%process, processdic['detail'])
+    self.cfg.setOption("Processes/%s/Generator"%process, processdic['generator'])
+    self.cfg.setOption("Processes/%s/Model"%process, processdic['model'])
+    self.cfg.setOption("Processes/%s/Restrictions"%process, processdic['restrictions'])
+    self.cfg.setOption("Processes/%s/InFile"%process, processdic['in_file'])
     cross_section = 0
     if processdic.has_key("cross_section"):
       cross_section=processdic["cross_section"]
-    self.cfg.setOption("Processes/%s/CrossSection"%processdic['process'], cross_section)
+    self.cfg.setOption("Processes/%s/CrossSection"%process, cross_section)
     return    
   
   def getCSPath(self,process):
@@ -82,8 +83,8 @@ class ProcessList:
     return processes
   
   def getProcessesDict(self):
-    processesdict = self.cfg.getAsDict("Processes")
-    return processesdict
+    return self.cfg.getAsDict("Processes")
+    
   
   def existsProcess(self,process):
     return S_OK(self._existsProcess(process))

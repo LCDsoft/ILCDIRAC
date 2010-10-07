@@ -51,8 +51,8 @@ def redirectLogOutput(fd, message):
   sys.stdout.flush()
   print message
   
-def readPRCFile(prc,inputlist):
-  list = []
+def readPRCFile(prc):
+  list = {}
   myprc = file(prc)
   model = ""
   for process in myprc:
@@ -63,21 +63,17 @@ def readPRCFile(prc,inputlist):
       elif elems[0]=="model":
         model = elems[1]
       elif not elems[0]=="model":
-        p = {}
-        p['process']=elems[0]
-        p['detail'] = string.join(elems[1:3],"->")
-        p['generator']=elems[3]
-        p['restrictions']="none"
+        list[elems[0]]['detail'] = string.join(elems[1:3],"->")
+        list[elems[0]]['generator']=elems[3]
+        list[elems[0]]['restrictions']="none"
         if len(elems)>4:
-          p['restrictions']=string.join(elems[4:]," ")
-        p['model'] = model
-        p['in_file']="whizard.in"
-        
-        list.append(p)
+          list[elems[0]]['restrictions']=string.join(elems[4:]," ")
+        list[elems[0]]['model'] = model
+        list[elems[0]]['in_file']="whizard.in"
       else:
         continue
-  inputlist.extend(list)
-  return inputlist
+  
+  return list
 
 def getDetailsFromPRC(prc,processin):
   details = {}
@@ -99,6 +95,7 @@ def getDetailsFromPRC(prc,processin):
             details['restrictions']=string.join(elems[4:]," ")
           break
   return details
+
   
 if len(args) < 3:
   usage()
@@ -135,7 +132,7 @@ if not os.path.exists(processlist):
 pl = ProcessList(processlist)
 
 startdir = os.getcwd()
-inputlist = []
+inputlist = {}
 os.chdir(whizard_location)
 folderlist = os.listdir(os.getcwd())
 whiz_here = folderlist.count("whizard")
@@ -153,31 +150,51 @@ if whizprc_here==0:
   print "whizard.mdl not found in %s, please check"%whizard_location
   os.chdir(startdir)
   DIRAC.exit(2)
+ 
+  
+print "Preparing process list"
 
 for f in folderlist:
   if f.count(".in"):
     infile = file(f,"r")
-    processdict = {}
     found_detail = False
     
     for line in infile:
       if line.count("decay_description"):
-        processdict["process"] = f.split(".in")[0]    
-        processdict["in_file"] = f
-        processdict["detail"] = line.split("\"")[1]
+        currprocess=f.split(".in")[0] 
+        inputlist[currprocess]["in_file"] = f
+        inputlist[currprocess]["detail"] = line.split("\"")[1]
         found_detail = True
       if line.count("process_id") and found_detail:
         process_id = line.split("\"")[1]
         process_detail = getDetailsFromPRC("whizard.prc",process_id)  
-        processdict["model"] =   process_detail["model"]
-        processdict["generator"] = process_detail["generator"]
-        processdict["restrictions"] = process_detail["restrictions"]
-    if len(processdict.items()):
-      inputlist.append(processdict)    
+        inputlist[currprocess]["model"] =   process_detail["model"]
+        inputlist[currprocess]["generator"] = process_detail["generator"]
+        inputlist[currprocess]["restrictions"] = process_detail["restrictions"]
+    #if len(inputlist[currprocess].items()):
+    #  inputlist.append(processdict)    
 
-appTar = os.path.join(os.getcwd(),"whizard"+whizard_version+".tgz")
+##Update inputlist with what was found looking in the prc file
+processes= readPRCFile("whizard.prc")
+inputlist.update(processes)
+
+##get from cross section files the cross sections for the processes in inputlist
+#Need full process list
+for f in folderlist:
+  if f.count("cross_sections_"):
+    crossfile = file(f,"r")
+    for line in crossfile:
+      line = line.rstrip().lstrip()
+      if line[0]=="#" or line[0]=="!":
+        continue
+      currprocess = line.split()[0]
+      if inputlist.has_key(currprocess):
+        inputlist[currprocess]['CrossSection']=line.split()[1]
+
 
 print "Preparing Tar ball"
+appTar = os.path.join(os.getcwd(),"whizard"+whizard_version+".tgz")
+
 if os.path.exists('lib'):
   shutil.rmtree('lib')
 scriptName = 'ldd.sh'
@@ -257,13 +274,17 @@ else:
 print "Done"
 
 os.remove(appTar)
+#Set for all new processes the TarBallURL
+for process in inputlist.keys():
+  inputlist[process]['TarBallPath']=tarballurl['Value']+os.path.basename(appTar)
 
-print "Preparing process list"
 
-processes= readPRCFile("whizard.prc",inputlist)
-for process in processes:
-  pl.setCSPath(process,tarballurl['Value']+os.path.basename(appTar))
+knownprocess = pl.getProcessesDict()
+knownprocess.update(inputlist)
+pl.updateProcessList(knownprocess)
+print "Done"
 
+#Return to initial location
 os.chdir(startdir)
 
 pl.writeProcessList()
