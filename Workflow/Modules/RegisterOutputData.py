@@ -19,6 +19,8 @@ class RegisterOutputData(ModuleBase):
     self.enable=True
     self.prodOutputLFNs =[]
     self.swpackages = []
+    self.nbofevents = 0
+    self.luminosity = 0
     self.fc = FileCatalogClient()
 
   def resolveInputVariables(self):
@@ -36,6 +38,11 @@ class RegisterOutputData(ModuleBase):
     if self.workflow_commons.has_key('SoftwarePackages'):
       self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
     return S_OK('Parameters resolved')
+
+    if self.workflow_commons.has_key('NbOfEvents'):
+      self.nbofevents = self.workflow_commons['NbOfEvents']
+    if self.workflow_commons.has_key('Luminosity'):
+      self.luminosity = self.workflow_commons['Luminosity']
   
   def execute(self):
     self.log.info('Initializing %s' %self.version)
@@ -75,7 +82,7 @@ class RegisterOutputData(ModuleBase):
       if not res['OK']:
         self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
         return res
-      
+      prodid = ''
       if elements[6].lower() == 'gen':
         meta['Datatype']=elements[6]
         datatype = string.join(elements[0:7],"/")
@@ -108,6 +115,18 @@ class RegisterOutputData(ModuleBase):
         res = self.fc.setMetadata(prodid,"ProdID",elements[8])
         if not res['OK']:
           self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
+          return res
+      if self.nbofevents:
+        meta['NumberOfEvents']=self.nbofevents
+        res = self.fc.setMetadata(prodid,'NumberOfEvents',self.nbofevents)
+        if not res['OK']:
+          self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,prodid))
+          return res
+      if self.luminosity:
+        meta['Luminosity']=self.luminosity
+        res = self.fc.setMetadata(prodid,'Luminosity',self.luminosity)
+        if not res['OK']:
+          self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,prodid))
           return res
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       #for key,value in meta.items():
