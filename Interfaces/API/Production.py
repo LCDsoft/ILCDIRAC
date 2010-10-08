@@ -156,6 +156,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 
     self.__addSoftwarePackages('whizard.%s' %(appvers))   
     self._addParameter(self.workflow,"WhizardOutput","string",outputfile,"whizard expected output file name")
+    if nbevts:
+      self._addParameter(self.workflow,"NbOfEvents","int",nbevts,"Number of events")
+    if lumi:
+      self._addParameter(self.workflow,"Luminosity","int",lumi,"Luminosity")
     self.ioDict["WhizardStep"]=mstep.getName()
     return S_OK()
 
