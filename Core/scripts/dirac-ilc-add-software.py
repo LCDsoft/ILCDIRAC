@@ -24,7 +24,7 @@ def usage():
   print 'Usage: %s <PLATFORM> <NAME> <VERSION> [<COMMENT>]' %(Script.scriptName)
   DIRAC.exit(2)
 
-def upload(path,tarball):
+def upload(path,appTar):
   if not os.path.exists(appTar):
     print "Tar ball %s does not exists, cannot continue."%appTar
     return S_ERROR()
