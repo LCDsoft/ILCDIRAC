@@ -63,13 +63,14 @@ def readPRCFile(prc):
       elif elems[0]=="model":
         model = elems[1]
       elif not elems[0]=="model":
-        list[elems[0]]['detail'] = string.join(elems[1:3],"->")
-        list[elems[0]]['generator']=elems[3]
-        list[elems[0]]['restrictions']="none"
+        list[elems[0]]={}
+        list[elems[0]]['Detail'] = string.join(elems[1:3],"->")
+        list[elems[0]]['Generator']=elems[3]
+        list[elems[0]]['Restrictions']="none"
         if len(elems)>4:
-          list[elems[0]]['restrictions']=string.join(elems[4:]," ")
-        list[elems[0]]['model'] = model
-        list[elems[0]]['in_file']="whizard.in"
+          list[elems[0]]['Restrictions']=string.join(elems[4:]," ")
+        list[elems[0]]['Model'] = model
+        list[elems[0]]['InFile']="whizard.in"
       else:
         continue
   
@@ -88,11 +89,11 @@ def getDetailsFromPRC(prc,processin):
         model = elems[1]
       elif not elems[0]=="model":
         if elems[0]==processin:
-          details['model']=model
-          details['generator'] = elems[3]
-          details['restrictions']="none"
+          details['Model']=model
+          details['Generator'] = elems[3]
+          details['Restrictions']="none"
           if len(elems)>4:
-            details['restrictions']=string.join(elems[4:]," ")
+            details['Restrictions']=string.join(elems[4:]," ")
           break
   return details
 
@@ -162,15 +163,16 @@ for f in folderlist:
     for line in infile:
       if line.count("decay_description"):
         currprocess=f.split(".in")[0] 
-        inputlist[currprocess]["in_file"] = f
-        inputlist[currprocess]["detail"] = line.split("\"")[1]
+        inputlist[currprocess]={}        
+        inputlist[currprocess]["InFile"] = f
+        inputlist[currprocess]["Detail"] = line.split("\"")[1]
         found_detail = True
       if line.count("process_id") and found_detail:
         process_id = line.split("\"")[1]
         process_detail = getDetailsFromPRC("whizard.prc",process_id)  
-        inputlist[currprocess]["model"] =   process_detail["model"]
-        inputlist[currprocess]["generator"] = process_detail["generator"]
-        inputlist[currprocess]["restrictions"] = process_detail["restrictions"]
+        inputlist[currprocess]["Model"] =   process_detail["Model"]
+        inputlist[currprocess]["Generator"] = process_detail["Generator"]
+        inputlist[currprocess]["Restrictions"] = process_detail["Restrictions"]
     #if len(inputlist[currprocess].items()):
     #  inputlist.append(processdict)    
 
@@ -276,7 +278,7 @@ print "Done"
 os.remove(appTar)
 #Set for all new processes the TarBallURL
 for process in inputlist.keys():
-  inputlist[process]['TarBallPath']=tarballurl['Value']+os.path.basename(appTar)
+  inputlist[process]['TarBallCSPath']=tarballurl['Value']+os.path.basename(appTar)
 
 
 knownprocess = pl.getProcessesDict()

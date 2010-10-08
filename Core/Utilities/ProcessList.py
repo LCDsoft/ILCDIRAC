@@ -47,29 +47,29 @@ class ProcessList:
   def updateProcessList(self,processes):
     for process,dict in processes.items():
       if not self._existsProcess(process):
-        res = self._addEntry(process,dict)
-        return res
+        self._addEntry(process,dict)
+        #return res
       else:
         gLogger.info("Process %s already defined in ProcessList, will replace it"%process)
         self.cfg.deleteKey("Processes/%s"%process)
-        res = self._addEntry(process,dict)
-        return res
+        self._addEntry(process,dict)
+        #return res
     return S_OK()
     
   def _addEntry(self,process,processdic):
     if not self.cfg.isSection("Processes/%s"%process):
       self.cfg.createNewSection("Processes/%s"%process)
-    self.cfg.setOption("Processes/%s/TarBallCSPath"%process, processdic['TarBallPath'])
-    self.cfg.setOption("Processes/%s/Detail"%process, processdic['detail'])
-    self.cfg.setOption("Processes/%s/Generator"%process, processdic['generator'])
-    self.cfg.setOption("Processes/%s/Model"%process, processdic['model'])
-    self.cfg.setOption("Processes/%s/Restrictions"%process, processdic['restrictions'])
-    self.cfg.setOption("Processes/%s/InFile"%process, processdic['in_file'])
+    self.cfg.setOption("Processes/%s/TarBallCSPath"%process, processdic['TarBallCSPath'])
+    self.cfg.setOption("Processes/%s/Detail"%process, processdic['Detail'])
+    self.cfg.setOption("Processes/%s/Generator"%process, processdic['Generator'])
+    self.cfg.setOption("Processes/%s/Model"%process, processdic['Model'])
+    self.cfg.setOption("Processes/%s/Restrictions"%process, processdic['Restrictions'])
+    self.cfg.setOption("Processes/%s/InFile"%process, processdic['InFile'])
     cross_section = 0
-    if processdic.has_key("cross_section"):
-      cross_section=processdic["cross_section"]
+    if processdic.has_key("CrossSection"):
+      cross_section=processdic["CrossSection"]
     self.cfg.setOption("Processes/%s/CrossSection"%process, cross_section)
-    return    
+    return S_OK()
   
   def getCSPath(self,process):
     return self.cfg.getOption("Processes/%s/TarBallCSPath"%process, None)
