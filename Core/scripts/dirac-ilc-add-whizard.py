@@ -189,6 +189,8 @@ for f in folderlist:
       line = line.rstrip().lstrip()
       if line[0]=="#" or line[0]=="!":
         continue
+      if len(line.split())<2:
+        continue
       currprocess = line.split()[0]
       if inputlist.has_key(currprocess):
         inputlist[currprocess]['CrossSection']=line.split()[1]
@@ -212,7 +214,7 @@ cp $string ./lib
 whizarddir=%s 
 rm -rf $whizarddir
 mkdir $whizarddir
-cp -r *.in whizard whizard.prc whizard.mdl lib/ $whizarddir
+cp -r *.in cross_sections_* whizard whizard.prc whizard.mdl lib/ $whizarddir
 """%("whizard"+whizard_version))
 script.close()
 os.chmod(scriptName,0755)
