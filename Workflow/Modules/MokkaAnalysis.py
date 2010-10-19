@@ -119,7 +119,7 @@ class MokkaAnalysis(ModuleBase):
             self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
             if self.workflow_commons.has_key("WhizardOutput"):
-              self.inputSLCIO = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+              self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
                                                 int(self.workflow_commons["JOB_ID"]))
            
           
@@ -296,6 +296,12 @@ class MokkaAnalysis(ModuleBase):
           
       script.write("declare -x PATH=%s:%s\n"%(myMokkaDir,os.environ['PATH']))
       
+      script.write('echo =============================\n')
+      script.write('echo Content of mokka.steer:\n')
+      script.write('cat mokka.steer\n')
+      script.write('echo =============================\n')
+      script.write('echo Content of mokkamac.mac:\n')
+      script.write('cat mokkamac.mac\n')
       script.write('echo =============================\n')
       script.write('echo LD_LIBRARY_PATH is\n')
       script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
