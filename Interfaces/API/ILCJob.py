@@ -1139,6 +1139,8 @@ class ILCJob(Job):
         return self._reportError('Expected string for OutputPath',**kwargs)
       # Remove leading "/" that might cause problems with os.path.join
       while OutputPath[0] == '/': OutputPath=OutputPath[1:]
+      if OutputPath.count("ilc/user"):
+        return self._reportError('Output path contains /ilc/user/ which is not what you want',**kwargs)
       self._addParameter(self.workflow,'UserOutputPath','JDL',OutputPath,description)
 
     return S_OK()
