@@ -48,6 +48,7 @@ class ILCJob(Job):
     self.ioDict = {}
     self.srms = ""
     self.processlist = None
+    self.systemConfig = "x86_64-slc5-gcc43-opt"
     if processlist:
       self.processlist =processlist
 
