@@ -221,7 +221,7 @@ class ILCJob(Job):
     kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"energy":energy,"lumi":lumi,"nbevts":nbevts,
               "jobindex":jobindex,'logFile':logFile,"logInOutputData":logInOutputData,"debug":debug}
     if not self.processlist:
-      return self._reportError('Process list was not passed, please pass dirac.giveProcessList() instance to ILCJob.',__name__,**kwargs)
+      return self._reportError('Process list was not passed, please define job = ILCJob(processlist=dirac.giveProcessList()).',__name__,**kwargs)
     if process:
       if not self.processlist.existsProcess(process)['Value']:
         self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
