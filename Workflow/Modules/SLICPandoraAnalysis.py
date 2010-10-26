@@ -54,8 +54,8 @@ class SLICPandoraAnalysis (ModuleBase):
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']        
 
-    if self.step_commons.has_key('numberOfEvents'):
-        self.numberOfEvents = self.step_commons['numberOfEvents']
+    if self.step_commons.has_key('EvtsToProcess'):
+        self.numberOfEvents = self.step_commons['EvtsToProcess']
           
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
@@ -133,8 +133,8 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_ERROR('Missing slcio file!')
     runonslcio = res['Value']
     
-    if not os.path.exists(os.path.basename(self.detectorxml)):
-      detmodel = self.detectorxml.rstrip(".xml")
+    if not os.path.exists(os.path.basename(self.detectorxml+".xml")):
+      detmodel = self.detectorxml
       if not os.path.exists(detmodel+".zip"):
         #retrieve detector model from web
         detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])
@@ -157,6 +157,8 @@ class SLICPandoraAnalysis (ModuleBase):
       if os.path.exists(detmodel) and os.path.isdir(detmodel):
         self.detectorxml = os.path.join(os.getcwd(),detmodel,self.detectorxml)
 
+    self.detectorxml = self.detectorxml+".xml"
+    
     if not os.path.exists(self.detectorxml):
       self.log.error('Detector model xml %s was not found, exiting'%detmodel)
       return S_ERROR('Detector model xml %s was not found, exiting'%detmodel)
