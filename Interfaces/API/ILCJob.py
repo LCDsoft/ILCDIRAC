@@ -13,7 +13,6 @@
 
   @author: Stephane Poss and Przemyslaw Majewski
 """
-import string
 from DIRAC.Core.Workflow.Parameter                  import *
 from DIRAC.Core.Workflow.Module                     import *
 from DIRAC.Core.Workflow.Step                       import *
@@ -22,7 +21,10 @@ from DIRAC.Core.Workflow.WorkflowReader             import *
 from DIRAC.Interfaces.API.Job                       import Job
 #from DIRAC.Core.Utilities.File                      import makeGuid
 #from DIRAC.Core.Utilities.List                      import uniqueElements
-from DIRAC                                          import gConfig
+from DIRAC                                          import gConfig, S_OK, S_ERROR
+
+import os,types,string
+ 
  
 COMPONENT_NAME='/WorkflowLib/API/ILCJob' 
 
@@ -157,12 +159,12 @@ class ILCJob(Job):
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
     module.setBody(body)
     
-    step = StepDefinition('GetSRM')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
-    step.createModuleInstance('GetSRMFile','GetSRM')
+    step.createModuleInstance('GetSRMFile',stepDefn)
     step.addParameter(Parameter("srmfiles","","string","","",False, False, "list of files to retrieve"))
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('GetSRM',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
 
     files = ""
     if type(filedict) == type(""):
@@ -275,11 +277,11 @@ class ILCJob(Job):
     userData.setDescription('Uploads user output data files with ILC specific policies.')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
     userData.setBody(body)    
-    step = StepDefinition('Whizard')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance('WhizardAnalysis','Whizard')
-    step.createModuleInstance('UserJobFinalization','Whizard')
+    step.createModuleInstance('WhizardAnalysis',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))    
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
@@ -296,7 +298,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
 
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('Whizard',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",version)
     stepInstance.setValue("applicationLog",logName)
     if in_file:
@@ -475,11 +477,11 @@ class ILCJob(Job):
     userData.setDescription('Uploads user output data files with ILC specific policies.')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
     userData.setBody(body)    
-    step = StepDefinition('Mokka')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance('MokkaAnalysis','Mokka')
-    step.createModuleInstance('UserJobFinalization','Mokka')
+    step.createModuleInstance('MokkaAnalysis',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("steeringFile","","string","","",False,False,"Name of the steering file"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
@@ -493,7 +495,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
     
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('Mokka',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("steeringFile",steeringFile)
     if inputGenfile:
@@ -642,11 +644,11 @@ class ILCJob(Job):
     userData.setDescription('Uploads user output data files with ILC specific policies.')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
     userData.setBody(body)        
-    step = StepDefinition('Marlin')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance('MarlinAnalysis','Marlin')
-    step.createModuleInstance('UserJobFinalization','Marlin')
+    step.createModuleInstance('MarlinAnalysis',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
@@ -656,7 +658,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('Marlin',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
     if(inputslcioStr):
@@ -804,11 +806,11 @@ class ILCJob(Job):
     userData.setDescription('Uploads user output data files with ILC specific policies.')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
     userData.setBody(body)
-    step = StepDefinition('SLIC')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance('SLICAnalysis','SLIC')
-    step.createModuleInstance('UserJobFinalization','SLIC')
+    step.createModuleInstance('SLICAnalysis',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("inputmacFile","","string","","",False,False,"Name of the mac file"))
     step.addParameter(Parameter("stdhepFile","","string","","",False,False,"Name of the stdhep file"))
@@ -820,7 +822,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
     
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('SLIC',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     if macFile:
       stepInstance.setValue("inputmacFile",macFile)
@@ -847,7 +849,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, logFile='', debug = False,logInOutputData=False):
+  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, outputFile = "",logFile='', debug = False,logInOutputData=False):
     """Helper function.
        Define LCSIM step
        
@@ -876,7 +878,8 @@ class ILCJob(Job):
        @type logInOutputData: bool
        @return: S_OK() or S_ERROR()
     """
-    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,'logFile':logFile, 
+    kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,
+              'logFile':logFile, "outputFile":outputFile,
               'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
@@ -940,26 +943,30 @@ class ILCJob(Job):
     userData.setDescription('Uploads user output data files with ILC specific policies.')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
     userData.setBody(body)            
-    step = StepDefinition('LCSIM')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance('LCSIMAnalysis','LCSIM')
-    step.createModuleInstance('UserJobFinalization','LCSIM')
+    step.createModuleInstance('LCSIMAnalysis',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the source directory to use"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     step.addParameter(Parameter("aliasproperties","","string","","",False,False,"Name of the alias properties file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
 
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('LCSIM',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
     stepInstance.setValue("inputXML",xmlfile)
     stepInstance.setValue("debug",debug)
-
+    if(outputFile):
+      stepInstance.setValue('outputFile',outputFile)
+      
     if aliasproperties:
       stepInstance.setValue("aliasproperties",aliasproperties)
 
@@ -991,6 +998,142 @@ class ILCJob(Job):
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
     self.ioDict["LCSIMStep"]=stepInstance.getName()    
     return S_OK()
+  
+  def setSLICPandora(self,appVersion,detectorgeo = None,pandorasettings = None,inputslcio = None, nbevts= 0, outputFile = "",logFile='', debug = False,logInOutputData=False):
+    """Helper function.
+       Define SLICPandora step
+              
+       All options files are automatically appended to the job input sandbox
+       
+       Example usage:
+
+       >>> job = ILCJob()
+       >>> job.setSLICPandora('',detectorxml='mydetector.xml',inputslcio=['LFN:/lcd/event/data/somedata.slcio'])
+
+       @param appVersion: SLICPandora version
+       @type appVersion: string
+       @param xmlfile: Path to detector xml file. Like SLIC step: will download the detector model if needed. Can be path to xml or detector model name
+       @type xmlfile: string
+       @param inputslcio: path to input slcio, list of strings or string
+       @type inputslcio: string or list
+       @param pandorasettings: Path to the pandora settings file name that will be used
+       @type pandorasettings: string
+       @param logFile: Optional log file name
+       @type logFile: string
+       @param debug: set to True to have verbosity set to 1
+       @type debug: bool
+       @param logInOutputData: If set to False (default) then automatically appended to output sandbox, if True, manually add it to OutputData
+       @type logInOutputData: bool
+       @return: S_OK() or S_ERROR()
+    """
+    kwargs = {'appVersion':appVersion,"detectorgeo":detectorgeo,"inputslcio":inputslcio,"nbevts":nbevts,"outputFile":outputFile,"logFile":logFile,
+              "debug":debug,"logInOutputData":logInOutputData}
+    if pandorasettings:
+      if not type(pandorasettings) in types.StringTypes:
+        return self._reportError('Expected string for PandoraSettings xml file',__name__,**kwargs)
+      if pandorasettings.lower().count("lfn:"):
+        self.addToInputSandbox.append(pandorasettings)
+      elif os.path.exists(pandorasettings):
+        self.addToInputSandbox.append(pandorasettings)
+      else:
+        return self._reportError("Could not find PandoraSettings xml files specified %s"%(pandorasettings), __name__,**kwargs)
+    
+    if detectorgeo:
+      if not type(detectorgeo) in types.StringTypes:
+        return self._reportError('Expected string for detector xml file',__name__,**kwargs)
+      if detectorgeo.lower().count("lfn:"):
+        self.addToInputSandbox.append(detectorgeo)
+      elif os.path.exists(detectorgeo):
+        self.addToInputSandbox.append(detectorgeo)
+      else:
+        return self._reportError("Could not find detector xml files specified %s"%(detectorgeo), __name__,**kwargs)
+
+    if not type(debug) == types.BooleanType:
+      return self._reportError('Expected bool for debug',__name__,**kwargs)
+
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'SLICPandora_%s.log' %(appVersion)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
+
+    self.StepCount +=1
+    stepName = 'RunSLICPandora'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('SLICPandora',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
+    
+    ##now define LCSIMAnalysis
+    moduleName = "SLICPandoraAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('SLICPandora module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)            
+    step = StepDefinition(stepDefn)
+    step.addModule(module)
+    step.addModule(userData)
+    step.createModuleInstance('SLICPandoraAnalysis',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("DetectorXML","","string","","",False,False,"Name of the detector xml to use"))
+    step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
+    step.addParameter(Parameter("PandoraSettings","","string","","",False,False,"Name of the PandoraSettings file"))
+    step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
+
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("applicationLog",logName)
+    if detectorgeo:
+      stepInstance.setValue("DetectorXML",detectorgeo)
+    elif self.ioDict.has_key("SLICStep"):
+      stepInstance.setLink('DetectorXML',self.ioDict["SLICStep"],'detectorModel')
+    stepInstance.setValue("debug",debug)
+   
+    if(pandorasettings):
+      stepInstance.setValue("PandoraSettings",pandorasettings)
+ 
+    if(inputslcio):
+      stepInstance.setValue("inputSlcio",inputslcio)
+    else:
+      if not self.ioDict.has_key("LCSIMStep"):
+        raise TypeError,'Expected previously defined LCSIM step for input data'
+      stepInstance.setLink('inputSlcio',self.ioDict["LCSIMStep"],'outputFile')
+
+    if(nbevts):
+      stepInstance.setValue("EvtsToProcess",nbevts)
+    elif self.ioDict.has_key("LCSIMStep"):
+        stepInstance.setLink('EvtsToProcess',self.ioDict["LCSIMStep"],'EvtsToProcess')
+    else :
+      stepInstance.setValue("EvtsToProcess",-1)
+          
+    currentApp = "slicpandora.%s"%appVersion
+
+    swPackages = 'SoftwarePackages'
+    description='ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict["SLICPandoraStep"]=stepInstance.getName()        
+    return S_OK()
+  
   
   def setRootAppli(self,appVersion, scriptpath,args=None,logFile='',logInOutputData=False):
     """Define root macro or executable execution
@@ -1045,6 +1188,8 @@ class ILCJob(Job):
     
     self.StepCount +=1
     stepName = 'RunRootMacro'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('RootMacro',stepNumber)    
     self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
 
     
@@ -1059,18 +1204,18 @@ class ILCJob(Job):
     userData.setDescription('Uploads user output data files with ILC specific policies.')
     body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
     userData.setBody(body)                
-    step = StepDefinition('RootMacro')
+    step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance(rootmoduleName,'RootMacro')
-    step.createModuleInstance('UserJobFinalization','RootMacro')
+    step.createModuleInstance(rootmoduleName,stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("script","","string","","",False,False,"Name of the source directory to use"))
     step.addParameter(Parameter("args","","string","","",False,False,"Name of the input slcio file"))
 
     self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance('RootMacro',stepName)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",appVersion)
     stepInstance.setValue("applicationLog",logName)
     stepInstance.setValue("script",scriptpath)
