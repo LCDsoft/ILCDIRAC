@@ -973,9 +973,12 @@ class ILCJob(Job):
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio",inputslcioStr)
     else:
-      if not self.ioDict.has_key("SLICStep"):
-        raise TypeError,'Expected previously defined SLIC step for input data'
-      stepInstance.setLink('inputSlcio',self.ioDict["SLICStep"],'outputFile')
+      if self.ioDict.has_key("SLICPandoraStep"):
+        stepInstance.setLink('inputSlcio',self.ioDict["SLICPandoraStep"],'outputFile')
+      elif self.ioDict.has_key("SLICStep"):
+        stepInstance.setLink('inputSlcio',self.ioDict["SLICStep"],'outputFile')
+      else:
+        raise TypeError,'Expected previously defined SLIC step or SLICPandora step for input data'
 
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
@@ -1092,6 +1095,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("PandoraSettings","","string","","",False,False,"Name of the PandoraSettings file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
+    step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
@@ -1119,7 +1123,9 @@ class ILCJob(Job):
         stepInstance.setLink('EvtsToProcess',self.ioDict["LCSIMStep"],'EvtsToProcess')
     else :
       stepInstance.setValue("EvtsToProcess",-1)
-          
+    if(outputFile):
+      stepInstance.setValue('outputFile',outputFile)
+                
     currentApp = "slicpandora.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
