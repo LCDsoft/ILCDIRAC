@@ -56,23 +56,27 @@ def readPRCFile(prc):
   myprc = file(prc)
   model = ""
   for process in myprc:
-    if len(process.split()):
-      elems = process.split()
-      if process[0]=="#":
-        continue
-      elif elems[0]=="model":
-        model = elems[1]
-      elif not elems[0]=="model":
-        list[elems[0]]={}
-        list[elems[0]]['Detail'] = string.join(elems[1:3],"->")
-        list[elems[0]]['Generator']=elems[3]
-        list[elems[0]]['Restrictions']="none"
-        if len(elems)>4:
-          list[elems[0]]['Restrictions']=string.join(elems[4:]," ")
-        list[elems[0]]['Model'] = model
-        list[elems[0]]['InFile']="whizard.in"
-      else:
-        continue
+    process = process.rstrip()
+    if not len(process):
+      continue
+    if process[0]=="#":
+      continue
+    elems = process.split()
+    if elems[0]=="alias":
+      continue
+    elif elems[0]=="model":
+      model = elems[1]
+    elif not elems[0]=="model":
+      list[elems[0]]={}
+      list[elems[0]]['Detail'] = string.join(elems[1:3],"->")
+      list[elems[0]]['Generator']=elems[3]
+      list[elems[0]]['Restrictions']="none"
+      if len(elems)>4:
+        list[elems[0]]['Restrictions']=string.join(elems[4:]," ")
+      list[elems[0]]['Model'] = model
+      list[elems[0]]['InFile']="whizard.in"
+    else:
+      continue
   
   return list
 
@@ -81,20 +85,22 @@ def getDetailsFromPRC(prc,processin):
   myprc = file(prc)
   model = ""
   for process in myprc:
-    if len(process.split()):
-      elems = process.split()
-      if process[0]=="#":
-        continue
-      elif elems[0]=="model":
-        model = elems[1]
-      elif not elems[0]=="model":
-        if elems[0]==processin:
-          details['Model']=model
-          details['Generator'] = elems[3]
-          details['Restrictions']="none"
-          if len(elems)>4:
-            details['Restrictions']=string.join(elems[4:]," ")
-          break
+    process = process.rstrip()
+    if not len(process):
+      continue
+    elems = process.split()
+    if process[0]=="#":
+      continue
+    elif elems[0]=="model":
+      model = elems[1]
+    elif not elems[0]=="model":
+      if elems[0]==processin:
+        details['Model']=model
+        details['Generator'] = elems[3]
+        details['Restrictions']="none"
+        if len(elems)>4:
+          details['Restrictions']=string.join(elems[4:]," ")
+        break
   return details
 
   
@@ -169,10 +175,18 @@ for f in folderlist:
         found_detail = True
       if line.count("process_id") and found_detail:
         process_id = line.split("\"")[1]
-        process_detail = getDetailsFromPRC("whizard.prc",process_id)  
-        inputlist[currprocess]["Model"] =   process_detail["Model"]
-        inputlist[currprocess]["Generator"] = process_detail["Generator"]
-        inputlist[currprocess]["Restrictions"] = process_detail["Restrictions"]
+        inputlist[currprocess]["Model"] = ""
+        inputlist[currprocess]["Generator"] = ""
+        inputlist[currprocess]["Restrictions"] = ""
+        for process in process_id.split():
+          print "Looking for detail of process %s"%(process)
+          process_detail = getDetailsFromPRC("whizard.prc",process)  
+          inputlist[currprocess]["Model"] =   process_detail["Model"]
+          inputlist[currprocess]["Generator"] = process_detail["Generator"]
+          if len(inputlist[currprocess]["Restrictions"]):
+            inputlist[currprocess]["Restrictions"] = inputlist[currprocess]["Restrictions"] + ", "+process_detail["Restrictions"]
+          else:
+            inputlist[currprocess]["Restrictions"] = process_detail["Restrictions"]
     #if len(inputlist[currprocess].items()):
     #  inputlist.append(processdict)    
 
@@ -187,6 +201,8 @@ for f in folderlist:
     crossfile = file(f,"r")
     for line in crossfile:
       line = line.rstrip().lstrip()
+      if not len(line):
+        continue
       if line[0]=="#" or line[0]=="!":
         continue
       if len(line.split())<2:
