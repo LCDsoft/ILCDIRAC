@@ -244,6 +244,10 @@ class WhizardAnalysis(ModuleBase):
     if leshouchesfiles:
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
+    script.write('echo =============================\n')
+    script.write('echo Printing content of whizard.prc \n')
+    script.write('cat whizard.prc\n')
+    script.write('echo =============================\n')
     extracmd = ""
     if not self.debug:
       extracmd = "2>/dev/null" 
