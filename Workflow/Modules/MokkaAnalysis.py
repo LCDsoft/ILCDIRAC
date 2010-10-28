@@ -380,7 +380,7 @@ class MokkaAnalysis(ModuleBase):
       """
       sys.stdout.flush()
       if message:
-        if re.search('>>> Event',message): print message
+        print message
       if self.applicationLog:
         log = open(self.applicationLog,'a')
         log.write(message+'\n')
