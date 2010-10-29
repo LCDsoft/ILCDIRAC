@@ -16,10 +16,11 @@ def TARinstall(app,config,area):
   appName    = app[0].lower()
   appVersion = app[1]
   deps = resolveDeps(config,appName,appVersion)
-  depapp = []
   for dep in deps:
+    depapp = []
     depapp.append(dep["app"])
     depapp.append(dep["version"])
+    DIRAC.gLogger.info("Installing dependency %s %s"%(dep["app"],dep["version"]))
     res = install(depapp,config,area)
     if not res['OK']:
       DIRAC.gLogger.error("Could not install dependency %s %s"%(dep["app"],dep["version"]))
