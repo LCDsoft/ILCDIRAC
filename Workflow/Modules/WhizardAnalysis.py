@@ -179,11 +179,14 @@ class WhizardAnalysis(ModuleBase):
     ### Resolve dependencies (look for beam_spectra)
     deps = resolveDepsTar(self.systemConfig,"whizard",self.applicationVersion)
     path_to_beam_spectra = ""
+    path_to_gridfiles = ""
     for dep in deps:
       if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
         depfolder = dep.replace(".tgz","").replace(".tar.gz","")
         if depfolder.count("beam_spectra"):
           path_to_beam_spectra=os.path.join(mySoftwareRoot,depfolder)
+        elif depfolder.count("gridfiles"):
+          path_to_gridfiles=os.path.join(mySoftwareRoot,depfolder)
 
     ##Env variables needed to run whizard: avoids hard coded locations
     os.environ['LUMI_LINKER'] = path_to_beam_spectra+"/lumi_linker_000"
@@ -192,6 +195,10 @@ class WhizardAnalysis(ModuleBase):
     os.environ['EBEAM'] = path_to_beam_spectra+"/ebeam_in_linker_000"
     os.environ['PBEAM'] = path_to_beam_spectra+"/pbeam_in_linker_000"
 
+    list_of_gridfiles = []
+    if path_to_gridfiles:
+      list_of_gridfiles = os.listdir(path_to_gridfiles)
+    
 
     ## Get from process file the proper whizard.in file
     if self.getProcessInFile:
@@ -243,6 +250,9 @@ class WhizardAnalysis(ModuleBase):
     script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
     if leshouchesfiles:
       script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
+    if len(list_of_gridfiles):
+      for gridfile in list_of_gridfiles:
+        script.write('ln -s %s/%s\n'%(path_to_gridfiles,gridfile))
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
     script.write('echo =============================\n')
     script.write('echo Printing content of whizard.prc \n')
