@@ -19,6 +19,7 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
+from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
 
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
@@ -116,6 +117,13 @@ class MarlinAnalysis(ModuleBase):
             self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
           
+    if self.InputData:
+      if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
+        res = getNumberOfevents(self.InputData)
+        if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
+          self.workflow_commons["NbOfEvents"]=res["nbevts"]
+        if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
+          self.workflow_commons["Luminosity"]=res["lumi"]
         
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
