@@ -108,6 +108,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         whiz_file = os.path.basename(cspath)
         appvers= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
         self.log.info("Found process %s corresponding to whizard%s"%(process,appvers))
+        processes = processlist.getProcessesDict()
+        cross_section = processes[process]["CrossSection"]
+        if cross_section:
+          if not lumi and nbevts:
+            lumi = nbevts/cross_section
+          if lumi and not nbevts:
+            nbevts = lumi*cross_section
     else:
       print "Process to generate was not specified"
       return S_ERROR("Process to generate was not specified")
