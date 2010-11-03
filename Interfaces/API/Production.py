@@ -109,7 +109,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         appvers= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
         self.log.info("Found process %s corresponding to whizard%s"%(process,appvers))
         processes = processlist.getProcessesDict()
-        cross_section = processes[process]["CrossSection"]
+        cross_section = float(processes[process]["CrossSection"])
         if cross_section:
           if not lumi and nbevts:
             lumi = nbevts/cross_section
