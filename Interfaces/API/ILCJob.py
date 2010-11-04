@@ -1126,7 +1126,7 @@ class ILCJob(Job):
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
                 
-    currentApp = "slicpandora.%s"%appVersion
+    currentApp = "pandorafrontend.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
