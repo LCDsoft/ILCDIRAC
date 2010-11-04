@@ -128,6 +128,7 @@ class RegisterOutputData(ModuleBase):
         if not res['OK']:
           self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,prodid))
           return res
+      self.log.info("Registered %s with tags %s"%(files,meta))
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       #for key,value in meta.items():
       #  res = self.fc.setMetadata(os.path.dirname(files),key,value)
