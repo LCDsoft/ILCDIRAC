@@ -1015,8 +1015,8 @@ class ILCJob(Job):
 
        @param appVersion: SLICPandora version
        @type appVersion: string
-       @param xmlfile: Path to detector xml file. Like SLIC step: will download the detector model if needed. Can be path to xml or detector model name
-       @type xmlfile: string
+       @param detectorgeo: Path to detector xml file. Like SLIC step: will download the detector model if needed. Can be path to xml or detector model name
+       @type detectorgeo: string
        @param inputslcio: path to input slcio, list of strings or string
        @type inputslcio: string or list
        @param pandorasettings: Path to the pandora settings file name that will be used
@@ -1046,10 +1046,19 @@ class ILCJob(Job):
         return self._reportError('Expected string for detector xml file',__name__,**kwargs)
       if detectorgeo.lower().count("lfn:"):
         self.addToInputSandbox.append(detectorgeo)
-      elif os.path.exists(detectorgeo):
+      elif detectorgeo.lower().count(".xml") and  os.path.exists(detectorgeo):
         self.addToInputSandbox.append(detectorgeo)
+      #else:
+      #  return self._reportError("Could not find detector xml files specified %s"%(detectorgeo), __name__,**kwargs)
+
+    if inputslcio:
+      if not type(inputslcio) in types.StringTypes:
+        return self._reportError('Expected string for inputslcio file',__name__,**kwargs)
+      elif inputslcio.lower().count("lfn:") or os.path.exists(inputslcio):
+        self.addToInputSandbox.append(inputslcio)
       else:
-        return self._reportError("Could not find detector xml files specified %s"%(detectorgeo), __name__,**kwargs)
+        return self._reportError("Could not find inputslcio file specified %s"%(pandorasettings), __name__,**kwargs)
+        
 
     if not type(debug) == types.BooleanType:
       return self._reportError('Expected bool for debug',__name__,**kwargs)
@@ -1126,7 +1135,7 @@ class ILCJob(Job):
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
                 
-    currentApp = "pandorafrontend.%s"%appVersion
+    currentApp = "slicpandora.%s"%appVersion
 
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'
