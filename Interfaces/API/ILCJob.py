@@ -293,7 +293,7 @@ class ILCJob(Job):
     if jobindex:
       step.addParameter(Parameter("JobIndex",0,"int","","",False,False,"job index to add in final file name"))
     step.addParameter(Parameter("NbOfEvts",0,"int","","",False,False,"Nb of evts to generated per job"))
-    step.addParameter(Parameter("Lumi",0,"int","","",False,False,"Luminosity to  generate per job"))
+    step.addParameter(Parameter("Lumi",0,"float","","",False,False,"Luminosity to  generate per job"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
 

@@ -115,6 +115,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
             lumi = nbevts/cross_section
           if lumi and not nbevts:
             nbevts = lumi*cross_section
+        print "Will generate %s evts, or lumi=%s fb"%(nbevts,lumi)    
     else:
       print "Process to generate was not specified"
       return S_ERROR("Process to generate was not specified")
@@ -146,7 +147,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(WhizardAppDefn,"outputPath","string","","Output data path")
     self._addParameter(WhizardAppDefn,"outputFile","string","","output file name")
 
-    self._addParameter(WhizardAppDefn,"Lumi","int",0,"Number of events to generate")
+    self._addParameter(WhizardAppDefn,"Lumi","float",0,"Number of events to generate")
     self.workflow.addStep(WhizardAppDefn)
     mstep = self.workflow.createStepInstance('Whizard_App_Step','Whizard')
     mstep.setValue('applicationVersion',appvers)
@@ -166,7 +167,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if nbevts:
       self._addParameter(self.workflow,"NbOfEvents","int",nbevts,"Number of events")
     if lumi:
-      self._addParameter(self.workflow,"Luminosity","int",lumi,"Luminosity")
+      self._addParameter(self.workflow,"Luminosity","float",lumi,"Luminosity")
     self.ioDict["WhizardStep"]=mstep.getName()
     return S_OK()
 
