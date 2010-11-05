@@ -211,7 +211,7 @@ class SLICPandoraAnalysis (ModuleBase):
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable/"%myslicPandoraDir
     if prefixpath:
-      com = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,self.numberOfEvents)
+      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,self.numberOfEvents)
       self.log.info("Will run %s"%comm)
       script.write(comm)
     else:
