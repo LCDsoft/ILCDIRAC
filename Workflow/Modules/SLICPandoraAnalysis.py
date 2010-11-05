@@ -140,7 +140,7 @@ class SLICPandoraAnalysis (ModuleBase):
     if not res['OK']:
       self.setApplicationStatus('SLICPandora: missing slcio file')
       return S_ERROR('Missing slcio file!')
-    runonslcio = res['Value']
+    runonslcio = res['Value'][0]
     
     if not self.detectorxml.count(".xml") or not os.path.exists(os.path.basename(self.detectorxml)):
       detmodel = self.detectorxml.replace("_pandora.xml","")
