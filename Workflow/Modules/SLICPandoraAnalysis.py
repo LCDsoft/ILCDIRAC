@@ -142,8 +142,8 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_ERROR('Missing slcio file!')
     runonslcio = res['Value']
     
-    if not os.path.exists(os.path.basename(self.detectorxml+".xml")):
-      detmodel = self.detectorxml
+    if not self.detectorxml.count(".xml") or not os.path.exists(os.path.basename(self.detectorxml)):
+      detmodel = self.detectorxml.replace("_pandora.xml","")
       if not os.path.exists(detmodel+".zip"):
         #retrieve detector model from web
         detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])
@@ -165,8 +165,7 @@ class SLICPandoraAnalysis (ModuleBase):
             continue
       if os.path.exists(detmodel) and os.path.isdir(detmodel):
         self.detectorxml = os.path.join(os.getcwd(),detmodel,self.detectorxml)
-
-    self.detectorxml = self.detectorxml+".xml"
+        self.detectorxml = self.detectorxml+"_pandora.xml"
     
     if not os.path.exists(self.detectorxml):
       self.log.error('Detector model xml %s was not found, exiting'%detmodel)
