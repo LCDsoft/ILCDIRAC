@@ -195,8 +195,8 @@ class SLICPandoraAnalysis (ModuleBase):
     else:
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myslicPandoraDir))
 
-    if os.path.exists("./lib/lddlib"):
-      script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n')
+    if os.path.exists("./lib"):
+      script.write('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n')
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
