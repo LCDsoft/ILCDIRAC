@@ -204,9 +204,16 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('echo PATH is\n')
     script.write('echo $PATH | tr ":" "\n"\n')
     script.write('echo =============================\n')
-    script.write('env | sort >> localEnv.log\n')      
-    if (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
-      script.write('%s/Executable/PandoraFrontend %s %s %s %s %s\n'%(myslicPandoraDir,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,self.numberOfEvents))
+    script.write('env | sort >> localEnv.log\n')
+    prefixpath = ""
+    if os.path.exists("PandoraFrontend"):
+      prefixpath = "./"
+    elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
+      prefixpath ="%s/Executable/"%myslicPandoraDir
+    if prefixpath:
+      com = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,self.numberOfEvents)
+      self.log.info("Will run %s"%comm)
+      script.write(comm)
     else:
       script.close()
       self.log.error("PandoraFrontend executable is missing, something is wrong with the installation!")
