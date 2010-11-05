@@ -109,7 +109,7 @@ class SLICPandoraAnalysis (ModuleBase):
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
-    slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"SLICPandora",self.applicationVersion),'')
+    slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"slicpandora",self.applicationVersion),'')
     slicPandoraDir = slicPandoraDir.replace(".tgz","").replace(".tar.gz","")
     mySoftwareRoot = ''
     localArea = LocalArea()
@@ -123,7 +123,7 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_ERROR('Missing installation of SLICPandora!')
     myslicPandoraDir = os.path.join(mySoftwareRoot,slicPandoraDir)
     ### Resolve dependencies
-    deps = resolveDepsTar(self.systemConfig,"SLICPandora",self.applicationVersion)
+    deps = resolveDepsTar(self.systemConfig,"slicpandora",self.applicationVersion)
     for dep in deps:
       if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
         depfolder = dep.replace(".tgz","").replace(".tar.gz","")
