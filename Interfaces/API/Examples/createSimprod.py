@@ -20,6 +20,7 @@ basefile = "%s"%(process)
 p.addMokkaStep("0705CDR_V2","clic01_ild.steer",detectormodel="",numberofevents=100,
                outputfile=basefile+"_sim.slcio",outputpath=basepath+"ILD/SIM",outputSE="CERN-SRM")
 p.addFinalizationStep(True,True,True)
+p.setInputSandbox(["LFN:/ilc/prod/software/mokka/steeringfile/20101105/clic_ild_cdr.steer"])#need to pass somehow the input steering files
 p.setCPUTime(300000)
 p.setOutputSandbox(["*.log"])##because the logs are stored on the vo box and can be resurrected if needed, but not yet available strait forwardly.
 p.setWorkflowName("%s_%s"%(process,energy))
