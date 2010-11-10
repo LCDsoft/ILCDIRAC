@@ -3,7 +3,7 @@ Created on Oct 25, 2010
 
 @author: sposs
 '''
-import os, urllib, zipfile, shutil, string
+import os, urllib, zipfile, shutil, string,sys
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
@@ -197,21 +197,21 @@ class SLICPandoraAnalysis (ModuleBase):
 
     if os.path.exists("./lib"):
       script.write('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n')
-    script.write('echo =============================\n')
-    script.write('echo LD_LIBRARY_PATH is\n')
-    script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
-    script.write('echo =============================\n')
-    script.write('echo PATH is\n')
-    script.write('echo $PATH | tr ":" "\n"\n')
-    script.write('echo =============================\n')
+    script.write('echo =============================>> %s\n'%self.applicationLog)
+    script.write('echo LD_LIBRARY_PATH is >> %s\n'%self.applicationLog)
+    script.write('echo $LD_LIBRARY_PATH | tr ":" "\n" >> %s\n'%self.applicationLog)
+    script.write('echo =============================>> %s\n'%self.applicationLog)
+    script.write('echo PATH is >> %s\n'%self.applicationLog)
+    script.write('echo $PATH | tr ":" "\n" >> %s \n'%self.applicationLog)
+    script.write('echo ============================= >> %s \n'%self.applicationLog)
     script.write('env | sort >> localEnv.log\n')
     prefixpath = ""
     if os.path.exists("PandoraFrontend"):
-      prefixpath = "./"
+      prefixpath = "."
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
-      prefixpath ="%s/Executable/"%myslicPandoraDir
+      prefixpath ="%s/Executable"%myslicPandoraDir
     if prefixpath:
-      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,self.numberOfEvents)
+      comm = '%s/PandoraFrontend %s %s %s %s %s >> %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,str(self.numberOfEvents),self.applicationLog)
       self.log.info("Will run %s"%comm)
       script.write(comm)
     else:
@@ -232,7 +232,8 @@ class SLICPandoraAnalysis (ModuleBase):
     comm = 'sh -c "./%s"' %(scriptName)
     self.setApplicationStatus('SLICPandora %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
     self.stdError = ''
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0,comm,#callbackFunction=self.redirectLogOutput,
+                            bufferLimit=20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
 
