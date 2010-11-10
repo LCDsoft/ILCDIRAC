@@ -8,10 +8,13 @@ __RCSID__ = "$Id: Production.py 24/06/2010 sposs $"
 from DIRAC.Core.Workflow.Workflow                     import *
 from ILCDIRAC.Interfaces.API.DiracILC                       import DiracILC
 from DIRAC.Core.Utilities.List                        import removeEmptyElements
+from DIRAC.Core.DISET.RPCClient                       import RPCClient
+from DIRAC.TransformationSystem.Client.TransformationDBClient import TransformationDBClient
 
+from DIRAC.TransformationSystem.Client.Transformation import Transformation
 from ILCDIRAC.Interfaces.API.ILCJob                           import ILCJob
 from DIRAC                                          import gConfig, gLogger, S_OK, S_ERROR
-import string, shutil
+import string, shutil,os
 
  
 class Production(ILCJob): 
@@ -35,7 +38,7 @@ class Production(ILCJob):
     self.defaultProdJobID = '12345'
     self.ioDict = {}
     #self.gaussList = []
-    self.prodTypes = ['MCSimulation','Test']
+    self.prodTypes = ['MCSimulation','Test','MCReconstruction']
     self.pluginsTriggeringStreamTypes = ['ByFileTypeSize','ByRunFileTypeSize','ByRun','AtomicRun']
     self.name='unspecifiedWorkflow'
     self.firstEventType = ''
@@ -46,6 +49,7 @@ class Production(ILCJob):
     self.inputBKSelection = {}
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
+    self.currtransID = None
     self.importLine = """
 from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 """
@@ -408,7 +412,101 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     ##Hack until log server is available
     self.addToOutputSandbox.append("*.log")
     
-    return
+    return S_OK()
+  #############################################################################  
+  def create(self,name=None):
+    """ Create the transformation based on the production definition
+    """
+    workflowName = self.workflow.getName()
+    fileName = '%s.xml' %workflowName
+    self.log.verbose('Workflow XML file name is: %s' %fileName)
+    try:
+      self.createWorkflow()
+    except Exception,x:
+      self.log.error(x)
+      return S_ERROR('Could not create workflow')
+    oFile = open(fileName,'r')
+    workflowXML = oFile.read()
+    oFile.close()
+    if not name:
+      name = workflowName
+    ###Create Tranformation
+    Trans = Transformation()
+    Trans.setTransformationName(name)
+    Trans.setDescription(self.workflow.getDescrShort())
+    Trans.setLongDescription(self.workflow.getDescription())
+    Trans.setType(self.type)
+    Trans.setPlugin('Standard')
+    Trans.setTransformationGroup(self.prodGroup)
+    Trans.setBody(workflowXML)
+    res = Trans.addTransformation()
+    if not res['OK']:
+      print res['Message']
+      return res
+    self.currtrans = Trans
+    self.currtrans.setStatus("Active")
+    self.currtrans.setAgentType("Automatic")
+    
+    return S_OK()
+
+  def setNbOfTasks(self,nbtasks):
+    if not self.currtrans:
+      print "Not transformation defined earlier"
+      return S_ERROR("No transformation defined")
+    if self.inputBKSelection:
+      print "Meta data selection activated, should not specify the nu,ber of jobs"
+      return S_ERROR()
+    self.nbtasks = nbtasks
+    self.currtrans.setMaxNumberOfTasks(self.nbtasks)
+    return S_OK()
+  
+  def setInputDataQuery(self,metadata):
+    if not self.currtrans:
+      print "Not transformation defined earlier"
+      return S_ERROR("No transformation defined")
+    if self.nbtasks:
+      print "Nb of tasks defined already, should not use InputDataQuery"
+      return S_ERROR()
+    if not type(metadata) == type({}):
+      print "metadata should be a dictionnary"
+      return S_ERROR()
+    self.inputBKSelection = metadata
+    client = TransformationDBClient()
+    res = client.createTransformationInputDataQuery(self.currtrans.getTransformationID()['Value'],self.inputBKSelection)
+    if not res['OK']:
+      return res
+    
+  
+  #############################################################################
+  def getParameters(self,prodID,pname='',printOutput=False):
+    """Get a production parameter or all of them if no parameter name specified.
+    """
+    prodClient = RPCClient('Transformation/TransformationManager',timeout=120)
+    result = prodClient.getTransformation(int(prodID),True)
+    if not result['OK']:
+      self.log.error(result)
+      return S_ERROR('Could not retrieve parameters for production %s' %prodID)
+
+    if not result['Value']:
+      self.log.info(result)
+      return S_ERROR('No additional parameters available for production %s' %prodID)
+
+    if pname:
+      if result['Value'].has_key(pname):
+        return S_OK(result['Value'][pname])
+      else:
+        self.log.verbose(result)
+        return S_ERROR('Production %s does not have parameter %s' %(prodID,pname))
+
+    if printOutput:
+      for n,v in result['Value'].items():
+        if not n.lower()=='body':
+          print '='*len(n),'\n',n,'\n','='*len(n)
+          print v
+        else:
+          print '*Omitted Body from printout*'
+
+    return result
   #############################################################################
   def __addSoftwarePackages(self,nameVersion):
     """ Internal method to accumulate software packages.
@@ -523,7 +621,6 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     """
     self.jobFileGroupSize = files
 
-  #############################################################################
   #############################################################################
   def setWorkflowString(self, wfString):
     """ Uses the supplied string to create the workflow
