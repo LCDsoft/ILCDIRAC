@@ -27,6 +27,9 @@ p.addMarlinStep("010902v3","clic_01_ild_stdreco.xml",
                 outputDSTfile=basefile+"_dst.slcio",outputDSTpath = basepath+"ILD/DST",
                 outputSE="CERN-SRM")
 p.addFinalizationStep(True,True,True)
+p.setInputSandbox(["LFN:/ilc/prod/software/mokka/steeringfile/20101105/clic_ild_cdr.steer",
+                   "LFN:/ilc/prod/software/marlin/xml/20100702/nets.tar.gz",
+                   "LFN:/ilc/prod/software/marlin/xml/20100702/clic_01_ild_stdreco.xml"])#need to pass somehow the input steering files
 p.setCPUTime(300000)
 p.setOutputSandbox(["*.log"])##because the logs are stored on the vo box and can be resurrected if needed, but not yet available strait forwardly.
 p.setWorkflowName("%s_%s"%(process,energy))
