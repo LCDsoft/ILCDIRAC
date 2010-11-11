@@ -14,7 +14,7 @@ from DIRAC.TransformationSystem.Client.TransformationDBClient import Transformat
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
 from ILCDIRAC.Interfaces.API.ILCJob                           import ILCJob
 from DIRAC                                          import gConfig, gLogger, S_OK, S_ERROR
-import string, shutil,os
+import string, shutil,os,types
 
  
 class Production(ILCJob): 
@@ -99,6 +99,25 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       self._addParameter(self.workflow,name,parameterType,parameterValue,description)
 
   def addWhizardStep(self,processlist,process,nbevts=0,lumi=0,outputpath="",outputSE=""):
+    """ Define Whizard step
+    
+    Must get the process list from dirac.
+    
+    The output file name is created automatically by whizard using the process name (process_gen.stdhep).
+    
+    Number of events and luminosity should not be specified together, they are determined one with the other using the cross section in the process list. Luminosity prevails.
+    
+    @param process: process to generate, must be available in the processlist
+    @type process: string
+    @param nbevts: number of events to generate
+    @type nbevts: int
+    @param lumi: luminosity to generate
+    @type lumi: double
+    @param outputpath: path to store the output file
+    @type outputpath: string
+    @param outputSE: Storage element to use
+    @type putputSE: string
+    """
     appvers = ""
 
     if process:
@@ -128,6 +147,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     outputfile = process+"_gen.stdhep"
     
     self.StepCount +=1
+    stepName = 'Whizard'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('Whizard',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
     whizardStep =     ModuleDefinition('WhizardAnalysis')
     whizardStep.setDescription('Whizard step: generate the physics events')
     body = string.replace(self.importLine,'<MODULE>','WhizardAnalysis')
@@ -138,11 +162,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
     createoutputlist.setBody(body)
     
-    WhizardAppDefn = StepDefinition('Whizard_App_Step')
+    WhizardAppDefn = StepDefinition(stepDefn)
     WhizardAppDefn.addModule(whizardStep)
-    WhizardAppDefn.createModuleInstance('WhizardAnalysis',"WhizardApp")
+    WhizardAppDefn.createModuleInstance('WhizardAnalysis',stepDefn)
     WhizardAppDefn.addModule(createoutputlist)
-    WhizardAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    WhizardAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(WhizardAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(WhizardAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(WhizardAppDefn,"EvtType","string","","Process to generate")
@@ -153,7 +177,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 
     self._addParameter(WhizardAppDefn,"Lumi","float",0,"Number of events to generate")
     self.workflow.addStep(WhizardAppDefn)
-    mstep = self.workflow.createStepInstance('Whizard_App_Step','Whizard')
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('applicationLog', 'Whizard_@{STEP_ID}.log')
     mstep.setValue("EvtType",process)
@@ -176,7 +200,30 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
 
   def addMokkaStep(self,appvers,steeringfile,detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
+    """ Define Mokka step in production system
+    
+    @param appvers: version of MOKKA to use
+    @type appvers: string
+    @param steeringfile: file name of the steering. Should not be lfn. Should be passed in with setInputSandbox.
+    @type steeringfile: string
+    @param detectormodel: detector model to use. Must be available with the Mokka version specified
+    @type detectormodel: string
+    @param numberofevents: number of events to process. If whizard was run before, number of events is resolved from there
+    @type numberofevents: int
+    @param outputfile: File name to be produced with mokka.
+    @type outputfile: string
+    @param outputpath: path where to store the data. Should be /ilc/prod/<machine>/<energy>/<evt type>/ILD/SIM/
+    @type outputpath: string
+    @param outputSE: Storage element to use
+    @type putputSE: string    
+    """
     self.StepCount +=1
+    
+    stepName = 'RunMokka'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('Mokka',stepNumber)
+    
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')    
     mokkaStep = ModuleDefinition('MokkaAnalysis')
     mokkaStep.setDescription('Mokka step: simulation in ILD-like geometries context')
     body = string.replace(self.importLine,'<MODULE>','MokkaAnalysis')
@@ -187,11 +234,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
     createoutputlist.setBody(body)
      
-    MokkaAppDefn = StepDefinition('Mokka_App_Step')
+    MokkaAppDefn = StepDefinition(stepDefn)
     MokkaAppDefn.addModule(mokkaStep)
-    MokkaAppDefn.createModuleInstance('MokkaAnalysis', 'MokkaApp')
+    MokkaAppDefn.createModuleInstance('MokkaAnalysis',stepDefn)
     MokkaAppDefn.addModule(createoutputlist)
-    MokkaAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    MokkaAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(MokkaAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(MokkaAppDefn,"steeringFile","string","","Name of the steering file")
     self._addParameter(MokkaAppDefn,"detectorModel","string","",'Detector Model')
@@ -203,7 +250,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(MokkaAppDefn,"stdhepFile","string","","Name of the stdhep file")
 
     self.workflow.addStep(MokkaAppDefn)
-    mstep = self.workflow.createStepInstance('Mokka_App_Step','Mokka')
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('steeringFile',steeringfile)
     mstep.setValue("detectorModel",detectormodel)
@@ -227,6 +274,22 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
   
   def addMarlinStep(self,appVers,inputXML="",inputGEAR=None,inputslcio=None,outputRECfile="",outputRECpath="",outputDSTfile="",outputDSTpath="",outputSE=""):
+    """ Define Marlin step in production system
+    
+    @param appVers: Version of Marlin to use
+    @type appVers: string
+    @param inputXML: Input XML file name to perform reconstruction. Should not be lfn. Should be passed with setInputSandbox.
+    @type inputXML: string
+    @param inputGEAR: GEAR File name to use. Resolved automatically if MOKKA ran before.
+    @type inputGEAR: string
+    @param inputslcio: input slcio to use, should be used for tests only. Input slcio come from the production definition, not the workflow def.
+    @param outputRECfile: File name of the REC file
+    @param outputDSTfile: File name of the DST file
+    @param outputRECpath: path to the REC file in the catalog. Should be like /ilc/prod/<machine>/<energy>/<process>/ILD/REC
+    @param outputDSTpath: path to the DST file in the catalog. Should be like /ilc/prod/<machine>/<energy>/<process>/ILD/DST
+    @param outputSE: Storage element to use
+    """
+    
     inputslcioStr =''
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
@@ -242,6 +305,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         return self._reportError('As Mokka do not run before, you need to specify gearfile')
     
     self.StepCount +=1
+    stepName = 'RunMarlin'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('Marlin',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    
     marlinStep = ModuleDefinition('MarlinAnalysis')
     marlinStep.setDescription('Marlin step: reconstruction in ILD like detectors')
     body = string.replace(self.importLine,'<MODULE>','MarlinAnalysis')
@@ -251,11 +319,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
     createoutputlist.setBody(body)
      
-    MarlinAppDefn = StepDefinition('Marlin_App_Step')
+    MarlinAppDefn = StepDefinition(stepDefn)
     MarlinAppDefn.addModule(marlinStep)
-    MarlinAppDefn.createModuleInstance('MarlinAnalysis', 'MarlinApp')
+    MarlinAppDefn.createModuleInstance('MarlinAnalysis', stepDefn)
     MarlinAppDefn.addModule(createoutputlist)
-    MarlinAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    MarlinAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(MarlinAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(MarlinAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(MarlinAppDefn,"inputXML","string","","Name of the input XML file")
@@ -267,7 +335,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(MarlinAppDefn,"outputDST","string","","output file name of DST")
     self._addParameter(MarlinAppDefn,'listoutput',"list",[],"list of output file name")    
     self.workflow.addStep(MarlinAppDefn)
-    mstep = self.workflow.createStepInstance('Marlin_App_Step','Marlin')
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'Marlin_@{STEP_ID}.log')
     if(inputslcioStr):
@@ -292,7 +360,22 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
 
   def addSLICStep(self,appVers,inputmac="",detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
+    """ Define SLIC step for production
+    
+    @param appVers: SLIC version to use
+    @param inputmac: File name of the mac file to use. Should not be lfn. Should be passed with setInputSandbox.
+    @param detectormodel: Detector model to use. Is downloaded automatically from the web
+    @param numberofevents: number of events to process
+    @param outputfile: File name of the outputfile
+    @param outputpath: path to file in File Catalog. Should be like /ilc/prod/<machine>/<energy>/<evt type>/SID/SIM/
+    @param outputSE: Storage element to use
+    """
     self.StepCount +=1
+    stepName = 'RunSLIC'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('SLIC',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    
     slicStep = ModuleDefinition('SLICAnalysis')
     slicStep.setDescription('SLIC step: simulation in SiD like detectors')
     body = string.replace(self.importLine,'<MODULE>','SLICAnalysis')
@@ -302,11 +385,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
     createoutputlist.setBody(body)
      
-    slicAppDefn = StepDefinition('SLIC_App_Step')
+    slicAppDefn = StepDefinition(stepDefn)
     slicAppDefn.addModule(slicStep)
-    slicAppDefn.createModuleInstance('SLICAnalysis', 'SLICApp')
+    slicAppDefn.createModuleInstance('SLICAnalysis', stepDefn)
     slicAppDefn.addModule(createoutputlist)
-    slicAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    slicAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(slicAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(slicAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(slicAppDefn,"detectorModel","string","","Name of the detector model")
@@ -316,7 +399,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(slicAppDefn,"outputFile","string","","output file name")
     self._addParameter(slicAppDefn,'listoutput',"list",[],"list of output file name")    
     self.workflow.addStep(slicAppDefn)
-    mstep = self.workflow.createStepInstance('SLIC_App_Step','SLIC')
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'Slic_@{STEP_ID}.log')
     mstep.setValue("detectorModel",detectormodel)
@@ -333,7 +416,20 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
 
   def addLCSIMStep(self,appVers,outputfile="",outputpath="",outputSE=""):
+    """ Define LCSIM step for production
+    
+    @param appVers: LCSIM version to use
+    @param outputfile: Outputfile name 
+    @todo: define properly REC and DST files
+    @param outputSE: Storage element to use
+    
+    """
     self.StepCount +=1
+    stepName = 'RunLCSIM'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('LCSIM',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    
     LCSIMStep = ModuleDefinition('LCSIMAnalysis')
     LCSIMStep.setDescription('LCSIM step: reconstruction in SiD like detectors')
     body = string.replace(self.importLine,'<MODULE>','LCSIMAnalysis')
@@ -343,18 +439,18 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
     createoutputlist.setBody(body)
      
-    LCSIMAppDefn = StepDefinition('LCSIM_App_Step')
+    LCSIMAppDefn = StepDefinition(stepDefn)
     LCSIMAppDefn.addModule(LCSIMStep)
-    LCSIMAppDefn.createModuleInstance('LCSIMAnalysis', 'LCSIMApp')
+    LCSIMAppDefn.createModuleInstance('LCSIMAnalysis', stepDefn)
     LCSIMAppDefn.addModule(createoutputlist)
-    LCSIMAppDefn.createModuleInstance('ComputeOutputDataList','compOutputDataList')
+    LCSIMAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(LCSIMAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(LCSIMAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(LCSIMAppDefn,"outputPath","string","","Output data path")
     self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
     self._addParameter(LCSIMAppDefn,'listoutput',"list",[],"list of output file name")    
     self.workflow.addStep(LCSIMAppDefn)
-    mstep = self.workflow.createStepInstance('LCSIM_App_Step','LCSIM')
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'LCSIM_@{STEP_ID}.log')
     mstep.setValue("outputFile",outputfile)
@@ -368,6 +464,14 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
   
   def addFinalizationStep(self,uploadData=False,uploadLog = False,registerData=False):
+    """ Add finalization step
+    
+    @param uploadData: Upload or not the data to the storage
+    @param uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
+    @param registerData: Register data in the file catalog
+    @todo: Do the registration only once, instead of once for each job
+    
+    """
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
     self._addParameter(dataUpload,'Enable','bool','False','EnableFlag')
@@ -416,6 +520,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
   #############################################################################  
   def create(self,name=None):
     """ Create the transformation based on the production definition
+    
+    @param name: name of the production
     """
     workflowName = self.workflow.getName()
     fileName = '%s.xml' %workflowName
@@ -450,6 +556,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
 
   def setNbOfTasks(self,nbtasks):
+    """ Define the number of tasks you want. Useful for generation jobs.
+    """
     if not self.currtrans:
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
@@ -461,6 +569,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
   
   def setInputDataQuery(self,metadata):
+    """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
+    """
     if not self.currtrans:
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
@@ -477,10 +587,16 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       return res
 
   def setInputDataDirectoryMask(self,dir):
+    """ More or less same feature as above, but useful for user's directory that don't have metadata info specified
+    """
     self.currtrans.setFileMask(dir)
     return S_OK()    
 
   def setInputDataLFNs(self,lfns):
+    """ Define by hand the input LFN list instead of relying on the input data query. 
+    
+    Useful when list is obtained from a user's job reopository.
+    """
     self.currtrans.addFilesToTransformation(lfns)
     return S_OK()
 
