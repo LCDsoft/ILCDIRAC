@@ -261,7 +261,7 @@ class SLICPandoraAnalysis (ModuleBase):
   def redirectLogOutput(self, fd, message):
     """Catch the stdout of the application
     """
-    sys.stdout.flush()
+    #sys.stdout.flush()
     if message:
       print message
       if self.applicationLog:

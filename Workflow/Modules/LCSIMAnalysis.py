@@ -234,7 +234,7 @@ class LCSIMAnalysis(ModuleBase):
 
   #############################################################################
   def redirectLogOutput(self, fd, message):
-    sys.stdout.flush()
+    #sys.stdout.flush()
     if message:
       if re.search(self.printoutflag,message): print message
       if self.applicationLog:
