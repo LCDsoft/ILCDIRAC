@@ -475,8 +475,15 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     res = client.createTransformationInputDataQuery(self.currtrans.getTransformationID()['Value'],self.inputBKSelection)
     if not res['OK']:
       return res
-    
-  
+
+  def setInputDataDirectoryMask(self,dir):
+    self.currtrans.setFileMask(dir)
+    return S_OK()    
+
+  def setInputDataLFNs(self,lfns):
+    self.currtrans.addFilesToTransformation(lfns)
+    return S_OK()
+
   #############################################################################
   def getParameters(self,prodID,pname='',printOutput=False):
     """Get a production parameter or all of them if no parameter name specified.
