@@ -38,3 +38,8 @@ meta['Energy']=energy
 meta['EvtType']=process
 meta['ProdId']=95
 p.setInputDataQuery(meta)
+
+###Can also use the following in case there is not metadata entry in the FC
+#Get a list of lfns in a list called lfns
+#use:
+#p.setInputDataLFNs(lfn)
