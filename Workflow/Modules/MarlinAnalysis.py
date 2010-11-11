@@ -361,7 +361,7 @@ class MarlinAnalysis(ModuleBase):
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
     """
-    sys.stdout.flush()
+    #sys.stdout.flush()
     if message:
       if re.search('INFO Evt',message): print message
       if self.applicationLog:

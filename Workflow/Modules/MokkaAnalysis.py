@@ -383,7 +383,7 @@ class MokkaAnalysis(ModuleBase):
     def redirectLogOutput(self, fd, message):
       """Used to catch the application print outs
       """
-      sys.stdout.flush()
+      #sys.stdout.flush()
       if message:
         print message
         if self.applicationLog:
