@@ -150,9 +150,20 @@ class UserJobFinalization(ModuleBase):
       if self.workflow_commons.has_key('Owner'):
         owner = self.workflow_commons['Owner']
       else:
-        owner = self.getCurrentOwner()['Value']
+        res = self.getCurrentOwner()
+        if not res['OK']:
+          return S_ERROR('Could not obtain owner from proxy')
+        owner = res['Value']
+      vo = ''
+      if self.workflow_commons.has_key('VO'):
+        vo = self.workflow_commons['VO']
+      else:
+        res = self.getCurrentVO()
+        if not res['OK']:
+          return S_ERROR('Could not obtain VO from proxy')
+        vo = res['Value']
       
-      result = constructUserLFNs(int(self.jobID),owner,self.userOutputData,self.userOutputPath)
+      result = constructUserLFNs(int(self.jobID),vo,owner,self.userOutputData,self.userOutputPath)
       if not result['OK']:
         self.log.error('Could not create production LFNs',result['Message'])
         return result
@@ -337,5 +348,19 @@ class UserJobFinalization(ModuleBase):
     
     username = result['Value']['username']
     return S_OK(username)
+  #############################################################################
+  def getCurrentVO(self):
+    """Simple function to return current DIRAC username.
+    """
+    result = getProxyInfo()
+    if not result['OK']:
+      return S_ERROR('Could not obtain proxy information')
+    
+    if not result['Value'].has_key('group'):
+      return S_ERROR('Could not get group from proxy')
+    
+    group = result['Value']['group']
+    vo = group.split("_")[0]
+    return S_OK(vo)
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
