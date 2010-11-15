@@ -158,7 +158,7 @@ def getLogPath(paramDict):
   return S_OK(jobOutputs)
 
 #############################################################################
-def constructUserLFNs(jobID,owner,outputFiles,outputPath):
+def constructUserLFNs(jobID,vo,owner,outputFiles,outputPath):
   """ This method is used to supplant the standard job wrapper output data policy
       for ILC.  The initial convention adopted for user output files is the following:
       If outputpath is not defined:
@@ -171,12 +171,13 @@ def constructUserLFNs(jobID,owner,outputFiles,outputPath):
   timeTup = datetime.date.today().timetuple() 
   yearMonth = '%s_%s' %(timeTup[0],string.zfill(str(timeTup[1]),2))
   outputLFNs = {}
-  res = gConfig.getOption("/DIRAC/VirtualOrganization","ilc")
-  if not res['OK']:
-    gLogger.error('Could not get VO from CS, assuming ilc')
-    vo = 'ilc'
-  else:
-    vo = res['Value']
+  if not vo:
+    res = gConfig.getOption("/DIRAC/VirtualOrganization","ilc")
+    if not res['OK']:
+      gLogger.error('Could not get VO from CS, assuming ilc')
+      vo = 'ilc'
+    else:
+      vo = res['Value']
   #Strip out any leading or trailing slashes but allow fine structure
   if outputPath:
     outputPathList = string.split(outputPath,os.sep)
