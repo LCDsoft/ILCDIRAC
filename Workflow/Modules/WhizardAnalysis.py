@@ -254,6 +254,7 @@ class WhizardAnalysis(ModuleBase):
       for gridfile in list_of_gridfiles:
         script.write('ln -s %s/%s\n'%(path_to_gridfiles,gridfile))
     script.write('ln -s %s/whizard.prc\n'%mySoftDir)
+    script.write('ln -s %s/whizard.cut1\n'%mySoftDir)
     script.write('echo =============================\n')
     script.write('echo Printing content of whizard.prc \n')
     script.write('cat whizard.prc\n')
