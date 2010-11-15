@@ -237,7 +237,7 @@ cp $string ./lib
 whizarddir=%s 
 rm -rf $whizarddir
 mkdir $whizarddir
-cp -r *.in *.grb *.grc cross_sections_* whizard whizard.prc whizard.mdl lib/ $whizarddir
+cp -r *.cut1 *.in *.grb *.grc cross_sections_* whizard whizard.prc whizard.mdl lib/ $whizarddir
 """%("whizard"+whizard_version))
 script.close()
 os.chmod(scriptName,0755)
