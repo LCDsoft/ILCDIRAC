@@ -168,8 +168,8 @@ class SLICPandoraAnalysis (ModuleBase):
       self.detectorxml = self.detectorxml+"_pandora.xml"
     
     if not os.path.exists(self.detectorxml):
-      self.log.error('Detector model xml %s was not found, exiting'%detmodel)
-      return S_ERROR('Detector model xml %s was not found, exiting'%detmodel)
+      self.log.error('Detector model xml %s was not found, exiting'%self.detectorxml)
+      return S_ERROR('Detector model xml %s was not found, exiting'%self.detectorxml)
     
     if not os.path.exists(os.path.basename(self.pandorasettings)):
       self.pandorasettings  = "PandoraSettings.xml"
