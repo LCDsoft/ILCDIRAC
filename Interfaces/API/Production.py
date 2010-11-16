@@ -12,6 +12,8 @@ from DIRAC.Core.DISET.RPCClient                       import RPCClient
 from DIRAC.TransformationSystem.Client.TransformationDBClient import TransformationDBClient
 
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+
 from ILCDIRAC.Interfaces.API.ILCJob                           import ILCJob
 from DIRAC                                          import gConfig, gLogger, S_OK, S_ERROR
 import string, shutil,os,types
@@ -47,6 +49,7 @@ class Production(ILCJob):
     self.plugin = ''
     self.inputFileMask = ''
     self.inputBKSelection = {}
+    self.nbtasks = 0
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
     self.currtransID = None
@@ -568,10 +571,15 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.currtrans.setMaxNumberOfTasks(self.nbtasks)
     return S_OK()
   
-  def setInputDataQuery(self,metadata):
+  def setInputDataQuery(self,metadata,prodid=None):
     """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
     """
-    if not self.currtrans:
+    currtrans = 0
+    if self.currtrans:
+      currtrans = self.currtrans.getTransformationID()['Value']
+    if prodid:
+      currtrans = prodid
+    if not currtrans:
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
     if self.nbtasks:
@@ -580,11 +588,43 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if not type(metadata) == type({}):
       print "metadata should be a dictionnary"
       return S_ERROR()
+    metakeys = metadata.keys()
+    client = FileCatalogClient()
+    res = client.getMetadataFields()
+    if not res['OK']:
+      print "Could not contact File Catalog"
+      self.explainInputDataQuery()
+      return S_ERROR()
+    metaFCkeys = res['Value'].keys()
+    for key in metakeys:
+      for meta in metaFCkeys:
+        if meta != key:
+          if meta.lower()==key.lower():
+            print "Key syntax error %s, should be %s"%(key,meta)
+            self.explainInputDataQuery()
+            return S_ERROR()
+      if not metaFCkeys.count(key):
+        print "Key %s not found in metadata keys, allowed are %s"%(key,metaFCkeys)
+        self.explainInputDataQuery()
+        return S_ERROR()
+      
     self.inputBKSelection = metadata
     client = TransformationDBClient()
-    res = client.createTransformationInputDataQuery(self.currtrans.getTransformationID()['Value'],self.inputBKSelection)
+    res = client.createTransformationInputDataQuery(currtrans,self.inputBKSelection)
     if not res['OK']:
       return res
+
+  def explainInputDataQuery(self):
+    print """To create production using input data query, do the following:
+    1) get the production number (prodid) you want to modify (from the web interface)
+    2) code the following:
+    p = Production()
+    meta = {}
+    meta['Some metadata key'] = some value
+    p.setInputDataQuery(meta,prodid)
+    3) check from web monitor that files are found. If not, let ilc-dirac@cern.ch know.
+    """
+    return
 
   def setInputDataDirectoryMask(self,dir):
     """ More or less same feature as above, but useful for user's directory that don't have metadata info specified
