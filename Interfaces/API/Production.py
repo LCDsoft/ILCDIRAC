@@ -466,7 +466,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["LCSIMStep"]=mstep.getName()
     return S_OK()
   
-  def addFinalizationStep(self,uploadData=False,uploadLog = False,registerData=False):
+  def addFinalizationStep(self,uploadData=False,uploadLog = False,sendFailover=False,registerData=False):
     """ Add finalization step
     
     @param uploadData: Upload or not the data to the storage
@@ -487,6 +487,12 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
     logUpload.setBody(body)
 
+    failoverRequest = ModuleDefinition('FailoverRequest')
+    failoverRequest.setDescription('Sends any failover requests')
+    self._addParameter(failoverRequest,'Enable','bool','True','EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','FailoverRequest')
+    failoverRequest.setBody(body)
+
     registerdata = ModuleDefinition('RegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
     self._addParameter(registerdata,'Enable','bool','False','EnableFlag')
@@ -505,6 +511,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalization.createModuleInstance('UploadLogFile','logUpload')
     self._addParameter(finalization,'LogEnable','bool',str(uploadLog),'EnableFlag')
 
+    failoverRequest.setLink('Enable','self','FailoverEnable')
+    finalization.addModule(failoverRequest)
+    finalization.createModuleInstance('FailoverRequest','failoverRequest')
+    self._addParameter(finalization,'FailoverEnable','bool',str(sendFailover),'EnableFlag')
+
     registerdata.setLink('Enable','self','RegisterEnable')
     finalization.addModule(registerdata)
     finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
@@ -514,6 +525,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
     finalizeStep.setValue('UploadEnable',uploadData)
     finalizeStep.setValue('LogEnable',uploadLog)
+    finalizeStep.setValue('FailoverEnable',sendFailover)
     finalizeStep.setValue('RegisterEnable',registerData)
 
     ##Hack until log server is available
