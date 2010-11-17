@@ -133,7 +133,7 @@ class FailoverRequest(ModuleBase):
     # in case of failure and a subsequent failover operation
     if self.workflowStatus['OK'] and self.stepStatus['OK']: 
       if not self.jobReport:
-         self.jobReport = JobReport(int(self.jobID))
+        self.jobReport = JobReport(int(self.jobID))
       jobStatus = self.jobReport.setApplicationStatus('Job Finished Successfully')
       if not jobStatus['OK']:
         self.log.warn(jobStatus['Message'])
