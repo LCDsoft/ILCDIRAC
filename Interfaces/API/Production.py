@@ -34,7 +34,6 @@ class Production(ILCJob):
     #self.histogramName =gConfig.getValue('%s/HistogramName' %(self.csSection),'@{applicationName}_@{STEP_ID}_Hist.root')
     #self.histogramSE =gConfig.getValue('%s/HistogramSE' %(self.csSection),'CERN-HIST')
     self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection),'x86_64-slc5-gcc43-opt')
-    #self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection),'slc4_ia32_gcc34')
     self.inputDataDefault = gConfig.getValue('%s/InputDataDefault' %(self.csSection),'/ilc/prod/clic/3tev/gen/bb/0/BS_01.stdhep')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
@@ -50,6 +49,10 @@ class Production(ILCJob):
     self.inputFileMask = ''
     self.inputBKSelection = {}
     self.nbtasks = 0
+    self.nbofevents = 0
+    self.process = ""
+    self.basepath = ""
+    self.basename = ""
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
     self.currtransID = None
@@ -101,7 +104,59 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       self.log.debug('Setting parameter %s = %s' %(name,parameterValue))
       self._addParameter(self.workflow,name,parameterType,parameterValue,description)
 
-  def addWhizardStep(self,processlist,process,nbevts=0,lumi=0,outputpath="",outputSE=""):
+  def defineInputData(self,metadata):
+    """ Define input data for the production
+    
+    Pass the metadata dictionary meta, that is looked up in the catalog to extract the process and number of events per file.
+    
+    @param meta: metadata dictionary used as InputDataQuery
+    @type meta: dict
+    """
+    if not type(metadata) == type({}):
+      print "metadata should be a dictionnary"
+      return S_ERROR()
+    metakeys = metadata.keys()
+    client = FileCatalogClient()
+    res = client.getMetadataFields()
+    if not res['OK']:
+      print "Could not contact File Catalog"
+      self.explainInputDataQuery()
+      return S_ERROR()
+    metaFCkeys = res['Value'].keys()
+    for key in metakeys:
+      for meta in metaFCkeys:
+        if meta != key:
+          if meta.lower()==key.lower():
+            print "Key syntax error %s, should be %s"%(key,meta)
+            self.explainInputDataQuery()
+            return S_ERROR()
+      if not metaFCkeys.count(key):
+        print "Key %s not found in metadata keys, allowed are %s"%(key,metaFCkeys)
+        self.explainInputDataQuery()
+        return S_ERROR()
+    res =   client.getCompatibleMetadata(metadata)
+    if not res['OK']:
+      print "Error looking up the catalog for compatible metadata"
+      return S_ERROR()
+    compatmeta = res['Value']
+    if compatmeta.has_key('EvtType'):
+      self.process  = compatmeta['EvtType'][0]
+    if compatmeta.has_key('NumberOfEvents'):
+      self.nbofevents = compatmeta['NumberOfEvents'][0]
+    self.basename = self.process
+    self.basepath = "/ilc/prod/"
+    if compatmeta.has_key("Machine"):
+      self.basepath +=compatmeta["Machine"][0]+"/"
+    if compatmeta.has_key("Energy"):
+      self.basepath +=compatmeta["Energy"][0]+"/"
+    if compatmeta.has_key("EvtType"):
+      self.basepath +=compatmeta["EvtType"][0]+"/"
+      
+    self.inputBKSelection = metadata
+
+    return S_OK()
+
+  def addWhizardStep(self,processlist,process,energy = 3000,nbevts=0,lumi=0,outputpath="",outputSE=""):
     """ Define Whizard step
     
     Must get the process list from dirac.
@@ -121,6 +176,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     @type putputSE: string
     """
+    kwargs = {"process":process,"energy":energy,"nbevts":nbevts,"lumi":lumi,"outputpath":outputpath,"outputSE":outputSE}
     appvers = ""
 
     if process:
@@ -128,7 +184,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
         self.log.info("Available processes are:")
         processlist.printProcesses()
-        return S_ERROR('Process %s does not exist in any whizard version.'%process)
+        return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
       else:
         cspath = processlist.getCSPath(process)
         whiz_file = os.path.basename(cspath)
@@ -143,9 +199,12 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
             nbevts = lumi*cross_section
         print "Will generate %s evts, or lumi=%s fb"%(nbevts,lumi)    
     else:
-      print "Process to generate was not specified"
-      return S_ERROR("Process to generate was not specified")
+      return self._reportError("Process to generate was not specified",__name__,**kwargs)
     
+    if not outputpath:
+      return self._reportError("Output path not defined" ,__name__,**kwargs)
+    if not outputSE:
+      return self._reportError("Output Storage element not defined" ,__name__,**kwargs)
     
     outputfile = process+"_gen.stdhep"
     
@@ -173,6 +232,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(WhizardAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(WhizardAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(WhizardAppDefn,"EvtType","string","","Process to generate")
+    self._addParameter(WhizardAppDefn,"Energy","int",0,"Energy to generate")
     self._addParameter(WhizardAppDefn,"NbOfEvts","int",0,"Number of events to generate")
     self._addParameter(WhizardAppDefn,'listoutput',"list",[],"list of output file name")
     self._addParameter(WhizardAppDefn,"outputPath","string","","Output data path")
@@ -183,6 +243,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('applicationLog', 'Whizard_@{STEP_ID}.log')
+    mstep.setValue("Energy",energy)
     mstep.setValue("EvtType",process)
     mstep.setValue("NbOfEvts",nbevts)
     mstep.setValue("Lumi",lumi)
@@ -220,6 +281,29 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     @type putputSE: string    
     """
+    kwargs = {"appvers":appvers,"steeringfile":steeringfile,"detectormodel":detectormodel,"numberofevents":numberofevents,
+              "outputfile":outputfile,"outputpath":outputpath,"outputSE":outputSE}
+    if not appvers:
+      return self._reportError('Mokka version not specified',__name__,**kwargs)
+    if not steeringfile:
+      return self._reportError("Steering file name not specified",__name__,**kwargs)
+    if not outputpath:
+      if self.basepath:
+        outputpath = self.basepath+"/ILD/SIM"
+      else:
+        return self._reportError('Output path not defined, please set it',__name__,**kwargs)
+    if not outputfile:
+      if self.basename:
+        outputfile = self.basename+"_sim.slcio"
+      else:
+        return self._reportError('Output file name was not specified',__name__,**kwargs)
+    if not outputSE:
+      return self._reportError('Output Storage element not defined',__name__,**kwargs)
+    
+    if not numberofevents:
+      if self.nbofevents:
+        numberofevents = self.nbofevents
+        
     self.StepCount +=1
     
     stepName = 'RunMokka'
@@ -293,6 +377,39 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     """
     
+    kwargs = {"appVers":appVers,"inputXML":inputXML,"inputGEAR":inputGEAR,"outputRECfile":outputRECfile,
+              "outputRECpath":outputRECpath,"outputDSTfile":outputDSTfile,"outputDSTpath":outputDSTpath,
+              "outputSE":outputSE}
+    
+    if not appVers:
+      return self._reportError("Marlin version not specified",__name__,**kwargs)
+    if not inputXML:
+      return self._reportError("XML reconstruction file not specified",__name__,**kwargs)
+    if not outputRECfile:
+      if self.basename:
+        outputRECfile = self.basename+"_rec.slcio"
+      else:
+        return self._reportError("Rec File not defined",__name__,**kwargs)
+    if not outputDSTfile:
+      if self.basename:
+        outputDSTfile = self.basename+"_dst.slcio"
+      else:
+        return self._reportError("DST File not defined",__name__,**kwargs)
+    if not   outputRECpath:
+      if self.basepath:
+        outputRECpath = self.basepath+"ILD/REC"
+      else:
+        return self._reportError("Output rec file path not specified",__name__,**kwargs)
+    if not   outputDSTpath:
+      if self.basepath:
+        outputDSTpath = self.basepath+"ILD/DST"
+      else:
+        return self._reportError("Output dst file path not specified",__name__,**kwargs)
+    
+    if not outputSE:
+      return self._reportError("Output Storage Element not specified",__name__,**kwargs)
+    
+      
     inputslcioStr =''
     if(inputslcio):
       if type(inputslcio) in types.StringTypes:
@@ -373,6 +490,33 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputpath: path to file in File Catalog. Should be like /ilc/prod/<machine>/<energy>/<evt type>/SID/SIM/
     @param outputSE: Storage element to use
     """
+    kwargs = {"appVers":appVers,"inputmac":inputmac,"detectormodel":detectormodel,"numberofevents":numberofevents,
+              "outputfile":outputfile,"outputpath":outputpath,"outputSE":outputSE}
+    
+    if not appVers:
+      return self._reportError("SLIC version not specified",__name__,**kwargs)
+    if not inputmac:
+      return self._reportError("Mac file not defined",__name__,**kwargs)
+    if not detectormodel:
+      return self._reportError("Detector model not specified",__name__,**kwargs)
+    if not numberofevents:
+      if self.nbofevents:
+        numberofevents = self.nbofevents
+      else:
+        return self._reportError("Number of events to process not defined",__name__,**kwargs)
+    if not outputfile:
+      if self.basename:
+        outputfile = self.basename+"_sim.slcio"
+      else:
+        return self._reporError("Output file name not specified",__name__,**kwargs)
+    if not outputpath:
+      if self.basepath:
+        outputpath = self.basepath+"SID/SIM"
+      else:
+        return self._reportError("Output path in Storage not defined",__name__,**kwargs)
+    if not outputSE:
+      return self._reportError('Storage Element to use not defined',__name__,**kwargs)
+    
     self.StepCount +=1
     stepName = 'RunSLIC'
     stepNumber = self.StepCount
@@ -577,13 +721,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
     if self.inputBKSelection:
-      print "Meta data selection activated, should not specify the nu,ber of jobs"
+      print "Meta data selection activated, should not specify the number of jobs"
       return S_ERROR()
     self.nbtasks = nbtasks
     self.currtrans.setMaxNumberOfTasks(self.nbtasks)
     return S_OK()
   
-  def setInputDataQuery(self,metadata,prodid=None):
+  def setInputDataQuery(self,metadata=None,prodid=None):
     """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
     """
     currtrans = 0
@@ -597,30 +741,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if self.nbtasks:
       print "Nb of tasks defined already, should not use InputDataQuery"
       return S_ERROR()
-    if not type(metadata) == type({}):
-      print "metadata should be a dictionnary"
-      return S_ERROR()
-    metakeys = metadata.keys()
-    client = FileCatalogClient()
-    res = client.getMetadataFields()
-    if not res['OK']:
-      print "Could not contact File Catalog"
-      self.explainInputDataQuery()
-      return S_ERROR()
-    metaFCkeys = res['Value'].keys()
-    for key in metakeys:
-      for meta in metaFCkeys:
-        if meta != key:
-          if meta.lower()==key.lower():
-            print "Key syntax error %s, should be %s"%(key,meta)
-            self.explainInputDataQuery()
-            return S_ERROR()
-      if not metaFCkeys.count(key):
-        print "Key %s not found in metadata keys, allowed are %s"%(key,metaFCkeys)
-        self.explainInputDataQuery()
-        return S_ERROR()
+    if metadata:
+      self.inputBKSelection=metadata
       
-    self.inputBKSelection = metadata
     client = TransformationDBClient()
     res = client.createTransformationInputDataQuery(currtrans,self.inputBKSelection)
     if not res['OK']:

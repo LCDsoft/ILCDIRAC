@@ -287,7 +287,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("InputFile","","string","","",False,False,"Name of the whizard.in file"))
     step.addParameter(Parameter("EvtType","","string","","",False,False,"Name of the whizard.in file"))
     if energy:
-      step.addParameter(Parameter("Energy",0,"int","","",False,False,"Random seed to use"))
+      step.addParameter(Parameter("Energy",0,"int","","",False,False,"Energy to use"))
     if randomseed:
       step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"Random seed to use"))
     if jobindex:
