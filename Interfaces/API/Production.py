@@ -570,6 +570,15 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     
     """
+    kwargs = {"appVers":appVers,"outputfile":outputfile,"outputpath":outputpath,"outputSE":outputSE}
+    if not outputpath:
+      if self.basepath:
+        outputpath = self.basepath+"SID/DST"
+      else:
+        return self._reportError("Output path in Storage not defined",__name__,**kwargs)
+    if not outputSE:
+      return self._reportError('Storage Element to use not defined',__name__,**kwargs)
+    
     self.StepCount +=1
     stepName = 'RunLCSIM'
     stepNumber = self.StepCount
@@ -609,11 +618,15 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["LCSIMStep"]=mstep.getName()
     return S_OK()
   
+  def addSLICPandoraStep(self,appVers,detector,pandorasettings,outputfile):
+    return S_OK()
+  
   def addFinalizationStep(self,uploadData=False,uploadLog = False,sendFailover=False,registerData=False):
     """ Add finalization step
     
     @param uploadData: Upload or not the data to the storage
     @param uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
+    @param sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
     @param registerData: Register data in the file catalog
     @todo: Do the registration only once, instead of once for each job
     
