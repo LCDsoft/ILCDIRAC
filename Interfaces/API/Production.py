@@ -127,17 +127,16 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       for meta in metaFCkeys:
         if meta != key:
           if meta.lower()==key.lower():
-            print "Key syntax error %s, should be %s"%(key,meta)
-            self.explainInputDataQuery()
-            return S_ERROR()
+            return self._reportError("Key syntax error %s, should be %s"%(key,meta))
       if not metaFCkeys.count(key):
-        print "Key %s not found in metadata keys, allowed are %s"%(key,metaFCkeys)
-        self.explainInputDataQuery()
-        return S_ERROR()
+        return self._reportError("Key %s not found in metadata keys, allowed are %s"%(key,metaFCkeys))
+    
+    if not   metadata.has_key("ProdID"):
+      return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
+      
     res =   client.getCompatibleMetadata(metadata)
     if not res['OK']:
-      print "Error looking up the catalog for compatible metadata"
-      return S_ERROR()
+      return self._reportError("Error looking up the catalog for compatible metadata")
     compatmeta = res['Value']
     if compatmeta.has_key('EvtType'):
       self.process  = compatmeta['EvtType'][0]
