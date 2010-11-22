@@ -72,12 +72,8 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
   @type input_in: string
   @param evttype: process type that will prepend stdhep output name
   @type evttype: string
-  @param randomseed: random seed to use
-  @type randomseed: int
-  @param nevts: number of events to generate
-  @type nevts: int
-  @param lumi: luminosity to use
-  @type lumi: int
+  @param parameters: dictionary of parameters to set in the whizard.in
+  @type parameters: dict 
   @param output_in: whizard.in output file name (usually whizard.in)
   @type output_in: string
   @return: S_OK()
@@ -90,7 +86,7 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
       outputfile.write(" seed = %s\n"%parameters['SEED'])
     elif line.count('ENERGYENERGY'):
       outputfile.write(" sqrts = %s\n"%(parameters['ENERGY']))
-    elif   line.count('NBEVTSNBEVTS') and not parameters['LUMI']:
+    elif line.count('NBEVTSNBEVTS') and not parameters['LUMI']:
       outputfile.write(" n_events = %s\n"%parameters['NBEVTS'])
     elif line.count('LUMILUMI') and parameters['LUMI']:
       outputfile.write(' luminosity=%s\n'%parameters['LUMI'])
