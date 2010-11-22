@@ -178,7 +178,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,energy=None,randomseed=0,extraparameters={},jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,energy=3000,randomseed=0,extraparameters={},jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
     """Helper function
     
        Define Whizard step
@@ -270,7 +270,7 @@ class ILCJob(Job):
         parameters.append('PNAME1=e1')
       if not extraparameters.has_key('PNAME2'):
         print "Assuming incoming beam 2 to be positrons"
-        parameters.append('PNAME1=E1')
+        parameters.append('PNAME2=E1')
       if not extraparameters.has_key('POLAB1'):
         print "Assuming no polarization for beam 1"
         parameters.append('POLAB1=0.0 0.0')

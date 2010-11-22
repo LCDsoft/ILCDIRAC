@@ -219,7 +219,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         parameters.append('PNAME1=e1')
       if not extraparameters.has_key('PNAME2'):
         print "Assuming incoming beam 2 to be positrons"
-        parameters.append('PNAME1=E1')
+        parameters.append('PNAME2=E1')
       if not extraparameters.has_key('POLAB1'):
         print "Assuming no polarization for beam 1"
         parameters.append('POLAB1=0.0 0.0')
