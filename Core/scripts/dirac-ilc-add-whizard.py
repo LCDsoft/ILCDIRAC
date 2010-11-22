@@ -74,14 +74,7 @@ def readPRCFile(prc):
       if len(elems)>4:
         list[elems[0]]['Restrictions']=string.join(elems[4:]," ")
       list[elems[0]]['Model'] = model
-      if elems[0][0:4]=="e1a_":
-        list[elems[0]]['InFile']="ea_x.in"
-      elif elems[0][0:4]=="ae1_":
-        list[elems[0]]['InFile']="ae_x.in"
-      elif elems[0][0:3]=="aa_" and not elems[0]=="aa_o":
-        list[elems[0]]['InFile']="aa_x.in"
-      else:
-        list[elems[0]]['InFile']="whizard.template.in"
+      list[elems[0]]['InFile']="whizard.template.in"
     else:
       continue
   
