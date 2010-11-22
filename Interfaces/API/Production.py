@@ -156,7 +156,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.prodparameters['nbevts']=self.nbofevents
     return S_OK()
 
-  def addWhizardStep(self,processlist,process,energy = 3000,nbevts=0,lumi=0,outputpath="",outputSE=""):
+  def addWhizardStep(self,processlist,process,energy = 3000,nbevts=0,lumi=0,extraparameters=None,outputpath="",outputSE=""):
     """ Define Whizard step
     
     Must get the process list from dirac.
@@ -208,6 +208,45 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     outputfile = process+"_gen.stdhep"
     
+    parameters = []
+    if extraparameters:
+      if not type(extraparameters)==type({}):
+        return self._reportError('Extraparameter argument must be dictionnary',__name__,**kwargs)
+      for n,v in extraparameters.items():
+        parameters.append("%s=%s"%(n,v))
+      if not extraparameters.has_key('PNAME1'):
+        print "Assuming incoming beam 1 to be electrons"
+        parameters.append('PNAME1=e1')
+      if not extraparameters.has_key('PNAME2'):
+        print "Assuming incoming beam 2 to be positrons"
+        parameters.append('PNAME1=E1')
+      if not extraparameters.has_key('POLAB1'):
+        print "Assuming no polarization for beam 1"
+        parameters.append('POLAB1=0.0 0.0')
+      if not extraparameters.has_key('POLAB2'):
+        print "Assuming no polarization for beam 2"
+        parameters.append('POLAB2=0.0 0.0')
+      if not extraparameters.has_key('USERB1'):
+        print "Will put beam spectrum to True for beam 1"
+        parameters.append('USERB1=T')
+      if not extraparameters.has_key('USERB2'):
+        print "Will put beam spectrum to True for beam 2"
+        parameters.append('USERB2=T')
+      if not extraparameters.has_key('ISRB1'):
+        print "Will put ISR to True for beam 1"
+        parameters.append('ISRB1=T')
+      if not extraparameters.has_key('ISRB2'):
+        print "Will put ISR to True for beam 2"
+        parameters.append('ISRB2=T')
+      if not extraparameters.has_key('EPAB1'):
+        print "Will put EPA to False for beam 1"
+        parameters.append('EPAB1=F')
+      if not extraparameters.has_key('EPAB2'):
+        print "Will put EPA to False for beam 2"
+        parameters.append('EPAB2=F')
+    else:
+      return self._reportError('Extraparameters parameter MUST be specified')   
+    
     self.StepCount +=1
     stepName = 'Whizard'
     stepNumber = self.StepCount
@@ -232,6 +271,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(WhizardAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(WhizardAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(WhizardAppDefn,"EvtType","string","","Process to generate")
+    self._addParameter(WhizardAppDefn,"parameters","string","","Parameters for template")
     self._addParameter(WhizardAppDefn,"Energy","int",0,"Energy to generate")
     self._addParameter(WhizardAppDefn,"NbOfEvts","int",0,"Number of events to generate")
     self._addParameter(WhizardAppDefn,'listoutput',"list",[],"list of output file name")
@@ -251,6 +291,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.prodparameters['nbevts']=nbevts
     mstep.setValue("Lumi",lumi)
     self.prodparameters['lumi']=lumi
+    mstep.setValue('parameters',string.join(parameters,";"))
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     
@@ -825,6 +866,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     info.append("- %s events per job\n"%self.prodparameters['nbevts'])
     if self.prodparameters.has_key('lumi'):
       info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
+    
+    if self.prodparameters.has_key("WhizardParameters"):
+      info.append('- Whizard parameters %s'%(self.prodparameters['WhizardParameters']))
       
     if self.prodparameters.has_key('MokkaSteer'):
       info.append("- Mokka steering file %s"%(self.prodparameters['MokkaSteer']))

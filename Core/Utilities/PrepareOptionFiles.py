@@ -63,6 +63,68 @@ def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
 
   return S_OK(foundprocessid)
 
+def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
+  """Prepares the whizard.in file to run
+  
+  Using specified parameters in the job definition passed from L{WhizardAnalysis}
+  
+  @param input_in: input whizard.in to modify
+  @type input_in: string
+  @param evttype: process type that will prepend stdhep output name
+  @type evttype: string
+  @param randomseed: random seed to use
+  @type randomseed: int
+  @param nevts: number of events to generate
+  @type nevts: int
+  @param lumi: luminosity to use
+  @type lumi: int
+  @param output_in: whizard.in output file name (usually whizard.in)
+  @type output_in: string
+  @return: S_OK()
+  """
+  inputfile = file(input_in,"r")  
+  outputfile = file(output_in,"w")
+  foundprocessid = False
+  for line in inputfile:
+    if line.count("SEEDSEED"):
+      outputfile.write(" seed = %s\n"%parameters['SEED'])
+    elif line.count('ENERGYENERGY'):
+      outputfile.write(" sqrts = %s\n"%(parameters['ENERGY']))
+    elif   line.count('NBEVTSNBEVTS') and not parameters['LUMI']:
+      outputfile.write(" n_events = %s\n"%parameters['NBEVTS'])
+    elif line.count('LUMILUMI') and parameters['LUMI']:
+      outputfile.write(' luminosity=%s\n'%parameters['LUMI'])
+    elif line.count('PNAME1PNAME1'):
+      outputfile.write(' particle_name = %s\n'%parameters['PNAME1'])
+    elif line.count('PNAME2PNAME2'):
+      outputfile.write(' particle_name = %s\n'%parameters['PNAME2'])
+    elif line.count('POLAB1POLAB1'):
+      outputfile.write(' polarization = %s\n'%parameters['POLAB1'])
+    elif line.count('POLAB2POLAB2'):
+      outputfile.write(' polarization = %s\n'%parameters['POLAB2'])
+    elif line.count('USERB1USERB1'):
+      outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERB1'])
+    elif line.count('USERB2USERB2'):
+      outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERB2'])
+    elif line.count('ISRB1ISRB1'):
+      outputfile.write(' ISR_on = %s\n'%parameters['ISRB1'])
+    elif line.count('ISRB2ISRB2'):
+      outputfile.write(' ISR_on = %s\n'%parameters['ISRB2'])
+    elif line.count('EPAB1EPAB1'):
+      outputfile.write(' EPA_on = %s\n'%(parameters['EPAB1']))
+    elif line.count('EPAB2EPAB2'):
+      outputfile.write(' EPA_on = %s\n'%(parameters['EPAB2']))
+    elif line.count("write_events_file") and len(evttype):
+      outputfile.write(" write_events_file = \"%s\" \n"%evttype)
+    elif line.count("process_id"):
+      outputfile.write(line)
+      if len(line.split("\"")[1]):
+        foundprocessid = True
+    else:
+      outputfile.write(line)
+
+  return S_OK(foundprocessid)
+
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
   """Writes out a steering file for Mokka
   
