@@ -244,6 +244,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       if not extraparameters.has_key('EPAB2'):
         print "Will put EPA to False for beam 2"
         parameters.append('EPAB2=F')
+      #TODO look how to allow changing pythia parameters, which are separated with ;  
+      #if not extraparameters.has_key('PYTHIAPARAMS'):
+      #  print "Using default pythia parameters"
+      #  parameters.append("PYTHIAPARAMS=\"PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ; MSTJ(28)=2 ;\"")
     else:
       return self._reportError('Extraparameters parameter MUST be specified')   
     
@@ -292,6 +296,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue("Lumi",lumi)
     self.prodparameters['lumi']=lumi
     mstep.setValue('parameters',string.join(parameters,";"))
+    self.prodparameters['WhizardParameters']=string.join(parameters,";")
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     
