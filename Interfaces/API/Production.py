@@ -30,20 +30,15 @@ class Production(ILCJob):
     self.StepCount = 0
     self.currentStepPrefix = ''
     self.inputDataType = 'STDHEP' #Default
-    #self.tier1s=gConfig.getValue('%s/Tier1s' %(self.csSection),['LCG.CERN.ch','LCG.CNAF.it','LCG.NIKHEF.nl','LCG.PIC.es','LCG.RAL.uk','LCG.GRIDKA.de','LCG.IN2P3.fr','LCG.SARA.nl'])
-    #self.histogramName =gConfig.getValue('%s/HistogramName' %(self.csSection),'@{applicationName}_@{STEP_ID}_Hist.root')
-    #self.histogramSE =gConfig.getValue('%s/HistogramSE' %(self.csSection),'CERN-HIST')
     self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection),'x86_64-slc5-gcc43-opt')
     self.inputDataDefault = gConfig.getValue('%s/InputDataDefault' %(self.csSection),'/ilc/prod/clic/3tev/gen/bb/0/BS_01.stdhep')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.ioDict = {}
-    #self.gaussList = []
     self.prodTypes = ['MCSimulation','Test','MCReconstruction']
     self.pluginsTriggeringStreamTypes = ['ByFileTypeSize','ByRunFileTypeSize','ByRun','AtomicRun']
     self.name='unspecifiedWorkflow'
     self.firstEventType = ''
-    #self.bkSteps = {}
     self.prodGroup = ''
     self.plugin = ''
     self.inputFileMask = ''
@@ -53,6 +48,10 @@ class Production(ILCJob):
     self.process = ""
     self.basepath = ""
     self.basename = ""
+    self.prodparameters = {}
+    self.prodparameters['UsingWhizardOutput']=False
+    self.prodparameters['UsingMokkaOutput']=False
+    self.prodparameters['UsingSLICOutput']=False
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
     self.currtransID = None
@@ -153,6 +152,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       
     self.inputBKSelection = metadata
 
+    self.prodparameters["FCInputQuery"]=self.inputBKSelection
+    self.prodparameters['nbevts']=self.nbofevents
     return S_OK()
 
   def addWhizardStep(self,processlist,process,energy = 3000,nbevts=0,lumi=0,outputpath="",outputSE=""):
@@ -243,9 +244,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('applicationLog', 'Whizard_@{STEP_ID}.log')
     mstep.setValue("Energy",energy)
+    self.prodparameters["Energy"]=energy
     mstep.setValue("EvtType",process)
+    self.prodparameters['Process']=process
     mstep.setValue("NbOfEvts",nbevts)
+    self.prodparameters['nbevts']=nbevts
     mstep.setValue("Lumi",lumi)
+    self.prodparameters['lumi']=lumi
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     
@@ -339,15 +344,20 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('steeringFile',steeringfile)
-    mstep.setValue("detectorModel",detectormodel)
+    self.prodparameters['MokkaSteer']=steeringfile
+    if detectormodel:
+      mstep.setValue("detectorModel",detectormodel)
+      self.prodparameters['MokkaDetectorModel']=detectormodel
     if self.ioDict.has_key("WhizardStep"):
       mstep.setLink("numberOfEvents",self.ioDict["WhizardStep"],"NbOfEvts")
     else:
       mstep.setValue("numberOfEvents",numberofevents)
+
     mstep.setValue('applicationLog', 'Mokka_@{STEP_ID}.log')
     
     if self.ioDict.has_key("WhizardStep"):
       mstep.setLink('stdhepFile',self.ioDict["WhizardStep"],'outputFile')
+      self.prodparameters['UsingWhizardOutput']=True
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     outputList=[]
@@ -464,7 +474,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         raise TypeError,'Expected previously defined Mokka step for input data'
       mstep.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
     mstep.setValue("inputXML",inputXML)
+    self.prodparameters['MarlinXML']=inputXML
     mstep.setValue("inputGEAR",inputGEAR)
+    self.prodparameters['MarlinGEAR']=inputGEAR
     mstep.setValue("outputREC",outputRECfile)
     mstep.setValue("outputPathREC",outputRECpath)
     mstep.setValue("outputDST",outputDSTfile)
@@ -549,8 +561,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'Slic_@{STEP_ID}.log')
     mstep.setValue("detectorModel",detectormodel)
+    self.prodparameters['SlicDetectorModel']=detectormodel
     mstep.setValue("numberOfEvents",numberofevents)
+    self.prodparameters['nbevts']=numberofevents
     mstep.setValue("inputmacFile",inputmac)
+    self.prodparameters['SlicInputMAC']=inputmac
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     outputList=[]
@@ -713,6 +728,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     Trans.setDescription(self.workflow.getDescrShort())
     Trans.setLongDescription(self.workflow.getDescription())
     Trans.setType(self.type)
+    self.prodparameters['JobType']=self.type
     Trans.setPlugin('Standard')
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
@@ -723,7 +739,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.currtrans = Trans
     self.currtrans.setStatus("Active")
     self.currtrans.setAgentType("Automatic")
-    
+
     return S_OK()
 
   def setNbOfTasks(self,nbtasks):
@@ -787,6 +803,81 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.currtrans.addFilesToTransformation(lfns)
     return S_OK()
 
+  def finalizeProdSubmission(self,prodid=None,prodinfo):
+    currtrans = 0
+    if self.currtrans:
+      currtrans = self.currtrans.getTransformationID()['Value']
+    if prodid:
+      currtrans = prodid
+    if not currtrans:
+      print "Not transformation defined earlier"
+      return S_ERROR("No transformation defined")
+    if prodinfo:
+      self.prodparameters = prodinfo
+    
+    info = []
+    info.append('%s Production %s has following parameters:\n' %(self.prodparameters['JobType'],currtrans))
+    info.append('- Will run on %s events'%self.prodparameters['nbevts'])
+    if self.prodparameters.has_key("Process"):
+      info.append('- Process %s'%self.prodparameters['Process'])
+    if self.prodparameters.has_key("Energy"):
+      info.append('- Energy %s'%self.prodparameters["Energy"])
+    info.append("- %s events per job\n"%self.prodparameters['nbevts'])
+    if self.prodparameters.has_key('lumi'):
+      info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
+      
+    if self.prodparameters.has_key('MokkaSteer'):
+      info.append("- Mokka steering file %s"%(self.prodparameters['MokkaSteer']))
+      if self.prodparameters.has_key('MokkaDetectorModel'):
+        info.append("- Mokka detector model %s"%self.prodparameters['MokkaDetectorModel'])
+        
+    if self.prodparameters.has_key('MarlinXML'):
+      info.append('- Marlin xml file %s'%self.prodparameters['MarlinXML'])
+    if self.prodparameters.has_key('MarlinGEAR'):
+      info.append("- Marlin GEAR file %s"%self.prodparameters['MarlinGEAR'])
+      
+    if self.prodparameters.has_key('SlicDetectorModel'):
+      info.append("- SLIC detector model %s"%self.prodparameters['SlicDetectorModel'])
+    if self.prodparameters.has_key('SlicInputMAC'):
+      info.append('- SLIC MAC file %s'%self.prodparameters['SlicInputMAC'])  
+      
+    if self.prodparameters['UsingWhizardOutput']:
+      info.append('Mokka or SLIC use whizard output from previous step')
+    if self.prodparameters['UsingMokkaOutput']:
+      info.append('Marlin uses mokka output from previous step')
+    if self.prodparameters['UsingSLICOutput']:
+      info.append('LCSIM uses slic output from previous step')
+    if not self.prodparameters['UsingWhizardOutput'] and not self.prodparameters['UsingMokkaOutput'] and not self.prodparameters['UsingSLICOutput']:
+      info.append('Using InputDataQuery :')
+      for n,v in self.prodparameters['FCInputQuery'].items():
+        info.append('    %s = %s' %(n,v))
+
+    info.append('- SW packages %s'%self.prodparameters["SWPackages"])
+      
+    infoString = string.join(info,'\n')
+    self.prodparameters['DetailedInfo']=infoString
+    for n,v in self.prodparameters.items():
+      result = self.setProdParameter(currtrans,n,v)
+      if not result['OK']:
+        self.log.error(result['Message'])
+
+    return S_OK()
+
+  #############################################################################
+  def setProdParameter(self,prodID,pname,pvalue):
+    """Set a production parameter.
+    """
+    if type(pvalue)==type([]):
+      pvalue=string.join(pvalue,'\n')
+
+    prodClient = RPCClient('Transformation/TransformationManager',timeout=120)
+    if type(pvalue)==type(2):
+      pvalue = str(pvalue)
+    result = prodClient.setTransformationParameter(int(prodID),str(pname),str(pvalue))
+    if not result['OK']:
+      self.log.error('Problem setting parameter %s for production %s and value:\n%s' %(prodID,pname,pvalue))
+    return result
+
   #############################################################################
   def getParameters(self,prodID,pname='',printOutput=False):
     """Get a production parameter or all of them if no parameter name specified.
@@ -825,6 +916,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     description='ILCSoftwarePackages'
     if not self.workflow.findParameter(swPackages):
       self._addParameter(self.workflow,swPackages,'JDL',nameVersion,description)
+      self.prodparameters["SWPackages"]=nameVersion
     else:
       apps = self.workflow.findParameter(swPackages).getValue()
       apps = apps.split(';')
@@ -832,6 +924,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       apps = removeEmptyElements(apps)
       apps = string.join(apps,';')
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+      self.prodparameters["SWPackages"]=apps
   #############################################################################
   def createWorkflow(self):
     """ Create XML for local testing.
