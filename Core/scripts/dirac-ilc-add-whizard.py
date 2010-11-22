@@ -81,7 +81,7 @@ def readPRCFile(prc):
       elif elems[0][0:3]=="aa_" and not elems[0]=="aa_o":
         list[elems[0]]['InFile']="aa_x.in"
       else:
-        list[elems[0]]['InFile']="whizard.in"
+        list[elems[0]]['InFile']="whizard.template.in"
     else:
       continue
   
