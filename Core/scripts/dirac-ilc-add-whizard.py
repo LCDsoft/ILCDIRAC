@@ -168,9 +168,9 @@ for f in folderlist:
     
     for line in infile:
       if line.count("decay_description"):
-        currprocess=f.split(".in")[0] 
+        currprocess=f.split(".template.in")[0] 
         inputlist[currprocess]={}        
-        inputlist[currprocess]["InFile"] = f
+        inputlist[currprocess]["InFile"] = f.rstrip("~")
         inputlist[currprocess]["Detail"] = line.split("\"")[1]
         found_detail = True
       if line.count("process_id") and found_detail:
