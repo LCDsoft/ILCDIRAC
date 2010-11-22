@@ -178,7 +178,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,energy=None,randomseed=0,jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
+  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,energy=None,randomseed=0,extraparameters={},jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
     """Helper function
     
        Define Whizard step
@@ -259,7 +259,45 @@ class ILCJob(Job):
         self.addToInputSandbox.append(in_file)    
       else:
         return self._reportError('Specified input generator file %s does not exist' %(in_file),__name__,**kwargs)
-        
+    parameters = []
+    if extraparameters:
+      if not type(extraparameters)==type({}):
+        return self._reportError('Extraparameter argument must be dictionnary',__name__,**kwargs)
+      for n,v in extraparameters.items():
+        parameters.append("%s=%s"%(n,v))
+      if not extraparameters.has_key('PNAME1'):
+        print "Assuming incoming beam 1 to be electrons"
+        parameters.append('PNAME1=e1')
+      if not extraparameters.has_key('PNAME2'):
+        print "Assuming incoming beam 2 to be positrons"
+        parameters.append('PNAME1=E1')
+      if not extraparameters.has_key('POLAB1'):
+        print "Assuming no polarization for beam 1"
+        parameters.append('POLAB1=0.0 0.0')
+      if not extraparameters.has_key('POLAB2'):
+        print "Assuming no polarization for beam 2"
+        parameters.append('POLAB2=0.0 0.0')
+      if not extraparameters.has_key('USERB1'):
+        print "Will put beam spectrum to True for beam 1"
+        parameters.append('USERB1=T')
+      if not extraparameters.has_key('USERB2'):
+        print "Will put beam spectrum to True for beam 2"
+        parameters.append('USERB2=T')
+      if not extraparameters.has_key('ISRB1'):
+        print "Will put ISR to True for beam 1"
+        parameters.append('ISRB1=T')
+      if not extraparameters.has_key('ISRB2'):
+        print "Will put ISR to True for beam 2"
+        parameters.append('ISRB2=T')
+      if not extraparameters.has_key('EPAB1'):
+        print "Will put EPA to False for beam 1"
+        parameters.append('EPAB1=F')
+      if not extraparameters.has_key('EPAB2'):
+        print "Will put EPA to False for beam 2"
+        parameters.append('EPAB2=F')
+    else:
+      return self._reportError('Extraparameters parameter MUST be specified')   
+    
     self.StepCount +=1
     stepName = 'RunWhizard'
     stepNumber = self.StepCount
@@ -296,6 +334,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("Lumi",0,"float","","",False,False,"Luminosity to  generate per job"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+    step.addParameter(Parameter("parameters","","string","","",False,False,"Parameters for whizard.in"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
@@ -316,6 +355,8 @@ class ILCJob(Job):
     stepInstance.setValue("debug",debug)
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)    
+    stepInstance.setValue("parameters",string.join(parameters,";"))
+    
     currentApp = "whizard.%s"%version
     swPackages = 'SoftwarePackages'
     description='ILC Software Packages to be installed'

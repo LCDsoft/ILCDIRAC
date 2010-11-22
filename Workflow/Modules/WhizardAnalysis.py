@@ -11,6 +11,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFile
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFileTemplate
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
@@ -51,6 +52,7 @@ class WhizardAnalysis(ModuleBase):
     self.jobindex = None
     self.debug = False
     self.outputFile = ''
+    self.parameters = {}
 
   def obtainProcessList(self):
     """Internal function
@@ -82,6 +84,7 @@ class WhizardAnalysis(ModuleBase):
  
     if self.step_commons.has_key("Energy"):
       self.energy = self.step_commons["Energy"]
+      self.parameters['ENERGY']=self.energy
  
     if self.step_commons.has_key("RandomSeed"):
       self.randomseed = self.step_commons['RandomSeed']
@@ -89,12 +92,14 @@ class WhizardAnalysis(ModuleBase):
       self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
     elif self.jobID:
       self.randomseed = self.jobID
+    self.parameters['SEED'] = self.randomseed
 
     if self.step_commons.has_key('NbOfEvts'):
       self.NumberOfEvents = self.step_commons['NbOfEvts']
+      self.parameters['NBEVTS']=self.NumberOfEvents
     if self.step_commons.has_key('Lumi'):
       self.Lumi = self.step_commons['Lumi']
-
+      self.parameters['LUMI']=self.Lumi
     if self.step_commons.has_key("InputFile"):
       self.inFile = os.path.basename(self.step_commons["InputFile"])
 
@@ -103,7 +108,7 @@ class WhizardAnalysis(ModuleBase):
       
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
-       
+      self.parameters['PROCESS']=self.evttype
     if self.step_commons.has_key("JobIndex"):
       self.jobindex = int(self.step_commons["JobIndex"])
 
@@ -115,6 +120,12 @@ class WhizardAnalysis(ModuleBase):
       self.inFile = "whizardnew.in"
     if self.step_commons.has_key("outputFile"):
       self.outputFile = self.step_commons["outputFile"]
+ 
+    if self.step_commons.has_key("parameters"):
+      params= self.step_commons["parameters"]
+      listofparams= params.split(";")
+      for param in listofparams:
+        self.parameters[param.split("=")[0]]=param.split("=")[1]
  
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
@@ -198,8 +209,8 @@ class WhizardAnalysis(ModuleBase):
     list_of_gridfiles = []
     if path_to_gridfiles:
       list_of_gridfiles = os.listdir(path_to_gridfiles)
-    
-
+      
+    template=False
     ## Get from process file the proper whizard.in file
     if self.getProcessInFile:
       whizardin = ""
@@ -211,6 +222,8 @@ class WhizardAnalysis(ModuleBase):
       if not whizardin:
         self.log.error("Whizard input file was not found in process list, cannot proceed")
         return S_ERROR("Error while resolving whizard input file")
+      if whizardin.count("template"):
+        template=True
       try:
         shutil.copy("%s/%s"%(mySoftDir,whizardin), "./whizardnew.in")
         self.inFile = "whizardnew.in"
@@ -226,8 +239,10 @@ class WhizardAnalysis(ModuleBase):
     outputfilename = self.evttype
     if type(self.jobindex)==type(0):
       outputfilename = outputfilename+"_"+str(self.jobindex)
-      
-    res = PrepareWhizardFile(self.inFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+    if not template:  
+      res = PrepareWhizardFile(self.inFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+    else:
+      res = PrepareWhizardFileTemplate(self.inFile,outputfilename,self.parameters,"whizard.in")
     if not res['OK']:
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
