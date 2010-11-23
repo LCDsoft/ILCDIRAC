@@ -212,7 +212,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     parameters = []
     if extraparameters:
       if not type(extraparameters)==type({}):
-        return self._reportError('Extraparameter argument must be dictionnary',__name__,**kwargs)
+        return self._reportError('Extraparameter argument must be dictionary',__name__,**kwargs)
     else:
       extraparameters['PNAME1']='e1'
       print "Assuming incoming beam 1 to be electrons"
