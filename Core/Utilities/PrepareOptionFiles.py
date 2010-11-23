@@ -91,9 +91,9 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
     elif line.count('LUMILUMI') and parameters['LUMI']:
       outputfile.write(' luminosity=%s\n'%parameters['LUMI'])
     elif line.count('PNAME1PNAME1'):
-      outputfile.write(' particle_name = %s\n'%parameters['PNAME1'])
+      outputfile.write(' particle_name = \'%s\'\n'%parameters['PNAME1'])
     elif line.count('PNAME2PNAME2'):
-      outputfile.write(' particle_name = %s\n'%parameters['PNAME2'])
+      outputfile.write(' particle_name = \'%s\'\n'%parameters['PNAME2'])
     elif line.count('POLAB1POLAB1'):
       outputfile.write(' polarization = %s\n'%parameters['POLAB1'])
     elif line.count('POLAB2POLAB2'):
