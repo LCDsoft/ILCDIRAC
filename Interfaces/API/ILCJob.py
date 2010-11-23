@@ -892,7 +892,7 @@ class ILCJob(Job):
     self.ioDict["SLICStep"]=stepInstance.getName()
     return S_OK()
   
-  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, outputFile = "",logFile='', debug = False,logInOutputData=False):
+  def setLCSIM(self,appVersion,xmlfile,inputslcio=None,evtstoprocess=None,aliasproperties = None, outputFile = "", outputRECFile="",outputDSTFile= "",logFile='', debug = False,logInOutputData=False):
     """Helper function.
        Define LCSIM step
        
@@ -922,7 +922,7 @@ class ILCJob(Job):
        @return: S_OK() or S_ERROR()
     """
     kwargs = {'appVersion':appVersion,'xmlfile':xmlfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,"aliasproperties":aliasproperties,
-              'logFile':logFile, "outputFile":outputFile,
+              'logFile':logFile, "outputFile":outputFile,"outputRECFile":outputRECFile,"outputDSTFile":outputDSTFile,
               'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
@@ -997,7 +997,12 @@ class ILCJob(Job):
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     step.addParameter(Parameter("aliasproperties","","string","","",False,False,"Name of the alias properties file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
-    step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+    if outputFile:
+      step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
+    if outputRECFile:   
+      step.addParameter(Parameter("outputRECFile","","string","","",False,False,"Name of the output REC file of the application"))
+    if outputDSTFile:  
+    step.addParameter(Parameter("outputDSTFile","","string","","",False,False,"Name of the output DST file of the application"))
 
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
 
@@ -1009,6 +1014,10 @@ class ILCJob(Job):
     stepInstance.setValue("debug",debug)
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
+    if(outputRECFile):
+      stepInstance.setValue('outputRECFile',outputRECFile)
+    if(outputDSTFile):
+      stepInstance.setValue('outputDSTFile',outputDSTFile)
       
     if aliasproperties:
       stepInstance.setValue("aliasproperties",aliasproperties)
