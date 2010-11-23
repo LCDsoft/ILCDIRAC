@@ -263,40 +263,42 @@ class ILCJob(Job):
     if extraparameters:
       if not type(extraparameters)==type({}):
         return self._reportError('Extraparameter argument must be dictionnary',__name__,**kwargs)
-      for n,v in extraparameters.items():
-        parameters.append("%s=%s"%(n,v))
-      if not extraparameters.has_key('PNAME1'):
-        print "Assuming incoming beam 1 to be electrons"
-        parameters.append('PNAME1=e1')
-      if not extraparameters.has_key('PNAME2'):
-        print "Assuming incoming beam 2 to be positrons"
-        parameters.append('PNAME2=E1')
-      if not extraparameters.has_key('POLAB1'):
-        print "Assuming no polarization for beam 1"
-        parameters.append('POLAB1=0.0 0.0')
-      if not extraparameters.has_key('POLAB2'):
-        print "Assuming no polarization for beam 2"
-        parameters.append('POLAB2=0.0 0.0')
-      if not extraparameters.has_key('USERB1'):
-        print "Will put beam spectrum to True for beam 1"
-        parameters.append('USERB1=T')
-      if not extraparameters.has_key('USERB2'):
-        print "Will put beam spectrum to True for beam 2"
-        parameters.append('USERB2=T')
-      if not extraparameters.has_key('ISRB1'):
-        print "Will put ISR to True for beam 1"
-        parameters.append('ISRB1=T')
-      if not extraparameters.has_key('ISRB2'):
-        print "Will put ISR to True for beam 2"
-        parameters.append('ISRB2=T')
-      if not extraparameters.has_key('EPAB1'):
-        print "Will put EPA to False for beam 1"
-        parameters.append('EPAB1=F')
-      if not extraparameters.has_key('EPAB2'):
-        print "Will put EPA to False for beam 2"
-        parameters.append('EPAB2=F')
     else:
-      return self._reportError('Extraparameters parameter MUST be specified')   
+      extraparameters['PNAME1']='e1'
+      print "Assuming incoming beam 1 to be electrons"
+      
+    for n,v in extraparameters.items():
+      parameters.append("%s=%s"%(n,v))
+    if not extraparameters.has_key('PNAME1'):
+      print "Assuming incoming beam 1 to be electrons"
+      parameters.append('PNAME1=e1')
+    if not extraparameters.has_key('PNAME2'):
+      print "Assuming incoming beam 2 to be positrons"
+      parameters.append('PNAME2=E1')
+    if not extraparameters.has_key('POLAB1'):
+      print "Assuming no polarization for beam 1"
+      parameters.append('POLAB1=0.0 0.0')
+    if not extraparameters.has_key('POLAB2'):
+      print "Assuming no polarization for beam 2"
+      parameters.append('POLAB2=0.0 0.0')
+    if not extraparameters.has_key('USERB1'):
+      print "Will put beam spectrum to True for beam 1"
+      parameters.append('USERB1=T')
+    if not extraparameters.has_key('USERB2'):
+      print "Will put beam spectrum to True for beam 2"
+      parameters.append('USERB2=T')
+    if not extraparameters.has_key('ISRB1'):
+      print "Will put ISR to True for beam 1"
+      parameters.append('ISRB1=T')
+    if not extraparameters.has_key('ISRB2'):
+      print "Will put ISR to True for beam 2"
+      parameters.append('ISRB2=T')
+    if not extraparameters.has_key('EPAB1'):
+      print "Will put EPA to False for beam 1"
+      parameters.append('EPAB1=F')
+    if not extraparameters.has_key('EPAB2'):
+      print "Will put EPA to False for beam 2"
+      parameters.append('EPAB2=F')
     
     self.StepCount +=1
     stepName = 'RunWhizard'

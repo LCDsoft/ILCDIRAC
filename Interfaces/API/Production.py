@@ -54,6 +54,7 @@ class Production(ILCJob):
     self.prodparameters['UsingSLICOutput']=False
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
+    self.currtrans = None
     self.currtransID = None
     self.importLine = """
 from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
@@ -212,44 +213,47 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if extraparameters:
       if not type(extraparameters)==type({}):
         return self._reportError('Extraparameter argument must be dictionnary',__name__,**kwargs)
-      for n,v in extraparameters.items():
-        parameters.append("%s=%s"%(n,v))
-      if not extraparameters.has_key('PNAME1'):
-        print "Assuming incoming beam 1 to be electrons"
-        parameters.append('PNAME1=e1')
-      if not extraparameters.has_key('PNAME2'):
-        print "Assuming incoming beam 2 to be positrons"
-        parameters.append('PNAME2=E1')
-      if not extraparameters.has_key('POLAB1'):
-        print "Assuming no polarization for beam 1"
-        parameters.append('POLAB1=0.0 0.0')
-      if not extraparameters.has_key('POLAB2'):
-        print "Assuming no polarization for beam 2"
-        parameters.append('POLAB2=0.0 0.0')
-      if not extraparameters.has_key('USERB1'):
-        print "Will put beam spectrum to True for beam 1"
-        parameters.append('USERB1=T')
-      if not extraparameters.has_key('USERB2'):
-        print "Will put beam spectrum to True for beam 2"
-        parameters.append('USERB2=T')
-      if not extraparameters.has_key('ISRB1'):
-        print "Will put ISR to True for beam 1"
-        parameters.append('ISRB1=T')
-      if not extraparameters.has_key('ISRB2'):
-        print "Will put ISR to True for beam 2"
-        parameters.append('ISRB2=T')
-      if not extraparameters.has_key('EPAB1'):
-        print "Will put EPA to False for beam 1"
-        parameters.append('EPAB1=F')
-      if not extraparameters.has_key('EPAB2'):
-        print "Will put EPA to False for beam 2"
-        parameters.append('EPAB2=F')
-      #TODO look how to allow changing pythia parameters, which are separated with ;  
-      #if not extraparameters.has_key('PYTHIAPARAMS'):
-      #  print "Using default pythia parameters"
-      #  parameters.append("PYTHIAPARAMS=\"PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ; MSTJ(28)=2 ;\"")
     else:
-      return self._reportError('Extraparameters parameter MUST be specified')   
+      extraparameters['PNAME1']='e1'
+      print "Assuming incoming beam 1 to be electrons"
+      
+    for n,v in extraparameters.items():
+      parameters.append("%s=%s"%(n,v))
+    if not extraparameters.has_key('PNAME1'):
+      print "Assuming incoming beam 1 to be electrons"
+      parameters.append('PNAME1=e1')
+    if not extraparameters.has_key('PNAME2'):
+      print "Assuming incoming beam 2 to be positrons"
+      parameters.append('PNAME2=E1')
+    if not extraparameters.has_key('POLAB1'):
+      print "Assuming no polarization for beam 1"
+      parameters.append('POLAB1=0.0 0.0')
+    if not extraparameters.has_key('POLAB2'):
+      print "Assuming no polarization for beam 2"
+      parameters.append('POLAB2=0.0 0.0')
+    if not extraparameters.has_key('USERB1'):
+      print "Will put beam spectrum to True for beam 1"
+      parameters.append('USERB1=T')
+    if not extraparameters.has_key('USERB2'):
+      print "Will put beam spectrum to True for beam 2"
+      parameters.append('USERB2=T')
+    if not extraparameters.has_key('ISRB1'):
+      print "Will put ISR to True for beam 1"
+      parameters.append('ISRB1=T')
+    if not extraparameters.has_key('ISRB2'):
+      print "Will put ISR to True for beam 2"
+      parameters.append('ISRB2=T')
+    if not extraparameters.has_key('EPAB1'):
+      print "Will put EPA to False for beam 1"
+      parameters.append('EPAB1=F')
+    if not extraparameters.has_key('EPAB2'):
+      print "Will put EPA to False for beam 2"
+      parameters.append('EPAB2=F')
+    #TODO look how to allow changing pythia parameters, which are separated with ;  
+    #if not extraparameters.has_key('PYTHIAPARAMS'):
+    #  print "Using default pythia parameters"
+    #  parameters.append("PYTHIAPARAMS=\"PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ; MSTJ(28)=2 ;\"")
+
     
     self.StepCount +=1
     stepName = 'Whizard'
@@ -863,17 +867,17 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     info = []
     info.append('%s Production %s has following parameters:\n' %(self.prodparameters['JobType'],currtrans))
-    info.append('- Will run on %s events'%self.prodparameters['nbevts'])
+    info.append('- Will run on %s events par tasks'%self.prodparameters['nbevts'])
     if self.prodparameters.has_key("Process"):
       info.append('- Process %s'%self.prodparameters['Process'])
     if self.prodparameters.has_key("Energy"):
-      info.append('- Energy %s'%self.prodparameters["Energy"])
-    info.append("- %s events per job\n"%self.prodparameters['nbevts'])
+      info.append('- Energy %s GeV'%self.prodparameters["Energy"])
+    info.append("- %s events per job"%self.prodparameters['nbevts'])
     if self.prodparameters.has_key('lumi'):
       info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
     
     if self.prodparameters.has_key("WhizardParameters"):
-      info.append('- Whizard parameters %s'%(self.prodparameters['WhizardParameters']))
+      info.append('- Whizard parameters: %s'%(self.prodparameters['WhizardParameters']))
       
     if self.prodparameters.has_key('MokkaSteer'):
       info.append("- Mokka steering file %s"%(self.prodparameters['MokkaSteer']))
