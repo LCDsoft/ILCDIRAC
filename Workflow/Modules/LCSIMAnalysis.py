@@ -34,6 +34,9 @@ class LCSIMAnalysis(ModuleBase):
     self.sourcedir = ''
     self.xmlfile = ''
     self.inputSLCIO = ''
+    self.outputFile = ""
+    self.outputREC = ""
+    self.outputDST = ""
     self.InputData = '' # from the (JDL WMS approach)
 
     self.aliasproperties = ''
@@ -57,10 +60,19 @@ class LCSIMAnalysis(ModuleBase):
 
     if self.step_commons.has_key('inputXML'):
       self.xmlfile = self.step_commons['inputXML']
-    if self.step_commons.has_key('lcsimFile'):
-      self.xmlfile = self.step_commons['lcsimFile']
+      
+    if self.step_commons.has_key('outputFile'):
+      self.outputFile = self.step_commons['outputFile']
+
+    if self.step_commons.has_key('outputREC'):
+      self.outputREC = self.step_commons['outputREC']
+      
+    if self.step_commons.has_key('outputDST'):
+      self.outputDST = self.step_commons['outputDST']
+      
     if self.step_commons.has_key("inputSlcio"):
       self.inputSLCIO = self.step_commons["inputSlcio"]
+      
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
 
@@ -71,6 +83,33 @@ class LCSIMAnalysis(ModuleBase):
           self.workflow_commons["NbOfEvents"]=res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
+
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                 int(self.workflow_commons["JOB_ID"]))
+        #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                 int(self.workflow_commons["JOB_ID"]))
+        #if self.workflow_commons.has_key("MokkaOutput"):
+        #  self.inputSLCIO = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                    int(self.workflow_commons["JOB_ID"]))
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_rec_"):
+              self.outputREC = os.path.basename(obj)
+            elif obj.lower().count("_dst_"):
+              self.outputDST = os.path.basename(obj)
+            elif obj.lower().count("_sim_"):
+              self.inputSLCIO = os.path.basename(obj)
+        else:
+          self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
+                                           int(self.workflow_commons["JOB_ID"]))
+          self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
+                                           int(self.workflow_commons["JOB_ID"]))
+          if self.workflow_commons.has_key("SLICOutput"):
+            self.inputSLCIO = getProdFilename(self.workflow_commons["SLICOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"]))
 
     if self.step_commons.has_key("aliasproperties"):
       self.aliasproperties = self.step_commons["aliasproperties"]
@@ -166,7 +205,7 @@ class LCSIMAnalysis(ModuleBase):
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
           
     lcsimfile = "job.lcsim"
-    res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.debug)
+    res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file")
       return S_ERROR("Error parsing input lcsim file")

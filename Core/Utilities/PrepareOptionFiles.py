@@ -348,7 +348,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output.close()
   return S_OK(True)
 
-def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None, debug=False):
+def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None, outputFile=None,outputRECFile=None,outputDSTFile=None,debug=False):
   """Writes out a lcsim file for LCSIM
   
   Takes the parameters passed from LCSIMAnalysis
@@ -363,6 +363,8 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   @type jars: list of strings
   @param cachedir: folder that holds the cache directory, instead of Home
   @type cachedir: string
+  @param outputFile: File name of the output
+  @type outputFile: string
   @param debug: By default set verbosity to true
   @type debug: bool
   
@@ -467,6 +469,81 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
           marker.text = "LCSIM"
           driver.append(marker)
           printtext = marker.text
-  
+
+  ##Take care of the output files
+  writerfound = False
+  recwriterfound = False
+  dstwriterfound = False
+  for driver in drivers:
+    if driver.attrib.has_key("type"):
+      if driver.attrib['type']=="org.lcsim.util.loop.LCIODriver":
+        if driver.attrib['name']=="Writer":
+          driver.remove(driver.find('outputFilePath'))
+          outputelem = Element("outputFilePath")
+          outputelem.text = outputFile
+          driver.append(outputelem)
+          writerfound = True
+          continue
+        if driver.attrib['name']=="RECWriter" and outputRECFile:
+          outputelem = Element("outputFilePath")
+          outputelem.text = outputRECFile
+          driver.append(outputelem)
+          recwriterfound = True
+          continue
+        if driver.attrib['name']=="DSTWriter" and outputDSTFile:
+          outputelem = Element("outputFilePath")
+          outputelem.text = outputDSTFile
+          driver.append(outputelem)
+          dstwriterfound = True
+          continue
+  if not writerfound:
+    drivers = tree.find("drivers")
+    propdict = {}
+    propdict['name']='Writer'
+    propdict['type']='org.lcsim.util.loop.LCIODriver'
+    output = Element("driver",propdict)
+    outputelem = Element("outputFilePath")
+    outputelem.text =  outputFile
+    output.append(outputelem)
+    drivers.append(output)
+    execut = tree.find("execute")
+    if(execut):
+      outputattrib = {}
+      outputattrib['name']="Writer"
+      outputmark= Element("driver",outputattrib)
+      execut.append(outputmark)
+  if not recwriterfound and outputRECFile:
+    drivers = tree.find("drivers")
+    propdict = {}
+    propdict['name']='RECWriter'
+    propdict['type']='org.lcsim.util.loop.LCIODriver'
+    output = Element("driver",propdict)
+    outputelem = Element("outputFilePath")
+    outputelem.text =  outputRECFile
+    output.append(outputelem)
+    drivers.append(output)
+    execut = tree.find("execute")
+    if(execut):
+      outputattrib = {}
+      outputattrib['name']="RECWriter"
+      outputmark= Element("driver",outputattrib)
+      execut.append(outputmark)
+  if not dstwriterfound and outputDSTFile:
+    drivers = tree.find("drivers")
+    propdict = {}
+    propdict['name']='DSTWriter'
+    propdict['type']='org.lcsim.util.loop.LCIODriver'
+    output = Element("driver",propdict)
+    outputelem = Element("outputFilePath")
+    outputelem.text =  outputDSTFile
+    output.append(outputelem)
+    drivers.append(output)
+    execut = tree.find("execute")
+    if(execut):
+      outputattrib = {}
+      outputattrib['name']="DSTWriter"
+      outputmark= Element("driver",outputattrib)
+      execut.append(outputmark)
+
   tree.write(outputlcsim)
   return S_OK(printtext)

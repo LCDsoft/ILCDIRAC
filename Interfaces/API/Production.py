@@ -623,10 +623,12 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('listoutput',(outputList))
 
     self.__addSoftwarePackages('slic.%s' %(appVers))
+    self._addParameter(self.workflow,"SLICOutput","string",outputfile,"SLIC expected output file name")
+
     self.ioDict["SLICStep"]=mstep.getName()
     return S_OK()
 
-  def addLCSIMStep(self,appVers,outputfile="",outputpath="",outputSE=""):
+  def addLCSIMStep(self,appVers,outputfile="",outputRECfile="",outputDSTfile="",outputpathREC="",outputpathDST="",outputSE=""):
     """ Define LCSIM step for production
     
     @param appVers: LCSIM version to use
@@ -635,10 +637,26 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     
     """
-    kwargs = {"appVers":appVers,"outputfile":outputfile,"outputpath":outputpath,"outputSE":outputSE}
-    if not outputpath:
+    kwargs = {"appVers":appVers,"outputfile":outputfile,"outputRECfile":outputRECfile,"outputDSTfile":outputDSTfile,
+              "outputpath":outputpathREC,"outputpath":outputpathDST,"outputSE":outputSE}
+    if outputRECfile=="default":
+      if self.basename:
+        outputRECfile = self.basename+"_rec.slcio"
+      else:
+        return self._reportError("Rec File not defined",__name__,**kwargs)
+    if outputDSTfile=="default":
+      if self.basename:
+        outputDSTfile = self.basename+"_dst.slcio"
+      else:
+        return self._reportError("DST File not defined",__name__,**kwargs)
+    if not outputpathDST:
       if self.basepath:
-        outputpath = self.basepath+"SID/DST"
+        outputpathDST = self.basepath+"SID/DST"
+      else:
+        return self._reportError("Output path in Storage not defined",__name__,**kwargs)
+    if not outputpathREC:
+      if self.basepath:
+        outputpathREC = self.basepath+"SID/REC"
       else:
         return self._reportError("Output path in Storage not defined",__name__,**kwargs)
     if not outputSE:
@@ -666,18 +684,28 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     LCSIMAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(LCSIMAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(LCSIMAppDefn,"applicationLog","string","","Application log file")
-    self._addParameter(LCSIMAppDefn,"outputPath","string","","Output data path")
+    self._addParameter(LCSIMAppDefn,"outputPathREC","string","","Output REC data path")
+    self._addParameter(LCSIMAppDefn,"outputPathDST","string","","Output DST data path")
     self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
+    self._addParameter(LCSIMAppDefn,"outputRECFile","string","","output REC file name")
+    self._addParameter(LCSIMAppDefn,"outputDSTFile","string","","output DST file name")
     self._addParameter(LCSIMAppDefn,'listoutput',"list",[],"list of output file name")    
     self.workflow.addStep(LCSIMAppDefn)
     mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'LCSIM_@{STEP_ID}.log')
     mstep.setValue("outputFile",outputfile)
-    mstep.setValue("outputPath",outputpath)
     outputList=[]
-    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
-    mstep.setValue('listoutput',(outputList))
+    if outputRECfile:
+      mstep.setValue("outputRECFile",outputRECfile)
+      outputList.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":outputSE})
+    if outputDSTfile:
+      mstep.setValue("outputDSTFile",outputDSTfile)
+      outputList.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":outputSE})
+    mstep.setValue("outputPathREC",outputpathREC)
+    mstep.setValue("outputPathDST",outputpathDST)
+    if outputRECfile or outputDSTfile:
+      mstep.setValue('listoutput',(outputList))
 
     self.__addSoftwarePackages('lcsim.%s' %(appVers))
     self.ioDict["LCSIMStep"]=mstep.getName()
