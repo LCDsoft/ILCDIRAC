@@ -849,7 +849,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.currtrans.addFilesToTransformation(lfns)
     return S_OK()
 
-  def finalizeProdSubmission(self,prodid=None,prodinfo):
+  def finalizeProdSubmission(self,prodid=None,prodinfo=None):
     currtrans = 0
     if self.currtrans:
       currtrans = self.currtrans.getTransformationID()['Value']
@@ -896,7 +896,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       info.append('Marlin uses mokka output from previous step')
     if self.prodparameters['UsingSLICOutput']:
       info.append('LCSIM uses slic output from previous step')
-    if not self.prodparameters['UsingWhizardOutput'] and not self.prodparameters['UsingMokkaOutput'] and not self.prodparameters['UsingSLICOutput']:
+    if not self.prodparameters['UsingWhizardOutput'] and not self.prodparameters['UsingMokkaOutput'] and not self.prodparameters['UsingSLICOutput'] \
+      and self.prodparameters.has_key('FCInputQuery'):
       info.append('Using InputDataQuery :')
       for n,v in self.prodparameters['FCInputQuery'].items():
         info.append('    %s = %s' %(n,v))
