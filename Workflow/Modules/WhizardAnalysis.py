@@ -211,6 +211,8 @@ class WhizardAnalysis(ModuleBase):
       list_of_gridfiles = os.listdir(path_to_gridfiles)
       
     template=False
+    if self.inFile.count("template"):
+      template=True
     ## Get from process file the proper whizard.in file
     if self.getProcessInFile:
       whizardin = ""
