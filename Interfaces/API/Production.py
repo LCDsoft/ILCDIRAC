@@ -684,6 +684,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     LCSIMAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
     self._addParameter(LCSIMAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(LCSIMAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(LCSIMAppDefn,"inputSlcio","string","","List of input SLCIO files")
     self._addParameter(LCSIMAppDefn,"outputPathREC","string","","Output REC data path")
     self._addParameter(LCSIMAppDefn,"outputPathDST","string","","Output DST data path")
     self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
@@ -694,6 +695,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'LCSIM_@{STEP_ID}.log')
+    if self.ioDict.has_key("SLICPanStep"):
+      mstep.setLink('inputSlcio',self.ioDict["SLICPanStep"],'outputFile')
+    elif self.ioDict.has_key("SLICStep"):
+      mstep.setLink('inputSlcio',self.ioDict["SLICStep"],'outputFile')
     mstep.setValue("outputFile",outputfile)
     outputList=[]
     if outputRECfile:
@@ -712,6 +717,44 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
   
   def addSLICPandoraStep(self,appVers,detector,pandorasettings,outputfile):
+    self.StepCount +=1
+    stepName = 'RunSLICPan'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('SLICPandora',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
+    SLICPanStep = ModuleDefinition('SLICPandoraAnalysis')
+    SLICPanStep.setDescription('SLIC Pandora step: Pandora for SID')
+    body = string.replace(self.importLine,'<MODULE>','SLICPandoraAnalysis')
+    SLICPanStep.setBody(body)
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    createoutputlist.setBody(body)
+     
+    SLICPanAppDefn = StepDefinition(stepDefn)
+    SLICPanAppDefn.addModule(SLICPanStep)
+    SLICPanAppDefn.createModuleInstance('SLICPandoraAnalysis', stepDefn)
+    SLICPanAppDefn.addModule(createoutputlist)
+    SLICPanAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
+    self._addParameter(SLICPanAppDefn,'applicationVersion','string','','ApplicationVersion')
+    self._addParameter(SLICPanAppDefn,"applicationLog","string","","Application log file")
+    self._addParameter(SLICPanAppDefn,"inputSlcio","string","","List of input SLCIO files")
+    self._addParameter(SLICPanAppDefn,"DetectorXML","string","","Detector Model")
+    self._addParameter(SLICPanAppDefn,"PandoraSettings","string","","Pandora settings file for SID")
+    self._addParameter(SLICPanAppDefn,"outputFile","string","","output file name")
+    self.workflow.addStep(SLICPanAppDefn)
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
+    mstep.setValue('applicationVersion',appVers)    
+    mstep.setValue('applicationLog', 'SLICPan_@{STEP_ID}.log')
+    mstep.setValue('DetectorXML',detector)
+    mstep.setValue('PandoraSettings',pandorasettings)
+    mstep.setValue("outputFile",outputfile)
+    if self.ioDict.has_key("LCSIMStep"):
+      mstep.setLink('inputSlcio',self.ioDict["LCSIMStep"],'outputFile')
+
+    self.__addSoftwarePackages('slicpandora.%s' %(appVers))
+    self.ioDict["SLICPanStep"]=mstep.getName()
     return S_OK()
   
   def addFinalizationStep(self,uploadData=False,uploadLog = False,sendFailover=False,registerData=False):
