@@ -9,7 +9,7 @@ from DIRAC.Core.Workflow.Workflow                     import *
 from ILCDIRAC.Interfaces.API.DiracILC                       import DiracILC
 from DIRAC.Core.Utilities.List                        import removeEmptyElements
 from DIRAC.Core.DISET.RPCClient                       import RPCClient
-from DIRAC.TransformationSystem.Client.TransformationDBClient import TransformationDBClient
+from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
@@ -893,10 +893,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if metadata:
       self.inputBKSelection=metadata
       
-    client = TransformationDBClient()
+    client = TransformationClient()
     res = client.createTransformationInputDataQuery(currtrans,self.inputBKSelection)
     if not res['OK']:
       return res
+    return S_OK()
 
   def explainInputDataQuery(self):
     print """To create production using input data query, do the following:
