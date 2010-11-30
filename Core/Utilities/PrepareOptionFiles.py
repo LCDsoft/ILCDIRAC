@@ -478,10 +478,11 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
     if driver.attrib.has_key("type"):
       if driver.attrib['type']=="org.lcsim.util.loop.LCIODriver":
         if driver.attrib['name']=="Writer":
-          driver.remove(driver.find('outputFilePath'))
-          outputelem = Element("outputFilePath")
-          outputelem.text = outputFile
-          driver.append(outputelem)
+          if outputFile:
+            driver.remove(driver.find('outputFilePath'))
+            outputelem = Element("outputFilePath")
+            outputelem.text = outputFile
+            driver.append(outputelem)
           writerfound = True
           continue
         if driver.attrib['name']=="RECWriter" and outputRECFile:
