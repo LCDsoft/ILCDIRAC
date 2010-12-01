@@ -252,6 +252,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if not extraparameters.has_key('RECOIL'):
       print "Will set Beam_recoil to False"
       parameters.append('RECOIL=F')
+    if not extraparameters.has_key('INITIALS'):
+      print "Will set keep_initials to False"
+      parameters.append('INITIALS=F')
     #TODO look how to allow changing pythia parameters, which are separated with ;  
     #if not extraparameters.has_key('PYTHIAPARAMS'):
     #  print "Using default pythia parameters"
