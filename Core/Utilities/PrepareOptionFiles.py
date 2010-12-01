@@ -92,6 +92,8 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
       outputfile.write(" n_events = %s\n"%parameters['NBEVTS'])
     elif line.count('LUMILUMI') and parameters['LUMI']:
       outputfile.write(' luminosity=%s\n'%parameters['LUMI'])
+    elif line.count('INITIALSINITIALS'):
+      outputfile.write(' keep_initials = %s\n'%parameters['INITIALS'])
     elif line.count('PNAME1PNAME1'):
       outputfile.write(' particle_name = \'%s\'\n'%parameters['PNAME1'])
     elif line.count('PNAME2PNAME2'):
