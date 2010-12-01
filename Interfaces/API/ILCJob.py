@@ -299,6 +299,9 @@ class ILCJob(Job):
     if not extraparameters.has_key('EPAB2'):
       print "Will put EPA to False for beam 2"
       parameters.append('EPAB2=F')
+    if   not extraparameters.has_key('RECOIL'):
+      print "Will set Beam_recoil to False"
+      parameters.append('RECOIL=F')
     
     self.StepCount +=1
     stepName = 'RunWhizard'

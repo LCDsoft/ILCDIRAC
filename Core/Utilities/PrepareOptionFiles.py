@@ -86,6 +86,8 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
       outputfile.write(" seed = %s\n"%parameters['SEED'])
     elif line.count('ENERGYENERGY'):
       outputfile.write(" sqrts = %s\n"%(parameters['ENERGY']))
+    elif line.count('RECOILRECOIL'):
+      outputfile.write(" beam_recoil = %s\n"%(parameters['RECOIL']))
     elif line.count('NBEVTSNBEVTS'):
       outputfile.write(" n_events = %s\n"%parameters['NBEVTS'])
     elif line.count('LUMILUMI') and parameters['LUMI']:
