@@ -53,6 +53,7 @@ class WhizardAnalysis(ModuleBase):
     self.debug = False
     self.outputFile = ''
     self.parameters = {}
+    self.susymodel = 0
 
   def obtainProcessList(self):
     """Internal function
@@ -97,9 +98,14 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key('NbOfEvts'):
       self.NumberOfEvents = self.step_commons['NbOfEvts']
       self.parameters['NBEVTS']=self.NumberOfEvents
+      
     if self.step_commons.has_key('Lumi'):
       self.Lumi = self.step_commons['Lumi']
       self.parameters['LUMI']=self.Lumi
+      
+    if self.step_commons.has_key('SusyModel'):
+      self.susymodel = self.step_commons['SusyModel']
+      
     if self.step_commons.has_key("InputFile"):
       self.inFile = os.path.basename(self.step_commons["InputFile"])
 
@@ -235,8 +241,14 @@ class WhizardAnalysis(ModuleBase):
 
     ##Check existence of Les Houches input file
     leshouchesfiles = False
-    if os.path.exists("%s/LesHouches.msugra_1.in"%(mySoftDir)):
-      leshouchesfiles = True
+    if self.susymodel:
+      if self.susymodel==1:
+        if os.path.exists("%s/LesHouches_slch.msugra_1.in"%(mySoftDir)):
+          leshouchesfiles = True
+      if self.susymodel==2:
+        if os.path.exists("%s/LesHouches_sqhh.msugra_1.in"%(mySoftDir)):
+          leshouchesfiles = True
+          
 
     outputfilename = self.evttype
     if type(self.jobindex)==type(0):
@@ -266,7 +278,10 @@ class WhizardAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
     if leshouchesfiles:
-      script.write('ln -s %s/LesHouches.msugra_1.in\n'%mySoftDir)
+      if self.susymodel==1:
+        script.write('cp %s/LesHouches_slch.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
+      if self.susymodel==2:
+        script.write('cp %s/LesHouches_sqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
         script.write('ln -s %s/%s\n'%(path_to_gridfiles,gridfile))

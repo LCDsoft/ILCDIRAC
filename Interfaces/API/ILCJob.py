@@ -178,7 +178,7 @@ class ILCJob(Job):
     
     return S_OK()
 
-  def setWhizard(self,process=None,version=None,in_file=None,nbevts=0,lumi = 0,energy=3000,randomseed=0,extraparameters={},jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
+  def setWhizard(self,process=None,version=None,in_file=None,susymodel=None,nbevts=0,lumi = 0,energy=3000,randomseed=0,extraparameters={},jobindex=None,outputFile=None,logFile=None,logInOutputData=False,debug=False):
     """Helper function
     
        Define Whizard step
@@ -202,6 +202,7 @@ class ILCJob(Job):
        @type version: string
        @param in_file: path to whizard.in to use
        @type in_file: string
+       @param susymodel: model of susy to use, can be only slch (slepton and charginos) or sqhh (squarks and heavy higgs)
        @param energy: CM energy to use
        @type energy: int
        @param nbevts: number of event to generate
@@ -220,7 +221,7 @@ class ILCJob(Job):
        @type debug: bool
     """
     
-    kwargs = {"process":process,"version":version,"in_file":in_file,"randomseed":randomseed,"energy":energy,"lumi":lumi,"nbevts":nbevts,
+    kwargs = {"process":process,"version":version,"in_file":in_file,"susymodel":susymodel,"randomseed":randomseed,"energy":energy,"lumi":lumi,"nbevts":nbevts,
               "jobindex":jobindex,'logFile':logFile,"logInOutputData":logInOutputData,"debug":debug}
     if not self.processlist:
       return self._reportError('Process list was not passed, please define job = ILCJob(processlist=dirac.giveProcessList()).',__name__,**kwargs)
@@ -242,6 +243,11 @@ class ILCJob(Job):
       return self._reportError("Nb of evts has to be defined via nbevts or luminosity via lumi",__name__,**kwargs)
     if nbevts and lumi:
       self.log.info('Nb of evts and lumi have been specified, only lumi will be taken into account')
+
+    if susymodel:
+      if not susymodel=="slch" and not susymodel=='sqhh':
+        self._reportError("susymodel must be either slch or sqhh")
+        
       
     if logFile:
       if type(logFile) in types.StringTypes:
@@ -343,6 +349,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
     step.addParameter(Parameter("parameters","","string","","",False,False,"Parameters for whizard.in"))
+    if susymodel:
+      step.addParameter(Parameter("SusyModel",0,"int","","",False,False,"SUSY model to use"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
@@ -358,6 +366,11 @@ class ILCJob(Job):
       stepInstance.setValue("RandomSeed",randomseed)
     if jobindex:
       stepInstance.setValue("JobIndex",jobindex)      
+    if susymodel:
+      if susymodel=='slch':
+        stepInstance.setValue('SusyModel',1)
+      if susymodel=='sqhh':
+        stepInstance.setValue('SusyModel',2)
     stepInstance.setValue("NbOfEvts",nbevts)
     stepInstance.setValue("Lumi",lumi)
     stepInstance.setValue("debug",debug)

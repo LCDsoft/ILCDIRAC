@@ -157,7 +157,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.prodparameters['nbevts']=self.nbofevents
     return S_OK()
 
-  def addWhizardStep(self,processlist,process,energy = 3000,nbevts=0,lumi=0,extraparameters=None,outputpath="",outputSE=""):
+  def addWhizardStep(self,processlist,process,susymodel=None,energy = 3000,nbevts=0,lumi=0,extraparameters=None,outputpath="",outputSE=""):
     """ Define Whizard step
     
     Must get the process list from dirac.
@@ -177,7 +177,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     @type putputSE: string
     """
-    kwargs = {"process":process,"energy":energy,"nbevts":nbevts,"lumi":lumi,"outputpath":outputpath,"outputSE":outputSE}
+    kwargs = {"process":process,'susymodel':susymodel,"energy":energy,"nbevts":nbevts,"lumi":lumi,"outputpath":outputpath,"outputSE":outputSE}
     appvers = ""
 
     if process:
@@ -206,6 +206,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       return self._reportError("Output path not defined" ,__name__,**kwargs)
     if not outputSE:
       return self._reportError("Output Storage element not defined" ,__name__,**kwargs)
+    
+    if susymodel:
+      if not susymodel=="slch" and not susymodel=='sqhh':
+        self._reportError("susymodel must be either slch or sqhh")    
     
     outputfile = process+"_gen.stdhep"
     
@@ -291,6 +295,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(WhizardAppDefn,'listoutput',"list",[],"list of output file name")
     self._addParameter(WhizardAppDefn,"outputPath","string","","Output data path")
     self._addParameter(WhizardAppDefn,"outputFile","string","","output file name")
+    if susymodel:
+      self._addParameter(WhizardAppDefn,"SusyModel","int",0,"SUSY model to use")
 
     self._addParameter(WhizardAppDefn,"Lumi","float",0,"Number of events to generate")
     self.workflow.addStep(WhizardAppDefn)
@@ -309,6 +315,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.prodparameters['WhizardParameters']=string.join(parameters,";")
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
+    if susymodel:
+      if susymodel=='slch':
+        mstep.setValue('SusyModel',1)
+      if susymodel=='sqhh':
+        mstep.setValue('SusyModel',2)
     
     outputList=[]
     outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
