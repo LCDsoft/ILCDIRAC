@@ -282,6 +282,7 @@ class WhizardAnalysis(ModuleBase):
         script.write('cp %s/LesHouches_slch.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
       if self.susymodel==2:
         script.write('cp %s/LesHouches_sqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
+      script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
         script.write('ln -s %s/%s\n'%(path_to_gridfiles,gridfile))
