@@ -148,6 +148,13 @@ def install(app,config,area):
       os.environ['LD_LIBRARY_PATH'] = os.environ['ROOTSYS']+"/lib"
     os.environ['PATH'] = os.environ['ROOTSYS']+"/bin:"+os.environ['PATH']
     os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
+  elif appName=='java':
+    basefolder = folder_name
+    os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/Executable:"+os.environ['PATH']
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs:"+os.environ['LD_LIBRARY_PATH']
+    else:
+      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs"
   elif appName=="lcsim":
     args = ['java',"-version"]
     try:
