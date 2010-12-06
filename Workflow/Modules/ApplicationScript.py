@@ -55,7 +55,7 @@ class ApplicationScript(ModuleBase):
       Cmd.append(os.path.basename(self.script))
       Cmd.append(self.arguments)
     else:
-      Cmd.append(os.path.basename(self.script))
+      Cmd.append("./"+os.path.basename(self.script))
       Cmd.append(self.arguments)
 
     command = ' '.join(Cmd)
