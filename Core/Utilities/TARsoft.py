@@ -109,9 +109,8 @@ def install(app,config,area):
         return DIRAC.S_ERROR("Folder %s is empty, considering install as failed"%folder_name)
     except:
       pass
-    
+  basefolder = folder_name  
   if appName=="slic":
-    basefolder = folder_name
     os.environ['SLIC_DIR']= basefolder
     slicv = ''
     lcddv = ''
@@ -139,7 +138,6 @@ def install(app,config,area):
   elif appName=="root":
     #members = app_tar_to_untar.getmembers()
     #fileexample = members[0].name
-    basefolder = folder_name
     #fileexample.split("/")[0]
     os.environ['ROOTSYS']= os.path.join(os.getcwd(),basefolder)
     if os.environ.has_key('LD_LIBRARY_PATH'):
@@ -149,7 +147,6 @@ def install(app,config,area):
     os.environ['PATH'] = os.environ['ROOTSYS']+"/bin:"+os.environ['PATH']
     os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
   elif appName=='java':
-    basefolder = folder_name
     os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/Executable:"+os.environ['PATH']
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs:"+os.environ['LD_LIBRARY_PATH']
