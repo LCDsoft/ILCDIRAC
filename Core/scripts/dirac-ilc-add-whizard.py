@@ -44,7 +44,12 @@ def upload(path,appTar):
     return S_ERROR()
   else:
     res = rm.putAndRegister("%s%s"%(path,os.path.basename(appTar)),appTar,"CERN-SRM")
-    return res
+    if not res['OK']:
+      return res
+    res = rm.replicateAndRegister("%s%s"%(path,os.path.basename(appTar)),"IN2P3-SRM")
+    if not res['OK']:
+      return res
+    return S_OK('Application uploaded')
   return S_OK()
 
 def redirectLogOutput(fd, message):

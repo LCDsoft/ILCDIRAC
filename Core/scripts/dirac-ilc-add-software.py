@@ -34,13 +34,18 @@ def upload(path,appTar):
       shutil.copy(appTar,"%s%s"%(final_path,appTar))
     except Exception,x:
       print "Could not copy because %s"%x
-      return S_ERROR()
+      return S_ERROR("Could not copy because %s"%x)
   elif path.find("http://")>-1:
     print "path %s was not forseen, location not known, upload to location yourself, and publish in CS manually"%path
     return S_ERROR()
   else:
     res = rm.putAndRegister("%s%s"%(path,appTar),appTar,"CERN-SRM")
-    return res
+    if not res['OK']:
+      return res
+    res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
+    if not res['Ok']:
+      return res
+    return S_OK('Application uploaded')
   return S_OK()
 
 if len(args) < 3:
