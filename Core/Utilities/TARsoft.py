@@ -155,6 +155,9 @@ def install(app,config,area):
       os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs:"+os.environ['LD_LIBRARY_PATH']
     else:
       os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs"
+  elif appName=="lcio":
+    os.environ['LCIO']= os.path.join(os.getcwd(),basefolder)
+    os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/bin:"+os.environ['PATH']
   elif appName=="lcsim":
     args = ['java',"-version"]
     try:
