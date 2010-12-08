@@ -208,8 +208,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       return self._reportError("Output Storage element not defined" ,__name__,**kwargs)
     
     if susymodel:
-      if not susymodel=="slch" and not susymodel=='sqhh':
-        self._reportError("susymodel must be either slch or sqhh")    
+      if not susymodel=="slsqhh" and not susymodel=='chne':
+        self._reportError("susymodel must be either slsqhh or chne")    
     
     outputfile = process+"_gen.stdhep"
     
@@ -316,9 +316,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue("outputFile",outputfile)
     mstep.setValue("outputPath",outputpath)
     if susymodel:
-      if susymodel=='slch':
+      if susymodel=='slsqhh':
         mstep.setValue('SusyModel',1)
-      if susymodel=='sqhh':
+      if susymodel=='chne':
         mstep.setValue('SusyModel',2)
     
     outputList=[]

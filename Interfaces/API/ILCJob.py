@@ -245,8 +245,8 @@ class ILCJob(Job):
       self.log.info('Nb of evts and lumi have been specified, only lumi will be taken into account')
 
     if susymodel:
-      if not susymodel=="slch" and not susymodel=='sqhh':
-        self._reportError("susymodel must be either slch or sqhh")
+      if not susymodel=="slsqhh" and not susymodel=='chne':
+        self._reportError("susymodel must be either slsqhh or chne")
         
       
     if logFile:
@@ -367,9 +367,9 @@ class ILCJob(Job):
     if jobindex:
       stepInstance.setValue("JobIndex",jobindex)      
     if susymodel:
-      if susymodel=='slch':
+      if susymodel=='slsqhh':
         stepInstance.setValue('SusyModel',1)
-      if susymodel=='sqhh':
+      if susymodel=='chne':
         stepInstance.setValue('SusyModel',2)
     stepInstance.setValue("NbOfEvts",nbevts)
     stepInstance.setValue("Lumi",lumi)
@@ -666,8 +666,8 @@ class ILCJob(Job):
     else:
       if self.ioDict.has_key("MokkaStep"):
         gearfile="GearOutput.xml"
-      else:
-        return self._reportError('As Mokka do not run before, you need to specify gearfile')
+      #else:
+      #  return self._reportError('As Mokka do not run before, you need to specify gearfile')
 
     inputslcioStr =''
     srmflag = False
@@ -714,7 +714,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
-    step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
+    if gearfile:
+      step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
     step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
     step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
@@ -736,7 +737,8 @@ class ILCJob(Job):
           srms = self._sortSRM(self.srms)
           stepInstance.setValue("inputSlcio",string.join(srms,";"))
     stepInstance.setValue("inputXML",xmlfile)
-    stepInstance.setValue("inputGEAR",gearfile)
+    if gearfile:
+      stepInstance.setValue("inputGEAR",gearfile)
     if(evtstoprocess):
       stepInstance.setValue("EvtsToProcess",evtstoprocess)
     else:
