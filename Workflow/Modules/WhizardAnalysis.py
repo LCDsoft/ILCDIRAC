@@ -243,10 +243,10 @@ class WhizardAnalysis(ModuleBase):
     leshouchesfiles = False
     if self.susymodel:
       if self.susymodel==1:
-        if os.path.exists("%s/LesHouches_slch.msugra_1.in"%(mySoftDir)):
+        if os.path.exists("%s/LesHouches_slsqhh.msugra_1.in"%(mySoftDir)):
           leshouchesfiles = True
       if self.susymodel==2:
-        if os.path.exists("%s/LesHouches_sqhh.msugra_1.in"%(mySoftDir)):
+        if os.path.exists("%s/LesHouches_chne.msugra_1.in"%(mySoftDir)):
           leshouchesfiles = True
           
 
@@ -279,9 +279,9 @@ class WhizardAnalysis(ModuleBase):
     script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
     if leshouchesfiles:
       if self.susymodel==1:
-        script.write('cp %s/LesHouches_slch.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
+        script.write('cp %s/LesHouches_slsqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
       if self.susymodel==2:
-        script.write('cp %s/LesHouches_sqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
+        script.write('cp %s/LesHouches_chne.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
       script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
