@@ -116,8 +116,8 @@ class WhizardAnalysis(ModuleBase):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
       self.parameters['PROCESS']=self.evttype
     if self.step_commons.has_key("JobIndex"):
-      self.jobindex = int(self.step_commons["JobIndex"])
-
+      self.jobindex = self.step_commons["JobIndex"]
+      
     if self.step_commons.has_key("debug"):
       self.debug = self.step_commons["debug"]
 
@@ -251,8 +251,8 @@ class WhizardAnalysis(ModuleBase):
           
 
     outputfilename = self.evttype
-    if type(self.jobindex)==type(0):
-      outputfilename = outputfilename+"_"+str(self.jobindex)
+    if self.jobindex:
+      outputfilename = "%s_%s"%(outputfilename,self.jobindex)
     if not template:  
       res = PrepareWhizardFile(self.inFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     else:
@@ -324,6 +324,10 @@ class WhizardAnalysis(ModuleBase):
         status = 1
         message = line
         break
+      elif line.count("PYSTOP"):
+        status = 1
+        message = line
+        break        
       else:
         status = 0
 
