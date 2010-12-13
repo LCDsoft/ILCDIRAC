@@ -645,7 +645,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["SLICStep"]=mstep.getName()
     return S_OK()
 
-  def addLCSIMStep(self,appVers,outputfile="",outputRECfile="",outputDSTfile="",outputpathREC="",outputpathDST="",outputSE=""):
+  def addLCSIMStep(self,appVers,steeringXML="",outputfile="",outputRECfile="",outputDSTfile="",outputpathREC="",outputpathDST="",outputSE=""):
     """ Define LCSIM step for production
     
     @param appVers: LCSIM version to use
@@ -654,7 +654,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     
     """
-    kwargs = {"appVers":appVers,"outputfile":outputfile,"outputRECfile":outputRECfile,"outputDSTfile":outputDSTfile,
+    kwargs = {"appVers":appVers,"steeringXML":steeringXML,"outputfile":outputfile,"outputRECfile":outputRECfile,"outputDSTfile":outputDSTfile,
               "outputpath":outputpathREC,"outputpath":outputpathDST,"outputSE":outputSE}
     if outputRECfile=="default":
       if self.basename:
@@ -678,7 +678,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         return self._reportError("Output path in Storage not defined",__name__,**kwargs)
     if not outputSE:
       return self._reportError('Storage Element to use not defined',__name__,**kwargs)
-    
+    if not steeringXML:
+      return self._reportError('Steering XML file was not specified, please provide',__name__,**kwargs)
     self.StepCount +=1
     stepName = 'RunLCSIM'
     stepNumber = self.StepCount
@@ -702,6 +703,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(LCSIMAppDefn,'applicationVersion','string','','ApplicationVersion')
     self._addParameter(LCSIMAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(LCSIMAppDefn,"inputSlcio","string","","List of input SLCIO files")
+    self._addParameter(LCSIMAppDefn,"inputXML","string","","XML steering")
     self._addParameter(LCSIMAppDefn,"outputPathREC","string","","Output REC data path")
     self._addParameter(LCSIMAppDefn,"outputPathDST","string","","Output DST data path")
     self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
@@ -712,6 +714,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
     mstep.setValue('applicationLog', 'LCSIM_@{STEP_ID}.log')
+    mstep.setValue('inputXML',steeringXML)
+    
     if self.ioDict.has_key("SLICPanStep"):
       mstep.setLink('inputSlcio',self.ioDict["SLICPanStep"],'outputFile')
     elif self.ioDict.has_key("SLICStep"):
