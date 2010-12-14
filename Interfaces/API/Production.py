@@ -109,8 +109,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     Pass the metadata dictionary meta, that is looked up in the catalog to extract the process and number of events per file.
     
-    @param meta: metadata dictionary used as InputDataQuery
-    @type meta: dict
+    @param metadata: metadata dictionary used as InputDataQuery
+    @type metadata: dict
     """
     if not type(metadata) == type({}):
       print "metadata should be a dictionnary"
@@ -175,7 +175,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputpath: path to store the output file
     @type outputpath: string
     @param outputSE: Storage element to use
-    @type putputSE: string
+    @type outputSE: string
     """
     kwargs = {"process":process,'susymodel':susymodel,"energy":energy,"nbevts":nbevts,"lumi":lumi,"outputpath":outputpath,"outputSE":outputSE}
     appvers = ""
@@ -350,7 +350,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputpath: path where to store the data. Should be /ilc/prod/<machine>/<energy>/<evt type>/ILD/SIM/
     @type outputpath: string
     @param outputSE: Storage element to use
-    @type putputSE: string    
+    @type outputSE: string    
     """
     kwargs = {"appvers":appvers,"steeringfile":steeringfile,"detectormodel":detectormodel,"numberofevents":numberofevents,
               "outputfile":outputfile,"outputpath":outputpath,"outputSE":outputSE}
