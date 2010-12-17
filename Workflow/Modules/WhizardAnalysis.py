@@ -327,7 +327,15 @@ class WhizardAnalysis(ModuleBase):
       elif line.count("PYSTOP"):
         status = 1
         message = line
-        break        
+        break
+      elif line.count("No matrix element available"):
+        status = 1
+        message = line
+        break
+      elif line.count("Floating point exception"):
+        status=1
+        message=line
+        break
       else:
         status = 0
 
