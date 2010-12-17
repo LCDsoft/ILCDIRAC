@@ -60,8 +60,8 @@ class ILCJob(Job):
     if log:
       if not logInOutputData:
         self.addToOutputSandbox.append(log)
-    
-    self.addToInputSandbox.append(script)
+    if os.path.exists(script):
+      self.addToInputSandbox.append(script)
 
     self.StepCount +=1
     stepNumber = self.StepCount
