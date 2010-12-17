@@ -3,6 +3,9 @@ Created on Dec 17, 2010
 
 @author: sposs
 '''
+from DIRAC.Core.Base import Script
+Script.parseCommandLine()
+
 from DIRAC import gConfig
 
 import string
