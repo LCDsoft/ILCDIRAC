@@ -113,7 +113,7 @@ class CombinedSoftwareInstallation:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
       res = TARinstall(app,self.jobConfig,self.localArea)
       if not res['OK']:
-        DIRAC.gLogger.error('Failed to install software','%s_%s' %(app))
+        DIRAC.gLogger.error('Failed to install software','%s_%s' %(app[0],app[1]))
         return DIRAC.S_ERROR('Failed to install software')
       else:
         DIRAC.gLogger.info('%s was successfully installed for %s' %(app,self.jobConfig))
