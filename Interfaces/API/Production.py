@@ -334,6 +334,45 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["WhizardStep"]=mstep.getName()
     return S_OK()
 
+  def addPostGenSelStep(self,appvers,NbEvts):
+    """ Define Post Generation Selection
+    @param appVers: Version to use
+    @type appVers: string
+    """
+    kwargs = {"appvers":appvers,"NbEvts":NbEvts}
+    if not appvers:
+      return self._reportError('PostGenSel version not specified',__name__,**kwargs)
+    if not NbEvts:
+      return self._reportError('Number of events must be specified',__name__,**kwargs)
+    
+    self.StepCount +=1
+    stepName = 'PostGenSel'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('PostGenSel',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    PostGenSelStep = ModuleDefinition('PostGenSelection')
+    PostGenSelStep.setDescription('Post Generation Selection step: apply cuts to the physics events')
+    body = string.replace(self.importLine,'<MODULE>','PostGenSelection')
+    PostGenSelStep.setBody(body)
+    postgenselDefn = StepDefinition(stepDefn)
+    postgenselDefn.addModule(PostGenSelStep)
+    postgenselDefn.createModuleInstance('PostGenSel',stepDefn)
+    self._addParameter(postgenselDefn,'applicationVersion','string','','ApplicationVersion')
+    self._addParameter(postgenselDefn,'NbEvts','int',0,'Number of events to keep')
+    self.workflow.addStep(postgenselDefn)
+    mstep = self.workflow.createStepInstance(stepDefn,stepName)
+    mstep.setValue('applicationVersion',appvers)
+    mstep.setValue('applicationLog', 'PostGenSel_@{STEP_ID}.log')    
+    mstep.setValue('NbEvts',NbEvts)
+    
+    self.__addSoftwarePackages('postgensel.%s' %(appvers))   
+    if NbEvts:
+      self._addParameter(self.workflow,"NbOfEvents","int",NbEvts,"Number of events")
+
+    self.ioDict["PostGenSelStep"]=mstep.getName()
+    
+    return S_OK()
+
   def addMokkaStep(self,appvers,steeringfile,detectormodel=None,numberofevents=0,outputfile="",outputpath="",outputSE=""):
     """ Define Mokka step in production system
     
@@ -415,8 +454,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if detectormodel:
       mstep.setValue("detectorModel",detectormodel)
       self.prodparameters['MokkaDetectorModel']=detectormodel
-    if self.ioDict.has_key("WhizardStep"):
-      mstep.setLink("numberOfEvents",self.ioDict["WhizardStep"],"NbOfEvts")
+    if self.ioDict.has_key("PostGenSelStep"):
+      mstep.setLink("numberOfEvents",self.ioDict["PostGenSelStep"],"NbEvts")    
+    elif self.ioDict.has_key("WhizardStep"):
+      mstep.setLink("numberOfEvents",self.ioDict["WhizardStep"],"NbOfEvts")  
     else:
       mstep.setValue("numberOfEvents",numberofevents)
 
