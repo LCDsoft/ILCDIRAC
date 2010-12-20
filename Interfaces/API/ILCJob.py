@@ -391,6 +391,92 @@ class ILCJob(Job):
     self.ioDict["WhizardStep"]=stepInstance.getName()
 
     return S_OK()
+  
+  def setPostGenStep(self,appVersion,inputStdhep="",NbEvts = 0,outputFile=None,logFile='',logInOutputData=False):
+    """ Helper application: 
+       apply selection at generator level
+    
+       @param appVersion: Version of the Post Generation Selection software to use
+       @type appVersion: string
+       @param inputStdhep: Input stdhep to filter. If whizard is run before, use its output
+       @type inoutStdhep: string
+       @param NbEvts: Number of events to keep
+       @type NbEvts: int
+       @param outputFile: Name of the output file. By default = inputStdhep
+       @type outputFile: string
+       @return: S_OK() or S_ERROR()
+    """
+    kwargs = {"appVersion":appVersion,"inputStdhep":inputStdhep,"NbEvts":NbEvts,"outputFile":outputFile}
+    if not type(inputStdhep) in types.StringTypes:
+      self._reportError("inputStdhep should be string",__name__,**kwargs)
+    if not outputFile:
+      outputFile=inputStdhep
+    if not NbEvts:
+      return self._reportError("Number of events to keep must be specified",__name__,**kwargs)
+      
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name',__name__,**kwargs)
+    else:
+      logName = 'PostGenSel_%s.log' %(appVersion)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
+
+    self.StepCount +=1
+    stepName = 'RunPostGenSel'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('PostGenSel',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
+    moduleName = "PostGenSelection"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('PostGenSelection module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    #Add user job finalization module 
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)    
+    userData.setBody(body)    
+    step = StepDefinition(stepDefn)
+    step.addModule(module)
+    step.addModule(userData)
+    step.createModuleInstance('PostGenSelection',stepDefn)
+    step.createModuleInstance('UserJobFinalization',stepDefn)
+    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
+    step.addParameter(Parameter("InputFile","","string","","",False, False, "Name of the input file"))
+    step.addParameter(Parameter("outputFile","","string","","",False, False, "Name of the output file"))
+    step.addParameter(Parameter("NbEvts",0,"int","","",False, False, "Number of events to keep"))
+    
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
+    stepInstance.setValue("applicationVersion",appVersion)
+    stepInstance.setValue("applicationLog",logName)
+    if inputStdhep:
+      stepInstance.setValue('InputFile',inputStdhep)
+    else:
+      if self.ioDict.has_key("WhizardStep"):
+        stepInstance.setLink('InputFile',self.ioDict["WhizardStep"],'outputFile')
+    stepInstance.setValue('outputFile',outputFile)
+    stepInstance.setValue("NbEvts",NbEvts)
+    
+    currentApp = "postgensel.%s"%appVersion
+    swPackages = 'SoftwarePackages'
+    description='ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps,';'):
+        apps += ';'+currentApp
+      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
+    self.ioDict["PostGenSelStep"]=stepInstance.getName()
+    
+    return S_OK()
      
   def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=0,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
     """Helper function.
