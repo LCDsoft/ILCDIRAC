@@ -424,6 +424,10 @@ class ILCJob(Job):
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
 
+    if inputStdhep:
+      if inputStdhep.lower().count("lfn:") or os.path.exists(inputStdhep):
+        self.addToInputSandbox.append(inputStdhep) 
+    
     self.StepCount +=1
     stepName = 'RunPostGenSel'
     stepNumber = self.StepCount
@@ -461,6 +465,8 @@ class ILCJob(Job):
     else:
       if self.ioDict.has_key("WhizardStep"):
         stepInstance.setLink('InputFile',self.ioDict["WhizardStep"],'outputFile')
+      else:
+        return self._reportError("Input STDHEP to filter canot be found")
     stepInstance.setValue('outputFile',outputFile)
     stepInstance.setValue("NbEvts",NbEvts)
     

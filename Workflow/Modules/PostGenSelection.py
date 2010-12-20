@@ -100,7 +100,7 @@ class PostGenSelection(ModuleBase):
 
     if not os.environ.has_key('ROOTSYS'):
       return S_OK('Root environment is not set')
-    postgenDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"PostGenSel",self.applicationVersion),'')
+    postgenDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"postgensel",self.applicationVersion),'')
     postgenDir = postgenDir.replace(".tgz","").replace(".tar.gz","")
     mySoftwareRoot = ''
     localArea = LocalArea()
@@ -116,7 +116,7 @@ class PostGenSelection(ModuleBase):
     
     base_file = self.inputstdhep.replace(".stdhep","")
     
-    scriptName = 'Whizard_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
+    scriptName = 'PostGenSel_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
     script = open(scriptName,'w')
     script.write('#!/bin/sh \n')
@@ -126,6 +126,10 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x PATH=%s:$PATH\n'%mySoftDir)
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
+    script.write('declare -x DEBUG=ON\n')
+    script.write('declare -x INDIR=$PWD/\n')
+    script.write('declare -x MCGEN=WHIZARD\n')
+
     comm = "readstdhep 100000 %s\n"%base_file
     self.log.info("Running %s"%comm)
     script.write(comm)
@@ -160,6 +164,9 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x PATH=%s:$PATH\n'%mySoftDir)
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
+    script.write('declare -x DEBUG=ON\n')
+    script.write('declare -x INDIR=$PWD/\n')
+    script.write('declare -x MCGEN=WHIZARD\n')
     comm='writestdhep %s %s\n'%(self.numberOfEvents,base_file)
     self.log.info('Running %s'%comm)
     script.write(comm)
