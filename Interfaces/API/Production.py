@@ -52,6 +52,7 @@ class Production(ILCJob):
     self.prodparameters['UsingWhizardOutput']=False
     self.prodparameters['UsingMokkaOutput']=False
     self.prodparameters['UsingSLICOutput']=False
+    self.prodParameters['PostGenSelApplied']=False
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
     self.currtrans = None
@@ -364,7 +365,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('applicationVersion',appvers)
     mstep.setValue('applicationLog', 'PostGenSel_@{STEP_ID}.log')    
     mstep.setValue('NbEvts',NbEvts)
-    
+    self.prodparameters['nbevts']=NbEvts
+    self.prodParameters['PostGenSelApplied']=True
     self.__addSoftwarePackages('postgensel.%s' %(appvers))   
     if NbEvts:
       self._addParameter(self.workflow,"NbOfEvents","int",NbEvts,"Number of events")
@@ -1001,7 +1003,6 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     info = []
     info.append('%s Production %s has following parameters:\n' %(self.prodparameters['JobType'],currtrans))
-    info.append('- Will run on %s events par tasks'%self.prodparameters['nbevts'])
     if self.prodparameters.has_key("Process"):
       info.append('- Process %s'%self.prodparameters['Process'])
     if self.prodparameters.has_key("Energy"):
@@ -1012,7 +1013,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     if self.prodparameters.has_key("WhizardParameters"):
       info.append('- Whizard parameters: %s'%(self.prodparameters['WhizardParameters']))
-      
+    if  self.prodParameters['PostGenSelApplied']:
+      info.append(' --> Events are selected after whizard generation !') 
     if self.prodparameters.has_key('MokkaSteer'):
       info.append("- Mokka steering file %s"%(self.prodparameters['MokkaSteer']))
       if self.prodparameters.has_key('MokkaDetectorModel'):
