@@ -24,6 +24,7 @@ class PostGenSelection(ModuleBase):
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
       
+    self.systemConfig = ''  
     self.applicationLog = ''
     self.applicationVersion = ''
     self.inputstdhep = ""
@@ -32,6 +33,8 @@ class PostGenSelection(ModuleBase):
     self.result = S_OK()
       
   def resolveInputVariables(self):
+    if self.workflow_commons.has_key('SystemConfig'):
+      self.systemConfig = self.workflow_commons['SystemConfig']  
       
     if self.step_commons.has_key('applicationVersion'):
       self.applicationVersion = self.step_commons['applicationVersion']
@@ -86,6 +89,8 @@ class PostGenSelection(ModuleBase):
     self.result = self.resolveInputVariables()
     if not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
+    if not self.systemConfig:
+      self.result = S_ERROR( 'No ILC platform selected' )  
     if not self.result['OK']:
       return self.result
     
