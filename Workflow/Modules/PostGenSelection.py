@@ -113,7 +113,7 @@ class PostGenSelection(ModuleBase):
       self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of PostGenSel!')
     mySoftDir = os.path.join(mySoftwareRoot,postgenDir)
-    
+    self.inputstdhep= os.path.basename(self.inputstdhep)
     base_file = self.inputstdhep.replace(".stdhep","")
     
     scriptName = 'PostGenSel_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
@@ -129,7 +129,6 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x DEBUG=ON\n')
     script.write('declare -x INDIR=$PWD/\n')
     script.write('declare -x MCGEN=WHIZARD\n')
-
     comm = "readstdhep 100000 %s\n"%base_file
     self.log.info("Running %s"%comm)
     script.write(comm)
@@ -167,7 +166,7 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x DEBUG=ON\n')
     script.write('declare -x INDIR=$PWD/\n')
     script.write('declare -x MCGEN=WHIZARD\n')
-    comm='writestdhep %s %s\n'%(self.numberOfEvents,base_file)
+    comm='writestdhep 100000 %s %s > writestdhep.out\n'%(self.numberOfEvents,base_file)
     self.log.info('Running %s'%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
