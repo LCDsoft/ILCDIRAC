@@ -52,7 +52,7 @@ class Production(ILCJob):
     self.prodparameters['UsingWhizardOutput']=False
     self.prodparameters['UsingMokkaOutput']=False
     self.prodparameters['UsingSLICOutput']=False
-    self.prodParameters['PostGenSelApplied']=False
+    self.prodparameters['PostGenSelApplied']=False
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
     self.currtrans = None
@@ -386,7 +386,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('applicationLog', 'PostGenSel_@{STEP_ID}.log')    
     mstep.setValue('NbEvts',NbEvts)
     self.prodparameters['nbevts']=NbEvts
-    self.prodParameters['PostGenSelApplied']=True
+    self.prodparameters['PostGenSelApplied']=True
     self.__addSoftwarePackages('postgensel.%s' %(appvers))   
     if NbEvts:
       self._addParameter(self.workflow,"NbOfEvents","int",NbEvts,"Number of events")
@@ -421,7 +421,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       return self._reportError("Steering file name not specified",__name__,**kwargs)
     if not outputpath:
       if self.basepath:
-        outputpath = self.basepath+"/ILD/SIM"
+        outputpath = self.basepath+"ILD/SIM"
       else:
         return self._reportError('Output path not defined, please set it',__name__,**kwargs)
     if not outputfile:
@@ -1033,7 +1033,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     
     if self.prodparameters.has_key("WhizardParameters"):
       info.append('- Whizard parameters: %s'%(self.prodparameters['WhizardParameters']))
-    if  self.prodParameters['PostGenSelApplied']:
+    if  self.prodparameters['PostGenSelApplied']:
       info.append(' --> Events are selected after whizard generation !') 
     if self.prodparameters.has_key('MokkaSteer'):
       info.append("- Mokka steering file %s"%(self.prodparameters['MokkaSteer']))
