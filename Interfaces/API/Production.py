@@ -141,20 +141,37 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     compatmeta = res['Value']
     compatmeta.update(metadata)
     if compatmeta.has_key('EvtType'):
-      self.process  = compatmeta['EvtType'][0]
+      if type(compatmeta['EvtType']) in types.StringTypes:
+        self.process  = compatmeta['EvtType']
+      if type(compatmeta['EvtType'])==type([]):
+        self.process = compatmeta['EvtType'][0]
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
     if compatmeta.has_key('NumberOfEvents'):
-      self.nbofevents = compatmeta['NumberOfEvents'][0]
+      if type(compatmeta['NumberOfEvents'])==type([]):
+        self.nbofevents = compatmeta['NumberOfEvents'][0]
+      elif type(compatmeta['NumberOfEvents']) in types.StringTypes:
+        self.nbofevents = compatmeta['NumberOfEvents']
+      else:
+        return self._reportError('Nb of events does not have any type recognised')
+      
     self.basename = self.process
     self.basepath = "/ilc/prod/"
     if compatmeta.has_key("Machine"):
-      self.basepath +=compatmeta["Machine"][0]+"/"
+      if type(compatmeta["Machine"]) in types.StringTypes:
+        self.basepath +=compatmeta["Machine"]+"/"
+      if type(compatmeta["Machine"])==type([]):
+        self.basepath +=compatmeta["Machine"][0]+"/"
     if compatmeta.has_key("Energy"):
-      self.basepath +=compatmeta["Energy"][0]+"/"
+      if type(compatmeta["Energy"]) in types.StringTypes:
+        self.basepath +=compatmeta["Energy"]+"/"
+      if type(compatmeta["Energy"])==type([]):
+        self.basepath +=compatmeta["Energy"][0]+"/"
     if compatmeta.has_key("EvtType"):
-      self.basepath +=compatmeta["EvtType"][0]+"/"
-      
+      if type(compatmeta["EvtType"]) in types.StringTypes:
+        self.basepath +=compatmeta["EvtType"]+"/"
+      if type(compatmeta["EvtType"])==type([]):
+        self.basepath +=compatmeta["EvtType"][0]+"/"
     self.inputBKSelection = metadata
 
     self.prodparameters["FCInputQuery"]=self.inputBKSelection
