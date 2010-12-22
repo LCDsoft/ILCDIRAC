@@ -139,8 +139,11 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if not res['OK']:
       return self._reportError("Error looking up the catalog for compatible metadata")
     compatmeta = res['Value']
+    compatmeta.update(metadata)
     if compatmeta.has_key('EvtType'):
       self.process  = compatmeta['EvtType'][0]
+    else:
+      return self._reportError("EvtType is not in the metadata, it has to be!")
     if compatmeta.has_key('NumberOfEvents'):
       self.nbofevents = compatmeta['NumberOfEvents'][0]
     self.basename = self.process
