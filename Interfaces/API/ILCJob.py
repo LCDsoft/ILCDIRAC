@@ -484,7 +484,7 @@ class ILCJob(Job):
     
     return S_OK()
      
-  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=0,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=0,RandomSeed=None,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
     """Helper function.
        Define Mokka step
        
@@ -523,6 +523,8 @@ class ILCJob(Job):
        @type startFrom: int
        @param dbslice: MySQL database slice to use different geometry, needed if not standard
        @type dbslice: string
+       @param RandomSeed: Seed to use. Not so random if set by user. By default it's the JobID.
+       @type RandomSeed: int
        @param logFile: Optional log file name
        @type logFile: string
        @param debug: By default, change printout level to least verbosity
@@ -532,7 +534,8 @@ class ILCJob(Job):
        @return: S_OK() or S_ERROR()
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,
+    kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,
+              'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,"RandomSeed":RandomSeed,
               'logFile':logFile,'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
@@ -555,6 +558,9 @@ class ILCJob(Job):
       return self._reportError('Expected string for DB slice name',__name__,**kwargs)
     if not type(debug) == types.BooleanType:
       return self._reportError('Expected bool for debug',__name__,**kwargs)
+    if RandomSeed:
+      if not type(RandomSeed)==types.IntType:
+        return self._reportError("Expected Int for RandomSeed",__name__,**kwargs)
  
     self.StepCount +=1
     
@@ -647,7 +653,9 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
-    
+    if RandomSeed:
+      step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"RandomSeed to use"))
+
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
     stepInstance.setValue("applicationVersion",appVersion)
@@ -673,6 +681,9 @@ class ILCJob(Job):
     stepInstance.setValue("applicationLog",logName)
     if(outputFile):
       stepInstance.setValue('outputFile',outputFile)
+    if (RandomSeed):
+      stepInstance.setValue("RandomSeed",RandomSeed)
+      
     stepInstance.setValue('debug',debug)
     currentApp = "mokka.%s"%appVersion
     swPackages = 'SoftwarePackages'

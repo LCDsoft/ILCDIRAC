@@ -125,7 +125,7 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
 
   return S_OK(foundprocessid)
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,debug,outputlcio=None):
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,randomseed,debug,outputlcio=None):
   """Writes out a steering file for Mokka
   
   Using specified parameters in the job definition passed from L{MokkaAnalysis}
@@ -144,6 +144,8 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   @type nbOfRuns: string
   @param startFrom: First event to read from the generator file
   @type startFrom: int
+  @param randomseed: Seed to use
+  @type randomseed: int
   @param debug: overwrite default print level, if set to True, don't change input steering parameter
   @type debug: bool
   @param outputlcio: output slcio file name, not used
@@ -166,23 +168,24 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   for line in input:
     if line.find("/Mokka/init/initialMacroFile")<0:
       if line.find("/Mokka/init/BatchMode")<0:
-        if outputlcio:
-          if line.find("lcioFilename")<0:
-            #if line.find("#")>1:
+        if not line.count("/Mokka/init/randomSeed"):
+          if outputlcio:
+            if line.find("lcioFilename")<0:
+              #if line.find("#")>1:
+                if detectormodel:
+                  if line.find("/Mokka/init/detectorModel")<0:
+                    output.write(line)
+                  else:
+                    output.write(line)
+                else:
+                  output.write(line)
+          else:
+            #if line.find("#")==1:
               if detectormodel:
                 if line.find("/Mokka/init/detectorModel")<0:
                   output.write(line)
-                else:
-                  output.write(line)
               else:
                 output.write(line)
-        else:
-          #if line.find("#")==1:
-            if detectormodel:
-              if line.find("/Mokka/init/detectorModel")<0:
-                output.write(line)
-            else:
-              output.write(line)
   if detectormodel:
     output.write("#Set detector model to value specified\n")
     output.write("/Mokka/init/detectorModel %s\n"%detectormodel)
@@ -194,6 +197,8 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   output.write("/Mokka/init/BatchMode true\n")
   output.write("#Set mac file to the one created on the site\n")
   output.write("/Mokka/init/initialMacroFile %s\n"%macname)
+  output.write("#Setting random seed\n")
+  output.write("/Mokka/init/randomSeed %s\n"%(randomseed))
   if outputlcio:
     output.write("#Set outputfile name to job specified\n")
     output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
