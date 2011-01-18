@@ -65,6 +65,10 @@ class RootExecutableAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
+    
+    if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      return S_OK('ROOT should not proceed as previous step did not end properly')
 
     if not os.environ.has_key("ROOTSYS"):
       self.log.error("Environment variable ROOTSYS was not defined, cannot do anything")
