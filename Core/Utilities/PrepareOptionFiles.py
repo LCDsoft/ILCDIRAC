@@ -166,14 +166,14 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   input = file(inputSteering,"r")
   output = file(str(outputSteering),"w")
   for line in input:
-    if line.find("/Mokka/init/initialMacroFile")<0:
-      if line.find("/Mokka/init/BatchMode")<0:
+    if not line.count("/Mokka/init/initialMacroFile"):
+      if not line.count("/Mokka/init/BatchMode"):
         if not line.count("/Mokka/init/randomSeed"):
           if outputlcio:
-            if line.find("lcioFilename")<0:
+            if not line.count("lcioFilename"):
               #if line.find("#")>1:
                 if detectormodel:
-                  if line.find("/Mokka/init/detectorModel")<0:
+                  if not line.count("/Mokka/init/detectorModel"):
                     output.write(line)
                   else:
                     output.write(line)
@@ -182,7 +182,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
           else:
             #if line.find("#")==1:
               if detectormodel:
-                if line.find("/Mokka/init/detectorModel")<0:
+                if not line.count("/Mokka/init/detectorModel"):
                   output.write(line)
               else:
                 output.write(line)
@@ -318,15 +318,15 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   output = file(outputmac,'w')
   listtext = []
   for line in inputmacfile:
-    if line.find("/generator/filename")<0:
-      if line.find("/generator/skipEvents")<0:
+    if not line.count("/generator/filename"):
+      if not line.count("/generator/skipEvents"):
         #if line.find("/run/initialize")<0:
-        if line.find("/lcio/path")<0:
-          if line.find("/run/beamOn")<0:
+        if not line.count("/lcio/path"):
+          if not line.count("/run/beamOn"):
             if detector:
-              if line.find("/lcdd/url")< 0:
+              if not line.count("/lcdd/url"):
                 if outputlcio:
-                  if line.find("/lcio/filename")<0:
+                  if not line.count("/lcio/filename"):
                     #output.write(line)
                     listtext.append(line)
                 else:
@@ -334,7 +334,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
                   listtext.append(line)
             else :
               if outputlcio:
-                if line.find("/lcio/filename")<0:
+                if not line.count("/lcio/filename"):
                   #output.write(line)
                   listtext.append(line)
               else: 
