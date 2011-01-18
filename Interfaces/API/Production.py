@@ -708,7 +708,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["SLICStep"]=mstep.getName()
     return S_OK()
 
-  def addLCSIMStep(self,appVers,steeringXML="",outputfile="",outputRECfile="",outputDSTfile="",outputpathREC="",outputpathDST="",outputSE=""):
+  def addLCSIMStep(self,appVers,steeringXML="",outputfile="",outputRECfile=None,outputDSTfile=None,outputpathREC="",outputpathDST="",outputSE=""):
     """ Define LCSIM step for production
     
     @param appVers: LCSIM version to use
@@ -767,12 +767,15 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(LCSIMAppDefn,"applicationLog","string","","Application log file")
     self._addParameter(LCSIMAppDefn,"inputSlcio","string","","List of input SLCIO files")
     self._addParameter(LCSIMAppDefn,"inputXML","string","","XML steering")
-    self._addParameter(LCSIMAppDefn,"outputPathREC","string","","Output REC data path")
-    self._addParameter(LCSIMAppDefn,"outputPathDST","string","","Output DST data path")
     self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
-    self._addParameter(LCSIMAppDefn,"outputRECFile","string","","output REC file name")
-    self._addParameter(LCSIMAppDefn,"outputDSTFile","string","","output DST file name")
-    self._addParameter(LCSIMAppDefn,'listoutput',"list",[],"list of output file name")    
+    if outputRECfile: 
+      self._addParameter(LCSIMAppDefn,"outputPathREC","string","","Output REC data path")
+      self._addParameter(LCSIMAppDefn,"outputRECFile","string","","output REC file name")
+    if outputDSTfile:
+      self._addParameter(LCSIMAppDefn,"outputDSTFile","string","","output DST file name")
+      self._addParameter(LCSIMAppDefn,"outputPathDST","string","","Output DST data path")
+    if outputDSTfile or outputRECfile:
+      self._addParameter(LCSIMAppDefn,'listoutput',"list",[],"list of output file name")    
     self.workflow.addStep(LCSIMAppDefn)
     mstep = self.workflow.createStepInstance(stepDefn,stepName)
     mstep.setValue('applicationVersion',appVers)    
@@ -787,13 +790,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     outputList=[]
     if outputRECfile:
       mstep.setValue("outputRECFile",outputRECfile)
-      outputList.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":outputSE})
+      mstep.setValue("outputPathREC",outputpathREC)
+      outputList.append({"outputFile":"@{outputRECFile}","outputPath":"@{outputPathREC}","outputDataSE":outputSE})
     if outputDSTfile:
       mstep.setValue("outputDSTFile",outputDSTfile)
-      outputList.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":outputSE})
-    mstep.setValue("outputPathREC",outputpathREC)
-    mstep.setValue("outputPathDST",outputpathDST)
-    if outputRECfile or outputDSTfile:
+      mstep.setValue("outputPathDST",outputpathDST)
+      outputList.append({"outputFile":"@{outputDSTFile}","outputPath":"@{outputPathDST}","outputDataSE":outputSE})
+    if len(outputList):
       mstep.setValue('listoutput',(outputList))
 
     self.__addSoftwarePackages('lcsim.%s' %(appVers))
