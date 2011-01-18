@@ -48,6 +48,11 @@ class ApplicationScript(ModuleBase):
       self.applicationLog = '%s.log' %(os.path.basename(self.script))    
     if not self.result['OK']:
       return self.result
+
+    if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      return S_OK('ApplicationScript should not proceed as previous step did not end properly')
+
     
     Cmd = []
     if re.search('.py$',self.script):
