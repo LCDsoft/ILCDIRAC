@@ -58,6 +58,7 @@ class MokkaAnalysis(ModuleBase):
         self.inputData = '' # to be resolved
         self.InputData = '' # from the (JDL WMS approach)
         self.outputFile = ''
+        self.randomseed = 0
         #self.generator_name=''
         #self.optionsLinePrev = ''
         #self.optionsLine = ''
@@ -96,6 +97,14 @@ class MokkaAnalysis(ModuleBase):
 
       if self.step_commons.has_key('detectorModel'):
         self.detectorModel = self.step_commons['detectorModel']
+
+      if self.step_commons.haskey("RandomSeed"):
+        self.randomseed = self.step_commons["RandomSeed"]
+      elif self.workflow_commons.has_key("IS_PROD"):  
+        self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
+      elif self.jobID:
+        self.randomseed = self.jobID
+        
 
       if self.step_commons.has_key('dbSlice'):
         self.dbslice = self.step_commons['dbSlice']
@@ -247,7 +256,7 @@ class MokkaAnalysis(ModuleBase):
       ##idem for steering file
       self.steeringFile = os.path.basename(self.steeringFile)
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
-                                    self.macFile,self.numberOfEvents,self.startFrom,self.debug,
+                                    self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,self.debug,
                                     self.outputFile)
       if not steerok['OK']:
         self.log.error('Failed to create MOKKA steering file')
