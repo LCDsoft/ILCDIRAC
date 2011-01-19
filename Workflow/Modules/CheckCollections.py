@@ -87,6 +87,9 @@ sys.exit( exitStatus )
 
 PYTHONSCRIPT
 
+declare -x appstatus=$?
+exit $appstatus
+
 ''')
 
         scriptContent = scriptContent.substitute(
