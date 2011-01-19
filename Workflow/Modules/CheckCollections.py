@@ -135,6 +135,10 @@ PYTHONSCRIPT
         status      = resultTuple[0]
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
+        
+        if status:
+          self.setApplicationStatus("CheckCollections failed with status %s"%(status))
+          return S_ERROR("Checking collections failed")
 
         # Return
 
