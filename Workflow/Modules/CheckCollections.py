@@ -140,12 +140,12 @@ exit $appstatus
         self.log.info( "Status after the application execution is %s" % str( status ) )
         
         if status:
-          self.setApplicationStatus("CheckCollections failed with status %s"%(status))
-          return S_ERROR("Checking collections failed")
+          self.setApplicationStatus("CheckCollections Exited With Status %s"%(status))
+          return S_ERROR("CheckCollections Exited With Status %s"%(status))
 
         # Return
-
-        return S_OK('CheckCollections')
+        self.setApplicationStatus('CheckCollections Finished successfully')
+        return S_OK('CheckCollections Finished successfully')
 
     def redirectLogOutput(self, fd, message):
 
