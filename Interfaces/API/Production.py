@@ -770,9 +770,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(LCSIMAppDefn,"outputFile","string","","output file name")
     if outputRECfile:
       self._addParameter(LCSIMAppDefn,"outputPathREC","string","","Output REC data path")
-      self._addParameter(LCSIMAppDefn,"outputRECFile","string","","output REC file name")
+      self._addParameter(LCSIMAppDefn,"outputREC","string","","output REC file name")
     if outputDSTfile:
-      self._addParameter(LCSIMAppDefn,"outputDSTFile","string","","output DST file name")
+      self._addParameter(LCSIMAppDefn,"outputDST","string","","output DST file name")
       self._addParameter(LCSIMAppDefn,"outputPathDST","string","","Output DST data path")
     if outputDSTfile or outputRECfile:
       self._addParameter(LCSIMAppDefn,'listoutput',"list",[],"list of output file name")
@@ -789,13 +789,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue("outputFile",outputfile)
     outputList=[]
     if outputRECfile:
-      mstep.setValue("outputRECFile",outputRECfile)
+      mstep.setValue("outputREC",outputRECfile)
       mstep.setValue("outputPathREC",outputpathREC)
-      outputList.append({"outputFile":"@{outputRECFile}","outputPath":"@{outputPathREC}","outputDataSE":outputSE})
+      outputList.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":outputSE})
     if outputDSTfile:
-      mstep.setValue("outputDSTFile",outputDSTfile)
+      mstep.setValue("outputDST",outputDSTfile)
       mstep.setValue("outputPathDST",outputpathDST)
-      outputList.append({"outputFile":"@{outputDSTFile}","outputPath":"@{outputPathDST}","outputDataSE":outputSE})
+      outputList.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":outputSE})
     if len(outputList):
       mstep.setValue('listoutput',(outputList))
 
