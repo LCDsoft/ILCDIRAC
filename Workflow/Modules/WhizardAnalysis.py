@@ -353,7 +353,10 @@ class WhizardAnalysis(ModuleBase):
       if len(self.outputFile):
         if os.path.exists(outputfilename+".001.stdhep"):
           os.rename(outputfilename+".001.stdhep", self.outputFile)
-      
+        else:
+          self.log.error( "Whizard execution did not produce a stdhep file" )
+          self.setApplicationStatus('Whizard %s Failed to produce STDHEP file' %(self.applicationVersion))
+          return S_ERROR('Whizard Failed to produce STDHEP file')
 
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
