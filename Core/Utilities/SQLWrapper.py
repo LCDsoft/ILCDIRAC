@@ -35,7 +35,7 @@ class SQLWrapper:
       dumpfile= 'CLICMokkaDB.sql'
       self.MokkaDumpFile = "%s/%s"%(softwareDir,dumpfile)
     else:
-      self.MokkaDumpFile = "./%s"%(os.path.basename(dumpfile))
+      self.MokkaDumpFile = "%s/%s"%(os.getcwd(),os.path.basename(dumpfile))
     if not os.environ.has_key('MOKKA_DUMP_FILE'):
       os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
       
