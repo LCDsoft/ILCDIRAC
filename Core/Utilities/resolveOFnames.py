@@ -12,4 +12,7 @@ def getProdFilename(filename,prodID,jobID):
   elif filename.count(".stdhep"):
     name = filename.split(".stdhep")
     outfile = name[0]+"_"+str(prodID)+"_"+str(jobID)+".stdhep"
+  elif filename.count(".root"):
+    name = filename.split(".root")
+    outfile = name[0]+"_"+str(prodID)+"_"+str(jobID)+".root"
   return outfile
