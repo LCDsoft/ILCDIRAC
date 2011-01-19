@@ -32,17 +32,17 @@ class CheckCollections(ModuleBase):
 
         result = self._resolveInputVariables()
 
-        if not result['OK']:
-            return result
-
         # Checks
 
         if not self.systemConfig:
             result = S_ERROR( 'No ILC platform selected' )
-
+            
         if not os.environ.has_key("LCIO"):
             self.log.error("Environment variable LCIO was not defined, cannot do anything")
-            return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
+            result = S_ERROR("Environment variable LCIO was not defined, cannot do anything")
+
+        if not result['OK']:
+            return result
 
         # Setting up script
 
