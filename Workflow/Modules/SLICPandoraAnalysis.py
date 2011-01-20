@@ -109,6 +109,7 @@ class SLICPandoraAnalysis (ModuleBase):
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
+    
     slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"slicpandora",self.applicationVersion),'')
     slicPandoraDir = slicPandoraDir.replace(".tgz","").replace(".tar.gz","")
     mySoftwareRoot = ''

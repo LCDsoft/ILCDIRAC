@@ -142,6 +142,10 @@ class LCSIMAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
       return self.result
+
+    if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      return S_OK('LCSIM should not proceed as previous step did not end properly')
     
     #look for lcsim filename
     lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"lcsim",self.applicationVersion),'')
@@ -177,7 +181,7 @@ class LCSIMAnalysis(ModuleBase):
     inputfilelist = self.inputSLCIO.split(";")
     res = resolveIFpaths(inputfilelist)
     if not res['OK']:
-      self.setApplicationStatus('LCSIM: missing slcio file')
+      self.setApplicationStatus('LCSIM: missing input slcio file')
       return S_ERROR('Missing slcio file!')
     runonslcio = res['Value']
     #for inputfile in inputfilelist:
