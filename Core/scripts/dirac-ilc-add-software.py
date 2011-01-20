@@ -43,7 +43,7 @@ def upload(path,appTar):
     if not res['OK']:
       return res
     res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
-    if not res['Ok']:
+    if not res['OK']:
       return res
     return S_OK('Application uploaded')
   return S_OK()
