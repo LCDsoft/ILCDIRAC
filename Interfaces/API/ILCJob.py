@@ -865,7 +865,7 @@ class ILCJob(Job):
     self.ioDict["MarlinStep"]=stepInstance.getName()
     return S_OK()
     
-  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,outputFile=None,logFile='',debug = False,logInOutputData=False):
+  def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,RandomSeed=0,outputFile=None,logFile='',debug = False,logInOutputData=False):
     """Helper function.
        Define SLIC step
        
@@ -892,6 +892,8 @@ class ILCJob(Job):
        @type nbOfEvents: int
        @param startFrom: Event number in the file to start reading from
        @type startFrom: int
+       @param RandomSeed: Seed to use. Default is JobID
+       @type RandomSeed: int
        @param outputFile: Name of the expected output file produced, to be passed to LCSIM
        @type outputFile: string 
        @param logFile: Optional log file name
@@ -902,7 +904,9 @@ class ILCJob(Job):
        @return: S_OK() or S_ERROR()
     """
     
-    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,'StartFrom':startFrom,'outputFile':outputFile,'logFile':logFile,
+    kwargs = {'appVersion':appVersion,'steeringFile':macFile,'inputGenfile':inputGenfile,'DetectorModel':detectorModel,
+              'NbOfEvents':nbOfEvents,'StartFrom':startFrom,"RandomSeed":RandomSeed,
+              'outputFile':outputFile,'logFile':logFile,
               'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
@@ -987,6 +991,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
     step.addParameter(Parameter("outputFile","","string","","",False,False,"Name of the output file of the application"))
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
+    if RandomSeed:
+      step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"RandomSeed to use"))
     
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
@@ -999,6 +1005,9 @@ class ILCJob(Job):
       stepInstance.setValue("detectorModel",detectormodeltouse)
     stepInstance.setValue("numberOfEvents",nbOfEvents)
     stepInstance.setValue("startFrom",startFrom)
+    if (RandomSeed):
+      stepInstance.setValue("RandomSeed",RandomSeed)
+    
     stepInstance.setValue("applicationLog",logName)
     stepInstance.setValue("debug",debug)
     if(outputFile):
