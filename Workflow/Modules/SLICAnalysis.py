@@ -36,7 +36,7 @@ class SLICAnalysis(ModuleBase):
     self.startFrom = 0
     self.stdhepFile = ''
     self.InputData = '' # from the (JDL WMS approach)
-    
+    self.randomseed = 0
     self.detectorModel = ''
     self.inmacFile = ''
     self.outputslcio = ''
@@ -72,6 +72,13 @@ class SLICAnalysis(ModuleBase):
 
     if self.step_commons.has_key('detectorModel'):
       self.detectorModel = self.step_commons['detectorModel'] 
+
+    if self.step_commons.has_key("RandomSeed"):
+      self.randomseed = self.step_commons["RandomSeed"]
+    elif self.workflow_commons.has_key("IS_PROD"):  
+      self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
+    elif self.jobID:
+      self.randomseed = self.jobID
       
     if self.step_commons.has_key('outputFile'):
       self.outputslcio = self.step_commons['outputFile'] 
@@ -210,7 +217,7 @@ class SLICAnalysis(ModuleBase):
       self.stdhepFile = res['Value'][0]
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
-    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.outputslcio,self.debug)
+    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputslcio,self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')

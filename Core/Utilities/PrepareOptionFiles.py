@@ -292,7 +292,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   return S_OK(True)
 
 
-def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outputlcio=None,debug = False):
+def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,randomseed=0,outputlcio=None,debug = False):
   """Writes out a mac file for SLIC
   
   Takes the parameters passed from L{SLICAnalysis} to define a new mac file if none was provided
@@ -321,25 +321,26 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
     if not line.count("/generator/filename"):
       if not line.count("/generator/skipEvents"):
         #if line.find("/run/initialize")<0:
-        if not line.count("/lcio/path"):
-          if not line.count("/run/beamOn"):
-            if detector:
-              if not line.count("/lcdd/url"):
+        if not line.count("/random/seed"):
+          if not line.count("/lcio/path"):
+            if not line.count("/run/beamOn"):
+              if detector:
+                if not line.count("/lcdd/url"):
+                  if outputlcio:
+                    if not line.count("/lcio/filename"):
+                      #output.write(line)
+                      listtext.append(line)
+                  else:
+                    #output.write(line)
+                    listtext.append(line)
+              else :
                 if outputlcio:
                   if not line.count("/lcio/filename"):
                     #output.write(line)
                     listtext.append(line)
-                else:
+                else: 
                   #output.write(line)
                   listtext.append(line)
-            else :
-              if outputlcio:
-                if not line.count("/lcio/filename"):
-                  #output.write(line)
-                  listtext.append(line)
-              else: 
-                #output.write(line)
-                listtext.append(line)
 
   finaltext = string.join(listtext,"\n")
   finaltext += "\n"
@@ -352,6 +353,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,outp
   if len(stdhep)>0:
     output.write("/generator/filename %s\n"%stdhep)
   output.write("/generator/skipEvents %s\n"%startfrom)
+  output.write("/random/seed %s\n"%(randomseed))
   output.write("/run/beamOn %s\n"%nbevts)
   inputmacfile.close()
   output.close()
