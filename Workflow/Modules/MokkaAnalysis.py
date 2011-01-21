@@ -98,7 +98,7 @@ class MokkaAnalysis(ModuleBase):
       if self.step_commons.has_key('detectorModel'):
         self.detectorModel = self.step_commons['detectorModel']
 
-      if self.step_commons.haskey("RandomSeed"):
+      if self.step_commons.has_key("RandomSeed"):
         self.randomseed = self.step_commons["RandomSeed"]
       elif self.workflow_commons.has_key("IS_PROD"):  
         self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
