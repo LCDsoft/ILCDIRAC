@@ -316,7 +316,10 @@ class WhizardAnalysis(ModuleBase):
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
-
+    if not os.path.exists(self.applicationLog):
+      self.log.error("Something went terribly wrong, the log file is not present")
+      self.setApplicationStatus('%s did not produce the expected log' %(self.applicationName))
+      return S_ERROR('%s did not produce the expected log' %(self.applicationName))
     message = ""
     ###Analyse log file
     logfile = file(self.applicationLog)
