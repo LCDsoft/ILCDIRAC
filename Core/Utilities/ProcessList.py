@@ -19,9 +19,9 @@ class ProcessList:
         self.cfg.createNewSection('Processes')
     else:
       self.OK = False  
-    written = self._writeProcessList(self.location)
-    if not written:
-      self.OK = False
+    #written = self._writeProcessList(self.location)
+    #if not written:
+    #  self.OK = False
       
   def _writeProcessList(self,path):
     handle,tmpName = tempfile.mkstemp()
