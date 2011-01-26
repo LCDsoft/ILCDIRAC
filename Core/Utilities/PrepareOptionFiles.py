@@ -10,13 +10,33 @@ Created on Jan 29, 2010
 @author: Stephane Poss
 '''
 
-from DIRAC import S_OK
+from DIRAC import S_OK,gLogger
 
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import Comment
-import string
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+import string,os
 
+def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
+  new_ld_lib_path = ""
+  deps = resolveDepsTar(systemConfig,application,applicationVersion)
+  for dep in deps:
+    if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
+      depfolder = dep.replace(".tgz","").replace(".tar.gz","")
+    if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
+      gLogger.verbose("Found lib folder in %s"%(depfolder))
+      newlibdir = os.path.join(mySoftwareRoot,depfolder,"lib")
+      new_ld_lib_path = newlibdir
+      ####Remove the libc
+      removeLibc(new_ld_lib_path)
+  if os.environ.has_key("LD_LIBRARY_PATH"):
+    if new_ld_lib_path:
+      new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
+    else:
+      new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]  
+  return new_ld_lib_path
 
 def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
   """Prepares the whizard.in file to run
