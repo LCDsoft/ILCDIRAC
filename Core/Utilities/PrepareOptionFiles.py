@@ -25,12 +25,12 @@ def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
   for dep in deps:
     if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
       depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-    if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
-      gLogger.verbose("Found lib folder in %s"%(depfolder))
-      newlibdir = os.path.join(mySoftwareRoot,depfolder,"lib")
-      new_ld_lib_path = newlibdir
-      ####Remove the libc
-      removeLibc(new_ld_lib_path)
+      if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
+        gLogger.verbose("Found lib folder in %s"%(depfolder))
+        newlibdir = os.path.join(mySoftwareRoot,depfolder,"lib")
+        new_ld_lib_path = newlibdir
+        ####Remove the libc
+        removeLibc(new_ld_lib_path)
   if os.environ.has_key("LD_LIBRARY_PATH"):
     if new_ld_lib_path:
       new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
