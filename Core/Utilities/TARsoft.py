@@ -25,6 +25,7 @@ def TARinstall(app,config,area):
     res = install(depapp,config,area)
     if not res['OK']:
       DIRAC.gLogger.error("Could not install dependency %s %s"%(dep["app"],dep["version"]))
+      return DIRAC.S_ERROR('Failed to install software')
   res = install(app,config,area)
   return res
 
