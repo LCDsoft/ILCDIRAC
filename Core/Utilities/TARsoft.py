@@ -9,6 +9,7 @@ Also installs all dependencies for the applications
 '''
 import DIRAC
 from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import os, urllib, tarfile, subprocess
 
@@ -148,6 +149,7 @@ def install(app,config,area):
     os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
   elif appName=='java':
     os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/Executable:"+os.environ['PATH']
+    removeLibc(os.path.join(os.getcwd(),basefolder)+"/LDLibs")
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs:"+os.environ['LD_LIBRARY_PATH']
     else:

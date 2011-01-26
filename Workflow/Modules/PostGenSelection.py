@@ -11,6 +11,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 
 import os,sys
 

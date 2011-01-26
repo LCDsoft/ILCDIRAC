@@ -10,7 +10,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
@@ -168,20 +168,11 @@ class SLICAnalysis(ModuleBase):
     if not mySoftwareRoot:
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
-    new_ld_lib_path=""
-    ### Resolve dependencies
-    deps = resolveDepsTar(self.systemConfig,"slic",self.applicationVersion)
-    for dep in deps:
-      if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-        depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-        if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
-          self.log.verbose("Found lib folder in %s"%(depfolder))
-          new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      if new_ld_lib_path:
-        new_ld_lib_path=new_ld_lib_path+":%s"%(os.environ['LD_LIBRARY_PATH'])
-      else:
-        new_ld_lib_path = os.environ['LD_LIBRARY_PATH']
+
+
+    ##Need to fetch the new LD_LIBRARY_PATH
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slic",self.applicationVersion,mySoftwareRoot)
+
     #retrieve detector model from web
     detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])
     if len(detector_urls[0])<1:
