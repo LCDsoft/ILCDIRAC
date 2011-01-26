@@ -10,9 +10,11 @@ Mokka analysis module. Called by Job Agent.
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
@@ -212,23 +214,9 @@ class MokkaAnalysis(ModuleBase):
       if not mySoftwareRoot:
         self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(mokkaDir,localArea,sharedArea))
         return S_ERROR('Failed to discover software')
-      new_ld_lib_path=""
 
-      ### Resolve dependencies
-      deps = resolveDepsTar(self.systemConfig,"mokka",self.applicationVersion)
-      for dep in deps:
-        if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-          depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-          if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
-            self.log.verbose("Found lib folder in %s"%(depfolder))
-            new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
-      if os.environ.has_key("LD_LIBRARY_PATH"):
-        if new_ld_lib_path:
-          new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
-        else:
-          new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]
-      ####Setup MySQL instance
-      
+
+      ####Setup MySQL instance      
       MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + self.GenRandString(8);
       
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
@@ -241,6 +229,9 @@ class MokkaAnalysis(ModuleBase):
       if not result['OK']:
         self.setApplicationStatus('MySQL setup failed.')
         return result
+
+      ##Need to fetch the new LD_LIBRARY_PATH
+      new_ld_lib_path= GetNewLDLibs(self.systemConfig,"mokka",self.applicationVersion,mySoftwareRoot)
 
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"

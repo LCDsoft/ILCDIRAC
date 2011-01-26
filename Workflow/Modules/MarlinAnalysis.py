@@ -15,11 +15,12 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
@@ -173,21 +174,13 @@ class MarlinAnalysis(ModuleBase):
       self.setApplicationStatus('Marlin: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of Marlin!')
     myMarlinDir = os.path.join(mySoftwareRoot,marlinDir)
-    new_ld_lib_path=""
 
-    ### Resolve dependencies
-    deps = resolveDepsTar(self.systemConfig,"marlin",self.applicationVersion)
-    for dep in deps:
-      if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-        depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-        if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
-          self.log.verbose("Found lib folder in %s"%(depfolder))
-          new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
-    if os.environ.has_key("LD_LIBRARY_PATH"):
-      if new_ld_lib_path:
-        new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
-      else:
-        new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]
+    ##Remove libc
+    removeLibc(myMarlinDir+"/LDLibs")
+
+    ##Need to fetch the new LD_LIBRARY_PATH
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"marlin",self.applicationVersion,mySoftwareRoot)
+
     #runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
     res = resolveIFpaths(inputfilelist)

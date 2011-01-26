@@ -12,6 +12,8 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 
@@ -123,22 +125,10 @@ class SLICPandoraAnalysis (ModuleBase):
       self.setApplicationStatus('SLICPandora: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of SLICPandora!')
     myslicPandoraDir = os.path.join(mySoftwareRoot,slicPandoraDir)
-    new_ld_lib_path = ""
-    ### Resolve dependencies
-    deps = resolveDepsTar(self.systemConfig,"slicpandora",self.applicationVersion)
-    for dep in deps:
-      if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-        depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-        if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
-          self.log.verbose("Found lib folder in %s"%(depfolder))
-          new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
-          
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      if new_ld_lib_path:
-        new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
-      else:
-        new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]
-    
+
+    ##Need to fetch the new LD_LIBRARY_PATH
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
+
     inputfilelist = self.inputSLCIO.split(";")    
     res = resolveIFpaths(inputfilelist)
     if not res['OK']:

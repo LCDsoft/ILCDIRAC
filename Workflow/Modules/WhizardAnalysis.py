@@ -11,10 +11,11 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFile
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFileTemplate
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFileTemplate,GetNewLDLibs
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
@@ -189,11 +190,10 @@ class WhizardAnalysis(ModuleBase):
       self.setApplicationStatus('Whizard: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of Whizard!')
     mySoftDir = os.path.join(mySoftwareRoot,whizardDir)
-    new_ld_lib_path=""
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      new_ld_lib_path=mySoftDir+"/lib:"+os.environ['LD_LIBRARY_PATH']
-    else:
-      new_ld_lib_path=mySoftDir+"/lib"
+
+    ##Need to fetch the new LD_LIBRARY_PATH
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"whizard",self.applicationVersion,mySoftwareRoot)
+
     ### Resolve dependencies (look for beam_spectra)
     deps = resolveDepsTar(self.systemConfig,"whizard",self.applicationVersion)
     path_to_beam_spectra = ""
