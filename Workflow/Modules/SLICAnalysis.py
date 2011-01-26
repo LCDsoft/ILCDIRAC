@@ -168,7 +168,7 @@ class SLICAnalysis(ModuleBase):
     if not mySoftwareRoot:
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
-
+    new_ld_lib_path=""
     ### Resolve dependencies
     deps = resolveDepsTar(self.systemConfig,"slic",self.applicationVersion)
     for dep in deps:
@@ -176,11 +176,12 @@ class SLICAnalysis(ModuleBase):
         depfolder = dep.replace(".tgz","").replace(".tar.gz","")
         if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
           self.log.verbose("Found lib folder in %s"%(depfolder))
-          if os.environ.has_key("LD_LIBRARY_PATH"):
-            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
-          else:
-            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
-
+          new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+      if new_ld_lib_path:
+        new_ld_lib_path=new_ld_lib_path+":%s"%(os.environ['LD_LIBRARY_PATH'])
+      else:
+        new_ld_lib_path = os.environ['LD_LIBRARY_PATH']
     #retrieve detector model from web
     detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])
     if len(detector_urls[0])<1:
@@ -230,8 +231,8 @@ class SLICAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n'%(mySoftwareRoot,os.environ['XERCES_VERSION']))
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:$LD_LIBRARY_PATH\n')
+    if new_ld_lib_path:
+      script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n'%new_ld_lib_path)
     else:
       script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR\n')
       

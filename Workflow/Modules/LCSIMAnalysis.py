@@ -164,6 +164,7 @@ class LCSIMAnalysis(ModuleBase):
       self.log.error('Application %s was not found in either the local area %s or shared area %s' %(lcsim_name,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
 
+    new_ld_lib_path=""
     ### Resolve dependencies
     deps = resolveDepsTar(self.systemConfig,"lcsim",self.applicationVersion)
     for dep in deps:
@@ -171,10 +172,12 @@ class LCSIMAnalysis(ModuleBase):
         depfolder = dep.replace(".tgz","").replace(".tar.gz","")
         if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
           self.log.verbose("Found lib folder in %s"%(depfolder))
-          if os.environ.has_key("LD_LIBRARY_PATH"):
-            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
-          else:
-            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
+          new_ld_lib_path= os.path.join(mySoftwareRoot,depfolder,"lib")
+    if os.environ.has_key("LD_LIBRARY_PATH"):
+      if new_ld_lib_path:
+        new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
+      else:
+        new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]
     
 
     #runonslcio = []
@@ -229,6 +232,8 @@ class LCSIMAnalysis(ModuleBase):
     #script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
     #script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
     #script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
+    if new_ld_lib_path:
+      script.write("declare -x LD_LIBRARY_PATH=%s\n"%new_ld_lib_path)
     script.write("declare -x JAVALIBPATH=./\n")
     if os.path.exists("lib"):
       script.write("declare -x JAVALIBPATH=./lib\n")

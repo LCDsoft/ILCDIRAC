@@ -212,6 +212,7 @@ class MokkaAnalysis(ModuleBase):
       if not mySoftwareRoot:
         self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(mokkaDir,localArea,sharedArea))
         return S_ERROR('Failed to discover software')
+      new_ld_lib_path=""
 
       ### Resolve dependencies
       deps = resolveDepsTar(self.systemConfig,"mokka",self.applicationVersion)
@@ -220,11 +221,12 @@ class MokkaAnalysis(ModuleBase):
           depfolder = dep.replace(".tgz","").replace(".tar.gz","")
           if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
             self.log.verbose("Found lib folder in %s"%(depfolder))
-            if os.environ.has_key("LD_LIBRARY_PATH"):
-              os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
-            else:
-              os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
-
+            new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
+      if os.environ.has_key("LD_LIBRARY_PATH"):
+        if new_ld_lib_path:
+          new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
+        else:
+          new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]
       ####Setup MySQL instance
       
       MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + self.GenRandString(8);
@@ -300,13 +302,13 @@ class MokkaAnalysis(ModuleBase):
         self.log.verbose("No additional environment variables needed for this application")
       
       if(os.path.exists("./lib")):
-        if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('declare -x LD_LIBRARY_PATH=./lib:%s:%s\n'%(myMokkaDir,os.environ['LD_LIBRARY_PATH']))
+        if new_ld_lib_path:
+          script.write('declare -x LD_LIBRARY_PATH=./lib:%s:%s\n'%(myMokkaDir,new_ld_lib_path))
         else:
           script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' %(myMokkaDir))
       else:
-        if os.environ.has_key('LD_LIBRARY_PATH'):
-          script.write('declare -x LD_LIBRARY_PATH=%s:%s\n'%(myMokkaDir,os.environ['LD_LIBRARY_PATH']))
+        if new_ld_lib_path:
+          script.write('declare -x LD_LIBRARY_PATH=%s:%s\n'%(myMokkaDir,new_ld_lib_path))
         else:
           script.write('declare -x LD_LIBRARY_PATH=%s\n'%(myMokkaDir))          
           
