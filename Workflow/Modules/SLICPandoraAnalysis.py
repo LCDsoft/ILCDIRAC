@@ -126,6 +126,9 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_ERROR('Missing installation of SLICPandora!')
     myslicPandoraDir = os.path.join(mySoftwareRoot,slicPandoraDir)
 
+    ##Remove libc lib
+    removeLibc(myslicPandoraDir+"/LDLibs")
+
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
 
