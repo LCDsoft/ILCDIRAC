@@ -191,6 +191,9 @@ class WhizardAnalysis(ModuleBase):
       return S_ERROR('Missing installation of Whizard!')
     mySoftDir = os.path.join(mySoftwareRoot,whizardDir)
 
+    ###Remove libc
+    removeLibc(mySoftDir+"/lib")
+
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"whizard",self.applicationVersion,mySoftwareRoot)
 
