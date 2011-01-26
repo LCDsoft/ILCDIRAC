@@ -189,10 +189,11 @@ class WhizardAnalysis(ModuleBase):
       self.setApplicationStatus('Whizard: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of Whizard!')
     mySoftDir = os.path.join(mySoftwareRoot,whizardDir)
+    new_ld_lib_path=""
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH']=mySoftDir+"/lib:"+os.environ['LD_LIBRARY_PATH']
+      new_ld_lib_path=mySoftDir+"/lib:"+os.environ['LD_LIBRARY_PATH']
     else:
-      os.environ['LD_LIBRARY_PATH']=mySoftDir+"/lib"
+      new_ld_lib_path=mySoftDir+"/lib"
     ### Resolve dependencies (look for beam_spectra)
     deps = resolveDepsTar(self.systemConfig,"whizard",self.applicationVersion)
     path_to_beam_spectra = ""
@@ -271,6 +272,7 @@ class WhizardAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     script.write('declare -x PATH=%s:$PATH\n'%mySoftDir)
+    script.write('declare -x LD_LIBRARY_PATH=%s\n'%new_ld_lib_path)
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
     script.write('echo Printing content of whizard.in \n')
@@ -318,7 +320,7 @@ class WhizardAnalysis(ModuleBase):
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
-      self.setApplicationStatus('%s did not produce the expected log' %(self.applicationName))
+      self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
       return S_ERROR('%s did not produce the expected log' %(self.applicationName))
     message = ""
     ###Analyse log file

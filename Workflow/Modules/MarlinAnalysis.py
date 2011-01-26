@@ -173,6 +173,8 @@ class MarlinAnalysis(ModuleBase):
       self.setApplicationStatus('Marlin: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of Marlin!')
     myMarlinDir = os.path.join(mySoftwareRoot,marlinDir)
+    new_ld_lib_path=""
+
     ### Resolve dependencies
     deps = resolveDepsTar(self.systemConfig,"marlin",self.applicationVersion)
     for dep in deps:
@@ -180,11 +182,12 @@ class MarlinAnalysis(ModuleBase):
         depfolder = dep.replace(".tgz","").replace(".tar.gz","")
         if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
           self.log.verbose("Found lib folder in %s"%(depfolder))
-          if os.environ.has_key("LD_LIBRARY_PATH"):
-            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")+":%s"%os.environ["LD_LIBRARY_PATH"]
-          else:
-            os.environ["LD_LIBRARY_PATH"] = os.path.join(mySoftwareRoot,depfolder,"lib")
-
+          new_ld_lib_path = os.path.join(mySoftwareRoot,depfolder,"lib")
+    if os.environ.has_key("LD_LIBRARY_PATH"):
+      if new_ld_lib_path:
+        new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
+      else:
+        new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]
     #runonslcio = []
     inputfilelist = self.inputSLCIO.split(";")
     res = resolveIFpaths(inputfilelist)
@@ -275,8 +278,8 @@ class MarlinAnalysis(ModuleBase):
       script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
           
     script.write('declare -x ROOTSYS=%s/ROOT\n'%(myMarlinDir))
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,os.environ['LD_LIBRARY_PATH']))
+    if new_ld_lib_path:
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,new_ld_lib_path))
     else:
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myMarlinDir))
     if os.path.exists("./lib/lddlib"):
