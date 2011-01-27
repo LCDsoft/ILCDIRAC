@@ -199,6 +199,7 @@ class WhizardAnalysis(ModuleBase):
 
     ### Resolve dependencies (look for beam_spectra)
     deps = resolveDepsTar(self.systemConfig,"whizard",self.applicationVersion)
+    print deps
     path_to_beam_spectra = ""
     path_to_gridfiles = ""
     for dep in deps:

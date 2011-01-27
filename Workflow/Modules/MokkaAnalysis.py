@@ -347,7 +347,10 @@ class MokkaAnalysis(ModuleBase):
       # stdError = resultTuple[2]
       self.log.info( "Status after Mokka execution is %s" % str( status ) )
       result = sqlwrapper.mysqlCleanUp()
-
+      if not os.path.exists(self.applicationLog):
+        self.log.error("Something went terribly wrong, the log file is not present")
+        self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
+        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
       ###Now change the name of Mokka output to the specified filename
       if os.path.exists("out.slcio"):
         if len(self.outputFile)>0:
