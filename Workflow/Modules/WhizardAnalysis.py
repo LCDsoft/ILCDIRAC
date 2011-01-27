@@ -196,7 +196,8 @@ class WhizardAnalysis(ModuleBase):
 
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"whizard",self.applicationVersion,mySoftwareRoot)
-
+    #Don't forget to prepend the application's libs
+    new_ld_lib_path = mySoftDir+"/lib:"+new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
     deps = resolveDepsTar(self.systemConfig,"whizard",self.applicationVersion)
     print deps
