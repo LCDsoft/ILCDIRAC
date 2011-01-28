@@ -13,6 +13,8 @@ Created on Feb 1, 2010
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
 from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+
 import DIRAC
 import os,sys,re, tempfile, threading, time, shutil
 
@@ -99,6 +101,7 @@ class SQLWrapper:
       return S_ERROR("Mokka Data dir is not available")    
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
+    removeLibc(self.softDir+"/mysql4grid/lib64")
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s'%(self.softDir,self.softDir,os.environ['LD_LIBRARY_PATH'])
     else:
