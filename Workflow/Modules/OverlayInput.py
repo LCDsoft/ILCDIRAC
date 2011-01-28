@@ -143,7 +143,7 @@ class OverlayInput (ModuleBase):
     failed = len(res['Value']['Failed'])
     tryagain = []
     if failed:
-      for i in failed:
+      for i in range(failed):
         fileindex = randrange(nbfiles)
         if fileindex not in usednumbers:
           usednumbers.append(fileindex)
