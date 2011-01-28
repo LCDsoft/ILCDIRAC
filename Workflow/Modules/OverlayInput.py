@@ -35,6 +35,7 @@ class OverlayInput (ModuleBase):
     self.InputData = ''
     self.nbsigeventsperfile = 0
     self.nbinputsigfile=1
+    self.nsigevts = 0
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
     if os.environ.has_key('JOBID'):
@@ -59,6 +60,9 @@ class OverlayInput (ModuleBase):
       
     if self.step_commons.has_key('ProdID'):
       self.prodid = self.step_commons['ProdID']
+    
+    if self.step_commons.has_key('NbSigEvtsPerJob'):
+      self.nsigevts = self.step_commons['NbSigEvtsPerJob']
       
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
@@ -85,8 +89,9 @@ class OverlayInput (ModuleBase):
     if not self.prodid:
       if compatmeta.has_key('ProdID'):
         #take the latest prodID as 
-        sortedlist = compatmeta['ProdID'].sort()
-        self.prodid=sortedlist[-1]
+        list = compatmeta['ProdID']
+        list.sort()
+        self.prodid=list[-1]
       else:
         return S_ERROR("Could not determine ProdID from compatible metadata")  
     meta['ProdID']=self.prodid
@@ -113,11 +118,13 @@ class OverlayInput (ModuleBase):
       return S_ERROR("Number of gg->had events available is less than requested")
     nboffilestogetpersigevt = ceil(numberofeventstoget/self.nbofeventsperfile)
     
-    ##Compute Nsignal events
-    nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
-    
+    if not self.nsigevts and self.nbinputsigfile and self.nbsigeventsperfile:
+      ##Compute Nsignal events
+      self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
+    else:
+      return S_ERROR('Could not determine the number of signal events per job')
     ##Get Number of files to get to cover all signal events
-    totnboffilestoget = nsigevts*nboffilestogetpersigevt
+    totnboffilestoget = self.nsigevts*nboffilestogetpersigevt
     ##Limit ourself to 15 files
     if totnboffilestoget>15:
       totnboffilestoget=15
@@ -126,14 +133,21 @@ class OverlayInput (ModuleBase):
     os.mkdir("./overlayinput")
     os.chdir("./overlayinput")
     filesobtained = []
+    usednumbers = []
     for i in range(totnboffilestoget):
-      filesobtained.append(self.lfns[randrange(nbfiles)])
+      fileindex = randrange(nbfiles)
+      if fileindex not in usednumbers:
+        usednumbers.append(fileindex)
+        filesobtained.append(self.lfns[fileindex])
     res = self.rm.getFile(filesobtained)
     failed = len(res['Value']['Failed'])
     tryagain = []
     if failed:
       for i in failed:
-        tryagain.append(self.lfns[randrange(nbfiles)])
+        fileindex = randrange(nbfiles)
+        if fileindex not in usednumbers:
+          usednumbers.append(fileindex)
+          tryagain.append(self.lfns[fileindex])
       res = self.rm.getFile(tryagain)
       if len(res['Value']['Failed']):
         os.chdir(curdir)
