@@ -116,8 +116,8 @@ class OverlayInput (ModuleBase):
     availableevents = nbfiles*self.nbofeventsperfile
     if availableevents < numberofeventstoget:
       return S_ERROR("Number of gg->had events available is less than requested")
-    nboffilestogetpersigevt = ceil(numberofeventstoget/self.nbofeventsperfile)
-    print "nboffilestogetpersigevt ",nboffilestogetpersigevt
+    nboffilestogetpersigevt = int(ceil(numberofeventstoget/self.nbofeventsperfile))
+
     if not self.nsigevts:
       ##Compute Nsignal events
       self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
