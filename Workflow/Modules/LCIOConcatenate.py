@@ -1,11 +1,12 @@
-import os,sys
-
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 import DIRAC
+import os
+import sys
 
 class LCIOConcatenate(ModuleBase):
 
@@ -19,8 +20,18 @@ class LCIOConcatenate(ModuleBase):
         #self.result      = S_ERROR()
         self.jobID       = None
 
+        # Step parameters
+
+        self.applicationVersion = None
+        self.applicationLog     = None
+        self.outputSLCIOFile    = None
+
+        #
+
         if os.environ.has_key('JOBID'):
             self.jobID = os.environ['JOBID']
+
+        #
 
         print "%s initialized" % ( self.__str__() )
 
@@ -42,15 +53,19 @@ class LCIOConcatenate(ModuleBase):
             self.log.error("Environment variable LCIO was not defined, cannot do anything")
             return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
+        # removeLibc
+
+        removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
+
         # Setting up script
 
-        LD_LIBRARY_PATH = "$LCIO/lib"
+        LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
         if os.environ.has_key('LD_LIBRARY_PATH'):
-            LD_LIBRARY_PATH = LD_LIBRARY_PATH + ":" + os.environ['LD_LIBRARY_PATH']
+            LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
         PATH = "$LCIO/bin"
         if os.environ.has_key('PATH'):
-            PATH = PATH + ":" + os.environ['PATH']
+            PATH += ":" + os.environ['PATH']
 
         scriptContent = """
 #!/bin/sh
@@ -83,7 +98,6 @@ exit $?
         script.write( scriptContent )
         script.close()
 
-
         # Setup log file for application stdout
 
         if os.path.exists(self.applicationLog):
@@ -113,12 +127,13 @@ exit $?
         self.log.info( "Status after the application execution is %s" % str( status ) )
 
         if status:
-          self.setApplicationStatus("LCIOConcatenate Exited With Status %s"%(status))
-          return S_ERROR("LCIOConcatenate Exited With Status %s"%(status))
+            self.setApplicationStatus( "LCIOConcatenate Exited With Status %s" % status )
+            return S_ERROR( "LCIOConcatenate Exited With Status %s" % status )
 
         # Return
-        self.setApplicationStatus('LCIOConcatenate Finished successfully')
-        return S_OK('LCIOConcatenate Finished successfully')
+
+        self.setApplicationStatus( 'LCIOConcatenate Finished successfully' )
+        return S_OK( 'LCIOConcatenate Finished successfully' )
 
     def redirectLogOutput(self, fd, message):
 
@@ -144,13 +159,22 @@ exit $?
         if self.step_commons.has_key('applicationVersion'):
             self.applicationVersion = self.step_commons['applicationVersion']
 
+        # Logfile
+
         if self.step_commons.has_key('applicationLog'):
             self.applicationLog = self.step_commons['applicationLog']
 
-        if self.step_commons.has_key('inputSLCIOFiles'):
-            self.inputSLCIOFiles = self.step_commons['inputSLCIOFiles'].split( ";" )
+        if not self.applicationLog:
+            self.applicationLog = 'LCIOConcatenate_%s_Run_%s.log' %( self.applicationVersion, self.STEP_NUMBER )
+
+        #
 
         if self.step_commons.has_key('outputSLCIOFile'):
             self.outputSLCIOFile = self.step_commons['outputSLCIOFile']
+
+        if not self.outputSLCIOFile:
+            return S_ERROR( 'No output file defined' )
+
+        #
 
         return S_OK('Parameters resolved')

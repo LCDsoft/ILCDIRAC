@@ -1,11 +1,12 @@
-import os,sys
-
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 import DIRAC
+import os
+import sys
 
 class StdHepConverter(ModuleBase):
 
@@ -19,8 +20,17 @@ class StdHepConverter(ModuleBase):
         #self.result      = S_ERROR()
         self.jobID       = None
 
+        # Step parameters
+
+        self.applicationVersion = None
+        self.applicationLog     = None
+
+        #
+
         if os.environ.has_key('JOBID'):
             self.jobID = os.environ['JOBID']
+
+        #
 
         print "%s initialized" % ( self.__str__() )
 
@@ -42,15 +52,19 @@ class StdHepConverter(ModuleBase):
             self.log.error("Environment variable LCIO was not defined, cannot do anything")
             return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
+        # removeLibc
+
+        removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
+
         # Setting up script
 
-        LD_LIBRARY_PATH = "$LCIO/lib"
+        LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
         if os.environ.has_key('LD_LIBRARY_PATH'):
-            LD_LIBRARY_PATH = LD_LIBRARY_PATH + ":" + os.environ['LD_LIBRARY_PATH']
+            LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
         PATH = "$LCIO/bin"
         if os.environ.has_key('PATH'):
-            PATH = PATH + ":" + os.environ['PATH']
+            PATH += ":" + os.environ['PATH']
 
         scriptContent = """
 #!/bin/sh
@@ -84,7 +98,6 @@ exit $?
         script.write( scriptContent )
         script.close()
 
-
         # Setup log file for application stdout
 
         if os.path.exists(self.applicationLog):
@@ -113,13 +126,14 @@ exit $?
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
 
-        # Return
         if status:
-          self.setApplicationStatus("StdHepConverter Exited With Status %s"%(status))
-          return S_ERROR("StdHepConverter Exited With Status %s"%(status))
-        
-        self.setApplicationStatus('StdHepConverter Finished successfully')
-        return S_OK('StdHepConverter Finished successfully')
+            self.setApplicationStatus( "StdHepConverter Exited With Status %s" % status )
+            return S_ERROR( "StdHepConverter Exited With Status %s" % status )
+
+        # Return
+
+        self.setApplicationStatus( 'StdHepConverter finished successfully' )
+        return S_OK( 'StdHepConverter finished successfully' )
 
     def redirectLogOutput(self, fd, message):
 
@@ -145,10 +159,14 @@ exit $?
         if self.step_commons.has_key('applicationVersion'):
             self.applicationVersion = self.step_commons['applicationVersion']
 
+        # Logfile
+
         if self.step_commons.has_key('applicationLog'):
             self.applicationLog = self.step_commons['applicationLog']
 
-        if self.step_commons.has_key('inputStdHepFiles'):
-            self.inputStdHepFiles = self.step_commons['inputStdHepFiles']
+        if not self.applicationLog:
+            self.applicationLog = 'StdHepConverter_%s_Run_%s.log' %( self.applicationVersion, self.STEP_NUMBER )
+
+        #
 
         return S_OK('Parameters resolved')
