@@ -90,7 +90,7 @@ class OverlayInput (ModuleBase):
       else:
         return S_ERROR("Could not determine ProdID from compatible metadata")  
     meta['ProdID']=self.prodid
-    #refetch the ompa metadata to get nb of events  
+    #refetch the compat metadata to get nb of events  
     res = self.fc.getCompatibleMetadata(meta)
     if not res['OK']:
       return res
@@ -161,7 +161,10 @@ class OverlayInput (ModuleBase):
       return S_ERROR('OverlayProcessor got an empty list')
     
     
-    
+    res = self.__getFilesLocaly()
+    if not res['OK']:
+      self.setApplicationStatus('OverlayProcessor failed to get files locally with message %s'%res['Message'])
+      return S_ERROR('OverlayProcessor failed to get files locally')
     
     return S_OK('Overlay input finished successfully')
   

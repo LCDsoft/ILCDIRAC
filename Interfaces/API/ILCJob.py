@@ -51,6 +51,8 @@ class ILCJob(Job):
     self.srms = ""
     self.processlist = None
     self.systemConfig = "x86_64-slc5-gcc43-opt"
+    self.energy = ''
+    self.detector = ''
     if processlist:
       self.processlist =processlist
 
@@ -1265,7 +1267,6 @@ class ILCJob(Job):
     self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
 
     
-    ##now define LCSIMAnalysis
     moduleName = "SLICPandoraAnalysis"
     module = ModuleDefinition(moduleName)
     module.setDescription('SLICPandora module definition')
@@ -1334,6 +1335,65 @@ class ILCJob(Job):
     self.ioDict["SLICPandoraStep"]=stepInstance.getName()        
     return S_OK()
   
+  def addOverlay(self,detector='',energy='',BXOverlay=0,NbGGtoHadInts=0,ProdID=0):
+    """ Helper call to define Overlay processor/driver inputs
+    
+    @param detector: Detector type to use (ILD or SID). Obtained in prod context via the metadata lookup
+    @type detector: string
+    @param energy: Energy to use (usually 3tev). In production context, obtained from metadata input
+    @type energy: string
+    @param BXOverlay: Bunch crossings to overlay
+    @type BXOverlay: int
+    @param NbGGtoHadInts: optional number of gamma gamma -> hadrons interactions per bunch crossing
+    @type NbGGtoHadInts: int
+    @param ProdID: Optional parameter to force using one specific prodID for the input files. By default it's the latest one
+    @type ProdID: int
+    """
+    kwargs = {"detector":detector,"energy":energy,'BXOverlay':BXOverlay,"NbGGtoHadInts":NbGGtoHadInts,'ProdID':ProdID}
+    if detector:
+      self.detector=detector
+    if not self.detector:
+      return self._reportError('Detector type (ILD or SID) must be specified somewhere')
+    if energy:
+      if not type(energy) in types.StringTypes:
+        return self._reportError('Energy type must be string',__name__,**kwargs)
+      self.energy = energy
+    if not self.energy:
+      return self._reportError('Energy must be set somewhere')  
+    if not BXOverlay:
+      return self._repartError('BXOverlay parameter must be set')
+
+    self.StepCount +=1
+    stepName = 'RunOverlay'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' %('OverlayInput',stepNumber)
+    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+
+    moduleName = "OverlayInput"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('OverlayInput module definition')
+    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
+    module.setBody(body)
+    step = StepDefinition(stepDefn)
+    step.addModule(module)
+    step.createModuleInstance('OverlayInput',stepDefn)
+    step.addParameter(Parameter("Detector","","string","","",False,False,"Name of the detector to use"))
+    step.addParameter(Parameter("Energy","","string","","",False,False,"Energy to use"))
+    step.addParameter(Parameter("BXOverlay",-1,"int","","",False,False,"Number of BX to overlay"))
+    if NbGGtoHadInts:
+      step.addParameter(Parameter("ggtohadint",0,"float","","",False,False,"Number of BX to overlay"))
+    if ProdID:
+      step.addParameter(Parameter("ProdID",0,"int","","",False,False,"ProdID for input"))
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
+    stepInstance.setValue("Detector",self.detector)
+    stepInstance.setValue("Energy",self.energy)
+    stepInstance.setValue("BXOverlay",BXOverlay)
+    if NbGGtoHadInts:
+      stepInstance.setValue("ggtohadint",NbGGtoHadInts)
+    if ProdID:
+      stepInstance.setValue("ProdID",ProdID)
+    return S_OK()
   
   def setRootAppli(self,appVersion, scriptpath,args=None,logFile='',logInOutputData=False):
     """Define root macro or executable execution
