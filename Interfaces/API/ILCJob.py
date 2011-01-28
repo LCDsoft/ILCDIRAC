@@ -1611,7 +1611,7 @@ class ILCJob(Job):
     #---------------------------------------------------------------------------
 
     appName    = 'StdhepToSLCIO'
-    appVersion = "test-v2"
+    appVersion = "HEAD"
 
     # Check the required arguments
     #---------------------------------------------------------------------------
@@ -1738,7 +1738,7 @@ class ILCJob(Job):
     #---------------------------------------------------------------------------
 
     appName    = 'LCIOConcatenate'
-    appVersion = 'test-v2'
+    appVersion = 'HEAD'
 
     # Check the required arguments
     #---------------------------------------------------------------------------
@@ -1875,7 +1875,7 @@ class ILCJob(Job):
     #---------------------------------------------------------------------------
 
     appName    = 'CheckCollections'
-    appVersion = 'test-v2'
+    appVersion = 'HEAD'
 
     # Check the arguments
     #---------------------------------------------------------------------------
