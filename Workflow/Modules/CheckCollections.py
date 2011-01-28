@@ -1,11 +1,12 @@
-import os,sys
-
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 import DIRAC
+import os
+import sys
 
 from string import Template
 
@@ -20,6 +21,15 @@ class CheckCollections(ModuleBase):
         self.args        = ''
         #self.result      = S_ERROR()
         self.jobID       = None
+
+        # Step parameters
+
+        self.applicationVersion = None
+        self.applicationLog     = None
+        self.inputSLCIOFiles    = None
+        self.collections        = None
+
+        #
 
         if os.environ.has_key('JOBID'):
             self.jobID = os.environ['JOBID']
@@ -36,7 +46,7 @@ class CheckCollections(ModuleBase):
 
         if not self.systemConfig:
             result = S_ERROR( 'No ILC platform selected' )
-            
+
         if not os.environ.has_key("LCIO"):
             self.log.error("Environment variable LCIO was not defined, cannot do anything")
             result = S_ERROR("Environment variable LCIO was not defined, cannot do anything")
@@ -44,15 +54,19 @@ class CheckCollections(ModuleBase):
         if not result['OK']:
             return result
 
+        # removeLibc
+
+        removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
+
         # Setting up script
 
-        LD_LIBRARY_PATH = "$LCIO/lib"
+        LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
         if os.environ.has_key('LD_LIBRARY_PATH'):
-            LD_LIBRARY_PATH = LD_LIBRARY_PATH + ":" + os.environ['LD_LIBRARY_PATH']
+            LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
         PATH = "$LCIO/bin"
         if os.environ.has_key('PATH'):
-            PATH = PATH + ":" + os.environ['PATH']
+            PATH += ":" + os.environ['PATH']
 
         scriptContent = Template('''
 #!/bin/sh
@@ -73,22 +87,28 @@ exitStatus = 0
 for file in $files:
 
     cmdResult      = subprocess.Popen( ["lcio", "count", file], stdout=subprocess.PIPE ).communicate()[ 0 ]
-    numberOfEvents = cmdResult.strip().split()[1]
+    numberOfEvents = int( cmdResult.strip().split()[1] )
 
     cmdAnajobResult = subprocess.Popen( ["anajob", file], stdout=subprocess.PIPE ).communicate()[ 0 ]
 
     for collection in $collections:
 
-        cmdResult = subprocess.Popen( ["grep", "-c", collection], stdin=subprocess.PIPE, stdout=subprocess.PIPE ).communicate( cmdAnajobResult )[ 0 ]
+        cmdResult           = subprocess.Popen( ["grep", "-c", collection], stdin=subprocess.PIPE, stdout=subprocess.PIPE ).communicate( cmdAnajobResult )[ 0 ]
+        numberOfCollections = int( cmdResult.strip() )
 
-        print "%s %s" %( numberOfEvents, cmdResult )
+        if numberOfEvents != numberOfCollections:
+
+            print 'Inconsistency in %s: %i events vs %i collections (%s)' % ( file, numberOfEvents, numberOfCollections, collection )
+
+            exitStatus = 1
+            #sys.exit( exitStatus )
 
 sys.exit( exitStatus )
 
 PYTHONSCRIPT
 
-declare -x appstatus=$?
-exit $appstatus
+declare -x appstatus=$$?
+exit $$appstatus
 
 ''')
 
@@ -113,8 +133,8 @@ exit $appstatus
 
         # Setup log file for application stdout
 
-        if os.path.exists(self.applicationLog):
-            os.remove(self.applicationLog)
+        if os.path.exists( self.applicationLog ):
+            os.remove( self.applicationLog )
 
         # Run code
 
@@ -138,14 +158,15 @@ exit $appstatus
         status      = resultTuple[0]
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
-        
+
         if status:
-          self.setApplicationStatus("CheckCollections Exited With Status %s"%(status))
-          return S_ERROR("CheckCollections Exited With Status %s"%(status))
+            self.setApplicationStatus( "CheckCollections Exited With Status %s" % status )
+            return S_ERROR( "CheckCollections Exited With Status %s" % status )
 
         # Return
-        self.setApplicationStatus('CheckCollections Finished successfully')
-        return S_OK('CheckCollections Finished successfully')
+
+        self.setApplicationStatus( 'CheckCollections Finished successfully' )
+        return S_OK( 'CheckCollections Finished successfully' )
 
     def redirectLogOutput(self, fd, message):
 
@@ -171,13 +192,28 @@ exit $appstatus
         if self.step_commons.has_key('applicationVersion'):
             self.applicationVersion = self.step_commons['applicationVersion']
 
+        # Logfile
+
         if self.step_commons.has_key('applicationLog'):
             self.applicationLog = self.step_commons['applicationLog']
 
+        if not self.applicationLog:
+            self.applicationLog = 'CheckCollections_%s_Run_%s.log' %( self.applicationVersion, self.STEP_NUMBER )
+
+        #
+
         if self.step_commons.has_key('inputSLCIOFiles'):
             self.inputSLCIOFiles = self.step_commons['inputSLCIOFiles'].split(";")
+            self.inputSLCIOFiles = [os.path.basename( file ) for file in self.inputSLCIOFiles]
+
+        #
 
         if self.step_commons.has_key('collections'):
             self.collections = self.step_commons['collections'].split(";")
+
+        if len( self.collections ) == 0:
+            return S_ERROR( 'No list of collections defined to check for.' )
+
+        #
 
         return S_OK('Parameters resolved')

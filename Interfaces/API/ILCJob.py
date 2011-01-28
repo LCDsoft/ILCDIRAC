@@ -1613,15 +1613,10 @@ class ILCJob(Job):
     appName    = 'StdhepToSLCIO'
     appVersion = "test-v2"
 
-    # Check the arguments
+    # Check the required arguments
     #---------------------------------------------------------------------------
-    # Input files are checked below separately because inputSLCIOFiles can be
-    # left undefined. The input will then be taken from any previous steps, if
-    # any.
 
-    #self._checkArgs( {
-    #  'logFile' : types.StringTypes
-    #} )
+    pass
 
     # Check for input files
     #---------------------------------------------------------------------------
@@ -1647,15 +1642,15 @@ class ILCJob(Job):
       pass
 
     else:
-      self._reportError( "No input files found for conversion." )
+      self.log.notice( "No input files found for stdhep->slcio conversion." )
 
     # Log file
     #---------------------------------------------------------------------------
 
-    if not logFile:
-      logFile = "StdhepToSLCIO.log"
+    if logFile:
 
-    self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
+      self._checkArgs( { 'loggFile' : types.StringTypes } )
+      self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
 
     # Setting up a step instance
     #---------------------------------------------------------------------------
@@ -1695,8 +1690,6 @@ class ILCJob(Job):
 
     step.addParameter( Parameter( "applicationVersion", "", "string", "", "", False, False, "Application version" ) )
     step.addParameter( Parameter( "applicationLog",     "", "string", "", "", False, False, "Name of the output file of the application" ) )
-    step.addParameter( Parameter( "inputStdhepFiles",   "", "string", "", "", False, False, "Input Stdhep file path" ) )
-    step.addParameter( Parameter( "outputSLCIOFiles",   "", "string", "", "", False, False, "Output SLCIO filenames" ) )
 
     # 3. Add modules to step
 
@@ -1717,22 +1710,11 @@ class ILCJob(Job):
 
     # 6. Set variables that are used by the modules
 
-    #
+    # Application version
 
     stepInstance.setValue( "applicationVersion", appVersion )
 
-    # Set both input and output files, depends only on the input file names
-
-    if inputStdhepFiles:
-      stepInstance.setValue( "inputStdhepFiles",  ";".join( inputStdhepFiles ) )
-
-    elif self.ioDict.has_key( "WhizardStep" ):
-      stepInstance.setLink( 'inputStdhepFiles', self.ioDict["WhizardStep"], 'outputFile' )
-
-    outputSLCIOFiles = str( stepInstance.findParameter( 'inputStdhepFiles' ).getValue() ).replace( ".stdhep", ".slcio" )
-    stepInstance.setValue( "outputSLCIOFiles", outputSLCIOFiles  )
-
-    #
+    # Logfile
 
     if logFile:
       stepInstance.setValue( "applicationLog", logFile )
@@ -1758,15 +1740,11 @@ class ILCJob(Job):
     appName    = 'LCIOConcatenate'
     appVersion = 'test-v2'
 
-    # Check the arguments
+    # Check the required arguments
     #---------------------------------------------------------------------------
-    # Input files are checked below separately because inputSLCIOFiles can be
-    # left undefined. The input will then be taken from any previous steps, if
-    # any.
 
     self._checkArgs( {
       'outputSLCIOFile' : types.StringTypes,
-      'logFile'         : types.StringTypes
     } )
 
     # Check for input files
@@ -1782,9 +1760,7 @@ class ILCJob(Job):
 
     if inputSLCIOFiles:
 
-      self._checkArgs( {
-        'inputSLCIOFiles' : types.ListType
-      } )
+      self._checkArgs( { 'inputSLCIOFiles' : types.ListType  } )
 
       for inputSLCIOFile in inputSLCIOFiles:
         self._addFileToInputSandbox( inputSLCIOFile, 'Input slcio file' )
@@ -1792,7 +1768,7 @@ class ILCJob(Job):
     # 3. There are no input files. Raise error.
 
     else:
-      self.log.warning( "No user defined input files found to concatenate." )
+      self.log.notice( "No user defined input files found to concatenate." )
 
     # Check for output files
     #---------------------------------------------------------------------------
@@ -1806,6 +1782,8 @@ class ILCJob(Job):
     #---------------------------------------------------------------------------
 
     if logFile:
+
+      self._checkArgs( { 'loggFile' : types.StringTypes } )
       self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
 
     # Setting up a step instance
@@ -1891,12 +1869,13 @@ class ILCJob(Job):
 
     return S_OK()
 
-  def setCheckCollections( self, appVersion, inputSLCIOFiles = None, collections = None, logFile = None ):
+  def setCheckCollections( self, inputSLCIOFiles = None, collections = None, logFile = None ):
 
     # Define appName, used below for setting up step instance
     #---------------------------------------------------------------------------
 
-    appName = 'CheckCollections'
+    appName    = 'CheckCollections'
+    appVersion = 'test-v2'
 
     # Check the arguments
     #---------------------------------------------------------------------------
@@ -1905,8 +1884,7 @@ class ILCJob(Job):
     # any.
 
     self._checkArgs( {
-      'collections'     : types.ListType,
-      'logFile'         : types.StringTypes
+      'collections'     : types.ListType
     } )
 
     # Check for input files
@@ -1929,33 +1907,10 @@ class ILCJob(Job):
       for inputSLCIOFile in inputSLCIOFiles:
         self._addFileToInputSandbox( inputSLCIOFile, 'Input slcio files' )
 
-    # 2. Files from previous step in a user job.
-
-    elif self.ioDict.has_key( "StdhepToSLCIOStep" ):
-      pass
-
-    elif self.ioDict.has_key( "LCIOConcatenateStep" ):
-      pass
-
-    elif self.ioDict.has_key( "MokkaStep" ):
-      pass
-
-    elif self.ioDict.has_key( "MarlinStep" ):
-      pass
-
-    elif self.ioDict.has_key( "SLICStep" ):
-      pass
-
-    elif self.ioDict.has_key( "LCSIMStep" ):
-      pass
-
-    elif self.ioDict.has_key( "SLICPandoraStep" ):
-      pass
-
-    # 3. There are no input files. Raise error.
+    # 3. There are no input files.
 
     else:
-      self._reportError( "No input files found to check." )
+      self.log.notice( "No input files found to check." )
 
     # Log file
     #---------------------------------------------------------------------------
