@@ -10,8 +10,8 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile
-from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar,GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile,GetNewLDLibs 
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
