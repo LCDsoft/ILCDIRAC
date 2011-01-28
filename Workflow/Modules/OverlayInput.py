@@ -128,7 +128,9 @@ class OverlayInput (ModuleBase):
     ##Limit ourself to 15 files
     if totnboffilestoget>21:
       totnboffilestoget=21
- 
+
+    self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
+    
     curdir = os.getcwd()
     os.mkdir("./overlayinput")
     os.chdir("./overlayinput")
@@ -154,6 +156,7 @@ class OverlayInput (ModuleBase):
         os.chdir(curdir)
         return S_ERROR("Could not obtain enough files after 2 attempts")
     os.chdir(curdir)
+    self.log.info('Got all files needed.')
     return S_OK()
 
   def execute(self):
