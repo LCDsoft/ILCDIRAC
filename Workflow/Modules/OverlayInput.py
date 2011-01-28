@@ -118,10 +118,10 @@ class OverlayInput (ModuleBase):
       return S_ERROR("Number of gg->had events available is less than requested")
     nboffilestogetpersigevt = ceil(numberofeventstoget/self.nbofeventsperfile)
     
-    if not self.nsigevts and self.nbinputsigfile and self.nbsigeventsperfile:
+    if not self.nsigevts:
       ##Compute Nsignal events
       self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
-    else:
+    if not self.nsigevts:
       return S_ERROR('Could not determine the number of signal events per job')
     ##Get Number of files to get to cover all signal events
     totnboffilestoget = self.nsigevts*nboffilestogetpersigevt
