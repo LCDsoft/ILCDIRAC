@@ -117,7 +117,7 @@ class OverlayInput (ModuleBase):
     if availableevents < numberofeventstoget:
       return S_ERROR("Number of gg->had events available is less than requested")
     nboffilestogetpersigevt = ceil(numberofeventstoget/self.nbofeventsperfile)
-    
+    print "nboffilestogetpersigevt ",nboffilestogetpersigevt
     if not self.nsigevts:
       ##Compute Nsignal events
       self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
@@ -143,6 +143,7 @@ class OverlayInput (ModuleBase):
     failed = len(res['Value']['Failed'])
     tryagain = []
     if failed:
+      self.log.error('Had issues getting %s files, retrying now with new files'%failed)
       for i in range(failed):
         fileindex = randrange(nbfiles)
         if fileindex not in usednumbers:
