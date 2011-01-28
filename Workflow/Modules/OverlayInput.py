@@ -181,5 +181,6 @@ class OverlayInput (ModuleBase):
       self.setApplicationStatus('OverlayProcessor failed to get files locally with message %s'%res['Message'])
       return S_ERROR('OverlayProcessor failed to get files locally')
     
+    self.setApplicationStatus('Overlay processor finished getting all files successfully')
     return S_OK('Overlay input finished successfully')
   
