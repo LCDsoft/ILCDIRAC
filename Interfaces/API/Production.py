@@ -165,13 +165,20 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.basepath +=compatmeta["Energy"]+"/"
+        self.energy=compatmeta["Energy"]
       if type(compatmeta["Energy"])==type([]):
         self.basepath +=compatmeta["Energy"][0]+"/"
+        self.energy=compatmeta["Energy"][0]        
     if compatmeta.has_key("EvtType"):
       if type(compatmeta["EvtType"]) in types.StringTypes:
         self.basepath +=compatmeta["EvtType"]+"/"
       if type(compatmeta["EvtType"])==type([]):
         self.basepath +=compatmeta["EvtType"][0]+"/"
+    if compatmeta.has_key("DetectorType"):
+      if type(compatmeta["DetectorType"]) in types.StringTypes:
+        self.detector = compatmeta["DetectorType"]
+      if type(compatmeta["DetectorType"])==type([]):
+        self.detector = compatmeta["DetectorType"][0]
     self.inputBKSelection = metadata
 
     self.prodparameters["FCInputQuery"]=self.inputBKSelection

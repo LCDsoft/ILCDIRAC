@@ -206,8 +206,8 @@ class LCSIMAnalysis(ModuleBase):
     lcsimfile = "job.lcsim"
     res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
-      self.log.error("Could not treat input lcsim file")
-      return S_ERROR("Error parsing input lcsim file")
+      self.log.error("Could not treat input lcsim file because %s"%res['Message'])
+      return S_ERROR("Error creating lcsim file")
     else:
       self.log.verbose("File job.lcsim created properly")
     self.printoutflag = res['Value']
