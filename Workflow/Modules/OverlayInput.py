@@ -126,8 +126,8 @@ class OverlayInput (ModuleBase):
     ##Get Number of files to get to cover all signal events
     totnboffilestoget = self.nsigevts*nboffilestogetpersigevt
     ##Limit ourself to 15 files
-    if totnboffilestoget>15:
-      totnboffilestoget=15
+    if totnboffilestoget>21:
+      totnboffilestoget=21
  
     curdir = os.getcwd()
     os.mkdir("./overlayinput")
