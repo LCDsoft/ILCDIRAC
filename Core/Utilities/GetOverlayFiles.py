@@ -6,13 +6,13 @@ Created on Jan 28, 2011
 from DIRAC import gLogger
 import os
 
-def getOverlayFiles():
+def getOverlayFiles(evttype='gghad'):
   localfiles = []
-  if not os.path.exists("./overlay"):
+  if not os.path.exists("./overlayinput_"+evttype):
     gLogger.error('overlay directory does not exists')
     return localfiles
   curdir = os.getcwd()
-  os.chdir("./overlay")
+  os.chdir("./overlayinput_"+evttype)
   listdir = os.listdir(os.getcwd())
   for item in listdir:
     if item.count('.slcio'):

@@ -30,6 +30,7 @@ class OverlayInput (ModuleBase):
     self.nbofeventsperfile = 100
     self.lfns = []
     self.nbfilestoget = 0
+    self.evttype= 'gghad'
     self.bxoverlay = 0
     self.ggtohadint = 3.3
     self.InputData = ''
@@ -63,6 +64,9 @@ class OverlayInput (ModuleBase):
     
     if self.step_commons.has_key('NbSigEvtsPerJob'):
       self.nsigevts = self.step_commons['NbSigEvtsPerJob']
+    
+    if self.step_commons.has_key('BkgEvtType'):
+      self.evttype = self.step_commons['BkgEvtType']  
       
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
@@ -79,7 +83,7 @@ class OverlayInput (ModuleBase):
   def __getFilesFromFC(self):
     meta = {}
     meta['Energy']=self.energy
-    meta['EvtType']='gghad'
+    meta['EvtType']=self.evttype
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
     res = self.fc.getCompatibleMetadata(meta)
@@ -132,8 +136,8 @@ class OverlayInput (ModuleBase):
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
     
     curdir = os.getcwd()
-    os.mkdir("./overlayinput")
-    os.chdir("./overlayinput")
+    os.mkdir("./overlayinput_"+self.evttype)
+    os.chdir("./overlayinput_"+self.evttype)
     filesobtained = []
     usednumbers = []
     for i in range(totnboffilestoget):
