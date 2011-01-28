@@ -10,13 +10,14 @@ Created on Jan 29, 2010
 @author: Stephane Poss
 '''
 
-from DIRAC import S_OK,gLogger
+from DIRAC import S_OK,gLogger,S_ERROR
 
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import Comment
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.GetOverlayFiles import getOverlayFiles
 import string,os
 
 def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
@@ -307,7 +308,10 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
                 subparam.text = outputDST
                 com = Comment("DST file changed")
                 param.insert(0,com)
-  
+      if param.attrib['name']=='Overlay':
+        files = getOverlayFiles()
+        if not len(files):
+          return S_ERROR('Could not find any overlay files')
   tree.write(finalxml)
   return S_OK(True)
 
@@ -500,6 +504,15 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
           marker.text = "LCSIM"
           driver.append(marker)
           printtext = marker.text
+
+  ##Take care of overlay
+  for driver in drivers:
+    if driver.attrib.has_key("type"):
+      if driver.attrib['type']=="overlay":
+        if driver.attrib['name']=="overlay":
+          files = getOverlayFiles()
+          if not len(files):
+            return S_ERROR('Could not find any overlay files')
 
   ##Take care of the output files
   writerfound = False
