@@ -233,6 +233,9 @@ class MokkaAnalysis(ModuleBase):
       ##Need to fetch the new LD_LIBRARY_PATH
       new_ld_lib_path= GetNewLDLibs(self.systemConfig,"mokka",self.applicationVersion,mySoftwareRoot)
 
+      ##Remove libc
+      removeLibc(myMokkaDir)
+
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
       ###prepare steering file
