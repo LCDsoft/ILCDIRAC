@@ -9,6 +9,7 @@ from DIRAC.Core.Base import Script
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
 
@@ -19,6 +20,8 @@ import os,tarfile, shutil, sys, string
 Script.parseCommandLine( ignoreErrors = False )
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
+request = RequestContainer()
+
 modifiedCS = False
 
 
@@ -43,12 +46,19 @@ def upload(path,appTar):
     print "path %s was not forseen, location not known, upload to location yourself, and publish in CS manually"%path
     return S_ERROR()
   else:
-    res = rm.putAndRegister("%s%s"%(path,os.path.basename(appTar)),appTar,"CERN-SRM")
+    lfnpath = "%s%s"%(path,os.path.basename(appTar))
+    res = rm.putAndRegister(lfnpath,appTar,"CERN-SRM")
     if not res['OK']:
       return res
-    res = rm.replicateAndRegister("%s%s"%(path,os.path.basename(appTar)),"IN2P3-SRM")
+    res = request.addSubRequest({'Attributes':{'Operation':'replicateAndRegister',
+                                               'TargetSE':'IN2P3-SRM','ExecutionOrder':0}},
+                                 'transfer')
+    #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
     if not res['OK']:
       return res
+    index = result['Value']
+    fileDict = {'LFN':lfnpath,'Status':'Waiting'}
+    request.setSubRequestFiles(index,'transfer',[fileDict])
     return S_OK('Application uploaded')
   return S_OK()
 
