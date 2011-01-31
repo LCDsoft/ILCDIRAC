@@ -101,7 +101,7 @@ class SQLWrapper:
       return S_ERROR("Mokka Data dir is not available")    
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
-    removeLibc(self.softDir+"/mysql4grid/lib64")
+    removeLibc(self.softDir+"/mysql4grid/lib64/mysql")
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s'%(self.softDir,self.softDir,os.environ['LD_LIBRARY_PATH'])
     else:
