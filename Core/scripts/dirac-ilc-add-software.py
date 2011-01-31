@@ -8,6 +8,8 @@ Created on May 5, 2010
 from DIRAC.FrameworkSystem.Client.NotificationClient     import NotificationClient
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
+
 from DIRAC import gConfig,S_OK,S_ERROR
 import DIRAC
 from DIRAC.Core.Base import Script
@@ -17,6 +19,10 @@ Script.parseCommandLine( ignoreErrors = True )
 args = Script.getPositionalArgs()
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
+request = RequestContainer()
+request.setRequestName('default_request.xml')
+request.setSourceComponent('ReplicateILCSoft')
+
 modifiedCS = False
 mailadress = 'ilc-dirac@cern.ch'
 
@@ -39,12 +45,19 @@ def upload(path,appTar):
     print "path %s was not forseen, location not known, upload to location yourself, and publish in CS manually"%path
     return S_ERROR()
   else:
-    res = rm.putAndRegister("%s%s"%(path,appTar),appTar,"CERN-SRM")
+    lfnpath = "%s%s"%(path,appTar)
+    res = rm.putAndRegister(lfnpath,appTar,"CERN-SRM")
     if not res['OK']:
       return res
-    res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
+    res = request.addSubRequest({'Attributes':{'Operation':'replicateAndRegister',
+                                               'TargetSE':'IN2P3-SRM','ExecutionOrder':0}},
+                                 'transfer')
+    #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
     if not res['OK']:
       return res
+    index = result['Value']
+    fileDict = {'LFN':lfnpath,'Status':'Waiting'}
+    request.setSubRequestFiles(index,'transfer',[fileDict])
     return S_OK('Application uploaded')
   return S_OK()
 
