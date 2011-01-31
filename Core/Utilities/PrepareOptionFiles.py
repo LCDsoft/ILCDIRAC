@@ -251,7 +251,12 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   
   """
   tree = ElementTree()
-  tree.parse(inputXML)
+  try:
+    tree.parse(inputXML)
+  except Exception,x:
+    print "Found Exception %s %s"%(Exception,x)
+    return S_ERROR("Found Exception %s %s"%(Exception,x))
+
   params = tree.findall('global/parameter')
   glob = tree.find('global')
   lciolistfound = False
@@ -415,7 +420,11 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   printtext = ''
 
   tree = ElementTree()
-  tree.parse(inputlcsim)
+  try:
+    tree.parse(inputlcsim)
+  except Exception,x:
+    print "Found Exception %s %s"%(Exception,x)
+    return S_ERROR("Found Exception %s %s"%(Exception,x))
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
   if filesinlcsim:
