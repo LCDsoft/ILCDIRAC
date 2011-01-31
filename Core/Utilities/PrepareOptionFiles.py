@@ -279,6 +279,10 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
           param.attrib['value'] = inputGEAR
           com = Comment("input gear changed")
           glob.insert(0,com)
+        else:
+          param.text = inputGEAR
+          com = Comment("input gear changed")
+          glob.insert(0,com)
       if not debug:
         if param.attrib['name']=='Verbosity':
           param.text = "SILENT"
