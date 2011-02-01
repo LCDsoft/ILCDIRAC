@@ -37,7 +37,7 @@ def install(app,config,area):
   appName = appName.lower()
   app_tar = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config,appName,appVersion),'')
   overwrite = DIRAC.gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/Overwrite'%(config,appName,appVersion),False)
-  
+
   if not app_tar:
     DIRAC.gLogger.error('Could not find tar ball for %s %s'%(appName,appVersion))
     return DIRAC.S_ERROR('Could not find tar ball for %s %s'%(appName,appVersion))
@@ -45,7 +45,7 @@ def install(app,config,area):
   if not TarBallURL:
     DIRAC.gLogger.error('Could not find TarBallURL in CS for %s %s'%(appName,appVersion))
     return DIRAC.S_ERROR('Could not find TarBallURL in CS')
-  
+
   #Check if folder is already there:
   folder_name = app_tar.replace(".tgz","").replace(".tar.gz","")
   if appName =="slic":
@@ -59,9 +59,9 @@ def install(app,config,area):
       appli_exists = False
     #os.chdir(curdir)
     #return DIRAC.S_OK()
-  
+
   #downloading file from url, but don't do if file is already there.
-  app_tar_base=os.path.basename(app_tar)  
+  app_tar_base=os.path.basename(app_tar)
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
     if TarBallURL.find("http://")>-1:
       try :
@@ -95,7 +95,7 @@ def install(app,config,area):
         os.chdir(curdir)
         return DIRAC.S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base,e))
       if appName=="slic":
-        slicname = "%s%s"%(appName,appVersion)      
+        slicname = "%s%s"%(appName,appVersion)
         members = app_tar_to_untar.getmembers()
         fileexample = members[0].name
         basefolder = fileexample.split("/")[0]
@@ -111,7 +111,7 @@ def install(app,config,area):
         return DIRAC.S_ERROR("Folder %s is empty, considering install as failed"%folder_name)
     except:
       pass
-  basefolder = folder_name  
+  basefolder = folder_name
   if appName=="slic":
     os.environ['SLIC_DIR']= basefolder
     slicv = ''
@@ -158,17 +158,14 @@ def install(app,config,area):
   elif appName=="lcio":
     os.environ['LCIO']= os.path.join(os.getcwd(),basefolder)
     os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/bin:"+os.environ['PATH']
+    res = checkJava()
+    if not res['OK']:
+      return res
   elif appName=="lcsim":
-    args = ['java',"-version"]
-    try:
-      p = subprocess.check_call(args)
-      if p:
-        os.chdir(curdir)
-        return DIRAC.S_ERROR("Something is wrong with Java")
-    except:
-      DIRAC.gLogger.error("Java was not found on this machine, cannot proceed")
-      os.chdir(curdir)
-      return DIRAC.S_ERROR("Java was not found on this machine, cannot proceed")
+    res = checkJava()
+    if not res['OK']:
+      return res
+
   #remove now useless tar ball
   if os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)):
     if app_tar_base.find(".jar")<0:
@@ -181,3 +178,17 @@ def install(app,config,area):
 
 def remove():
   pass
+
+def checkJava():
+  args = ['java',"-version"]
+  try:
+    p = subprocess.check_call(args)
+    if p:
+      os.chdir(curdir)
+      return DIRAC.S_ERROR("Something is wrong with Java")
+  except:
+    DIRAC.gLogger.error("Java was not found on this machine, cannot proceed")
+    os.chdir(curdir)
+    return DIRAC.S_ERROR("Java was not found on this machine, cannot proceed")
+
+  return DIRAC.S_OK()
