@@ -6,6 +6,8 @@ Created on Jan 26, 2011
 import os
 
 def removeLibc(path):
+  return True
+
   curdir = os.getcwd()
   os.chdir(path)
   listlibs = os.listdir(os.getcwd())
