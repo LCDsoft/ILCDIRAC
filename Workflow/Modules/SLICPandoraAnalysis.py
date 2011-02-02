@@ -12,7 +12,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs,GetNewPATH
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
@@ -132,6 +132,8 @@ class SLICPandoraAnalysis (ModuleBase):
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
 
+    new_path = GetNewPATH(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
+
     inputfilelist = self.inputSLCIO.split(";")    
     res = resolveIFpaths(inputfilelist)
     if not res['OK']:
@@ -184,7 +186,7 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-
+    script.write('declare -x PATH=%s:$PATH\n'%new_path)
     script.write('declare -x ROOTSYS=%s/ROOT\n'%(myslicPandoraDir))
 
     if os.environ.has_key('LD_LIBRARY_PATH'):
