@@ -32,7 +32,7 @@ class OverlayInput (ModuleBase):
     self.nbfilestoget = 0
     self.evttype= 'gghad'
     self.bxoverlay = 0
-    self.ggtohadint = 3.3
+    self.ggtohadint = 3.2
     self.InputData = ''
     self.nbsigeventsperfile = 0
     self.nbinputsigfile=1
@@ -129,9 +129,11 @@ class OverlayInput (ModuleBase):
       return S_ERROR('Could not determine the number of signal events per job')
     ##Get Number of files to get to cover all signal events
     totnboffilestoget = self.nsigevts*nboffilestogetpersigevt
-    ##Limit ourself to 15 files
-    if totnboffilestoget>21:
-      totnboffilestoget=21
+    
+    ##Limit ourself to some configuration maximum
+    maxNbFilesToGet = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)    
+    if totnboffilestoget>maxNbFilesToGet+1:
+      totnboffilestoget=maxNbFilesToGet+1
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
     
