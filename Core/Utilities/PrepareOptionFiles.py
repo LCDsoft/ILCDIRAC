@@ -39,6 +39,24 @@ def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
       new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]  
   return new_ld_lib_path
 
+def GetNewPATH(systemConfig,application,applicationVersion,mySoftwareRoot):
+  new_path = ""
+  deps = resolveDepsTar(systemConfig,application,applicationVersion)
+  for dep in deps:
+    if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
+      depfolder = dep.replace(".tgz","").replace(".tar.gz","")
+      if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"bin")):
+        gLogger.verbose("Found lib folder in %s"%(depfolder))
+        newpathdir = os.path.join(mySoftwareRoot,depfolder,"bin")
+        new_path = newpathdir
+        ####Remove the libc
+  if os.environ.has_key("PATH"):
+    if new_path:
+      new_path=new_path+":%s"%os.environ["PATH"]
+    else:
+      new_path=os.environ["PATH"]  
+  return new_path
+
 def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
   """Prepares the whizard.in file to run
   
