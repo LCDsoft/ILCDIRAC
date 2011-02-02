@@ -1334,7 +1334,7 @@ class ILCJob(Job):
     self.ioDict["SLICPandoraStep"]=stepInstance.getName()
     return S_OK()
 
-  def addOverlay(self,detector='',energy='',BXOverlay=0,NbGGtoHadInts=0,ProdID=0, NSigEvetnsPerJob = 0):
+  def addOverlay(self,detector='',energy='',BXOverlay=0,NbGGtoHadInts=0,ProdID=0, NSigEventsPerJob = 0):
     """ Helper call to define Overlay processor/driver inputs
 
     @param detector: Detector type to use (ILD or SID). Obtained in prod context via the metadata lookup
@@ -1347,9 +1347,11 @@ class ILCJob(Job):
     @type NbGGtoHadInts: int
     @param ProdID: Optional parameter to force using one specific prodID for the input files. By default it's the latest one
     @type ProdID: int
+    @param NSigEventsPerJob: Number of signal events per job
+    @type NSigEventsPerJob: int 
     """
     kwargs = {"detector":detector,"energy":energy,'BXOverlay':BXOverlay,"NbGGtoHadInts":NbGGtoHadInts,'ProdID':ProdID,
-              'NSigEvetnsPerJob':NSigEvetnsPerJob}
+              'NSigEventsPerJob':NSigEventsPerJob}
     if detector:
       self.detector=detector
     if not self.detector:
@@ -1385,7 +1387,7 @@ class ILCJob(Job):
     if ProdID:
       step.addParameter(Parameter("ProdID",0,"int","","",False,False,"ProdID for input"))
 
-    if NSigEvetnsPerJob:
+    if NSigEventsPerJob:
       step.addParameter(Parameter("NbSigEvtsPerJob",0,"int","","",False,False,"Number of signal events per job"))
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
@@ -1396,8 +1398,8 @@ class ILCJob(Job):
       stepInstance.setValue("ggtohadint",NbGGtoHadInts)
     if ProdID:
       stepInstance.setValue("ProdID",ProdID)
-    if NSigEvetnsPerJob:
-      stepInstance.setValue("NbSigEvtsPerJob",NSigEvetnsPerJob)
+    if NSigEventsPerJob:
+      stepInstance.setValue("NbSigEvtsPerJob",NSigEventsPerJob)
 
     return S_OK()
 
