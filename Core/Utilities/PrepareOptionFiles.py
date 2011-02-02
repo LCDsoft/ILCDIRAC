@@ -12,12 +12,12 @@ Created on Jan 29, 2010
 
 from DIRAC import S_OK,gLogger,S_ERROR
 
-from xml.etree.ElementTree import ElementTree
-from xml.etree.ElementTree import Element
-from xml.etree.ElementTree import Comment
+from xml.etree.ElementTree                                import ElementTree
+from xml.etree.ElementTree                                import Element
+from xml.etree.ElementTree                                import Comment
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
-from ILCDIRAC.Core.Utilities.GetOverlayFiles import getOverlayFiles
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
+from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 import string,os
 
 def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
