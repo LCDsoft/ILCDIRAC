@@ -190,6 +190,7 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('echo =============================\n')
     script.write('echo PATH is \n')
     script.write('echo $PATH | tr ":" "\n"  \n')
+    script.write('which ls\n')
     script.write('declare -x ROOTSYS=%s/ROOT\n'%(myslicPandoraDir))
 
     if os.environ.has_key('LD_LIBRARY_PATH'):
