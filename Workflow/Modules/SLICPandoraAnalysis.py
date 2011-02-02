@@ -187,6 +187,9 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     script.write('declare -x PATH=%s:$PATH\n'%new_path)
+    script.write('echo =============================\n')
+    script.write('echo PATH is \n')
+    script.write('echo $PATH | tr ":" "\n"  \n')
     script.write('declare -x ROOTSYS=%s/ROOT\n'%(myslicPandoraDir))
 
     if os.environ.has_key('LD_LIBRARY_PATH'):
@@ -199,9 +202,6 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is \n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
-    script.write('echo =============================\n')
-    script.write('echo PATH is \n')
-    script.write('echo $PATH | tr ":" "\n"  \n')
     script.write('echo ============================= \n')
     script.write('env | sort >> localEnv.log\n')
     prefixpath = ""
