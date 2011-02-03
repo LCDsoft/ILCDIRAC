@@ -213,7 +213,7 @@ class SLICPandoraAnalysis (ModuleBase):
       prefixpath ="%s/Executable"%myslicPandoraDir
     script.write('echo ============================= \n')
     if prefixpath:
-      script.write('ldd %s/PandoraFrontend\n'%prefixpath)
+      script.write('ls -ltr /lib64/libc.so.6 \n')
       comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,str(self.numberOfEvents))
       self.log.info("Will run %s"%comm)
       script.write(comm)
