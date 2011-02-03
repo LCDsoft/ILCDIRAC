@@ -131,7 +131,8 @@ class OverlayInput (ModuleBase):
     totnboffilestoget = self.nsigevts*nboffilestogetpersigevt
     
     ##Limit ourself to some configuration maximum
-    maxNbFilesToGet = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)    
+    res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)    
+    maxNbFilesToGet = res['Value']
     if totnboffilestoget>maxNbFilesToGet+1:
       totnboffilestoget=maxNbFilesToGet+1
 
