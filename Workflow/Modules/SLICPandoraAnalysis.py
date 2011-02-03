@@ -214,6 +214,7 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('echo ============================= \n')
     if prefixpath:
       script.write('ls -ltr /lib64/libc.so.6 \n')
+      script.write('rpm -qa glibc\n')
       comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,str(self.numberOfEvents))
       self.log.info("Will run %s"%comm)
       script.write(comm)
