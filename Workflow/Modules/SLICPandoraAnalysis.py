@@ -212,6 +212,7 @@ class SLICPandoraAnalysis (ModuleBase):
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable"%myslicPandoraDir
     script.write('echo "============================= lalala"\n')
+    script.write('ls\n')
     script.write('rpm -qa glibc\n')
     if prefixpath:
       #script.write('ls -ltr /lib64/* \n')
