@@ -205,13 +205,14 @@ class SLICPandoraAnalysis (ModuleBase):
     script.write('echo LD_LIBRARY_PATH is \n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
     script.write('echo ============================= \n')
-    script.write('env | sort >> localEnv.log\n')
+    #script.write('env | sort >> localEnv.log\n')
     prefixpath = ""
     if os.path.exists("PandoraFrontend"):
       prefixpath = "."
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable"%myslicPandoraDir
     script.write('echo "============================= lalala"\n')
+    script.write('which ls\n')
     script.write('ls\n')
     script.write('rpm -qa glibc\n')
     if prefixpath:
