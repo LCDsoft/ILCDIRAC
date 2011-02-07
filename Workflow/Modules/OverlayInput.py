@@ -31,7 +31,6 @@ class OverlayInput (ModuleBase):
     self.evttype= 'gghad'
     self.bxoverlay = 0
     self.ggtohadint = 3.2
-    self.InputData = ''
     self.nbsigeventsperfile = 0
     self.nbinputsigfile=1
     self.nsigevts = 0
@@ -65,9 +64,6 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.evttype = self.step_commons['BkgEvtType']  
       
-    if self.workflow_commons.has_key('InputData'):
-      self.InputData = self.workflow_commons['InputData']
-
     if self.InputData:
       res = getNumberOfevents(self.InputData)
       if res.has_key("nbevts"):

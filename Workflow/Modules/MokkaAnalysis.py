@@ -50,8 +50,6 @@ class MokkaAnalysis(ModuleBase):
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 0
-        self.inputData = '' # to be resolved
-        self.InputData = '' # from the (JDL WMS approach)
         self.outputFile = ''
 
         self.debug = False
@@ -110,11 +108,7 @@ class MokkaAnalysis(ModuleBase):
             if self.workflow_commons.has_key("WhizardOutput"):
               self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
                                                 int(self.workflow_commons["JOB_ID"]))
-           
-          
-      if self.workflow_commons.has_key('InputData'):
-          self.InputData = self.workflow_commons['InputData']
-
+      
       if self.InputData:
         if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
           res = getNumberOfevents(self.InputData)

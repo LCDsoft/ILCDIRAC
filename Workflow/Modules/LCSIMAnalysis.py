@@ -36,7 +36,6 @@ class LCSIMAnalysis(ModuleBase):
     self.outputFile = ""
     self.outputREC = ""
     self.outputDST = ""
-    self.InputData = '' # from the (JDL WMS approach)
     self.aliasproperties = ''
     self.debug = False
     self.applicationName = 'LCSIM'
@@ -62,8 +61,6 @@ class LCSIMAnalysis(ModuleBase):
     if self.step_commons.has_key("inputSlcio"):
       self.inputSLCIO = self.step_commons["inputSlcio"]
       
-    if self.workflow_commons.has_key('InputData'):
-      self.InputData = self.workflow_commons['InputData']
 
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):

@@ -30,8 +30,7 @@ class HandleProdOutputData(ModuleBase):
     self.request = None
     self.failoverTest=False
     self.log = gLogger.getSubLogger( "HandleOutputData" )
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
+
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.

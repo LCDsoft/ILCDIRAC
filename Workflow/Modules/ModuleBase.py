@@ -37,6 +37,7 @@ class ModuleBase(object):
     self.applicationLog = ''
     self.applicationVersion=''
     self.applicationName = ''
+    self.InputData = ''
     self.result = S_ERROR()
 
     self.jobType = ''
@@ -305,6 +306,8 @@ class ModuleBase(object):
       
     if self.workflow_commons.has_key('JobType'):
       self.jobType = self.workflow_commons['JobType']
+    if self.workflow_commons.has_key('InputData'):
+      self.InputData = self.workflow_commons['InputData']
     
     res = self.applicationSpecificInputs()
     if not res['OK']:

@@ -32,7 +32,6 @@ class SLICAnalysis(ModuleBase):
     self.applicationName = 'SLIC'
     self.startFrom = 0
     self.stdhepFile = ''
-    self.InputData = '' # from the (JDL WMS approach)
     self.randomseed = 0
     self.detectorModel = ''
     self.inmacFile = ''
@@ -52,8 +51,6 @@ class SLICAnalysis(ModuleBase):
 
     if self.step_commons.has_key('stdhepFile'):
       self.stdhepFile = self.step_commons['stdhepFile']
-    if self.workflow_commons.has_key('InputData'):
-      self.InputData = self.workflow_commons['InputData']
       
     if self.step_commons.has_key("inputmacFile"):
       self.inmacFile = self.step_commons['inputmacFile']
