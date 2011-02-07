@@ -29,7 +29,6 @@ class SLICPandoraAnalysis (ModuleBase):
     self.outputslcio = ""
     self.numberOfEvents = 0
     self.startFrom = 0
-    self.InputData = ""
 
   def applicationSpecificInputs(self):
 
@@ -40,10 +39,7 @@ class SLICPandoraAnalysis (ModuleBase):
       self.detectorxml = self.step_commons["DetectorXML"]
 
     if self.step_commons.has_key("inputSlcio"):
-      self.inputSLCIO = self.step_commons["inputSlcio"]      
-
-    if self.workflow_commons.has_key('InputData'):
-      self.InputData = self.workflow_commons['InputData']        
+      self.inputSLCIO = self.step_commons["inputSlcio"]         
 
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):

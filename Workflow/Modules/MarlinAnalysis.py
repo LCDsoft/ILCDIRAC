@@ -37,7 +37,6 @@ class MarlinAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.inputSLCIO = ''
-    self.InputData = '' # from the (JDL WMS approach)
     self.inputXML=''
     self.inputGEAR =''
     self.outputREC = ''
@@ -53,10 +52,7 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('inputSlcio'):
       self.inputSLCIO =self.step_commons['inputSlcio']
-      
-    if self.workflow_commons.has_key('InputData'):
-      self.InputData = self.workflow_commons['InputData']
-      
+            
     if self.step_commons.has_key('inputXML'):
       self.inputXML=self.step_commons['inputXML']
       
