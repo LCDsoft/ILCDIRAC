@@ -23,25 +23,15 @@ class RootExecutableAnalysis(ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "RootExecutableAnalysis" )
-    
     self.appli = ''
     self.args = ''
     self.result = S_ERROR()
-    
-    self.jobID = None
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
+
       
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-      
-    if self.step_commons.has_key('applicationVersion'):
-      self.applicationVersion = self.step_commons['applicationVersion']
-      self.applicationLog = self.step_commons['applicationLog']
     if self.step_commons.has_key("script"):
       self.appli = self.step_commons["script"]
     if self.step_commons.has_key("args"):

@@ -33,6 +33,18 @@ class ModuleBase(object):
     else:
       self.log.info('Payload proxy information:\n', result['Value'])
 
+    self.systemConfig = ''
+    self.applicationLog = ''
+    self.applicationVersion=''
+    self.applicationName = ''
+    self.result = S_ERROR()
+
+    self.jobType = ''
+    self.jobID = None
+    if os.environ.has_key('JOBID'):
+      self.jobID = os.environ['JOBID']
+
+
   #############################################################################
   def setApplicationStatus(self,status, sendFlag=True):
     """Wraps around setJobApplicationStatus of state update client
@@ -281,3 +293,23 @@ class ModuleBase(object):
           return S_ERROR('File %s has missing %s' %(fileName,key))
 
     return S_OK(final)
+  
+  def resolveInputVariables(self):
+    if self.workflow_commons.has_key('SystemConfig'):
+      self.systemConfig = self.workflow_commons['SystemConfig']
+    if self.step_commons.has_key('applicationName'):
+      self.applicationName = self.step_commons['applicationName']      
+    if self.step_commons.has_key('applicationVersion'):
+      self.applicationVersion = self.step_commons['applicationVersion']
+      self.applicationLog = self.step_commons['applicationLog']
+      
+    if self.workflow_commons.has_key('JobType'):
+      self.jobType = self.workflow_commons['JobType']
+    
+    res = self.applicationSpecificInputs()
+    if not res['OK']:
+      return res
+    return S_OK('Parameters resolved')
+  
+  def applicationSpecificInputs(self):
+    return S_OK()

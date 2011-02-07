@@ -16,9 +16,8 @@ class ComputeOutputDataList(ModuleBase):
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "ComputeOutputData" )
     self.listoutput = []
-    self.jobID = ''
 
-  def resolveInputParameters(self):
+  def applicationSpecificInputs(self):
     if self.step_commons.has_key('listoutput'):
       self.listoutput = self.step_commons['listoutput']
 

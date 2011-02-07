@@ -16,7 +16,6 @@ class HandleProdOutputData(ModuleBase):
   def __init__(self):
     ModuleBase.__init__(self)
     self.result = S_ERROR()
-    self.jobID = None
     self.fc = FileCatalogClient()
     self.rm = ReplicaManager()
     self.destination = ''
@@ -34,7 +33,7 @@ class HandleProdOutputData(ModuleBase):
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
     
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """

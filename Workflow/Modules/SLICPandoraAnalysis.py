@@ -22,10 +22,7 @@ class SLICPandoraAnalysis (ModuleBase):
     ModuleBase.__init__(self)
     self.debug = False
     self.result = S_ERROR()
-    self.systemConfig = ''
-    self.applicationLog = ''
     self.applicationName = 'SLICPandora'
-    self.applicationVersion=''
     self.pandorasettings = ""
     self.detectorxml = ""
     self.inputSLCIO = ""
@@ -33,17 +30,8 @@ class SLICPandoraAnalysis (ModuleBase):
     self.numberOfEvents = 0
     self.startFrom = 0
     self.InputData = ""
-    self.jobID = None
-    if os.environ.has_key('JOBID'): 
-      self.jobID = os.environ['JOBID']
 
-  def resolveInputVariables(self):
-    if self.workflow_commons.has_key('SystemConfig'):
-        self.systemConfig = self.workflow_commons['SystemConfig']
-
-    if self.step_commons.has_key('applicationVersion'):
-        self.applicationVersion = self.step_commons['applicationVersion']
-        self.applicationLog = self.step_commons['applicationLog']
+  def applicationSpecificInputs(self):
 
     if self.step_commons.has_key("PandoraSettings"):
       self.pandorasettings = self.step_commons["PandoraSettings"]

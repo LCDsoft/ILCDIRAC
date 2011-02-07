@@ -23,7 +23,8 @@ class GetSRMFile(ModuleBase):
     self.filestxt = ""
     self.files = []
     self.counter=1
-  def resolveInputVariables(self):
+    
+  def applicationSpecificInputs(self):
     if self.step_commons.has_key("srmfiles"):
       self.filestxt = self.step_commons["srmfiles"]
     if self.filestxt:

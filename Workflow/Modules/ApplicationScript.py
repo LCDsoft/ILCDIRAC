@@ -12,23 +12,12 @@ class ApplicationScript(ModuleBase):
   def __init__(self):
     ModuleBase.__init__(self)
     self.enable = True 
-    self.jobID = None
     self.log = gLogger.getSubLogger( "ScriptAnalysis" )
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
     self.script = None
-    self.applicationLog = ''
-    self.applicationName = ''
-    self.applicationVersion = ''
     self.arguments = ''
 
-  def resolveInputVariables(self):
-    if self.step_commons.has_key('applicationName'):
-      self.applicationName = self.step_commons['applicationName']
-      self.applicationVersion = self.step_commons['applicationVersion']
-      self.applicationLog = self.step_commons['applicationLog']
-    else:
-      self.log.warn('No applicationName defined')
+  def applicationSpecificInputs(self):
+
     if self.step_commons.has_key('script'):
       self.script = self.step_commons['script']
       print self.script
@@ -40,8 +29,7 @@ class ApplicationScript(ModuleBase):
     return S_OK()
 
   def execute(self):
-    self.resolveInputVariables()
-    self.result = S_OK()
+    self.result =self.resolveInputVariables()
     if not self.applicationName or not self.applicationVersion:
       self.result = S_ERROR( 'No Application defined' )
     if not self.applicationLog:

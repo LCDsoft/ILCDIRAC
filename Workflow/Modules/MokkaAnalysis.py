@@ -46,41 +46,20 @@ class MokkaAnalysis(ModuleBase):
         self.macFile = ''
         self.run_number = 0
         self.firstEventNumber = 1
-        self.jobID = None
-        if os.environ.has_key('JOBID'):
-            self.jobID = os.environ['JOBID']
-
-        self.systemConfig = ''
-        self.applicationLog = ''
         self.applicationName = 'Mokka'
-        self.applicationVersion=''
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 0
         self.inputData = '' # to be resolved
         self.InputData = '' # from the (JDL WMS approach)
         self.outputFile = ''
-        self.randomseed = 0
-        #self.generator_name=''
-        #self.optionsLinePrev = ''
-        #self.optionsLine = ''
-        #self.extraPackages = ''
-        self.jobType = ''
+
         self.debug = False
 #############################################################################
-    def resolveInputVariables(self):
+    def applicationSpecificInputs(self):
       """ Resolve all input variables for the module here.
       @return: S_OK()
       """
-      if self.workflow_commons.has_key('SystemConfig'):
-          self.systemConfig = self.workflow_commons['SystemConfig']
-
-      if self.workflow_commons.has_key('JobType'):
-        self.jobType = self.workflow_commons['JobType']
-
-      if self.step_commons.has_key('applicationVersion'):
-          self.applicationVersion = self.step_commons['applicationVersion']
-          self.applicationLog = self.step_commons['applicationLog']
 
       if self.step_commons.has_key('numberOfEvents'):
           self.numberOfEvents = self.step_commons['numberOfEvents']
@@ -107,7 +86,6 @@ class MokkaAnalysis(ModuleBase):
       elif self.jobID:
         self.randomseed = self.jobID
         
-
       if self.step_commons.has_key('dbSlice'):
         self.dbslice = self.step_commons['dbSlice']
       if self.step_commons.has_key('debug'):

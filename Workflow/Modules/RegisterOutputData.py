@@ -15,7 +15,6 @@ class RegisterOutputData(ModuleBase):
     self.version = "RegisterOutputData v1"
     self.log = gLogger.getSubLogger( "RegisterOutputData" )
     self.commandTimeOut = 10*60
-    self.jobID = ''
     self.enable=True
     self.prodOutputLFNs =[]
     self.swpackages = []
@@ -23,7 +22,7 @@ class RegisterOutputData(ModuleBase):
     self.luminosity = 0
     self.fc = FileCatalogClient()
 
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
       self.enable=self.step_commons['Enable']
       if not type(self.enable)==type(True):
