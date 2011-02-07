@@ -202,7 +202,8 @@ class LCSIMAnalysis(ModuleBase):
     if os.path.exists(os.path.join(cachedir,".lcsim")) and os.path.exists(aliasproperties):
       self.log.verbose("Copy alias.properties file in %s"%(os.path.join(cachedir,".lcsim")))
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
-          
+    if len(self.xmlfile):
+      self.xmlfile = os.path.basename(self.xmlfile)
     lcsimfile = "job.lcsim"
     res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
