@@ -20,13 +20,11 @@ from DIRAC                                                import S_OK, S_ERROR, 
 class SLICPandoraAnalysis (ModuleBase):
   def __init__(self):
     ModuleBase.__init__(self)
-    self.debug = False
     self.result = S_ERROR()
     self.applicationName = 'SLICPandora'
     self.pandorasettings = ""
     self.detectorxml = ""
     self.inputSLCIO = ""
-    self.outputslcio = ""
     self.numberOfEvents = 0
     self.startFrom = 0
 
@@ -54,12 +52,6 @@ class SLICPandoraAnalysis (ModuleBase):
           
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
-      
-    if self.step_commons.has_key('outputFile'):
-      self.outputslcio = self.step_commons['outputFile']     
-
-    if self.step_commons.has_key('debug'):
-      self.debug =  self.step_commons['debug']
       
     if len(self.inputSLCIO)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
@@ -196,7 +188,7 @@ class SLICPandoraAnalysis (ModuleBase):
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable"%myslicPandoraDir
     if prefixpath:
-      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputslcio,str(self.numberOfEvents))
+      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputFile,str(self.numberOfEvents))
       self.log.info("Will run %s"%comm)
       script.write(comm)
     else:

@@ -22,16 +22,12 @@ class PostGenSelection(ModuleBase):
     self.enable = True 
     self.log = gLogger.getSubLogger( "PostGenSelection" )
     self.inputstdhep = ""
-    self.outputfile = ''
     self.numberOfEvents = 0
       
   def applicationSpecificInputs(self):
 
     if self.step_commons.has_key('InputFile'):
       self.inputstdhep =self.step_commons['InputFile']
-      
-    if self.step_commons.has_key('OutputFile'):
-      self.outputfile = self.step_commons['OutputFile']
       
     if self.step_commons.has_key('NbEvts'):
       self.numberOfEvents = self.step_commons['NbEvts']
@@ -47,7 +43,7 @@ class PostGenSelection(ModuleBase):
           for obj in outputlist:
             if obj.lower().count("_gen_"):
               self.inputstdhep = os.path.basename(obj)
-              self.outputfile = self.inputstdhep
+              self.outputFile = self.inputstdhep
         else:
           if self.workflow_commons.has_key("WhizardOutput"):
             self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),

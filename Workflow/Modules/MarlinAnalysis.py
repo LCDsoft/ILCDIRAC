@@ -33,7 +33,6 @@ class MarlinAnalysis(ModuleBase):
     ModuleBase.__init__(self)
     self.enable = True
     self.STEP_NUMBER = ''
-    self.debug = True
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.inputSLCIO = ''
@@ -43,7 +42,6 @@ class MarlinAnalysis(ModuleBase):
     self.outputDST = ''
     self.applicationName = "Marlin"
     self.evtstoprocess = ''
-    self.debug = False
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -106,8 +104,6 @@ class MarlinAnalysis(ModuleBase):
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
-    if self.step_commons.has_key('debug'):
-      self.debug =  self.step_commons['debug']
     if len(self.inputSLCIO)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:

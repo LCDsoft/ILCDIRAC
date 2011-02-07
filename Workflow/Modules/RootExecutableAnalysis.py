@@ -25,8 +25,6 @@ class RootExecutableAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "RootExecutableAnalysis" )
     self.appli = ''
     self.args = ''
-    self.result = S_ERROR()
-
       
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.

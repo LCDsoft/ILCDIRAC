@@ -38,7 +38,6 @@ class MokkaAnalysis(ModuleBase):
         ModuleBase.__init__(self)
         self.enable = True
         self.STEP_NUMBER = ''
-        self.debug = True
         self.log = gLogger.getSubLogger( "MokkaAnalysis" )
         self.result = S_ERROR()
         self.steeringFile = ''
@@ -50,9 +49,7 @@ class MokkaAnalysis(ModuleBase):
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 0
-        self.outputFile = ''
 
-        self.debug = False
 #############################################################################
     def applicationSpecificInputs(self):
       """ Resolve all input variables for the module here.
@@ -86,10 +83,6 @@ class MokkaAnalysis(ModuleBase):
         
       if self.step_commons.has_key('dbSlice'):
         self.dbslice = self.step_commons['dbSlice']
-      if self.step_commons.has_key('debug'):
-        self.debug = self.step_commons['debug']
-      if self.step_commons.has_key("outputFile"):
-        self.outputFile = self.step_commons["outputFile"]
       
       if self.workflow_commons.has_key("IS_PROD"):
         if self.workflow_commons["IS_PROD"]:

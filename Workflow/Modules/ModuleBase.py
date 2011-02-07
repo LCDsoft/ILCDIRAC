@@ -39,8 +39,9 @@ class ModuleBase(object):
     self.applicationName = ''
     self.InputData = ''
     self.result = S_ERROR()
-
+    self.outputFile = ''
     self.jobType = ''
+    self.debug = False
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -308,7 +309,13 @@ class ModuleBase(object):
       self.jobType = self.workflow_commons['JobType']
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
-    
+
+    if self.step_commons.has_key("outputFile"):
+      self.outputFile = self.step_commons["outputFile"]
+
+    if self.step_commons.has_key('debug'):
+      self.debug =  self.step_commons['debug']
+          
     res = self.applicationSpecificInputs()
     if not res['OK']:
       return res
