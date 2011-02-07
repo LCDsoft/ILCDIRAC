@@ -4,9 +4,25 @@
 ##
 
 from subprocess import call
+from DIRAC.Core.Security.Misc import getProxyInfo
 
-print 'Getting production proxy ...'
-call( [ 'proxy-init' , '-g', 'ilc_prod' ] )
+
+def getNewProxy(): 
+  print 'Getting production proxy ...'
+  call( [ 'proxy-init' , '-g', 'ilc_prod' ] )
+
+result = getProxyInfo()
+if not result['OK']:
+  print 'Could not obtain proxy information: %s'%result['Message']
+  getNewProxy()
+elif not result['Value'].has_key('group'):
+  print 'Could not get group from proxy'
+  getNewProxy()
+group = result['Value']['group']
+
+if not group=='ilc_prod':
+  print 'You do not have a valid group'
+  getNewProxy()
 
 
 from DIRAC.Core.Base import Script
