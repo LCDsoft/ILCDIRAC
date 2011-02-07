@@ -700,6 +700,7 @@ class ILCJob(Job):
     return S_OK()
 
   def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False,logInOutputData=False):
+
     """ Define Marlin step
       Example usage:
 
@@ -726,144 +727,211 @@ class ILCJob(Job):
       @type logInOutputData: bool
       @return: S_OK() or S_ERROR()
     """
-    kwargs = {'appVersion':appVersion,'XMLFile':xmlfile,'GEARFile':gearfile,'inputslcio':inputslcio,'evtstoprocess':evtstoprocess,'logFile':logFile,'debug':debug,"logInOutputData":logInOutputData}
-    if not type(appVersion) in types.StringTypes:
-      return self._reportError('Expected string for version',__name__,**kwargs)
-    if not type(xmlfile) in types.StringTypes:
-      return self._reportError('Expected string for xml file',__name__,**kwargs)
-    if gearfile:
-      if not type(gearfile) in types.StringTypes:
-        return self._reportError('Expected string for gear file',__name__,**kwargs)
-    if not type(debug) == types.BooleanType:
-      return self._reportError('Expected bool for debug',__name__,**kwargs)
 
-    self.StepCount +=1
+    # Define appName, used below for setting up step instance
+    #---------------------------------------------------------------------------
 
-    if logFile:
-      if type(logFile) in types.StringTypes:
-        logName = logFile
-      else:
-        return self._reportError('Expected string for log file name',__name__,**kwargs)
-    else:
-      logName = 'Marlin_%s.log' %(appVersion)
-    if not logInOutputData:
-      self.addToOutputSandbox.append(logName)
+    appName = 'Marlin'
 
-    if os.path.exists(xmlfile):
-      self.log.verbose('Found specified XML file %s'%xmlfile)
-      self.addToInputSandbox.append(xmlfile)
-    elif xmlfile.lower().find("lfn:")>-1:
-      self.log.verbose('Found specified lfn to XML file %s'%xmlfile)
-      self.addToInputSandbox.append(xmlfile)
-    else:
-      return self._reportError('Specified XML file %s does not exist' %(xmlfile),__name__,**kwargs)
+    # Check the required arguments
+    #---------------------------------------------------------------------------
+
+    self._checkArgs( {
+      'appVersion'     : types.StringTypes,
+      'xmlfile'        : types.StringTypes,
+      'debug'          : types.BooleanType
+    } )
+
+    # XML Steering file
+    #---------------------------------------------------------------------------
+
+    self._addFileToInputSandbox( xmlfile, 'Marlin steering file')
+
+    # GEAR file
+    #---------------------------------------------------------------------------
 
     if gearfile:
-      if os.path.exists(gearfile):
-        self.log.verbose('Found specified GEAR file %s'%gearfile)
-        self.addToInputSandbox.append(gearfile)
-      elif gearfile.lower().count("lfn:")>0:
-        self.log.verbose('Found specified LFN to GEAR file %s'%gearfile)
-        self.addToInputSandbox.append(gearfile)
-      else:
-        return self._reportError('Specified GEAR file %s does not exist' %(gearfile),__name__,**kwargs)
+
+      self._checkArgs( { 'gearfile' : types.StringTypes } )
+      self._addFileToInputSandbox( gearfile, 'GEAR file')
+
     else:
-      if self.ioDict.has_key("MokkaStep"):
-        gearfile="GearOutput.xml"
-      #else:
-      #  return self._reportError('As Mokka do not run before, you need to specify gearfile')
+
+      if self.ioDict.has_key( "MokkaStep" ):
+        gearfile = "GearOutput.xml"
+
+    # SLCIO files
+    #---------------------------------------------------------------------------
 
     inputslcioStr =''
     srmflag = False
-    if(inputslcio):
+
+    if inputslcio:
+
       if type(inputslcio) in types.StringTypes:
+
         if inputslcio.lower()== "srm":
+
           self.log.verbose("Will assume SRM file was set in getSRMFile before.")
           srmflag = True
+
         else:
           inputslcio = [inputslcio]
+
       if not srmflag:
-        if not type(inputslcio)==type([]):
-          return self._reportError('Expected string or list of strings for input slcio file',__name__,**kwargs)
-        #for i in xrange(len(inputslcio)):
-        #  inputslcio[i] = inputslcio[i].replace('LFN:','')
-        #inputslcio = map( lambda x: 'LFN:'+x, inputslcio)
+
+        self._checkArgs( { 'inputslcio' : types.ListType } )
+
         inputslcioStr = string.join(inputslcio,';')
-        self.addToInputSandbox.append(inputslcioStr)
+
+        for file in inputslcio:
+          self._addFileToInputSandbox( file, 'SLCIO file' )
 
 
-    stepName = 'RunMarlin'
+    # Log file
+    #---------------------------------------------------------------------------
+
+    if logFile:
+      self._checkArgs( { 'logFile' : types.StringTypes } )
+    else:
+      logFile = 'Marlin_%s.log' % appVersion
+
+    if not logInOutputData:
+      self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
+
+    # Setting up a step instance
+    #---------------------------------------------------------------------------
+    # 1. Create Step definition
+    # 2. Add step parameters
+    # 3. Add modules to step
+    # 4. Add step to workflow
+    # 5. Create Step instance
+    # 6. Set variables that are used by the modules
+    # 7. Install software
+    # 8. Set ioDict to pass parameters to future steps
+
+    # Add count to number of steps
+
+    self.StepCount +=1
+
+    #--------------------------
+    # 1. Create Step definition
+
     stepNumber = self.StepCount
-    stepDefn = '%sStep%s' %('Marlin',stepNumber)
-    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    stepDefn   = '%sStep%s'    % ( appName, stepNumber )
+    stepName   = 'Run%sStep%s' % ( appName, stepNumber )
 
+    self._addParameter(
+      self.workflow,
+      'TotalSteps',
+      'String',
+      self.StepCount,
+      'Total number of steps'
+    )
 
-    ##now define MokkaAnalysis
-    moduleName = "MarlinAnalysis"
-    module = ModuleDefinition(moduleName)
-    module.setDescription('Marlin module definition')
-    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
-    module.setBody(body)
-    #Add user job finalization module
-    moduleName = 'UserJobFinalization'
-    userData = ModuleDefinition(moduleName)
-    userData.setDescription('Uploads user output data files with ILC specific policies.')
-    body = 'from %s.%s import %s\n' %(self.importLocation,moduleName,moduleName)
-    userData.setBody(body)
-    step = StepDefinition(stepDefn)
-    step.addModule(module)
-    step.addModule(userData)
-    step.createModuleInstance('MarlinAnalysis',stepDefn)
-    step.createModuleInstance('UserJobFinalization',stepDefn)
-    step.addParameter(Parameter("applicationVersion","","string","","",False, False, "Application Name"))
-    step.addParameter(Parameter("applicationLog","","string","","",False,False,"Name of the log file of the application"))
-    step.addParameter(Parameter("inputXML","","string","","",False,False,"Name of the input XML file"))
+    step = StepDefinition( stepDefn )
+
+    #-----------------------
+    # 2. Add step parameters
+
+    step.addParameter( Parameter( "applicationVersion", "",    "string", "", "", False, False, "Application Name"))
+    step.addParameter( Parameter( "applicationLog",     "",    "string", "", "", False, False, "Name of the log file of the application"))
+    step.addParameter( Parameter( "inputXML",           "",    "string", "", "", False, False, "Name of the input XML file"))
+
     if gearfile:
-      step.addParameter(Parameter("inputGEAR","","string","","",False,False,"Name of the input GEAR file"))
-    step.addParameter(Parameter("inputSlcio","","string","","",False,False,"Name of the input slcio file"))
-    step.addParameter(Parameter("EvtsToProcess",-1,"int","","",False,False,"Number of events to process"))
-    step.addParameter(Parameter("debug",False,"bool","","",False,False,"Number of events to process"))
+      step.addParameter( Parameter( "inputGEAR",        "",    "string", "", "", False, False, "Name of the input GEAR file"))
 
-    self.workflow.addStep(step)
-    stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
-    stepInstance.setValue("applicationVersion",appVersion)
-    stepInstance.setValue("applicationLog",logName)
-    if(inputslcioStr):
-      stepInstance.setValue("inputSlcio",inputslcioStr)
+    step.addParameter( Parameter( "inputSlcio",         "",    "string", "", "", False, False, "Name of the input slcio file"))
+    step.addParameter( Parameter( "EvtsToProcess",      -1,    "int",    "", "", False, False, "Number of events to process"))
+    step.addParameter( Parameter( "debug",              False, "bool",   "", "", False, False, "Number of events to process"))
+
+    #-----------------------
+    # 3. Add modules to step
+
+    modules = [
+      ['MarlinAnalysis',      'Marlin module definition'],
+      ['UserJobFinalization', 'Uploads user output data files with ILC specific policies.']
+    ]
+
+    self._addModuleToStep( modules, step, stepDefn )
+
+    #------------------------
+    # 4. Add step to workflow
+
+    self.workflow.addStep( step )
+
+    #------------------------
+    # 5. Create Step instance
+
+    stepInstance = self.workflow.createStepInstance( stepDefn, stepName )
+
+    #----------------------------------------------
+    # 6. Set variables that are used by the modules
+
+    # Application version
+
+    stepInstance.setValue( "applicationVersion", appVersion )
+
+    # Logfile
+
+    if logFile:
+      stepInstance.setValue( "applicationLog", logFile )
+
+    # Input SLCIO
+
+    if inputslcioStr :
+      stepInstance.setValue( "inputSlcio", inputslcioStr )
+
     else:
+
       if not srmflag:
-        if self.ioDict.has_key("MokkaStep"):
-          stepInstance.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+
+        if self.ioDict.has_key( "MokkaStep" ):
+          stepInstance.setLink( 'inputSlcio', self.ioDict[ "MokkaStep" ], 'outputFile' )
+
       else:
-        if not self.ioDict.has_key("GetSRMStep"):
-          return self._reportError("Could not find SRM step. Please check that getSRMFile is called before.",__name__,**kwargs)
+
+        if not self.ioDict.has_key( "GetSRMStep" ):
+          return self._reportError( "Could not find SRM step. Please check that getSRMFile is called before.", __name__, **kwargs )
         else:
-          srms = self._sortSRM(self.srms)
-          stepInstance.setValue("inputSlcio",string.join(srms,";"))
-    stepInstance.setValue("inputXML",xmlfile)
+          srms = self._sortSRM( self.srms )
+          stepInstance.setValue( "inputSlcio", string.join( srms, ";" ) )
+
+    # Marlin steering file
+
+    stepInstance.setValue( "inputXML", xmlfile )
+
+    # GEAR file
+
     if gearfile:
-      stepInstance.setValue("inputGEAR",gearfile)
-    if(evtstoprocess):
-      stepInstance.setValue("EvtsToProcess",evtstoprocess)
+      stepInstance.setValue( "inputGEAR", gearfile )
+
+    # Events to process
+
+    if( evtstoprocess ):
+      stepInstance.setValue( "EvtsToProcess", evtstoprocess )
     else:
-      if self.ioDict.has_key("MokkaStep"):
-        stepInstance.setLink('EvtsToProcess',self.ioDict["MokkaStep"],'numberOfEvents')
+      if self.ioDict.has_key( "MokkaStep" ):
+        stepInstance.setLink( 'EvtsToProcess', self.ioDict[ "MokkaStep" ], 'numberOfEvents' )
       else :
-        stepInstance.setValue("EvtsToProcess",-1)
+        stepInstance.setValue( "EvtsToProcess", -1 )
+
+    # Debug flag
+
     stepInstance.setValue("debug",debug)
 
-    currentApp = "marlin.%s"%appVersion
+    #--------------------
+    # 7. Install software
 
-    swPackages = 'SoftwarePackages'
-    description='ILC Software Packages to be installed'
-    if not self.workflow.findParameter(swPackages):
-      self._addParameter(self.workflow,swPackages,'JDL',currentApp,description)
-    else:
-      apps = self.workflow.findParameter(swPackages).getValue()
-      if not currentApp in string.split(apps,';'):
-        apps += ';'+currentApp
-      self._addParameter(self.workflow,swPackages,'JDL',apps,description)
-    self.ioDict["MarlinStep"]=stepInstance.getName()
+    self._addSoftware( 'marlin', appVersion )
+
+    # 8. Set ioDict to pass parameters to future steps
+
+    self.ioDict["MarlinStep"] = stepInstance.getName()
+
+    # Return
+    #---------------------------------------------------------------------------
+
     return S_OK()
 
   def setSLIC(self,appVersion,macFile,inputGenfile=None,detectorModel='',nbOfEvents=10000,startFrom=1,RandomSeed=0,outputFile=None,logFile='',debug = False,logInOutputData=False):
@@ -1348,7 +1416,7 @@ class ILCJob(Job):
     @param ProdID: Optional parameter to force using one specific prodID for the input files. By default it's the latest one
     @type ProdID: int
     @param NSigEventsPerJob: Number of signal events per job
-    @type NSigEventsPerJob: int 
+    @type NSigEventsPerJob: int
     """
     kwargs = {"detector":detector,"energy":energy,'BXOverlay':BXOverlay,"NbGGtoHadInts":NbGGtoHadInts,'ProdID':ProdID,
               'NSigEventsPerJob':NSigEventsPerJob}
@@ -1651,7 +1719,7 @@ class ILCJob(Job):
 
     if logFile:
 
-      self._checkArgs( { 'loggFile' : types.StringTypes } )
+      self._checkArgs( { 'logFile' : types.StringTypes } )
       self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
 
     # Setting up a step instance
@@ -1674,9 +1742,6 @@ class ILCJob(Job):
     stepNumber = self.StepCount
     stepDefn   = '%sStep%s'    % ( appName, stepNumber )
     stepName   = 'Run%sStep%s' % ( appName, stepNumber )
-    stepPrefix = '%s_'         % stepName
-
-    self.currentStepPrefix = stepPrefix
 
     self._addParameter(
       self.workflow,
@@ -1785,7 +1850,7 @@ class ILCJob(Job):
 
     if logFile:
 
-      self._checkArgs( { 'loggFile' : types.StringTypes } )
+      self._checkArgs( { 'logFile' : types.StringTypes } )
       self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
 
     # Setting up a step instance
@@ -1808,9 +1873,6 @@ class ILCJob(Job):
     stepNumber = self.StepCount
     stepDefn   = '%sStep%s'    % ( appName, stepNumber )
     stepName   = 'Run%sStep%s' % ( appName, stepNumber )
-    stepPrefix = '%s_'         % stepName
-
-    self.currentStepPrefix = stepPrefix
 
     self._addParameter(
       self.workflow,
@@ -1918,6 +1980,8 @@ class ILCJob(Job):
     #---------------------------------------------------------------------------
 
     if logFile:
+
+      self._checkArgs( { 'logFile' : types.StringTypes } )
       self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
 
     # Setting up a step instance
@@ -1939,9 +2003,6 @@ class ILCJob(Job):
     stepNumber = self.StepCount
     stepDefn   = '%sStep%s'    % ( appName, stepNumber )
     stepName   = 'Run%sStep%s' % ( appName, stepNumber )
-    stepPrefix = '%s_'         % stepName
-
-    self.currentStepPrefix = stepPrefix
 
     self._addParameter(
       self.workflow,
@@ -2021,6 +2082,68 @@ class ILCJob(Job):
 
     return S_OK()
 
+  def setTomato( self, xmlFile, inputSLCIOFiles = None, libTomato = None, logFile = ''):
+    # Wrapper for Marlin
+
+    # Check the arguments
+    #---------------------------------------------------------------------------
+    # Input files are checked below separately because inputSLCIOFiles can be
+    # left undefined. The input will then be taken from any previous steps, if
+    # any.
+
+    self._checkArgs( {
+      'xmlFile'     : types.StringTypes
+    } )
+
+    # Check for input files
+    #---------------------------------------------------------------------------
+    # Two possibilities:
+    # 1. User defined in a user job.
+    # 2. Files from previous step in a user job.
+    #    The actual linking of the output files from previous step occurs
+    #    below in another section of code where the step is set up
+    # 3. There are no input files. Raise error.
+
+    # 1. User defined in a user job.
+
+    if inputSLCIOFiles:
+
+      self._checkArgs( {
+        'inputSLCIOFiles' : types.ListType
+      } )
+
+      for inputSLCIOFile in inputSLCIOFiles:
+        self._addFileToInputSandbox( inputSLCIOFile, 'Input slcio files' )
+
+    # 3. There are no input files.
+
+    else:
+      self.log.notice( "No input files found to run Tomato on." )
+
+    # User specified libTomato
+    #---------------------------------------------------------------------------
+
+    if libTomato:
+
+      self._checkArgs( {
+        'libTomato' : types.StringTypes
+      } )
+
+      self._addFileToInputSandbox( libTomato, 'User provided libTomato' )
+
+    # Log file
+    #---------------------------------------------------------------------------
+
+    if logFile:
+      self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
+
+    # Marlin stuffs
+    #---------------------------------------------------------------------------
+
+    # 7. Install software
+
+    self._addSoftware( 'tomato', appVersion )
+
   #-----------------------------------------------------------------------------
   # Helper methods
 
@@ -2058,25 +2181,25 @@ class ILCJob(Job):
 
     if not filePath:
       return self._reportError(
-        'Specified %s file %s does not exist' % (fileDescription, filePath),
+        '%s does not exist: %s' % (fileDescription, filePath),
         __name__,
         **self._getArgsDict( 1 )
       )
 
     if os.path.exists( filePath ):
 
-      self.log.verbose( 'Found %s file %s' % ( fileDescription, filePath ) )
+      self.log.verbose( 'Found %s: %s' % ( fileDescription, filePath ) )
       self.addToInputSandbox.append( filePath )
       return
 
     elif filePath.lower().find( "lfn:" ) > -1:
 
-      self.log.verbose('Found specified lfn to %s file %s' % ( fileDescription, filePath ) )
+      self.log.verbose('Found specified lfn to %s: %s' % ( fileDescription, filePath ) )
       self.addToInputSandbox.append(filePath)
       return
 
     return self._reportError(
-      'Specified %s file %s does not exist' % (fileDescription, filePath),
+      '%s does not exist: %s' % (fileDescription, filePath),
       __name__,
       **self._getArgsDict( 1 )
     )
