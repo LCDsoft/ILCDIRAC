@@ -31,7 +31,6 @@ class UserJobFinalization(ModuleBase):
     ModuleBase.__init__(self)
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "UserJobFinalization" )
-    self.jobID = ''
     self.enable=True
     self.failoverTest=False #flag to put file to failover SE by default
     self.defaultOutputSE = gConfig.getValue( '/Resources/StorageElementGroups/Tier1-USER',[])    
@@ -48,7 +47,7 @@ class UserJobFinalization(ModuleBase):
     self.jobReport = None
     
   #############################################################################
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
     self.log.verbose(self.workflow_commons)

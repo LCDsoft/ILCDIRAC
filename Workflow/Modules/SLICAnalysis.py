@@ -29,10 +29,7 @@ class SLICAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "SLICAnalysis" )
     self.result = S_ERROR()
-    self.systemConfig = ''
-    self.applicationLog = ''
     self.applicationName = 'SLIC'
-    self.applicationVersion=''
     self.startFrom = 0
     self.stdhepFile = ''
     self.InputData = '' # from the (JDL WMS approach)
@@ -41,20 +38,11 @@ class SLICAnalysis(ModuleBase):
     self.inmacFile = ''
     self.outputslcio = ''
     self.debug = False
-    self.jobID = None
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
-    
-  def resolveInputVariables(self):
+
+  def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    if self.workflow_commons.has_key('SystemConfig'):
-        self.systemConfig = self.workflow_commons['SystemConfig']
-
-    if self.step_commons.has_key('applicationVersion'):
-        self.applicationVersion = self.step_commons['applicationVersion']
-        self.applicationLog = self.step_commons['applicationLog']
 
     if self.step_commons.has_key('numberOfEvents'):
         self.numberOfEvents = self.step_commons['numberOfEvents']

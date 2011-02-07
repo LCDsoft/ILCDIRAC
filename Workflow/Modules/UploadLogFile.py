@@ -49,7 +49,7 @@ class UploadLogFile(ModuleBase):
     self.jobID = ''
 
 ######################################################################
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
 
     if self.step_commons.has_key('Enable'):
       self.enable=self.step_commons['Enable']

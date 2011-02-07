@@ -29,7 +29,6 @@ class UploadOutputData(ModuleBase):
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "UploadOutputData" )
     self.commandTimeOut = 10*60
-    self.jobID = ''
     self.enable=True
     self.failoverTest=False #flag to put file to failover SE by default
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover',[])
@@ -43,7 +42,7 @@ class UploadOutputData(ModuleBase):
     self.PRODUCTION_ID=""
 
   #############################################################################
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
     self.log.verbose(self.workflow_commons)
@@ -65,7 +64,6 @@ class UploadOutputData(ModuleBase):
       self.PRODUCTION_ID = self.workflow_commons["PRODUCTION_ID"]
 
     if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
       self.log.verbose('Found WMS JobID = %s' %self.jobID)
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')

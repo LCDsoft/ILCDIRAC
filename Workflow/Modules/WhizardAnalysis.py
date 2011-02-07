@@ -31,18 +31,10 @@ class WhizardAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.debug = True
     self.log = gLogger.getSubLogger( "WhizardAnalysis" )
-    self.result = S_ERROR()
     self.inFile = ''
     self.stdhepFile = ''
     self.NumberOfEvents = 1
     self.Lumi = 0
-    self.jobID = None
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
-
-    self.systemConfig = ''
-    self.applicationLog = ''
-    self.applicationVersion = ''
     self.applicationName = 'whizard'
     self.evttype = ""
     self.randomseed = 0
@@ -72,18 +64,11 @@ class WhizardAnalysis(ModuleBase):
     self.processlist = ProcessList(os.path.basename(processlistloc))
     return S_OK()
     
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """Resolve module input
     @return: S_OK()
     """
-    
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-      
-    if self.step_commons.has_key('applicationVersion'):
-      self.applicationVersion = self.step_commons['applicationVersion']
-      self.applicationLog = self.step_commons['applicationLog']
- 
+
     if self.step_commons.has_key("Energy"):
       self.energy = self.step_commons["Energy"]
       self.parameters['ENERGY']=self.energy

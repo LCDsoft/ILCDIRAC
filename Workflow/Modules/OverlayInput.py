@@ -20,8 +20,6 @@ class OverlayInput (ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "OverlayInput" )
-    self.result = S_ERROR()
-    self.jobID = None
     self.applicationName = 'OverlayInput'
     self.printoutflag = ''
     self.prodid = 0
@@ -39,10 +37,9 @@ class OverlayInput (ModuleBase):
     self.nsigevts = 0
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
 
-  def resolveInputVariables(self):
+
+  def applicationSpecificInputs(self):
     if self.step_commons.has_key('Detector'):
       self.detector = self.step_commons['Detector']
     else:

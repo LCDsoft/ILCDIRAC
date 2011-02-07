@@ -30,9 +30,6 @@ class LCSIMAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "LCSIMAnalysis" )
     self.result = S_ERROR()
-    self.systemConfig = ''
-    self.applicationLog = ''
-    self.applicationVersion=''
     self.sourcedir = ''
     self.xmlfile = ''
     self.inputSLCIO = ''
@@ -40,26 +37,16 @@ class LCSIMAnalysis(ModuleBase):
     self.outputREC = ""
     self.outputDST = ""
     self.InputData = '' # from the (JDL WMS approach)
-
     self.aliasproperties = ''
     self.debug = False
-    self.jobID = None
     self.applicationName = 'LCSIM'
     self.printoutflag = ''
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
+
      
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-
-    if self.step_commons.has_key('applicationVersion'):
-      self.applicationVersion = self.step_commons['applicationVersion']
-      self.applicationLog = self.step_commons['applicationLog']
-
     if self.step_commons.has_key('inputXML'):
       self.xmlfile = self.step_commons['inputXML']
       

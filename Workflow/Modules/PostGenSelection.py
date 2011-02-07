@@ -20,26 +20,12 @@ class PostGenSelection(ModuleBase):
     ModuleBase.__init__(self)
     self.STEP_NUMBER = ''
     self.enable = True 
-    self.jobID = None
     self.log = gLogger.getSubLogger( "PostGenSelection" )
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
-      
-    self.systemConfig = ''  
-    self.applicationLog = ''
-    self.applicationVersion = ''
     self.inputstdhep = ""
     self.outputfile = ''
     self.numberOfEvents = 0
-    self.result = S_OK()
       
-  def resolveInputVariables(self):
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']  
-      
-    if self.step_commons.has_key('applicationVersion'):
-      self.applicationVersion = self.step_commons['applicationVersion']
-      self.applicationLog = self.step_commons['applicationLog']
+  def applicationSpecificInputs(self):
 
     if self.step_commons.has_key('InputFile'):
       self.inputstdhep =self.step_commons['InputFile']

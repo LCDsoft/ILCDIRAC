@@ -43,29 +43,13 @@ class MarlinAnalysis(ModuleBase):
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.jobID = None
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
-    self.systemConfig = ''
-    self.applicationLog = ''
-    self.applicationVersion=''
-    self.jobType = ''
     self.evtstoprocess = ''
     self.debug = False
     
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-      
-    if self.step_commons.has_key('applicationVersion'):
-      self.applicationVersion = self.step_commons['applicationVersion']
-      self.applicationLog = self.step_commons['applicationLog']
-      
-    if self.workflow_commons.has_key('JobType'):
-      self.jobType = self.workflow_commons['JobType']
       
     if self.step_commons.has_key('inputSlcio'):
       self.inputSLCIO =self.step_commons['inputSlcio']
