@@ -254,19 +254,3 @@ class LCSIMAnalysis(ModuleBase):
       return S_ERROR('LCSIM Exited With Status %s' %(status))
     self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
     return S_OK('LCSIM %s Successful' %(self.applicationVersion))
-
-  #############################################################################
-  def redirectLogOutput(self, fd, message):
-    #sys.stdout.flush()
-    if message:
-      if re.search(self.printoutflag,message): print message
-      if self.applicationLog:
-        log = open(self.applicationLog,'a')
-        log.write(message+'\n')
-        log.close()
-      else:
-        self.log.error("Application Log file not defined")
-    if fd == 1:
-      self.stdError += message
-    #############################################################################
-    

@@ -355,21 +355,6 @@ class MokkaAnalysis(ModuleBase):
       return S_OK('Mokka %s Successful' %(self.applicationVersion))
 
     #############################################################################
-    def redirectLogOutput(self, fd, message):
-      """Used to catch the application print outs
-      """
-      #sys.stdout.flush()
-      if message:
-        print message
-        if self.applicationLog:
-          log = open(self.applicationLog,'a')
-          log.write(message+'\n')
-          log.close()
-        else:
-          self.log.error("Application Log file not defined")
-      if fd == 1:
-        self.stdError += message
-    #############################################################################
 
     def GenRandString(self, length=8, chars=string.letters + string.digits):
       """Return random string of 8 chars
