@@ -35,9 +35,7 @@ class SLICAnalysis(ModuleBase):
     self.randomseed = 0
     self.detectorModel = ''
     self.inmacFile = ''
-    self.outputslcio = ''
-    self.debug = False
-
+    
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
@@ -64,9 +62,7 @@ class SLICAnalysis(ModuleBase):
       self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
     elif self.jobID:
       self.randomseed = self.jobID
-      
-    if self.step_commons.has_key('outputFile'):
-      self.outputslcio = self.step_commons['outputFile'] 
+
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
         self.outputslcio = getProdFilename(self.outputslcio,int(self.workflow_commons["PRODUCTION_ID"]),
@@ -81,9 +77,6 @@ class SLICAnalysis(ModuleBase):
             self.numberOfEvents=res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
-            
-    if self.step_commons.has_key('debug'):
-      self.debug =  self.step_commons['debug']
       
     if len(self.stdhepFile)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
@@ -194,7 +187,7 @@ class SLICAnalysis(ModuleBase):
       self.stdhepFile = res['Value'][0]
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
-    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputslcio,self.debug)
+    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputFile,self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')

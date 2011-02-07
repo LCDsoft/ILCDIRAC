@@ -43,8 +43,6 @@ class WhizardAnalysis(ModuleBase):
     self.rm = ReplicaManager()
     self.processlist = None
     self.jobindex = None
-    self.debug = False
-    self.outputFile = ''
     self.parameters = {}
     self.susymodel = 0
 
@@ -103,15 +101,10 @@ class WhizardAnalysis(ModuleBase):
       self.parameters['PROCESS']=self.evttype
     if self.step_commons.has_key("JobIndex"):
       self.jobindex = self.step_commons["JobIndex"]
-      
-    if self.step_commons.has_key("debug"):
-      self.debug = self.step_commons["debug"]
 
     if self.inFile == "whizard.in":
       os.rename(self.inFile, "whizardnew.in")
       self.inFile = "whizardnew.in"
-    if self.step_commons.has_key("outputFile"):
-      self.outputFile = self.step_commons["outputFile"]
  
     if self.step_commons.has_key("parameters"):
       params= self.step_commons["parameters"]

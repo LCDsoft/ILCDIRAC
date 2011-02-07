@@ -25,9 +25,7 @@ class RootMacroAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "RootMacroAnalysis" )
     
     self.macro = ''
-    self.args = ''
-    self.result = S_ERROR()
-    
+    self.args = ''    
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.

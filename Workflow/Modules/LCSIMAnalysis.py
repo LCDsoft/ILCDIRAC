@@ -33,11 +33,9 @@ class LCSIMAnalysis(ModuleBase):
     self.sourcedir = ''
     self.xmlfile = ''
     self.inputSLCIO = ''
-    self.outputFile = ""
     self.outputREC = ""
     self.outputDST = ""
     self.aliasproperties = ''
-    self.debug = False
     self.applicationName = 'LCSIM'
     self.printoutflag = ''
 
@@ -48,9 +46,6 @@ class LCSIMAnalysis(ModuleBase):
     """
     if self.step_commons.has_key('inputXML'):
       self.xmlfile = self.step_commons['inputXML']
-      
-    if self.step_commons.has_key('outputFile'):
-      self.outputFile = self.step_commons['outputFile']
 
     if self.step_commons.has_key('outputREC'):
       self.outputREC = self.step_commons['outputREC']
@@ -99,8 +94,7 @@ class LCSIMAnalysis(ModuleBase):
 
     if self.step_commons.has_key("aliasproperties"):
       self.aliasproperties = self.step_commons["aliasproperties"]
-    if self.step_commons.has_key('debug'):
-      self.debug =  self.step_commons['debug']
+
     if len(self.inputSLCIO)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
