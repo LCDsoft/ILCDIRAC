@@ -98,17 +98,3 @@ class ApplicationScript(ModuleBase):
     #Above can't be removed as it is the last notification for user jobs
     self.setApplicationStatus('%s (%s %s) Successful' %(os.path.basename(self.script),self.applicationName,self.applicationVersion))
     return S_OK('%s (%s %s) Successful' %(os.path.basename(self.script),self.applicationName,self.applicationVersion))
-          
-  
-  def redirectLogOutput(self, fd, message):
-    """Catch the output from the application
-    """
-    sys.stdout.flush()
-    if self.applicationLog:
-      log = open(self.applicationLog,'a')
-      log.write(message+'\n')
-      log.close()
-    else:
-      self.log.error("Application Log file not defined")
-    if fd == 1:
-      self.stdError += message  

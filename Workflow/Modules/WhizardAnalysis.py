@@ -356,18 +356,3 @@ class WhizardAnalysis(ModuleBase):
     self.setApplicationStatus('Whizard %s Successful' %(self.applicationVersion))
     return S_OK('Whizard %s Successful' %(self.applicationVersion))
     
-  def redirectLogOutput(self, fd, message):
-    """Catch the output from the application
-    """
-    sys.stdout.flush()
-    if message:
-      print message
-    if self.applicationLog:
-      log = open(self.applicationLog,'a')
-      log.write(message+'\n')
-      log.close()
-    else:
-      self.log.error("Application Log file not defined")
-    if fd == 1:
-      self.stdError += message
-      

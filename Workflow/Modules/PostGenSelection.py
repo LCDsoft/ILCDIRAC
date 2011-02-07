@@ -172,18 +172,3 @@ class PostGenSelection(ModuleBase):
     self.setApplicationStatus('Post Generation Selection successful')
     return S_OK('Post Generation Selection successful')
   
-  def redirectLogOutput(self, fd, message):
-    """Catch the output from the application
-    """
-    sys.stdout.flush()
-    if message:
-      print message
-    if self.applicationLog:
-      log = open(self.applicationLog,'a')
-      log.write(message+'\n')
-      log.close()
-    else:
-      self.log.error("Application Log file not defined")
-    if fd == 1:
-      self.stdError += message
-    

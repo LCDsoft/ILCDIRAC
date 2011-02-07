@@ -255,20 +255,3 @@ class SLICAnalysis(ModuleBase):
     self.setApplicationStatus('SLIC %s Successful' %(self.applicationVersion))
     return S_OK('SLIC %s Successful' %(self.applicationVersion))
 
-    #############################################################################
-  def redirectLogOutput(self, fd, message):
-    """Catch the stdout of the application
-    """
-    #sys.stdout.flush()
-    if message:
-      if re.search('BeginEvent',message): print message
-      if self.applicationLog:
-        log = open(self.applicationLog,'a')
-        log.write(message+'\n')
-        log.close()
-      else:
-        self.log.error("Application Log file not defined")
-    if fd == 1:
-      self.stdError += message
-    #############################################################################
-    
