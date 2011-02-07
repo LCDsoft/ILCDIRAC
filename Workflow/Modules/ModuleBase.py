@@ -17,7 +17,7 @@ from DIRAC.Core.Utilities.Adler import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport import FileReport
 from DIRAC.Core.Utilities.File import makeGuid
 import DIRAC
-import os,string
+import os,string,sys
 
 class ModuleBase(object):
 
@@ -327,9 +327,9 @@ class ModuleBase(object):
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
     """
-    #sys.stdout.flush()
+    sys.stdout.flush()
     if message:
-      if re.search('INFO Evt',message): print message
+      print message
       if self.applicationLog:
         log = open(self.applicationLog,'a')
         log.write(message+'\n')
