@@ -39,7 +39,6 @@ class MokkaAnalysis(ModuleBase):
         self.enable = True
         self.STEP_NUMBER = ''
         self.log = gLogger.getSubLogger( "MokkaAnalysis" )
-        self.result = S_ERROR()
         self.steeringFile = ''
         self.stdhepFile = ''
         self.macFile = ''
