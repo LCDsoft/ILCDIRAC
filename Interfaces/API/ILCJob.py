@@ -709,7 +709,7 @@ class ILCJob(Job):
 
       If personal processors are needed, put them in a 'lib' directory, and do
 
-      >>> job.setInputData('lib')
+      >>> job.setInputSandbox('lib')
 
       so that they get shipped to the grid site. All contents are prepended in MARLIN_DLL
 
