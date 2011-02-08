@@ -892,7 +892,7 @@ class ILCJob(Job):
       else:
 
         if not self.ioDict.has_key( "GetSRMStep" ):
-          return self._reportError( "Could not find SRM step. Please check that getSRMFile is called before.", __name__, **kwargs )
+          return self._reportError( "Could not find SRM step. Please check that getSRMFile is called before.")
         else:
           srms = self._sortSRM( self.srms )
           stepInstance.setValue( "inputSlcio", string.join( srms, ";" ) )
