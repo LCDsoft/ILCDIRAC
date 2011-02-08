@@ -42,7 +42,7 @@ class MarlinAnalysis(ModuleBase):
     self.outputDST = ''
     self.applicationName = "Marlin"
     self.evtstoprocess = ''
-    self.eventstring = 'INFO Evt'
+    self.eventstring = ''
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -205,17 +205,18 @@ class MarlinAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     marlindll = ""
     if(os.path.exists("%s/MARLIN_DLL"%myMarlinDir)):
-      if os.environ.has_key('MARLIN_DLL'):
-        for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
-          if d!="Marlin":
-            marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
+      #if os.environ.has_key('MARLIN_DLL'):
+      #  os.environ['MARLIN_DLL']=''
+        #for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
+        #  if d!="Marlin":
+        #    marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
         #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
-        marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
-      else:
-        for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
-          marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
+        #marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
+      #else:
+      for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
+        marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
         #script.write('export MARLIN_DLL=%s:'%marlindll)
-        marlindll="%s"%(marlindll)
+      marlindll="%s"%(marlindll)
     else:
       script.close()
       self.log.error("MARLIN_DLL directory was not found, something went terribly wrong!")
