@@ -10,7 +10,7 @@ Created on Jan 29, 2010
 @author: Stephane Poss
 '''
 
-from DIRAC import S_OK,gLogger,S_ERROR
+from DIRAC import S_OK,gLogger,S_ERROR,gConfig
 
 from xml.etree.ElementTree                                import ElementTree
 from xml.etree.ElementTree                                import Element
@@ -496,20 +496,26 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
       cachedirelem = Element("cacheDirectory")
       cachedirelem.text = cachedir
       control.append(cachedirelem)
-
+      
+  LcsimPrintEveryEvent = 1
+  res = gConfig.getOption("/LocalSite/LcsimPrintEveryEvent",1)
+  if not res['OK']:
+    LcsimPrintEveryEvent=1
+  else:
+    LcsimPrintEveryEvent = res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
   if eventInterval:
     evtint = eventInterval.text
     if int(evtint)<10:    
-      eventInterval.text = "10"
+      eventInterval.text = "%s"%LcsimPrintEveryEvent
   else:
     notdriver = True
     for driver in drivers:
       if driver.attrib.has_key("type"):
         if driver.attrib["type"]=="org.lcsim.job.EventMarkerDriver" :
           eventInterval = Element("eventInterval")
-          eventInterval.text = "10"
+          eventInterval.text = "%s"%LcsimPrintEveryEvent
           driver.append(eventInterval)
           notdriver = False
     if notdriver:
@@ -519,7 +525,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
       propdict['type']='org.lcsim.job.EventMarkerDriver'
       eventmarker = Element("driver",propdict)
       eventInterval = Element("eventInterval")
-      eventInterval.text = "10"
+      eventInterval.text = "%s"%LcsimPrintEveryEvent
       eventmarker.append(eventInterval)
       drivers.append(eventmarker)
       execut = tree.find("execute")
