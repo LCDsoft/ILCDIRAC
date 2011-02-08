@@ -45,7 +45,8 @@ class WhizardAnalysis(ModuleBase):
     self.jobindex = None
     self.parameters = {}
     self.susymodel = 0
-
+    self.eventstring = ''
+    
   def obtainProcessList(self):
     """Internal function
     

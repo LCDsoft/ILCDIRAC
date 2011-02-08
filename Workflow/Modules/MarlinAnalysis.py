@@ -42,6 +42,7 @@ class MarlinAnalysis(ModuleBase):
     self.outputDST = ''
     self.applicationName = "Marlin"
     self.evtstoprocess = ''
+    self.eventstring = 'INFO Evt'
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.

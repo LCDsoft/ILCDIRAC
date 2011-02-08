@@ -35,6 +35,7 @@ class SLICAnalysis(ModuleBase):
     self.randomseed = 0
     self.detectorModel = ''
     self.inmacFile = ''
+    self.eventstring = 'BeginEvent'
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.

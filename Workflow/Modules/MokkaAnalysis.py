@@ -48,6 +48,7 @@ class MokkaAnalysis(ModuleBase):
         self.dbslice = ''
         self.numberOfEvents = 0
         self.startFrom = 0
+        self.eventstring = ''
 
 #############################################################################
     def applicationSpecificInputs(self):

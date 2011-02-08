@@ -27,7 +27,8 @@ class SLICPandoraAnalysis (ModuleBase):
     self.inputSLCIO = ""
     self.numberOfEvents = 0
     self.startFrom = 0
-
+    self.eventstring = ''
+      
   def applicationSpecificInputs(self):
 
     if self.step_commons.has_key("PandoraSettings"):
