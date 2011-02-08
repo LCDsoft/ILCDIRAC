@@ -17,7 +17,7 @@ from DIRAC.Core.Utilities.Adler import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport import FileReport
 from DIRAC.Core.Utilities.File import makeGuid
 import DIRAC
-import os,string,sys
+import os,string,sys,re
 
 class ModuleBase(object):
 
@@ -45,7 +45,7 @@ class ModuleBase(object):
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
-
+    self.eventstring = ''
 
   #############################################################################
   def setApplicationStatus(self,status, sendFlag=True):
@@ -329,7 +329,11 @@ class ModuleBase(object):
     """
     sys.stdout.flush()
     if message:
-      print message
+      if self.eventstring:
+        if re.search(self.eventstring,message):
+          print message
+      else:
+        print message
       if self.applicationLog:
         log = open(self.applicationLog,'a')
         log.write(message+'\n')
