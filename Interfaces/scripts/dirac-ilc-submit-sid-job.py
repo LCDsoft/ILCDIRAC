@@ -1,7 +1,7 @@
 '''
 Created on Feb 7, 2011
 
-@author: sposs
+@author: cgrefe
 '''
 ##
 #  Convenience script for submitting jobs with full reconstruction chain (or parts of it) to dirac
