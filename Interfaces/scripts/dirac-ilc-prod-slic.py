@@ -3,28 +3,6 @@
 #  christian.grefe@cern.ch
 ##
 
-from subprocess import call
-from DIRAC.Core.Security.Misc import getProxyInfo
-
-
-def getNewProxy(): 
-  print 'Getting production proxy ...'
-  call( [ 'proxy-init' , '-g', 'ilc_prod' ] )
-
-result = getProxyInfo()
-if not result['OK']:
-  print 'Could not obtain proxy information: %s'%result['Message']
-  getNewProxy()
-elif not result['Value'].has_key('group'):
-  print 'Could not get group from proxy'
-  getNewProxy()
-group = result['Value']['group']
-
-if not group=='ilc_prod':
-  print 'You do not have a valid group'
-  getNewProxy()
-
-
 from DIRAC.Core.Base import Script
 import sys
 
@@ -74,6 +52,11 @@ for switch in switches:
 if (detectorName == None) or (prodID == None):
 	Script.showHelp()
 	sys.exit(2)	
+
+from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import CheckAndGetProdProxy
+res = CheckAndGetProdProxy()
+if not res['OK']:
+  sys.exit(2)
 
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from ILCDIRAC.Interfaces.API.Production import Production
