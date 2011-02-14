@@ -32,7 +32,7 @@ Script.parseCommandLine()
 switches = Script.getUnprocessedSwitches()
 
 # default parameters
-macroFile = 'slicMacros/default.mac'
+macroFile = 'slicMacros/defaultClicCrossingAngle.mac'
 slicPandoraVer = 'CDR0'
 lcsimVer = '1.15-SNAPSHOT'
 slicVer = 'v2r8p4'
@@ -199,23 +199,29 @@ for inputFile in lfnlist:
 		
 	if inputFile:
 		if slicVer:
-			outputFile = jobTitle+'_'+inputFile.split('/')[-1].replace( '.stdhep', '' )
+			outputFileBase = jobTitle+'_'+inputFile.split('/')[-1].replace( '.stdhep', '' )
 			if not process:
 				process = splitPath[ splitPath.index( 'gen' ) - 1]
 		else:
-			outputFile = jobTitle+'_'+inputSlcios[0].split('/')[-1].replace( '.slcio', '' )
+			outputFileBase = jobTitle+'_'+inputSlcios[0].split('/')[-1].replace( '.slcio', '' )
 			if not process:
 				process = splitPath[-3]
 	else:
-		outputFile = jobTitle+'_'+macroFile.split('/')[-1].replace('.mac','_%s'%(nEvts))
+		outputFileBase = jobTitle+'_'+macroFile.split('/')[-1].replace('.mac','_%s'%(nEvts))
 		if not process:
 			print 'ERROR: no process defined. Use -p <processName> to define the storage path'
 			sys.exit(2)
 
 	for job in xrange( nJobs ):
 		
+		outputFile = outputFileBase
 		if not nJobs == 1:
 			outputFile += '_%s'%(job)
+		
+		if lcsimVer:
+			slicOutput='slic.slcio'
+		else:
+			slicOutput=outputFile+'.slcio'
 		
 		if slicPandoraVer:
 			lcsimOutput='prePandora.slcio'
@@ -247,19 +253,20 @@ for inputFile in lfnlist:
 			print 'Parameters:'
 			print '\tProcess:', process
 			print '\tOutputFile:', outputFile
-			print '\tStorage path:', storagePath
 			print '\tDetector:', detector
+			print '\tJobs per input file:', nJobs
+			print '\tEvents per job:', nEvts
+			print '\tMerged files per job:', mergeSlcioFiles
+			print '\tTotal number of jobs:', len(lfnlist)*nJobs/mergeSlcioFiles
 			print '\tSlic version:', slicVer
 			print '\tMacro file:', macroFile
-			print '\tJobs per input file:', nJobs
-			print '\tMerged files per job:', mergeSlcioFiles
-			print '\tEvents per job:', nEvts
 			print '\tLCSim version:', lcsimVer
 			print '\tLCSim file:', xmlFile
 			print '\tAlias file:', aliasFile
 			print '\tSlicPandora version:', slicPandoraVer
 			print '\tPandora settings:', settingsFile
 			print '\tInput Sandbox:', inputSandbox
+			print '\tStorage path:', storagePath
 			print '\tOutput data:', outputData
 			print '\tBanned sites:', bannedSites
 		
@@ -277,7 +284,7 @@ for inputFile in lfnlist:
 				inputGenfile=inputFile ,
 				nbOfEvents=nEvts ,
 				startFrom=startEvt ,
-				outputFile="slic.slcio"
+				outputFile=slicOutput
 				)
 			inputSlcios = '' # no inputSlcio for lcsim so it picks up its input from lcsim output
 			if not res['OK']:
