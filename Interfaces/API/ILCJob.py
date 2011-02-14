@@ -707,11 +707,12 @@ class ILCJob(Job):
       >>> job = ILCJob()
       >>> job.setMarlin("v00-17",xmlfile='myMarlin.xml',gearfile='GearFile.xml',inputslcio='input.slcio')
 
-      If personal processors are needed, put them in a 'lib' directory, and do
+      If personal processors are needed, put them in a 'lib/marlin_dll/' directory, and do
 
       >>> job.setInputSandbox('lib')
 
-      so that they get shipped to the grid site. All contents are prepended in MARLIN_DLL
+      so that they get shipped to the grid site. All contents are prepended in MARLIN_DLL. 
+      Or you can put that lib in a lib.tar.gz archive, and pass that. It will get untarred on site automatically. 
 
       @param xmlfile: the marlin xml definition
       @type xmlfile: string
@@ -2143,6 +2144,40 @@ class ILCJob(Job):
     # 7. Install software
 
     self._addSoftware( 'tomato', appVersion )
+
+  #############################################################################
+  def setParametricFilesInputSandbox( self, lfns ):
+    """Helper function.
+
+       Specify input data 
+
+       Example usage:
+
+       >>> job = Job()
+       >>> job.setInputData(['/lhcb/production/DC04/v2/DST/00000742_00003493_10.dst'])
+
+       @param lfns: Logical File Names
+       @type lfns: Single LFN string or list of LFNs
+    """
+    self.parametric['InputSandbox']=string.join(lfns,";")
+    return S_OK()
+  #############################################################################
+  def setParametricFilesInputData( self, lfns ):
+    """Helper function.
+
+       Specify input data 
+
+       Example usage:
+
+       >>> job = Job()
+       >>> job.setInputData(['/lhcb/production/DC04/v2/DST/00000742_00003493_10.dst'])
+
+       @param lfns: Logical File Names
+       @type lfns: Single LFN string or list of LFNs
+    """
+    self.parametric['InputData']=string.join(lfns,";")
+    return S_OK()
+
 
   #-----------------------------------------------------------------------------
   # Helper methods
