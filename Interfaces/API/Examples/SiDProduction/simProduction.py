@@ -33,6 +33,7 @@ slicVersion = 'v2r8p4'
 workflowName = None
 workflowDescription = None
 checkMeta = True
+slicMacro = 'defaultClicCrossingAngle.mac'
 
 for switch in switches:
 	opt = switch[0]
@@ -127,11 +128,11 @@ if checkMeta:
 p = Production()
 p.defineInputData( meta )
 p.addSLICStep( appVers=slicVersion,
-	inputmac="default.mac",
+	inputmac=slicMacro,
 	detectormodel=detectorName,
 	outputSE="CERN-SRM" )
 p.addFinalizationStep( True, True , True , True )
-p.setInputSandbox( [ "LFN:/ilc/prod/software/slic/default.mac" ] )		#need to pass somehow the input steering files
+p.setInputSandbox( [ "LFN:/ilc/prod/software/slic/"+slicMacro ] )		#need to pass somehow the input steering files
 p.setCPUTime( cpuLimit )
 p.setOutputSandbox( [ "*.log" ] )
 p.setWorkflowName( workflowName )
