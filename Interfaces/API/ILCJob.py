@@ -1413,7 +1413,7 @@ class ILCJob(Job):
     @param BXOverlay: Bunch crossings to overlay
     @type BXOverlay: int
     @param NbGGtoHadInts: optional number of gamma gamma -> hadrons interactions per bunch crossing
-    @type NbGGtoHadInts: int
+    @type NbGGtoHadInts: float
     @param ProdID: Optional parameter to force using one specific prodID for the input files. By default it's the latest one
     @type ProdID: int
     @param NSigEventsPerJob: Number of signal events per job
