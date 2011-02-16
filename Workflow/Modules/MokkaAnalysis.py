@@ -162,6 +162,9 @@ class MokkaAnalysis(ModuleBase):
       self.log.info("Root directory for job is %s" % ( self.root ) )
 
       mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"mokka",self.applicationVersion),'')
+      if not mokkaDir:
+        self.log.error('Could not get Tar ball name')
+        return S_ERROR('Failed finding software directory')
       mokkaDir = mokkaDir.replace(".tgz","").replace(".tar.gz","")
       #mokkaDir = 'lddLib' ###Temporary while mokka tar ball are not redone.
       mySoftwareRoot = ''
