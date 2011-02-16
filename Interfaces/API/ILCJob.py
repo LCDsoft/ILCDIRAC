@@ -400,7 +400,7 @@ class ILCJob(Job):
        @param appVersion: Version of the Post Generation Selection software to use
        @type appVersion: string
        @param inputStdhep: Input stdhep to filter. If whizard is run before, use its output
-       @type inoutStdhep: string
+       @type inputStdhep: string
        @param NbEvts: Number of events to keep
        @type NbEvts: int
        @param outputFile: Name of the output file. By default = inputStdhep
@@ -2083,7 +2083,7 @@ class ILCJob(Job):
 
     return S_OK()
 
-  def setTomato( self, xmlFile, inputSLCIOFiles = None, libTomato = None, logFile = ''):
+  def setTomato( self, appVersion, xmlFile, inputSLCIOFiles = None, libTomato = None, logFile = ''):
     # Wrapper for Marlin
 
     # Check the arguments
@@ -2144,39 +2144,6 @@ class ILCJob(Job):
     # 7. Install software
 
     self._addSoftware( 'tomato', appVersion )
-
-  #############################################################################
-  def setParametricFilesInputSandbox( self, lfns ):
-    """Helper function.
-
-       Specify input data 
-
-       Example usage:
-
-       >>> job = Job()
-       >>> job.setInputData(['/lhcb/production/DC04/v2/DST/00000742_00003493_10.dst'])
-
-       @param lfns: Logical File Names
-       @type lfns: Single LFN string or list of LFNs
-    """
-    self.parametric['InputSandbox']=string.join(lfns,";")
-    return S_OK()
-  #############################################################################
-  def setParametricFilesInputData( self, lfns ):
-    """Helper function.
-
-       Specify input data 
-
-       Example usage:
-
-       >>> job = Job()
-       >>> job.setInputData(['/lhcb/production/DC04/v2/DST/00000742_00003493_10.dst'])
-
-       @param lfns: Logical File Names
-       @type lfns: Single LFN string or list of LFNs
-    """
-    self.parametric['InputData']=string.join(lfns,";")
-    return S_OK()
 
 
   #-----------------------------------------------------------------------------
