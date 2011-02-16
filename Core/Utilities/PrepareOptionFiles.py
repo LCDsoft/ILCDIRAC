@@ -552,12 +552,15 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   ##Take care of overlay
   for driver in drivers:
     if driver.attrib.has_key("type"):
-      if driver.attrib['type']=="overlay":
-        if driver.attrib['name']=="overlay":
-          files = getOverlayFiles()
-          if not len(files):
-            return S_ERROR('Could not find any overlay files')
-
+      if driver.attrib['type']=="org.lcsim.util.OverlayDriver":
+        #if driver.attrib['name']=="eventOverlay":
+        driver.remove(driver.find('overlayFiles'))
+        files = getOverlayFiles()
+        if not len(files):
+          return S_ERROR('Could not find any overlay files')
+        overlay = Element('overlayFiles')
+        overlay.text = files
+        driver.append(overlay)
   ##Take care of the output files
   writerfound = False
   recwriterfound = False
