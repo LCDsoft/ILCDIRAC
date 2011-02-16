@@ -5,6 +5,38 @@ Created on May 5, 2010
 
 @author: sposs
 '''
+import sys
+from DIRAC.Core.Base import Script
+Script.parseCommandLine( ignoreErrors = True )
+
+Script.registerSwitch("P:","platform=","Platform")
+Script.registerSwitch("N:","name=","Application name")
+Script.registerSwitch("V:","version=","Version")
+Script.registerSwitch("C:","comment=","Comment")
+Script.setUsageMessage( sys.argv[0]+'-P x86_64-slc5-gcc43-opt -N marlin -V v0111pre02 -C "Some Comment"' )
+
+switches = Script.getUnprocessedSwitches()
+
+platform = ""
+appName = ""
+appVersion = ""
+comment = ""
+
+for switch in switches:
+  opt = switch[0]
+  arg = switch[1]
+  if opt in ('P','platform'):
+    platform = arg
+  if opt in ('N','name'):
+    appName = arg
+  if opt in ('V','version'):
+    appVersion = arg
+  if   opt in ('C','comment'):
+    comment = arg
+if (not platform) or (not appName) or not appVersion or not comment:
+  Script.showHelp()
+  sys.exit(2)
+
 from DIRAC.FrameworkSystem.Client.NotificationClient     import NotificationClient
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
@@ -12,11 +44,8 @@ from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContain
 
 from DIRAC import gConfig,S_OK,S_ERROR
 import DIRAC
-from DIRAC.Core.Base import Script
 import string,os,shutil
 
-Script.parseCommandLine( ignoreErrors = True )
-args = Script.getPositionalArgs()
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
@@ -25,10 +54,6 @@ request.setSourceComponent('ReplicateILCSoft')
 
 modifiedCS = False
 mailadress = 'ilc-dirac@cern.ch'
-
-def usage():
-  print 'Usage: %s <PLATFORM> <NAME> <VERSION> [<COMMENT>]' %(Script.scriptName)
-  DIRAC.exit(2)
 
 def upload(path,appTar):
   if not os.path.exists(appTar):
@@ -61,16 +86,9 @@ def upload(path,appTar):
     return S_OK('Application uploaded')
   return S_OK()
 
-if len(args) < 3:
-  usage()
 
 softwareSection = "/Operations/AvailableTarBalls"
-platform = "%s"%args[0]
-appName = "%s"%args[1]
-appVersion = "%s"%args[2]
-comment = ""
-if len(args)>3:
-  comment = "%s"%args[3]
+
 appTar = "%s%s.tgz"%(appName,appVersion)
 subject = '%s %s added to DIRAC CS' %(args[1],args[2])
 msg = 'New application %s %s declared into Configuration service\n %s' %(args[1],args[2],comment)
