@@ -1452,7 +1452,7 @@ class ILCJob(Job):
     step.addParameter(Parameter("Energy","","string","","",False,False,"Energy to use"))
     step.addParameter(Parameter("BXOverlay",-1,"int","","",False,False,"Number of BX to overlay"))
     if NbGGtoHadInts:
-      step.addParameter(Parameter("ggtohadint",0,"float","","",False,False,"Number of BX to overlay"))
+      step.addParameter(Parameter("ggtohadint",0,"float","","",False,False,"gamma gamma ints per BX"))
     if ProdID:
       step.addParameter(Parameter("ProdID",0,"int","","",False,False,"ProdID for input"))
 
