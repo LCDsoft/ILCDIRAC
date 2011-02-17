@@ -35,7 +35,7 @@ class Production(ILCJob):
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.ioDict = {}
-    self.prodTypes = ['MCSimulation','Test','MCReconstruction']
+    self.prodTypes = ['MCGeneration','MCSimulation','Test','MCReconstruction']
     self.pluginsTriggeringStreamTypes = ['ByFileTypeSize','ByRunFileTypeSize','ByRun','AtomicRun']
     self.name='unspecifiedWorkflow'
     self.firstEventType = ''
