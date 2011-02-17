@@ -214,7 +214,7 @@ class LCSIMAnalysis(ModuleBase):
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
     
-    comm = "java -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s/%s %s\n"%(cachedir,mySoftwareRoot,lcsim_name,lcsimfile)
+    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s/%s %s\n"%(cachedir,mySoftwareRoot,lcsim_name,lcsimfile)
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
