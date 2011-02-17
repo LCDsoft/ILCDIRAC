@@ -146,7 +146,10 @@ class RegisterOutputData(ModuleBase):
       ###Now, set the ancestors
       if self.InputData:
         inputdata = self.InputData.split(";")
-        self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
+        res = self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
+        if not res['OK']:
+          self.log.error('Registration of Ancestors for %s failed'%files)
+          return res
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       #res = self.fc.setMetadata(os.path.dirname(files),meta)
       #if not res['OK']:
