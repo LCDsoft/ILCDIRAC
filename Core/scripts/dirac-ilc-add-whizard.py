@@ -6,6 +6,9 @@ Created on Sep 21, 2010
 
 import DIRAC
 from DIRAC.Core.Base import Script
+Script.parseCommandLine( ignoreErrors = False )
+args = Script.getPositionalArgs()
+
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
@@ -17,7 +20,7 @@ from DIRAC import gConfig, S_ERROR,S_OK
 
 import os,tarfile, shutil, sys, string
 
-Script.parseCommandLine( ignoreErrors = False )
+
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
@@ -25,7 +28,6 @@ request = RequestContainer()
 modifiedCS = False
 
 
-args = Script.getPositionalArgs()
 
 def usage():
   print 'Usage: %s <directory_where_whizard_is> <platform> <whizard_version> <beam_spectra_version>' % (Script.scriptName)
