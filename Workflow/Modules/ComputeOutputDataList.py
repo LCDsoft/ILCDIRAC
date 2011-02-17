@@ -29,7 +29,7 @@ class ComputeOutputDataList(ModuleBase):
     return S_OK()
   
   def execute(self):
-    res = self.resolveInputParameters()
+    res = self.resolveInputVariables()
     if not res['OK']:
       return res
     return S_OK()
