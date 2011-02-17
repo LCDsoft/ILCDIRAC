@@ -1,0 +1,7025 @@
+%PDF-1.4
+%“Œ‹ž ReportLab Generated PDF document http://www.reportlab.com
+% 'BasicFonts': class PDFDictionary 
+1 0 obj
+% The standard fonts dictionary
+<< /F1 2 0 R
+ /F2 3 0 R >>
+endobj
+% 'F1': class PDFType1Font 
+2 0 obj
+% Font Helvetica
+<< /BaseFont /Helvetica
+ /Encoding /WinAnsiEncoding
+ /Name /F1
+ /Subtype /Type1
+ /Type /Font >>
+endobj
+% 'F2': class PDFType1Font 
+3 0 obj
+% Font Helvetica-Bold
+<< /BaseFont /Helvetica-Bold
+ /Encoding /WinAnsiEncoding
+ /Name /F2
+ /Subtype /Type1
+ /Type /Font >>
+endobj
+% 'Page1': class PDFPage 
+4 0 obj
+% Page dictionary
+<< /Contents 99 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page2': class PDFPage 
+5 0 obj
+% Page dictionary
+<< /Contents 100 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page3': class PDFPage 
+6 0 obj
+% Page dictionary
+<< /Contents 101 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page4': class PDFPage 
+7 0 obj
+% Page dictionary
+<< /Contents 102 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page5': class PDFPage 
+8 0 obj
+% Page dictionary
+<< /Contents 103 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page6': class PDFPage 
+9 0 obj
+% Page dictionary
+<< /Contents 104 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Annot.NUMBER1': class PDFDictionary 
+10 0 obj
+<< /A << /S /URI
+ /Type /Action
+ /URI (http://) >>
+ /Border [ 0
+ 0
+ 0 ]
+ /Rect [ 379.6829
+ 146.6161
+ 404.7029
+ 158.6161 ]
+ /Subtype /Link
+ /Type /Annot >>
+endobj
+% 'Page7': class PDFPage 
+11 0 obj
+% Page dictionary
+<< /Annots [ 10 0 R ]
+ /Contents 105 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page8': class PDFPage 
+12 0 obj
+% Page dictionary
+<< /Contents 106 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page9': class PDFPage 
+13 0 obj
+% Page dictionary
+<< /Contents 107 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'Page10': class PDFPage 
+14 0 obj
+% Page dictionary
+<< /Contents 108 0 R
+ /MediaBox [ 0
+ 0
+ 595.2756
+ 841.8898 ]
+ /Parent 98 0 R
+ /Resources << /Font 1 0 R
+ /ProcSet [ /PDF
+ /Text
+ /ImageB
+ /ImageC
+ /ImageI ] >>
+ /Rotate 0
+ /Trans <<  >>
+ /Type /Page >>
+endobj
+% 'R15': class PDFCatalog 
+15 0 obj
+% Document Root
+<< /Outlines 17 0 R
+ /PageLabels 109 0 R
+ /PageMode /UseNone
+ /Pages 98 0 R
+ /Type /Catalog >>
+endobj
+% 'R16': class PDFInfo 
+16 0 obj
+<< /Author ()
+ /CreationDate (D:20110217183502-01'00')
+ /Creator (\(unspecified\))
+ /Keywords ()
+ /Producer (ReportLab PDF Library - www.reportlab.com)
+ /Subject (\(unspecified\))
+ /Title (Package ILCDIRAC) >>
+endobj
+% 'R17': class PDFOutlines 
+17 0 obj
+<< /Count 112
+ /First 18 0 R
+ /Last 96 0 R
+ /Type /Outlines >>
+endobj
+% 'Outline.0': class OutlineEntryObject 
+18 0 obj
+<< /Count 3
+ /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 729.0236
+ 0 ]
+ /First 19 0 R
+ /Last 21 0 R
+ /Next 22 0 R
+ /Parent 17 0 R
+ /Title (Version v1r15p3) >>
+endobj
+% 'Outline.81.0': class OutlineEntryObject 
+19 0 obj
+<< /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 696.0236
+ 0 ]
+ /Next 20 0 R
+ /Parent 18 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.81.1': class OutlineEntryObject 
+20 0 obj
+<< /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 621.0236
+ 0 ]
+ /Next 21 0 R
+ /Parent 18 0 R
+ /Prev 19 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.81.2': class OutlineEntryObject 
+21 0 obj
+<< /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 546.0236
+ 0 ]
+ /Parent 18 0 R
+ /Prev 20 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.1': class OutlineEntryObject 
+22 0 obj
+<< /Count 1
+ /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 441.0236
+ 0 ]
+ /First 23 0 R
+ /Last 23 0 R
+ /Next 24 0 R
+ /Parent 17 0 R
+ /Prev 18 0 R
+ /Title (Version v1r15p2) >>
+endobj
+% 'Outline.82.0': class OutlineEntryObject 
+23 0 obj
+<< /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 408.0236
+ 0 ]
+ /Parent 22 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.2': class OutlineEntryObject 
+24 0 obj
+<< /Count 1
+ /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 333.0236
+ 0 ]
+ /First 25 0 R
+ /Last 25 0 R
+ /Next 26 0 R
+ /Parent 17 0 R
+ /Prev 22 0 R
+ /Title (Version v1r15p1) >>
+endobj
+% 'Outline.83.0': class OutlineEntryObject 
+25 0 obj
+<< /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 300.0236
+ 0 ]
+ /Parent 24 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.3': class OutlineEntryObject 
+26 0 obj
+<< /Count 2
+ /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 225.0236
+ 0 ]
+ /First 27 0 R
+ /Last 28 0 R
+ /Next 29 0 R
+ /Parent 17 0 R
+ /Prev 24 0 R
+ /Title (Version v1r15p0) >>
+endobj
+% 'Outline.84.0': class OutlineEntryObject 
+27 0 obj
+<< /Dest [ 4 0 R
+ /XYZ
+ 62.69291
+ 174.0236
+ 0 ]
+ /Next 28 0 R
+ /Parent 26 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.84.1': class OutlineEntryObject 
+28 0 obj
+<< /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 695.0236
+ 0 ]
+ /Parent 26 0 R
+ /Prev 27 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.4': class OutlineEntryObject 
+29 0 obj
+<< /Count 3
+ /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 571.0236
+ 0 ]
+ /First 30 0 R
+ /Last 32 0 R
+ /Next 33 0 R
+ /Parent 17 0 R
+ /Prev 26 0 R
+ /Title (Version v1r14p0) >>
+endobj
+% 'Outline.85.0': class OutlineEntryObject 
+30 0 obj
+<< /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 538.0236
+ 0 ]
+ /Next 31 0 R
+ /Parent 29 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.85.1': class OutlineEntryObject 
+31 0 obj
+<< /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 445.0236
+ 0 ]
+ /Next 32 0 R
+ /Parent 29 0 R
+ /Prev 30 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.85.2': class OutlineEntryObject 
+32 0 obj
+<< /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 370.0236
+ 0 ]
+ /Parent 29 0 R
+ /Prev 31 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.5': class OutlineEntryObject 
+33 0 obj
+<< /Count 1
+ /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 246.0236
+ 0 ]
+ /First 34 0 R
+ /Last 34 0 R
+ /Next 35 0 R
+ /Parent 17 0 R
+ /Prev 29 0 R
+ /Title (Version v1r13p3) >>
+endobj
+% 'Outline.86.0': class OutlineEntryObject 
+34 0 obj
+<< /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 213.0236
+ 0 ]
+ /Parent 33 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.6': class OutlineEntryObject 
+35 0 obj
+<< /Count 2
+ /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 138.0236
+ 0 ]
+ /First 36 0 R
+ /Last 37 0 R
+ /Next 38 0 R
+ /Parent 17 0 R
+ /Prev 33 0 R
+ /Title (Version v1r13p2) >>
+endobj
+% 'Outline.87.0': class OutlineEntryObject 
+36 0 obj
+<< /Dest [ 5 0 R
+ /XYZ
+ 62.69291
+ 105.0236
+ 0 ]
+ /Next 37 0 R
+ /Parent 35 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.87.1': class OutlineEntryObject 
+37 0 obj
+<< /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 646.0236
+ 0 ]
+ /Parent 35 0 R
+ /Prev 36 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.7': class OutlineEntryObject 
+38 0 obj
+<< /Count 1
+ /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 571.0236
+ 0 ]
+ /First 39 0 R
+ /Last 39 0 R
+ /Next 40 0 R
+ /Parent 17 0 R
+ /Prev 35 0 R
+ /Title (Version v1r13p1) >>
+endobj
+% 'Outline.88.0': class OutlineEntryObject 
+39 0 obj
+<< /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 538.0236
+ 0 ]
+ /Parent 38 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.8': class OutlineEntryObject 
+40 0 obj
+<< /Count 2
+ /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 463.0236
+ 0 ]
+ /First 41 0 R
+ /Last 42 0 R
+ /Next 43 0 R
+ /Parent 17 0 R
+ /Prev 38 0 R
+ /Title (Version v1r13p0) >>
+endobj
+% 'Outline.89.0': class OutlineEntryObject 
+41 0 obj
+<< /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 430.0236
+ 0 ]
+ /Next 42 0 R
+ /Parent 40 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.89.1': class OutlineEntryObject 
+42 0 obj
+<< /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 318.0236
+ 0 ]
+ /Parent 40 0 R
+ /Prev 41 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.9': class OutlineEntryObject 
+43 0 obj
+<< /Count 1
+ /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 243.0236
+ 0 ]
+ /First 44 0 R
+ /Last 44 0 R
+ /Next 45 0 R
+ /Parent 17 0 R
+ /Prev 40 0 R
+ /Title (Version v1r12p1) >>
+endobj
+% 'Outline.90.0': class OutlineEntryObject 
+44 0 obj
+<< /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 210.0236
+ 0 ]
+ /Parent 43 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.10': class OutlineEntryObject 
+45 0 obj
+<< /Count 1
+ /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 135.0236
+ 0 ]
+ /First 46 0 R
+ /Last 46 0 R
+ /Next 47 0 R
+ /Parent 17 0 R
+ /Prev 43 0 R
+ /Title (Version v1r12p0) >>
+endobj
+% 'Outline.91.0': class OutlineEntryObject 
+46 0 obj
+<< /Dest [ 6 0 R
+ /XYZ
+ 62.69291
+ 102.0236
+ 0 ]
+ /Parent 45 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.11': class OutlineEntryObject 
+47 0 obj
+<< /Count 1
+ /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 720.0236
+ 0 ]
+ /First 48 0 R
+ /Last 48 0 R
+ /Next 49 0 R
+ /Parent 17 0 R
+ /Prev 45 0 R
+ /Title (Version v1r11p2) >>
+endobj
+% 'Outline.92.0': class OutlineEntryObject 
+48 0 obj
+<< /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 687.0236
+ 0 ]
+ /Parent 47 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.12': class OutlineEntryObject 
+49 0 obj
+<< /Count 1
+ /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 612.0236
+ 0 ]
+ /First 50 0 R
+ /Last 50 0 R
+ /Next 51 0 R
+ /Parent 17 0 R
+ /Prev 47 0 R
+ /Title (Version v1r11p1) >>
+endobj
+% 'Outline.93.0': class OutlineEntryObject 
+50 0 obj
+<< /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 579.0236
+ 0 ]
+ /Parent 49 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.13': class OutlineEntryObject 
+51 0 obj
+<< /Count 1
+ /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 467.0236
+ 0 ]
+ /First 52 0 R
+ /Last 52 0 R
+ /Next 53 0 R
+ /Parent 17 0 R
+ /Prev 49 0 R
+ /Title (Version v1r11p0) >>
+endobj
+% 'Outline.94.0': class OutlineEntryObject 
+52 0 obj
+<< /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 434.0236
+ 0 ]
+ /Parent 51 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.14': class OutlineEntryObject 
+53 0 obj
+<< /Count 2
+ /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 322.0236
+ 0 ]
+ /First 54 0 R
+ /Last 55 0 R
+ /Next 56 0 R
+ /Parent 17 0 R
+ /Prev 51 0 R
+ /Title (Version v1r10p7) >>
+endobj
+% 'Outline.95.0': class OutlineEntryObject 
+54 0 obj
+<< /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 289.0236
+ 0 ]
+ /Next 55 0 R
+ /Parent 53 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.95.1': class OutlineEntryObject 
+55 0 obj
+<< /Dest [ 7 0 R
+ /XYZ
+ 62.69291
+ 140.0236
+ 0 ]
+ /Parent 53 0 R
+ /Prev 54 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.15': class OutlineEntryObject 
+56 0 obj
+<< /Count 1
+ /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 765.0236
+ 0 ]
+ /First 57 0 R
+ /Last 57 0 R
+ /Next 58 0 R
+ /Parent 17 0 R
+ /Prev 53 0 R
+ /Title (Version v1r10p6) >>
+endobj
+% 'Outline.96.0': class OutlineEntryObject 
+57 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 732.0236
+ 0 ]
+ /Parent 56 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.16': class OutlineEntryObject 
+58 0 obj
+<< /Count 2
+ /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 657.0236
+ 0 ]
+ /First 59 0 R
+ /Last 60 0 R
+ /Next 61 0 R
+ /Parent 17 0 R
+ /Prev 56 0 R
+ /Title (Version v1r10p5) >>
+endobj
+% 'Outline.97.0': class OutlineEntryObject 
+59 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 624.0236
+ 0 ]
+ /Next 60 0 R
+ /Parent 58 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.97.1': class OutlineEntryObject 
+60 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 549.0236
+ 0 ]
+ /Parent 58 0 R
+ /Prev 59 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.17': class OutlineEntryObject 
+61 0 obj
+<< /Count 1
+ /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 474.0236
+ 0 ]
+ /First 62 0 R
+ /Last 62 0 R
+ /Next 63 0 R
+ /Parent 17 0 R
+ /Prev 58 0 R
+ /Title (Version v1r10p4) >>
+endobj
+% 'Outline.98.0': class OutlineEntryObject 
+62 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 441.0236
+ 0 ]
+ /Parent 61 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.18': class OutlineEntryObject 
+63 0 obj
+<< /Count 1
+ /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 366.0236
+ 0 ]
+ /First 64 0 R
+ /Last 64 0 R
+ /Next 65 0 R
+ /Parent 17 0 R
+ /Prev 61 0 R
+ /Title (Version v1r10p3) >>
+endobj
+% 'Outline.99.0': class OutlineEntryObject 
+64 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 333.0236
+ 0 ]
+ /Parent 63 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.19': class OutlineEntryObject 
+65 0 obj
+<< /Count 1
+ /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 258.0236
+ 0 ]
+ /First 66 0 R
+ /Last 66 0 R
+ /Next 67 0 R
+ /Parent 17 0 R
+ /Prev 63 0 R
+ /Title (Version v1r10p2) >>
+endobj
+% 'Outline.100.0': class OutlineEntryObject 
+66 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 225.0236
+ 0 ]
+ /Parent 65 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.20': class OutlineEntryObject 
+67 0 obj
+<< /Count 1
+ /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 150.0236
+ 0 ]
+ /First 68 0 R
+ /Last 68 0 R
+ /Next 69 0 R
+ /Parent 17 0 R
+ /Prev 65 0 R
+ /Title (Version v1r10p1) >>
+endobj
+% 'Outline.101.0': class OutlineEntryObject 
+68 0 obj
+<< /Dest [ 8 0 R
+ /XYZ
+ 62.69291
+ 117.0236
+ 0 ]
+ /Parent 67 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.21': class OutlineEntryObject 
+69 0 obj
+<< /Count 2
+ /Dest [ 9 0 R
+ /XYZ
+ 62.69291
+ 720.0236
+ 0 ]
+ /First 70 0 R
+ /Last 71 0 R
+ /Next 72 0 R
+ /Parent 17 0 R
+ /Prev 67 0 R
+ /Title (Version v1r10p0) >>
+endobj
+% 'Outline.102.0': class OutlineEntryObject 
+70 0 obj
+<< /Dest [ 9 0 R
+ /XYZ
+ 62.69291
+ 687.0236
+ 0 ]
+ /Next 71 0 R
+ /Parent 69 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.102.1': class OutlineEntryObject 
+71 0 obj
+<< /Dest [ 9 0 R
+ /XYZ
+ 62.69291
+ 539.0236
+ 0 ]
+ /Parent 69 0 R
+ /Prev 70 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.22': class OutlineEntryObject 
+72 0 obj
+<< /Count 2
+ /Dest [ 9 0 R
+ /XYZ
+ 62.69291
+ 336.0236
+ 0 ]
+ /First 73 0 R
+ /Last 74 0 R
+ /Next 75 0 R
+ /Parent 17 0 R
+ /Prev 69 0 R
+ /Title (Version v1r9p0) >>
+endobj
+% 'Outline.103.0': class OutlineEntryObject 
+73 0 obj
+<< /Dest [ 9 0 R
+ /XYZ
+ 62.69291
+ 303.0236
+ 0 ]
+ /Next 74 0 R
+ /Parent 72 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.103.1': class OutlineEntryObject 
+74 0 obj
+<< /Dest [ 11 0 R
+ /XYZ
+ 62.69291
+ 684.0236
+ 0 ]
+ /Parent 72 0 R
+ /Prev 73 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.23': class OutlineEntryObject 
+75 0 obj
+<< /Count 1
+ /Dest [ 11 0 R
+ /XYZ
+ 62.69291
+ 487.0236
+ 0 ]
+ /First 76 0 R
+ /Last 76 0 R
+ /Next 77 0 R
+ /Parent 17 0 R
+ /Prev 72 0 R
+ /Title (Version v1r7p1) >>
+endobj
+% 'Outline.104.0': class OutlineEntryObject 
+76 0 obj
+<< /Dest [ 11 0 R
+ /XYZ
+ 62.69291
+ 454.0236
+ 0 ]
+ /Parent 75 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.24': class OutlineEntryObject 
+77 0 obj
+<< /Count 1
+ /Dest [ 11 0 R
+ /XYZ
+ 62.69291
+ 300.0236
+ 0 ]
+ /First 78 0 R
+ /Last 78 0 R
+ /Next 79 0 R
+ /Parent 17 0 R
+ /Prev 75 0 R
+ /Title (Version v1r7p0) >>
+endobj
+% 'Outline.105.0': class OutlineEntryObject 
+78 0 obj
+<< /Dest [ 11 0 R
+ /XYZ
+ 62.69291
+ 267.0236
+ 0 ]
+ /Parent 77 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.25': class OutlineEntryObject 
+79 0 obj
+<< /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 454.0236
+ 0 ]
+ /Next 80 0 R
+ /Parent 17 0 R
+ /Prev 77 0 R
+ /Title (Version v1r6p2) >>
+endobj
+% 'Outline.26': class OutlineEntryObject 
+80 0 obj
+<< /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 421.0236
+ 0 ]
+ /Next 81 0 R
+ /Parent 17 0 R
+ /Prev 79 0 R
+ /Title (Version v1r6p1) >>
+endobj
+% 'Outline.27': class OutlineEntryObject 
+81 0 obj
+<< /Count 2
+ /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 388.0236
+ 0 ]
+ /First 82 0 R
+ /Last 83 0 R
+ /Next 84 0 R
+ /Parent 17 0 R
+ /Prev 80 0 R
+ /Title (Version v1r6p0) >>
+endobj
+% 'Outline.106.0': class OutlineEntryObject 
+82 0 obj
+<< /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 355.0236
+ 0 ]
+ /Next 83 0 R
+ /Parent 81 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.106.1': class OutlineEntryObject 
+83 0 obj
+<< /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 280.0236
+ 0 ]
+ /Parent 81 0 R
+ /Prev 82 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.28': class OutlineEntryObject 
+84 0 obj
+<< /Count 1
+ /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 150.0236
+ 0 ]
+ /First 85 0 R
+ /Last 85 0 R
+ /Next 86 0 R
+ /Parent 17 0 R
+ /Prev 81 0 R
+ /Title (Version v1r5p0) >>
+endobj
+% 'Outline.107.0': class OutlineEntryObject 
+85 0 obj
+<< /Dest [ 12 0 R
+ /XYZ
+ 62.69291
+ 117.0236
+ 0 ]
+ /Parent 84 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.29': class OutlineEntryObject 
+86 0 obj
+<< /Count 2
+ /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 629.0236
+ 0 ]
+ /First 87 0 R
+ /Last 88 0 R
+ /Next 89 0 R
+ /Parent 17 0 R
+ /Prev 84 0 R
+ /Title (Version v1r4p0) >>
+endobj
+% 'Outline.108.0': class OutlineEntryObject 
+87 0 obj
+<< /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 596.0236
+ 0 ]
+ /Next 88 0 R
+ /Parent 86 0 R
+ /Title (NEW) >>
+endobj
+% 'Outline.108.1': class OutlineEntryObject 
+88 0 obj
+<< /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 484.0236
+ 0 ]
+ /Parent 86 0 R
+ /Prev 87 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.30': class OutlineEntryObject 
+89 0 obj
+<< /Count 1
+ /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 305.0236
+ 0 ]
+ /First 90 0 R
+ /Last 90 0 R
+ /Next 91 0 R
+ /Parent 17 0 R
+ /Prev 86 0 R
+ /Title (Version v1r3p0) >>
+endobj
+% 'Outline.109.0': class OutlineEntryObject 
+90 0 obj
+<< /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 272.0236
+ 0 ]
+ /Parent 89 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.31': class OutlineEntryObject 
+91 0 obj
+<< /Count 1
+ /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 148.0236
+ 0 ]
+ /First 92 0 R
+ /Last 92 0 R
+ /Next 93 0 R
+ /Parent 17 0 R
+ /Prev 89 0 R
+ /Title (Version v1r2p0) >>
+endobj
+% 'Outline.110.0': class OutlineEntryObject 
+92 0 obj
+<< /Dest [ 13 0 R
+ /XYZ
+ 62.69291
+ 115.0236
+ 0 ]
+ /Parent 91 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.32': class OutlineEntryObject 
+93 0 obj
+<< /Count 2
+ /Dest [ 14 0 R
+ /XYZ
+ 62.69291
+ 720.0236
+ 0 ]
+ /First 94 0 R
+ /Last 95 0 R
+ /Next 96 0 R
+ /Parent 17 0 R
+ /Prev 91 0 R
+ /Title (Version v1r1p0) >>
+endobj
+% 'Outline.111.0': class OutlineEntryObject 
+94 0 obj
+<< /Dest [ 14 0 R
+ /XYZ
+ 62.69291
+ 687.0236
+ 0 ]
+ /Next 95 0 R
+ /Parent 93 0 R
+ /Title (CHANGE) >>
+endobj
+% 'Outline.111.1': class OutlineEntryObject 
+95 0 obj
+<< /Dest [ 14 0 R
+ /XYZ
+ 62.69291
+ 538.0236
+ 0 ]
+ /Parent 93 0 R
+ /Prev 94 0 R
+ /Title (BUGFIX) >>
+endobj
+% 'Outline.33': class OutlineEntryObject 
+96 0 obj
+<< /Count 1
+ /Dest [ 14 0 R
+ /XYZ
+ 62.69291
+ 463.0236
+ 0 ]
+ /First 97 0 R
+ /Last 97 0 R
+ /Parent 17 0 R
+ /Prev 93 0 R
+ /Title (Version v1r0p0) >>
+endobj
+% 'Outline.112.0': class OutlineEntryObject 
+97 0 obj
+<< /Dest [ 14 0 R
+ /XYZ
+ 62.69291
+ 412.0236
+ 0 ]
+ /Parent 96 0 R
+ /Title (NEW) >>
+endobj
+% 'R98': class PDFPages 
+98 0 obj
+% page tree
+<< /Count 10
+ /Kids [ 4 0 R
+ 5 0 R
+ 6 0 R
+ 7 0 R
+ 8 0 R
+ 9 0 R
+ 11 0 R
+ 12 0 R
+ 13 0 R
+ 14 0 R ]
+ /Type /Pages >>
+endobj
+% 'R99': class PDFStream 
+99 0 obj
+% page stream
+<< /Length 6251 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 741.0236 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 4 Tm /F2 20 Tf 24 TL 143.8149 0 Td (Package ILCDIRAC) Tj T* -143.8149 0 Td ET
+Q
+Q
+q
+1 0 0 1 62.69291 708.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r15p3) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 678.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 666.0236 cm
+Q
+q
+1 0 0 1 62.69291 633.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Add MCGeneration as a possible Production type) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 633.0236 cm
+Q
+q
+1 0 0 1 62.69291 603.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 591.0236 cm
+Q
+q
+1 0 0 1 62.69291 558.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Added memory requirement for java in LCSIM) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 558.0236 cm
+Q
+q
+1 0 0 1 62.69291 528.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 516.0236 cm
+Q
+q
+1 0 0 1 62.69291 453.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 51 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 38 Tm  T* ET
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL 1.16498 Tw (With new Script interface, our scripts would not work. Made ilc-proxy-init deprecated, use) Tj T* 0 Tw (proxy-init instead) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Overlay input for LCSIM did not work \(created exception\)) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 453.0236 cm
+Q
+q
+1 0 0 1 62.69291 420.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r15p2) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 390.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 378.0236 cm
+Q
+q
+1 0 0 1 62.69291 345.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (bad workflow tag) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 345.0236 cm
+Q
+q
+1 0 0 1 62.69291 312.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r15p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 282.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 270.0236 cm
+Q
+q
+1 0 0 1 62.69291 237.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (bad workflow tag) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 237.0236 cm
+Q
+q
+1 0 0 1 62.69291 204.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r15p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 186.0236 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (CHANGE: move to DIRAC v5r12p7) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 156.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 144.0236 cm
+Q
+q
+1 0 0 1 62.69291 95.02362 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 37 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 16 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Utility to obtain a prod proxy if needed, useful in prod submission scripts) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+Q
+Q
+ 
+endstream
+endobj
+% 'R100': class PDFStream 
+100 0 obj
+% page stream
+<< /Length 7541 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 707.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (support for Tomato, check collections, lcio concat: currently in test phase) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Support for overlay in LCSIM) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 707.0236 cm
+Q
+q
+1 0 0 1 62.69291 677.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 665.0236 cm
+Q
+q
+1 0 0 1 62.69291 583.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 70 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 49 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Modified scripts for sid jobs) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 33 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 20 Tm  T* ET
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL 2.079979 Tw (Moved many parameters from many sub classes to mother class \(ModuleBase\): easier) Tj T* 0 Tw (maintenance) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 583.0236 cm
+Q
+q
+1 0 0 1 62.69291 550.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r14p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 520.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 508.0236 cm
+Q
+q
+1 0 0 1 62.69291 457.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 39 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (SID production submission scripts) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (SID chain job submission scripts, and directory containing necessary files) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 457.0236 cm
+Q
+q
+1 0 0 1 62.69291 427.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 415.0236 cm
+Q
+q
+1 0 0 1 62.69291 382.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (software addition uses Request object for replication.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 382.0236 cm
+Q
+q
+1 0 0 1 62.69291 352.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 340.0236 cm
+Q
+q
+1 0 0 1 62.69291 258.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 70 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 20 Tm  T* ET
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .07311 Tw (now remove system libs from all application on site. In the future, should remove them at tar) Tj T* 0 Tw (ball creation time) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Pass basename of xml file in LCSIM instead of parameter value) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 258.0236 cm
+Q
+q
+1 0 0 1 62.69291 225.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r13p3) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 195.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 183.0236 cm
+Q
+q
+1 0 0 1 62.69291 150.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Gear file can also be a text in the xml parameters, not only a value) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 150.0236 cm
+Q
+q
+1 0 0 1 62.69291 117.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r13p2) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 87.02362 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 76.86614 cm
+Q
+ 
+endstream
+endobj
+% 'R101': class PDFStream 
+101 0 obj
+% page stream
+<< /Length 7116 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 658.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 95 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 74 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Added utilities for overlay input) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (interface for overlay) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Module for Overlay Input) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 658.0236 cm
+Q
+q
+1 0 0 1 62.69291 628.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 616.0236 cm
+Q
+q
+1 0 0 1 62.69291 583.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (fix import location in LCSIMAnalysis) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 583.0236 cm
+Q
+q
+1 0 0 1 62.69291 550.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r13p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 520.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 508.0236 cm
+Q
+q
+1 0 0 1 62.69291 475.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (fix LD_LIBRARY_PATH for whizard) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 475.0236 cm
+Q
+q
+1 0 0 1 62.69291 442.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r13p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 412.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 400.0236 cm
+Q
+q
+1 0 0 1 62.69291 330.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Utility to remove the libc provided in the software packages) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Script to submit productions in slic context) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 330.0236 cm
+Q
+q
+1 0 0 1 62.69291 300.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 288.0236 cm
+Q
+q
+1 0 0 1 62.69291 255.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (All worflow modules check that log file is present) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 255.0236 cm
+Q
+q
+1 0 0 1 62.69291 222.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r12p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 192.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 180.0236 cm
+Q
+q
+1 0 0 1 62.69291 147.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (bug fix in MokkaAnalysis) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 147.0236 cm
+Q
+q
+1 0 0 1 62.69291 114.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r12p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 84.02362 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 76.86614 cm
+Q
+ 
+endstream
+endobj
+% 'R102': class PDFStream 
+102 0 obj
+% page stream
+<< /Length 7711 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 732.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Now Mokka uses random seed for every job. Users can set their own seed.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 732.0236 cm
+Q
+q
+1 0 0 1 62.69291 699.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r11p2) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 669.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 657.0236 cm
+Q
+q
+1 0 0 1 62.69291 624.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (take new interface of writestdhep into account) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 624.0236 cm
+Q
+q
+1 0 0 1 62.69291 591.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r11p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 561.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 549.0236 cm
+Q
+q
+1 0 0 1 62.69291 479.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Bug in CombimedSoftware installation) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Several errors remained in PostGenSel module) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 479.0236 cm
+Q
+q
+1 0 0 1 62.69291 446.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r11p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 416.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 404.0236 cm
+Q
+q
+1 0 0 1 62.69291 334.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (added script to obtain list of available software: no need to use web page) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (added PostGenSel step to allow "generator level" cuts) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 334.0236 cm
+Q
+q
+1 0 0 1 62.69291 301.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p7) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 271.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 259.0236 cm
+Q
+q
+1 0 0 1 62.69291 152.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 95 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 74 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (All applications are also replicated to IN2P3-SRM) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (jobindex in whizard can be anything) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (in whizard, when PYSTOP was called, application was still OK, now not anymore) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 152.0236 cm
+Q
+q
+1 0 0 1 62.69291 122.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 110.0236 cm
+Q
+q
+1 0 0 1 62.69291 77.02362 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (XML file for LCSIM is now a parameter in the Production API) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 77.02362 cm
+Q
+ 
+endstream
+endobj
+% 'R103': class PDFStream 
+103 0 obj
+% page stream
+<< /Length 5897 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 744.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p6) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 714.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 702.0236 cm
+Q
+q
+1 0 0 1 62.69291 669.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (TARSoft was failing installation of lcio) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 669.0236 cm
+Q
+q
+1 0 0 1 62.69291 636.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p5) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 606.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 594.0236 cm
+Q
+q
+1 0 0 1 62.69291 561.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (LCIO specific install: environment vars are set) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 561.0236 cm
+Q
+q
+1 0 0 1 62.69291 531.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 519.0236 cm
+Q
+q
+1 0 0 1 62.69291 486.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Allowed models in Whizard for susy are slsqhh and chne) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 486.0236 cm
+Q
+q
+1 0 0 1 62.69291 453.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p4) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 423.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 411.0236 cm
+Q
+q
+1 0 0 1 62.69291 378.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (allow choice of SUSY model in whizard) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 378.0236 cm
+Q
+q
+1 0 0 1 62.69291 345.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p3) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 315.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 303.0236 cm
+Q
+q
+1 0 0 1 62.69291 270.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (added beam_ercoil and keep_initials as parameters) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 270.0236 cm
+Q
+q
+1 0 0 1 62.69291 237.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p2) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 207.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 195.0236 cm
+Q
+q
+1 0 0 1 62.69291 162.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Registration of file in FC failed because FC changed) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 162.0236 cm
+Q
+q
+1 0 0 1 62.69291 129.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 99.02362 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 87.02362 cm
+Q
+ 
+endstream
+endobj
+% 'R104': class PDFStream 
+104 0 obj
+% page stream
+<< /Length 8349 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 732.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (PrepareOptionsFile had a bug in Preparation of whizard.in) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 732.0236 cm
+Q
+q
+1 0 0 1 62.69291 699.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r10p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 669.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 657.0236 cm
+Q
+q
+1 0 0 1 62.69291 551.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 94 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 55 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Whizard step in DIRAC) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (SLIC Pandora step is in ProductionAPI) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 39 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (WhizardAnalysis module) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (FailoverRequest module: publish requests and update file status in transformation system) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 551.0236 cm
+Q
+q
+1 0 0 1 62.69291 521.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 509.0236 cm
+Q
+q
+1 0 0 1 62.69291 348.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 149 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 110 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Whizard default .in file is now whizard.template.in, and is templated) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Propagate the number of events and luminosity through productions) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 94 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 44 Tm  T* ET
+q
+1 0 0 1 20 48 cm
+Q
+q
+1 0 0 1 20 48 cm
+Q
+q
+1 0 0 1 20 36 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Production and user job API takes parameters for whizard, to fill in the template) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (complete LCSIM step in production API: input and output are treated properly) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Production details are available from web interface) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (UserLFN now uses current credentials to guess the VO: suitable for ILC and CALICE run) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 348.0236 cm
+Q
+q
+1 0 0 1 62.69291 315.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r9p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 285.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 273.0236 cm
+Q
+q
+1 0 0 1 62.69291 139.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 122 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 83 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add resolveOFnames to change output files in production context) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (script/dirac-ilc-add-whizard: define in DIRAC a new whizard version) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 67 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 16 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 38 Tm  T* ET
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .919398 Tw (Add possibility to get a file using its SRM path FIXME: startFrom in mokka is 0 by default) Tj T* 0 Tw (instead of 1.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (SLICPandora step definition) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+Q
+Q
+ 
+endstream
+endobj
+% 'R105': class PDFStream 
+105 0 obj
+% page stream
+<< /Length 9037 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 696.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 56 Tm  T* ET
+q
+1 0 0 1 20 60 cm
+Q
+q
+1 0 0 1 20 60 cm
+Q
+q
+1 0 0 1 20 36 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL 1.082765 Tw (GetSRMFile module: used to get a file given its SRM path. Useful to get a file that is not) Tj T* 0 Tw (registered in the DIRAC FC.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (RegisterOutputData: set the metadata flags for production data) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (SLICPandora Module) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 696.0236 cm
+Q
+q
+1 0 0 1 62.69291 666.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 654.0236 cm
+Q
+q
+1 0 0 1 62.69291 499.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 143 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 122 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (check that application software is not empty after untarring) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 106 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 67 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (allow arguments in ApplicationScript. To be used for pyroot scripts) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add IS_PROD to workflow parameters, for Production API only) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 51 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 38 Tm  T* ET
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .475697 Tw (handle production context properly: input and output file names depend on prod ID and job) Tj T* 0 Tw (ID) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (check that applications are actually there before running, and if not return an error.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 499.0236 cm
+Q
+q
+1 0 0 1 62.69291 466.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r7p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 436.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 424.0236 cm
+Q
+q
+1 0 0 1 62.69291 312.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 100 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 67 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 20 Tm  T* ET
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .164269 Tw (add comments in created steering and xml TODO: idem for SLIC and LCIM FIXME: replace) Tj T* 0 Tw (rstrip by replace in TARSoft.py) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 51 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 38 Tm  T* ET
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .132927 Tw (Marlin does not need to be specified the inputslcio list, as it is taken from inputdata if mokka) Tj T* 0 Tw (step is not run before) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (overload setBannedSites) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 312.0236 cm
+Q
+q
+1 0 0 1 62.69291 279.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r7p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 249.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 237.0236 cm
+Q
+q
+1 0 0 1 62.69291 76.86614 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 141 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 128 Tm  T* ET
+q
+1 0 0 1 20 132 cm
+Q
+q
+1 0 0 1 20 132 cm
+Q
+q
+1 0 0 1 20 120 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Reshuffle CombinedSoftwareInstallation so that we use the SharedArea) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 114 cm
+Q
+q
+1 0 0 1 20 90 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL 1.958443 Tw (TARSoft: don't redownload the applications if they are already there. Had to do some) Tj T* 0 Tw (tricks to manage slic folder name TODO: what about LCSIM) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 84 cm
+Q
+q
+1 0 0 1 20 72 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+BT 1 0 0 1 0 2 Tm 12 TL /F1 10 Tf 0 0 0 rg (in TARSoft, use ReplicaManager if url does not start with ) Tj 0 0 .501961 rg (http://) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 66 cm
+Q
+q
+1 0 0 1 20 42 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL 1.044983 Tw (better check in SQLWrapper that TMP dir is properly created. Also do proper remove of) Tj T* 0 Tw (TMP dir, whatever happened to the socket.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 36 cm
+Q
+q
+1 0 0 1 20 24 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (better handling of SQLWrapper errors) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 18 cm
+Q
+q
+1 0 0 1 20 6 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Add modules needed by UserJobFinalization) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+ 
+endstream
+endobj
+% 'R106': class PDFStream 
+106 0 obj
+% page stream
+<< /Length 8474 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 466.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 230 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 56 Tm  T* ET
+q
+1 0 0 1 20 54 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (adapt ProdutionData to ILC needs, basically removing everything) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 48 cm
+Q
+q
+1 0 0 1 20 36 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (To be able to use InputData, need to import InputDataResolution.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (dirac-ilc-add-sofware.py: now add to TarBallURL location the tar ball) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (update detectOS after discussion with Hubert, comment out slc4 binary support) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 214 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 103 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 98 Tm  T* ET
+q
+1 0 0 1 20 102 cm
+Q
+q
+1 0 0 1 20 102 cm
+Q
+q
+1 0 0 1 20 78 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .87284 Tw (In presubmissionchecks, check that outputpath, if used, does not contain /../, /./, or //, and) Tj T* 0 Tw (does not end with /.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 72 cm
+Q
+q
+1 0 0 1 20 60 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (All applications now call the UserJobFinalization module, and setOutputData is ILC specific.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 54 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 26 Tm /F1 10 Tf 12 TL .766136 Tw (Check that outputdata and outputsandbox do not contain the same things and output data) Tj T* 0 Tw 2.826136 Tw (does not allow wildcard FIXME: checks where not done properly, all things were not) Tj T* 0 Tw (checked FIXME: add TotalSteps in setROOT) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (allow to use LFNs for steering and xml files for Mokka and Marlin) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 87 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 74 Tm  T* ET
+q
+1 0 0 1 20 78 cm
+Q
+q
+1 0 0 1 20 78 cm
+Q
+q
+1 0 0 1 20 66 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (handle return value of SQLWrapper in MokkaWrapper) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 60 cm
+Q
+q
+1 0 0 1 20 48 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (check if input slcio is present for Marlin before running) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 30 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add UserJobFinalization module, taken from LHCb) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .555542 Tw (prepare for using InputData: find out where the files are on the fly and pass the full path to) Tj T* 0 Tw (PrepareOptionsfiles) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 466.0236 cm
+Q
+q
+1 0 0 1 62.69291 433.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r6p2) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 400.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r6p1) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 367.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r6p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 337.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 325.0236 cm
+Q
+q
+1 0 0 1 62.69291 292.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (dirac-ilc-add-software, utility to add software in CS) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 292.0236 cm
+Q
+q
+1 0 0 1 62.69291 262.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 250.0236 cm
+Q
+q
+1 0 0 1 62.69291 162.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 76 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 55 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (use elif statements) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 39 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (handle end of file reached in Mokka, avoid job declared as failed.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (in Marlin if nb of events to process is not specified, use -1 i.e. all events.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 162.0236 cm
+Q
+q
+1 0 0 1 62.69291 129.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r5p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 99.02362 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 87.02362 cm
+Q
+ 
+endstream
+endobj
+% 'R107': class PDFStream 
+107 0 obj
+% page stream
+<< /Length 7721 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 641.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 112 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 61 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 38 Tm  T* ET
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 42 cm
+Q
+q
+1 0 0 1 20 30 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Take into account dependencies in installation phase.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .279983 Tw (Set convention that folder containing application is same as tar ball name minus .tar.gz and) Tj T* 0 Tw (.tgz) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 45 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 32 Tm  T* ET
+q
+1 0 0 1 20 36 cm
+Q
+q
+1 0 0 1 20 36 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 26 Tm /F1 10 Tf 12 TL 2.821412 Tw (Get base folder name based on CS content, allows for multiple version of the same) Tj T* 0 Tw .916342 Tw (software to run FIXME: Running marlin: duplicated processors were not properly removed) Tj T* 0 Tw (from MARLIN_DLL.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 641.0236 cm
+Q
+q
+1 0 0 1 62.69291 608.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r4p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 578.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 566.0236 cm
+Q
+q
+1 0 0 1 62.69291 496.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add DiracILC with specification of preSubmissionChecks) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (DataManagementSystem) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add DataManagementSystem, for dirac-dms-gridify-castor-file script) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 496.0236 cm
+Q
+q
+1 0 0 1 62.69291 466.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 454.0236 cm
+Q
+q
+1 0 0 1 62.69291 317.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 125 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 92 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 20 Tm  T* ET
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .773059 Tw (add in PrepareOptionsFiles the relevant methods for SLIC and LCSIM FIXME: fixes to the) Tj T* 0 Tw (methods for Mokka and Marlin.) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 76 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 26 Tm  T* ET
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 30 cm
+Q
+q
+1 0 0 1 20 18 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add the relevant bits of code for the definition of SLIC and LCSIM jobs) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add the possibility to run on mac files in mokka) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (add relevant workflow for SLIC and LCSIM) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 317.0236 cm
+Q
+q
+1 0 0 1 62.69291 284.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r3p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 254.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 242.0236 cm
+Q
+q
+1 0 0 1 62.69291 160.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 70 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 20 Tm  T* ET
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 24 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 9 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14 Tm /F1 10 Tf 12 TL .559982 Tw (add ilc-install.sh script FIXME: Fix PrepareOptions such that the parsing of options is done) Tj T* 0 Tw (properly) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (in ILCJob, possibility to run Mokka and Marlin in one job) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 160.0236 cm
+Q
+q
+1 0 0 1 62.69291 127.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r2p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 97.02362 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 85.02362 cm
+Q
+ 
+endstream
+endobj
+% 'R108': class PDFStream 
+108 0 obj
+% page stream
+<< /Length 6201 >>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 62.69291 732.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (rewrite of SQLwrapper) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 732.0236 cm
+Q
+q
+1 0 0 1 62.69291 699.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r1p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 669.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (CHANGE) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 657.0236 cm
+Q
+q
+1 0 0 1 62.69291 550.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 95 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 74 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (start working on InputDataResolution) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (ConfigurationSystem) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (adapt UsersAndGroups to LCD : comment references to LFC) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (finish dev of LCDJob) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 550.0236 cm
+Q
+q
+1 0 0 1 62.69291 520.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (BUGFIX) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 508.0236 cm
+Q
+q
+1 0 0 1 62.69291 475.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (Fix several bugs) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 475.0236 cm
+Q
+q
+1 0 0 1 62.69291 442.0236 cm
+q
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf 0 0 0 rg (Version v1r0p0) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 424.0236 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (NEW: first release) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 394.0236 cm
+q
+BT 1 0 0 1 0 3 Tm 18 TL /F2 15 Tf 0 0 0 rg (NEW) Tj T* ET
+Q
+Q
+q
+1 0 0 1 62.69291 382.0236 cm
+Q
+q
+1 0 0 1 62.69291 238.0236 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 2 Tm  T* ET
+q
+1 0 0 1 20 132 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Core) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 111 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (first import) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 95 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (ConfigurationSystem) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 74 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (first import) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 58 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Interfaces) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 37 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (first import) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 21 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F2 10 Tf 12 TL (Workflow) Tj T* ET
+Q
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 0 8 Tm  T* ET
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 12 cm
+Q
+q
+1 0 0 1 20 0 cm
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL 10.5 0 Td (\177) Tj T* -10.5 0 Td ET
+Q
+Q
+q
+1 0 0 1 23 -3 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2 Tm /F1 10 Tf 12 TL (first import) Tj T* ET
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 20 0 cm
+Q
+q
+Q
+Q
+q
+Q
+Q
+q
+1 0 0 1 62.69291 238.0236 cm
+Q
+ 
+endstream
+endobj
+% 'R109': class PDFPageLabels 
+109 0 obj
+% Document Root
+<< /Nums [ 0
+ 110 0 R
+ 1
+ 111 0 R
+ 2
+ 112 0 R
+ 3
+ 113 0 R
+ 4
+ 114 0 R
+ 5
+ 115 0 R
+ 6
+ 116 0 R
+ 7
+ 117 0 R
+ 8
+ 118 0 R
+ 9
+ 119 0 R ] >>
+endobj
+% 'R110': class PDFPageLabel 
+110 0 obj
+% None
+<< /S /D
+ /St 1 >>
+endobj
+% 'R111': class PDFPageLabel 
+111 0 obj
+% None
+<< /S /D
+ /St 2 >>
+endobj
+% 'R112': class PDFPageLabel 
+112 0 obj
+% None
+<< /S /D
+ /St 3 >>
+endobj
+% 'R113': class PDFPageLabel 
+113 0 obj
+% None
+<< /S /D
+ /St 4 >>
+endobj
+% 'R114': class PDFPageLabel 
+114 0 obj
+% None
+<< /S /D
+ /St 5 >>
+endobj
+% 'R115': class PDFPageLabel 
+115 0 obj
+% None
+<< /S /D
+ /St 6 >>
+endobj
+% 'R116': class PDFPageLabel 
+116 0 obj
+% None
+<< /S /D
+ /St 7 >>
+endobj
+% 'R117': class PDFPageLabel 
+117 0 obj
+% None
+<< /S /D
+ /St 8 >>
+endobj
+% 'R118': class PDFPageLabel 
+118 0 obj
+% None
+<< /S /D
+ /St 9 >>
+endobj
+% 'R119': class PDFPageLabel 
+119 0 obj
+% None
+<< /S /D
+ /St 10 >>
+endobj
+xref
+0 120
+0000000000 65535 f
+0000000113 00000 n
+0000000221 00000 n
+0000000386 00000 n
+0000000559 00000 n
+0000000838 00000 n
+0000001118 00000 n
+0000001398 00000 n
+0000001678 00000 n
+0000001958 00000 n
+0000002252 00000 n
+0000002464 00000 n
+0000002766 00000 n
+0000003047 00000 n
+0000003329 00000 n
+0000003611 00000 n
+0000003771 00000 n
+0000004035 00000 n
+0000004162 00000 n
+0000004382 00000 n
+0000004548 00000 n
+0000004732 00000 n
+0000004898 00000 n
+0000005133 00000 n
+0000005284 00000 n
+0000005519 00000 n
+0000005670 00000 n
+0000005905 00000 n
+0000006071 00000 n
+0000006237 00000 n
+0000006472 00000 n
+0000006638 00000 n
+0000006822 00000 n
+0000006988 00000 n
+0000007223 00000 n
+0000007374 00000 n
+0000007609 00000 n
+0000007775 00000 n
+0000007941 00000 n
+0000008176 00000 n
+0000008327 00000 n
+0000008562 00000 n
+0000008728 00000 n
+0000008894 00000 n
+0000009129 00000 n
+0000009281 00000 n
+0000009516 00000 n
+0000009665 00000 n
+0000009900 00000 n
+0000010052 00000 n
+0000010287 00000 n
+0000010439 00000 n
+0000010674 00000 n
+0000010823 00000 n
+0000011058 00000 n
+0000011227 00000 n
+0000011394 00000 n
+0000011629 00000 n
+0000011781 00000 n
+0000012016 00000 n
+0000012182 00000 n
+0000012349 00000 n
+0000012584 00000 n
+0000012733 00000 n
+0000012968 00000 n
+0000013120 00000 n
+0000013356 00000 n
+0000013508 00000 n
+0000013744 00000 n
+0000013896 00000 n
+0000014132 00000 n
+0000014299 00000 n
+0000014466 00000 n
+0000014701 00000 n
+0000014868 00000 n
+0000015036 00000 n
+0000015272 00000 n
+0000015425 00000 n
+0000015661 00000 n
+0000015814 00000 n
+0000016005 00000 n
+0000016196 00000 n
+0000016432 00000 n
+0000016600 00000 n
+0000016768 00000 n
+0000017004 00000 n
+0000017157 00000 n
+0000017393 00000 n
+0000017561 00000 n
+0000017729 00000 n
+0000017965 00000 n
+0000018118 00000 n
+0000018354 00000 n
+0000018507 00000 n
+0000018743 00000 n
+0000018914 00000 n
+0000019082 00000 n
+0000019303 00000 n
+0000019436 00000 n
+0000019620 00000 n
+0000025971 00000 n
+0000033613 00000 n
+0000040830 00000 n
+0000048642 00000 n
+0000054640 00000 n
+0000063090 00000 n
+0000072228 00000 n
+0000080803 00000 n
+0000088625 00000 n
+0000094931 00000 n
+0000095153 00000 n
+0000095232 00000 n
+0000095311 00000 n
+0000095390 00000 n
+0000095469 00000 n
+0000095548 00000 n
+0000095627 00000 n
+0000095706 00000 n
+0000095785 00000 n
+0000095864 00000 n
+trailer
+<< /ID 
+ % ReportLab generated PDF document -- digest (http://www.reportlab.com) 
+ [(\271\263\)\353,\255\304\006\200Jd\323Lz\305\224) (\271\263\)\353,\255\304\006\200Jd\323Lz\305\224)] 
+
+ /Info 16 0 R
+ /Root 15 0 R
+ /Size 120 >>
+startxref
+95913
+%%EOF
