@@ -559,7 +559,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
         if not len(files):
           return S_ERROR('Could not find any overlay files')
         overlay = Element('overlayFiles')
-        overlay.text = files
+        overlay.text = string.join(files,"\n")
         driver.append(overlay)
   ##Take care of the output files
   writerfound = False
