@@ -9,8 +9,7 @@ import sys
 Script.registerSwitch( 'a:', 'alias=', 'name of the alias.properties file to use (default alias.properties)' )
 Script.registerSwitch( 'A', 'agent', 'Submits the job in agent mode, which will run the job on the local machine' )
 Script.registerSwitch( 'b:', 'banlist=', 'file with list of banned sites (default bannedSites.py)' )
-Script.registerSwitch( 'd:', 'detector=', 'name of the detector model (default clic_sid_cdr)' )
-Script.registerSwitch( 'D', 'debug', 'switches on the debug mode' )
+Script.registerSwitch( 'D:', 'detector=', 'name of the detector model (default clic_sid_cdr)' )
 Script.registerSwitch( 'i:', 'input=', 'input python script holding the lfnlist to process' )
 Script.registerSwitch( 'I:', 'prodid=', 'use a production id to define the input lfnlist' )
 Script.registerSwitch( 'l:', 'lcsimxml=', 'lcsim steering xml template (optional)' )
@@ -24,6 +23,7 @@ Script.registerSwitch( 'P:', 'pandora=', 'slicPandora version to use (default CD
 Script.registerSwitch( 'S:', 'slic=', 'slic version (default v2r8p4)' )
 Script.registerSwitch( 't:', 'time=', 'CPU time limit per job in seconds (default 300000)' )
 Script.registerSwitch( 'T:', 'title=', 'job title (default fullReco)' )
+Script.registerSwitch( 'v', 'verbose', 'switches on the verbose mode' )
 Script.registerSwitch( 'x:', 'settings=', 'name of pandora settings file (default taken from grid installation)' )
 
 Script.setUsageMessage( sys.argv[0]+'-n <nEvts> (-i <inputList> OR -I <prodID> AND/OR -m <macro>) (<additional options>)' )
@@ -68,10 +68,8 @@ for switch in switches:
 		agentMode = True
 	if opt in ('b','banlist'):
 		banlistFile = arg
-	if opt in ('d','detector'):
+	if opt in ('D','detector'):
 		detector = arg
-	if opt in ('D','debug'):
-		debug = True
 	if opt in ('i','input'):
 		inputFileList = arg
 	if opt in ('I','prodid'):
@@ -100,6 +98,8 @@ for switch in switches:
 		cpuLimit = arg
 	if opt in ('T','title'):
 		jobTitle = arg
+	if opt in ('v','verbose'):
+		debug = True
 
 if not inputFileList and not prodID:
 	if macroFile == 'slicMacros/default.mac':
