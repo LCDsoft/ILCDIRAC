@@ -12,7 +12,7 @@ print 'Getting production proxy ...'
 from DIRAC.Core.Base import Script
 import sys
 
-Script.registerSwitch( 'd:', 'description=', 'Short description of the workflow (default set by metadata)' )
+Script.registerSwitch( 'D:', 'description=', 'Short description of the workflow (default set by metadata)' )
 Script.registerSwitch( 'g:', 'group=', 'Name of the production group (default set by metadata)' )
 Script.registerSwitch( 'l:', 'lcsim=', 'LCSIM version to use (default 1.15-SNAPHOT)' )
 Script.registerSwitch( 'm:', 'model=', 'Name of detector model to use (default clic_sid_cdr)' )
@@ -40,7 +40,7 @@ checkMeta = True
 for switch in switches:
 	opt = switch[0]
 	arg = switch[1]
-	if opt in ('d', 'description'):
+	if opt in ('D', 'description'):
 		workflowDescription = arg
 	elif opt in ('g', 'group'):
 		prodGroup = arg

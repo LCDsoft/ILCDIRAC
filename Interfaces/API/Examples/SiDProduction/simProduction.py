@@ -6,7 +6,7 @@
 from DIRAC.Core.Base import Script
 import sys
 
-Script.registerSwitch( 'd:', 'description=', 'Short description of the workflow (default set by metadata)' )
+Script.registerSwitch( 'D:', 'description=', 'Short description of the workflow (default set by metadata)' )
 Script.registerSwitch( 'e:', 'evttype=', 'Name of the production event type (optional in addition to production ID)' )
 Script.registerSwitch( 'E:', 'energy=', 'Energy of the production events (default 3tev)' )
 Script.registerSwitch( 'm:', 'model=', 'Name of detector model to use' )
@@ -38,7 +38,7 @@ slicMacro = 'defaultClicCrossingAngle.mac'
 for switch in switches:
 	opt = switch[0]
 	arg = switch[1]
-	if opt in ('d', 'description'):
+	if opt in ('D', 'description'):
 		workflowDescription = arg
 	elif opt in ('e', 'evttype'):
 		eventType = arg
