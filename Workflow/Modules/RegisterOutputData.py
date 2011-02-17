@@ -142,6 +142,11 @@ class RegisterOutputData(ModuleBase):
           return res
       meta.update(metaprodid)
       self.log.info("Registered %s with tags %s"%(files,meta))
+      
+      ###Now, set the ancestors
+      if self.InputData:
+        inputdata = self.InputData.split(";")
+        self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       #res = self.fc.setMetadata(os.path.dirname(files),meta)
       #if not res['OK']:
