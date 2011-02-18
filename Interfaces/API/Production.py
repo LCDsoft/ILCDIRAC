@@ -1051,7 +1051,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
 
     if self.prodparameters.has_key("WhizardParameters"):
-      info.append('- Whizard parameters: %s'%(self.prodparameters['WhizardParameters']))
+      info.append('- Whizard parameters: \n %s'%(string.join(self.prodparameters['WhizardParameters'].split(";"),'\n')))
     if  self.prodparameters['PostGenSelApplied']:
       info.append(' --> Events are selected after whizard generation !')
     if self.prodparameters.has_key('MokkaSteer'):
