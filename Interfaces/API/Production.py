@@ -1048,7 +1048,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       info.append('- Energy %s GeV'%self.prodparameters["Energy"])
     info.append("- %s events per job"%self.prodparameters['nbevts'])
     if self.prodparameters.has_key('lumi'):
-      info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
+      if self.prodparameters['lumi']:
+        info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
 
     if self.prodparameters.has_key("WhizardParameters"):
       info.append('- Whizard parameters: \n %s'%(string.join(self.prodparameters['WhizardParameters'].split(";"),'\n')))
