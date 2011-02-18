@@ -54,6 +54,7 @@ class ILCJob(Job):
     self.detector = ''
     if processlist:
       self.processlist =processlist
+    self.prodparameters = {}
 
   def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None,logInOutputData=False):
     """ method needed by Ganga, and also for pyroot
@@ -1469,6 +1470,11 @@ class ILCJob(Job):
       stepInstance.setValue("ProdID",ProdID)
     if NSigEventsPerJob:
       stepInstance.setValue("NbSigEvtsPerJob",NSigEventsPerJob)
+
+    ##Define prod parameters
+    self.prodparameters['BXOverlay']=BXOverlay
+    if NbGGtoHadInts:
+      self.prodparameters['GGInt']=NbGGtoHadInts
 
     return S_OK()
 
