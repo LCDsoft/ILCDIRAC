@@ -48,11 +48,14 @@ class Production(ILCJob):
     self.process = ""
     self.basepath = ""
     self.basename = ""
-    self.prodparameters = {}
+    self.prodparameters = {}    
     self.prodparameters['UsingWhizardOutput']=False
     self.prodparameters['UsingMokkaOutput']=False
     self.prodparameters['UsingSLICOutput']=False
     self.prodparameters['PostGenSelApplied']=False
+    self.prodparameters['BXOverlay']=0
+    self.prodparameters['GGInt']=0
+    
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
     self.currtrans = None
@@ -1066,6 +1069,14 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if self.prodparameters.has_key('SlicInputMAC'):
       info.append('- SLIC MAC file %s'%self.prodparameters['SlicInputMAC'])
 
+    if self.prodparameters.has_key('BXOverlay'):
+      if self.prodparameters['BXOverlay']:
+        info.append('- Overlaying %s bunch crossings of gamma gamma -> hadrons'%self.prodparameters['BXOverlay'])
+        if self.prodparameters['GGInt']:
+          info.append('  Using %s gamma gamma -> hadrons interactions per bunch crossing'%self.prodparameters['GGInt'])
+        else:
+          info.append('  Using default 3.2 gamma gamma -> hadrons interactions per bunch crossing')
+    
     if self.prodparameters['UsingWhizardOutput']:
       info.append('Mokka or SLIC use whizard output from previous step')
     if self.prodparameters['UsingMokkaOutput']:
