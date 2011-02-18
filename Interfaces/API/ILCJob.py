@@ -1426,6 +1426,8 @@ class ILCJob(Job):
       self.detector=detector
     if not self.detector:
       return self._reportError('Detector type (ILD or SID) must be specified somewhere')
+    elif self.detector not in ('ILD','SID'):
+      return self._reportError('Detector Model must be either ILD or SID')
     if energy:
       if not type(energy) in types.StringTypes:
         return self._reportError('Energy type must be string',__name__,**kwargs)
@@ -1433,7 +1435,7 @@ class ILCJob(Job):
     if not self.energy:
       return self._reportError('Energy must be set somewhere')
     if not BXOverlay:
-      return self._repartError('BXOverlay parameter must be set')
+      return self._reportError('BXOverlay parameter must be set')
 
     self.StepCount +=1
     stepName = 'RunOverlay'
