@@ -109,7 +109,7 @@ if not prodGroup:
 print 'Production group:', prodGroup
 
 if not workflowName:
-	workflowName = eventType+'_'+energy+'_sim_sid_cdr'	
+	workflowName = eventType+'_'+energy+'_sim_sid_cdr_2'	
 print 'Workflow name:', workflowName
 
 if not workflowDescription:
@@ -137,7 +137,7 @@ p.setCPUTime( cpuLimit )
 p.setOutputSandbox( [ "*.log" ] )
 p.setWorkflowName( workflowName )
 p.setWorkflowDescription( workflowDescription )
-p.setProdType( "MCReconstruction" )
+p.setProdType( "MCSimulation" )
 p.setProdGroup( prodGroup )
 res = p.create()
 if not res['OK']:
