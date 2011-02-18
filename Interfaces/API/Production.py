@@ -876,12 +876,6 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
     dataUpload.setBody(body)
 
-    logUpload = ModuleDefinition('UploadLogFile')
-    logUpload.setDescription('Uploads the output log files')
-    self._addParameter(logUpload,'Enable','bool','False','EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
-    logUpload.setBody(body)
-
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
     self._addParameter(failoverRequest,'Enable','bool','True','EnableFlag')
@@ -894,12 +888,23 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     body = string.replace(self.importLine,'<MODULE>','RegisterOutputData')
     registerdata.setBody(body)
 
+    logUpload = ModuleDefinition('UploadLogFile')
+    logUpload.setDescription('Uploads the output log files')
+    self._addParameter(logUpload,'Enable','bool','False','EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
+    logUpload.setBody(body)
+
     finalization = StepDefinition('Job_Finalization')
 
     dataUpload.setLink('Enable','self','UploadEnable')
     finalization.addModule(dataUpload)
     finalization.createModuleInstance('UploadOutputData','dataUpload')
     self._addParameter(finalization,'UploadEnable','bool',str(uploadData),'EnableFlag')
+
+    registerdata.setLink('Enable','self','RegisterEnable')
+    finalization.addModule(registerdata)
+    finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
+    self._addParameter(finalization,'RegisterEnable','bool',str(uploadLog),'EnableFlag')
 
     logUpload.setLink('Enable','self','LogEnable')
     finalization.addModule(logUpload)
@@ -910,11 +915,6 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     finalization.addModule(failoverRequest)
     finalization.createModuleInstance('FailoverRequest','failoverRequest')
     self._addParameter(finalization,'FailoverEnable','bool',str(sendFailover),'EnableFlag')
-
-    registerdata.setLink('Enable','self','RegisterEnable')
-    finalization.addModule(registerdata)
-    finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
-    self._addParameter(finalization,'RegisterEnable','bool',str(uploadLog),'EnableFlag')
 
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
