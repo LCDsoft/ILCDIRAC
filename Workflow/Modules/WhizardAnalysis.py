@@ -59,6 +59,7 @@ class WhizardAnalysis(ModuleBase):
     processlistloc = res['Value']
     res = self.rm.getFile(processlistloc)
     if not res['OK']:
+      self.log.error('Could not get processlist: %s'%res['Message'])
       return res
     self.processlist = ProcessList(os.path.basename(processlistloc))
     return S_OK()
@@ -210,10 +211,12 @@ class WhizardAnalysis(ModuleBase):
       res = self.obtainProcessList()
       if not res['OK']:
         self.log.error("Could not obtain process list")
+        self.setApplicationStatus('Failed getting processlist')
         return res
       whizardin = self.processlist.getInFile(self.evttype)
       if not whizardin:
         self.log.error("Whizard input file was not found in process list, cannot proceed")
+        self.setApplicationStatus('Whizard input file was not found')
         return S_ERROR("Error while resolving whizard input file")
       if whizardin.count("template"):
         template=True
@@ -222,6 +225,7 @@ class WhizardAnalysis(ModuleBase):
         self.inFile = "whizardnew.in"
       except:
         self.log.error("Could not copy %s from %s"%(whizardin,mySoftDir))
+        self.setApplicationStatus('Failed getting whizard.in file')
         return S_ERROR("Failed to obtain %s"%whizardin)
 
     ##Check existence of Les Houches input file
