@@ -2,17 +2,19 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
     xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/lcsim/1.0/lcsim.xsd">
     <inputFiles>
-				<file>input.slcio</file>
+		<file>input.slcio</file>
     </inputFiles>
     <control>
         <numberOfEvents>-1</numberOfEvents>
         <verbose>false</verbose>
+        <printDriverStatistics>true</printDriverStatistics>
+		<printDriversDetailed>true</printDriversDetailed>
     </control>
     <execute>
         <driver name="EventMarkerDriver"/>
-     		<driver name="MuonEndcapSelector"/>
-    		<driver name="MuonBarrelSelector"/>
-        <driver name="HitRemover"/>
+   		<driver name="MuonEndcapSelector"/>
+   		<driver name="MuonBarrelSelector"/>
+        <driver name="TrackHitRemover"/>
         <driver name="VertexBarrelSetup"/>
         <driver name="VertexEndcapSetup"/>
         <driver name="TrackerBarrelSetup"/>
@@ -37,19 +39,19 @@
         </driver>
         <!-- Driver to select only hits in layers which are meant to be active -->
         <driver name="MuonEndcapSelector"
-								type="contrib.cgrefe.calorimetry.CalorimeterLayerSelector">
-						<collectionName>MuonEndcapHits</collectionName>
-						<activeLayers>0 1 2 7 8 9 15 16 17</activeLayers>
-				</driver>
-				<!-- Driver to select only hits in layers which are meant to be active -->
-				<driver name="MuonBarrelSelector"
-								type="contrib.cgrefe.calorimetry.CalorimeterLayerSelector">
-						<collectionName>MuonBarrelHits</collectionName>
-						<activeLayers>0 1 2 7 8 9 15 16 17</activeLayers>
-				</driver>
-				<!-- Driver to remove hits in overlapping tracking modules to avoid confusion in track reconstruction -->
-        <driver name="HitRemover"
-        				type="contrib.cgrefe.tracking.RemoveMultipleHitsCheater">
+				type="org.lcsim.recon.calorimetry.CalorimeterLayerSelector">
+			<collectionName>MuonEndcapHits</collectionName>
+			<activeLayers>0 1 2 7 8 9 15 16 17</activeLayers>
+			</driver>
+		<!-- Driver to select only hits in layers which are meant to be active -->
+		<driver name="MuonBarrelSelector"
+				type="org.lcsim.recon.calorimetry.CalorimeterLayerSelector">
+			<collectionName>MuonBarrelHits</collectionName>
+			<activeLayers>0 1 2 7 8 9 15 16 17</activeLayers>
+		</driver>
+		<!-- Driver to remove hits in overlapping tracking modules to avoid confusion in track reconstruction -->
+        <driver name="TrackHitRemover"
+				type="org.lcsim.recon.cheater.RemoveMultipleTrackHitsCheater">
        	</driver>
         <driver name="ReadoutDriver"
                 type="org.lcsim.recon.tracking.digitization.sisim.config.SimTrackerHitReadoutDriver">
