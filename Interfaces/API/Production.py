@@ -177,7 +177,15 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         self.basepath +=compatmeta["EvtType"]+"/"
       if type(compatmeta["EvtType"])==type([]):
         self.basepath +=compatmeta["EvtType"][0]+"/"
-    if compatmeta.has_key("DetectorType"):
+    gendata=False
+    if compatmeta.has_key('Datatype'):
+      if type(compatmeta['Datatype']) in types.StringTypes:
+        if compatmeta['Datatype']=='gen':
+          gendata=True
+      if type(compatmeta['Datatype'])==type([]):
+        if compatmeta['Datatype'][0]=='gen':
+          gendata=True
+    if compatmeta.has_key("DetectorType") and not gendata:
       if type(compatmeta["DetectorType"]) in types.StringTypes:
         self.detector = compatmeta["DetectorType"]
       if type(compatmeta["DetectorType"])==type([]):
