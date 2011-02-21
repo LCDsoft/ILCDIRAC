@@ -24,6 +24,10 @@ for switch in switches:
     Script.showHelp()
   if opt in ('a','outputdata'):
     outputdata=True  
+
+if not repoLocation:
+  Script.showHelp()
+  sys.exit(1)
     
 import DIRAC
 from DIRAC.Interfaces.API.Dirac import Dirac
