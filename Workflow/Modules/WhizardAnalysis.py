@@ -53,14 +53,16 @@ class WhizardAnalysis(ModuleBase):
     Get the process list from storage if whizard.in was not provided
     @return: S_OK(), S_ERROR()
     """
+    
     res = gConfig.getOption("/Operations/ProcessList/Location","")
     if not res['OK']:
       return res
     processlistloc = res['Value']
-    res = self.rm.getFile(processlistloc)
-    if not res['OK']:
-      self.log.error('Could not get processlist: %s'%res['Message'])
-      return res
+    if not os.path.exists(os.path.basename(processlistloc)):
+      res = self.rm.getFile(processlistloc)
+      if not res['OK']:
+        self.log.error('Could not get processlist: %s'%res['Message'])
+        return res
     self.processlist = ProcessList(os.path.basename(processlistloc))
     return S_OK()
     
