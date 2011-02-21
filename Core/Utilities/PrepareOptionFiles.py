@@ -275,6 +275,19 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
     print "Found Exception %s %s"%(Exception,x)
     return S_ERROR("Found Exception %s %s"%(Exception,x))
 
+  ##Get all processors:
+  overlay=False
+  #recoutput=False
+  #dstoutput=False
+  processors = tree.findall('execute/processor')
+  for processor in processors:
+    if processor.attrib.has_key('name'):
+      if processor.attrib['name'].lower().count('overlaytiming'):
+        overlay=True
+      #if processor.attrib['name'].lower().count('lciooutputprocessor'):
+      #  recoutput=True
+      #if processor.attrib['name'].lower().count('dstoutput'):
+      #  dstoutput=True  
   params = tree.findall('global/parameter')
   glob = tree.find('global')
   lciolistfound = False
@@ -335,7 +348,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
                 subparam.text = outputDST
                 com = Comment("DST file changed")
                 param.insert(0,com)
-      if param.attrib['name'].lower().count('overlaytiming'):
+      if param.attrib['name'].lower().count('overlaytiming') and overlay:
         files = getOverlayFiles()
         if not len(files):
           return S_ERROR('Could not find any overlay files')
