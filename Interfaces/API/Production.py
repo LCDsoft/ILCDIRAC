@@ -305,6 +305,12 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     #  print "Using default pythia parameters"
     #  parameters.append("PYTHIAPARAMS=\"PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ; MSTJ(28)=2 ;\"")
 
+    #Add to input sandbox the processlist: if it fails getting it, the job get rescheduled
+    res = gConfig.getValue('/Operations/ProcessList/Location','')
+    if not res:
+      return self._reportError('Could not resolve location of processlist.cfg')
+    res = 'LFN:'+res
+    self.addToInputSandbox.append(res)
 
     self.StepCount +=1
     stepName = 'Whizard'
