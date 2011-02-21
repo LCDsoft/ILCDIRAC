@@ -314,6 +314,13 @@ class ILCJob(Job):
       print "Will set keep_initials to False"
       parameters.append('INITIALS=F')
 
+    #Add to input sandbox the processlist: if it fails getting it, the job get rescheduled
+    res = gConfig.getValue('/Operations/ProcessList/Location','')
+    if not res:
+      return self._reportError('Could not resolve location of processlist.cfg')
+    res = 'LFN:'+res
+    self.addToInputSandbox.append(res)
+
     self.StepCount +=1
     stepName = 'RunWhizard'
     stepNumber = self.StepCount
