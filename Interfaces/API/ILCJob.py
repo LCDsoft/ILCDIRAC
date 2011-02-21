@@ -213,6 +213,8 @@ class ILCJob(Job):
        @type lumi: int
        @param randomseed: random seed to use. By default using current job ID
        @type randomseed: int
+       @param extraparameters: dictionary of parameters for whizard template. e.g. RECOIL for beam_recoil
+       @type extraparameters: dict
        @param jobindex: index to add to output file names so that several job can be stored in the same ouput directory
        @type jobindex: int
        @param logFile: log file name. Default is provided
@@ -709,7 +711,8 @@ class ILCJob(Job):
 
   def setMarlin(self,appVersion,xmlfile,gearfile=None,inputslcio=None,evtstoprocess=None,logFile='',debug=False,logInOutputData=False):
 
-    """ Define Marlin step
+    """Helper function: define Marlin step
+    
       Example usage:
 
       >>> job = ILCJob()
@@ -1420,7 +1423,7 @@ class ILCJob(Job):
     @type energy: string
     @param BXOverlay: Bunch crossings to overlay
     @type BXOverlay: int
-    @param NbGGtoHadInts: optional number of gamma gamma -> hadrons interactions per bunch crossing
+    @param NbGGtoHadInts: optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2
     @type NbGGtoHadInts: float
     @param ProdID: Optional parameter to force using one specific prodID for the input files. By default it's the latest one
     @type ProdID: int
