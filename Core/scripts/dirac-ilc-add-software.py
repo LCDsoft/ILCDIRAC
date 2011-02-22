@@ -7,14 +7,14 @@ Created on May 5, 2010
 '''
 import sys
 from DIRAC.Core.Base import Script
-Script.parseCommandLine( ignoreErrors = True )
 
 Script.registerSwitch("P:","platform=","Platform")
 Script.registerSwitch("N:","name=","Application name")
 Script.registerSwitch("V:","version=","Version")
 Script.registerSwitch("C:","comment=","Comment")
-Script.setUsageMessage( sys.argv[0]+'-P x86_64-slc5-gcc43-opt -N marlin -V v0111pre02 -C "Some Comment"' )
+Script.setUsageMessage( sys.argv[0]+'-P x86_64-slc5-gcc43-opt -N Marlin -V v0111pre02 -C "Some Comment"' )
 
+Script.parseCommandLine( ignoreErrors = True )
 switches = Script.getUnprocessedSwitches()
 
 platform = ""
