@@ -162,13 +162,15 @@ class PostGenSelection(ModuleBase):
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
+    message = 'Post Generation Selection successful'
     if not status==0:
       self.log.error("Writing did not proceed properly")
       self.setApplicationStatus('PostGenSelection_Write Exited With Status %s' %(status))
-      return S_ERROR('PostGenSelection_Write Exited With Status %s' %(status))
-    
-    self.workflow_commons["NbOfEvents"]=self.numberOfEvents
-    
-    self.setApplicationStatus('Post Generation Selection successful')
-    return S_OK('Post Generation Selection successful')
+      message = 'PostGenSelection_Write Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else:  
+      self.workflow_commons["NbOfEvents"]=self.numberOfEvents
+      self.setApplicationStatus(message)
+    return S_OK(message)
   

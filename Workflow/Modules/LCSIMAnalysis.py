@@ -245,12 +245,15 @@ class LCSIMAnalysis(ModuleBase):
       failed = True
     else:
       self.log.info( "LCSIM execution completed successfully")
-
+    message = 'LCSIM %s Successful' %(self.applicationVersion)
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError) 
       self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('LCSIM Exited With Status %s' %(status))
-      return S_ERROR('LCSIM Exited With Status %s' %(status))
-    self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
-    return S_OK('LCSIM %s Successful' %(self.applicationVersion))
+      message = 'LCSIM Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else:
+      self.setApplicationStatus(message)
+    return S_OK(message)

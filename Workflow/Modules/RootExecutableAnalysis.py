@@ -142,11 +142,15 @@ class RootExecutableAnalysis(ModuleBase):
     else:
       self.log.info( "ROOT execution completed successfully")
 
+    message = 'ROOT %s Successful' %(self.applicationVersion)
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('ROOT Exited With Status %s' %(status))
-      return S_ERROR('ROOT Exited With Status %s' %(status))
-    self.setApplicationStatus('ROOT %s Successful' %(self.applicationVersion))
-    return S_OK('ROOT %s Successful' %(self.applicationVersion))
+      message = 'ROOT Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else:
+      self.setApplicationStatus(message)
+    return S_OK(message)

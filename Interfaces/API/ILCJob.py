@@ -1593,103 +1593,6 @@ class ILCJob(Job):
     self.ioDict["RootStep"]=stepInstance.getName()
 
     return S_OK()
-  #############################################################################
-  def setOutputData(self,lfns,OutputSE=[],OutputPath=''):
-    """Helper function, used in preference to Job.setOutputData() for ILC.
-
-       For specifying output data to be registered in Grid storage.  If a list
-       of OutputSEs are specified the job wrapper will try each in turn until
-       successful.
-
-       Example usage:
-
-       >>> job = Job()
-       >>> job.setOutputData(['Ntuple.root'])
-
-       @param lfns: Output data file or files
-       @type lfns: Single string or list of strings ['','']
-       @param OutputSE: Optional parameter to specify the Storage
-       @param OutputPath: Optional parameter to specify the Path in the Storage, postpented to /ilc/user/u/username/
-       Element to store data or files, e.g. CERN-tape
-       @type OutputSE: string or list
-       @type OutputPath: string
-    """
-    kwargs = {'lfns':lfns,'OutputSE':OutputSE,'OutputPath':OutputPath}
-    if type(lfns)==list and len(lfns):
-      outputDataStr = string.join(lfns,';')
-      description = 'List of output data files'
-      self._addParameter(self.workflow,'UserOutputData','JDL',outputDataStr,description)
-    elif type(lfns)==type(" "):
-      description = 'Output data file'
-      self._addParameter(self.workflow,'UserOutputData','JDL',lfns,description)
-    else:
-      return self._reportError('Expected file name string or list of file names for output data',**kwargs)
-
-    if OutputSE:
-      description = 'User specified Output SE'
-      if type(OutputSE) in types.StringTypes:
-        OutputSE = [OutputSE]
-      elif type(OutputSE) != types.ListType:
-        return self._reportError('Expected string or list for OutputSE',**kwargs)
-      OutputSE = ';'.join(OutputSE)
-      self._addParameter(self.workflow,'UserOutputSE','JDL',OutputSE,description)
-
-    if OutputPath:
-      description = 'User specified Output Path'
-      if not type(OutputPath) in types.StringTypes:
-        return self._reportError('Expected string for OutputPath',**kwargs)
-      # Remove leading "/" that might cause problems with os.path.join
-      while OutputPath[0] == '/': OutputPath=OutputPath[1:]
-      if OutputPath.count("ilc/user"):
-        return self._reportError('Output path contains /ilc/user/ which is not what you want',**kwargs)
-      self._addParameter(self.workflow,'UserOutputPath','JDL',OutputPath,description)
-
-    return S_OK()
-  def setBannedSites(self,sites):
-    """Helper function.
-
-       Can specify banned sites for job.  This can be useful
-       for debugging purposes but often limits the possible candidate sites
-       and overall system response time.
-
-       Example usage:
-
-       >>> job = ILCJob()
-       >>> job.setBannedSites(['LCG.DESY.de','LCG.KEK.jp'])
-
-       @param sites: single site string or list
-       @type sites: string or list
-    """
-    bannedsites = []
-    bannedsiteswp = self.workflow.findParameter("BannedSites")
-    if bannedsiteswp:
-      bannedsites = bannedsiteswp.getValue().split(";")
-    if type(sites) == list and len(sites):
-      bannedsites.extend(sites)
-    elif type(sites)==type(" "):
-      bannedsites.append(sites)
-    else:
-      kwargs = {'sites':sites}
-      return self._reportError('Expected site string or list of sites',**kwargs)
-    description = 'Sites excluded by user'
-    self._addParameter(self.workflow,'BannedSites','JDLReqt',string.join(bannedsites,';'),description)
-    return S_OK()
-
-  def _rootType(self,name):
-    modname = ''
-    if name.endswith((".C",".cc",".cxx",".c")):
-      modname = "RootMacroAnalysis"
-    else:
-      modname = "RootExecutableAnalysis"
-    return modname
-
-  def _sortSRM(self,srmfiles=""):
-    list = []
-    srmlist = srmfiles.split(";")
-    for srmdict in srmlist:
-      srm = eval(srmdict)['file']
-      list.append(srm)
-    return list
 
   #-----------------------------------------------------------------------------
   # Experimental apps
@@ -2163,6 +2066,112 @@ class ILCJob(Job):
 
     self._addSoftware( 'tomato', appVersion )
 
+  #############################################################################
+  def setOutputData(self,lfns,OutputSE=[],OutputPath=''):
+    """Helper function, used in preference to Job.setOutputData() for ILC.
+
+       For specifying output data to be registered in Grid storage.  If a list
+       of OutputSEs are specified the job wrapper will try each in turn until
+       successful.
+
+       Example usage:
+
+       >>> job = Job()
+       >>> job.setOutputData(['Ntuple.root'])
+
+       @param lfns: Output data file or files
+       @type lfns: Single string or list of strings ['','']
+       @param OutputSE: Optional parameter to specify the Storage
+       @param OutputPath: Optional parameter to specify the Path in the Storage, postpented to /ilc/user/u/username/
+       Element to store data or files, e.g. CERN-tape
+       @type OutputSE: string or list
+       @type OutputPath: string
+    """
+    kwargs = {'lfns':lfns,'OutputSE':OutputSE,'OutputPath':OutputPath}
+    if type(lfns)==list and len(lfns):
+      outputDataStr = string.join(lfns,';')
+      description = 'List of output data files'
+      self._addParameter(self.workflow,'UserOutputData','JDL',outputDataStr,description)
+    elif type(lfns)==type(" "):
+      description = 'Output data file'
+      self._addParameter(self.workflow,'UserOutputData','JDL',lfns,description)
+    else:
+      return self._reportError('Expected file name string or list of file names for output data',**kwargs)
+
+    if OutputSE:
+      description = 'User specified Output SE'
+      if type(OutputSE) in types.StringTypes:
+        OutputSE = [OutputSE]
+      elif type(OutputSE) != types.ListType:
+        return self._reportError('Expected string or list for OutputSE',**kwargs)
+      OutputSE = ';'.join(OutputSE)
+      self._addParameter(self.workflow,'UserOutputSE','JDL',OutputSE,description)
+
+    if OutputPath:
+      description = 'User specified Output Path'
+      if not type(OutputPath) in types.StringTypes:
+        return self._reportError('Expected string for OutputPath',**kwargs)
+      # Remove leading "/" that might cause problems with os.path.join
+      while OutputPath[0] == '/': OutputPath=OutputPath[1:]
+      if OutputPath.count("ilc/user"):
+        return self._reportError('Output path contains /ilc/user/ which is not what you want',**kwargs)
+      self._addParameter(self.workflow,'UserOutputPath','JDL',OutputPath,description)
+
+    return S_OK()
+  
+  def setBannedSites(self,sites):
+    """Helper function.
+
+       Can specify banned sites for job.  This can be useful
+       for debugging purposes but often limits the possible candidate sites
+       and overall system response time.
+
+       Example usage:
+
+       >>> job = ILCJob()
+       >>> job.setBannedSites(['LCG.DESY.de','LCG.KEK.jp'])
+
+       @param sites: single site string or list
+       @type sites: string or list
+    """
+    bannedsites = []
+    bannedsiteswp = self.workflow.findParameter("BannedSites")
+    if bannedsiteswp:
+      bannedsites = bannedsiteswp.getValue().split(";")
+    if type(sites) == list and len(sites):
+      bannedsites.extend(sites)
+    elif type(sites)==type(" "):
+      bannedsites.append(sites)
+    else:
+      kwargs = {'sites':sites}
+      return self._reportError('Expected site string or list of sites',**kwargs)
+    description = 'Sites excluded by user'
+    self._addParameter(self.workflow,'BannedSites','JDLReqt',string.join(bannedsites,';'),description)
+    return S_OK()
+
+  def setIgnoreApplicationErrors(self):
+    """Helper function
+    
+    When called, all applications will always return OK, even if something went wrong: allows upload of output data
+    """
+    self._addParameter(self.workflow,'IgnoreAppError','JDL',True,'To ignore application errors')
+    return S_OK()
+
+  def _rootType(self,name):
+    modname = ''
+    if name.endswith((".C",".cc",".cxx",".c")):
+      modname = "RootMacroAnalysis"
+    else:
+      modname = "RootExecutableAnalysis"
+    return modname
+
+  def _sortSRM(self,srmfiles=""):
+    list = []
+    srmlist = srmfiles.split(";")
+    for srmdict in srmlist:
+      srm = eval(srmdict)['file']
+      list.append(srm)
+    return list
 
   #-----------------------------------------------------------------------------
   # Helper methods

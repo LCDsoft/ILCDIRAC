@@ -126,14 +126,18 @@ exit $?
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
 
+        message =  'LCIOConcatenate Finished successfully' 
+
         if status:
             self.setApplicationStatus( "LCIOConcatenate Exited With Status %s" % status )
-            return S_ERROR( "LCIOConcatenate Exited With Status %s" % status )
+            message = "LCIOConcatenate Exited With Status %s" % status 
+            if not self.ignoreapperrors:
+                return S_ERROR( message )
 
         # Return
-
-        self.setApplicationStatus( 'LCIOConcatenate Finished successfully' )
-        return S_OK( 'LCIOConcatenate Finished successfully' )
+        else:
+            self.setApplicationStatus( message )
+        return S_OK(message)
 
     def redirectLogOutput(self, fd, message):
 

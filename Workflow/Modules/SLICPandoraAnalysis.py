@@ -217,7 +217,8 @@ class SLICPandoraAnalysis (ModuleBase):
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
-      return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+      if not self.ignoreapperrors:
+        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
@@ -230,14 +231,18 @@ class SLICPandoraAnalysis (ModuleBase):
     else:
       self.log.info( "SLICPandora execution completed successfully")
 
+    message = 'SLICPandora %s Successful' %(self.applicationVersion)
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('SLICPandora Exited With Status %s' %(status))
-      return S_ERROR('SLICPandora Exited With Status %s' %(status))
-    self.setApplicationStatus('SLICPandora %s Successful' %(self.applicationVersion))       
-    return S_OK()
+      message= 'SLICPandora Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else:
+      self.setApplicationStatus(message)
+    return S_OK(message)
     #############################################################################
 
   
