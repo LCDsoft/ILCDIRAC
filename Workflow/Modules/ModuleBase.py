@@ -208,7 +208,13 @@ class ModuleBase(object):
       if os.path.basename(lfn) in fileInfo.keys():
         fileInfo[os.path.basename(lfn)]['lfn']=lfn
         self.log.verbose('Found LFN %s for file %s' %(lfn,os.path.basename(lfn)))
-
+        if len(os.path.basename(lfn))>127:
+          self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload.')
+          return S_ERROR('Filename too long')
+        if len(lfn)>256+217:
+          self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload.')
+          return S_ERROR('LFN too long')
+        
     #Check that the list of output files were produced
     for fileName,metadata in fileInfo.items():
       if not os.path.exists(fileName):
