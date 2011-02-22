@@ -159,14 +159,17 @@ exit $$appstatus
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
 
+        message = 'CheckCollections Finished successfully'
         if status:
             self.setApplicationStatus( "CheckCollections Exited With Status %s" % status )
-            return S_ERROR( "CheckCollections Exited With Status %s" % status )
+            message =  "CheckCollections Exited With Status %s" % status 
+            if not self.ignoreapperrors:
+                return S_ERROR( message )
 
         # Return
-
-        self.setApplicationStatus( 'CheckCollections Finished successfully' )
-        return S_OK( 'CheckCollections Finished successfully' )
+        else:
+            self.setApplicationStatus( message )
+        return S_OK( message )
 
     def redirectLogOutput(self, fd, message):
 

@@ -311,7 +311,8 @@ class WhizardAnalysis(ModuleBase):
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
-      return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+      if not self.ignoreapperrors:
+        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
     message = ""
     ###Analyse log file
     logfile = file(self.applicationLog)
@@ -338,6 +339,8 @@ class WhizardAnalysis(ModuleBase):
     #stdOutput = resultTuple[1]
     #stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
+
+    messageout = 'Whizard %s Successful' %(self.applicationVersion)
     failed = False
     if status != 0:
       self.log.error( "Whizard execution completed with errors:" )
@@ -351,15 +354,19 @@ class WhizardAnalysis(ModuleBase):
         else:
           self.log.error( "Whizard execution did not produce a stdhep file" )
           self.setApplicationStatus('Whizard %s Failed to produce STDHEP file' %(self.applicationVersion))
-          return S_ERROR('Whizard Failed to produce STDHEP file')
+          messageout = 'Whizard Failed to produce STDHEP file'
+          if not self.ignoreapperrors:
+            return S_ERROR(messageout)
 
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( message )
       self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('Whizard Exited With Status %s' %(status))
-      return S_ERROR('Whizard Exited With Status %s' %(status))
-
-    self.setApplicationStatus('Whizard %s Successful' %(self.applicationVersion))
-    return S_OK('Whizard %s Successful' %(self.applicationVersion))
+      messageout = 'Whizard Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(messageout)
+    else:
+      self.setApplicationStatus(messageout)
+    return S_OK(messageout)
     

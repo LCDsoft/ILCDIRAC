@@ -46,6 +46,7 @@ class ModuleBase(object):
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
     self.eventstring = ''
+    self.ignoreapperrors = False
 
   #############################################################################
   def setApplicationStatus(self,status, sendFlag=True):
@@ -299,6 +300,8 @@ class ModuleBase(object):
   def resolveInputVariables(self):
     if self.workflow_commons.has_key('SystemConfig'):
       self.systemConfig = self.workflow_commons['SystemConfig']
+    if self.workflow_commons.has_key('IgnoreAppError'):
+      self.ignoreapperrors = self.workflow_commons['IgnoreAppError']
     if self.step_commons.has_key('applicationName'):
       self.applicationName = self.step_commons['applicationName']      
     if self.step_commons.has_key('applicationVersion'):
@@ -315,6 +318,7 @@ class ModuleBase(object):
 
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
+
           
     res = self.applicationSpecificInputs()
     if not res['OK']:

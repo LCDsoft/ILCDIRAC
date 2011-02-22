@@ -125,15 +125,16 @@ exit $?
         status      = resultTuple[0]
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
-
+        message = 'StdHepConverter finished successfully'
         if status:
             self.setApplicationStatus( "StdHepConverter Exited With Status %s" % status )
-            return S_ERROR( "StdHepConverter Exited With Status %s" % status )
-
+            message = "StdHepConverter Exited With Status %s" % status 
+            if not self.ignoreapperrors:
+                return S_ERROR(message )
         # Return
-
-        self.setApplicationStatus( 'StdHepConverter finished successfully' )
-        return S_OK( 'StdHepConverter finished successfully' )
+        else:
+          self.setApplicationStatus( message )
+        return S_OK( message )
 
     def redirectLogOutput(self, fd, message):
 

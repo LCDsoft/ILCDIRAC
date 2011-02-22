@@ -234,7 +234,8 @@ class SLICAnalysis(ModuleBase):
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
-      return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+      if not self.ignoreapperrors:
+        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
@@ -246,13 +247,16 @@ class SLICAnalysis(ModuleBase):
       failed = True
     else:
       self.log.info( "SLIC execution completed successfully")
-
+    message = 'SLIC %s Successful' %(self.applicationVersion)
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError) 
       self.setApplicationStatus('SLIC Exited With Status %s' %(status))
       self.log.error('SLIC Exited With Status %s' %(status))
-      return S_ERROR('SLIC Exited With Status %s' %(status))    
-    self.setApplicationStatus('SLIC %s Successful' %(self.applicationVersion))
-    return S_OK('SLIC %s Successful' %(self.applicationVersion))
+      message = 'SLIC Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else:
+      self.setApplicationStatus(message)
+    return S_OK(message)
 

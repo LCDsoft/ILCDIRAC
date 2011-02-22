@@ -313,7 +313,8 @@ class MarlinAnalysis(ModuleBase):
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
-      return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+      if not self.ignoreapperrors:
+        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
 
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
@@ -326,12 +327,16 @@ class MarlinAnalysis(ModuleBase):
       failed = True
     else:
       self.log.info( "Marlin execution completed successfully")
-
+      
+    message = 'Marlin %s Successful' %(self.applicationVersion)
     if failed==True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
       self.log.error('Marlin Exited With Status %s' %(status))
-      return S_ERROR('Marlin Exited With Status %s' %(status))
-    self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))
-    return S_OK('Marlin %s Successful' %(self.applicationVersion))
+      message = 'Marlin Exited With Status %s' %(status)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else: 
+      self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))
+    return S_OK(message)

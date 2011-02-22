@@ -321,7 +321,8 @@ class MokkaAnalysis(ModuleBase):
       if not os.path.exists(self.applicationLog):
         self.log.error("Something went terribly wrong, the log file is not present")
         self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
-        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+        if not self.ignoreapperrors:
+          return S_ERROR('%s did not produce the expected log' %(self.applicationName))
       ###Now change the name of Mokka output to the specified filename
       if os.path.exists("out.slcio"):
         if len(self.outputFile)>0:
@@ -335,27 +336,22 @@ class MokkaAnalysis(ModuleBase):
         self.log.info( "Mokka execution reached end of input generator file")
       else:
         self.log.info( "Mokka execution finished successfully")
-
+        
+      message = 'Mokka %s Successful' %(self.applicationVersion)
       if failed==True:
         self.log.error( "==================================\n StdError:\n" )
         self.log.error( self.stdError) 
         #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
         self.log.error('Mokka Exited With Status %s' %(status))
-        self.setApplicationStatus('Mokka Exited With Status %s' %(status))
-        return S_ERROR('Mokka Exited With Status %s' %(status))
-
-      ###cleanup after putting some dirt...
-      #for now cleanup is executed by mokka-wrapper.sh on exit or kill
-      
-      #result = sqlwrapper.mysqlCleanUp()
-      #if not result['OK']:
-      #  return result
-      # Still have to set the application status e.g. user job case.
-      if status==106:
-        self.setApplicationStatus('Mokka %s reached end of input generator file' %(self.applicationVersion))
-        return S_OK('Mokka %s reached end of input generator file' %(self.applicationVersion))
-      self.setApplicationStatus('Mokka %s Successful' %(self.applicationVersion))
-      return S_OK('Mokka %s Successful' %(self.applicationVersion))
+        message = 'Mokka Exited With Status %s' %(status)
+        self.setApplicationStatus(message)
+        if not self.ignoreapperrors:
+          return S_ERROR(message)
+      else:
+        if status==106:
+          message = 'Mokka %s reached end of input generator file' %(self.applicationVersion)
+        self.setApplicationStatus(message)
+      return S_OK(message)
 
     #############################################################################
 
