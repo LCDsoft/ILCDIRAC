@@ -239,7 +239,8 @@ class WhizardAnalysis(ModuleBase):
       if self.susymodel==2:
         if os.path.exists("%s/LesHouches_chne.msugra_1.in"%(mySoftDir)):
           leshouchesfiles = True
-          
+    if os.path.exists("LesHouches.msugra_1.in"):
+      leshouchesfiles = True
 
     outputfilename = self.evttype
     if self.jobindex:
@@ -270,9 +271,9 @@ class WhizardAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
     if leshouchesfiles:
-      if self.susymodel==1:
+      if self.susymodel==1 and not os.path.exists('LesHouches.msugra_1.in'):
         script.write('cp %s/LesHouches_slsqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
-      if self.susymodel==2:
+      if self.susymodel==2 and not os.path.exists('LesHouches.msugra_1.in'):
         script.write('cp %s/LesHouches_chne.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
       script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
@@ -313,10 +314,14 @@ class WhizardAnalysis(ModuleBase):
       self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+    lumi = ''
     message = ""
     ###Analyse log file
     logfile = file(self.applicationLog)
     for line in logfile:
+      if line.count('! Event sample corresponds to luminosity'):
+        elems = line.split()
+        lumi = elems[-1]
       if line.count("*** Fatal error:"):
         status = 1
         message = line
