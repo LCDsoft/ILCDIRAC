@@ -211,7 +211,7 @@ class ModuleBase(object):
         if len(os.path.basename(lfn))>127:
           self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload.')
           return S_ERROR('Filename too long')
-        if len(lfn)>256+217:
+        if len(lfn)>256+127:
           self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload.')
           return S_ERROR('LFN too long')
         
