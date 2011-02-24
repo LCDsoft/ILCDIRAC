@@ -23,6 +23,8 @@ from DIRAC.Interfaces.API.Job                       import Job
 #from DIRAC.Core.Utilities.List                      import uniqueElements
 from DIRAC                                          import gConfig, S_OK, S_ERROR
 
+from ILCDIRAC.Core.Utilities.CheckXMLValidity import CheckXMLValidity
+
 import os, types, string, inspect
 
 COMPONENT_NAME='/WorkflowLib/API/ILCJob'
@@ -756,7 +758,13 @@ class ILCJob(Job):
 
     # XML Steering file
     #---------------------------------------------------------------------------
-
+    if not xmlfile.lower().count('lfn:'): 
+      res = CheckXMLValidity(xmlfile)
+      if not res['OK']:
+        return self._reportError('XML file %s has this problem: %s'%(xmlfile,res['Message']),__name__)
+    else:
+      self.log.info('Cannot validate the XML file %s as it is an LFN, check yourself!'%xmlfile)  
+    
     self._addFileToInputSandbox( xmlfile, 'Marlin steering file')
 
     # GEAR file
@@ -1175,8 +1183,15 @@ class ILCJob(Job):
       logName = 'LCSIM_%s.log' %(appVersion)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
+      
+    if not xmlfile.lower().count('lfn:'):  
+      res = CheckXMLValidity(xmlfile)
+      if not res['OK']:
+        return self._reportError('XML file %s has this problem: %s'%(xmlfile,res['Message']),__name__)
+    else:
+      self.log.info('Cannot check validity of file %s as it is an LFN'%xmlfile)
 
-    if os.path.exists(xmlfile):
+    if os.path.exists(xmlfile) or xmlfile.lower().count('lfn:'):
       self.addToInputSandbox.append(xmlfile)
     else:
       return self._reportError("Cannot find specified input xml file %s, please fix !"%(xmlfile),__name__,**kwargs)
