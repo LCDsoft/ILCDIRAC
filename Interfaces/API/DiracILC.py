@@ -10,7 +10,6 @@ from DIRAC.Interfaces.API.Job                       import Job
 from DIRAC.Core.Utilities.List                      import breakListIntoChunks, sortList
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-from xml.etree.ElementTree                                import ElementTree
 
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
 import string,os
@@ -133,22 +132,6 @@ class DiracILC(Dirac):
       if not res['OK']: 
         return res
 
-    jobinputsb = job.addToInputSandbox
-    inputsandbox = job.workflow.findParameter('InputSandbox')
-    if inputsandbox:
-      inputsandbox = inputsandbox.split(';')
-      jobinputsb.extend(inputsandbox)
-    if len(jobinputsb):
-      for item in jobinputsb:
-        if not item.lower().count('lfn:'):
-          if item.lower().count("xml"):
-            res = self._checkXMLvalidity(item)
-            if not res['OK']:
-              return res
-        elif item.lower().count("xml"):
-          self.log.info('Cannot check validity of input XML file %s as it is a LFN, check it yourself.'%(item))    
-      
-
     return S_OK()
   
   def _checkapp(self,config,appName,appVersion):
@@ -180,11 +163,3 @@ class DiracILC(Dirac):
         return S_ERROR("Wildcard character in OutputData definition")
     return S_OK()
   
-  def _checkXMLvalidity(self,xmlfile):
-    tree = ElementTree()
-    try:
-      tree.parse(xmlfile)
-    except Exception,x:
-      return S_ERROR("Found problem in file %s: %s %s"%(xmlfile,Exception,x))
-    
-    return S_OK()
