@@ -32,6 +32,12 @@ def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
         new_ld_lib_path = newlibdir
         ####Remove the libc
         removeLibc(new_ld_lib_path)
+      if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"LDLibs")):
+        gLogger.verbose("Found lib folder in %s"%(depfolder))
+        newlibdir = os.path.join(mySoftwareRoot,depfolder,"LDLibs")
+        new_ld_lib_path = newlibdir
+        ####Remove the libc
+        removeLibc(new_ld_lib_path)
   if os.environ.has_key("LD_LIBRARY_PATH"):
     if new_ld_lib_path:
       new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
@@ -652,3 +658,79 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
 
   tree.write(outputlcsim)
   return S_OK(printtext)
+
+def PrepareTomatoSalad(inputxml,outputxml,inputSLCIO,outputFile,collection):
+  if not inputxml:
+    inputxml = file('default.xml')
+    inputxml.write("""
+<?xml version="1.0" encoding="us-ascii"?>
+<!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
+<!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+
+   <execute>
+      <processor name="MyTomatoProcessor"/>
+   </execute>
+
+   <global>
+      <parameter name="Verbosity" value="ERROR"/>
+   </global>
+
+ <processor name="MyTomatoProcessor" type="TomatoProcessor">
+ <!--Automated analysis-->
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCCollectionName" type="string" lcioInType="MCParticle"> MCParticle </parameter>
+  <!--Root OutputFile-->
+  <parameter name="OutputFile" type="string" value="tomato.root"/>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string" value=""/-->
+</processor>
+
+</marlin>      
+    """)
+    inputxml.close()
+  tree = ElementTree()
+  try:
+    tree.parse(inputxml)
+  except Exception,x:
+    print "Found Exception %s %s"%(Exception,x)
+    return S_ERROR("Found Exception %s %s"%(Exception,x))
+  params = tree.findall('global/parameter')
+  glob = tree.find('global')
+  lciolistfound = False
+  for param in params:
+    if param.attrib.has_key('name'):
+      if param.attrib['name']=='LCIOInputFiles':
+        lciolistfound = True
+        com = Comment("input file list changed")
+        glob.insert(0,com)
+        param.text = inputSLCIO
+  if not lciolistfound:
+    name = {}
+    name["name"]="LCIOInputFiles"
+    lciolist = Element("parameter",name)
+    lciolist.text = inputSLCIO
+    globparams = tree.find("global")
+    globparams.append(lciolist)
+
+  params = tree.findall('processor')
+  for param in params:
+    if param.attrib.has_key('type'):
+      if param.attrib['type']=='TomatoProcessor':
+        subparams = param.findall('parameter')
+        for subparam in subparams:
+          if subparam.attrib.has_key('name'):
+            if outputFile:
+              if subparam.attrib['name']=='OutputFile':
+                com = Comment('Outputfile changed')
+                param.insert(0,com)
+                subparam.text=outputFile
+            if collection:
+              if subparam.attrib['name']=='MCCollectionName':
+                com = Comment('Collections to analyse changed')
+                param.insert(0,com)
+                subparam.text=collection
+         
+  tree.write(outputxml)              
+  return S_OK()
