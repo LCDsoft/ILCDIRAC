@@ -133,10 +133,10 @@ class TomatoAnalysis(MarlinAnalysis):
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('Marlin Exited With Status %s' %(status))
-      message = 'Marlin Exited With Status %s' %(status)
+      self.log.error('%s Exited With Status %s' %(self.applicationName,status))
+      message = '%s Exited With Status %s' %(self.applicationName,status)
       if not self.ignoreapperrors:
         return S_ERROR(message)
     else: 
-      self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))
+      self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
     return S_OK(message)    
