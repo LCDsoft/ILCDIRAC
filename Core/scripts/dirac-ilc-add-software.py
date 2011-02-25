@@ -90,8 +90,8 @@ def upload(path,appTar):
 softwareSection = "/Operations/AvailableTarBalls"
 
 appTar = "%s%s.tgz"%(appName,appVersion)
-subject = '%s %s added to DIRAC CS' %(args[1],args[2])
-msg = 'New application %s %s declared into Configuration service\n %s' %(args[1],args[2],comment)
+subject = '%s %s added to DIRAC CS' %(appName,appVersion)
+msg = 'New application %s %s declared into Configuration service\n %s' %(appName,appVersion,comment)
 
 av_platforms = gConfig.getSections(softwareSection, [])
 if av_platforms['OK']:
