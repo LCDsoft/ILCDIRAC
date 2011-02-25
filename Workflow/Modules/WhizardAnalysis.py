@@ -160,6 +160,10 @@ class WhizardAnalysis(ModuleBase):
       return S_OK('Whizard should not proceed as previous step did not end properly')
 
     whizardDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"whizard",self.applicationVersion),'')
+    if not whizardDir:
+      self.log.error('Could not get info from CS')
+      self.setApplicationStatus('Failed finding info from CS')
+      return S_ERROR('Failed finding info from CS')
     whizardDir = whizardDir.replace(".tgz","").replace(".tar.gz","")
     mySoftwareRoot = ''
     localArea = LocalArea()
