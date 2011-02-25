@@ -43,6 +43,7 @@ class MarlinAnalysis(ModuleBase):
     self.applicationName = "Marlin"
     self.evtstoprocess = ''
     self.eventstring = ''
+    self.envdict = {}
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -135,7 +136,7 @@ class MarlinAnalysis(ModuleBase):
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
-      return S_OK('Marlin should not proceed as previous step did not end properly')
+      return S_OK('%s should not proceed as previous step did not end properly'%self.applicationName)
 
     
     marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"marlin",self.applicationVersion),'')
@@ -158,20 +159,11 @@ class MarlinAnalysis(ModuleBase):
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"marlin",self.applicationVersion,mySoftwareRoot)
 
-    #runonslcio = []
-    inputfilelist = self.inputSLCIO.split(";")
-    res = resolveIFpaths(inputfilelist)
+    res = self.GetInputFiles()
     if not res['OK']:
-      self.setApplicationStatus('Marlin: missing slcio file')
-      return S_ERROR('Missing slcio file!')
-    runonslcio = res['Value']
-    #for inputfile in inputfilelist:
-    #  if not os.path.exists(os.path.basename(inputfile)):
-    #    filemissing=True
-    #  runonslcio.append(os.path.basename(inputfile))
-    #print "input file list ",inputfilelist
-    #listofslcio = self.inputSLCIO.replace(";", " ")
-    listofslcio = string.join(runonslcio," ")
+      self.log.error(res['Message'])
+      return res
+    listofslcio = res['Value']
 
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'
@@ -182,11 +174,6 @@ class MarlinAnalysis(ModuleBase):
         except Exception,x:
           self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
     
-    
-    #for inputfile in self.inputSLCIO:
-    #  listofslcio += listofslcio+" "+inputfile
-    #listofslcio = string.join(self.inputSLCIO," ")#string.join(runonslcio, ' ')
-    
     finalXML = "marlinxml.xml"
     self.inputGEAR = os.path.basename(self.inputGEAR)
     self.inputXML = os.path.basename(self.inputXML)
@@ -195,119 +182,22 @@ class MarlinAnalysis(ModuleBase):
       self.log.error('Something went wrong with XML generation because %s'%res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
       return S_ERROR('Something went wrong with XML generation')
-    
-    scriptName = 'Marlin_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
-    if os.path.exists(scriptName): os.remove(scriptName)
-    script = open(scriptName,'w')
-    script.write('#!/bin/sh \n')
-    script.write('#####################################################################\n')
-    script.write('# Dynamically generated script to run a production or analysis job. #\n')
-    script.write('#####################################################################\n')
-    marlindll = ""
-    if(os.path.exists("%s/MARLIN_DLL"%myMarlinDir)):
-      #if os.environ.has_key('MARLIN_DLL'):
-      #  os.environ['MARLIN_DLL']=''
-        #for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
-        #  if d!="Marlin":
-        #    marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
-        #script.write('export MARLIN_DLL=%s:%s'%(marlindll,os.environ['MARLIN_DLL']))
-        #marlindll="%s:%s"%(marlindll,os.environ['MARLIN_DLL'])
-      #else:
-      for d in os.listdir("%s/MARLIN_DLL"%myMarlinDir):
-        marlindll = marlindll + "%s/MARLIN_DLL/%s"%(myMarlinDir,d) + ":" 
-        #script.write('export MARLIN_DLL=%s:'%marlindll)
-      marlindll="%s"%(marlindll)
-    else:
-      script.close()
-      self.log.error("MARLIN_DLL directory was not found, something went terribly wrong!")
-      return S_ERROR("Marlin: Error in installation somewhere")
-    #user libs
-    userlib = ""
-    if(os.path.exists("./lib")):
-      if os.path.exists("./lib/marlin_dll"):
-        for d in os.listdir("lib/marlin_dll"):
-          userlib = userlib + "./lib/marlin_dll/%s"%d + ":" 
-      
-    temp=marlindll.split(":")
-    temp2=userlib.split(":")
-    for x in temp2:
-      doublelib = "%s/MARLIN_DLL/"%(myMarlinDir)+os.path.basename(x)
-      if doublelib in temp:
-        self.log.verbose("Duplicated lib found, removing %s"%doublelib)
-        try:
-          temp.remove(doublelib)
-        except:
-          pass
-    #userlib=""
-    #for x in temp2:
-    #  userlib=userlib + x + ":"
-      
-    marlindll = "%s%s"%(string.join(temp,":"),userlib)
-    
-    
-    if (len(marlindll) != 0):
-      script.write('declare -x MARLIN_DLL=%s\n'%marlindll)
-          
-    script.write('declare -x ROOTSYS=%s/ROOT\n'%(myMarlinDir))
-    if new_ld_lib_path:
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,new_ld_lib_path))
-    else:
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myMarlinDir))
-    if os.path.exists("./lib/lddlib"):
-      script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n')
-      
-    script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
-    script.write('echo =============================\n')
-    script.write('echo LD_LIBRARY_PATH is\n')
-    script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
-    script.write('echo =============================\n')
-    script.write('echo PATH is\n')
-    script.write('echo $PATH | tr ":" "\n"\n')
-    script.write('echo =============================\n')
-    script.write('echo MARLIN_DLL is\n')
-    script.write('echo $MARLIN_DLL | tr ":" "\n"\n')
-    script.write('echo =============================\n')
-    script.write('echo ldd is\n')
-    script.write('ldd %s/Executable/* \n'%myMarlinDir)
-    script.write('echo =============================\n')
-    script.write('echo ldd is\n')
-    script.write('ldd %s/MARLIN_DLL/* \n'%myMarlinDir)
-    script.write('echo =============================\n')
-    #script.write('echo uname is \n')
-    #script.write('uname -a\n')
-    #script.write('echo =============================\n')
-    #script.write('echo gcc is \n')
-    #script.write('gcc --version\n')
-    #script.write('echo =============================\n')
-    #script.write('echo ld is \n')
-    #script.write('ld --version\n')
-    script.write('env | sort >> localEnv.log\n')      
-    script.write('echo =============================\n')
 
-    if (os.path.exists("%s/Executable/Marlin"%myMarlinDir)):
-      if (os.path.exists(finalXML)):
-        #check
-        script.write('%s/Executable/Marlin -c %s\n'%(myMarlinDir,finalXML))
-        #real run
-        script.write('%s/Executable/Marlin %s\n'%(myMarlinDir,finalXML))
-    else:
-      script.close()
-      self.log.error("Marlin executable is missing, something is wrong with the installation!")
-      return S_ERROR("Marlin executable is missing")
-    script.write('declare -x appstatus=$?\n')
-    #script.write('where\n')
-    #script.write('quit\n')
-    #script.write('EOF\n')
-    script.write('exit $appstatus\n')
+    res = self.prepareMARLIN_DLL(myMarlinDir)
+    if not res['OK']:
+      self.log.error('Failed building MARLIN_DLL: %s'%res['Message'])
+      self.setApplicationStatus('Failed to setup MARLIN_DLL')
+      return S_ERROR('Something wrong with software installation')
+    
+    self.envdict['MARLIN_DLL'] = res['Value']
+    self.envdict['MarlinDIR'] = myMarlinDir
+    self.envdict['LD_LIB_PATH'] = new_ld_lib_path
+    self.result = self.runMarlin(finalXML, self.envdict)
+    if not self.result['OK']:
+      self.log.error('Something wrong during running: %s'%self.result['Message'])
+      self.setApplicationStatus('Error during running %s'%self.applicationName)
+      return S_ERROR('Failed to run %s'%self.applicationName)
 
-    script.close()
-    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
-
-    os.chmod(scriptName,0755)
-    comm = 'sh -c "./%s %s"' %(scriptName,finalXML)
-    self.setApplicationStatus('Marlin %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
-    self.stdError = ''
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
@@ -340,3 +230,119 @@ class MarlinAnalysis(ModuleBase):
     else: 
       self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))
     return S_OK(message)
+
+  def prepareMARLIN_DLL(self,marlinDir):
+    marlindll = ""
+    if(os.path.exists("%s/MARLIN_DLL"%marlinDir)):
+      for d in os.listdir("%s/MARLIN_DLL"%marlinDir):
+        marlindll = marlindll + "%s/MARLIN_DLL/%s"%(marlinDir,d) + ":" 
+      marlindll="%s"%(marlindll)
+    else:
+      self.log.error('MARLIN_DLL folder not found, cannot proceed')
+      return S_ERROR('MARLIN_DLL folder not found in %s'%marlinDir)
+    #user libs
+    userlib = ""
+    if(os.path.exists("./lib")):
+      if os.path.exists("./lib/marlin_dll"):
+        for d in os.listdir("lib/marlin_dll"):
+          userlib = userlib + "./lib/marlin_dll/%s"%d + ":" 
+      
+    temp=marlindll.split(":")
+    temp2=userlib.split(":")
+    for x in temp2:
+      doublelib = "%s/MARLIN_DLL/"%(marlinDir)+os.path.basename(x)
+      if doublelib in temp:
+        self.log.verbose("Duplicated lib found, removing %s"%doublelib)
+        try:
+          temp.remove(doublelib)
+        except:
+          pass
+      
+    marlindll = "%s%s"%(string.join(temp,":"),userlib)    
+    return S_OK(marlindll)
+
+  def runMarlin(self,inputxml,envdict):
+    scriptName = '%s_%s_Run_%s.sh' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER)
+    if os.path.exists(scriptName): os.remove(scriptName)
+    script = open(scriptName,'w')
+    script.write('#!/bin/sh \n')
+    script.write('#####################################################################\n')
+    script.write('# Dynamically generated script to run a production or analysis job. #\n')
+    script.write('#####################################################################\n')
+    myMarlinDir=envdict['MarlinDIR']
+
+    if envdict.has_key('MARLIN_DLL'):
+      script.write('declare -x MARLIN_DLL=%s\n'%envdict['MARLIN_DLL'])
+    else:
+      return S_ERROR('MARLIN_DLL not found.')  
+          
+    script.write('declare -x ROOTSYS=%s/ROOT\n'%(myMarlinDir))
+    if envdict.has_key('LD_LIB_PATH'):
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,envdict['LD_LIB_PATH']))
+    else:
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myMarlinDir))
+    if os.path.exists("./lib/lddlib"):
+      script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n')
+      
+    script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
+    script.write('echo =============================\n')
+    script.write('echo LD_LIBRARY_PATH is\n')
+    script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
+    script.write('echo =============================\n')
+    script.write('echo PATH is\n')
+    script.write('echo $PATH | tr ":" "\n"\n')
+    script.write('echo =============================\n')
+    script.write('echo MARLIN_DLL is\n')
+    script.write('echo $MARLIN_DLL | tr ":" "\n"\n')
+    script.write('echo =============================\n')
+    script.write('echo ldd of executable is\n')
+    script.write('ldd %s/Executable/* \n'%myMarlinDir)
+    script.write('echo =============================\n')
+    script.write('echo ldd of Marlin_DLL objects is\n')
+    script.write('ldd %s/MARLIN_DLL/* \n'%myMarlinDir)
+    if os.path.exists('./lib/marlin_dll'):
+      script.write('ldd ./lib/marlin_dll/* \n')
+    script.write('echo =============================\n')
+    script.write('echo ldd of LDLIBS objects is\n')
+    script.write('ldd %s/LDLibs/* \n'%myMarlinDir)  
+    if os.path.exists('./lib/lddlib'):
+      script.write('ldd ./lib/lddlib/* \n')
+    script.write('echo =============================\n')
+    script.write('env | sort >> localEnv.log\n')      
+    script.write('echo =============================\n')
+
+    if (os.path.exists("%s/Executable/Marlin"%myMarlinDir)):
+      if (os.path.exists(inputxml)):
+        #check
+        script.write('%s/Executable/Marlin -c %s\n'%(myMarlinDir,inputxml))
+        #real run
+        script.write('%s/Executable/Marlin %s\n'%(myMarlinDir,inputxml))
+    else:
+      script.close()
+      self.log.error("Marlin executable is missing, something is wrong with the installation!")
+      return S_ERROR("Marlin executable is missing")
+    script.write('declare -x appstatus=$?\n')
+    script.write('exit $appstatus\n')
+
+    script.close()
+    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
+
+    os.chmod(scriptName,0755)
+    comm = 'sh -c "./%s"' %(scriptName)
+    self.setApplicationStatus('%s %s step %s' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER))
+    self.stdError = ''
+    res = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)    
+    return res
+  
+  def GetInputFiles(self):
+    inputfilelist = self.inputSLCIO.split(";")
+    res = resolveIFpaths(inputfilelist)
+    if not res['OK']:
+      self.setApplicationStatus('%s: missing slcio file'%self.applicationName)
+      return S_ERROR('Missing slcio file!')
+    runonslcio = res['Value']
+
+    listofslcio = string.join(runonslcio," ")
+    
+    return S_OK(listofslcio)
+  
