@@ -32,10 +32,36 @@
     		<jarUrl>http://www.cern.ch/lcd-data/software/analysis.jar</jarUrl>
     </classpath>
     <drivers>
-    		<!-- Driver to give some feedback on progress -->
+    	<!-- Driver to give some feedback on progress -->
         <driver name="EventMarkerDriver"
                 type="org.lcsim.job.EventMarkerDriver">
             <eventInterval>1</eventInterval>
+        </driver>
+        <!-- Driver to add gg->hadron events -->
+        <driver name="BackgroundOverlay"
+        		type="org.lcsim.util.OverlayDriver">
+            <bunchCrossings>60</bunchCrossings>
+            <bunchSpacing>0.5</bunchSpacing>
+            <signalBunchCrossing>10</signalBunchCrossing>
+            <overlayWeight>3.2</overlayWeight>
+            <overlayName>gghad</overlayName>
+            <shuffleOverlay>true</shuffleOverlay>
+            <signalAtZero>true</signalAtZero>
+            <fullCaloProcessing>false</fullCaloProcessing>
+            <readoutTime>LumiCalHits -1</readoutTime>
+            <readoutTime>BeamCalHits -1</readoutTime>
+            <readoutTime>MuonBarrelHits 10.0</readoutTime>
+            <readoutTime>MuonEndcapHits 10.0</readoutTime>
+            <readoutTime>HcalBarrelHits 100.0</readoutTime>
+            <readoutTime>HcalEndcapHits 10.0</readoutTime>
+            <readoutTime>EcalBarrelHits 10.0</readoutTime>
+            <readoutTime>EcalEndcapHits 10.0</readoutTime>
+            <readoutTime>SiTrackerBarrelHits 10.0</readoutTime>
+            <readoutTime>SiTrackerEndcapHits 10.0</readoutTime>
+            <readoutTime>SiTrackerForwardHits 10.0</readoutTime>
+            <readoutTime>SiVertexBarrelHits 10.0</readoutTime>
+            <readoutTime>SiVertexEndcapHits 10.0</readoutTime>            
+            <overlayFiles>__OverlayFiles__</overlayFiles>
         </driver>
         <!-- Driver to select only hits in layers which are meant to be active -->
         <driver name="MuonEndcapSelector"
