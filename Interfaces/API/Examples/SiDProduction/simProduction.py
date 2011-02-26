@@ -4,7 +4,8 @@
 ##
 
 from DIRAC.Core.Base import Script
-import sys
+import sys, types
+import os.path
 
 Script.registerSwitch( 'D:', 'description=', 'Short description of the workflow (default set by metadata)' )
 Script.registerSwitch( 'e:', 'evttype=', 'Name of the production event type (optional in addition to production ID)' )
@@ -25,8 +26,8 @@ switches = Script.getUnprocessedSwitches()
 detectorName = None
 prodID = None
 eventType = None
-dataType = 'gen'
-energy = '3tev'
+dataType = ''
+energy = ''
 prodGroup = None
 cpuLimit = 300000
 slicVersion = 'v2r8p4'
@@ -84,8 +85,10 @@ res = client.getCompatibleMetadata( meta )
 if not res['OK']:
 	self._reportError("Error looking up the catalog for metadata")
 	sys.exit(2)
-	
+
 metaValues = res['Value']
+#print metaValues
+
 print 'Meta data for production', prodID, ':'
 for key, value in metaValues.iteritems():
 	if not len(value) == 0:
