@@ -18,6 +18,8 @@ Script.registerSwitch( 'j:', 'jobs=', 'number of jobs that each input file gets 
 Script.registerSwitch( 'm:', 'macro=', 'name of the macro file used for SLIC (default default.mac)' )
 Script.registerSwitch( 'M:', 'merge=', 'number of slcio input files used per job, only used if no slic step (default 1)' )
 Script.registerSwitch( 'n:', 'events=', 'number of events per job, -1 for all in file (default -1)' )
+Script.registerSwitch( 'o:', 'overlay=', 'number of bunch crossings overlaid over each event (default 0)' )
+Script.registerSwitch( 'O:', 'overlayweight=', 'number of gg->hadron interactions per bunch crossing (default 3.2)' )
 Script.registerSwitch( 'p:', 'process=', 'process name to be used for naming of path etc.' )
 Script.registerSwitch( 'P:', 'pandora=', 'slicPandora version to use (default CDR0)' )
 Script.registerSwitch( 'S:', 'slic=', 'slic version (default v2r8p4)' )
@@ -53,6 +55,8 @@ xmlFile = 'defaultPrePandoraLcsim.xml'
 lcsimTemplate = ''
 strategyFile = 'defaultStrategies.xml'
 banlistFile = 'bannedSites.py'
+overlayBX = 0
+overlayWeight = 3.2
 lfnlist = None
 prodID = None
 process = None
@@ -86,6 +90,10 @@ for switch in switches:
 		mergeSlcioFiles = int(arg)
 	if opt in ('n','events'):
 		nEvts = int(arg)
+	if opt in ('o','overlay'):
+		overlayBX = int(arg)
+	if opt in ('O','overlayweight'):
+		overlayBX = float(arg)
 	if opt in ('p','process'):
 		process = arg
 	if opt in ('P','pandora'):
@@ -105,6 +113,9 @@ if not inputFileList and not prodID:
 	if macroFile == 'slicMacros/default.mac':
 		Script.showHelp()
 		sys.exit(2)
+		
+if overlayBX > 0 and not lcsimTemplate:
+	xmlFile = 'defaultPrePandoraLcsimOverlay.xml'
 
 
 # helper function to replace strings in a textfile
@@ -187,12 +198,14 @@ if debug:
 dirac = DiracILC ( True , repositoryFile )
 
 inputFiles = []
+filesProcessed = 0
 for inputFile in lfnlist:
+	filesProcessed += 1
 	
 	# processing multiple input files in a single job starting with lcsim
 	if lcsimVer and not slicVer:
 		inputFiles.append(inputFile)
-		if len(inputFiles) < mergeSlcioFiles:
+		if len(inputFiles) < mergeSlcioFiles and filesProcessed != len(lfnlist):
 			continue
 		inputSlcios = inputFiles
 		inputFiles = []
@@ -215,10 +228,14 @@ for inputFile in lfnlist:
 		if not process:
 			print 'ERROR: no process defined. Use -p <processName> to define the storage path'
 			sys.exit(2)
+	
+	if lcsimVer and overlayBX > 0:
+		outputFileBase += '_%sBX'%(overlayBX)
 
 	for job in xrange( nJobs ):
 		
 		outputFile = outputFileBase
+		
 		if not nJobs == 1:
 			outputFile += '_%s'%(job)
 		
@@ -264,6 +281,8 @@ for inputFile in lfnlist:
 			print '\tTotal number of jobs:', len(lfnlist)*nJobs/mergeSlcioFiles
 			print '\tSlic version:', slicVer
 			print '\tMacro file:', macroFile
+			print '\tOverlay bunch crossings:', overlayBX
+			print '\tgg->hadron events per bunch crossings:', overlayWeight
 			print '\tLCSim version:', lcsimVer
 			print '\tLCSim file:', xmlFile
 			print '\tAlias file:', aliasFile
@@ -280,7 +299,7 @@ for inputFile in lfnlist:
 		
 		if slicVer:
 			if nEvts < 0:
-				print 'ERROR: need to set number of events for SLIC. Use -n <nEvts> to set number of events.'
+				print 'ERROR: need to set number of events per job for SLIC. Use -n <nEvts> to set number of events.'
 				sys.exit(2)
 			res = job.setSLIC ( appVersion=slicVer ,
 				detectorModel=detector ,
@@ -294,8 +313,20 @@ for inputFile in lfnlist:
 			if not res['OK']:
 				print res['Message']
 				sys.exit(2)
-	
+			
 		if lcsimVer:
+			if overlayBX > 0:
+				if nEvts < 0:
+					print 'ERROR: need to set number of events per job for overlay. Use -n <nEvts> to set number of events.'
+					sys.exit(2)
+				res = job.addOverlay( detector='SID',
+					energy = '3tev',
+					BXOverlay = overlayBX,
+					NbGGtoHadInts = overlayWeight,
+					NSigEventsPerJob = nEvts)
+				if not res['OK']:
+					print res['Message']
+					sys.exit(2)
 			res = job.setLCSIM ( lcsimVer ,
 				xmlfile=xmlFile ,
 				aliasproperties=aliasFile ,
