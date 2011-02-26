@@ -33,7 +33,7 @@ switches = Script.getUnprocessedSwitches()
 
 # default parameters
 macroFile = 'slicMacros/defaultClicCrossingAngle.mac'
-slicPandoraVer = 'CDR0'
+slicPandoraVer = 'CDR1'
 lcsimVer = '1.15-SNAPSHOT'
 slicVer = 'v2r8p4'
 detector = 'clic_sid_cdr'
@@ -189,8 +189,8 @@ dirac = DiracILC ( True , repositoryFile )
 inputFiles = []
 for inputFile in lfnlist:
 	
-	# processing multiple input files in a single job
-	if not slicVer:
+	# processing multiple input files in a single job starting with lcsim
+	if lcsimVer and not slicVer:
 		inputFiles.append(inputFile)
 		if len(inputFiles) < mergeSlcioFiles:
 			continue
@@ -203,7 +203,11 @@ for inputFile in lfnlist:
 			if not process:
 				process = splitPath[ splitPath.index( 'gen' ) - 1]
 		else:
-			outputFileBase = jobTitle+'_'+inputSlcios[0].split('/')[-1].replace( '.slcio', '' )
+			if not lcsimVer:
+				inputSlcios = inputFile
+				outputFileBase = jobTitle+'_'+inputSlcios.split('/')[-1].replace( '.slcio', '' )
+			else:
+				outputFileBase = jobTitle+'_'+inputSlcios[0].split('/')[-1].replace( '.slcio', '' )
 			if not process:
 				process = splitPath[-3]
 	else:
