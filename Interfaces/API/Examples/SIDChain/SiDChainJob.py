@@ -18,8 +18,8 @@ Script.registerSwitch( 'j:', 'jobs=', 'number of jobs that each input file gets 
 Script.registerSwitch( 'm:', 'macro=', 'name of the macro file used for SLIC (default default.mac)' )
 Script.registerSwitch( 'M:', 'merge=', 'number of slcio input files used per job, only used if no slic step (default 1)' )
 Script.registerSwitch( 'n:', 'events=', 'number of events per job, -1 for all in file (default -1)' )
-Script.registerSwitch( 'o:', 'overlay=', 'number of bunch crossings overlaid over each event (default 0)' )
-Script.registerSwitch( 'O:', 'overlayweight=', 'number of gg->hadron interactions per bunch crossing (default 3.2)' )
+Script.registerSwitch( 'O:', 'overlay=', 'number of bunch crossings overlaid over each event (default 0)' )
+Script.registerSwitch( 'w:', 'overlayweight=', 'number of gg->hadron interactions per bunch crossing (default 3.2)' )
 Script.registerSwitch( 'p:', 'process=', 'process name to be used for naming of path etc.' )
 Script.registerSwitch( 'P:', 'pandora=', 'slicPandora version to use (default CDR0)' )
 Script.registerSwitch( 'S:', 'slic=', 'slic version (default v2r8p4)' )
@@ -27,6 +27,8 @@ Script.registerSwitch( 't:', 'time=', 'CPU time limit per job in seconds (defaul
 Script.registerSwitch( 'T:', 'title=', 'job title (default fullReco)' )
 Script.registerSwitch( 'v', 'verbose', 'switches on the verbose mode' )
 Script.registerSwitch( 'x:', 'settings=', 'name of pandora settings file (default taken from grid installation)' )
+Script.registerSwitch( 'y:', 'strategy=', 'name of tracking strategy file to use' )
+Script.registerSwitch( 'z:', 'maxfiles=', 'maximum number of files to process (default -1)' )
 
 Script.setUsageMessage( sys.argv[0]+'-n <nEvts> (-i <inputList> OR -I <prodID> AND/OR -m <macro>) (<additional options>)' )
 
@@ -57,6 +59,7 @@ strategyFile = 'defaultStrategies.xml'
 banlistFile = 'bannedSites.py'
 overlayBX = 0
 overlayWeight = 3.2
+maxFiles = -1
 lfnlist = None
 prodID = None
 process = None
@@ -90,9 +93,9 @@ for switch in switches:
 		mergeSlcioFiles = int(arg)
 	if opt in ('n','events'):
 		nEvts = int(arg)
-	if opt in ('o','overlay'):
+	if opt in ('O','overlay'):
 		overlayBX = int(arg)
-	if opt in ('O','overlayweight'):
+	if opt in ('w','overlayweight'):
 		overlayBX = float(arg)
 	if opt in ('p','process'):
 		process = arg
@@ -106,6 +109,10 @@ for switch in switches:
 		cpuLimit = arg
 	if opt in ('T','title'):
 		jobTitle = arg
+	if opt in ('y','strategy'):
+		strategyFile = arg
+	if opt in ('z','maxfiles'):
+		maxFiles = int(arg)
 	if opt in ('v','verbose'):
 		debug = True
 
@@ -200,6 +207,9 @@ dirac = DiracILC ( True , repositoryFile )
 inputFiles = []
 filesProcessed = 0
 for inputFile in lfnlist:
+	if filesProcessed == maxFiles:
+		break
+		
 	filesProcessed += 1
 	
 	# processing multiple input files in a single job starting with lcsim
@@ -276,6 +286,7 @@ for inputFile in lfnlist:
 			print '\tOutputFile:', outputFile
 			print '\tDetector:', detector
 			print '\tJobs per input file:', nJobs
+			print '\tMaximum files:', maxFiles
 			print '\tEvents per job:', nEvts
 			print '\tMerged files per job:', mergeSlcioFiles
 			print '\tTotal number of jobs:', len(lfnlist)*nJobs/mergeSlcioFiles
@@ -285,6 +296,7 @@ for inputFile in lfnlist:
 			print '\tgg->hadron events per bunch crossings:', overlayWeight
 			print '\tLCSim version:', lcsimVer
 			print '\tLCSim file:', xmlFile
+			print '\tTracking strategies:', strategyFile
 			print '\tAlias file:', aliasFile
 			print '\tSlicPandora version:', slicPandoraVer
 			print '\tPandora settings:', settingsFile
