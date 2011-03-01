@@ -345,6 +345,7 @@ class WhizardAnalysis(ModuleBase):
       else:
         status = 0
     self.log.info('The sample generated has an equivalent luminosity of %s'%lumi)
+    self.workflow_commons['Luminosity']=float(lumi)
     #stdOutput = resultTuple[1]
     #stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
