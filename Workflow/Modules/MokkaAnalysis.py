@@ -204,6 +204,13 @@ class MokkaAnalysis(ModuleBase):
       ##Remove libc
       removeLibc(myMokkaDir)
 
+      ##Get the particle.tbl, if any
+      path_to_particletbl = os.path.join(myMokkaDir,'ConfigFiles')
+      configdir = os.listdir(path_to_particletbl)
+      path_to_particle_tbl = ''
+      if 'particle.tbl' in configdir:
+        path_to_particle_tbl = os.path.join(myMokkaDir,'ConfigFiles','particle.tbl')
+
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
       ###prepare steering file
@@ -220,7 +227,8 @@ class MokkaAnalysis(ModuleBase):
       ##idem for steering file
       self.steeringFile = os.path.basename(self.steeringFile)
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
-                                    self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,self.debug,
+                                    self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
+                                    self.debug,
                                     self.outputFile)
       if not steerok['OK']:
         self.log.error('Failed to create MOKKA steering file')
