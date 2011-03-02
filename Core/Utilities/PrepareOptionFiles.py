@@ -170,7 +170,8 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
 
   return S_OK(foundprocessid)
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,randomseed,debug,outputlcio=None):
+def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,randomseed,particle_tbl,
+                        debug,outputlcio=None):
   """Writes out a steering file for Mokka
   
   Using specified parameters in the job definition passed from L{MokkaAnalysis}
@@ -213,24 +214,25 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   for line in input:
     if not line.count("/Mokka/init/initialMacroFile"):
       if not line.count("/Mokka/init/BatchMode"):
-        if not line.count("/Mokka/init/randomSeed"):
-          if outputlcio:
-            if not line.count("lcioFilename"):
-              #if line.find("#")>1:
+        if not line.count('/Mokka/init/PDGFile'):
+          if not line.count("/Mokka/init/randomSeed"):
+            if outputlcio:
+              if not line.count("lcioFilename"):
+                #if line.find("#")>1:
+                  if detectormodel:
+                    if not line.count("/Mokka/init/detectorModel"):
+                      output.write(line)
+                    else:
+                      output.write(line)
+                  else:
+                    output.write(line)
+            else:
+              #if line.find("#")==1:
                 if detectormodel:
                   if not line.count("/Mokka/init/detectorModel"):
                     output.write(line)
-                  else:
-                    output.write(line)
                 else:
                   output.write(line)
-          else:
-            #if line.find("#")==1:
-              if detectormodel:
-                if not line.count("/Mokka/init/detectorModel"):
-                  output.write(line)
-              else:
-                output.write(line)
   if detectormodel:
     output.write("#Set detector model to value specified\n")
     output.write("/Mokka/init/detectorModel %s\n"%detectormodel)
@@ -240,6 +242,9 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
     output.write("/Mokka/init/printLevel 1\n")
   output.write("#Set batch mode to true\n")
   output.write("/Mokka/init/BatchMode true\n")
+  if particle_tbl:
+    output.write("#Set path to particle.tbl\n")
+    output.write('/Mokka/init/PDGFile %s\n'%particle_tbl)
   output.write("#Set mac file to the one created on the site\n")
   output.write("/Mokka/init/initialMacroFile %s\n"%macname)
   output.write("#Setting random seed\n")
