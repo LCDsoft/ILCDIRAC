@@ -205,11 +205,12 @@ class MokkaAnalysis(ModuleBase):
       removeLibc(myMokkaDir)
 
       ##Get the particle.tbl, if any
-      path_to_particletbl = os.path.join(myMokkaDir,'ConfigFiles')
-      configdir = os.listdir(path_to_particletbl)
       path_to_particle_tbl = ''
-      if 'particle.tbl' in configdir:
-        path_to_particle_tbl = os.path.join(myMokkaDir,'ConfigFiles','particle.tbl')
+      dir_to_particletbl = os.path.join(myMokkaDir,'ConfigFiles')
+      if os.path.exists(dir_to_particletbl):
+        configdir = os.listdir(dir_to_particletbl)
+        if 'particle.tbl' in configdir:
+          path_to_particle_tbl = os.path.join(dir_to_particletbl,'particle.tbl')
 
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
