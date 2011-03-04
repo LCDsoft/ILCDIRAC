@@ -49,6 +49,7 @@ class MokkaAnalysis(ModuleBase):
         self.numberOfEvents = 0
         self.startFrom = 0
         self.eventstring = ''
+        self.processID = ''
 
 #############################################################################
     def applicationSpecificInputs(self):
@@ -73,6 +74,8 @@ class MokkaAnalysis(ModuleBase):
 
       if self.step_commons.has_key('detectorModel'):
         self.detectorModel = self.step_commons['detectorModel']
+      if   self.step_commons.has_key('ProcessID'):
+        self.processID = self.step_commons['ProcessID']
 
       if self.step_commons.has_key("RandomSeed"):
         self.randomseed = self.step_commons["RandomSeed"]
@@ -111,6 +114,8 @@ class MokkaAnalysis(ModuleBase):
               self.numberOfEvents=res["nbevts"]
           if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
             self.workflow_commons["Luminosity"]=res["lumi"]
+          if   res.has_key('EvtType') and not self.processID:
+            self.processID = res['EvtType']
 
       if len(self.stdhepFile)==0 and not len(self.InputData)==0:
         inputfiles = self.InputData.split(";")
@@ -229,6 +234,7 @@ class MokkaAnalysis(ModuleBase):
       self.steeringFile = os.path.basename(self.steeringFile)
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
+                                    self.processID,
                                     self.debug,
                                     self.outputFile)
       if not steerok['OK']:
