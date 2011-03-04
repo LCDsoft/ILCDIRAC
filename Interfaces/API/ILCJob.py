@@ -497,7 +497,9 @@ class ILCJob(Job):
 
     return S_OK()
 
-  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',nbOfEvents=None,startFrom=0,RandomSeed=None,dbslice='',outputFile=None,logFile='',debug=False,logInOutputData=False):
+  def setMokka(self,appVersion,steeringFile,inputGenfile=None,macFile = None,detectorModel='',
+               nbOfEvents=None,startFrom=0,RandomSeed=None,dbslice='',outputFile=None,processID=None,
+               logFile='',debug=False,logInOutputData=False):
     """Helper function.
        Define Mokka step
 
@@ -538,6 +540,10 @@ class ILCJob(Job):
        @type dbslice: string
        @param RandomSeed: Seed to use. Not so random if set by user. By default it's the JobID.
        @type RandomSeed: int
+       @param outputFile: Name of the output file
+       @type outputFile: string
+       @param processID: process ID string to set for every event
+       @type processID: string
        @param logFile: Optional log file name
        @type logFile: string
        @param debug: By default, change printout level to least verbosity
@@ -548,7 +554,7 @@ class ILCJob(Job):
     """
 
     kwargs = {'appVersion':appVersion,'steeringFile':steeringFile,'inputGenfile':inputGenfile,'macFile':macFile,'DetectorModel':detectorModel,'NbOfEvents':nbOfEvents,
-              'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,"RandomSeed":RandomSeed,
+              'StartFrom':startFrom,'outputFile':outputFile,'DBSlice':dbslice,"RandomSeed":RandomSeed,'processID':processID,
               'logFile':logFile,'debug':debug,"logInOutputData":logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version',__name__,**kwargs)
@@ -574,6 +580,9 @@ class ILCJob(Job):
     if RandomSeed:
       if not type(RandomSeed)==types.IntType:
         return self._reportError("Expected Int for RandomSeed",__name__,**kwargs)
+    if processID:
+      if not type(processID) in types.StringTypes:
+        return self._reportError('Expected string for processID',__name__,**kwargs)
 
     self.StepCount +=1
 
@@ -668,6 +677,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("debug",False,"bool","","",False,False,"Keep debug level as set in input file"))
     if RandomSeed:
       step.addParameter(Parameter("RandomSeed",0,"int","","",False,False,"RandomSeed to use"))
+    if processID: 
+      step.addParameter(Parameter("ProcessID","","string","","",False,False,"Name of the procesSID to set per event"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn,stepName)
@@ -696,6 +707,8 @@ class ILCJob(Job):
       stepInstance.setValue('outputFile',outputFile)
     if (RandomSeed):
       stepInstance.setValue("RandomSeed",RandomSeed)
+    if processID:
+      stepInstance.setValue('ProcessID',processID)
 
     stepInstance.setValue('debug',debug)
     currentApp = "mokka.%s"%appVersion
