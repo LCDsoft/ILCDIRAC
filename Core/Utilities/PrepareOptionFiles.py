@@ -171,7 +171,7 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
   return S_OK(foundprocessid)
 
 def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,randomseed,particle_tbl,
-                        debug,outputlcio=None):
+                        processID='',debug=False,outputlcio=None):
   """Writes out a steering file for Mokka
   
   Using specified parameters in the job definition passed from L{MokkaAnalysis}
@@ -252,6 +252,10 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   if outputlcio:
     output.write("#Set outputfile name to job specified\n")
     output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
+  if processID:
+    output.write("#Set processID as event parameter\n")
+    output.write("/Mokka/init/lcioEventParameter string processID %s\n"%processID)
+      
   output.write("#Set event start number to value given as job parameter\n")  
   output.write("/Mokka/init/startEventNumber %d"%startFrom)
   output.close()
