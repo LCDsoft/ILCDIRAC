@@ -41,6 +41,7 @@ from DIRAC.FrameworkSystem.Client.NotificationClient     import NotificationClie
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
+from DIRAC.RequestManagementSystem.Client.RequestClient         import RequestClient
 
 from DIRAC import gConfig,S_OK,S_ERROR
 import DIRAC
@@ -49,6 +50,7 @@ import string,os,shutil
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
+requestClient = RequestClient()
 request.setRequestName('default_request.xml')
 request.setSourceComponent('ReplicateILCSoft')
 
@@ -83,6 +85,12 @@ def upload(path,appTar):
     index = result['Value']
     fileDict = {'LFN':lfnpath,'Status':'Waiting'}
     request.setSubRequestFiles(index,'transfer',[fileDict])
+    requestName = appTar.replace('.tgz','')
+    request.setRequestAttributes({'RequestName':requestName})
+    requestxml = request.toXML()['Value']
+    res = requestClient.setRequest(requestName,requestxml)
+    if not res['OK']:
+      print 'Could not set replication request %s'%res['Message']
     return S_OK('Application uploaded')
   return S_OK()
 

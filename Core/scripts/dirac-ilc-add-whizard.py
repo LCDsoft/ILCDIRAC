@@ -9,10 +9,17 @@ from DIRAC.Core.Base import Script
 Script.parseCommandLine( ignoreErrors = False )
 args = Script.getPositionalArgs()
 
+whizard_location = "%s"%args[0]
+platform = "%s"%args[1]
+whizard_version = "%s"%args[2]
+appVersion = whizard_version
+beam_spectra_version= "%s"%args[3]
+
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
+from DIRAC.RequestManagementSystem.Client.RequestClient         import RequestClient
 
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
 
@@ -24,7 +31,7 @@ import os,tarfile, shutil, sys, string
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
-
+requestClient = RequestClient()
 modifiedCS = False
 
 
@@ -34,6 +41,7 @@ def usage():
   DIRAC.exit(2)
 
 def upload(path,appTar):
+  global appVersion
   if not os.path.exists(appTar):
     print "File %s does not exists, cannot continue."%appTar
     return S_ERROR()
@@ -61,6 +69,12 @@ def upload(path,appTar):
     index = result['Value']
     fileDict = {'LFN':lfnpath,'Status':'Waiting'}
     request.setSubRequestFiles(index,'transfer',[fileDict])
+    requestName = appTar.replace('.tgz','').replace('.cfg','_%s'%appVersion)
+    request.setRequestAttributes({'RequestName':requestName})
+    requestxml = request.toXML()['Value']
+    res = requestClient.setRequest(requestName,requestxml)
+    if not res['OK']:
+      print 'Could not set replication request %s'%res['Message']
     return S_OK('Application uploaded')
   return S_OK()
 
@@ -130,11 +144,6 @@ processlistLocation = "/Operations/ProcessList/Location"
 
 appName  ="whizard"
 
-whizard_location = "%s"%args[0]
-platform = "%s"%args[1]
-whizard_version = "%s"%args[2]
-appVersion = whizard_version
-beam_spectra_version= "%s"%args[3]
 
 path_to_process_list = gConfig.getOption(processlistLocation, None)
 if not path_to_process_list:
