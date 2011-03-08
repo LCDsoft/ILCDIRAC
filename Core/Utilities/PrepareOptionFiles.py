@@ -363,17 +363,23 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
                 subparam.text = outputDST
                 com = Comment("DST file changed")
                 param.insert(0,com)
-      if param.attrib['name'].lower().count('overlaytiming') and overlay:
-        files = getOverlayFiles()
-        if not len(files):
-          return S_ERROR('Could not find any overlay files')
+      if param.attrib['name'].lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:
           if subparam.attrib.has_key('name'):
-            if subparam.attrib['name']=="BackgroundFileNames":
-              subparam.text = string.join(files,"\n")
-              com = Comment("Overlay files changed")
-              param.insert(0,com)
+            if subparam.attrib['name']=='NumberBackground':
+              if subparam.attrib['value']=='0.0':
+                overlay=False
+        if overlay: 
+          files = getOverlayFiles()
+          if not len(files):
+            return S_ERROR('Could not find any overlay files')
+          for subparam in subparams:
+            if subparam.attrib.has_key('name'):
+              if subparam.attrib['name']=="BackgroundFileNames":
+                subparam.text = string.join(files,"\n")
+                com = Comment("Overlay files changed")
+                param.insert(0,com)
   tree.write(finalxml)
   return S_OK(True)
 
