@@ -56,6 +56,8 @@ class ILCJob(Job):
     self.detector = ''
     if processlist:
       self.processlist =processlist
+    else:
+      self.log.info('Process list was not given, limited WHIZARD functionality') 
     self.prodparameters = {}
 
   def setApplicationScript(self,appName,appVersion,script,arguments=None,log=None,logInOutputData=False):
