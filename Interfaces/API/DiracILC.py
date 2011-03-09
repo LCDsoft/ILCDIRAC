@@ -29,6 +29,9 @@ class DiracILC(Dirac):
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     self.log = gLogger
     self.software_versions = {}
+    self.pl = None
+    
+  def getProcessList(self):    
     processlistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
     if not processlistpath['Value']:
       gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to your dirac.cfg \
@@ -44,6 +47,7 @@ class DiracILC(Dirac):
     else:
       processlist = processlistpath['Value']
     self.pl = ProcessList(processlist)
+    return self.pl
     
   def preSubmissionChecks(self,job,mode):
     """Overridden method from DIRAC.Interfaces.API.Dirac
@@ -161,5 +165,27 @@ class DiracILC(Dirac):
       if data.find("*")>-1:
         self.log.error("Remove wildcard characters from output data definition: must be exact files")
         return S_ERROR("Wildcard character in OutputData definition")
+    return S_OK()
+
+  def checkInputSandboxLFNs(self,job):
+    lfns = []
+    inputsb = job.workflow.findParameter("InputSandbox")
+    if inputsb:
+      list = inputsb.getValue()
+      if list:
+        list = list.split(';')
+        for f in list:
+          if f.lower().count('lfn:'):
+            lfns.append(f.replace('LFN:','').replace('lfn:',''))
+    if len(lfns):
+      res = self.getReplicas(lfns)
+      if not res["OK"]:
+        return S_ERROR('Could not get replicas')
+      failed = res['Value']['Failed']
+      if failed:
+        self.log.error('Failed to find replicas for the following files %s'%string.join(failed, ', '))
+        return S_ERROR('Failed to find replicas')
+      else:
+        self.log.info('All LFN files have replicas available')
     return S_OK()
   
