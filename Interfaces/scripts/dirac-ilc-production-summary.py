@@ -97,7 +97,8 @@ for prodID in prodids:
   metadata.append(dirmeta)
 
 for channel in metadata:
-    print "<tr> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> </tr>"%(channel['detail'],
+    print "<tr> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td> </tr>"%(channel['detail'],
+                                                                                                            channel['Energy'],
                                                                                                 channel['ProdID'],
                                                                                                 channel['nb_files'],
                                                                                                 channel['NumberOfEvents'],
