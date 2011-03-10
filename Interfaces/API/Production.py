@@ -6,38 +6,40 @@ Created on Jun 24, 2010
 __RCSID__ = "$Id: Production.py 24/06/2010 sposs $"
 
 from DIRAC.Core.Workflow.Workflow                     import *
-from ILCDIRAC.Interfaces.API.DiracILC                       import DiracILC
+from ILCDIRAC.Interfaces.API.DiracILC                 import DiracILC
 from DIRAC.Core.Utilities.List                        import removeEmptyElements
 from DIRAC.Core.DISET.RPCClient                       import RPCClient
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+from DIRAC.Resources.Catalog.FileCatalogClient        import FileCatalogClient
 
-from ILCDIRAC.Interfaces.API.ILCJob                           import ILCJob
-from DIRAC                                          import gConfig, gLogger, S_OK, S_ERROR
+from ILCDIRAC.Interfaces.API.ILCJob                   import ILCJob
+from DIRAC                                            import gConfig, gLogger, S_OK, S_ERROR
 import string, shutil,os,types
 
 
 class Production(ILCJob):
+  """ Production API class
+  """
   #############################################################################
-  def __init__(self,script=None):
+  def __init__(self, script=None):
     """Instantiates the Workflow object and some default parameters.
     """
-    ILCJob.__init__(self,script)
-    self.prodVersion=__RCSID__
+    ILCJob.__init__(self, script)
+    self.prodVersion = __RCSID__
     self.csSection = '/Production/Defaults'
     self.StepCount = 0
     self.currentStepPrefix = ''
     self.inputDataType = 'STDHEP' #Default
-    self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection),'x86_64-slc5-gcc43-opt')
-    self.inputDataDefault = gConfig.getValue('%s/InputDataDefault' %(self.csSection),'/ilc/prod/clic/3tev/gen/bb/0/BS_01.stdhep')
+    self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection), 'x86_64-slc5-gcc43-opt')
+    self.inputDataDefault = gConfig.getValue('%s/InputDataDefault' %(self.csSection), '/ilc/prod/clic/3tev/gen/bb/0/BS_01.stdhep')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.ioDict = {}
-    self.prodTypes = ['MCGeneration','MCSimulation','Test','MCReconstruction']
-    self.pluginsTriggeringStreamTypes = ['ByFileTypeSize','ByRunFileTypeSize','ByRun','AtomicRun']
-    self.name='unspecifiedWorkflow'
+    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction']
+    self.pluginsTriggeringStreamTypes = ['ByFileTypeSize', 'ByRunFileTypeSize', 'ByRun', 'AtomicRun']
+    self.name = 'unspecifiedWorkflow'
     self.firstEventType = ''
     self.prodGroup = ''
     self.plugin = ''
@@ -49,12 +51,12 @@ class Production(ILCJob):
     self.basepath = ""
     self.basename = ""
     self.prodparameters = {}    
-    self.prodparameters['UsingWhizardOutput']=False
-    self.prodparameters['UsingMokkaOutput']=False
-    self.prodparameters['UsingSLICOutput']=False
-    self.prodparameters['PostGenSelApplied']=False
-    self.prodparameters['BXOverlay']=0
-    self.prodparameters['GGInt']=0
+    self.prodparameters['UsingWhizardOutput'] = False
+    self.prodparameters['UsingMokkaOutput'] = False
+    self.prodparameters['UsingSLICOutput'] = False
+    self.prodparameters['PostGenSelApplied'] = False
+    self.prodparameters['BXOverlay'] = 0
+    self.prodparameters['GGInt'] = 0
     
     self.jobFileGroupSize = 0
     self.ancestorProduction = ''
@@ -64,7 +66,7 @@ class Production(ILCJob):
 from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 """
     is_prod = "IS_PROD"
-    self._addParameter(self.workflow,is_prod,'JDL',True,"This job is a production job")
+    self._addParameter(self.workflow, is_prod, 'JDL', True, "This job is a production job")
     if not script:
       self.__setDefaults()
 
@@ -80,35 +82,36 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.setFileMask('')
 
     #version control
-    self._setParameter('productionVersion','string',self.prodVersion,'ProdAPIVersion')
+    self._setParameter('productionVersion', 'string', self.prodVersion, 'ProdAPIVersion')
 
     #General workflow parameters
-    self._setParameter('PRODUCTION_ID','string',self.defaultProdID.zfill(8),'ProductionID')
-    self._setParameter('JOB_ID','string',self.defaultProdJobID.zfill(8),'ProductionJobID')
+    self._setParameter('PRODUCTION_ID',     'string', self.defaultProdID.zfill(8), 'ProductionID')
+    self._setParameter('JOB_ID',            'string', self.defaultProdJobID.zfill(8), 'ProductionJobID')
     #self._setParameter('poolXMLCatName','string','pool_xml_catalog.xml','POOLXMLCatalogName')
-    self._setParameter('Priority','JDL','1','Priority')
-    self._setParameter('emailAddress','string','stephane.poss@cern.ch','CrashEmailAddress')
-    self._setParameter('DataType','string','MC','Priority') #MC or DATA
-    self._setParameter('outputMode','string','Local','SEResolutionPolicy')
+    self._setParameter('Priority',             'JDL',                     '1', 'Priority')
+    self._setParameter('emailAddress','      string', 'stephane.poss@cern.ch', 'CrashEmailAddress')
+    self._setParameter('DataType',          'string',                    'MC', 'Priority') #MC or DATA
+    self._setParameter('outputMode',        'string',                 'Local', 'SEResolutionPolicy')
 
     #Options related parameters
-    self._setParameter('EventMaxDefault','string','-1','DefaultNumberOfEvents')
+    self._setParameter('EventMaxDefault',   'string',                    '-1', 'DefaultNumberOfEvents')
     #BK related parameters
-    self._setParameter('lfnprefix','string','prod','LFNprefix')
-    self._setParameter('lfnpostfix','string','2009','LFNpostfix')
+    self._setParameter('lfnprefix',         'string',                  'prod', 'LFNprefix')
+    self._setParameter('lfnpostfix',        'string',                  '2009', 'LFNpostfix')
     #self._setParameter('conditions','string','','SimOrDataTakingCondsString')
   #############################################################################
-  def _setParameter(self,name,parameterType,parameterValue,description):
+  
+  def _setParameter(self, name, parameterType, parameterValue, description):
     """Set parameters checking in CS in case some defaults need to be changed.
     """
-    if gConfig.getValue('%s/%s' %(self.csSection,name),''):
-      self.log.debug('Setting %s from CS defaults = %s' %(name,gConfig.getValue('%s/%s' %(self.csSection,name))))
-      self._addParameter(self.workflow,name,parameterType,gConfig.getValue('%s/%s' %(self.csSection,name),'default'),description)
+    if gConfig.getValue('%s/%s' % (self.csSection, name), ''):
+      self.log.debug('Setting %s from CS defaults = %s' % (name, gConfig.getValue('%s/%s' % (self.csSection, name))))
+      self._addParameter(self.workflow, name, parameterType, gConfig.getValue('%s/%s' % (self.csSection, name), 'default'), description)
     else:
-      self.log.debug('Setting parameter %s = %s' %(name,parameterValue))
-      self._addParameter(self.workflow,name,parameterType,parameterValue,description)
+      self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
+      self._addParameter(self.workflow, name, parameterType, parameterValue, description)
 
-  def defineInputData(self,metadata):
+  def defineInputData(self, metadata):
     """ Define input data for the production
 
     Pass the metadata dictionary meta, that is looked up in the catalog to extract the process and number of events per file.
@@ -130,73 +133,84 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     for key in metakeys:
       for meta in metaFCkeys:
         if meta != key:
-          if meta.lower()==key.lower():
-            return self._reportError("Key syntax error %s, should be %s"%(key,meta))
+          if meta.lower() == key.lower():
+            return self._reportError("Key syntax error %s, should be %s" % (key, meta))
       if not metaFCkeys.count(key):
-        return self._reportError("Key %s not found in metadata keys, allowed are %s"%(key,metaFCkeys))
+        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
 
     if not   metadata.has_key("ProdID"):
       return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
-
-    res =   client.getCompatibleMetadata(metadata)
+    
+    res = client.findFilesByMetadata(metadata)
     if not res['OK']:
-      return self._reportError("Error looking up the catalog for compatible metadata")
+      return self._reportError("Error looking up the catalog for available files")
+    elif len(res['Value']) < 1:
+      return self._reportError('Could not find any files corresponding to the query issued')
+    directory = os.path.dirname(res['Value'][0])
+    res = client.getDirectoryMetadata(directory)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for directory metadata")
+    #res =   client.getCompatibleMetadata(metadata)
+    #if not res['OK']:
+    #  return self._reportError("Error looking up the catalog for compatible metadata")
     compatmeta = res['Value']
     compatmeta.update(metadata)
     if compatmeta.has_key('EvtType'):
       if type(compatmeta['EvtType']) in types.StringTypes:
         self.process  = compatmeta['EvtType']
-      if type(compatmeta['EvtType'])==type([]):
+      if type(compatmeta['EvtType']) == type([]):
         self.process = compatmeta['EvtType'][0]
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
     if compatmeta.has_key('NumberOfEvents'):
-      if type(compatmeta['NumberOfEvents'])==type([]):
+      if type(compatmeta['NumberOfEvents']) == type([]):
         self.nbofevents = compatmeta['NumberOfEvents'][0]
-      elif type(compatmeta['NumberOfEvents']) in types.StringTypes:
-        self.nbofevents = compatmeta['NumberOfEvents']
       else:
-        return self._reportError('Nb of events does not have any type recognised')
+        #type(compatmeta['NumberOfEvents']) in types.StringTypes:
+        self.nbofevents = compatmeta['NumberOfEvents']
+      #else:
+      #  return self._reportError('Nb of events does not have any type recognised')
 
     self.basename = self.process
     self.basepath = "/ilc/prod/"
     if compatmeta.has_key("Machine"):
       if type(compatmeta["Machine"]) in types.StringTypes:
-        self.basepath +=compatmeta["Machine"]+"/"
-      if type(compatmeta["Machine"])==type([]):
-        self.basepath +=compatmeta["Machine"][0]+"/"
+        self.basepath += compatmeta["Machine"]+"/"
+      if type(compatmeta["Machine"]) == type([]):
+        self.basepath += compatmeta["Machine"][0]+"/"
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
-        self.basepath +=compatmeta["Energy"]+"/"
+        self.basepath += compatmeta["Energy"]+"/"
         self.energy=compatmeta["Energy"]
-      if type(compatmeta["Energy"])==type([]):
-        self.basepath +=compatmeta["Energy"][0]+"/"
+      if type(compatmeta["Energy"]) == type([]):
+        self.basepath += compatmeta["Energy"][0]+"/"
         self.energy=compatmeta["Energy"][0]        
     if compatmeta.has_key("EvtType"):
       if type(compatmeta["EvtType"]) in types.StringTypes:
-        self.basepath +=compatmeta["EvtType"]+"/"
-      if type(compatmeta["EvtType"])==type([]):
-        self.basepath +=compatmeta["EvtType"][0]+"/"
-    gendata=False
+        self.basepath += compatmeta["EvtType"]+"/"
+      if type(compatmeta["EvtType"]) == type([]):
+        self.basepath += compatmeta["EvtType"][0]+"/"
+    gendata = False
     if compatmeta.has_key('Datatype'):
       if type(compatmeta['Datatype']) in types.StringTypes:
-        if compatmeta['Datatype']=='gen':
-          gendata=True
-      if type(compatmeta['Datatype'])==type([]):
-        if compatmeta['Datatype'][0]=='gen':
-          gendata=True
+        if compatmeta['Datatype'] == 'gen':
+          gendata = True
+      if type(compatmeta['Datatype']) == type([]):
+        if compatmeta['Datatype'][0] == 'gen':
+          gendata = True
     if compatmeta.has_key("DetectorType") and not gendata:
       if type(compatmeta["DetectorType"]) in types.StringTypes:
         self.detector = compatmeta["DetectorType"]
-      if type(compatmeta["DetectorType"])==type([]):
+      if type(compatmeta["DetectorType"]) == type([]):
         self.detector = compatmeta["DetectorType"][0]
     self.inputBKSelection = metadata
 
-    self.prodparameters["FCInputQuery"]=self.inputBKSelection
-    self.prodparameters['nbevts']=self.nbofevents
+    self.prodparameters["FCInputQuery"] = self.inputBKSelection
+    self.prodparameters['nbevts'] = self.nbofevents
     return S_OK()
 
-  def addWhizardStep(self,processlist,process,susymodel=None,energy = 3000,nbevts=0,lumi=0,extraparameters=None,outputpath="",outputSE=""):
+  def addWhizardStep(self, processlist, process, susymodel=None, energy = 3000, nbevts=0, lumi=0,
+                     extraparameters=None, outputpath="", outputSE=""):
     """ Define Whizard step
 
     Must get the process list from dirac.
@@ -218,20 +232,21 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     @param outputSE: Storage element to use
     @type outputSE: string
     """
-    kwargs = {"process":process,'susymodel':susymodel,"energy":energy,"nbevts":nbevts,"lumi":lumi,"outputpath":outputpath,"outputSE":outputSE}
+    kwargs = {"process":process, 'susymodel':susymodel, "energy":energy, "nbevts":nbevts,
+              "lumi":lumi, "outputpath":outputpath, "outputSE":outputSE}
     appvers = ""
 
     if process:
       if not processlist.existsProcess(process)['Value']:
-        self.log.error('Process %s does not exist in any whizard version, please contact responsible.'%process)
+        self.log.error('Process %s does not exist in any whizard version, please contact responsible.' % process)
         self.log.info("Available processes are:")
         processlist.printProcesses()
-        return self._reportError('Process %s does not exist in any whizard version.'%process,__name__,**kwargs)
+        return self._reportError('Process %s does not exist in any whizard version.' % process, __name__, **kwargs)
       else:
         cspath = processlist.getCSPath(process)
         whiz_file = os.path.basename(cspath)
-        appvers= whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
-        self.log.info("Found process %s corresponding to whizard%s"%(process,appvers))
+        appvers = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
+        self.log.info("Found process %s corresponding to whizard%s" % (process, appvers))
         processes = processlist.getProcessesDict()
         cross_section = float(processes[process]["CrossSection"])
         if cross_section:
@@ -239,31 +254,31 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
             lumi = nbevts/cross_section
           if lumi and not nbevts:
             nbevts = lumi*cross_section
-        print "Will generate %s evts, or lumi=%s fb"%(nbevts,lumi)
+        print "Will generate %s evts, or lumi=%s fb" % (nbevts, lumi)
     else:
-      return self._reportError("Process to generate was not specified",__name__,**kwargs)
+      return self._reportError("Process to generate was not specified", __name__, **kwargs)
 
     if not outputpath:
-      return self._reportError("Output path not defined" ,__name__,**kwargs)
+      return self._reportError("Output path not defined" , __name__, **kwargs)
     if not outputSE:
-      return self._reportError("Output Storage element not defined" ,__name__,**kwargs)
+      return self._reportError("Output Storage element not defined" , __name__, **kwargs)
 
     if susymodel:
-      if not susymodel=="slsqhh" and not susymodel=='chne':
+      if not susymodel == "slsqhh" and not susymodel == 'chne':
         self._reportError("susymodel must be either slsqhh or chne")
 
-    outputfile = process+"_gen.stdhep"
+    outputfile = process + "_gen.stdhep"
 
     parameters = []
     if extraparameters:
-      if not type(extraparameters)==type({}):
-        return self._reportError('extraparameter argument must be dictionary',__name__,**kwargs)
+      if not type(extraparameters) == type({}):
+        return self._reportError('extraparameter argument must be dictionary', __name__, **kwargs)
     else:
-      extraparameters['PNAME1']='e1'
+      extraparameters['PNAME1'] = 'e1'
       print "Assuming incoming beam 1 to be electrons"
 
     for n,v in extraparameters.items():
-      parameters.append("%s=%s"%(n,v))
+      parameters.append("%s=%s" % (n, v))
     if not extraparameters.has_key('PNAME1'):
       print "Assuming incoming beam 1 to be electrons"
       parameters.append('PNAME1=e1')
@@ -306,118 +321,121 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     #  parameters.append("PYTHIAPARAMS=\"PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ; MSTJ(28)=2 ;\"")
 
     #Add to input sandbox the processlist: if it fails getting it, the job get rescheduled
-    res = gConfig.getValue('/Operations/ProcessList/Location','')
+    res = gConfig.getValue('/Operations/ProcessList/Location', '')
     if not res:
       return self._reportError('Could not resolve location of processlist.cfg')
-    res = 'LFN:'+res
+    res = 'LFN:' + res
     self.addToInputSandbox.append(res)
 
-    self.StepCount +=1
+    self.StepCount += 1
     stepName = 'Whizard'
     stepNumber = self.StepCount
-    stepDefn = '%sStep%s' %('Whizard',stepNumber)
-    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    stepDefn = '%sStep%s' % ('Whizard', stepNumber)
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
 
     whizardStep =     ModuleDefinition('WhizardAnalysis')
     whizardStep.setDescription('Whizard step: generate the physics events')
-    body = string.replace(self.importLine,'<MODULE>','WhizardAnalysis')
+    body = string.replace(self.importLine, '<MODULE>', 'WhizardAnalysis')
     whizardStep.setBody(body)
 
     createoutputlist = ModuleDefinition('ComputeOutputDataList')
     createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
-    body = string.replace(self.importLine,'<MODULE>','ComputeOutputDataList')
+    body = string.replace(self.importLine, '<MODULE>', 'ComputeOutputDataList')
     createoutputlist.setBody(body)
 
     WhizardAppDefn = StepDefinition(stepDefn)
     WhizardAppDefn.addModule(whizardStep)
-    WhizardAppDefn.createModuleInstance('WhizardAnalysis',stepDefn)
+    WhizardAppDefn.createModuleInstance('WhizardAnalysis', stepDefn)
     WhizardAppDefn.addModule(createoutputlist)
-    WhizardAppDefn.createModuleInstance('ComputeOutputDataList',stepDefn)
-    self._addParameter(WhizardAppDefn,'applicationVersion','string','','ApplicationVersion')
-    self._addParameter(WhizardAppDefn,"applicationLog","string","","Application log file")
-    self._addParameter(WhizardAppDefn,"EvtType","string","","Process to generate")
-    self._addParameter(WhizardAppDefn,"parameters","string","","Parameters for template")
-    self._addParameter(WhizardAppDefn,"Energy","int",0,"Energy to generate")
-    self._addParameter(WhizardAppDefn,"NbOfEvts","int",0,"Number of events to generate")
-    self._addParameter(WhizardAppDefn,'listoutput',"list",[],"list of output file name")
-    self._addParameter(WhizardAppDefn,"outputPath","string","","Output data path")
-    self._addParameter(WhizardAppDefn,"outputFile","string","","output file name")
+    WhizardAppDefn.createModuleInstance('ComputeOutputDataList', stepDefn)
+    self._addParameter(WhizardAppDefn, 'applicationVersion', 'string', '', 'ApplicationVersion')
+    self._addParameter(WhizardAppDefn, "applicationLog",     "string", "", "Application log file")
+    self._addParameter(WhizardAppDefn, "EvtType",            "string", "", "Process to generate")
+    self._addParameter(WhizardAppDefn, "parameters",         "string", "", "Parameters for template")
+    self._addParameter(WhizardAppDefn, "Energy",                "int",  0, "Energy to generate")
+    self._addParameter(WhizardAppDefn, "NbOfEvts",              "int",  0, "Number of events to generate")
+    self._addParameter(WhizardAppDefn, 'listoutput',           "list", [], "list of output file name")
+    self._addParameter(WhizardAppDefn, "outputPath",         "string", "", "Output data path")
+    self._addParameter(WhizardAppDefn, "outputFile",         "string", "", "output file name")
     if susymodel:
-      self._addParameter(WhizardAppDefn,"SusyModel","int",0,"SUSY model to use")
+      self._addParameter(WhizardAppDefn, "SusyModel"           ,"int",  0, "SUSY model to use")
 
-    self._addParameter(WhizardAppDefn,"Lumi","float",0,"Number of events to generate")
+    self._addParameter(WhizardAppDefn, "Lumi",                "float",  0, "Number of events to generate")
     self.workflow.addStep(WhizardAppDefn)
-    mstep = self.workflow.createStepInstance(stepDefn,stepName)
-    mstep.setValue('applicationVersion',appvers)
+    mstep = self.workflow.createStepInstance(stepDefn, stepName)
+    mstep.setValue('applicationVersion', appvers)
     mstep.setValue('applicationLog', 'Whizard_@{STEP_ID}.log')
-    mstep.setValue("Energy",energy)
-    self.prodparameters["Energy"]=energy
-    mstep.setValue("EvtType",process)
-    self.prodparameters['Process']=process
-    mstep.setValue("NbOfEvts",nbevts)
-    self.prodparameters['nbevts']=nbevts
-    mstep.setValue("Lumi",lumi)
-    self.prodparameters['lumi']=lumi
-    mstep.setValue('parameters',string.join(parameters,";"))
-    self.prodparameters['WhizardParameters']=string.join(parameters,";")
-    mstep.setValue("outputFile",outputfile)
-    mstep.setValue("outputPath",outputpath)
+    mstep.setValue("Energy", energy)
+    self.prodparameters["Energy"] = energy
+    mstep.setValue("EvtType", process)
+    self.prodparameters['Process'] = process
+    mstep.setValue("NbOfEvts", nbevts)
+    self.prodparameters['nbevts'] = nbevts
+    mstep.setValue("Lumi", lumi)
+    self.prodparameters['lumi'] = lumi
+    mstep.setValue('parameters',string.join(parameters, ";"))
+    self.prodparameters['WhizardParameters'] = string.join(parameters,";")
+    mstep.setValue("outputFile", outputfile)
+    mstep.setValue("outputPath", outputpath)
     if susymodel:
-      if susymodel=='slsqhh':
-        mstep.setValue('SusyModel',1)
-      if susymodel=='chne':
-        mstep.setValue('SusyModel',2)
+      if susymodel == 'slsqhh':
+        mstep.setValue('SusyModel', 1)
+      if susymodel == 'chne':
+        mstep.setValue('SusyModel', 2)
 
-    outputList=[]
-    outputList.append({"outputFile":"@{outputFile}","outputPath":"@{outputPath}","outputDataSE":outputSE})
-    mstep.setValue('listoutput',(outputList))
+    outputList = []
+    outputList.append({"outputFile":"@{outputFile}", "outputPath":"@{outputPath}", "outputDataSE":outputSE})
+    mstep.setValue('listoutput', (outputList))
 
-    self.__addSoftwarePackages('whizard.%s' %(appvers))
-    self._addParameter(self.workflow,"WhizardOutput","string",outputfile,"whizard expected output file name")
+    self.__addSoftwarePackages('whizard.%s' % (appvers))
+    self._addParameter(self.workflow, "WhizardOutput", "string", outputfile, "whizard expected output file name")
     if nbevts:
-      self._addParameter(self.workflow,"NbOfEvents","int",nbevts,"Number of events")
+      self._addParameter(self.workflow, "NbOfEvents", "int", nbevts, "Number of events")
     if lumi:
-      self._addParameter(self.workflow,"Luminosity","float",lumi,"Luminosity")
-    self.ioDict["WhizardStep"]=mstep.getName()
+      self._addParameter(self.workflow, "Luminosity", "float", lumi, "Luminosity")
+    self.ioDict["WhizardStep"] = mstep.getName()
     return S_OK()
 
-  def addPostGenSelStep(self,appvers,NbEvts):
+  def addPostGenSelStep(self, appvers, NbEvts):
     """ Define Post Generation Selection
     @param appVers: Version to use
     @type appVers: string
     """
-    kwargs = {"appvers":appvers,"NbEvts":NbEvts}
+    kwargs = {"appvers":appvers, "NbEvts":NbEvts}
     if not appvers:
-      return self._reportError('PostGenSel version not specified',__name__,**kwargs)
+      return self._reportError('PostGenSel version not specified', __name__, **kwargs)
     if not NbEvts:
-      return self._reportError('Number of events must be specified',__name__,**kwargs)
+      return self._reportError('Number of events must be specified', __name__, **kwargs)
 
-    self.StepCount +=1
+    self.StepCount += 1
     stepName = 'PostGenSel'
     stepNumber = self.StepCount
-    stepDefn = '%sStep%s' %('PostGenSel',stepNumber)
-    self._addParameter(self.workflow,'TotalSteps','String',self.StepCount,'Total number of steps')
+    stepDefn = '%sStep%s' %('PostGenSel', stepNumber)
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
+    
     PostGenSelStep = ModuleDefinition('PostGenSelection')
     PostGenSelStep.setDescription('Post Generation Selection step: apply cuts to the physics events')
-    body = string.replace(self.importLine,'<MODULE>','PostGenSelection')
+    body = string.replace(self.importLine, '<MODULE>', 'PostGenSelection')
     PostGenSelStep.setBody(body)
+    
     postgenselDefn = StepDefinition(stepDefn)
     postgenselDefn.addModule(PostGenSelStep)
-    postgenselDefn.createModuleInstance('PostGenSel',stepDefn)
-    self._addParameter(postgenselDefn,'applicationVersion','string','','ApplicationVersion')
-    self._addParameter(postgenselDefn,'NbEvts','int',0,'Number of events to keep')
+    postgenselDefn.createModuleInstance('PostGenSel', stepDefn)
+    self._addParameter(postgenselDefn, 'applicationVersion', 'string', '', 'ApplicationVersion')
+    self._addParameter(postgenselDefn,             'NbEvts',    'int',  0, 'Number of events to keep')
     self.workflow.addStep(postgenselDefn)
-    mstep = self.workflow.createStepInstance(stepDefn,stepName)
-    mstep.setValue('applicationVersion',appvers)
-    mstep.setValue('applicationLog', 'PostGenSel_@{STEP_ID}.log')
-    mstep.setValue('NbEvts',NbEvts)
-    self.prodparameters['nbevts']=NbEvts
-    self.prodparameters['PostGenSelApplied']=True
-    self.__addSoftwarePackages('postgensel.%s' %(appvers))
+    
+    mstep = self.workflow.createStepInstance(stepDefn, stepName)
+    mstep.setValue('applicationVersion', appvers)
+    mstep.setValue('applicationLog',     'PostGenSel_@{STEP_ID}.log')
+    mstep.setValue('NbEvts',             NbEvts)
+    self.prodparameters['nbevts'] = NbEvts
+    self.prodparameters['PostGenSelApplied'] = True
+    self.__addSoftwarePackages('postgensel.%s' % (appvers))
     if NbEvts:
-      self._addParameter(self.workflow,"NbOfEvents","int",NbEvts,"Number of events")
+      self._addParameter(self.workflow, "NbOfEvents", "int", NbEvts, "Number of events")
 
-    self.ioDict["PostGenSelStep"]=mstep.getName()
+    self.ioDict["PostGenSelStep"] = mstep.getName()
 
     return S_OK()
 
@@ -626,9 +644,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if(inputslcioStr):
       mstep.setValue("inputSlcio",inputslcioStr)
     else:
-      if not self.ioDict.has_key("MokkaStep"):
-        raise TypeError,'Expected previously defined Mokka step for input data'
-      mstep.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+      if self.ioDict.has_key("MokkaStep"):
+        #raise TypeError,'Expected previously defined Mokka step for input data'
+        mstep.setLink('inputSlcio',self.ioDict["MokkaStep"],'outputFile')
+        
     mstep.setValue("inputXML",inputXML)
     self.prodparameters['MarlinXML']=inputXML
     mstep.setValue("inputGEAR",inputGEAR)
