@@ -318,6 +318,9 @@ class ModuleBase(object):
       self.jobType = self.workflow_commons['JobType']
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
+      
+    if self.workflow_commons.has_key('ParametricInputData'):
+      self.InputData += ";"+self.workflow_commons['ParametricInputData']
 
     if self.step_commons.has_key("outputFile"):
       self.outputFile = self.step_commons["outputFile"]
