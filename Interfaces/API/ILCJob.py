@@ -2211,6 +2211,25 @@ class ILCJob(Job):
     self._addParameter(self.workflow, 'IgnoreAppError', 'JDL', True, 'To ignore application errors')
     return S_OK()
 
+  def checkWorkflowParams(self):
+    self.StepCount += 1
+    stepName = 'DummyModule'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' % ('DummyModule', stepNumber)
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
+    moduleName = "DummyModule"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('DummyModule module definition')
+    body = 'from %s.%s import %s\n' % (self.importLocation, moduleName, moduleName)
+    module.setBody(body)
+    step = StepDefinition(stepDefn)
+    step.addModule(module)
+    step.createModuleInstance('DummyModule', stepDefn)
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance(stepDefn, stepName)
+        
+    return S_OK()
+
   def _rootType(self, name):
     """ Private method
     """
