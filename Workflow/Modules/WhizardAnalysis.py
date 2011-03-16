@@ -320,6 +320,7 @@ class WhizardAnalysis(ModuleBase):
         return S_ERROR('%s did not produce the expected log' %(self.applicationName))
     lumi = ''
     message = ""
+    success=False
     ###Analyse log file
     logfile = file(self.applicationLog)
     for line in logfile:
@@ -342,8 +343,14 @@ class WhizardAnalysis(ModuleBase):
         status=1
         message=line
         break
+      elif line.count("Event generation finished."):
+        success=True
       else:
         status = 0
+    if success:
+      status = 0
+    else:
+      status = 1
     self.log.info('The sample generated has an equivalent luminosity of %s'%lumi)
     self.workflow_commons['Luminosity']=float(lumi)
     #stdOutput = resultTuple[1]
