@@ -52,6 +52,9 @@ class MarlinAnalysis(ModuleBase):
       
     if self.step_commons.has_key('inputSlcio'):
       self.inputSLCIO =self.step_commons['inputSlcio']
+      
+    if self.workflow_commons.has_key('ParametricInputSandbox'):
+      self.inputSLCIO += ";" + self.workflow_commons['ParametricInputSandbox']
             
     if self.step_commons.has_key('inputXML'):
       self.inputXML=self.step_commons['inputXML']
