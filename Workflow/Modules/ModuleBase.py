@@ -337,6 +337,20 @@ class ModuleBase(object):
   def applicationSpecificInputs(self):
     return S_OK()
 
+  def finalStatusReport(self,status):
+    message = '%s %s Successful' %(self.applicationName,self.applicationVersion)
+    if status:
+      self.log.error( "==================================\n StdError:\n" )
+      self.log.error( self.stdError )
+      message = '%s exited With Status %s' %(self.applicationName,status)
+      self.setApplicationStatus(message)
+      self.log.error(message)
+      if not self.ignoreapperrors:
+        return S_ERROR(message)
+    else: 
+      self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
+    return S_OK(message)    
+
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
     """

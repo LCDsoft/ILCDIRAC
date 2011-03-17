@@ -21,6 +21,7 @@ class PostGenSelection(ModuleBase):
     self.STEP_NUMBER = ''
     self.enable = True 
     self.log = gLogger.getSubLogger( "PostGenSelection" )
+    self.applicationName = 'PostGenSel'
     self.inputstdhep = ""
     self.numberOfEvents = 0
       
@@ -162,15 +163,5 @@ class PostGenSelection(ModuleBase):
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
-    message = 'Post Generation Selection successful'
-    if not status==0:
-      self.log.error("Writing did not proceed properly")
-      self.setApplicationStatus('PostGenSelection_Write Exited With Status %s' %(status))
-      message = 'PostGenSelection_Write Exited With Status %s' %(status)
-      if not self.ignoreapperrors:
-        return S_ERROR(message)
-    else:  
-      self.workflow_commons["NbOfEvents"]=self.numberOfEvents
-      self.setApplicationStatus(message)
-    return S_OK(message)
+    return self.finalStatusReport(status)
   

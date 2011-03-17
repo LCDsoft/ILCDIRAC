@@ -214,25 +214,7 @@ class MarlinAnalysis(ModuleBase):
     # stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
-    failed = False
-    if status != 0:
-      self.log.error( "Marlin execution completed with errors:" )
-      failed = True
-    else:
-      self.log.info( "Marlin execution completed successfully")
-      
-    message = 'Marlin %s Successful' %(self.applicationVersion)
-    if failed==True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
-      self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('Marlin Exited With Status %s' %(status))
-      message = 'Marlin Exited With Status %s' %(status)
-      if not self.ignoreapperrors:
-        return S_ERROR(message)
-    else: 
-      self.setApplicationStatus('Marlin %s Successful' %(self.applicationVersion))
-    return S_OK(message)
+    return self.finalStatusReport(status) 
 
   def prepareMARLIN_DLL(self,marlinDir):
     marlindll = ""
