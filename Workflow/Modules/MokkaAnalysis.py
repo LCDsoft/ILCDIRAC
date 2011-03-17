@@ -351,7 +351,7 @@ class MokkaAnalysis(ModuleBase):
         self.log.info( "Mokka execution reached end of input generator file")
       else:
         self.log.info( "Mokka execution finished successfully")
-        
+
       message = 'Mokka %s Successful' %(self.applicationVersion)
       if failed==True:
         self.log.error( "==================================\n StdError:\n" )

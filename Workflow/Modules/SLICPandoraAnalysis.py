@@ -224,25 +224,7 @@ class SLICPandoraAnalysis (ModuleBase):
     # stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
-    failed = False
-    if status != 0:
-      self.log.error( "SLICPandora execution completed with errors:" )
-      failed = True
-    else:
-      self.log.info( "SLICPandora execution completed successfully")
-
-    message = 'SLICPandora %s Successful' %(self.applicationVersion)
-    if failed==True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
-      self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('SLICPandora Exited With Status %s' %(status))
-      message= 'SLICPandora Exited With Status %s' %(status)
-      if not self.ignoreapperrors:
-        return S_ERROR(message)
-    else:
-      self.setApplicationStatus(message)
-    return S_OK(message)
+    return self.finalStatusReport(status)
     #############################################################################
 
   

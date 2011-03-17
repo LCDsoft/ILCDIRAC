@@ -21,7 +21,7 @@ class CheckCollections(ModuleBase):
         self.args        = ''
         #self.result      = S_ERROR()
         self.jobID       = None
-
+        self.applicationName = 'CheckCollections'
         # Step parameters
 
         self.applicationVersion = None
@@ -159,17 +159,7 @@ exit $$appstatus
 
         self.log.info( "Status after the application execution is %s" % str( status ) )
 
-        message = 'CheckCollections Finished successfully'
-        if status:
-            self.setApplicationStatus( "CheckCollections Exited With Status %s" % status )
-            message =  "CheckCollections Exited With Status %s" % status 
-            if not self.ignoreapperrors:
-                return S_ERROR( message )
-
-        # Return
-        else:
-            self.setApplicationStatus( message )
-        return S_OK( message )
+        return self.finalStatusReport(status)
 
     def redirectLogOutput(self, fd, message):
 

@@ -121,22 +121,4 @@ class TomatoAnalysis(MarlinAnalysis):
     # stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
-    failed = False
-    if status != 0:
-      self.log.error( "%s execution completed with errors:"%self.applicationName)
-      failed = True
-    else:
-      self.log.info( "%s execution completed successfully"%self.applicationName)
-      
-    message = '%s %s Successful' %(self.applicationName,self.applicationVersion)
-    if failed==True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
-      self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('%s Exited With Status %s' %(self.applicationName,status))
-      message = '%s Exited With Status %s' %(self.applicationName,status)
-      if not self.ignoreapperrors:
-        return S_ERROR(message)
-    else: 
-      self.setApplicationStatus('%s %s Successful' %(self.applicationName,self.applicationVersion))
-    return S_OK(message)    
+    return self.finalStatusReport(status)

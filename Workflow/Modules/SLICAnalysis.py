@@ -241,22 +241,5 @@ class SLICAnalysis(ModuleBase):
     # stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
-    failed = False
-    if status != 0:
-      self.log.error( "SLIC execution completed with errors:" )
-      failed = True
-    else:
-      self.log.info( "SLIC execution completed successfully")
-    message = 'SLIC %s Successful' %(self.applicationVersion)
-    if failed:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError) 
-      self.setApplicationStatus('SLIC Exited With Status %s' %(status))
-      self.log.error('SLIC Exited With Status %s' %(status))
-      message = 'SLIC Exited With Status %s' %(status)
-      if not self.ignoreapperrors:
-        return S_ERROR(message)
-    else:
-      self.setApplicationStatus(message)
-    return S_OK(message)
+    return self.finalStatusReport(status)
 
