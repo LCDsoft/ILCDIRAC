@@ -10,9 +10,8 @@ from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 from math import ceil
-from random import randrange
 
-import os,types
+import os,types,time,random
 
 class OverlayInput (ModuleBase):
   def __init__(self):
@@ -136,18 +135,30 @@ class OverlayInput (ModuleBase):
     os.chdir("./overlayinput_"+self.evttype)
     filesobtained = []
     usednumbers = []
-    for i in range(totnboffilestoget):
-      fileindex = randrange(nbfiles)
+    while len(filesobtained) < totnboffilestoget:
+      fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
         usednumbers.append(fileindex)
+        res = self.rm.getFile(self.lfns[fileindex])
+        if not res['OK']:
+          self.log.warning('Could not obtain %s'%self.lfns[fileindex])
+          time.sleep(60*random.gauss(3,0.1))     
+          continue
+        if len(res['Value']['Failed']):
+          self.log.warning('Could not obtain %s'%self.lfns[fileindex])
+          time.sleep(60*random.gauss(3,0.1))     
+          continue
         filesobtained.append(self.lfns[fileindex])
+        ##Now wait for a random time around 3 minutes
+        time.sleep(60*random.gauss(3,0.1))
+        
     res = self.rm.getFile(filesobtained)
     failed = len(res['Value']['Failed'])
     tryagain = []
     if failed:
       self.log.error('Had issues getting %s files, retrying now with new files'%failed)
-      for i in range(failed):
-        fileindex = randrange(nbfiles)
+      while len(tryagain) < failed:
+        fileindex = random.randrange(nbfiles)
         if fileindex not in usednumbers:
           usednumbers.append(fileindex)
           tryagain.append(self.lfns[fileindex])
