@@ -139,6 +139,7 @@ class OverlayInput (ModuleBase):
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
         usednumbers.append(fileindex)
+        self.setApplicationStatus('Getting file')
         res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
           self.log.warning('Could not obtain %s'%self.lfns[fileindex])
@@ -189,12 +190,20 @@ class OverlayInput (ModuleBase):
       self.setApplicationStatus('OverlayProcessor got an empty list')
       return S_ERROR('OverlayProcessor got an empty list')
     
+    ###Don't check for CPU time as other wise, job can get killed
+    if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+      os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+    f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
+    f.write('Dont look at cpu')
+    f.close()
     
     res = self.__getFilesLocaly()
+    ###Now that module is finished,resume CPU time checks
+    os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+    
     if not res['OK']:
       self.setApplicationStatus('OverlayProcessor failed to get files locally with message %s'%res['Message'])
       return S_ERROR('OverlayProcessor failed to get files locally')
-    
     self.setApplicationStatus('Overlay processor finished getting all files successfully')
     return S_OK('Overlay input finished successfully')
   
