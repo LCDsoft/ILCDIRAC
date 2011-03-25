@@ -370,6 +370,9 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
             if subparam.attrib['name']=='NumberBackground':
               if subparam.attrib['value']=='0.0':
                 overlay=False
+            if subparam.attrib['name']=='NBunchtrain':
+              if subparam.attrib['value']=='0':
+                overlay=False  
         if overlay: 
           files = getOverlayFiles()
           if not len(files):
