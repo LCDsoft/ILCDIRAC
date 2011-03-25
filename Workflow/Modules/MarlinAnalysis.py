@@ -184,7 +184,7 @@ class MarlinAnalysis(ModuleBase):
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s'%res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
-      return S_ERROR('Something went wrong with XML generation')
+      return res
 
     res = self.prepareMARLIN_DLL(myMarlinDir)
     if not res['OK']:
