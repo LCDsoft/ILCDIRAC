@@ -315,6 +315,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     if not extraparameters.has_key('INITIALS'):
       print "Will set keep_initials to False"
       parameters.append('INITIALS=F')
+    if not extraparameters.has_key('USERSPECTRUM'):
+      print "Will set USER_spectrum_on to 11"
+      parameters.append('USERSPECTRUM=11')
+
     #TODO look how to allow changing pythia parameters, which are separated with ;
     #if not extraparameters.has_key('PYTHIAPARAMS'):
     #  print "Using default pythia parameters"

@@ -324,6 +324,9 @@ class ILCJob(Job):
     if not extraparameters.has_key('INITIALS'):
       print "Will set keep_initials to False"
       parameters.append('INITIALS=F')
+    if not extraparameters.has_key('USERSPECTRUM'):
+      print "Will set USER_spectrum_on to +-11"
+      parameters.append('USERSPECTRUM=11')
 
     #Add to input sandbox the processlist: if it fails getting it, the job get rescheduled
     res = gConfig.getValue('/Operations/ProcessList/Location','')
