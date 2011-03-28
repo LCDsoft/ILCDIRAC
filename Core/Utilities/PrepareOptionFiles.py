@@ -151,6 +151,10 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
       outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERB1'])
     elif line.count('USERB2USERB2'):
       outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERB2'])
+    elif line.count('USERSPECTRUMB1'):
+      outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERSPECTRUM'])
+    elif line.count('USERSPECTRUMB2'):
+      outputfile.write(' USER_spectrum_on = -%s\n'%parameters['USERSPECTRUM'])
     elif line.count('ISRB1ISRB1'):
       outputfile.write(' ISR_on = %s\n'%parameters['ISRB1'])
     elif line.count('ISRB2ISRB2'):
