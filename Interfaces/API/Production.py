@@ -89,7 +89,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._setParameter('JOB_ID',            'string', self.defaultProdJobID.zfill(8), 'ProductionJobID')
     #self._setParameter('poolXMLCatName','string','pool_xml_catalog.xml','POOLXMLCatalogName')
     self._setParameter('Priority',             'JDL',                     '1', 'Priority')
-    self._setParameter('emailAddress','      string', 'stephane.poss@cern.ch', 'CrashEmailAddress')
+    self._setParameter('emailAddress',      'string', 'stephane.poss@cern.ch', 'CrashEmailAddress')
     self._setParameter('DataType',          'string',                    'MC', 'Priority') #MC or DATA
     self._setParameter('outputMode',        'string',                 'Local', 'SEResolutionPolicy')
 
