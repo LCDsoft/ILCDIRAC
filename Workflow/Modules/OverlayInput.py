@@ -142,11 +142,11 @@ class OverlayInput (ModuleBase):
         self.setApplicationStatus('Getting file')
         res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
-          self.log.warning('Could not obtain %s'%self.lfns[fileindex])
+          self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           time.sleep(60*random.gauss(3,0.1))     
           continue
         if len(res['Value']['Failed']):
-          self.log.warning('Could not obtain %s'%self.lfns[fileindex])
+          self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           time.sleep(60*random.gauss(3,0.1))     
           continue
         filesobtained.append(self.lfns[fileindex])
