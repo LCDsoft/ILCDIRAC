@@ -112,16 +112,16 @@ class OverlayInput (ModuleBase):
     availableevents = nbfiles*self.nbofeventsperfile
     if availableevents < numberofeventstoget:
       return S_ERROR("Number of gg->had events available is less than requested")
-    nboffilestogetpersigevt = int(ceil(numberofeventstoget/self.nbofeventsperfile))
 
     if not self.nsigevts:
       ##Compute Nsignal events
       self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
     if not self.nsigevts:
       return S_ERROR('Could not determine the number of signal events per job')
-    ##Get Number of files to get to cover all signal events
-    totnboffilestoget = self.nsigevts*nboffilestogetpersigevt
     
+    ##Now determine how many files are needed to cover all signal events
+    totnboffilestoget = int(ceil(self.nsigevts*numberofeventstoget/self.nbofeventsperfile))
+        
     ##Limit ourself to some configuration maximum
     res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)    
     maxNbFilesToGet = res['Value']
