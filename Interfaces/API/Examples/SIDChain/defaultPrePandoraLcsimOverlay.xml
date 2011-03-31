@@ -12,8 +12,9 @@
     </control>
     <execute>
         <driver name="EventMarkerDriver"/>
-   		<driver name="MuonEndcapSelector"/>
-   		<driver name="MuonBarrelSelector"/>
+        <driver name="BackgroundOverlay" />
+    		<driver name="MuonEndcapSelector"/>
+    		<driver name="MuonBarrelSelector"/>
         <driver name="TrackHitRemover"/>
         <driver name="VertexBarrelSetup"/>
         <driver name="VertexEndcapSetup"/>
@@ -178,7 +179,7 @@
         <!-- Driver to write output slcio file -->
         <driver name="Writer"
                 type="org.lcsim.util.loop.LCIODriver">
-            <writeOnlyCollections>BeamCalHits EcalBarrelHits EcalEndcapHits HcalBarrelHits HcalEndcapHits HcalPlugHits LumiCalHits MCParticle MCParticleEndPointEnergy MuonBarrelHits MuonEndcapHits SiTrackerBarrelHits SiTrackerEndcapHits SiTrackerForwardHits SiVertexBarrelHits SiVertexEndcapHits HelicalTrackHits HelicalTrackMCRelations StateAtECal StateAtEnd StateAtStart Tracks</writeOnlyCollections>
+            <writeOnlyCollections>BeamCalHits EcalBarrelHits EcalEndcapHits HcalBarrelHits HcalEndcapHits HcalPlugHits LumiCalHits MCParticle MCParticleEndPointEnergy MCParticles_gghad MuonBarrelHits MuonEndcapHits SiTrackerBarrelHits SiTrackerEndcapHits SiTrackerForwardHits SiVertexBarrelHits SiVertexEndcapHits HelicalTrackHits HelicalTrackMCRelations StateAtECal StateAtEnd StateAtStart Tracks</writeOnlyCollections>
             <outputFilePath>__outputFile__.slcio</outputFilePath>
         </driver>
     </drivers>

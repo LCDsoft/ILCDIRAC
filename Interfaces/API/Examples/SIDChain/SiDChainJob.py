@@ -177,10 +177,11 @@ if prodID:      # use a production id to define the lfnlist
 			print '\t%s: %s'%( key, value[0] )
 	if metaData['Datatype'][0] == 'SIM':
 		slicVer = ''		# data has been simulated, can skip SLIC step
-	if metaData['EvtType']:
+	if metaData['EvtType'] and not process:
 		process = metaData['EvtType'][0]
 	if slicVer and metaData['NumberOfEvents']:
-		nEvts = metaData['NumberOfEvents'][0]
+		if nEvts < 1:
+			nEvts = int(metaData['NumberOfEvents'][0])
 	result = fileCatalog.findFilesByMetadata( meta )
 	if not result['OK']:
 		print "Error looking up the file catalog for metadata"
