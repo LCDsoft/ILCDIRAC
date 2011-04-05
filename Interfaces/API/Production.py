@@ -28,17 +28,14 @@ class Production(ILCJob):
     """
     ILCJob.__init__(self, script)
     self.prodVersion = __RCSID__
-    self.csSection = '/Production/Defaults'
+    self.csSection = '/Operations/Production/Defaults'
     self.StepCount = 0
     self.currentStepPrefix = ''
-    self.inputDataType = 'STDHEP' #Default
     self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection), 'x86_64-slc5-gcc43-opt')
-    self.inputDataDefault = gConfig.getValue('%s/InputDataDefault' %(self.csSection), '/ilc/prod/clic/3tev/gen/bb/0/BS_01.stdhep')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.ioDict = {}
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction']
-    self.pluginsTriggeringStreamTypes = ['ByFileTypeSize', 'ByRunFileTypeSize', 'ByRun', 'AtomicRun']
     self.name = 'unspecifiedWorkflow'
     self.firstEventType = ''
     self.prodGroup = ''
