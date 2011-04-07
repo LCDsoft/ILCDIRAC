@@ -12,7 +12,7 @@ Script.registerSwitch("P:","platform=","Platform")
 Script.registerSwitch("N:","name=","Application name")
 Script.registerSwitch("V:","version=","Version")
 Script.registerSwitch("C:","comment=","Comment")
-Script.setUsageMessage( sys.argv[0]+'-P x86_64-slc5-gcc43-opt -N Marlin -V v0111pre02 -C "Some Comment"' )
+Script.setUsageMessage( sys.argv[0]+' -P x86_64-slc5-gcc43-opt -N Marlin -V v0111pre02 -C "Some Comment"' )
 
 Script.parseCommandLine( ignoreErrors = True )
 switches = Script.getUnprocessedSwitches()
@@ -73,11 +73,11 @@ def upload(path,appTar):
     return S_ERROR()
   else:
     lfnpath = "%s%s"%(path,appTar)
-    res = rm.putAndRegister(lfnpath,appTar,"CERN-SRM")
+    res = rm.putAndRegister(lfnpath,appTar,"IN2P3-SRM")
     if not res['OK']:
       return res
     res = request.addSubRequest({'Attributes':{'Operation':'replicateAndRegister',
-                                               'TargetSE':'IN2P3-SRM','ExecutionOrder':0}},
+                                               'TargetSE':'CERN-SRM','ExecutionOrder':0}},
                                  'transfer')
     #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
     if not res['OK']:
