@@ -45,6 +45,8 @@ class OverlayInput (ModuleBase):
 
 
   def applicationSpecificInputs(self):
+    for key,val in self.step_commons.items():
+      self.log.info("%s=%s" % (key, val))
     if self.step_commons.has_key('Detector'):
       self.detector = self.step_commons['Detector']
     else:
