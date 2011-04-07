@@ -154,11 +154,9 @@ class OverlayInput (ModuleBase):
         error_count += 1 
         time.sleep(60)
         continue
-      if not res['Value'].has_key('Running'):
-        error_count += 1 
-        time.sleep(60)
-        continue
-      running = res['Value']['Running']
+      running = 0
+      if res['Value'].has_key('Running'):
+        running = res['Value']['Running']
       if running < max_concurrent_running:
         break
       else:
