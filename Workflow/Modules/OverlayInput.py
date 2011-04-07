@@ -151,6 +151,7 @@ class OverlayInput (ModuleBase):
       jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
       res = jobMonitor.getCurrentJobCounters({'ApplicationStatus':'Getting overlay files'})
       if not res['OK']:
+        error_count += 1 
         time.sleep(60)
         continue
       if not res['Value'].has_key('Running'):
