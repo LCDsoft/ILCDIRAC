@@ -1,8 +1,13 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
 Created on Dec 20, 2010
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id: $"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase

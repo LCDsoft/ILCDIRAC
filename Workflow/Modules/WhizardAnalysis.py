@@ -1,4 +1,6 @@
-
+########################################################################
+# $HeadURL$
+########################################################################
 '''
 Whizard analysis module. Called by Job Agent. 
 
@@ -6,6 +8,9 @@ Created on Sep 22, 2010
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id$"
+
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea

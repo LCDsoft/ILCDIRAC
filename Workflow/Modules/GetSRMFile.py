@@ -1,9 +1,14 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
+Module that gets a file from its SRM definition
+
 Created on Aug 27, 2010
 
 @author: sposs
 '''
-__RCSID__ = "$Id: GetSRMFile.py sposs$"
+__RCSID__ = "$Id: $"
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 

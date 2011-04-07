@@ -1,11 +1,11 @@
 ########################################################################
-# $Id: UserJobFinalization.py,v 1.17 2009/07/29 14:06:24 paterson Exp $
+# $HeadURL: $
 ########################################################################
 """ Module to upload specified job output files according to the parameters
     defined in the user workflow.
 """
 
-__RCSID__ = "$Id: UserJobFinalization.py,v 1.17 2009/07/29 14:06:24 paterson Exp $"
+__RCSID__ = "$Id: $"
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer

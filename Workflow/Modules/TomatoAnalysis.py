@@ -1,8 +1,14 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
 Created on Feb 24, 2011
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id: $"
+
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareTomatoSalad,GetNewLDLibs

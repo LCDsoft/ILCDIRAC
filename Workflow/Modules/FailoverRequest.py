@@ -1,11 +1,11 @@
 ########################################################################
-# $Id: FailoverRequest.py 28901 2010-10-04 15:18:15Z paterson $
+# $HeadURL: $
 ########################################################################
 """ Create and send a combined request for any pending operations at
     the end of a job.
 """
 
-__RCSID__ = "$Id: FailoverRequest.py 28901 2010-10-04 15:18:15Z paterson $"
+__RCSID__ = "$Id: $"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
