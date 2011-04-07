@@ -1,8 +1,14 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
 Created on Jan 27, 2011
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id: $"
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
@@ -64,13 +70,15 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.evttype = self.step_commons['BkgEvtType']  
       
-    if self.InputData:
+    if len(self.InputData):
       res = getNumberOfevents(self.InputData)
       if res.has_key("nbevts"):
-        self.nbsigeventsperfile=res["nbevts"]
+        self.nbsigeventsperfile = res["nbevts"]
       else:
         return S_ERROR("Could not find number of signal events per input file")
       self.nbinputsigfile = len(self.InputData.split(";"))
+    if not self.nsigevts and not self.nbsigeventsperfile:
+      return S_ERROR("Could not determine the number of signal events per input file")
     return S_OK("Input variables resolved")
 
   def __getFilesFromFC(self):
