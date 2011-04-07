@@ -72,7 +72,7 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.evttype = self.step_commons['BkgEvtType']  
       
-    if len(self.InputData):
+    if len(self.InputData.rstrip()) : 
       res = getNumberOfevents(self.InputData)
       if res.has_key("nbevts"):
         self.nbsigeventsperfile = res["nbevts"]
