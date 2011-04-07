@@ -1,3 +1,6 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
 ILCDIRAC.Workflow.Modules.SLICAnalysis Called by Job Agent. 
 
@@ -5,6 +8,10 @@ ILCDIRAC.Workflow.Modules.SLICAnalysis Called by Job Agent.
 
 @author: Stephane Poss
 '''
+
+__RCSID__ = "$Id: $"
+
+
 import os,sys,re, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient

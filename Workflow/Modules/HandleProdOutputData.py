@@ -1,8 +1,16 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
+Module that handles production data: not used
+
 Created on May 31, 2010
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id: $"
+
 import os,string, random
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC.Resources.Catalog.FileCatalogClient            import FileCatalogClient

@@ -1,11 +1,11 @@
 ########################################################################
-# $Id: UploadOutputData.py 25072 2010-05-11 12:18:24Z paterson $
+# $HeadURL: $
 ########################################################################
 """ Module to upload specified job output files according to the parameters
     defined in the production workflow.
 """
 
-__RCSID__ = "$Id: UploadOutputData.py 25072 2010-05-11 12:18:24Z paterson $"
+__RCSID__ = "$Id:  $"
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer

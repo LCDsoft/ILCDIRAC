@@ -1,3 +1,6 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
 ILCDIRAC.Workflow.Modules.RootMacroAnalysis
 
@@ -7,6 +10,8 @@ Module to run root macros
 
 @author: Stephane Poss
 '''
+__RCSID__ = "$Id: $"
+
 import os,sys
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase

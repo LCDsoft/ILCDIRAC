@@ -1,8 +1,15 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
+Dummy module that prints out the workflow parameters
+
 Created on Mar 11, 2011
 
 @author: sposs
 '''
+__RCSID__ = "$Id: $"
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 

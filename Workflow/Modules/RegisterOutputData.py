@@ -1,8 +1,13 @@
+#####################################################
+# $HeadURL$
+#####################################################
 '''
 Created on Sep 8, 2010
 
 @author: sposs
 '''
+__RCSID__ = "$Id$"
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 

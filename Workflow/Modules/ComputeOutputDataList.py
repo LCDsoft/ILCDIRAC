@@ -1,9 +1,16 @@
+#####################################################
+# $HeadURL: $
+#####################################################
 '''
+Module to compute the outputdata list for production jobs
+
 Created on Jun 30, 2010
 
 @author: sposs
 '''
-__RCSID__ = "$Id: ComputeOutputDataList sposs"
+
+__RCSID__ = "$Id: $"
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
 from DIRAC import gLogger, S_OK

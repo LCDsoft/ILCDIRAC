@@ -1,5 +1,7 @@
+##############################################################
 # $HeadURL$
-# $Id$
+##############################################################
+
 '''
 ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
@@ -9,6 +11,9 @@ Define the Marlin analysis part of the workflow
 
 @author: Stephane Poss and Przemyslaw Majewski
 '''
+
+__RCSID__ = "$Id$"
+
 import os,sys,re,string, shutil
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall

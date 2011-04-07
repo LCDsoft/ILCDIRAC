@@ -1,5 +1,6 @@
+#####################################################
 # $HeadURL$
-# $Id$
+#####################################################
 '''
 Mokka analysis module. Called by Job Agent. 
 
@@ -7,6 +8,9 @@ Mokka analysis module. Called by Job Agent.
 
 @author: Stephane Poss and Przemyslaw Majewski
 '''
+
+__RCSID__ = "$Id$"
+
 from DIRAC.Core.Utilities.Subprocess                     import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
