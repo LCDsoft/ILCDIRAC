@@ -7,6 +7,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
+from DIRAC.Core.DISET.RPCClient                  import RPCClient
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 from math import ceil
@@ -127,6 +128,31 @@ class OverlayInput (ModuleBase):
     maxNbFilesToGet = res['Value']
     if totnboffilestoget>maxNbFilesToGet+1:
       totnboffilestoget=maxNbFilesToGet+1
+    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
+    max_concurrent_running = res['Value']
+
+    ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
+    error_count = 0
+
+    while 1:
+      if error_count > 10 :
+        self.log.error('JobDB Content does not return expected dictionary')
+        return S_ERROR('Failed to get number of concurrent overlay jobs')
+      jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
+      res = jobMonitor.getCurrentJobCounters({'ApplicationStatus':'Getting overlay files'})
+      if not res['OK']:
+        time.sleep(60)
+        continue
+      if not res['Value'].has_key('Running'):
+        error_count += 1 
+        time.sleep(60)
+        continue
+      running = res['Value']['Running']
+      if running < max_concurrent_running:
+        break
+      else:
+        time.sleep(60)        
+    self.setApplicationStatus('Getting overlay files')
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
     
@@ -135,11 +161,11 @@ class OverlayInput (ModuleBase):
     os.chdir("./overlayinput_"+self.evttype)
     filesobtained = []
     usednumbers = []
+      
     while len(filesobtained) < totnboffilestoget:
       fileindex = random.randrange(nbfiles)
-      if fileindex not in usednumbers:
+      if fileindex not in usednumbers:        
         usednumbers.append(fileindex)
-        self.setApplicationStatus('Getting file')
         res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
@@ -179,7 +205,7 @@ class OverlayInput (ModuleBase):
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
       return S_OK('OverlayInput should not proceed as previous step did not end properly')
-    self.setApplicationStatus('Getting file list')
+    self.setApplicationStatus('Starting up Overlay')
     res = self.__getFilesFromFC()
     if not res['OK']:
       self.setApplicationStatus('OverlayProcessor failed to get file list')
