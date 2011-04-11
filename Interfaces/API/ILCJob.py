@@ -236,7 +236,7 @@ class ILCJob(Job):
               "randomseed":randomseed, "energy":energy, "lumi":lumi, "nbevts":nbevts,
               "jobindex":jobindex, 'logFile':logFile, "logInOutputData":logInOutputData, "debug":debug}
     if not self.processlist:
-      return self._reportError('Process list was not passed, please define job = ILCJob(processlist=dirac.giveProcessList()).', 
+      return self._reportError('Process list was not passed, please define job = ILCJob(processlist=dirac.getProcessList()).', 
                                __name__, **kwargs)
     if process:
       if not self.processlist.existsProcess(process)['Value']:
