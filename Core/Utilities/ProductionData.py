@@ -97,7 +97,7 @@ def constructProductionLFNs(paramDict):
 
   #Get log file path - unique for all modules
   #logPath = _makeProductionPath(str(jobID).zfill(8),lfnRoot,'LOG',wfLfnprefix,str(productionID).zfill(8),log=True)
-  logPathtemp = fileTuple[0].split("/")
+  logPathtemp = fileTupleList[0][0].split("/")
   logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1],"/")
   logPath = logPathroot+"/LOG/"+str(productionID).zfill(8)
   logFilePath = ['%s/%s' %(logPath,str(int(jobID)/1000).zfill(3))]
