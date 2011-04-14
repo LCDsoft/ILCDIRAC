@@ -57,7 +57,7 @@ class ILCJob(Job):
     if processlist:
       self.processlist = processlist
     else:
-      self.log.warning('Process list was not given, limited WHIZARD functionality') 
+      self.log.warn('Process list was not given, limited WHIZARD functionality') 
     self.prodparameters = {}
 
   def setApplicationScript(self, appName, appVersion, script, arguments=None, log=None, logInOutputData=False):
@@ -261,6 +261,7 @@ class ILCJob(Job):
       if not susymodel == "slsqhh" and not susymodel == 'chne':
         self._reportError("susymodel must be either slsqhh or chne")
 
+    self.StepCount += 1
 
     if logFile:
       if type(logFile) in types.StringTypes:
@@ -268,7 +269,7 @@ class ILCJob(Job):
       else:
         return self._reportError('Expected string for log file name', __name__, **kwargs)
     else:
-      logName = 'Whizard_%s.log' % (version)
+      logName = 'Whizard_%s_%s.log' % (version,self.StepCount)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
     if in_file:
@@ -335,7 +336,6 @@ class ILCJob(Job):
     res = 'LFN:' + res
     self.addToInputSandbox.append(res)
 
-    self.StepCount += 1
     stepName = 'RunWhizard'
     stepNumber = self.StepCount
     stepDefn = '%sStep%s' % ('Whizard', stepNumber)
@@ -438,13 +438,15 @@ class ILCJob(Job):
     if not NbEvts:
       return self._reportError("Number of events to keep must be specified", __name__, **kwargs)
 
+    self.StepCount += 1
+
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
       else:
         return self._reportError('Expected string for log file name', __name__, **kwargs)
     else:
-      logName = 'PostGenSel_%s.log' % (appVersion)
+      logName = 'PostGenSel_%s_%s.log' % (appVersion,self.StepCount)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
 
@@ -452,7 +454,6 @@ class ILCJob(Job):
       if inputStdhep.lower().count("lfn:") or os.path.exists(inputStdhep):
         self.addToInputSandbox.append(inputStdhep)
 
-    self.StepCount += 1
     stepName = 'RunPostGenSel'
     stepNumber = self.StepCount
     stepDefn = '%sStep%s' % ('PostGenSel', stepNumber)
@@ -604,7 +605,7 @@ class ILCJob(Job):
       else:
         return self._reportError('Expected string for log file name', __name__, **kwargs)
     else:
-      logName = 'Mokka_%s.log' % (appVersion)
+      logName = 'Mokka_%s_%s.log' % (appVersion,self.StepCount)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
 
@@ -833,6 +834,10 @@ class ILCJob(Job):
         for file in inputslcio:
           self._addFileToInputSandbox( file, 'SLCIO file' )
 
+    # Add count to number of steps
+
+    self.StepCount += 1
+
 
     # Log file
     #---------------------------------------------------------------------------
@@ -840,7 +845,7 @@ class ILCJob(Job):
     if logFile:
       self._checkArgs( { 'logFile' : types.StringTypes } )
     else:
-      logFile = 'Marlin_%s.log' % appVersion
+      logFile = 'Marlin_%s_%s.log' % ( appVersion, self.StepCount )
 
     if not logInOutputData:
       self._addFileToOutputSandbox( logFile, 'Log file for application stdout' )
@@ -856,9 +861,6 @@ class ILCJob(Job):
     # 7. Install software
     # 8. Set ioDict to pass parameters to future steps
 
-    # Add count to number of steps
-
-    self.StepCount += 1
 
     #--------------------------
     # 1. Create Step definition
@@ -1050,7 +1052,7 @@ class ILCJob(Job):
       else:
         return self._reportError('Expected string for log file name', __name__, **kwargs)
     else:
-      logName = 'SLIC_%s.log' % (appVersion)
+      logName = 'SLIC_%s_%s.log' % ( appVersion, self.StepCount )
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
 
@@ -1205,15 +1207,6 @@ class ILCJob(Job):
       else:
         return self._reportError("Could not find alias properties files specified %s" % (aliasproperties), __name__, **kwargs)
 
-    if logFile:
-      if type(logFile) in types.StringTypes:
-        logName = logFile
-      else:
-        return self._reportError('Expected string for log file name', __name__, **kwargs)
-    else:
-      logName = 'LCSIM_%s.log' % (appVersion)
-    if not logInOutputData:
-      self.addToOutputSandbox.append(logName)
       
     if not xmlfile.lower().count('lfn:'):  
       res = CheckXMLValidity(xmlfile)
@@ -1230,6 +1223,18 @@ class ILCJob(Job):
     self.StepCount += 1
     stepName = 'RunLCSIM'
     stepNumber = self.StepCount
+
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name', __name__, **kwargs)
+    else:
+      logName = 'LCSIM_%s_%s.log' % (appVersion,stepNumber)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
+    
+    
     stepDefn = '%sStep%s' % ('LCSIM', stepNumber)
     self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
 
@@ -1378,17 +1383,18 @@ class ILCJob(Job):
     if not type(debug) == types.BooleanType:
       return self._reportError('Expected bool for debug', __name__, **kwargs)
 
+    self.StepCount += 1
+
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
       else:
         return self._reportError('Expected string for log file name', __name__, **kwargs)
     else:
-      logName = 'SLICPandora_%s.log' % (appVersion)
+      logName = 'SLICPandora_%s_%s.log' % (appVersion,self.StepCount)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
 
-    self.StepCount += 1
     stepName = 'RunSLICPandora'
     stepNumber = self.StepCount
     stepDefn = '%sStep%s' % ('SLICPandora', stepNumber)
@@ -1580,17 +1586,18 @@ class ILCJob(Job):
     else:
       return self._reportError("Could not find specified macro %s" % scriptpath, __name__, **kwargs)
 
+    self.StepCount += 1
+
     if logFile:
       if type(logFile) in types.StringTypes:
         logName = logFile
       else:
         return self._reportError('Expected string for log file name', __name__, **kwargs)
     else:
-      logName = 'ROOT_%s.log' % (appVersion)
+      logName = 'ROOT_%s_%s.log' % (appVersion,self.StepCount)
     if not logInOutputData:
       self.addToOutputSandbox.append(logName)
 
-    self.StepCount += 1
     stepName = 'RunRootMacro'
     stepNumber = self.StepCount
     stepDefn = '%sStep%s' %('RootMacro', stepNumber)
