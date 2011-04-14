@@ -618,18 +618,20 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
           writerfound = True
           continue
         if driver.attrib['name']=="RECWriter" and outputRECFile:
+          driver.remove(driver.find('outputFilePath'))
           outputelem = Element("outputFilePath")
           outputelem.text = outputRECFile
           driver.append(outputelem)
           recwriterfound = True
           continue
         if driver.attrib['name']=="DSTWriter" and outputDSTFile:
+          driver.remove(driver.find('outputFilePath'))
           outputelem = Element("outputFilePath")
           outputelem.text = outputDSTFile
           driver.append(outputelem)
           dstwriterfound = True
           continue
-  if not writerfound:
+  if not writerfound and outputFile:
     drivers = tree.find("drivers")
     propdict = {}
     propdict['name']='Writer'
