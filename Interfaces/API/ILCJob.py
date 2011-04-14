@@ -1060,6 +1060,8 @@ class ILCJob(Job):
       if os.path.exists(macFile):
         self.log.verbose('Found specified mac file %s' % macFile)
         self.addToInputSandbox.append(macFile)
+      elif macFile.lower().count("lfn:"):
+        self.addToInputSandbox.append(macFile)
       else:
         return self._reportError('Specified mac file %s does not exist' % (macFile), __name__, **kwargs)
 
