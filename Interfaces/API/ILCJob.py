@@ -1282,9 +1282,9 @@ class ILCJob(Job):
     if(outputFile):
       stepInstance.setValue('outputFile', outputFile)
     if(outputRECFile):
-      stepInstance.setValue('outputRECFile', outputRECFile)
+      stepInstance.setValue('outputREC', outputRECFile)
     if(outputDSTFile):
-      stepInstance.setValue('outputDSTFile', outputDSTFile)
+      stepInstance.setValue('outputDST', outputDSTFile)
 
     if aliasproperties:
       stepInstance.setValue("aliasproperties", aliasproperties)
