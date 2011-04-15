@@ -1267,9 +1267,9 @@ class ILCJob(Job):
     if outputFile:
       step.addParameter(Parameter("outputFile",       "", "string", "", "", False, False, "Name of the output file of the application"))
     if outputRECFile:
-      step.addParameter(Parameter("outputRECFile",    "", "string", "", "", False, False, "Name of the output REC file of the application"))
+      step.addParameter(Parameter("outputREC",    "", "string", "", "", False, False, "Name of the output REC file of the application"))
     if outputDSTFile:
-      step.addParameter(Parameter("outputDSTFile",    "", "string", "", "", False, False, "Name of the output DST file of the application"))
+      step.addParameter(Parameter("outputDST",    "", "string", "", "", False, False, "Name of the output DST file of the application"))
 
     step.addParameter(Parameter("debug",           False,   "bool", "", "", False, False, "Number of events to process"))
 
