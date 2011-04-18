@@ -26,9 +26,12 @@ class ProcessDB ( DB ):
     req = "SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s';"%(AppName,AppVersion)
     res = self._query( req, connection )
     if not res['OK']:
+      return S_ERROR("Could not get software")
+    if len(res['Value']):
       return res
     else:
-      return S_OK()
+      return S_ERROR("Could not find any software %s %s"%(AppName,AppVersion))
+    
       
   def getSoftwares(self):
     """ Return the list of softwares/version available, and valid
@@ -48,10 +51,10 @@ class ProcessDB ( DB ):
       req = "SELECT idDependency FROM DependencyRelation WHERE idSoftware=%s;"%(idSoftware)
       res = self._query( req, connection )
       depid = 0
-      if not res['OK']:
+      if not len(res['Value']):
           depid=0
       else:
-        depid = res['Value']
+        depid = res['Value'][0]
       app['Dependency'] = depid
       apps[idSoftware] = app
       
@@ -107,7 +110,7 @@ class ProcessDB ( DB ):
     req =  self._query( req, connection )
     if not res['OK']:
       return res
-    return res
+    return S_OK(res['Value'][0])
   
   ##################################################################
   # Setter methods
@@ -116,8 +119,8 @@ class ProcessDB ( DB ):
     """
     connection = self.__getConnection( connection )
     res = self.checkSoftware(AppName, AppVersion, connection)
-    if res:
-      return S_ERROR('Application %s, Version %s already defined in the database'%(AppVersion,AppName))
+    if res['OK']:
+      return S_ERROR('Application %s, Version %s already defined in the database'%(AppName,AppVersion))
         
     res = self._escapeString( Comment )
     if not res['OK']:
@@ -159,8 +162,8 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     req = "INSERT INTO SteeringFiles (FileName) VALUES ('%s');" % FileName
     res = self._update( req, connection )
-
-    return res   
+    res = self._query("SELECT LAST_INSERT_ID();",connection)    
+    return res
  
   
   def addProcess(self, ProcessName, ProcessDetail, WhizardVers, Template, connection = False):
@@ -213,31 +216,36 @@ class ProcessDB ( DB ):
     res = self._query( req, connection )
     if not res['OK']:
       return S_ERROR('Could not find Process %s'%ProcessName)
-    ProcessID = res['Value']
+    if not len(res['Value']):
+      return S_ERROR('Could not find Process %s'%ProcessName)
+    ProcessID = res['Value'][0]
     
     ##Create the ProcessData
     req = "INSERT INTO ProcessData (idProcesses) VALUES (%s);" % ProcessID
     res = self._update( req, connection )
+    if not res['OK']:
+      return S_ERROR("Could not insert ProcessData into DB")
     #Get that line's ID
     req = "SELECT LAST_INSERT_ID();"
     res = self._query( req, connection )
     if not res['OK']:
-      return S_ERROR('')
-    ProcessDataID = res['Value']
+      return S_ERROR('Failed to get last insert ID')
+    ProcessDataID = res['Value'][0]
     
     #Declare new production
     req = "INSERT INTO Productions (idSoftware,idProcessData,ProdID,Type) VALUES \
            ( (SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s'), \
            %d, %d, '%s');" % (AppName, AppVersion, ProcessDataID, ProdID, ProdType)
     res = self._update( req, connection ) 
-    
+    if not res['OK']:
+      return res
     ##In Case there is a steering file
     if SteeringFile:
       req = "SELECT idfiles FROM SteeringFiles WHERE FileName='%s';" % SteeringFile
       res = self._query( req, connection )
-      if not res['OK']:
+      if not len(res['Value']):
         res = self.addSteeringFile( SteeringFile, connection = connection)
-      idSteering = res['Value']
+      idSteering = res['Value'][0]
       req = "INSERT INTO SteeringFiles_has_ProcessData (idfiles,idProcessData) VALUES ( %s, %s);"% (idSteering,ProcessDataID)
       res = self._query( req, connection )
 
@@ -262,7 +270,8 @@ class ProcessDB ( DB ):
     CrossSection = CrossSection/Files
     req = "UPDATE ProcessData SET CrossSection=%s,Files=%s WHERE idProcessData=%s;" %( CrossSection, Files, processDataID)
     res = self._update( req, connection ) 
-    
+    if not res['OK']:
+      return res
     return S_OK()
 
   def changeSoftwareStatus ( self, AppName, AppVersion, Comment, Status=False, connection = False ):
@@ -287,7 +296,7 @@ class ProcessDB ( DB ):
     if not Status:
       req = "SELECT idSoftware FROM DependencyRelation WHERE idDependency = (SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s');" % (AppName,AppVersion)
       res = self._query( req, connection )
-      if not res['OK']:
+      if not res['OK'] or not len(res['Value']):
         return S_ERROR('Could not find any dependency')
       for id in res['Value']:
         req = "UPDATE Software SET Valid=FALSE,UpdateComment='Dependency inheritance',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware = %s;"%id
