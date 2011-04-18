@@ -23,9 +23,9 @@ def initializeProcessManagerHandler( serviceInfo ):
 
 class ProcessManagerHandler(RequestHandler):
 
-  types_addSoftware = [ StringTypes, StringTypes, StringTypes]
-  def export_addSoftware(self,AppName,AppVersion,Comment):
+  types_addSoftware = [ StringTypes, StringTypes, StringTypes,StringTypes]
+  def export_addSoftware(self,AppName,AppVersion,Comment,Path):
     """ Add new software in the DB
     """
-    return processDB.addSoftware(AppName,AppVersion,Comment)
+    return processDB.addSoftware(AppName,AppVersion,Comment,Path)
   
