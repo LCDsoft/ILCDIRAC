@@ -6,6 +6,7 @@
 """
 __RCSID__ = " $Id: $ "
 
+from types import *
 from DIRAC                                              import gLogger, gConfig, S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 
