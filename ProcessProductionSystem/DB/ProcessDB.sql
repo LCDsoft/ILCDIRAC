@@ -14,7 +14,7 @@ USE mysql;
 GRANT SELECT,INSERT,LOCK TABLES,UPDATE,DELETE,CREATE,DROP,ALTER ON ProcessDB.* TO Dirac@'%' IDENTIFIED BY 'must_be_set';
 FLUSH PRIVILEGES;
 
-
+use ProcessDB;
 -- -----------------------------------------------------
 -- Table Processes
 -- -----------------------------------------------------
