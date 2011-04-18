@@ -46,7 +46,7 @@ CREATE  TABLE IF NOT EXISTS Software (
   `UpdateComment` VARCHAR(255) NULL ,
   Defined DATETIME ,
   LastUpdate DATETIME ,
-  Path VARCHAR(512) NIOT NULL,
+  Path VARCHAR(512) NOT NULL,
   PRIMARY KEY (idSoftware) ,
   INDEX Application (AppName ASC, AppVersion ASC) ,
   UNIQUE INDEX idSoftware_UNIQUE (idSoftware ASC) )
