@@ -33,7 +33,7 @@ class ProcessDB ( DB ):
       return S_ERROR("Could not find any software %s %s"%(AppName,AppVersion))
     
       
-  def getSoftwares(self):
+  def getSoftwares(self,connection = False):
     """ Return the list of softwares/version available, and valid
     """
     connection = self.__getConnection( connection )
@@ -65,7 +65,7 @@ class ProcessDB ( DB ):
     """
     connection = self.__getConnection( connection )
     req = "SELECT idProcesses,ProcessName,Detail FROM Processes WHERE ProcessName='%s';"%(ProcessName)
-    req =  self._query( req, connection )
+    res =  self._query( req, connection )
     if not res['OK']:
       return res
     process= {}
@@ -92,7 +92,7 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     
   
-  def getTemplate(self, ProcessName, WhizardVersion):
+  def getTemplate(self, ProcessName, WhizardVersion, connection = False):
     """ Get the template name that describes the process specified in the whizard version specified
     """
     connection = self.__getConnection( connection )
@@ -107,7 +107,7 @@ class ProcessDB ( DB ):
     
     req = "SELECT Template FROM Processes_has_Software WHERE idProcesses = (SELECT idProcesses FROM Processes WHERE ProcessName='%s') \
            AND idSoftware = (SELECT idSoftware FROM Software WHERE AppName='Whizard' AND AppVersion='%s');"% ( ProcessName, WhizardVersion)
-    req =  self._query( req, connection )
+    res =  self._query( req, connection )
     if not res['OK']:
       return res
     return S_OK(res['Value'][0])
@@ -162,6 +162,8 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     req = "INSERT INTO SteeringFiles (FileName) VALUES ('%s');" % FileName
     res = self._update( req, connection )
+    if not res['OK']:
+      return res
     res = self._query("SELECT LAST_INSERT_ID();",connection)    
     return res
  
@@ -204,9 +206,20 @@ class ProcessDB ( DB ):
     res = self._update( req, connection )
     return res
   
-  def addProductionData(self, ProdID, ProdType, ProcessName, Path, AppName, AppVersion,  SteeringFile = None, connection = False):
+  def addProductionData(self, ProdDataDict, connection = False):
     """ Declare a new Production
     """
+    ProdID = ProdDataDict['ProdID']
+    ProdType = ProdDataDict['Type']
+    ProcessName = ProdDataDict['Process']
+    Path = ProdDataDict['Path']
+    AppName = ProdDataDict['AppName']
+    AppVersion = ProdDataDict['AppVersion']
+
+    SteeringFile = None
+    if ProdDataDict.has_key('SteeringFile'):
+      SteeringFile = ProdDataDict['SteeringFile']
+
     if not ProdType in self.ProdTypes:
       return S_ERROR("Production type %s not available"%(ProdType))
     connection = self.__getConnection( connection )
@@ -221,7 +234,7 @@ class ProcessDB ( DB ):
     ProcessID = res['Value'][0]
     
     ##Create the ProcessData
-    req = "INSERT INTO ProcessData (idProcesses) VALUES (%s);" % ProcessID
+    req = "INSERT INTO ProcessData (idProcesses,Path) VALUES (%s,'%s');" % (ProcessID,Path)
     res = self._update( req, connection )
     if not res['OK']:
       return S_ERROR("Could not insert ProcessData into DB")
@@ -253,10 +266,15 @@ class ProcessDB ( DB ):
            
   ########################################################################
   # Update methods
-  def updateCrossSection(self, ProcessName, ProdID, App, CrossSection, connection = False):
+  def updateCrossSection(self, ProcessDict, connection = False):
     """ Update the cross section of the given process in the given production
     """
     connection = self.__getConnection( connection )
+
+    #ProcessName = ProcessDict['ProcessName']
+    ProdID = ProcessDict['ProdID']
+    App = ProcessDict['AppName']
+    CrossSection = ProcessDict['CrossSection']
 
     req = "SELECT idProcessData,CrossSection,Files FROM ProcessData WHERE \
            idProcessData=(SELECT idProcessData FROM Productions WHERE ProdID=%s AND AppName=%s);"%( ProdID, App )
@@ -288,7 +306,7 @@ class ProcessDB ( DB ):
     new_status='FALSE'
     if Status:
       new_status='TRUE'
-    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE AppName='%s' AND AppVersion='%s';"%(new_status,Comment,AppName,App_Version)
+    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE AppName='%s' AND AppVersion='%s';"%(new_status,Comment,AppName,AppVersion)
     res = self._update( req, connection )
     if not res['OK']:
       return res
