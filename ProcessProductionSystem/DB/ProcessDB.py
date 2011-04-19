@@ -114,7 +114,7 @@ class ProcessDB ( DB ):
   
   ##################################################################
   # Setter methods
-  def addSoftware( self, AppName, AppVersion, Comment="", Path, connection = False ):
+  def addSoftware( self, AppName, AppVersion, Comment, Path, connection = False ):
     """ Add the specified software if it does not exist
     """
     connection = self.__getConnection( connection )
