@@ -44,7 +44,7 @@ class LCSIMAnalysis(ModuleBase):
     self.aliasproperties = ''
     self.applicationName = 'LCSIM'
     self.eventstring = ''
-
+    self.extraparams = ''
      
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -62,6 +62,8 @@ class LCSIMAnalysis(ModuleBase):
     if self.step_commons.has_key("inputSlcio"):
       self.inputSLCIO = self.step_commons["inputSlcio"]
       
+    if self.step_commons.has_key('ExtraParams'):
+      self.extraparams = self.step_commons['ExtraParams']    
 
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -218,9 +220,8 @@ class LCSIMAnalysis(ModuleBase):
     script.write('echo java version :\n')
     script.write('java -version\n')
     script.write('env | sort >> localEnv.log\n')
-    script.write('echo =========\n')
-    
-    comm = "java -Xmx2048m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s/%s %s\n"%(cachedir,mySoftwareRoot,lcsim_name,lcsimfile)
+    script.write('echo =========\n')    
+    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s/%s %s %s\n"%(cachedir,mySoftwareRoot,lcsim_name,self.extraparams,lcsimfile)
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
