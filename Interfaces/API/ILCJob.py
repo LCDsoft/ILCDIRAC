@@ -1147,7 +1147,7 @@ class ILCJob(Job):
     return S_OK()
 
   def setLCSIM(self, appVersion, xmlfile, inputslcio=None, evtstoprocess=None, aliasproperties = None,
-               outputFile = "", outputRECFile="", outputDSTFile= "", logFile='',
+               outputFile = "", extraparams='', outputRECFile="", outputDSTFile= "", logFile='',
                debug = False, logInOutputData=False):
     """Helper function.
        Define LCSIM step
@@ -1171,6 +1171,8 @@ class ILCJob(Job):
        @type aliasproperties: string
        @param logFile: Optional log file name
        @type logFile: string
+       @param extraparams: Command line parameter to pass to java
+       @type extraparams: string
        @param debug: set to True to have verbosity set to 1
        @type debug: bool
        @param logInOutputData: If set to False (default) then automatically appended to output sandbox, if True, manually add it to OutputData
@@ -1179,7 +1181,7 @@ class ILCJob(Job):
     """
     kwargs = {'appVersion':appVersion, 'xmlfile':xmlfile, 'inputslcio':inputslcio, 
               'evtstoprocess':evtstoprocess, "aliasproperties":aliasproperties,
-              'logFile':logFile, "outputFile":outputFile, "outputRECFile":outputRECFile,
+              'logFile':logFile, "outputFile":outputFile, 'extraparams':extraparams,"outputRECFile":outputRECFile,
               "outputDSTFile":outputDSTFile, 'debug':debug, 'logInOutputData':logInOutputData}
     if not type(appVersion) in types.StringTypes:
       return self._reportError('Expected string for version', __name__, **kwargs)
@@ -1263,6 +1265,8 @@ class ILCJob(Job):
     step.addParameter(Parameter("inputXML",           "", "string", "", "", False, False, "Name of the source directory to use"))
     step.addParameter(Parameter("inputSlcio",         "", "string", "", "", False, False, "Name of the input slcio file"))
     step.addParameter(Parameter("aliasproperties",    "", "string", "", "", False, False, "Name of the alias properties file"))
+    if extraparams:
+      step.addParameter(Parameter("ExtraParams",        "", "string", "", "", False, False, "Name of the alias properties file"))
     step.addParameter(Parameter("EvtsToProcess",      -1,    "int", "", "", False, False, "Number of events to process"))
     if outputFile:
       step.addParameter(Parameter("outputFile",       "", "string", "", "", False, False, "Name of the output file of the application"))
@@ -1285,10 +1289,12 @@ class ILCJob(Job):
       stepInstance.setValue('outputREC', outputRECFile)
     if(outputDSTFile):
       stepInstance.setValue('outputDST', outputDSTFile)
-
     if aliasproperties:
       stepInstance.setValue("aliasproperties", aliasproperties)
-
+    
+    if extraparams:
+      stepInstance.setValue('ExtraParams',extraparams)  
+        
     if(inputslcioStr):
       stepInstance.setValue("inputSlcio", inputslcioStr)
     else:
