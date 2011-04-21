@@ -111,7 +111,7 @@ class RootExecutableAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    script.write("chown u+x %s\n"%self.appli)
+    script.write("chmod u+x %s\n"%self.appli)
     comm = "./%s %s \n"%(self.appli,self.args)
     self.log.info("Will run %s"%(comm))
     script.write(comm)
