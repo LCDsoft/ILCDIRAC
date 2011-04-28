@@ -8,6 +8,7 @@ __RCSID__ = " $Id: $ "
 
 from DIRAC                                                             import gConfig, gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.DB                                                import DB
+from DIRAC.Core.Utilities.List                                         import stringListToString, intListToString, sortList
 
 class ProcessDB ( DB ):
   def __init__( self, maxQueueSize = 10 ):
@@ -16,14 +17,19 @@ class ProcessDB ( DB ):
     self.dbname = 'ProcessDB'
     DB.__init__( self, self.dbname, 'ProcessProduction/ProcessDB', maxQueueSize  )
     self.ProdTypes = ['MCGeneration',"MCSimulation","MCReconstruction"]
-  
+    self.SoftwareParams = ['Path','Valid','AppName','AppVersion','Platform']
+    self.ProcessDataParams = ['CrossSection','NbEvts','Path','Files','Polarisation']
+    
   ##################################################################
   ### Getter methods
-  def checkSoftware( self, AppName, AppVersion, connection = False ):
+  def checkSoftware( self, AppName, AppVersion, Platform, connection = False ):
     """ Check if specified software exists
     """
     connection = self.__getConnection( connection )
-    req = "SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s';"%(AppName,AppVersion)
+    extrareqs = ''
+    if not Platform is 'any':
+      extrareqs = " AND Platform='%s'"%Platform
+    req = "SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s' %s;"%(AppName,AppVersion, extrareqs)
     res = self._query( req, connection )
     if not res['OK']:
       return S_ERROR("Could not get software")
@@ -32,7 +38,34 @@ class ProcessDB ( DB ):
     else:
       return S_ERROR("Could not find any software %s %s"%(AppName,AppVersion))
     
-      
+  def getSoftwareParams(self,AppName,AppVersion,Platform, Params, connection = False):    
+    """ Check status of given software
+    """
+    for param in Params:
+      if not param in self.SoftwareParams:
+        return S_ERROR("Parameter %s is not valid"%param)
+    connection = self.__getConnection( connection )
+    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
+    if not res['OK']:
+      return res
+    extrareqs = ''
+    if not Platform is 'any':
+      extrareqs = " AND Platform='%s'"%Platform
+    
+    req = "SELECT %s FROM Software WHERE AppName='%s' AND AppVersion='%s' %s"%(intListToString( Params ),AppName,AppVersion,extrareqs)
+    res = self._query( req, connection )
+    if not res['OK']:
+      return res
+    reslist = []  
+    for row in res['Value']:
+      resdict = {}
+      count = 0
+      for item in row:
+        resdict[Params[count]]=item
+        count += 1
+      reslist.append(resdict)
+    return S_OK(reslist)
+  
   def getSoftwares(self,connection = False):
     """ Return the list of softwares/version available, and valid
     """
@@ -60,53 +93,107 @@ class ProcessDB ( DB ):
       
     return S_OK(apps)  
       
-  def getProcessInfo(self, ProcessName, connection = False):
+  def getProcessInfo(self, ProcessName, Params, connection = False):
     """ Get the process info 
     """
     connection = self.__getConnection( connection )
-    req = "SELECT idProcesses,ProcessName,Detail FROM Processes WHERE ProcessName='%s';"%(ProcessName)
+    req = "SELECT %s FROM Processes WHERE ProcessName='%s';"%(intListToString( Params ), ProcessName)
     res =  self._query( req, connection )
     if not res['OK']:
       return res
-    process= {}
-    for idProcess,ProcessName,Detail in res['Value']:
-      process[idProcess] = {"ProcessName":ProcessName,"Detail":Detail}
-    return S_OK(process)
-    
-  
-  def getProcessInfoForProdID(self, ProdID, connection = False):
-    """ Get the process used for the specified production ID
-    """
-    connection = self.__getConnection( connection )
-    
+    row = res['Value'][0]
+    resdict = {}
+    count = 0
+    for item in row:
+      resdict[Params[count]]=item
+      count += 1
+    return S_OK(resdict)
   
   def getProdIDsForProcess(self, ProcessName, connection = False):
     """ Get the productions that produced or used the specified process
     """
     connection = self.__getConnection( connection )
-    
+    Params = ['idProcesses']
+    res = self.getProcessInfo(ProcessName, Params, connection)
+    if not res['OK']:
+      return res
+    processID = res['Value']['idProcesses']
+    req = "SELECT ProdID,Type FROM Production WHERE idProcessData IN (SELECT idProcessData FROM ProcessData WHERE idProcesses = %s)"%(processID)
+    res =  self._query( req, connection )
+    if not res['OK']:
+      return res
+    ProdIDs = []
+    for row in res['Value']:
+      resdict = {}
+      resdict['ProdID']=row[0]
+      resdict['Type']=row[1]
+      ProdIDs.append(resdict)
+    return S_OK(ProdIDs)
   
-  def getProductionResults(self, ProdID, connection = False):
+  def getProductionResults(self, ProdID, Params, connection = False):
     """ Get the Cross Section, etc. for the specified production
     """
     connection = self.__getConnection( connection )
+    for param in Params:
+      if not param in self.ProcessDataParams:
+        return S_ERROR("%s is not valid"%param)
+
+    Params.append('idProcesses')  
+    req = 'SELECT %s FROM ProcessData WHERE idProcessData IN (SELECT idProcessData FROM Productions WHERE ProdID=%s)'%(intListToString( Params ), ProdID)
+    res =  self._query( req, connection )
+    if not res['OK']:
+      return res
     
+    row = res['Value'][0]
+    resdict = {}
+    count = 0
+    for item in row:
+      resdict[Params[count]]=item
+      count += 1
+    req = "SELECT ProcessName,Detail FROM Processes WHERE idProcesses = %s"%(resdict['idProcesses'])
+    res = self._query( req, connection )
+    if not res['OK']:
+      return res
+    row = res['Value'][0]
+    resdict['ProcessName'] = row[0]
+    resdict['Detail'] = row[1]
+    req = "SELECT Type FROM Productions WHERE ProdID=%s"%(ProdID)
+    res = self._query( req, connection )
+    if not res['OK']:
+      return res
+    row = res['Value'][0]
+    resdict['Type'] = row[0]
+    resdict['ProdID'] = ProdID
+    req = 'SELECT FileName FROM SteeringFiles WHERE idfiles IN (SELECT idfiles FROM SteeringFiles_has_ProcessData WHERE idProcessData IN (SELECT idProcessData FROM Productions WHERE ProdID=%s))'%ProdID
+    res = self._query( req, connection )
+    if not res['OK']:
+      return res
+    resdict['SteeringFile'] = []
+    for row in res['Value']:
+      if len(row):
+        resdict['SteeringFile'].append(row[0])
+    return S_OK(resdict)
   
   def getTemplate(self, ProcessName, WhizardVersion, connection = False):
     """ Get the template name that describes the process specified in the whizard version specified
     """
     connection = self.__getConnection( connection )
     ##Check that process exists
-    process = self.getProcessInfo(ProcessName, connection)
-    if not process['OK']:
+    Params = ['idProcesses','ProcessName']
+    res = self.getProcessInfo(ProcessName, Params, connection)
+    if not res['OK']:
       return S_ERROR("Process %s does not exist"%ProcessName)
+    processID = res['Value']['idProcesses']
     ##Check software
-    whizard = self.checkSoftware('Whizard', WhizardVersion, connection)
-    if not whizard['OK']:
-      return S_ERROR('Whizard %s does not exist'% WhizardVersion)
+    Params = ['idSoftware']
+    Platform = 'any'
+    res = self.getSoftwareParams('Whizard', WhizardVersion, Platform, Params, connection)
+    if not res['OK']:
+      return res
+    whizardID  = res['Value']['idProcesses']
     
-    req = "SELECT Template FROM Processes_has_Software WHERE idProcesses = (SELECT idProcesses FROM Processes WHERE ProcessName='%s') \
-           AND idSoftware = (SELECT idSoftware FROM Software WHERE AppName='Whizard' AND AppVersion='%s');"% ( ProcessName, WhizardVersion)
+    req = "SELECT Template FROM Processes_has_Software WHERE idProcesses = %s \
+           AND idSoftware = %s;"% ( processID, whizardID)
     res =  self._query( req, connection )
     if not res['OK']:
       return res
@@ -114,11 +201,11 @@ class ProcessDB ( DB ):
   
   ##################################################################
   # Setter methods
-  def addSoftware( self, AppName, AppVersion, Comment, Path, connection = False ):
+  def addSoftware( self, AppName, AppVersion, Platform, Comment, Path, connection = False ):
     """ Add the specified software if it does not exist
     """
     connection = self.__getConnection( connection )
-    res = self.checkSoftware(AppName, AppVersion, connection)
+    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
     if res['OK']:
       return S_ERROR('Application %s, Version %s already defined in the database'%(AppName,AppVersion))
         
@@ -126,21 +213,21 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return S_ERROR( "Failed to parse the Comment" )
     Comment = res['Value']  
-    req = "INSERT INTO Software (AppName,AppVersion,Comment,Path,Defined) VALUES ('%s','%s','%s','%s',UTC_TIMESTAMP());"%(AppName,AppVersion,Comment,Path)
+    req = "INSERT INTO Software (AppName,AppVersion,Platform,Comment,Path,Defined) VALUES ('%s','%s','%s','%s','%s',UTC_TIMESTAMP());"%(AppName,AppVersion,Platform,Comment,Path)
     res = self._update( req, connection )
     if not res['OK']:
       return res
     return res
   
-  def addDependency(self, AppName, AppVersion, DepName, DepVersion, autodeclare = False, connection = False):
+  def addDependency(self, AppName, AppVersion, DepName, DepVersion, Platform, autodeclare = False, connection = False):
     """ Declare a dependency between 2 softwares 
     """
     connection = self.__getConnection( connection )
-    res = self.checkSoftware(AppName, AppVersion, connection)
+    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
     if not res:
       return S_ERROR('Application %s, Version %s not defined in the database'%(AppVersion,AppName))
-    appid = res['Value']
-    res = self.checkSoftware(DepName, DepVersion, connection)
+    appid = res['Value'][0][0]
+    res = self.checkSoftware(DepName, DepVersion, Platform, connection)
     if not res:
       if autodeclare:
         return S_ERROR("Auto declare of dependencies not implemented, please unset autodeclare.")
@@ -149,8 +236,8 @@ class ProcessDB ( DB ):
         #  return S_ERROR("Could not add dependency %s %s" % ( DepName, DepVersion) )
       else:
         return S_ERROR('Dependency %s, Version %s not defined in the database'%(DepVersion,DepName))
-    depid = res['Value']  
-    req = "INSERT INTO DependencyRelation VALUES (%s,%s);"%(appid,depid)
+    depid = res['Value'][0][0]
+    req = "INSERT INTO DependencyRelation (idSoftware,idDependency) VALUES (%s,%s);"%(appid,depid)
     res = self._update( req, connection )
     if not res['OK']:
       return res
@@ -164,8 +251,7 @@ class ProcessDB ( DB ):
     res = self._update( req, connection )
     if not res['OK']:
       return res
-    res = self._query("SELECT LAST_INSERT_ID();",connection)    
-    return res
+    return S_OK(res['lastRowId'])
  
   
   def addProcess(self, ProcessName, ProcessDetail, WhizardVers, Template, connection = False):
@@ -178,8 +264,9 @@ class ProcessDB ( DB ):
     Template = res['Value']  
     
     ##Will need the row where the Process is, and create it is needed.
-    processID = None
-    res = self.getProcessInfo(ProcessName, connection)
+    ProcessID = None
+    Params = ['idProcesses','ProcessName','Detail']
+    res = self.getProcessInfo(ProcessName, Params, connection)
     if not res['OK']:
       ## Add process in DB
       req = "INSERT INTO Processes (ProcessName,Detail) VALUES ('%s','%s');" % (ProcessName, ProcessDetail)
@@ -187,20 +274,19 @@ class ProcessDB ( DB ):
       if not res['OK']:
         return res
       #Get the ProcessID: last row inserted
-      req = "SELECT LAST_INSERT_ID()"
-      res = self._update( req, connection )
-      if not res['OK']:
-        return res
-      ProcessID = res['Value']
+      ProcessID = res['lastRowId']
     else:
-      ProcessID,ProcessName,ProcessDetail = res['Value']
+      ProcessID = res['Value']['idProcesses']
+      ProcessName = res['Value']['ProcessName']
+      ProcessDetail = res['Value']['Detail']
         
     ##Get the software ID
-    req = "SELECT idSoftware FROM Softwares WHERE AppName='Whizard' AND AppVersion='%s';"%(WhizardVers)
+    req = "SELECT idSoftware FROM Software WHERE AppName='Whizard' AND AppVersion='%s';"%(WhizardVers)
     res = self._query( req, connection )
     if not res['OK']:
-      return S_ERROR('Whizard version %s not found in DB, make sure you declared it')
-    SoftwareID = res['Value']
+      return S_ERROR('Whizard version %s not found in DB, make sure you declared it'%(WhizardVers))
+    row = res['Value'][0]
+    SoftwareID = row[0]
     
     req = "INSERT INTO Processes_has_Software (idProcesses,idSoftware,Template) VALUES ( %s, %s, '%s');"% (ProcessID,SoftwareID,Template) 
     res = self._update( req, connection )
@@ -215,23 +301,31 @@ class ProcessDB ( DB ):
     Path = ProdDataDict['Path']
     AppName = ProdDataDict['AppName']
     AppVersion = ProdDataDict['AppVersion']
-
+    Platform   = ProdDataDict['Platform']
     SteeringFile = None
     if ProdDataDict.has_key('SteeringFile'):
       SteeringFile = ProdDataDict['SteeringFile']
+    InheritsFrom = None
+    if ProdDataDict.has_key('InheritsFrom'):
+      InheritsFrom = ProdDataDict['InheritsFrom']
 
     if not ProdType in self.ProdTypes:
       return S_ERROR("Production type %s not available"%(ProdType))
     connection = self.__getConnection( connection )
     
     #Get the ProcessID
-    req = "SELECT idProcesses FROM Processes WHERE ProcessName='%s';"% ( ProcessName )
-    res = self._query( req, connection )
+    Params = ['idProcesses']
+    res = self.getProcessInfo(ProcessName, Params, connection)
     if not res['OK']:
-      return S_ERROR('Could not find Process %s'%ProcessName)
-    if not len(res['Value']):
-      return S_ERROR('Could not find Process %s'%ProcessName)
-    ProcessID = res['Value'][0]
+      return res
+    ProcessID = res['Value']['idProcesses']
+    
+    ##Get Software ID
+    Params = ['idSoftware']
+    res = self.getSoftwareParams(AppName, AppVersion, Platform, Params, connection)
+    if not res['OK']:
+      return res
+    SoftwareID = res['Value']['idSoftware']
     
     ##Create the ProcessData
     req = "INSERT INTO ProcessData (idProcesses,Path) VALUES (%s,'%s');" % (ProcessID,Path)
@@ -239,19 +333,19 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return S_ERROR("Could not insert ProcessData into DB")
     #Get that line's ID
-    req = "SELECT LAST_INSERT_ID();"
-    res = self._query( req, connection )
-    if not res['OK']:
-      return S_ERROR('Failed to get last insert ID')
-    ProcessDataID = res['Value'][0]
+    #req = "SELECT LAST_INSERT_ID();"
+    #res = self._query( req, connection )
+    #if not res['OK']:
+    #  return S_ERROR('Failed to get last insert ID')
+    ProcessDataID = res['lastRowId']
     
     #Declare new production
     req = "INSERT INTO Productions (idSoftware,idProcessData,ProdID,Type) VALUES \
-           ( (SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s'), \
-           %d, %d, '%s');" % (AppName, AppVersion, ProcessDataID, ProdID, ProdType)
+           ( %d, %d, %d, '%s');" % (SoftwareID, ProcessDataID, ProdID, ProdType)
     res = self._update( req, connection ) 
     if not res['OK']:
       return res
+    prod_insert_ID = res['lastRowId']
     ##In Case there is a steering file
     if SteeringFile:
       req = "SELECT idfiles FROM SteeringFiles WHERE FileName='%s';" % SteeringFile
@@ -260,8 +354,12 @@ class ProcessDB ( DB ):
         res = self.addSteeringFile( SteeringFile, connection = connection)
       idSteering = res['Value'][0]
       req = "INSERT INTO SteeringFiles_has_ProcessData (idfiles,idProcessData) VALUES ( %s, %s);"% (idSteering,ProcessDataID)
-      res = self._query( req, connection )
-
+      res = self._update( req, connection )
+    if InheritsFrom:
+      req = 'INSERT INTO ProductionRelation (idMotherProd,idDaughterProd) VALUES ((SELECT idProduction FROM Productions WHERE ProdID=%s),%s)'%(InheritsFrom,prod_insert_ID)
+      res = self._update( req, connection )
+      if not res['OK']:
+        return res
     return S_OK()  
            
   ########################################################################
@@ -273,26 +371,38 @@ class ProcessDB ( DB ):
 
     #ProcessName = ProcessDict['ProcessName']
     ProdID = ProcessDict['ProdID']
-    App = ProcessDict['AppName']
-    CrossSection = ProcessDict['CrossSection']
+    AppName = ProcessDict['AppName']
+    AppVersion = ProcessDict['AppVersion']
+    Platform = ProcessDict['Platform']
+    Params = ['idSoftware']
+    res = self.getSoftwareParams(AppName, AppVersion, Platform, Params, connection)
+    if not res['OK']:
+      return res    
+    SoftwareID= res['Value']['idSoftware']
 
+    CrossSection = ProcessDict['CrossSection']
+    
     req = "SELECT idProcessData,CrossSection,Files FROM ProcessData WHERE \
-           idProcessData=(SELECT idProcessData FROM Productions WHERE ProdID=%s AND AppName=%s);"%( ProdID, App )
+           idProcessData IN (SELECT idProcessData FROM Productions \
+           WHERE ProdID=%s AND idSoftware = %d);"%( ProdID, SoftwareID)
     res = self._query( req, connection )
     if not res['OK']:
       return S_ERROR("Could not find matching ProcessData for Production %s" % ProdID)
-    processDataID,OldCrossSection,OldFiles = res['Value']
-    temp_crosssection = OldCrossSection*OldFiles
-    Files = OldFiles + 1
-    CrossSection += temp_crosssection
-    CrossSection = CrossSection/Files
-    req = "UPDATE ProcessData SET CrossSection=%s,Files=%s WHERE idProcessData=%s;" %( CrossSection, Files, processDataID)
-    res = self._update( req, connection ) 
-    if not res['OK']:
-      return res
+    for row in res['Value']:
+      processDataID,OldCrossSection,OldFiles = row
+      if OldFiles == None:
+        OldFiles = 0
+      temp_crosssection = OldCrossSection*OldFiles
+      Files = OldFiles + 1
+      CrossSection += temp_crosssection
+      CrossSection = CrossSection/Files
+      req = "UPDATE ProcessData SET CrossSection=%s,Files=%s WHERE idProcessData=%s;" %( CrossSection, Files, processDataID)
+      res = self._update( req, connection ) 
+      if not res['OK']:
+        return res
     return S_OK()
 
-  def changeSoftwareStatus ( self, AppName, AppVersion, Comment, Status=False, connection = False ):
+  def changeSoftwareStatus ( self, AppName, AppVersion, Platform, Comment, Status=False, connection = False ):
     """ Change validity of software
     """
     connection = self.__getConnection( connection )
@@ -300,19 +410,19 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return S_ERROR( "Failed to parse the Comment" )
     Comment = res['Value']      
-    res = self.checkSoftware(AppName, AppVersion, connection)
-    if not res:
-      return S_ERROR('Application %s, Version %s not defined in the database'%(AppVersion,AppName))
+    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
+    if not res['OK']:
+      return res
     new_status='FALSE'
     if Status:
       new_status='TRUE'
-    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE AppName='%s' AND AppVersion='%s';"%(new_status,Comment,AppName,AppVersion)
+    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE AppName='%s' AND AppVersion='%s' AND Platform='%s';"%(new_status,Comment,AppName,AppVersion,Platform)
     res = self._update( req, connection )
     if not res['OK']:
       return res
     ##Now update also dependent software (Only to FALSE)
     if not Status:
-      req = "SELECT idSoftware FROM DependencyRelation WHERE idDependency = (SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s');" % (AppName,AppVersion)
+      req = "SELECT idSoftware FROM DependencyRelation WHERE idDependency = (SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s' AND Platform='%s');" % (AppName,AppVersion,Platform)
       res = self._query( req, connection )
       if not res['OK'] or not len(res['Value']):
         return S_ERROR('Could not find any dependency')
