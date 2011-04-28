@@ -41,6 +41,7 @@ CREATE  TABLE IF NOT EXISTS Software (
   idSoftware INT NOT NULL AUTO_INCREMENT ,
   AppName VARCHAR(45) NOT NULL ,
   AppVersion VARCHAR(45) NOT NULL ,
+  Platform   VARCHAR(45) NOT NULL ,
   Valid TINYINT(1)  NOT NULL DEFAULT TRUE ,
   `Comment` VARCHAR(255) NULL ,
   `UpdateComment` VARCHAR(255) NULL ,
@@ -87,7 +88,7 @@ CREATE  TABLE IF NOT EXISTS ProcessData (
   CrossSection DOUBLE(10,6) NULL DEFAULT 0 ,
   Path VARCHAR(255) NULL ,
   NbEvts INT NULL DEFAULT 0 ,
-  Files INT NULL ,
+  Files INT NULL DEFAULT 0 ,
   idProcessData INT NOT NULL AUTO_INCREMENT ,
   idProcesses INT NOT NULL ,
   Polarisation VARCHAR(10) NULL ,
@@ -170,7 +171,7 @@ ENGINE = MyISAM;
 
 
 -- -----------------------------------------------------
--- Table ProcessDB.SteeringFiles_has_ProcessData
+-- Table ProcessDB.DependencyRelation
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `DependencyRelation` ;
 
@@ -193,4 +194,28 @@ CREATE  TABLE IF NOT EXISTS `DependencyRelation` (
     ON UPDATE NO ACTION)
 ENGINE = MyISAM;
 
+-- -----------------------------------------------------
+-- Table ProcessDB.ProductionRelation
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `ProductionRelation` ;
+
+CREATE TABLE IF NOT EXISTS `ProductionRelation` (
+  idRelation INT NOT NULL AUTO_INCREMENT,
+  idMotherProd INT NOT NULL,
+  idDaughterProd INT NOT NULL,
+  PRIMARY KEY (idRelation),
+  INDEX Daughter (idDaughterProd ASC),
+  INDEX Mother (idMotherProd ASC),
+  CONSTRAIN `mother_daugher`
+    FOREIGN KEY (idMotherProd)
+    REFERENCES Productions (idProduction)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAIN `daugher_mother`
+    FOREIGN KEY (idDaughterProd)
+    REFERENCES Productions (idProduction)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = MyISAM;
+  
 
