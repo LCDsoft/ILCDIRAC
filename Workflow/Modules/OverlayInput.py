@@ -221,7 +221,7 @@ class OverlayInput (ModuleBase):
     res = self.__getFilesFromFC()
     if not res['OK']:
       self.setApplicationStatus('OverlayProcessor failed to get file list')
-      return S_ERROR('OverlayProcessor failed to get file list')
+      return res
 
     self.lfns=  res['Value']
     if not len(self.lfns):
