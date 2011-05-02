@@ -139,11 +139,12 @@ class OverlayInput (ModuleBase):
     if totnboffilestoget>maxNbFilesToGet+1:
       totnboffilestoget=maxNbFilesToGet+1
     res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
+    self.log.verbose("Will allow only %s concurrent running"%res['Value'])
     max_concurrent_running = res['Value']
 
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
-
+    count = 0
     while 1:
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
@@ -160,7 +161,9 @@ class OverlayInput (ModuleBase):
       if running < max_concurrent_running:
         break
       else:
-        time.sleep(60)        
+        count += 1
+        self.setApplicationStatus("Overlay standby nb %s"%count)
+        time.sleep(60)
     self.setApplicationStatus('Getting overlay files')
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
