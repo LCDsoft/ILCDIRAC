@@ -89,19 +89,22 @@ class OverlayInput (ModuleBase):
     meta['EvtType']=self.evttype
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
-    res = self.fc.getCompatibleMetadata(meta)
-    if not res['OK']:
-      return res
-    compatmeta = res['Value']
-    if not self.prodid:
-      if compatmeta.has_key('ProdID'):
-        #take the latest prodID as 
-        list = compatmeta['ProdID']
-        list.sort()
-        self.prodid=list[-1]
-      else:
-        return S_ERROR("Could not determine ProdID from compatible metadata")  
-    meta['ProdID']=self.prodid
+    
+    res= gConfig.getOption("/Operations/Overlay/%s/ProdID"%self.detector,0)
+    meta['ProdID']= res['Value']
+    #res = self.fc.getCompatibleMetadata(meta)
+    #if not res['OK']:
+    #  return res
+    #compatmeta = res['Value']
+    #if not self.prodid:
+    #  if compatmeta.has_key('ProdID'):
+    #    #take the latest prodID as 
+    #    list = compatmeta['ProdID']
+    #    list.sort()
+    #    self.prodid=list[-1]
+    #  else:
+    #    return S_ERROR("Could not determine ProdID from compatible metadata")  
+    #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events  
     res = self.fc.getCompatibleMetadata(meta)
     if not res['OK']:
