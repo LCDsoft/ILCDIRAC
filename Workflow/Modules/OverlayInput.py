@@ -194,20 +194,20 @@ class OverlayInput (ModuleBase):
         ##Now wait for a random time around 3 minutes
         time.sleep(60*random.gauss(3,0.1))
         
-    res = self.rm.getFile(filesobtained)
-    failed = len(res['Value']['Failed'])
-    tryagain = []
-    if failed:
-      self.log.error('Had issues getting %s files, retrying now with new files'%failed)
-      while len(tryagain) < failed:
-        fileindex = random.randrange(nbfiles)
-        if fileindex not in usednumbers:
-          usednumbers.append(fileindex)
-          tryagain.append(self.lfns[fileindex])
-      res = self.rm.getFile(tryagain)
-      if len(res['Value']['Failed']):
-        os.chdir(curdir)
-        return S_ERROR("Could not obtain enough files after 2 attempts")
+    #res = self.rm.getFile(filesobtained)
+    #failed = len(res['Value']['Failed'])
+    #tryagain = []
+    #if failed:
+    #  self.log.error('Had issues getting %s files, retrying now with new files'%failed)
+    #  while len(tryagain) < failed:
+    #    fileindex = random.randrange(nbfiles)
+    #    if fileindex not in usednumbers:
+    #      usednumbers.append(fileindex)
+    #      tryagain.append(self.lfns[fileindex])
+    #  res = self.rm.getFile(tryagain)
+    #  if len(res['Value']['Failed']):
+    #    os.chdir(curdir)
+    #    return S_ERROR("Could not obtain enough files after 2 attempts")
     os.chdir(curdir)
     self.log.info('Got all files needed.')
     return S_OK()
