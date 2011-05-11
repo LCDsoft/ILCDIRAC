@@ -84,7 +84,7 @@ class StdHepCut(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s'%self.MaxNbEvts
-    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.outputFile,self.cutfile)
+    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.outputFile,os.path.basename(self.cutfile))
     self.log.info("Running %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
