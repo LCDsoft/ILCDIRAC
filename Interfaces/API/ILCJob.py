@@ -559,6 +559,11 @@ class ILCJob(Job):
       else:
         return self._reportError("Input file %s not found"%inputFile, __name__, **kwargs)  
 
+    if os.path.exists(cutfile) or cutfile.lower().count("lfn:"):
+      self.addToInputSandbox.append(cutfile)
+    else:
+      return self._reportError("Cut file %s not found"%cutfile,__name__, **kwargs)
+
     stepName = 'RunStdHepCut'
     stepNumber = self.StepCount
     stepDefn = '%sStep%s' % ('stdhepCut', stepNumber)
