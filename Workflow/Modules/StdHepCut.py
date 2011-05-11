@@ -28,6 +28,13 @@ class StdHepCut(ModuleBase):
       return S_ERROR('Cut file not defined')
     if self.step_commons.has_key('MaxNbEvts'):
       self.MaxNbEvts = self.step_commons['MaxNbEvts']
+    if not self.outputFile:
+      dircont = os.listdir("./")
+      for file in dircont:
+        if file.count(".stdhep"):
+          self.outputFile = file.rstrip(".stdhep")+"_reduced.stdhep"
+          break
+        
     return S_OK()
 
   def execute(self):

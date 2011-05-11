@@ -509,6 +509,118 @@ class ILCJob(Job):
 
     return S_OK()
 
+  def setStdhepCut(self, appVersion, cutfile, inputFile = '',outputFile = None, MaxNbEvts = None, logFile = '', debug = False,
+                   logInOutputData = False):
+    """Helper function
+    Call Stdhep cut. 
+    
+    Should be used after whizard or any other program producing stdhep files.
+    
+    Example usage:
+  
+    >>> job = setStdhepCut('v1',"mycutfile.txt")
+    
+    @param appVersion: Version to use
+    @type appVersion: string
+    @param cutfile: Cut file to use. Can be LFN.
+    @type cutfile: string
+    @param inputFile: File to cut on, default is to run on all files found locally.
+    @type inputFile: string
+    @param outputFile: Output file name, default is same as input if set
+    @type outputFile: string
+    @param MxNbEvts: Maximum number of events to retain
+    @type MaxNbEvts: int
+    
+    """
+
+    kwargs = {"appVersion":appVersion,'cutfile':cutfile,'inputFile':inputFile,'outputFile':outputFile,
+              "MaxNbEvts":MaxNbEvts, 'logFile':logFile, 'debug':debug,"logInOutputData":logInOutputData}
+    
+    if not type(appVersion) in types.StringTypes:
+      return self._reportError('Expected string for version', __name__, **kwargs)
+    if not type(cutfile) in types.StringTypes:
+      return self._reportError('Expected string for cutfile', __name__, **kwargs)
+
+    self.StepCount += 1
+
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name', __name__, **kwargs)
+    else:
+      logName = 'stdhepCut_%s_%s.log' % (appVersion,self.StepCount)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
+
+    if inputFile:
+      if os.path.exists(inputFile) or inputFile.lower().count("lfn:"):
+        self.addToInputSandbox.append(inputFile)
+      else:
+        return self._reportError("Input file %s not found"%inputFile, __name__, **kwargs)  
+
+    stepName = 'RunStdHepCut'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' % ('stdhepCut', stepNumber)
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
+
+
+    ##now define MokkaAnalysis
+    moduleName = "StdHepCut"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('stdhepCut module definition')
+    body = 'from %s.%s import %s\n' % (self.importLocation, moduleName, moduleName)
+    module.setBody(body)
+    #Add user job finalization module
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' % (self.importLocation, moduleName, moduleName)
+    userData.setBody(body)
+    step = StepDefinition(stepDefn)
+    step.addModule(module)
+    step.addModule(userData)
+    step.createModuleInstance('StdHepCut', stepDefn)
+    step.createModuleInstance('UserJobFinalization', stepDefn)
+    step.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, "Application Name"))
+    step.addParameter(Parameter("applicationLog",     "", "string", "", "", False, False, "Name of the log file of the application"))
+    step.addParameter(Parameter("CutFile",            "", "string", "", "", False, False, "Cut file to use"))
+    #step.addParameter(Parameter("inputFile",          "", "string", "", "", False, False, "Name of the input file of the application"))
+    step.addParameter(Parameter("outputFile",         "", "string", "", "", False, False, "Name of the output file of the application"))
+    step.addParameter(Parameter("MaxNbEvts",           0,    "int", "", "", False, False, "Max nb of events to keep"))
+
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance(stepDefn, stepName)
+    stepInstance.setValue("applicationVersion", appVersion)
+    stepInstance.setValue("applicationLog",     logName)
+    stepInstance.setValue("CutFile",            cutfile)
+
+    #if inputFile:
+    #  stepInstance.setValue("inputFile",inputFile)
+    #else:
+    #  stepInstance.setLink( 'inputFile', self.ioDict[ "MokkaStep" ], 'outputFile' )
+  
+    
+    if MaxNbEvts:
+      stepInstance.setValue('MaxNbEvts',        MaxNbEvts)
+    if(outputFile):
+      stepInstance.setValue('outputFile',       outputFile)
+
+    stepInstance.setValue('debug', debug)
+    currentApp = "stdhepcut.%s" % appVersion
+    swPackages = 'SoftwarePackages'
+    description = 'ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow, swPackages, 'JDL', currentApp, description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps, ';'):
+        apps += ';' + currentApp
+      self._addParameter(self.workflow, swPackages, 'JDL', apps, description)
+    self.ioDict["StdHepCutStep"] = stepInstance.getName()
+        
+    return S_OK()
+
   def setMokka(self, appVersion, steeringFile, inputGenfile=None, macFile = None, detectorModel='',
                nbOfEvents=None, startFrom=0, RandomSeed=None, dbslice='', outputFile=None, processID=None,
                logFile='', debug=False, logInOutputData=False):
