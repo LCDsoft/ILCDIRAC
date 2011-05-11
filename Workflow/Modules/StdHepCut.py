@@ -34,7 +34,8 @@ class StdHepCut(ModuleBase):
         if file.count(".stdhep"):
           self.outputFile = file.rstrip(".stdhep")+"_reduced.stdhep"
           break
-        
+      if not self.outputFile:
+        return S_ERROR("Could not find suitable outputFile name")
     return S_OK()
 
   def execute(self):
