@@ -593,6 +593,7 @@ class ILCJob(Job):
     #step.addParameter(Parameter("inputFile",          "", "string", "", "", False, False, "Name of the input file of the application"))
     step.addParameter(Parameter("outputFile",         "", "string", "", "", False, False, "Name of the output file of the application"))
     step.addParameter(Parameter("MaxNbEvts",           0,    "int", "", "", False, False, "Max nb of events to keep"))
+    step.addParameter(Parameter("debug",           False,   "bool", "", "", False, False, "Keep debug level as set in input file"))
 
     self.workflow.addStep(step)
     stepInstance = self.workflow.createStepInstance(stepDefn, stepName)
