@@ -231,6 +231,8 @@ class OverlayInput (ModuleBase):
     resultTuple = self.result['Value']
     status = resultTuple[0]
     dict = {}
+    dict['Failed'] = []
+    dict['Successful'] = []
     if status:
       dict['Failed']=lfn 
     else:
