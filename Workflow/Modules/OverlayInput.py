@@ -10,12 +10,13 @@ Created on Jan 27, 2011
 __RCSID__ = "$Id: $"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
-from DIRAC.Core.DISET.RPCClient                  import RPCClient
+from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
+from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
+from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfevents
+from DIRAC.Core.DISET.RPCClient                              import RPCClient
+from DIRAC.Core.Utilities.Subprocess                         import shellCall
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 from math import ceil
 
 import os,types,time,random
@@ -42,6 +43,7 @@ class OverlayInput (ModuleBase):
     self.nsigevts = 0
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
+    self.site = ''
 
 
   def applicationSpecificInputs(self):
@@ -71,6 +73,9 @@ class OverlayInput (ModuleBase):
     
     if self.step_commons.has_key('BkgEvtType'):
       self.evttype = self.step_commons['BkgEvtType']  
+    
+    if self.step_commons.has_key('Site'):
+      self.site = self.step_commons['Site']  
       
     if len(self.InputData) > 2 : 
       res = getNumberOfevents(self.InputData)
@@ -148,7 +153,7 @@ class OverlayInput (ModuleBase):
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
-    while 1:
+    while 1 and not self.site:
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
@@ -183,7 +188,10 @@ class OverlayInput (ModuleBase):
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:        
         usednumbers.append(fileindex)
-        res = self.rm.getFile(self.lfns[fileindex])
+        if self.site =='LCG.CERN.ch':
+          res = self.getCASTORFile(self.lfns[fileindex])
+        else:  
+          res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           time.sleep(60*random.gauss(3,0.1))     
@@ -212,6 +220,17 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not obtain enough files after 2 attempts")
     os.chdir(curdir)
     self.log.info('Got all files needed.')
+    return S_OK()
+
+  def getCASTORFile(self,lfn):
+    prependpath = "/castor/cern.ch/grid"
+    file = prependpath+lfn
+    command = "rfcp %s ./"%file
+    self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
+    status = resultTuple[0]
+    if status:
+      return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK()
 
   def execute(self):
