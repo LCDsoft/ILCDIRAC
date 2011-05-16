@@ -74,8 +74,8 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.evttype = self.step_commons['BkgEvtType']  
     
-    if self.step_commons.has_key('Site'):
-      self.site = self.step_commons['Site']  
+    if self.workflow_commons.has_key('Site'):
+      self.site = self.workflow_commons['Site']  
       
     if len(self.InputData) > 2 : 
       res = getNumberOfevents(self.InputData)
@@ -153,7 +153,7 @@ class OverlayInput (ModuleBase):
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
-    while 1 and not self.site:
+    while 1 and not self.site=='LCG.CERN.ch':
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
