@@ -28,6 +28,7 @@ class OverlayInput (ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "OverlayInput" )
     self.applicationName = 'OverlayInput'
+    self.applicationLog = 'Overlay.log'
     self.printoutflag = ''
     self.prodid = 0
     self.detector = ""
