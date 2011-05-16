@@ -230,9 +230,13 @@ class OverlayInput (ModuleBase):
     self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
+    dict = {}
     if status:
-      return S_ERROR("Problem getting %s"%os.path.basename(lfn))
-    return S_OK()
+      dict['Failed']=lfn 
+    else:
+      dict['Successful']=lfn  
+      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
+    return S_OK(dict)
 
   def execute(self):
     self.result =self.resolveInputVariables()
