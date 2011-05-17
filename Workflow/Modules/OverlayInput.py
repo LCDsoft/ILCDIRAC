@@ -19,7 +19,7 @@ from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 from math import ceil
 
-import os,types,time,random
+import os,types,time,random, string
 
 class OverlayInput (ModuleBase):
   def __init__(self):
@@ -226,7 +226,11 @@ class OverlayInput (ModuleBase):
   def getCASTORFile(self,lfn):
     prependpath = "/castor/cern.ch/grid"
     file = prependpath+lfn
-    command = "rfcp %s ./"%file
+    #command = "rfcp %s ./"%file
+    comm = []
+    comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
+    comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata"%file)
+    command = string.join(comm,";")
     self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
