@@ -22,7 +22,7 @@ class ProcessDB ( DB ):
     
   ##################################################################
   ### Getter methods
-  def checkSoftware( self, AppName, AppVersion, Platform, connection = False ):
+  def _checkSoftware( self, AppName, AppVersion, Platform, connection = False ):
     """ Check if specified software exists
     """
     connection = self.__getConnection( connection )
@@ -45,7 +45,7 @@ class ProcessDB ( DB ):
       if not param in self.SoftwareParams:
         return S_ERROR("Parameter %s is not valid"%param)
     connection = self.__getConnection( connection )
-    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
+    res = self._checkSoftware(AppName, AppVersion, Platform, connection)
     if not res['OK']:
       return res
     extrareqs = ''
@@ -205,7 +205,7 @@ class ProcessDB ( DB ):
     """ Add the specified software if it does not exist
     """
     connection = self.__getConnection( connection )
-    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
+    res = self._checkSoftware(AppName, AppVersion, Platform, connection)
     if res['OK']:
       return S_ERROR('Application %s, Version %s already defined in the database'%(AppName,AppVersion))
         
@@ -223,11 +223,11 @@ class ProcessDB ( DB ):
     """ Declare a dependency between 2 softwares 
     """
     connection = self.__getConnection( connection )
-    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
+    res = self._checkSoftware(AppName, AppVersion, Platform, connection)
     if not res:
       return S_ERROR('Application %s, Version %s not defined in the database'%(AppVersion,AppName))
     appid = res['Value'][0][0]
-    res = self.checkSoftware(DepName, DepVersion, Platform, connection)
+    res = self._checkSoftware(DepName, DepVersion, Platform, connection)
     if not res:
       if autodeclare:
         return S_ERROR("Auto declare of dependencies not implemented, please unset autodeclare.")
@@ -291,6 +291,12 @@ class ProcessDB ( DB ):
     req = "INSERT INTO Processes_has_Software (idProcesses,idSoftware,Template) VALUES ( %s, %s, '%s');"% (ProcessID,SoftwareID,Template) 
     res = self._update( req, connection )
     return res
+  
+  def addCut(self,cutsdict={},connection=False):
+    """ Add a set of cut
+    """
+    connection = self.__getConnection( connection )
+
   
   def addProductionData(self, ProdDataDict, connection = False):
     """ Declare a new Production
@@ -410,7 +416,7 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return S_ERROR( "Failed to parse the Comment" )
     Comment = res['Value']      
-    res = self.checkSoftware(AppName, AppVersion, Platform, connection)
+    res = self._checkSoftware(AppName, AppVersion, Platform, connection)
     if not res['OK']:
       return res
     new_status='FALSE'
