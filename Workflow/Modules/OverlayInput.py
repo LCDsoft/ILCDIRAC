@@ -96,7 +96,7 @@ class OverlayInput (ModuleBase):
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
     
-    res= gConfig.getOption("/Operations/Overlay/%s/ProdID"%self.detector,0)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/ProdID"%(self.detector,self.energy),0)
     meta['ProdID']= res['Value']
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
