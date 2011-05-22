@@ -137,6 +137,7 @@ class OverlayInput (ModuleBase):
     path = "/castor/cern.ch/grid/ilc/prod/clic/%s/%s/%s/SIM/%s/"%(energy,bkg,detector,prod)
     comm = ["nsls","%s"%path]
     res = subprocess.Popen(comm,stdout=subprocess.PIPE).communicate()
+    self.log.info("res 1 stderr %s"%res[1])
     dirlist = res[0].rstrip().split("\n")
     list = []
     for dir in dirlist:
@@ -145,10 +146,13 @@ class OverlayInput (ModuleBase):
       curdir = path+dir
       comm2 = ["nsls",curdir]
       res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      self.log.info("res 2 stderr %s"%res[1])
       for f in res[0].rstrip().split("\n"):
         if f.count("dirac_directory"):
           continue
         list.append(path+dir+"/"+f)
+    if not list:
+      return S_ERROR("File list is empty")    
     return S_OK(list)
 
   def __getFilesLocaly(self):
@@ -251,7 +255,10 @@ class OverlayInput (ModuleBase):
 
   def getCASTORFile(self,lfn):
     prependpath = "/castor/cern.ch/grid"
-    file = prependpath+lfn
+    if not lfn.count("castor/cern.ch"):
+      file = prependpath+lfn
+    else: 
+      file = lfn
     #command = "rfcp %s ./"%file
     comm = []
     comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
