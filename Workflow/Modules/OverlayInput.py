@@ -140,10 +140,14 @@ class OverlayInput (ModuleBase):
     dirlist = res[0].rstrip().split("\n")
     list = []
     for dir in dirlist:
+      if dir.count("dirac_directory"):
+        continue
       curdir = path+dir
       comm2 = ["nsls",curdir]
       res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
       for f in res[0].rstrip().split("\n"):
+        if f.count("dirac_directory"):
+          continue
         list.append(path+dir+"/"+f)
     return S_OK(list)
 
