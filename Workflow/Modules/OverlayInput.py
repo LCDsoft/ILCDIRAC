@@ -19,7 +19,7 @@ from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 from math import ceil
 
-import os,types,time,random, string
+import os,types,time,random, string, subprocess
 
 class OverlayInput (ModuleBase):
   def __init__(self):
@@ -123,7 +123,29 @@ class OverlayInput (ModuleBase):
         self.nbofeventsperfile = compatmeta['NumberOfEvents']
     else:
       return S_ERROR("Number of events could not be determined, cannot proceed.")    
-    return self.fc.findFilesByMetadata(meta)
+    if not self.site == "LCG.CERN.ch":
+      return self.fc.findFilesByMetadata(meta)
+    else:
+      return self.__getFilesFromCastor(meta)
+
+  def __getFilesFromCastor(self,meta):
+    ProdID= meta['ProdID']
+    prod = str(ProdID).zfill(8)
+    energy = meta['Energy']
+    bkg = meta["EvtType"]
+    detector = meta["DetectorType"]
+    path = "/castor/cern.ch/grid/ilc/prod/clic/%s/%s/%s/SIM/%s/"%(energy,bkg,detector,prod)
+    comm = ["nsls","%s"%path]
+    res = subprocess.Popen(comm,stdout=subprocess.PIPE).communicate()
+    dirlist = res[0].rstrip().split("\n")
+    list = []
+    for dir in dirlist:
+      curdir = path+dir
+      comm2 = ["nsls",curdir]
+      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      for f in res[0].rstrip().split("\n"):
+        list.append(path+dir+"/"+f)
+    return S_OK(list)
 
   def __getFilesLocaly(self):
     
