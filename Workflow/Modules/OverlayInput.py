@@ -262,7 +262,7 @@ class OverlayInput (ModuleBase):
     #command = "rfcp %s ./"%file
     comm = []
     comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata"%file)
+    comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata > toto.log"%file)
     command = string.join(comm,";")
     self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
