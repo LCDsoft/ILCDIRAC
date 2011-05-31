@@ -249,6 +249,10 @@ class OverlayInput (ModuleBase):
     #  if len(res['Value']['Failed']):
     #    os.chdir(curdir)
     #    return S_ERROR("Could not obtain enough files after 2 attempts")
+    ##Print the file list
+    list = os.listdir(os.getcwd())
+    self.log.info("List of Overlay files:")
+    self.log.info(string.join(list,"\n"))
     os.chdir(curdir)
     self.log.info('Got all files needed.')
     return S_OK()
