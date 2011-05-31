@@ -25,7 +25,8 @@ from DIRAC                                          import gConfig, S_OK
 
 from ILCDIRAC.Core.Utilities.CheckXMLValidity import CheckXMLValidity
 
-import os, types, string, inspect
+import os, types, string, inspect 
+from random import randrange
 
 COMPONENT_NAME = '/WorkflowLib/API/ILCJob'
 
@@ -329,6 +330,9 @@ class ILCJob(Job):
       print "Will set USER_spectrum_on to +-11"
       parameters.append('USERSPECTRUM=11')
 
+    if self.ioDict.has_key("WhizardStep"):
+      randomseed = randrange(1000000)
+    
     #Add to input sandbox the processlist: if it fails getting it, the job get rescheduled
     res = gConfig.getValue('/Operations/ProcessList/Location','')
     if not res:
