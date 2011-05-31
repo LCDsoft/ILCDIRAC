@@ -18,6 +18,8 @@ from ILCDIRAC.Interfaces.API.ILCJob                   import ILCJob
 from DIRAC                                            import gConfig, gLogger, S_OK, S_ERROR
 import string, shutil,os,types
 
+from random import randrange
+
 
 class Production(ILCJob):
   """ Production API class
@@ -207,7 +209,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     return S_OK()
 
   def addWhizardStep(self, processlist, process, susymodel=None, energy = 3000, nbevts=0, lumi=0,
-                     extraparameters=None, outputpath="", outputSE=""):
+                     extraparameters=None, randomseed = None, outputpath="", outputSE=""):
     """ Define Whizard step
 
     Must get the process list from dirac.
@@ -316,6 +318,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       print "Will set USER_spectrum_on to 11"
       parameters.append('USERSPECTRUM=11')
 
+    if self.ioDict.has_key("WhizardStep"):
+      randomseed = randrange(1000000)
+
     #TODO look how to allow changing pythia parameters, which are separated with ;
     #if not extraparameters.has_key('PYTHIAPARAMS'):
     #  print "Using default pythia parameters"
@@ -354,6 +359,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(WhizardAppDefn, "EvtType",            "string", "", "Process to generate")
     self._addParameter(WhizardAppDefn, "parameters",         "string", "", "Parameters for template")
     self._addParameter(WhizardAppDefn, "Energy",                "int",  0, "Energy to generate")
+    if randomseed:
+      self._addParameter(WhizardAppDefn, "RandomSeed",                "int",  0, "RandomSeed")
     self._addParameter(WhizardAppDefn, "NbOfEvts",              "int",  0, "Number of events to generate")
     self._addParameter(WhizardAppDefn, 'listoutput',           "list", [], "list of output file name")
     self._addParameter(WhizardAppDefn, "outputPath",         "string", "", "Output data path")
@@ -383,6 +390,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         mstep.setValue('SusyModel', 1)
       if susymodel == 'chne':
         mstep.setValue('SusyModel', 2)
+
+    if randomseed:
+      mstep.setValue("RandomSeed",randomseed)
 
     outputList = []
     outputList.append({"outputFile":"@{outputFile}", "outputPath":"@{outputPath}", "outputDataSE":outputSE})
