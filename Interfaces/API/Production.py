@@ -268,6 +268,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 
     outputfile = process + "_gen.stdhep"
 
+    self.StepCount += 1
+
+
     parameters = []
     if extraparameters:
       if not type(extraparameters) == type({}):
@@ -318,8 +321,13 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       print "Will set USER_spectrum_on to 11"
       parameters.append('USERSPECTRUM=11')
 
+
+    jobindex = ""
     if self.ioDict.has_key("WhizardStep"):
       randomseed = randrange(1000000)
+      jobindex = str(self.StepCount)
+      outputfile = process + "_%s_gen.stdhep"%jobindex
+      
 
     #TODO look how to allow changing pythia parameters, which are separated with ;
     #if not extraparameters.has_key('PYTHIAPARAMS'):
@@ -333,7 +341,6 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     res = 'LFN:' + res
     self.addToInputSandbox.append(res)
 
-    self.StepCount += 1
     stepName = 'Whizard'
     stepNumber = self.StepCount
     stepDefn = '%sStep%s' % ('Whizard', stepNumber)
@@ -363,6 +370,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       self._addParameter(WhizardAppDefn, "RandomSeed",                "int",  0, "RandomSeed")
     self._addParameter(WhizardAppDefn, "NbOfEvts",              "int",  0, "Number of events to generate")
     self._addParameter(WhizardAppDefn, 'listoutput',           "list", [], "list of output file name")
+    self._addParameter(WhizardAppDefn, "JobIndex",           "string", "", "JobIndex")
     self._addParameter(WhizardAppDefn, "outputPath",         "string", "", "Output data path")
     self._addParameter(WhizardAppDefn, "outputFile",         "string", "", "output file name")
     if susymodel:
@@ -397,7 +405,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     outputList = []
     outputList.append({"outputFile":"@{outputFile}", "outputPath":"@{outputPath}", "outputDataSE":outputSE})
     mstep.setValue('listoutput', (outputList))
-
+    mstep.setValue('JobIndex',jobindex)
     self.__addSoftwarePackages('whizard.%s' % (appvers))
     self._addParameter(self.workflow, "WhizardOutput", "string", outputfile, "whizard expected output file name")
     if nbevts:
