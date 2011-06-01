@@ -333,6 +333,9 @@ class ILCJob(Job):
     if self.ioDict.has_key("WhizardStep"):
       randomseed = randrange(1000000)
       jobindex = str(self.StepCount)
+      if outputFile:
+        base = outputFile.split(".stdhep")[0]
+        outputFile = base+"_%s.stdhep"
     
     #Add to input sandbox the processlist: if it fails getting it, the job get rescheduled
     res = gConfig.getValue('/Operations/ProcessList/Location','')
