@@ -60,7 +60,14 @@ class PythiaAnalysis(ModuleBase):
       return S_ERROR('Missing installation of Pythia!')
     myappDir = os.path.join(mySoftwareRoot,appDir)
 
-    self.lumifile = ''
+
+    deptar = resolveDepsTar(self.applicationName,self.applicationVersion)
+    depdir = deptar.replace(".tgz","").replace(".tar.gz","")
+    path = os.path.join(mySoftwareRoot,depdir)
+    if not os.path.exists(path+"/%s.ep"%depdir):
+      return S_ERROR("Lumi files not found")
+     
+    self.lumifile = path+"/%s.ep"%depdir
 
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
