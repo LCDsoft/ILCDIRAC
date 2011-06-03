@@ -16,7 +16,7 @@ import os
 
 class PythiaAnalysis(ModuleBase):
   def __init__(self):
-    ModuleBase.__init(self)
+    ModuleBase.__init__(self)
     self.NumberOfEvents = 1
     self.enable = True
     self.STEP_NUMBER = ''
