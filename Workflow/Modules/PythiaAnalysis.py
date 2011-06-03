@@ -37,9 +37,8 @@ class PythiaAnalysis(ModuleBase):
         if self.workflow_commons.has_key('ProductionOutputData'):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
-            if obj.lower().count("_gen_"):
+            if obj.lower().count("%s_gen_"%self.STEP_NUMBER):
               self.outputFile = os.path.basename(obj)
-              break
         else:
           self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))
