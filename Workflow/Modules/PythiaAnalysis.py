@@ -11,7 +11,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
-import os,shutil
+import os, choice
 
 
 class PythiaAnalysis(ModuleBase):
@@ -68,17 +68,22 @@ class PythiaAnalysis(ModuleBase):
       return S_ERROR("Lumi files not found")
     
     originpath = path+"/%s.ep"%depdir
-    if not os.path.exists("/tmp/%s.ep"%depdir):
-      try:
-        os.symlink(originpath,"/tmp/%s.ep"%depdir)
-      except Exception,x:
-        return S_ERROR("Cannot sym link lumi file: %s %s"%(Exception,x))
+    randomName =  '/tmp/LumiFile-' + self.GenRandString(8);
+    try:
+      os.mkdir(randomName)
+    except Exception,x:
+      return S_ERROR("Could not create temp dir: %s %s"%(Exception,x))
+    
+    try:
+      os.symlink(originpath,"%s/%s.ep"%(randomName,depdir))
+    except Exception,x:
+      return S_ERROR("Cannot sym link lumi file: %s %s"%(Exception,x))
     #try :
     #  shutil.copy(originpath,"/tmp/")
     #except:
     #  return S_ERROR("Could not copy to /tmp")  
     #self.lumifile = path+"/%s.ep"%depdir
-    self.lumifile = "/tmp/%s"%depdir
+    self.lumifile = "%s/%s"%(randomName,depdir)
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
     new_ld_lib_path = myappDir+"/lib:"+new_ld_lib_path
@@ -125,3 +130,9 @@ class PythiaAnalysis(ModuleBase):
 
     status = resultTuple[0]
     return self.finalStatusReport(status) 
+  
+  def GenRandString(self, length=8, chars=string.letters + string.digits):
+    """Return random string of 8 chars
+    """
+    return ''.join([choice(chars) for i in range(length)])
+  
