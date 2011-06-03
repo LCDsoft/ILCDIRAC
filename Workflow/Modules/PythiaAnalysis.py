@@ -30,6 +30,20 @@ class PythiaAnalysis(ModuleBase):
     else:
       return S_ERROR("Number of events to process not specified")
     
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                  int(self.workflow_commons["JOB_ID"]))
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_gen_"):
+              self.outputFile = os.path.basename(obj)
+              break
+        else:
+          self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                            int(self.workflow_commons["JOB_ID"]))
+    
     return S_OK()
   
   def execute(self):

@@ -415,10 +415,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["WhizardStep"] = mstep.getName()
     return S_OK()
 
-  def addPYTHIAStep(self, name, appvers, nbevts=0, outputFile = '',outputpath="", outputSE=""):
+  def addPYTHIAStep(self, name, appvers, nbevts=0, process = None, outputFile = '',outputpath="", outputSE=""):
     """ Define PYTHIA step
     """
-    kwargs = {'name':name,"appvers":appvers,"nbevts":nbevts,"outputFile":outputFile,"outputpath":outputpath, "outputSE":outputSE}
+    kwargs = {'name':name,"appvers":appvers,"nbevts":nbevts,"process":process,"outputFile":outputFile,"outputpath":outputpath, "outputSE":outputSE}
     if not nbevts:
       return self._reportError("Number of events has to be specified",__name__,**kwargs)
     if not outputFile:
@@ -435,7 +435,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 
     pythiaStep =     ModuleDefinition('PythiaAnalysis')
     pythiaStep.setDescription('Pythia step: generate the physics events')
-    body = string.replace(self.importLine, '<MODULE>', 'WhizardAnalysis')
+    body = string.replace(self.importLine, '<MODULE>', 'PythiaAnalysis')
     pythiaStep.setBody(body)
 
     createoutputlist = ModuleDefinition('ComputeOutputDataList')
@@ -460,6 +460,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     mstep.setValue('applicationLog', 'Pythia_@{STEP_ID}.log')
     mstep.setValue("NbOfEvts", nbevts)
     self.prodparameters['nbevts'] = nbevts
+    self.prodparameters['Process'] = process
     mstep.setValue("outputFile", outputFile)
     mstep.setValue("outputPath", outputpath)
     outputList = []
