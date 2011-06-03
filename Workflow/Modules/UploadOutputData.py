@@ -85,15 +85,33 @@ class UploadOutputData(ModuleBase):
         olist = []
         for obj in self.outputList:
           for prodfile in proddata:
-            if (obj['outputFile'].lower().count("_gen") and prodfile.lower().count("_gen_")) :
-              appdict = obj
-              appdict['outputFile'] = os.path.basename(prodfile)
-              olist.append(appdict)
-            if (obj['outputFile'].lower().count("_sim") and prodfile.lower().count("_sim_")) or (obj['outputFile'].lower().count("_rec") and prodfile.lower().count("_rec_")) or (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
-              appdict = obj
-              appdict['outputFile'] = os.path.basename(prodfile)
-              olist.append(appdict)
-              break
+            if (obj['outputFile'].lower().count("_gen")):# and prodfile.lower().count("_gen_")) :
+              genf = obj['outputFile'].split("_gen")[0]
+              if (prodfile.lower().count(genf)):
+                appdict = obj
+                appdict['outputFile'] = os.path.basename(prodfile)
+                olist.append(appdict)
+            if (obj['outputFile'].lower().count("_sim")):
+              simf = obj['outputFile'].split("_sim")[0]
+              if (prodfile.lower().count(simf)):
+                appdict = obj
+                appdict['outputFile'] = os.path.basename(prodfile)
+                olist.append(appdict)
+                break
+            if (obj['outputFile'].lower().count("_rec")):
+              recf = obj['outputFile'].split("_rec")[0]
+              if (prodfile.lower().count(recf)):
+                appdict = obj
+                appdict['outputFile'] = os.path.basename(prodfile)
+                olist.append(appdict)
+                break
+            if  (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
+              dstf = obj['outputFile'].split("_dst")[0]
+              if (prodfile.lower().count(dstf)):
+                appdict = obj
+                appdict['outputFile'] = os.path.basename(prodfile)
+                olist.append(appdict)
+                break
         self.outputList = olist
         self.log.verbose("OutputList : %s"%self.outputList)
         
