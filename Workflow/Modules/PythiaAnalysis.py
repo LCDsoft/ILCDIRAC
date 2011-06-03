@@ -77,7 +77,7 @@ class PythiaAnalysis(ModuleBase):
     #except:
     #  return S_ERROR("Could not copy to /tmp")  
     #self.lumifile = path+"/%s.ep"%depdir
-    self.lumifile = "/tmp/%s.ep"%depdir
+    self.lumifile = "/tmp/%s"%depdir
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
     new_ld_lib_path = myappDir+"/lib:"+new_ld_lib_path
