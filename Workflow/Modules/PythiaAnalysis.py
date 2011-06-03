@@ -11,7 +11,8 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
-import os, choice,string
+import os,string
+from random import choice
 
 
 class PythiaAnalysis(ModuleBase):
