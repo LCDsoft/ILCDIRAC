@@ -61,7 +61,7 @@ class PythiaAnalysis(ModuleBase):
     myappDir = os.path.join(mySoftwareRoot,appDir)
 
 
-    deptar = resolveDepsTar(self.systemConfig,self.applicationName,self.applicationVersion)
+    deptar = resolveDepsTar(self.systemConfig,self.applicationName,self.applicationVersion)[0]
     depdir = deptar.replace(".tgz","").replace(".tar.gz","")
     path = os.path.join(mySoftwareRoot,depdir)
     if not os.path.exists(path+"/%s.ep"%depdir):
