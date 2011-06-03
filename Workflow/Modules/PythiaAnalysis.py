@@ -70,8 +70,8 @@ class PythiaAnalysis(ModuleBase):
     originpath = path+"/%s.ep"%depdir
     try:
       os.symlink(originpath,"/tmp/%s.ep"%depdir)
-    except:
-      return S_ERROR("Cannot sym link lumi file")
+    except Exception,x:
+      return S_ERROR("Cannot sym link lumi file: %s %s"%(Exception,x))
     #try :
     #  shutil.copy(originpath,"/tmp/")
     #except:
