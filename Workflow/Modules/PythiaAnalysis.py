@@ -123,13 +123,30 @@ class PythiaAnalysis(ModuleBase):
 
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
+    status = resultTuple[0]
+
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log' %(self.applicationName))
 
-    status = resultTuple[0]
+    if os.path.exists("pythiaGen.lpt"):
+      base = "pythiaGen.lpt".split(".lpt")[0]
+      try:
+        os.rename("pythiaGen.lpt", base+self.STEP_NUMBER+".lpt")
+      except:
+        self.log.error("Could not rename, deleting")
+        os.unlink("pythiaGen.lpt")
+
+    logf = file(self.applicationLog)  
+    success=False
+    for line in logf:
+      if line.count("Evts Generated= "):
+        success = True
+    if not success:
+      status = 1  
+
     return self.finalStatusReport(status) 
   
   def GenRandString(self, length=8, chars=string.letters + string.digits):
