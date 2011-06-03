@@ -71,6 +71,7 @@ class PythiaAnalysis(ModuleBase):
 
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path = myappDir+"/lib:"+new_ld_lib_path
 
     scriptName = '%s_%s_Run_%s.sh' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
