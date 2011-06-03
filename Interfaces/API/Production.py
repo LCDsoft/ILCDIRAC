@@ -415,6 +415,64 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.ioDict["WhizardStep"] = mstep.getName()
     return S_OK()
 
+  def addPYTHIAStep(self, name, appvers, nbevts=0, outputFile = '',outputpath="", outputSE=""):
+    """ Define PYTHIA step
+    """
+    kwargs = {'name':name,"appvers":appvers,"nbevts":nbevts,"outputFile":outputFile,"outputpath":outputpath, "outputSE":outputSE}
+    if not nbevts:
+      return self._reportError("Number of events has to be specified",__name__,**kwargs)
+    if not outputFile:
+      return self._reportError("outputFile must be specified",__name__,**kwargs)
+
+    self.StepCount += 1
+    
+    stepName = 'Pythia'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' % ('Pythia', stepNumber)
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
+
+    pythiaStep =     ModuleDefinition('PythiaAnalysis')
+    pythiaStep.setDescription('Pythia step: generate the physics events')
+    body = string.replace(self.importLine, '<MODULE>', 'WhizardAnalysis')
+    pythiaStep.setBody(body)
+
+    createoutputlist = ModuleDefinition('ComputeOutputDataList')
+    createoutputlist.setDescription('Compute the outputList parameter, needed by outputdataPolicy')
+    body = string.replace(self.importLine, '<MODULE>', 'ComputeOutputDataList')
+    createoutputlist.setBody(body)
+
+    PythiaAppDefn = StepDefinition(stepDefn)
+    PythiaAppDefn.addModule(pythiaStep)
+    PythiaAppDefn.createModuleInstance('WhizardAnalysis', stepDefn)
+    PythiaAppDefn.addModule(createoutputlist)
+    PythiaAppDefn.createModuleInstance('ComputeOutputDataList', stepDefn)
+    self._addParameter(PythiaAppDefn, 'applicationVersion', 'string', '', 'ApplicationVersion')
+    self._addParameter(PythiaAppDefn, "applicationLog",     "string", "", "Application log file")
+    self._addParameter(PythiaAppDefn, "NbOfEvts",              "int",  0, "Number of events to generate")
+    self._addParameter(PythiaAppDefn, 'listoutput',           "list", [], "list of output file name")
+    self._addParameter(PythiaAppDefn, "outputPath",         "string", "", "Output data path")
+    self._addParameter(PythiaAppDefn, "outputFile",         "string", "", "output file name")
+    self.workflow.addStep(PythiaAppDefn)
+    mstep = self.workflow.createStepInstance(stepDefn, stepName)
+    mstep.setValue('applicationVersion', appvers)
+    mstep.setValue('applicationLog', 'Pythia_@{STEP_ID}.log')
+    mstep.setValue("NbOfEvts", nbevts)
+    self.prodparameters['nbevts'] = nbevts
+    mstep.setValue("outputFile", outputFile)
+    mstep.setValue("outputPath", outputpath)
+    outputList = []
+    outputList.append({"outputFile":"@{outputFile}", "outputPath":"@{outputPath}", "outputDataSE":outputSE})
+    mstep.setValue('listoutput', (outputList))
+
+    self.__addSoftwarePackages('%s.%s' % (name,appvers))
+
+    if nbevts:
+      self._addParameter(self.workflow, "NbOfEvents", "int", nbevts, "Number of events")
+
+    self.ioDict["WhizardStep"] = mstep.getName()
+    
+    return S_OK()
+
   def addPostGenSelStep(self, appvers, NbEvts):
     """ Define Post Generation Selection
     @param appVers: Version to use

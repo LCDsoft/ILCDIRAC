@@ -423,6 +423,76 @@ class ILCJob(Job):
 
     return S_OK()
 
+  def setPythiaStep(self,name,appvers,nbevts,outputFile,logFile=None, logInOutputData=False):
+    """ Helper function 
+    """
+    kwargs = {'name':name,"appvers":appvers,"nbevts":nbevts,"outputFile":outputFile,'logFile':logFile}
+    if not nbevts:
+      return self._reportError("Number of events has to be specified",__name__,**kwargs)
+    if not outputFile:
+      return self._reportError("outputFile must be specified",__name__,**kwargs)
+
+    self.StepCount += 1
+
+    if logFile:
+      if type(logFile) in types.StringTypes:
+        logName = logFile
+      else:
+        return self._reportError('Expected string for log file name', __name__, **kwargs)
+    else:
+      logName = 'Pythia_%s_%s.log' % (appvers,self.StepCount)
+    if not logInOutputData:
+      self.addToOutputSandbox.append(logName)
+
+    
+    stepName = 'RunPythia'
+    stepNumber = self.StepCount
+    stepDefn = '%sStep%s' % ('Pythia', stepNumber)
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
+
+    moduleName = "PythiaAnalysis"
+    module = ModuleDefinition(moduleName)
+    module.setDescription('Whizard module definition')
+    body = 'from %s.%s import %s\n' % (self.importLocation, moduleName, moduleName)
+    module.setBody(body)
+    #Add user job finalization module
+    moduleName = 'UserJobFinalization'
+    userData = ModuleDefinition(moduleName)
+    userData.setDescription('Uploads user output data files with ILC specific policies.')
+    body = 'from %s.%s import %s\n' % (self.importLocation, moduleName, moduleName)
+    userData.setBody(body)
+    step = StepDefinition(stepDefn)
+    step.addModule(module)
+    step.addModule(userData)
+    step.createModuleInstance('WhizardAnalysis', stepDefn)
+    step.createModuleInstance('UserJobFinalization', stepDefn)
+    step.addParameter(Parameter("applicationName", "", "string", "", "", False, False, "Application Name"))
+    step.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, "Application version"))
+    step.addParameter(Parameter("applicationLog", "", "string", "", "", False, False, "Name of the log file of the application"))
+    step.addParameter(Parameter("NbOfEvts", 0, "int", "", "", False, False, "Nb of evts to generated per job"))
+    step.addParameter(Parameter("outputFile", "", "string", "", "", False, False, "Name of the output file of the application"))
+    self.workflow.addStep(step)
+    stepInstance = self.workflow.createStepInstance(stepDefn, stepName)
+    stepInstance.setValue("applicationName", name)
+    stepInstance.setValue("applicationVersion", appvers)
+    stepInstance.setValue("applicationLog", logName)
+    stepInstance.setValue("NbOfEvts", nbevts)
+    stepInstance.setValue('outputFile', outputFile)
+    
+    currentApp = "%s.%s" % (name,appvers)
+    swPackages = 'SoftwarePackages'
+    description = 'ILC Software Packages to be installed'
+    if not self.workflow.findParameter(swPackages):
+      self._addParameter(self.workflow, swPackages, 'JDL', currentApp, description)
+    else:
+      apps = self.workflow.findParameter(swPackages).getValue()
+      if not currentApp in string.split(apps, ';'):
+        apps += ';' + currentApp
+      self._addParameter(self.workflow, swPackages, 'JDL', apps, description)
+    self.ioDict["WhizardStep"] = stepInstance.getName()
+
+    return S_OK()
+
   def setPostGenStep(self, appVersion, inputStdhep = "", NbEvts = 0, outputFile = None,
                      logFile = '', logInOutputData = False):
     """ Helper application:
