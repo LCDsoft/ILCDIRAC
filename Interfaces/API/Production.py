@@ -448,6 +448,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     PythiaAppDefn.createModuleInstance('PythiaAnalysis', stepDefn)
     PythiaAppDefn.addModule(createoutputlist)
     PythiaAppDefn.createModuleInstance('ComputeOutputDataList', stepDefn)
+    self._addParameter(PythiaAppDefn, 'applicationName', 'string', '', 'Application name')
     self._addParameter(PythiaAppDefn, 'applicationVersion', 'string', '', 'ApplicationVersion')
     self._addParameter(PythiaAppDefn, "applicationLog",     "string", "", "Application log file")
     self._addParameter(PythiaAppDefn, "NbOfEvts",              "int",  0, "Number of events to generate")
@@ -456,6 +457,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self._addParameter(PythiaAppDefn, "outputFile",         "string", "", "output file name")
     self.workflow.addStep(PythiaAppDefn)
     mstep = self.workflow.createStepInstance(stepDefn, stepName)
+    mstep.setValue('applicationName', name)
     mstep.setValue('applicationVersion', appvers)
     mstep.setValue('applicationLog', 'Pythia_@{STEP_ID}.log')
     mstep.setValue("NbOfEvts", nbevts)
@@ -1273,8 +1275,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     else:
       apps = self.workflow.findParameter(swPackages).getValue()
       apps = apps.split(';')
-      apps.append(nameVersion)
-      apps = removeEmptyElements(apps)
+      if not apps.count(nameVersion):
+        apps.append(nameVersion)
+        apps = removeEmptyElements(apps)
       apps = string.join(apps,';')
       self._addParameter(self.workflow,swPackages,'JDL',apps,description)
       self.prodparameters["SWPackages"]=apps
