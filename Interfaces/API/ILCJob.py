@@ -464,7 +464,7 @@ class ILCJob(Job):
     step = StepDefinition(stepDefn)
     step.addModule(module)
     step.addModule(userData)
-    step.createModuleInstance('WhizardAnalysis', stepDefn)
+    step.createModuleInstance('PythiaAnalysis', stepDefn)
     step.createModuleInstance('UserJobFinalization', stepDefn)
     step.addParameter(Parameter("applicationName", "", "string", "", "", False, False, "Application Name"))
     step.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, "Application version"))

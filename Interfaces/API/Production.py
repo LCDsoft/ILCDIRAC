@@ -423,7 +423,9 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       return self._reportError("Number of events has to be specified",__name__,**kwargs)
     if not outputFile:
       return self._reportError("outputFile must be specified",__name__,**kwargs)
-
+    elif not outputFile.count("_gen"):
+      outputfile = outputFile.split(".stdhep")[0]
+      outputFile = outputfile+"_gen.stdhep"
     self.StepCount += 1
     
     stepName = 'Pythia'
@@ -443,7 +445,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
 
     PythiaAppDefn = StepDefinition(stepDefn)
     PythiaAppDefn.addModule(pythiaStep)
-    PythiaAppDefn.createModuleInstance('WhizardAnalysis', stepDefn)
+    PythiaAppDefn.createModuleInstance('PythiaAnalysis', stepDefn)
     PythiaAppDefn.addModule(createoutputlist)
     PythiaAppDefn.createModuleInstance('ComputeOutputDataList', stepDefn)
     self._addParameter(PythiaAppDefn, 'applicationVersion', 'string', '', 'ApplicationVersion')
