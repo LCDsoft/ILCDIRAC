@@ -11,7 +11,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
-import os
+import os,shutil
 
 
 class PythiaAnalysis(ModuleBase):
@@ -66,9 +66,18 @@ class PythiaAnalysis(ModuleBase):
     path = os.path.join(mySoftwareRoot,depdir)
     if not os.path.exists(path+"/%s.ep"%depdir):
       return S_ERROR("Lumi files not found")
-     
-    self.lumifile = path+"/%s.ep"%depdir
-
+    
+    originpath = path+"/%s.ep"%depdir
+    try:
+      os.symlink(originpath,"/tmp/%s.ep"%depdir)
+    except:
+      return S_ERROR("Cannot sym link lumi file")
+    #try :
+    #  shutil.copy(originpath,"/tmp/")
+    #except:
+    #  return S_ERROR("Could not copy to /tmp")  
+    #self.lumifile = path+"/%s.ep"%depdir
+    self.lumifile = "/tmp/%s.ep"%depdir
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
     new_ld_lib_path = myappDir+"/lib:"+new_ld_lib_path
