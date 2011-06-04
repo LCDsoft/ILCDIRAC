@@ -38,7 +38,7 @@ class PythiaAnalysis(ModuleBase):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           baseoutputfile = self.outputFile.split(".stdhep")[0]
           for obj in outputlist:
-            if obj.lower().count(baseoutputfile):
+            if obj.count(baseoutputfile):
               self.outputFile = os.path.basename(obj)
         else:
           self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
