@@ -31,7 +31,7 @@ class SLICPandoraAnalysis (ModuleBase):
     self.pandorasettings = ""
     self.detectorxml = ""
     self.inputSLCIO = ""
-    self.numberOfEvents = 0
+    self.numberOfEvents = -1
     self.startFrom = 0
     self.eventstring = ''
       
