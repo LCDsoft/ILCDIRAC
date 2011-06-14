@@ -57,7 +57,7 @@ class Production(ILCJob):
     self.prodparameters['BXOverlay'] = 0
     self.prodparameters['GGInt'] = 0
     
-    self.jobFileGroupSize = 0
+    self.jobFileGroupSize = 1
     self.ancestorProduction = ''
     self.currtrans = None
     self.currtransID = None
@@ -1071,8 +1071,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     Trans.setType(self.type)
     self.prodparameters['JobType']=self.type
     Trans.setPlugin('Standard')
+    Trans.setGroupSize(self.jobFileGroupSize)
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
+    Trans.setEventsPerTask(self.prodparameters['nbevts'])
     res = Trans.addTransformation()
     if not res['OK']:
       print res['Message']
