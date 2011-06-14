@@ -269,6 +269,13 @@ class OverlayInput (ModuleBase):
     self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
+    if status:
+      comm = []
+      comm.append('rfcp %s ./'%file)
+      self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+      resultTuple = self.result['Value']
+      status = resultTuple[0]
+      
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
