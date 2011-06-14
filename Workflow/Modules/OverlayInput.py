@@ -271,7 +271,11 @@ class OverlayInput (ModuleBase):
     status = resultTuple[0]
     if status:
       comm = []
+      comm.append('declare -x STAGE_SVCCLASS=ilcdata')      
+      comm.append('declare -x STAGE_HOST=castorpublic')
       comm.append('rfcp %s ./'%file)
+      command = string.join(comm,";")
+
       self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
       resultTuple = self.result['Value']
       status = resultTuple[0]
