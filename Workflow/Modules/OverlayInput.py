@@ -123,10 +123,38 @@ class OverlayInput (ModuleBase):
         self.nbofeventsperfile = compatmeta['NumberOfEvents']
     else:
       return S_ERROR("Number of events could not be determined, cannot proceed.")    
-    if not self.site == "LCG.CERN.ch":
-      return self.fc.findFilesByMetadata(meta)
-    else:
+    if self.site == "LCG.CERN.ch":
       return self.__getFilesFromCastor(meta)
+#    elif   self.site == "LCG.IN2P3-CC.fr":
+#      return self.__getFilesFromLyon(meta)
+    else:
+      return self.fc.findFilesByMetadata(meta)
+
+  def __getFilesFromLyon(self,meta):
+    list = []
+    ProdID= meta['ProdID']
+    prod = str(ProdID).zfill(8)
+    energy = meta['Energy']
+    bkg = meta["EvtType"]
+    detector = meta["DetectorType"]
+    path ="/ilc/prod/clic/%s/%s/%s/SIM/%s/"%(energy,bkg,detector,prod)
+    comm = ["nsls","%s"%path]
+    res = subprocess.Popen(comm,stdout=subprocess.PIPE).communicate()
+    dirlist = res[0].rstrip().split("\n")
+    list = []
+    for dir in dirlist:
+      if dir.count("dirac_directory"):
+        continue
+      curdir = path+dir
+      comm2 = ["nsls",curdir]
+      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      for f in res[0].rstrip().split("\n"):
+        if f.count("dirac_directory"):
+          continue
+        list.append(path+dir+"/"+f)    
+    if not list:
+      return S_ERROR("File list is empty")        
+    return S_OK(list)
 
   def __getFilesFromCastor(self,meta):
     ProdID= meta['ProdID']
@@ -182,7 +210,7 @@ class OverlayInput (ModuleBase):
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
-    while 1 and not self.site=='LCG.CERN.ch':
+    while 1 and not (self.site=='LCG.CERN.ch' or self.site=="LCG.IN2P3-CC.fr"):
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
@@ -219,6 +247,8 @@ class OverlayInput (ModuleBase):
         usednumbers.append(fileindex)
         if self.site =='LCG.CERN.ch':
           res = self.getCASTORFile(self.lfns[fileindex])
+        elif self.site=='LCG.IN2P3-CC.fr':
+          res = self.getLyonFile(self.lfns[fileindex])  
         else:  
           res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
@@ -281,6 +311,31 @@ class OverlayInput (ModuleBase):
       resultTuple = self.result['Value']
       status = resultTuple[0]
       
+    dict = {}
+    dict['Failed'] = []
+    dict['Successful'] = []
+    if status:
+      dict['Failed']=lfn 
+    else:
+      dict['Successful']=lfn  
+      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
+    return S_OK(dict)
+
+  def getLyonFile(self,lfn):
+    prependpath = '/pnfs/in2p3.fr/data'
+    if not lfn.count('in2p3.fr/data'):
+      file = prependpath+lfn
+    else: 
+      file = lfn
+    self.log.info("Getting %s"%file)  
+    #command = "rfcp %s ./"%file
+    comm = []
+    comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
+    comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
+    command = string.join(comm,";")
+    self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    resultTuple = self.result['Value']
+    status = resultTuple[0]  
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
