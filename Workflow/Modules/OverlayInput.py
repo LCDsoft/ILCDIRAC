@@ -330,13 +330,20 @@ class OverlayInput (ModuleBase):
       file = lfn
     self.log.info("Getting %s"%file)  
     #command = "rfcp %s ./"%file
-    comm = []
-    comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
-    command = string.join(comm,";")
-    command2  = command.split()
-    res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
+    #comm = []
+    #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
+    comm2 = ["cp", "$X509_USER_PROXY","/tmp/x509up_u%s"%os.getuid()]
+    res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
     print res
+    #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
+    #command = string.join(comm,";")
+    comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
+    res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
+    print res
+    
+    #command2  = command.split()
+    #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
+    #print res
     #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #resultTuple = self.result['Value']
     status = 0
