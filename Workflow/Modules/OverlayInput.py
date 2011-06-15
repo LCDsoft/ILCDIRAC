@@ -332,9 +332,10 @@ class OverlayInput (ModuleBase):
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    comm2 = ["cp", "$X509_USER_PROXY","/tmp/x509up_u%s"%os.getuid()]
-    res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
-    print res
+    if os.environ.has_key('X509_USER_PROXY'):
+      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
+      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
     comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
