@@ -340,13 +340,14 @@ class OverlayInput (ModuleBase):
     comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
     res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
     print res
-    
+    status = 0
+    if not os.path.exists(os.path.basename(file)):
+      status = 1
     #command2  = command.split()
     #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
     #print res
     #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #resultTuple = self.result['Value']
-    status = 0
     #status = resultTuple[0]  
     dict = {}
     dict['Failed'] = []
