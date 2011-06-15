@@ -17,6 +17,7 @@ from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
+import DIRAC
 from math import ceil
 
 import os,types,time,random, string, subprocess
@@ -44,7 +45,7 @@ class OverlayInput (ModuleBase):
     self.nsigevts = 0
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
-    self.site = ''
+    self.site = DIRAC.siteName()
 
 
   def applicationSpecificInputs(self):
@@ -75,8 +76,8 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.evttype = self.step_commons['BkgEvtType']  
     
-    if self.workflow_commons.has_key('Site'):
-      self.site = self.workflow_commons['Site']  
+    #if self.workflow_commons.has_key('Site'):
+    #  self.site = self.workflow_commons['Site']  
       
     if len(self.InputData) > 2 : 
       res = getNumberOfevents(self.InputData)
