@@ -334,9 +334,13 @@ class OverlayInput (ModuleBase):
     comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
     comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     command = string.join(comm,";")
-    self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    resultTuple = self.result['Value']
-    status = resultTuple[0]  
+    command2  = command.split()
+    res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
+    print res
+    #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #resultTuple = self.result['Value']
+    status = 0
+    #status = resultTuple[0]  
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
