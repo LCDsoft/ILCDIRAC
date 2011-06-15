@@ -295,7 +295,8 @@ class OverlayInput (ModuleBase):
     self.log.info("Getting %s"%file)  
     #command = "rfcp %s ./"%file
     comm = []
-    comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
+    if os.environ.has_key('X509_USER_PROXY'):    
+      comm.append("cp %s /tmp/x509up_u%s"%(os.environ['X509_USER_PROXY'],os.getuid()))
     comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata -s"%file)
     command = string.join(comm,";")
     self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
