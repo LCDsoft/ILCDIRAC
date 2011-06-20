@@ -1,0 +1,3 @@
+/run/initialize
+/generator/setLorentzTransformationAngle 10 mrad
+/run/beamOn 1 
