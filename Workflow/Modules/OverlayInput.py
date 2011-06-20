@@ -113,17 +113,20 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")  
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events  
-    res = self.fc.getCompatibleMetadata(meta)
-    if not res['OK']:
-      return res
-    compatmeta = res['Value']      
-    if compatmeta.has_key('NumberOfEvents'):
-      if type(compatmeta['NumberOfEvents'])==type([]):
-        self.nbofeventsperfile = compatmeta['NumberOfEvents'][0]
-      elif type(compatmeta['NumberOfEvents']) in types.StringTypes:
-        self.nbofeventsperfile = compatmeta['NumberOfEvents']
-    else:
-      return S_ERROR("Number of events could not be determined, cannot proceed.")    
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/NbEvts"%(self.detector,self.energy),100)
+    self.nbofeventsperfile = res['Value']
+
+    #res = self.fc.getCompatibleMetadata(meta)
+    #if not res['OK']:
+    #  return res
+    #compatmeta = res['Value']      
+    #if compatmeta.has_key('NumberOfEvents'):
+    #  if type(compatmeta['NumberOfEvents'])==type([]):
+    #    self.nbofeventsperfile = compatmeta['NumberOfEvents'][0]
+    #  elif type(compatmeta['NumberOfEvents']) in types.StringTypes:
+    #    self.nbofeventsperfile = compatmeta['NumberOfEvents']
+    #else:
+    #  return S_ERROR("Number of events could not be determined, cannot proceed.")    
     if self.site == "LCG.CERN.ch":
       return self.__getFilesFromCastor(meta)
 #    elif   self.site == "LCG.IN2P3-CC.fr":
@@ -241,8 +244,15 @@ class OverlayInput (ModuleBase):
     os.chdir("./overlayinput_"+self.evttype)
     filesobtained = []
     usednumbers = []
-      
+    fail = False
+    fail_count = 0  
+    
+    res = gConfig.getOption("/Operations/Overlay/MaxFailedAllowed",20)
+    max_fail_allowed = res['Value']
     while len(filesobtained) < totnboffilestoget:
+      if fail_count > max_fail_allowed:
+        fail = True
+        break
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:        
         usednumbers.append(fileindex)
@@ -254,11 +264,13 @@ class OverlayInput (ModuleBase):
           res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
+          fail_count += 1
           time.sleep(60*random.gauss(3,0.1))     
           continue
         if len(res['Value']['Failed']):
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           time.sleep(60*random.gauss(3,0.1))     
+          fail_count += 1
           continue
         filesobtained.append(self.lfns[fileindex])
         ##Now wait for a random time around 3 minutes
@@ -283,6 +295,9 @@ class OverlayInput (ModuleBase):
     self.log.info("List of Overlay files:")
     self.log.info(string.join(list,"\n"))
     os.chdir(curdir)
+    if fail:
+      self.log.error("Did not manage to get all files needed, too many errors")
+      return S_ERROR("Failed to get files")
     self.log.info('Got all files needed.')
     return S_OK()
 
