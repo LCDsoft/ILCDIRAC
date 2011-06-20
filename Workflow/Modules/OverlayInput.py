@@ -259,7 +259,9 @@ class OverlayInput (ModuleBase):
         if self.site =='LCG.CERN.ch':
           res = self.getCASTORFile(self.lfns[fileindex])
         elif self.site=='LCG.IN2P3-CC.fr':
-          res = self.getLyonFile(self.lfns[fileindex])  
+          res = self.getLyonFile(self.lfns[fileindex])
+        elif self.site=='LCG.UKI-LT2-IC-HEP.uk':
+          res = self.getImperialFile(self.lfns[fileindex])
         else:  
           res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
@@ -355,6 +357,44 @@ class OverlayInput (ModuleBase):
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
     comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
+    res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
+    print res
+    status = 0
+    if not os.path.exists(os.path.basename(file)):
+      status = 1
+    #command2  = command.split()
+    #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
+    #print res
+    #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #resultTuple = self.result['Value']
+    #status = resultTuple[0]  
+    dict = {}
+    dict['Failed'] = []
+    dict['Successful'] = []
+    if status:
+      dict['Failed']=lfn 
+    else:
+      dict['Successful']=lfn  
+      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
+    return S_OK(dict)
+
+  def getImperialFile(self,lfn):
+    prependpath = '/pnfs/hep.ph.ic.ac.uk/data'
+    if not lfn.count('hep.ph.ic.ac.uk/data'):
+      file = prependpath+lfn
+    else: 
+      file = lfn
+    self.log.info("Getting %s"%file)  
+    #command = "rfcp %s ./"%file
+    #comm = []
+    #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
+    if os.environ.has_key('X509_USER_PROXY'):
+      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
+      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      print res
+    #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
+    #command = string.join(comm,";")
+    comm3 = ["dccp","%s"%file,"./"]
     res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
     print res
     status = 0
