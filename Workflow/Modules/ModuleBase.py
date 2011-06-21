@@ -42,6 +42,7 @@ class ModuleBase(object):
     self.result = S_ERROR()
     self.outputFile = ''
     self.jobType = ''
+    self.stdError = ''
     self.debug = False
     self.jobID = None
     if os.environ.has_key('JOBID'):
