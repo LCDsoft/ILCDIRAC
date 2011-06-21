@@ -37,7 +37,7 @@ class Production(ILCJob):
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.ioDict = {}
-    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction']
+    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay']
     self.name = 'unspecifiedWorkflow'
     self.firstEventType = ''
     self.prodGroup = ''
