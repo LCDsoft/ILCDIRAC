@@ -50,6 +50,7 @@ class Production(ILCJob):
     self.basepath = ""
     self.basename = ""
     self.prodparameters = {}    
+    self.prodparameters['NbInputFiles'] = 1
     self.prodparameters['UsingWhizardOutput'] = False
     self.prodparameters['UsingMokkaOutput'] = False
     self.prodparameters['UsingSLICOutput'] = False
@@ -1074,7 +1075,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     Trans.setGroupSize(self.jobFileGroupSize)
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
-    Trans.setEventsPerTask(self.prodparameters['nbevts'])
+    Trans.setEventsPerTask(self.prodparameters['nbevts']*self.prodparameters['NbInputFiles'])
     res = Trans.addTransformation()
     if not res['OK']:
       print res['Message']
@@ -1165,10 +1166,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       info.append('- Process %s'%self.prodparameters['Process'])
     if self.prodparameters.has_key("Energy"):
       info.append('- Energy %s GeV'%self.prodparameters["Energy"])
-    info.append("- %s events per job"%self.prodparameters['nbevts'])
+    info.append("- %s events per job"%self.prodparameters['nbevts']*self.prodparameters['NbInputFiles'])
     if self.prodparameters.has_key('lumi'):
       if self.prodparameters['lumi']:
-        info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']))
+        info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']*self.prodparameters['NbInputFiles']))
 
     if self.prodparameters.has_key("WhizardParameters"):
       info.append('- Whizard parameters: \n %s'%(string.join(self.prodparameters['WhizardParameters'].split(";"),'\n')))
@@ -1381,6 +1382,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     """ Sets the number of files to be input to each job created.
     """
     self.jobFileGroupSize = files
+    self.prodparameters['NbInputFiles'] = files
 
   #############################################################################
   def setWorkflowString(self, wfString):
