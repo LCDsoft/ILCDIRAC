@@ -214,7 +214,7 @@ class OverlayInput (ModuleBase):
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
-    while 1 and not (self.site=='LCG.CERN.ch' or self.site=="LCG.IN2P3-CC.fr"):
+    while 1 and not (self.site=='LCG.CERN.ch' or self.site=="LCG.IN2P3-CC.fr" or self.site=="LCG.UKI-LT2-IC-HEP.uk"):
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
@@ -314,7 +314,7 @@ class OverlayInput (ModuleBase):
     comm = []
     if os.environ.has_key('X509_USER_PROXY'):    
       comm.append("cp %s /tmp/x509up_u%s"%(os.environ['X509_USER_PROXY'],os.getuid()))
-    comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata -s"%file)
+    comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata -s"%file.rstrip())
     command = string.join(comm,";")
     self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     resultTuple = self.result['Value']
