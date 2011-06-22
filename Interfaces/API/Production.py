@@ -1166,7 +1166,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       info.append('- Process %s'%self.prodparameters['Process'])
     if self.prodparameters.has_key("Energy"):
       info.append('- Energy %s GeV'%self.prodparameters["Energy"])
-    info.append("- %s events per job"%self.prodparameters['nbevts']*self.prodparameters['NbInputFiles'])
+    info.append("- %s events per job"%(self.prodparameters['nbevts']*self.prodparameters['NbInputFiles']))
     if self.prodparameters.has_key('lumi'):
       if self.prodparameters['lumi']:
         info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']*self.prodparameters['NbInputFiles']))
