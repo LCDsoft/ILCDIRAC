@@ -394,7 +394,7 @@ class OverlayInput (ModuleBase):
       print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
-    comm3 = ["dccp","%s"%file,"./"]
+    comm3 = ["dccp","dcap://$VO_ILC_DEFAULT_SE%s"%file,"./"]
     res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
     print res
     status = 0
