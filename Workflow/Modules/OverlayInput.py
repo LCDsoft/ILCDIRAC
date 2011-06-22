@@ -211,15 +211,24 @@ class OverlayInput (ModuleBase):
     self.log.verbose("Will allow only %s concurrent running"%res['Value'])
     max_concurrent_running = res['Value']
 
+    jobpropdict = {}
+    jobpropdict['ApplicationStatus'] = 'Getting overlay files'
+    if self.site=='LCG.CERN.ch' or self.site=="LCG.IN2P3-CC.fr" or self.site=="LCG.UKI-LT2-IC-HEP.uk":
+      res = gConfig.getOption("/Operations/Overlay/%s/MaxConcurrentRunning"%self.site,200)
+      self.log.verbose("Will allow only %s concurrent running"%res['Value'])
+      jobpropdict['Site']=self.site
+      max_concurrent_running = res['Value']
+      
+
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
-    while 1 and not (self.site=='LCG.CERN.ch' or self.site=="LCG.IN2P3-CC.fr" or self.site=="LCG.UKI-LT2-IC-HEP.uk"):
+    while 1:
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
       jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
-      res = jobMonitor.getCurrentJobCounters({'ApplicationStatus':'Getting overlay files'})
+      res = jobMonitor.getCurrentJobCounters(jobpropdict)
       if not res['OK']:
         error_count += 1 
         time.sleep(60)
