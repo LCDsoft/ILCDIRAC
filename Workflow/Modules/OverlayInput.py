@@ -213,8 +213,12 @@ class OverlayInput (ModuleBase):
 
     jobpropdict = {}
     jobpropdict['ApplicationStatus'] = 'Getting overlay files'
-    if self.site=='LCG.CERN.ch' or self.site=="LCG.IN2P3-CC.fr" or self.site=="LCG.UKI-LT2-IC-HEP.uk":
-      res = gConfig.getOption("/Operations/Overlay/%s/MaxConcurrentRunning"%self.site,200)
+    res = gConfig.getSections("/Operations/Overlay/Sites/")
+    sites = []
+    if res['OK']:
+      sites = res['Value']
+    if self.site in sites:
+      res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
       self.log.verbose("Will allow only %s concurrent running"%res['Value'])
       jobpropdict['Site']=self.site
       max_concurrent_running = res['Value']
@@ -271,6 +275,8 @@ class OverlayInput (ModuleBase):
           res = self.getLyonFile(self.lfns[fileindex])
         elif self.site=='LCG.UKI-LT2-IC-HEP.uk':
           res = self.getImperialFile(self.lfns[fileindex])
+        elif   self.site=='LCG.RAL-LCG2.uk':
+          res = self.getRALFile(self.lfns[fileindex])
         else:  
           res = self.rm.getFile(self.lfns[fileindex])
         if not res['OK']:
@@ -405,6 +411,53 @@ class OverlayInput (ModuleBase):
     #command = string.join(comm,";")
     comm3 = ["dccp","dcap://$VO_ILC_DEFAULT_SE%s"%file,"./"]
     res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
+    print res
+    status = 0
+    if not os.path.exists(os.path.basename(file)):
+      status = 1
+    #command2  = command.split()
+    #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
+    #print res
+    #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #resultTuple = self.result['Value']
+    #status = resultTuple[0]  
+    dict = {}
+    dict['Failed'] = []
+    dict['Successful'] = []
+    if status:
+      dict['Failed']=lfn 
+    else:
+      dict['Successful']=lfn  
+      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
+    return S_OK(dict)
+
+  def getRALFile(self,lfn):
+    prependpath = '/castor/ads.rl.ac.uk/prod'
+    if not lfn.count('ads.rl.ac.uk/prod'):
+      file = prependpath+lfn
+    else: 
+      file = lfn
+    self.log.info("Getting %s"%file)  
+    #command = "rfcp %s ./"%file
+    #comm = []
+    #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
+    if os.environ.has_key('X509_USER_PROXY'):
+      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
+      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      print res
+    #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
+    #command = string.join(comm,";")
+    comm3= ['declare','-x','CNS_HOST=castorns.ads.rl.ac.uk']
+    res = subprocess.call(comm3)
+    print res
+    comm3= ['declare','-x','STAGE_SVCCLASS=ilcTape']
+    res = subprocess.call(comm3)
+    print res
+    comm3=['declare','-x','STAGE_HOST=genstager.ads.rl.ac.uk']
+    res = subprocess.call(comm3)
+    print res
+    comm3=["/usr/bin/rfcp",file,"./"]
+    res = subprocess.call(comm3)
     print res
     status = 0
     if not os.path.exists(os.path.basename(file)):
