@@ -448,17 +448,17 @@ class OverlayInput (ModuleBase):
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
     try:
-      comm3= ['declare','-x','CNS_HOST=castorns.ads.rl.ac.uk']
-      res = subprocess.call(comm3)
+      comm4= ['declare','-x','CNS_HOST=castorns.ads.rl.ac.uk']
+      res = subprocess.call(comm4)
       print res
-      comm3= ['declare','-x','STAGE_SVCCLASS=ilcTape']
-      res = subprocess.call(comm3)
+      comm5= ['declare','-x','STAGE_SVCCLASS=ilcTape']
+      res = subprocess.call(comm5)
       print res
-      comm3=['declare','-x','STAGE_HOST=genstager.ads.rl.ac.uk']
-      res = subprocess.call(comm3)
+      comm6=['declare','-x','STAGE_HOST=genstager.ads.rl.ac.uk']
+      res = subprocess.call(comm6)
       print res
-      comm3=["/usr/bin/rfcp",file,"./"]
-      res = subprocess.call(comm3)
+      comm7=["/usr/bin/rfcp",file,"./"]
+      res = subprocess.call(comm7)
       print res
     except Exception,x:
       print ("failed : %s %s"%(Exception,x))
