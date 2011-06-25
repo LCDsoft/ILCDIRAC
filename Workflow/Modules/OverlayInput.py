@@ -454,10 +454,10 @@ class OverlayInput (ModuleBase):
       comm5= ['declare','-x','STAGE_SVCCLASS=ilcTape']
       res = subprocess.call(comm5)
       print res
-      comm6=['declare','-x','STAGE_HOST=genstager.ads.rl.ac.uk']
+      comm6=['declare','-x','STAGE_HOST=cgenstager.ads.rl.ac.uk']
       res = subprocess.call(comm6)
       print res
-      comm7=["/usr/bin/rfcp",file,"./"]
+      comm7=["/usr/bin/rfcp","rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s"%file,"./"]
       res = subprocess.call(comm7)
       print res
     except Exception,x:
