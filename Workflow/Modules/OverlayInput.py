@@ -449,7 +449,7 @@ class OverlayInput (ModuleBase):
       print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
-    try:
+    
 #      comm4= ['declare','-x','CNS_HOST=castorns.ads.rl.ac.uk']
 #      res = subprocess.call(comm4)
 #      print res
@@ -459,14 +459,15 @@ class OverlayInput (ModuleBase):
 #      comm6=['declare','-x','STAGE_HOST=cgenstager.ads.rl.ac.uk']
 #      res = subprocess.call(comm6)
 #      print res
-      basename=os.path.basename(file)
-      comm7=["/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
-      logfile = file(self.applicationLog,"w")
+    basename=os.path.basename(file)
+    comm7=["/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
+    logfile = file(self.applicationLog,"w")
+    try:
       res = subprocess.call(comm7,stdout=logfile)
-      logfile.close()
-      print res
     except Exception,x:
       print ("failed : %s %s"%(Exception,x))
+    logfile.close()
+    print res
     status = 0
     if not os.path.exists(os.path.basename(file)):
       status = 1
