@@ -29,7 +29,9 @@ class OverlayInput (ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "OverlayInput" )
     self.applicationName = 'OverlayInput'
-    self.applicationLog = 'Overlay.log'
+    self.curdir = os.getcwd()
+    
+    self.applicationLog = self.curdir+"/"+'Overlay.log'
     self.printoutflag = ''
     self.prodid = 0
     self.detector = ""
@@ -46,7 +48,6 @@ class OverlayInput (ModuleBase):
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
     self.site = DIRAC.siteName()
-    self.curdir = os.getcwd()
 
 
   def applicationSpecificInputs(self):
@@ -460,7 +461,7 @@ class OverlayInput (ModuleBase):
       print res
       basename=os.path.basename(file)
       comm7=["/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
-      logfile = file(self.curdir+"/"+self.applicationLog,"w")
+      logfile = file(self.applicationLog,"w")
       res = subprocess.call(comm7,stdout=logfile)
       logfile.close()
       print res
