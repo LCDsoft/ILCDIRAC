@@ -436,10 +436,10 @@ class OverlayInput (ModuleBase):
   def getRALFile(self,lfn):
     prependpath = '/castor/ads.rl.ac.uk/prod'
     if not lfn.count('ads.rl.ac.uk/prod'):
-      file = prependpath+lfn
+      lfile = prependpath+lfn
     else: 
-      file = lfn
-    self.log.info("Getting %s"%file)  
+      lfile = lfn
+    self.log.info("Getting %s"%lfile)  
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
@@ -459,8 +459,8 @@ class OverlayInput (ModuleBase):
 #      comm6=['declare','-x','STAGE_HOST=cgenstager.ads.rl.ac.uk']
 #      res = subprocess.call(comm6)
 #      print res
-    basename=os.path.basename(file)
-    comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
+    basename=os.path.basename(lfile)
+    comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
     logfile = file(self.applicationLog,"w")
     try:
       res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
@@ -469,7 +469,7 @@ class OverlayInput (ModuleBase):
     logfile.close()
     print res
     status = 0
-    if not os.path.exists(os.path.basename(file)):
+    if not os.path.exists(os.path.basename(lfile)):
       status = 1
     #command2  = command.split()
     #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
