@@ -46,6 +46,7 @@ class OverlayInput (ModuleBase):
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
     self.site = DIRAC.siteName()
+    self.curdir = os.getcwd()
 
 
   def applicationSpecificInputs(self):
@@ -252,7 +253,6 @@ class OverlayInput (ModuleBase):
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
     
-    curdir = os.getcwd()
     os.mkdir("./overlayinput_"+self.evttype)
     os.chdir("./overlayinput_"+self.evttype)
     filesobtained = []
@@ -311,7 +311,7 @@ class OverlayInput (ModuleBase):
     list = os.listdir(os.getcwd())
     self.log.info("List of Overlay files:")
     self.log.info(string.join(list,"\n"))
-    os.chdir(curdir)
+    os.chdir(self.curdir)
     if fail:
       self.log.error("Did not manage to get all files needed, too many errors")
       return S_ERROR("Failed to get files")
@@ -459,7 +459,7 @@ class OverlayInput (ModuleBase):
       print res
       basename=os.path.basename(file)
       comm7=["/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
-      logfile = file(self.applicationLog,"w")
+      logfile = file(self.curdir+"/"+self.applicationLog,"w")
       res = subprocess.call(comm7,stdout=logfile)
       logfile.close()
       print res
