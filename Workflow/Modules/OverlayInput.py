@@ -449,7 +449,7 @@ class OverlayInput (ModuleBase):
       print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
-    logfile = file(self.applicationLog,"w")
+    #logfile = file(self.applicationLog,"w")
     os.environ['CNS_HOST']='castorns.ads.rl.ac.uk'
     #comm4= ['declare','-x','CNS_HOST=castorns.ads.rl.ac.uk']
     #res = subprocess.Popen(comm4,stdout=logfile,stderr=subprocess.STDOUT)
@@ -463,13 +463,27 @@ class OverlayInput (ModuleBase):
 #      res = subprocess.call(comm6)
 #      print res
     basename=os.path.basename(lfile)
-    comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
-    try:
-      res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
-    except Exception,x:
-      print ("failed : %s %s"%(Exception,x))
-    logfile.close()
-    print res
+    
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    script = file("overlayinput.sh","w")
+    script.write('#!/bin/sh \n')
+    script.write('###############################\n')
+    script.write('# Dynamically generated scrip #\n')
+    script.write('###############################\n')
+    script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' file:./%s\n"%(lfile,basename))
+    script.write('declare -x appstatus=$?\n')
+    script.write('exit $appstatus\n')
+    script.close()
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
+    #try:
+    #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
+    #except Exception,x:
+    #  print ("failed : %s %s"%(Exception,x))
+    #logfile.close()
+    #print res
     status = 0
     if not os.path.exists(os.path.basename(lfile)):
       status = 1
