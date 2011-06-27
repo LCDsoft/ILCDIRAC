@@ -218,9 +218,10 @@ class OverlayInput (ModuleBase):
     sites = []
     if res['OK']:
       sites = res['Value']
+      self.log.verbose("Found the following sites to restrain: %s"%sites)
     if self.site in sites:
       res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
-      self.log.verbose("Will allow only %s concurrent running"%res['Value'])
+      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
       jobpropdict['Site']=self.site
       max_concurrent_running = res['Value']
       
