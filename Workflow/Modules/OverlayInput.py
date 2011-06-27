@@ -460,7 +460,7 @@ class OverlayInput (ModuleBase):
 #      res = subprocess.call(comm6)
 #      print res
     basename=os.path.basename(file)
-    comm7=["/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
+    comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
     logfile = file(self.applicationLog,"w")
     try:
       res = subprocess.call(comm7,stdout=logfile,stderr=subprocess.STDOUT)
