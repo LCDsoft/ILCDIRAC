@@ -459,7 +459,7 @@ class OverlayInput (ModuleBase):
       print res
       basename=os.path.basename(file)
       comm7=["/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
-      res = subprocess.call(comm7)rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=
+      res = subprocess.call(comm7)
       
       print res
     except Exception,x:
