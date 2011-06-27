@@ -463,7 +463,7 @@ class OverlayInput (ModuleBase):
     comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%file,"file:%s"%basename]
     logfile = file(self.applicationLog,"w")
     try:
-      res = subprocess.call(comm7,stdout=logfile,stderr=subprocess.STDOUT)
+      res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
     except Exception,x:
       print ("failed : %s %s"%(Exception,x))
     logfile.close()
