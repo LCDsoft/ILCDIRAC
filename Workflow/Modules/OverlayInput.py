@@ -30,7 +30,7 @@ class OverlayInput (ModuleBase):
     self.log = gLogger.getSubLogger( "OverlayInput" )
     self.applicationName = 'OverlayInput'
     self.curdir = os.getcwd()
-    
+
     self.applicationLog = self.curdir+"/"+'Overlay.log'
     self.printoutflag = ''
     self.prodid = 0
@@ -57,31 +57,31 @@ class OverlayInput (ModuleBase):
       self.detector = self.step_commons['Detector']
     else:
       return S_ERROR('Detector model not defined')
-    
+
     if self.step_commons.has_key('Energy'):
       self.energy = self.step_commons['Energy']
-      
+
     if self.step_commons.has_key('BXOverlay'):
       self.bxoverlay = self.step_commons['BXOverlay']
     else:
       return S_ERROR("BXOverlay parameter not defined")
-    
+
     if self.step_commons.has_key('ggtohadint'):
       self.ggtohadint = self.step_commons['ggtohadint']
-      
+
     if self.step_commons.has_key('ProdID'):
       self.prodid = self.step_commons['ProdID']
-    
+
     if self.step_commons.has_key('NbSigEvtsPerJob'):
       self.nsigevts = self.step_commons['NbSigEvtsPerJob']
-    
+
     if self.step_commons.has_key('BkgEvtType'):
-      self.evttype = self.step_commons['BkgEvtType']  
-    
+      self.evttype = self.step_commons['BkgEvtType']
+
     #if self.workflow_commons.has_key('Site'):
-    #  self.site = self.workflow_commons['Site']  
-      
-    if len(self.InputData) > 2 : 
+    #  self.site = self.workflow_commons['Site']
+
+    if len(self.InputData) > 2 :
       res = getNumberOfevents(self.InputData)
       if res.has_key("nbevts"):
         self.nbsigeventsperfile = res["nbevts"]
@@ -98,7 +98,7 @@ class OverlayInput (ModuleBase):
     meta['EvtType']=self.evttype
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
-    
+
     res= gConfig.getOption("/Operations/Overlay/%s/%s/ProdID"%(self.detector,self.energy),0)
     meta['ProdID']= res['Value']
     #res = self.fc.getCompatibleMetadata(meta)
@@ -107,28 +107,28 @@ class OverlayInput (ModuleBase):
     #compatmeta = res['Value']
     #if not self.prodid:
     #  if compatmeta.has_key('ProdID'):
-    #    #take the latest prodID as 
+    #    #take the latest prodID as
     #    list = compatmeta['ProdID']
     #    list.sort()
     #    self.prodid=list[-1]
     #  else:
-    #    return S_ERROR("Could not determine ProdID from compatible metadata")  
+    #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
-    #refetch the compat metadata to get nb of events  
+    #refetch the compat metadata to get nb of events
     res= gConfig.getOption("/Operations/Overlay/%s/%s/NbEvts"%(self.detector,self.energy),100)
     self.nbofeventsperfile = res['Value']
 
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
     #  return res
-    #compatmeta = res['Value']      
+    #compatmeta = res['Value']
     #if compatmeta.has_key('NumberOfEvents'):
     #  if type(compatmeta['NumberOfEvents'])==type([]):
     #    self.nbofeventsperfile = compatmeta['NumberOfEvents'][0]
     #  elif type(compatmeta['NumberOfEvents']) in types.StringTypes:
     #    self.nbofeventsperfile = compatmeta['NumberOfEvents']
     #else:
-    #  return S_ERROR("Number of events could not be determined, cannot proceed.")    
+    #  return S_ERROR("Number of events could not be determined, cannot proceed.")
     if self.site == "LCG.CERN.ch":
       return self.__getFilesFromCastor(meta)
 #    elif   self.site == "LCG.IN2P3-CC.fr":
@@ -157,9 +157,9 @@ class OverlayInput (ModuleBase):
       for f in res[0].rstrip().split("\n"):
         if f.count("dirac_directory"):
           continue
-        list.append(path+dir+"/"+f)    
+        list.append(path+dir+"/"+f)
     if not list:
-      return S_ERROR("File list is empty")        
+      return S_ERROR("File list is empty")
     return S_OK(list)
 
   def __getFilesFromCastor(self,meta):
@@ -184,11 +184,11 @@ class OverlayInput (ModuleBase):
           continue
         list.append(path+dir+"/"+f)
     if not list:
-      return S_ERROR("File list is empty")    
+      return S_ERROR("File list is empty")
     return S_OK(list)
 
   def __getFilesLocaly(self):
-    
+
     numberofeventstoget = ceil(self.bxoverlay*self.ggtohadint)
     nbfiles = len(self.lfns)
     availableevents = nbfiles*self.nbofeventsperfile
@@ -200,12 +200,12 @@ class OverlayInput (ModuleBase):
       self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
     if not self.nsigevts:
       return S_ERROR('Could not determine the number of signal events per job')
-    
+
     ##Now determine how many files are needed to cover all signal events
     totnboffilestoget = int(ceil(self.nsigevts*numberofeventstoget/self.nbofeventsperfile))
-        
+
     ##Limit ourself to some configuration maximum
-    res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)    
+    res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)
     maxNbFilesToGet = res['Value']
     if totnboffilestoget>maxNbFilesToGet+1:
       totnboffilestoget=maxNbFilesToGet+1
@@ -225,7 +225,7 @@ class OverlayInput (ModuleBase):
       self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
       jobpropdict['Site']=self.site
       max_concurrent_running = res['Value']
-      
+
 
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
@@ -237,7 +237,7 @@ class OverlayInput (ModuleBase):
       jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
       res = jobMonitor.getCurrentJobCounters(jobpropdict)
       if not res['OK']:
-        error_count += 1 
+        error_count += 1
         time.sleep(60)
         continue
       running = 0
@@ -249,19 +249,19 @@ class OverlayInput (ModuleBase):
         count += 1
         if count>300:
           return S_ERROR("Waited too long: 5h, so marking job as failed")
-        self.setApplicationStatus("Overlay standby nb %s"%count)        
+        self.setApplicationStatus("Overlay standby nb %s"%count)
         time.sleep(60)
     self.setApplicationStatus('Getting overlay files')
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
-    
+
     os.mkdir("./overlayinput_"+self.evttype)
     os.chdir("./overlayinput_"+self.evttype)
     filesobtained = []
     usednumbers = []
     fail = False
-    fail_count = 0  
-    
+    fail_count = 0
+
     res = gConfig.getOption("/Operations/Overlay/MaxFailedAllowed",20)
     max_fail_allowed = res['Value']
     while len(filesobtained) < totnboffilestoget:
@@ -269,32 +269,45 @@ class OverlayInput (ModuleBase):
         fail = True
         break
       fileindex = random.randrange(nbfiles)
-      if fileindex not in usednumbers:        
+      if fileindex not in usednumbers:
+
         usednumbers.append(fileindex)
+
+        isDefault = False
+
         if self.site =='LCG.CERN.ch':
           res = self.getCASTORFile(self.lfns[fileindex])
         elif self.site=='LCG.IN2P3-CC.fr':
           res = self.getLyonFile(self.lfns[fileindex])
         elif self.site=='LCG.UKI-LT2-IC-HEP.uk':
           res = self.getImperialFile(self.lfns[fileindex])
-        elif   self.site=='LCG.RAL-LCG2.uk':
+        elif  self.site=='LCG.RAL-LCG2.uk':
           res = self.getRALFile(self.lfns[fileindex])
-        else:  
+        else:
           res = self.rm.getFile(self.lfns[fileindex])
+          isDefault = True
+
+        # Tue Jun 28 14:21:03 CEST 2011
+        # Temporarily for Imperial College site until dCache is fixed
+
+        if not res['OK'] and not isDefault and self.site=='LCG.UKI-LT2-IC-HEP.uk':
+          res = self.rm.getFile(self.lfns[fileindex])
+
         if not res['OK']:
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           fail_count += 1
-          time.sleep(60*random.gauss(3,0.1))     
+          time.sleep(60*random.gauss(3,0.1))
           continue
+
         if len(res['Value']['Failed']):
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
-          time.sleep(60*random.gauss(3,0.1))     
+          time.sleep(60*random.gauss(3,0.1))
           fail_count += 1
           continue
         filesobtained.append(self.lfns[fileindex])
         ##Now wait for a random time around 3 minutes
         time.sleep(60*random.gauss(3,0.1))
-        
+
     #res = self.rm.getFile(filesobtained)
     #failed = len(res['Value']['Failed'])
     #tryagain = []
@@ -324,12 +337,12 @@ class OverlayInput (ModuleBase):
     prependpath = "/castor/cern.ch/grid"
     if not lfn.count("castor/cern.ch"):
       file = prependpath+lfn
-    else: 
+    else:
       file = lfn
-    self.log.info("Getting %s"%file)  
+    self.log.info("Getting %s"%file)
     #command = "rfcp %s ./"%file
     comm = []
-    if os.environ.has_key('X509_USER_PROXY'):    
+    if os.environ.has_key('X509_USER_PROXY'):
       comm.append("cp %s /tmp/x509up_u%s"%(os.environ['X509_USER_PROXY'],os.getuid()))
     comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata -s"%file.rstrip())
     command = string.join(comm,";")
@@ -338,7 +351,7 @@ class OverlayInput (ModuleBase):
     status = resultTuple[0]
     if status:
       comm = []
-      comm.append('declare -x STAGE_SVCCLASS=ilcdata')      
+      comm.append('declare -x STAGE_SVCCLASS=ilcdata')
       comm.append('declare -x STAGE_HOST=castorpublic')
       comm.append('rfcp %s ./'%file)
       command = string.join(comm,";")
@@ -346,14 +359,14 @@ class OverlayInput (ModuleBase):
       self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
       resultTuple = self.result['Value']
       status = resultTuple[0]
-      
+
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn 
+      dict['Failed']=lfn
     else:
-      dict['Successful']=lfn  
+      dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK(dict)
 
@@ -361,9 +374,9 @@ class OverlayInput (ModuleBase):
     prependpath = '/pnfs/in2p3.fr/data'
     if not lfn.count('in2p3.fr/data'):
       file = prependpath+lfn
-    else: 
+    else:
       file = lfn
-    self.log.info("Getting %s"%file)  
+    self.log.info("Getting %s"%file)
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
@@ -384,14 +397,14 @@ class OverlayInput (ModuleBase):
     #print res
     #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #resultTuple = self.result['Value']
-    #status = resultTuple[0]  
+    #status = resultTuple[0]
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn 
+      dict['Failed']=lfn
     else:
-      dict['Successful']=lfn  
+      dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK(dict)
 
@@ -399,9 +412,9 @@ class OverlayInput (ModuleBase):
     prependpath = '/pnfs/hep.ph.ic.ac.uk/data'
     if not lfn.count('hep.ph.ic.ac.uk/data'):
       file = prependpath+lfn
-    else: 
+    else:
       file = lfn
-    self.log.info("Getting %s"%file)  
+    self.log.info("Getting %s"%file)
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
@@ -411,7 +424,7 @@ class OverlayInput (ModuleBase):
       print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
-    comm3 = ["dccp","dcap://$VO_ILC_DEFAULT_SE%s"%file,"./"]
+    comm3 = ["dccp","dcap://%s%s" % ( os.environ['VO_ILC_DEFAULT_SE'], file ),"./"]
     res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
     print res
     status = 0
@@ -422,14 +435,14 @@ class OverlayInput (ModuleBase):
     #print res
     #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #resultTuple = self.result['Value']
-    #status = resultTuple[0]  
+    #status = resultTuple[0]
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn 
+      dict['Failed']=lfn
     else:
-      dict['Successful']=lfn  
+      dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK(dict)
 
@@ -437,9 +450,9 @@ class OverlayInput (ModuleBase):
     prependpath = '/castor/ads.rl.ac.uk/prod'
     if not lfn.count('ads.rl.ac.uk/prod'):
       lfile = prependpath+lfn
-    else: 
+    else:
       lfile = lfn
-    self.log.info("Getting %s"%lfile)  
+    self.log.info("Getting %s"%lfile)
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
@@ -463,7 +476,7 @@ class OverlayInput (ModuleBase):
 #      res = subprocess.call(comm6)
 #      print res
     basename=os.path.basename(lfile)
-    
+
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
     script = file("overlayinput.sh","w")
@@ -492,14 +505,14 @@ class OverlayInput (ModuleBase):
     #print res
     #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #resultTuple = self.result['Value']
-    #status = resultTuple[0]  
+    #status = resultTuple[0]
     dict = {}
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn 
+      dict['Failed']=lfn
     else:
-      dict['Successful']=lfn  
+      dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK(dict)
 
@@ -521,21 +534,21 @@ class OverlayInput (ModuleBase):
     if not len(self.lfns):
       self.setApplicationStatus('OverlayProcessor got an empty list')
       return S_ERROR('OverlayProcessor got an empty list')
-    
+
     ###Don't check for CPU time as other wise, job can get killed
     if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
       os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
     f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
     f.write('Dont look at cpu')
     f.close()
-    
+
     res = self.__getFilesLocaly()
     ###Now that module is finished,resume CPU time checks
     os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
-    
+
     if not res['OK']:
       self.setApplicationStatus('OverlayProcessor failed to get files locally with message %s'%res['Message'])
       return S_ERROR('OverlayProcessor failed to get files locally')
     self.setApplicationStatus('Overlay processor finished getting all files successfully')
     return S_OK('Overlay input finished successfully')
-  
+
