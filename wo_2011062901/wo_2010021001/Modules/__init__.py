@@ -1,3 +1,0 @@
-"""
-   LCDDIRAC.WorkflowLib.Modules package
-"""
