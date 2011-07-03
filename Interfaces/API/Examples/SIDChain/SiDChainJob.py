@@ -8,8 +8,8 @@ import sys
 
 # default parameters
 macroFile = 'slicMacros/defaultClicCrossingAngle.mac'
-slicPandoraVer = 'CDR1'
-lcsimVer = '1.18-SNAPSHOT'
+slicPandoraVer = 'CLIC_CDR'
+lcsimVer = 'CLIC_CDR'
 slicVer = 'v2r9p8'
 detector = 'clic_sid_cdr'
 jobTitle = 'fullReco'
@@ -17,7 +17,7 @@ inputFileList = None
 nEvts = -1
 nJobs = 1
 settingsFile = ''
-cpuLimit = 300000
+cpuLimit = 100000
 mergeSlcioFiles = 1
 slicPandoraPath = 'LFN:/ilc/prod/software/slicpandora/'
 slicPandoraDetector = detector
@@ -36,7 +36,7 @@ maxFiles = -1
 lfnlist = None
 prodID = None
 process = None
-debug = False
+debug = True
 agentMode = False
 
 Script.registerSwitch( 'a:', 'alias=', 'name of the alias.properties file to use (default %s)'%(aliasFile) )
@@ -58,7 +58,7 @@ Script.registerSwitch( 'P:', 'pandora=', 'slicPandora version to use (default %s
 Script.registerSwitch( 'S:', 'slic=', 'slic version (default %s)'%(slicVer) )
 Script.registerSwitch( 't:', 'time=', 'CPU time limit per job in seconds (default %s)'%(cpuLimit) )
 Script.registerSwitch( 'T:', 'title=', 'job title (default %s)'%(jobTitle) )
-Script.registerSwitch( 'v', 'verbose', 'switches on the verbose mode' )
+Script.registerSwitch( 'v', 'verbose', 'switches off the verbose mode' )
 Script.registerSwitch( 'x:', 'settings=', 'name of pandora settings file (default taken from grid installation)' )
 Script.registerSwitch( 'y:', 'strategy=', 'name of tracking strategy file to use (default %s)'%(strategyFile) )
 Script.registerSwitch( 'z:', 'maxfiles=', 'maximum number of files to process (default %s)'%(maxFiles) )
@@ -117,7 +117,7 @@ for switch in switches:
 	if opt in ('z','maxfiles'):
 		maxFiles = int(arg)
 	if opt in ('v','verbose'):
-		debug = True
+		debug = False
 	if opt in ('g','pandoradetector'):
 		slicPandoraDetector = arg
 
@@ -376,7 +376,7 @@ for inputFile in lfnlist:
 		job.setSystemConfig ( systemConfig )
 		job.setName ( detector+"_"+process+"_"+jobTitle )
 		job.setBannedSites( bannedSites )
-		#job.setDestination('LCG.CERN.ch')
+		job.setDestination('LCG.CERN.ch')
 		
 		if debug:
 			print ''
@@ -400,6 +400,7 @@ for inputFile in lfnlist:
 			print ''
 			
 			print 'General parameters:'
+			
 			print '  Detector model:', detector
 			print '  Process name:', process
 			print '  Job title:', jobTitle
