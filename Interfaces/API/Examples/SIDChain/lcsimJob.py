@@ -24,6 +24,7 @@ strategyFile = 'defaultStrategies.xml'
 banlistFile = 'bannedSites.py'
 maxFiles = -1
 jobTitle = ''
+jarFile = ''
 outputPath = ''
 replaceFiles = False
 recFiles = False
@@ -41,6 +42,7 @@ Script.registerSwitch( 'D:', 'detector=', 'name of the detector model (default %
 Script.registerSwitch( 'e:', 'eventType=', 'the name of the event type (taken from meta data if production ID is given)' )
 Script.registerSwitch( 'f:', 'files=', 'maximum number of files to process (default %s)'%(maxFiles) )
 Script.registerSwitch( 'i:', 'input=', 'input python script holding the lfnlist to process' )
+Script.registerSwitch( 'J:', 'jar=', 'jar file which will be added to the input sand box' )
 Script.registerSwitch( 'l:', 'lcsimxml=', 'lcsim steering xml template' )
 Script.registerSwitch( 'L:', 'lcsim=', 'lcsim version to use (default %s)'%(lcsimVer) )
 Script.registerSwitch( 'M:', 'merge=', 'number of slcio input files processed per job (default %s)'%(mergeSlcioFiles) )
@@ -79,6 +81,8 @@ for switch in switches:
 		maxFiles = int(arg)
 	if opt in ('i','input'):
 		inputFileList = arg
+	if opt in ('J','jar'):
+		jarFile = arg
 	if opt in ('l','lcsimxml'):
 		lcsimTemplate = arg
 	if opt in ('L','lcsim'):
@@ -236,6 +240,9 @@ else:
 	inputSandbox.append( 'LFN:/ilc/prod/software/lcsim/trackingStrategies/'+detector+'/'+strategyFile )
 # JNI bindings for root writer
 inputSandbox.append( 'lib' )
+# jar file
+if jarFile:
+	inputSandbox.appen( jarFile )
 
 # read file with list of banned sites
 if banlistFile:
