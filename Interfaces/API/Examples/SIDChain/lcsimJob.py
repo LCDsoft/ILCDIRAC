@@ -229,6 +229,11 @@ elif inputFileList:
 # define storage path
 if not outputPath:
 	outputPath = '%s/%s/%s/'%(detector, eventType, jobTitle)
+else:
+	correctedPath = ''
+	for item in outputPath.split('/'):
+		correctedPath += item+'/'
+	outputPath = correctedPath
 
 # sandboxes
 inputSandbox = []
@@ -314,6 +319,10 @@ if not result['OK']:
 	print 'Error looking up the file catalog for metadata: %s'%(result['Message'])
 	sys.exit( 2 )
 checkedOutputFiles = result[ 'Value' ][ 'Successful' ]
+# append those files that did not make it through the query as non existing
+for file in allOutputFiles:
+	if not checkedOutputFiles.has_key( file ):
+		checkedOutputFiles[ file ] = False
 
 # check job sanity based on existance of input and output files
 removeFiles = []
@@ -345,7 +354,9 @@ for job in jobs:
 		skippedJobs += 1
 	# prepend 'LFN:' in order to properly use it as input data
 	job['inputData'] = map(lambda x: "LFN:"+x, job['inputData'])
-				
+
+nTotalJobs = len(jobs) - skippedJobs
+	
 # give some feedback to the user before job submission
 if debug:
 	print 'Jobs to submit:'
@@ -368,7 +379,7 @@ if debug:
 	else:
 		if existingOutputFiles > 0:
 			print '  Jobs skipped because of existing output files:', existingOutputFiles
-	print '  Total number of jobs:', len(jobs)-skippedJobs
+	print '  Total number of jobs:', nTotalJobs
 	print '  Maximum CPU time per job:', cpuLimit, 'sec'
 	print ''
 	
@@ -401,9 +412,17 @@ if debug:
 		print 'WARNING: jobs are submitted in agent mode and will be executed locally.'
 		print ''
 	
+	if nTotalJobs < 1:
+		print 'No jobs to submit, please check your input!'
+		sys.exit(2)
+	
 	answer = raw_input('Proceed and submit job(s)? (Y/N): ')
 	if not answer.lower() in ('y', 'yes'):
 		sys.exit(2)
+
+if nTotalJobs < 1:
+	print 'No jobs to submit, please check your input!'
+	sys.exit(2)
 
 # delete files
 if len(removeFiles) > 0:
@@ -442,6 +461,9 @@ for job in jobs:
 	
 	ilcjob.setOutputSandbox ( outputSandbox )
 	ilcjob.setInputSandbox ( inputSandbox )
+	# remove trailing "/" from output path
+	if outputPath[-1:] == '/':
+		outputPath = outputPath[:-1]
 	ilcjob.setOutputData ( outputData, storageElement, outputPath )	
 	ilcjob.setCPUTime( cpuLimit )
 	ilcjob.setSystemConfig ( systemConfig )
@@ -449,7 +471,7 @@ for job in jobs:
 	ilcjob.setJobGroup( jobTitle )
 	ilcjob.setBannedSites( bannedSites )
 	
-	print 'Submitting job %s / %s'%(counter, len(jobs))
+	print 'Submitting job %s / %s'%(counter, nTotalJobs)
 	if agentMode:
 		dirac.submit ( ilcjob, mode="Agent" )
 	else:
