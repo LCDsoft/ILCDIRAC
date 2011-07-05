@@ -488,6 +488,7 @@ class OverlayInput (ModuleBase):
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
     script.close()
+    os.chmod("overlayinput.sh",0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
