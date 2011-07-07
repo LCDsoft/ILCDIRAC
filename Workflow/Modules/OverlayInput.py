@@ -484,7 +484,7 @@ class OverlayInput (ModuleBase):
     script.write('###############################\n')
     script.write('# Dynamically generated scrip #\n')
     script.write('###############################\n')
-    script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' file:./%s\n"%(lfile,basename))
+    script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
     script.close()
