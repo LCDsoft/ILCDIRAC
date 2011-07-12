@@ -226,7 +226,7 @@ class OverlayInput (ModuleBase):
       jobpropdict['Site']=self.site
       max_concurrent_running = res['Value']
 
-
+    overlaymon = RPCClient('Overlay/Overlay',timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
@@ -234,16 +234,19 @@ class OverlayInput (ModuleBase):
       if error_count > 10 :
         self.log.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
-      jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
-      res = jobMonitor.getCurrentJobCounters(jobpropdict)
-      if not res['OK']:
-        error_count += 1
-        time.sleep(60)
-        continue
-      running = 0
-      if res['Value'].has_key('Running'):
-        running = res['Value']['Running']
-      if running < max_concurrent_running:
+      #jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
+      #res = jobMonitor.getCurrentJobCounters(jobpropdict)
+      #if not res['OK']:
+      #  error_count += 1
+      #  time.sleep(60)
+      #  continue
+      #running = 0
+      #if res['Value'].has_key('Running'):
+      #  running = res['Value']['Running']
+
+      res = overlaymon.canRun(self.site)
+      #if running < max_concurrent_running:
+      if res['Value']:
         break
       else:
         count += 1
@@ -327,6 +330,9 @@ class OverlayInput (ModuleBase):
     self.log.info("List of Overlay files:")
     self.log.info(string.join(list,"\n"))
     os.chdir(self.curdir)
+    res = overlaymon.jobDone(self.site)
+    if not res['OK']:
+      self.log.error("Could not declare the job as finished getting the files")
     if fail:
       self.log.error("Did not manage to get all files needed, too many errors")
       return S_ERROR("Failed to get files")
