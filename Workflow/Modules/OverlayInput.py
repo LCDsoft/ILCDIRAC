@@ -209,22 +209,22 @@ class OverlayInput (ModuleBase):
     maxNbFilesToGet = res['Value']
     if totnboffilestoget>maxNbFilesToGet+1:
       totnboffilestoget=maxNbFilesToGet+1
-    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
-    self.log.verbose("Will allow only %s concurrent running"%res['Value'])
-    max_concurrent_running = res['Value']
-
-    jobpropdict = {}
-    jobpropdict['ApplicationStatus'] = 'Getting overlay files'
-    res = gConfig.getSections("/Operations/Overlay/Sites/")
-    sites = []
-    if res['OK']:
-      sites = res['Value']
-      self.log.verbose("Found the following sites to restrain: %s"%sites)
-    if self.site in sites:
-      res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
-      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
-      jobpropdict['Site']=self.site
-      max_concurrent_running = res['Value']
+#    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
+#    self.log.verbose("Will allow only %s concurrent running"%res['Value'])
+#    max_concurrent_running = res['Value']
+#
+#    jobpropdict = {}
+#    jobpropdict['ApplicationStatus'] = 'Getting overlay files'
+#    res = gConfig.getSections("/Operations/Overlay/Sites/")
+#    sites = []
+#    if res['OK']:
+#      sites = res['Value']
+#      self.log.verbose("Found the following sites to restrain: %s"%sites)
+#    if self.site in sites:
+#      res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
+#      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
+#      jobpropdict['Site']=self.site
+#      max_concurrent_running = res['Value']
 
     overlaymon = RPCClient('Overlay/Overlay',timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
