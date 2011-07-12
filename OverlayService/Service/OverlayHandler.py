@@ -10,7 +10,10 @@ from DIRAC                                              import gLogger, gConfig,
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 
 from ILCDIRAC.OverlayService.DB.OverlayDB import OverlayDB
-# This is a global instance of the ProcessDB class
+from types import *
+
+
+# This is a global instance of the OverlayDB class
 overlayDB = False
 
 def initializeOverlayHandler( serviceInfo ):
@@ -20,4 +23,16 @@ def initializeOverlayHandler( serviceInfo ):
   return S_OK()
 
 class OverlayHandler(RequestHandler):
-  pass
+
+  types_canRun = [StringTypes]
+  def export_canRun(self,site):
+    return overlayDB.canRun(site)
+
+  types_jobDone = [StringTypes]
+  def export_jobDone(self,site):
+    return overlayDB.jobDone(site)
+  
+  types_getJobsAtSite =  [StringTypes]
+  def export_getJobsAtSite(self,site):
+    return overlayDB.getJobsAtSite(site)
+  
