@@ -14,6 +14,7 @@ class OverlayDB ( DB ):
     """ 
     """
     self.dbname = 'OverlayDB'
+    self.logger = gLogger.getSubLogger('OverlayDB')
     DB.__init__( self, self.dbname, 'OverlaySystem/OverlayDB', maxQueueSize  )
     self._createTables( { "OverlayData" : { 'Fields' : { 'Site' : "VARCHAR(256) UNIQUE NOT NULL",
                                                           'NumberOfJobs' : "INTEGER NOT NULL DEFAULT 1"
@@ -33,6 +34,8 @@ class OverlayDB ( DB ):
     for tempsite in sites:
       res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%tempsite,200)
       self.limits[tempsite] = res['Value']
+    self.logger.info("Using the following restrictions : %s"%self.limits)
+
  #####################################################################
   # Private methods
 
@@ -89,7 +92,7 @@ class OverlayDB ( DB ):
     res = self._checkSite(site, connection)
     if not res['OK']:
       return S_OK(0)
-    nbjobs = res['Value'][0]
+    nbjobs = res['Value'][0][0]
     return S_OK(nbjobs)
 
 ### Important methods
@@ -104,7 +107,7 @@ class OverlayDB ( DB ):
       self.addSite(site, connection)
       nbjobs = 1
     else:
-      nbjobs = res['Value'][0]
+      nbjobs = res['Value'][0][0]
     if nbjobs < self._limitForSite(site):
       res = self._addNewJob(site,nbjobs, connection)
       if not res['OK']:
@@ -121,7 +124,9 @@ class OverlayDB ( DB ):
     res = self._checkSite(site, connection)
     if not res['OK']:
       return res
-    nbjobs = res['Value'][0]
+    nbjobs = res['Value'][0][0]
+    if nbjobs == 1:
+      return S_OK()
     nbjobs -= 1
     req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(nbjobs,site)
     res = self._update( req, connection )
