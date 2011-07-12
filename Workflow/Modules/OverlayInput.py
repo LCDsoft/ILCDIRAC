@@ -245,6 +245,11 @@ class OverlayInput (ModuleBase):
       #  running = res['Value']['Running']
 
       res = overlaymon.canRun(self.site)
+      if not res['OK']:
+        error_count += 1
+        time.sleep(60)
+        continue
+      
       #if running < max_concurrent_running:
       if res['Value']:
         break
