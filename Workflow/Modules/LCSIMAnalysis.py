@@ -191,8 +191,8 @@ class LCSIMAnalysis(ModuleBase):
     if len(self.xmlfile):
       self.xmlfile = os.path.basename(self.xmlfile)
       if not os.path.exists(self.xmlfile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.xmlfile)):
-          self.xmlfile = os.path.join(mySoftwareRoot,"steeringfiles",self.xmlfile)
+        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.xmlfile)):
+          self.xmlfile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.xmlfile)
     lcsimfile = "job.lcsim"
     res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:

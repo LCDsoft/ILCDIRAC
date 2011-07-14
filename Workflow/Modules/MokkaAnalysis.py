@@ -238,9 +238,9 @@ class MokkaAnalysis(ModuleBase):
       ##idem for steering file
       self.steeringFile = os.path.basename(self.steeringFile)
       if not os.path.exists(self.steeringFile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)):
+        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.steeringFile)):
           try:
-            shutil.copy(os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile), "./"+self.steeringFile )
+            shutil.copy(os.path.join(mySoftwareRoot,"steeringfilesV1",self.steeringFile), "./"+self.steeringFile )
           except Exception,x:
             result = sqlwrapper.mysqlCleanUp()
             return S_ERROR('Failed to access file %s: '%(self.steeringFile,str(x)))  
