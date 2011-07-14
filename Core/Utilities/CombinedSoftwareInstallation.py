@@ -140,12 +140,12 @@ def CanWrite(area):
   curdir = os.getcwd()
   os.chdir(area)
   try:
-    f = file("testfile","w")
-    f.write("Testing writing")
+    f = open("testfile.txt","w")
+    f.write("Testing writing\n")
     f.close()
-    os.remove(f)
+    os.remove("testfile.txt")
   except Exception,x:
-    DIRAC.gLogger.error('Problem trying to write in area',str(x))
+    DIRAC.gLogger.error('Problem trying to write in area %s: '%area,str(x))
     return False
   finally:
     os.chdir(curdir)
