@@ -184,7 +184,15 @@ class MarlinAnalysis(ModuleBase):
     
     finalXML = "marlinxml.xml"
     self.inputGEAR = os.path.basename(self.inputGEAR)
+    if not os.path.exists(self.inputGEAR):
+      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.inputGEAR)):
+        self.inputGEAR = os.path.join(mySoftwareRoot,"steeringfiles",self.inputGEAR)
+      
     self.inputXML = os.path.basename(self.inputXML)
+    if not os.path.exists(self.inputXML):
+      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.inputXML)):
+        self.inputXML = os.path.join(mySoftwareRoot,"steeringfiles",self.inputXML)
+        
     res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s'%res['Message'])
