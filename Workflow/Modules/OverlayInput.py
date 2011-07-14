@@ -347,29 +347,46 @@ class OverlayInput (ModuleBase):
   def getCASTORFile(self,lfn):
     prependpath = "/castor/cern.ch/grid"
     if not lfn.count("castor/cern.ch"):
-      file = prependpath+lfn
+      lfile = prependpath+lfn
     else:
-      file = lfn
-    self.log.info("Getting %s"%file)
+      lfile = lfn
+    self.log.info("Getting %s"%lfile)
     #command = "rfcp %s ./"%file
-    comm = []
-    if os.environ.has_key('X509_USER_PROXY'):
-      comm.append("cp %s /tmp/x509up_u%s"%(os.environ['X509_USER_PROXY'],os.getuid()))
-    comm.append("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata -s"%file.rstrip())
-    command = string.join(comm,";")
-    self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    resultTuple = self.result['Value']
-    status = resultTuple[0]
-    if status:
-      comm = []
-      comm.append('declare -x STAGE_SVCCLASS=ilcdata')
-      comm.append('declare -x STAGE_HOST=castorpublic')
-      comm.append('rfcp %s ./'%file)
-      command = string.join(comm,";")
 
-      self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-      resultTuple = self.result['Value']
-      status = resultTuple[0]
+    basename=os.path.basename(lfile)
+
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    script = file("overlayinput.sh","w")
+    script.write('#!/bin/sh \n')
+    script.write('###############################\n')
+    script.write('# Dynamically generated scrip #\n')
+    script.write('###############################\n')
+    script.write("cp %s /tmp/x509up_u%s \n"%(os.environ['X509_USER_PROXY'],os.getuid()))
+    script.write('declare -x STAGE_SVCCLASS=ilcdata\n')
+    script.write('declare -x STAGE_HOST=castorpublic\n')
+    script.write("xrdcp root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic&svcClass=ilcdata -s\n"%lfile.rstrip())
+    #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
+    script.write("""
+if [ ! -s %s ]; then
+  rfcp %s ./
+fi\n"""%(basename,lfile))
+    script.write('declare -x appstatus=$?\n')
+    script.write('exit $appstatus\n')
+    script.close()
+    os.chmod("overlayinput.sh",0755)
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
+    #try:
+    #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
+    #except Exception,x:
+    #  print ("failed : %s %s"%(Exception,x))
+    #logfile.close()
+    #print res
+    status = 0
+    if not os.path.exists(os.path.basename(lfile)):
+      status = 1
 
     dict = {}
     dict['Failed'] = []
