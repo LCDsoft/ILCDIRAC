@@ -26,7 +26,7 @@ from DIRAC                                               import S_OK, S_ERROR, g
 
 import DIRAC
 
-import re, os, sys
+import re, os, sys, shutil
 
 #random string generator 
 import string
@@ -230,6 +230,7 @@ class MokkaAnalysis(ModuleBase):
         res = resolveIFpaths([self.stdhepFile])
         if not res['OK']:
           self.log.error("Generator file not found")
+          result = sqlwrapper.mysqlCleanUp()
           return res
         self.stdhepFile = res['Value'][0]
       if len(self.macFile)>0:
@@ -238,7 +239,12 @@ class MokkaAnalysis(ModuleBase):
       self.steeringFile = os.path.basename(self.steeringFile)
       if not os.path.exists(self.steeringFile):
         if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)):
-          self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
+          try:
+            shutil.copy(os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile), "./"+self.steeringFile )
+          except Exception,x:
+            result = sqlwrapper.mysqlCleanUp()
+            return S_ERROR('Failed to access file %s: '%(self.steeringFile,str(x)))  
+          #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
           
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
