@@ -56,5 +56,5 @@ class RemoveSoft():
         
     if len(failed):
       return S_ERROR("Failed deleting applications %s"%failed)
-    
+    self.log.info("Successfully deleted %s"%self.apps)
     return S_OK()
