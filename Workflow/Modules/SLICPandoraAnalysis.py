@@ -126,7 +126,12 @@ class SLICPandoraAnalysis (ModuleBase):
     
     if not self.detectorxml.count(".xml") or not os.path.exists(os.path.basename(self.detectorxml)):
       detmodel = self.detectorxml.replace("_pandora.xml","")
-      if not os.path.exists(detmodel+".zip"):
+      if os.path.exists(detmodel+".zip"):
+        try:
+          self.unzip_file_into_dir(open(detmodel+".zip"),os.getcwd())
+        except:
+          os.unlink(detmodel+".zip") 
+      if not os.path.exists(detmodel+".zip"):  
         #retrieve detector model from web
         detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])
         if len(detector_urls[0])<1:
