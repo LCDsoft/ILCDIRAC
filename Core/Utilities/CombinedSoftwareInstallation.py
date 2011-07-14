@@ -102,16 +102,30 @@ class CombinedSoftwareInstallation:
             self.jobConfig = ceConfig
             found_config=True
             break
-          
+    
+    ###Deal with shared/local area: first try to see if the Shared area exists and if not create it. If it fails, fall back to local area
+    area = ''
+    if not self.sharedArea:
+      if CreateSharedArea():
+        self.sharedArea = SharedArea()
+        area = self.sharedArea
+      else:
+        area = self.localArea
+    else:
+      if CanWrite(self.sharedArea):
+        area = self.sharedArea    
+      else:
+        area = self.localArea
+              
     if not found_config:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
         DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
         return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
       else:
-        DIRAC.gLogger.info( 'Assume locally running job, will install software in /LocalSite/LocalArea=%s' %(self.localArea))
+        DIRAC.gLogger.info( 'Assume locally running job, will install software in %s' %(area))
     for app in self.apps:
       DIRAC.gLogger.info('Attempting to install %s_%s for %s' %(app[0],app[1],self.jobConfig))
-      res = TARinstall(app,self.jobConfig,self.localArea)
+      res = TARinstall(app,self.jobConfig,area)
       if not res['OK']:
         DIRAC.gLogger.error('Failed to install software','%s_%s' %(app[0],app[1]))
         return DIRAC.S_ERROR('Failed to install software')
@@ -121,6 +135,21 @@ class CombinedSoftwareInstallation:
   
 def log( n, line ):
   DIRAC.gLogger.info( line )
+
+def CanWrite(area):
+  curdir = os.getcwd()
+  os.chdir(area)
+  try:
+    f = file("testfile","w")
+    f.write("Testing writing")
+    f.close()
+    os.remove(f)
+  except Exception,x:
+    DIRAC.gLogger.error('Problem trying to write in area',str(x))
+    return False
+  finally:
+    os.chdir(curdir)
+  return True
     
 def SharedArea():
   """
@@ -130,11 +159,11 @@ def SharedArea():
   """
   sharedArea = ''
   if os.environ.has_key('VO_ILC_SW_DIR'):
-    sharedArea = os.environ['VO_ILC_SW_DIR']
+    sharedArea = os.path.join(os.environ['VO_ILC_SW_DIR'],'clic')
     DIRAC.gLogger.debug( 'Using VO_ILC_SW_DIR at "%s"' % sharedArea )
     if os.environ['VO_ILC_SW_DIR'] == '.':
-      if not os.path.isdir( 'lcd' ):
-        os.mkdir( 'lcd' )
+      if not os.path.isdir( 'clic' ):
+        os.mkdir( 'clic' )
   elif DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
     sharedArea = DIRAC.gConfig.getValue('/LocalSite/SharedArea')
     DIRAC.gLogger.debug( 'Using CE SharedArea at "%s"' % sharedArea )
@@ -164,7 +193,7 @@ def CreateSharedArea():
     DIRAC.gLogger.error( 'VO_ILC_SW_DIR="%s" is not a directory' % sharedArea )
     return False
 
-  #sharedArea = os.path.join( sharedArea, 'lcd' )
+  sharedArea = os.path.join( sharedArea, 'clic' )
   try:
     if os.path.isdir( sharedArea ) and not os.path.islink( sharedArea ) :
       return True
@@ -206,4 +235,6 @@ def LocalArea():
         DIRAC.gLogger.error( 'Cannot create:', localArea )
         localArea = ''
   return localArea
+
+
       
