@@ -2444,6 +2444,42 @@ class ILCJob(Job):
         
     return S_OK()
 
+  def _AddSoftwarePackages(self,softdict):
+    """
+    Expert tool Add software packages, mostly for tests and new software
+    """
+    for appn,appv in softdict.items():
+      self._addSoftware(appn, appv)
+
+    return S_OK()
+  
+  def _RemoveSoftwarePackages(self,softdict):
+    """ Expert tool to remove software
+    """
+    apps = ''
+    for appname,appversion in softdict.items():
+      apps += appname+"."+appversion+";"
+    apps.rstrip(";")  
+    step = StepDefinition( 'RemoveSoft' )
+    step.addParameter( Parameter( "Apps", "", "string", "", "", False, False, "Applications to remove" ) )
+    
+    module = ModuleDefinition( 'RemoveSoft' )
+    module.setDescription( 'Remove software module' )
+    module.setBody( 'from ILCDIRAC.Core.Utilities.RemoveSoft import RemoveSoft\n' )
+
+    step.addModule( module )
+    step.createModuleInstance( 'RemoveSoft', 'RemoveSoft' )
+
+    self.workflow.addStep(step)
+
+    stepInstance = self.workflow.createStepInstance( 'RemoveSoft', 'RemoveSoft' )
+
+    # 6. Set variables that are used by the modules
+
+    stepInstance.setValue( "Apps", apps )
+    
+    return S_OK()
+
   def _rootType(self, name):
     """ Private method
     """
