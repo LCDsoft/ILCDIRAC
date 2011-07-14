@@ -104,33 +104,36 @@ class CombinedSoftwareInstallation:
             break
     
     ###Deal with shared/local area: first try to see if the Shared area exists and if not create it. If it fails, fall back to local area
-    area = ''
     if not self.sharedArea:
       if CreateSharedArea():
         self.sharedArea = SharedArea()
-        area = self.sharedArea
-      else:
-        area = self.localArea
-    else:
-      if CanWrite(self.sharedArea):
-        area = self.sharedArea    
-      else:
-        area = self.localArea
               
     if not found_config:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
         DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
         return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
       else:
-        DIRAC.gLogger.info( 'Assume locally running job, will install software in %s' %(area))
+        DIRAC.gLogger.info( 'Assume locally running job, will install software in ' )
+    
     for app in self.apps:
-      DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' %(app[0],app[1],self.jobConfig,area))
-      res = TARinstall(app,self.jobConfig,area)
-      if not res['OK']:
-        DIRAC.gLogger.error('Failed to install software','%s_%s' %(app[0],app[1]))
-        return DIRAC.S_ERROR('Failed to install software')
-      else:
-        DIRAC.gLogger.info('%s was successfully installed for %s' %(app,self.jobConfig))
+      failed = False    
+      for area in [self.sharedArea,self.localArea]:
+        if CanWrite(area):
+          DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' %(app[0],app[1],self.jobConfig,area))
+          res = TARinstall(app,self.jobConfig,area)
+          if not res['OK']:
+            DIRAC.gLogger.error('Failed to install software in %s'%area,'%s_%s' %(app[0],app[1]))
+            failed = True
+            continue
+          else:
+            DIRAC.gLogger.info('%s was successfully installed for %s in %s' %(app,self.jobConfig,area))
+            failed = False
+            break
+        else:
+          failed = True
+          continue 
+      if failed:
+        return DIRAC.S_ERROR("Failed to install software")
     return DIRAC.S_OK()
   
 def log( n, line ):
