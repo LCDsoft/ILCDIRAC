@@ -190,8 +190,8 @@ class MarlinAnalysis(ModuleBase):
       
     self.inputXML = os.path.basename(self.inputXML)
     if not os.path.exists(self.inputXML):
-      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.inputXML)):
-        self.inputXML = os.path.join(mySoftwareRoot,"steeringfiles",self.inputXML)
+      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputXML)):
+        self.inputXML = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputXML)
         
     res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:

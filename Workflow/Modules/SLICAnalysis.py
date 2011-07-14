@@ -196,8 +196,8 @@ class SLICAnalysis(ModuleBase):
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
       if not os.path.exists(self.inmacFile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.inmacFile)):
-          self.inmacFile = os.path.join(mySoftwareRoot,"steeringfiles",self.inmacFile)
+        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inmacFile)):
+          self.inmacFile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inmacFile)
           
     macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputFile,self.debug)
     if not macok['OK']:
