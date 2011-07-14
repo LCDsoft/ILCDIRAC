@@ -102,12 +102,15 @@ class CombinedSoftwareInstallation:
             self.jobConfig = ceConfig
             found_config=True
             break
-    
+          
+    areas = []
     ###Deal with shared/local area: first try to see if the Shared area exists and if not create it. If it fails, fall back to local area
     if not self.sharedArea:
       if CreateSharedArea():
         self.sharedArea = SharedArea()
-              
+        areas.append(self.sharedArea)
+    areas.append(self.localArea)       
+       
     if not found_config:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
         DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
@@ -117,7 +120,7 @@ class CombinedSoftwareInstallation:
     
     for app in self.apps:
       failed = False    
-      for area in [self.sharedArea,self.localArea]:
+      for area in areas:
         if CanWrite(area):
           DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' %(app[0],app[1],self.jobConfig,area))
           res = TARinstall(app,self.jobConfig,area)
