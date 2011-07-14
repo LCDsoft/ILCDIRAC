@@ -236,6 +236,10 @@ class MokkaAnalysis(ModuleBase):
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
       self.steeringFile = os.path.basename(self.steeringFile)
+      if not os.path.exists(self.steeringFile):
+        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)):
+          self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
+          
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
                                     self.processID,
