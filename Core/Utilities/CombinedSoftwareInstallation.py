@@ -104,11 +104,13 @@ class CombinedSoftwareInstallation:
             break
           
     areas = []
-    ###Deal with shared/local area: first try to see if the Shared area exists and if not create it. If it fails, fall back to local area
+    ###Deal with shared/local area: first try to see if the Shared area exists and if not create it (try to). If it fails, fall back to local area
     if not self.sharedArea:
       if CreateSharedArea():
         self.sharedArea = SharedArea()
         areas.append(self.sharedArea)
+    else:
+      areas.append(self.sharedArea)
     areas.append(self.localArea)       
        
     if not found_config:
@@ -121,20 +123,16 @@ class CombinedSoftwareInstallation:
     for app in self.apps:
       failed = False    
       for area in areas:
-        if CanWrite(area):
-          DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' %(app[0],app[1],self.jobConfig,area))
-          res = TARinstall(app,self.jobConfig,area)
-          if not res['OK']:
-            DIRAC.gLogger.error('Failed to install software in %s'%area,'%s_%s' %(app[0],app[1]))
-            failed = True
-            continue
-          else:
-            DIRAC.gLogger.info('%s was successfully installed for %s in %s' %(app,self.jobConfig,area))
-            failed = False
-            break
-        else:
+        DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' %(app[0],app[1],self.jobConfig,area))
+        res = TARinstall(app,self.jobConfig,area)
+        if not res['OK']:
+          DIRAC.gLogger.error('Failed to install software in %s: %s'%(area,res['Message']),'%s_%s' %(app[0],app[1]))
           failed = True
-          continue 
+          continue
+        else:
+          DIRAC.gLogger.info('%s was successfully installed for %s in %s' %(app,self.jobConfig,area))
+          failed = False
+          break
       if failed:
         return DIRAC.S_ERROR("Failed to install software")
     return DIRAC.S_OK()
@@ -142,21 +140,6 @@ class CombinedSoftwareInstallation:
 def log( n, line ):
   DIRAC.gLogger.info( line )
 
-def CanWrite(area):
-  curdir = os.getcwd()
-  os.chdir(area)
-  try:
-    f = open("testfile.txt","w")
-    f.write("Testing writing\n")
-    f.close()
-    os.remove("testfile.txt")
-  except Exception,x:
-    DIRAC.gLogger.error('Problem trying to write in area %s: '%area,str(x))
-    return False
-  finally:
-    os.chdir(curdir)
-  return True
-    
 def SharedArea():
   """
    Discover location of Shared SW area

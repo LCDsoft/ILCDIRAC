@@ -31,6 +31,8 @@ def TARinstall(app,config,area):
 
 def install(app,config,area):
   curdir = os.getcwd()
+  if not CanWrite(area):
+    return DIRAC.S_ERROR("Not allowed to write in %s"%area)
   os.chdir(area)
   appName    = app[0]
   appVersion = app[1]
@@ -111,6 +113,8 @@ def install(app,config,area):
         return DIRAC.S_ERROR("Folder %s is empty, considering install as failed"%folder_name)
     except:
       pass
+    
+  ### Set env variables  
   basefolder = folder_name
   if appName=="slic":
     os.environ['SLIC_DIR']= basefolder
@@ -158,11 +162,11 @@ def install(app,config,area):
   elif appName=="lcio":
     os.environ['LCIO']= os.path.join(os.getcwd(),basefolder)
     os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/bin:"+os.environ['PATH']
-    res = checkJava()
+    res = checkJava(curdir)
     if not res['OK']:
       return res
   elif appName=="lcsim":
-    res = checkJava()
+    res = checkJava(curdir)
     if not res['OK']:
       return res
 
@@ -179,16 +183,32 @@ def install(app,config,area):
 def remove():
   pass
 
-def checkJava():
+def CanWrite(area):
+  curdir = os.getcwd()
+  os.chdir(area)
+  try:
+    f = open("testfile.txt","w")
+    f.write("Testing writing\n")
+    f.close()
+    os.remove("testfile.txt")
+  except Exception,x:
+    DIRAC.gLogger.error('Problem trying to write in area %s: '%area,str(x))
+    return False
+  finally:
+    os.chdir(curdir)
+  return True
+    
+
+def checkJava(dir):
   args = ['java',"-version"]
   try:
     p = subprocess.check_call(args)
     if p:
-      os.chdir(curdir)
+      os.chdir(dir)
       return DIRAC.S_ERROR("Something is wrong with Java")
   except:
     DIRAC.gLogger.error("Java was not found on this machine, cannot proceed")
-    os.chdir(curdir)
+    os.chdir(dir)
     return DIRAC.S_ERROR("Java was not found on this machine, cannot proceed")
 
   return DIRAC.S_OK()
