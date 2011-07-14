@@ -15,12 +15,12 @@ class OverlayDB ( DB ):
     """
     self.dbname = 'OverlayDB'
     self.logger = gLogger.getSubLogger('OverlayDB')
-    DB.__init__( self, self.dbname, 'OverlaySystem/OverlayDB', maxQueueSize  )
+    DB.__init__( self, self.dbname, 'Overlay/OverlayDB', maxQueueSize  )
     self._createTables( { "OverlayData" : { 'Fields' : { 'Site' : "VARCHAR(256) UNIQUE NOT NULL",
                                                           'NumberOfJobs' : "INTEGER NOT NULL DEFAULT 1"
                                                        },
                                              'PrimaryKey' : 'Site',
-                                             'Indexes': 'Site'
+                                             'Indexes': {'Index':['Site']}
                                            }
                         }
                       )
@@ -68,7 +68,7 @@ class OverlayDB ( DB ):
       return res
     return res
 
-  def _limitPerSite(self,site):
+  def _limitForSite(self,site):
     if site in self.limits.keys():
       return self.limits[site]   
     return self.limits['default']
@@ -104,7 +104,7 @@ class OverlayDB ( DB ):
     res = self._checkSite(site, connection)
     nbjobs = 0
     if not res['OK']:
-      self.addSite(site, connection)
+      self._addSite(site, connection)
       nbjobs = 1
     else:
       nbjobs = res['Value'][0][0]
