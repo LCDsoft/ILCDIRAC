@@ -6,22 +6,33 @@ Created on Jul 14, 2011
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 
 from DIRAC import S_OK,S_ERROR, gConfig, gLogger
-import os
+import os,shutil
 
 class RemoveSoft():
   def __init__(self):
     self.softs = ''
     self.apps = []
     self.log = gLogger.getSubLogger( "RemoveSoft" )
-    
+    self.systemConfig = ''
+
   def execute(self):
     if self.step_commons.has_key('Apps'):
       self.softs = self.step_commons['Apps']
     else:
       return S_ERROR('Applications to remove were not defined')  
+    if self.workflow_commons.has_key('SystemConfig'):
+      self.systemConfig = self.workflow_commons['SystemConfig']
+    else:
+      return S_ERROR('System Config not defined')
     
+    self.softs.rstrip(";")
     self.apps = self.softs.split(';')
+    self.log.info("Will delete %s"%self.apps)
+    failed = []
     for app in self.apps:
+      if not app:
+        continue
+      
       appname = app.split(".")[0]
       appversion = app.split(".")[1]
       appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,appname,appversion),'')
@@ -38,8 +49,12 @@ class RemoveSoft():
         continue
       myappDir = os.path.join(mySoftwareRoot,appDir)
       try:
-        os.rmdir(myappDir)
+        shutil.rmtree(myappDir)
       except Exception, x:
         self.log.error("Could not delete %s : %s"%(app,str(x)))  
+        failed.append(app)
+        
+    if len(failed):
+      return S_ERROR("Failed deleting applications %s"%failed)
     
     return S_OK()
