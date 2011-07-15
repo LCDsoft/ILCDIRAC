@@ -192,7 +192,9 @@ class MarlinAnalysis(ModuleBase):
     if not os.path.exists(self.inputXML):
       if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputXML)):
         self.inputXML = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputXML)
-        
+    if not self.inputXML:
+      return S_ERROR("Could not find steering file")
+    
     res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s'%res['Message'])
