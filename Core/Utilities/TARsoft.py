@@ -61,8 +61,9 @@ def install(app,config,area):
       appli_exists = False
     #os.chdir(curdir)
     #return DIRAC.S_OK()
-  if not CanWrite(area) and not appli_exists:
-    return DIRAC.S_ERROR("Not allowed to write in %s"%area)
+  if not appli_exists:
+    if not CanWrite(area):
+      return DIRAC.S_ERROR("Not allowed to write in %s"%area)
   #downloading file from url, but don't do if file is already there.
   app_tar_base=os.path.basename(app_tar)
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
