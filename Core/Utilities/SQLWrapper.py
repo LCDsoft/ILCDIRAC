@@ -14,6 +14,7 @@ Created on Feb 1, 2010
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
 from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
 
 import DIRAC
 import os,sys,re, tempfile, threading, time, shutil
@@ -98,7 +99,18 @@ class SQLWrapper:
     if not os.path.exists(self.MokkaTMPDir):
       return S_ERROR("MokkaTMP dir is not available")
     if not os.path.exists(self.MokkaDataDir):
-      return S_ERROR("Mokka Data dir is not available")    
+      return S_ERROR("Mokka Data dir is not available")  
+    
+    ##Because it's possibly installed in the shared area, where one regular user cannot write, it's needed to get it back to the LocalArea
+    if self.softDir == SharedArea():
+      localarea = LocalArea()
+      try:
+        shutil.copytree(os.path.join(self.softDir,"mysql4grid"),os.path.join(localarea,"mysql4grid"), False)
+      except Exception,x :
+        return S_ERROR("Could not copy back to LocalAra the mysql install dir: %s"%(str(x)))
+      self.softDir = localarea
+      
+      
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     removeLibc(self.softDir+"/mysql4grid/lib64/mysql")
