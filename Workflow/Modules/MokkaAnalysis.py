@@ -245,7 +245,9 @@ class MokkaAnalysis(ModuleBase):
             result = sqlwrapper.mysqlCleanUp()
             return S_ERROR('Failed to access file %s: '%(self.steeringFile,str(x)))  
           #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
-          
+      if not os.path.exists(self.steeringFile):
+        result = sqlwrapper.mysqlCleanUp()
+        return S_ERROR("Could not find steering file")
       steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
                                     self.processID,
