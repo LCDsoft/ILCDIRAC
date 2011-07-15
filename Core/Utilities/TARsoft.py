@@ -51,6 +51,8 @@ def install(app,config,area):
   if appName =="slic":
     folder_name= "%s%s"%(appName,appVersion)
   appli_exists = False
+  os.chdir(area)
+
   if os.path.exists(folder_name):
     # and not appName =="slic":
     DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
@@ -61,7 +63,6 @@ def install(app,config,area):
     #return DIRAC.S_OK()
   if not CanWrite(area) and not appli_exists:
     return DIRAC.S_ERROR("Not allowed to write in %s"%area)
-  os.chdir(area)
   #downloading file from url, but don't do if file is already there.
   app_tar_base=os.path.basename(app_tar)
   if not os.path.exists("%s/%s"%(os.getcwd(),app_tar_base)) and not appli_exists:
