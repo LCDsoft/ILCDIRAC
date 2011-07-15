@@ -104,10 +104,11 @@ class SQLWrapper:
     ##Because it's possibly installed in the shared area, where one regular user cannot write, it's needed to get it back to the LocalArea
     if self.softDir == SharedArea():
       localarea = LocalArea()
-      try:
-        shutil.copytree(os.path.join(self.softDir,"mysql4grid"),os.path.join(localarea,"mysql4grid"), False)
-      except Exception,x :
-        return S_ERROR("Could not copy back to LocalAra the mysql install dir: %s"%(str(x)))
+      if not os.path.isdir(os.path.join(localarea,"mysql4grid")):
+        try:
+          shutil.copytree(os.path.join(self.softDir,"mysql4grid"),os.path.join(localarea,"mysql4grid"), False)
+        except Exception,x :
+          return S_ERROR("Could not copy back to LocalAra the mysql install dir: %s"%(str(x)))
       self.softDir = localarea
       
       
