@@ -401,24 +401,47 @@ fi\n"""%(basename,lfile))
   def getLyonFile(self,lfn):
     prependpath = '/pnfs/in2p3.fr/data'
     if not lfn.count('in2p3.fr/data'):
-      file = prependpath+lfn
+      lfile = prependpath+lfn
     else:
-      file = lfn
+      lfile = lfn
     self.log.info("Getting %s"%file)
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    if os.environ.has_key('X509_USER_PROXY'):
-      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
-      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
-      print res
+
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    script = file("overlayinput.sh","w")
+    script.write('#!/bin/sh \n')
+    script.write('###############################\n')
+    script.write('# Dynamically generated scrip #\n')
+    script.write('###############################\n')
+    script.write("cp %s /tmp/x509up_u%s \n"%(os.environ['X509_USER_PROXY'],os.getuid()))
+    script.write("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s\n"%lfile.rstrip())
+    #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
+    #script.write("""
+#if [ ! -s %s ]; then
+#  rfcp %s ./
+#fi\n"""%(basename,lfile))
+    script.write('declare -x appstatus=$?\n')
+    script.write('exit $appstatus\n')
+    script.close()
+    os.chmod("overlayinput.sh",0755)
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+#    
+#    if os.environ.has_key('X509_USER_PROXY'):
+#      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
+#      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+#      print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
-    comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
-    res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
-    print res
+    #comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
+    #res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
+    #print res
+    
     status = 0
-    if not os.path.exists(os.path.basename(file)):
+    if not os.path.exists(os.path.basename(lfile)):
       status = 1
     #command2  = command.split()
     #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
@@ -439,24 +462,50 @@ fi\n"""%(basename,lfile))
   def getImperialFile(self,lfn):
     prependpath = '/pnfs/hep.ph.ic.ac.uk/data'
     if not lfn.count('hep.ph.ic.ac.uk/data'):
-      file = prependpath+lfn
+      lfile = prependpath+lfn
     else:
-      file = lfn
+      lfile = lfn
     self.log.info("Getting %s"%file)
+    ###Don't check for CPU time as other wise, job can get killed
+    if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
+      f.write('Dont look at cpu')
+      f.close()
+
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    script = file("overlayinput.sh","w")
+    script.write('#!/bin/sh \n')
+    script.write('###############################\n')
+    script.write('# Dynamically generated scrip #\n')
+    script.write('###############################\n')
+    script.write("dccp dcap://%s%s ./\n"%(os.environ['VO_ILC_DEFAULT_SE'],lfile.rstrip()))
+    #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
+    #script.write("""
+#if [ ! -s %s ]; then
+#  rfcp %s ./
+#fi\n"""%(basename,lfile))
+    script.write('declare -x appstatus=$?\n')
+    script.write('exit $appstatus\n')
+    script.close()
+    os.chmod("overlayinput.sh",0755)
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+#    
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    if os.environ.has_key('X509_USER_PROXY'):
-      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
-      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
-      print res
+    #if os.environ.has_key('X509_USER_PROXY'):
+    #  comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
+    #  res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+    #  print res
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
-    comm3 = ["dccp","dcap://%s%s" % ( os.environ['VO_ILC_DEFAULT_SE'], file ),"./"]
-    res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
-    print res
+    #comm3 = ["dccp","dcap://%s%s" % ( os.environ['VO_ILC_DEFAULT_SE'], file ),"./"]
+    #res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
+    #print res
     status = 0
-    if not os.path.exists(os.path.basename(file)):
+    if not os.path.exists(os.path.basename(lfile)):
       status = 1
     #command2  = command.split()
     #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
@@ -481,6 +530,12 @@ fi\n"""%(basename,lfile))
     else:
       lfile = lfn
     self.log.info("Getting %s"%lfile)
+    ###Don't check for CPU time as other wise, job can get killed
+    if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
+      f.write('Dont look at cpu')
+      f.close()
+    
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
@@ -564,16 +619,11 @@ fi\n"""%(basename,lfile))
       self.setApplicationStatus('OverlayProcessor got an empty list')
       return S_ERROR('OverlayProcessor got an empty list')
 
-    ###Don't check for CPU time as other wise, job can get killed
-    if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
-    f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
-    f.write('Dont look at cpu')
-    f.close()
 
     res = self.__getFilesLocaly()
     ###Now that module is finished,resume CPU time checks
-    os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+    if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+      os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
 
     if not res['OK']:
       self.setApplicationStatus('OverlayProcessor failed to get files locally with message %s'%res['Message'])
