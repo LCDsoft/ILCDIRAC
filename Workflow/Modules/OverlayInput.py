@@ -257,7 +257,7 @@ class OverlayInput (ModuleBase):
         count += 1
         if count>300:
           return S_ERROR("Waited too long: 5h, so marking job as failed")
-        self.setApplicationStatus("Overlay standby nb %s"%count)
+        self.setApplicationStatus("Overlay standby number %s"%count)
         time.sleep(60)
     self.setApplicationStatus('Getting overlay files')
 
