@@ -292,6 +292,10 @@ class OverlayInput (ModuleBase):
         elif  self.site=='LCG.RAL-LCG2.uk':
           res = self.getRALFile(self.lfns[fileindex])
         else:
+          if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+            f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
+            f.write('Dont look at cpu')
+            f.close()
           res = self.rm.getFile(self.lfns[fileindex])
           isDefault = True
 
