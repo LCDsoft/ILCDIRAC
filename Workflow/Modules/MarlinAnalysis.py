@@ -185,8 +185,8 @@ class MarlinAnalysis(ModuleBase):
     finalXML = "marlinxml.xml"
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if not os.path.exists(self.inputGEAR):
-      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfiles",self.inputGEAR)):
-        self.inputGEAR = os.path.join(mySoftwareRoot,"steeringfiles",self.inputGEAR)
+      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)):
+        self.inputGEAR = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)
       
     self.inputXML = os.path.basename(self.inputXML)
     if not os.path.exists(self.inputXML):
