@@ -284,7 +284,7 @@ class OverlayInput (ModuleBase):
         fail = True
         break
       ### need to use some CPU otherwise sites think the job is stuck, lets count to 1e6
-      for i in range(1000000):
+      for i in range(50000000):
         i += 1
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
