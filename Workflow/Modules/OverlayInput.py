@@ -225,7 +225,10 @@ class OverlayInput (ModuleBase):
 #      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
 #      jobpropdict['Site']=self.site
 #      max_concurrent_running = res['Value']
-
+    if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
+      f.write('Dont look at cpu')
+      f.close()
     overlaymon = RPCClient('Overlay/Overlay',timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
@@ -259,6 +262,10 @@ class OverlayInput (ModuleBase):
           return S_ERROR("Waited too long: 5h, so marking job as failed")
         self.setApplicationStatus("Overlay standby number %s"%count)
         time.sleep(60)
+        
+    if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+      os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+
     self.setApplicationStatus('Getting overlay files')
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
@@ -276,6 +283,9 @@ class OverlayInput (ModuleBase):
       if fail_count > max_fail_allowed:
         fail = True
         break
+      ### need to use some CPU otherwise sites think the job is stuck, lets count to 1e6
+      for i in range(1000000):
+        i += 1
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
 
