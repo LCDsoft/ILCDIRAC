@@ -235,7 +235,7 @@ class OverlayInput (ModuleBase):
     count = 0
     while 1:
       if error_count > 10 :
-        self.log.error('JobDB Content does not return expected dictionary')
+        self.log.error('OverlayDB returned too any errors')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
       #jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
       #res = jobMonitor.getCurrentJobCounters(jobpropdict)
@@ -252,7 +252,7 @@ class OverlayInput (ModuleBase):
         error_count += 1
         time.sleep(60)
         continue
-      
+      error_count = 0
       #if running < max_concurrent_running:
       if res['Value']:
         break
