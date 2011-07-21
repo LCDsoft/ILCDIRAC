@@ -258,6 +258,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     else:
       return self._reportError("Process to generate was not specified", __name__, **kwargs)
     if version:
+      self.log.info("Overwritting version to %s"%version)
       appvers = version
 
     if not outputpath:
