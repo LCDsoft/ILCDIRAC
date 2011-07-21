@@ -209,7 +209,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     self.prodparameters['nbevts'] = self.nbofevents
     return S_OK()
 
-  def addWhizardStep(self, processlist, process, susymodel=None, energy = 3000, nbevts=0, lumi=0,
+  def addWhizardStep(self, processlist, process, version = None, susymodel=None, energy = 3000, nbevts=0, lumi=0,
                      extraparameters=None, randomseed = None, outputpath="", outputSE=""):
     """ Define Whizard step
 
@@ -257,6 +257,8 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
         print "Will generate %s evts, or lumi=%s fb" % (nbevts, lumi)
     else:
       return self._reportError("Process to generate was not specified", __name__, **kwargs)
+    if version:
+      appvers = version
 
     if not outputpath:
       return self._reportError("Output path not defined" , __name__, **kwargs)
