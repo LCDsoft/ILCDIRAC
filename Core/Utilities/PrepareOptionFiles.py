@@ -450,6 +450,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,rand
   #output.write("/run/initialize\n")
   if outputlcio:
     output.write("/lcio/filename %s\n"%outputlcio)
+  output.write("/lcio/runNumber %s\n"%randomseed)
   output.write(finaltext)
   if len(stdhep)>0:
     output.write("/generator/filename %s\n"%stdhep)
