@@ -253,6 +253,8 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   output.write("/Mokka/init/initialMacroFile %s\n"%macname)
   output.write("#Setting random seed\n")
   output.write("/Mokka/init/randomSeed %s\n"%(randomseed))
+  output.write("#Setting run number, same as seed\n")
+  output.write("/Mokka/init/mcRunNumber %s\n"%(randomseed))
   if outputlcio:
     output.write("#Set outputfile name to job specified\n")
     output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
