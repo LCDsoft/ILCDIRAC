@@ -39,6 +39,7 @@ class ResetCounters ( AgentModule ):
     gLogger.info("Setting new values %s"%sitedict)    
     res = self.ovc.setJobsAtSites(sitedict)
     if not res['OK']:
+      gLogger.error(res['Message'])
       return res
     
     return S_OK()
