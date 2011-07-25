@@ -6,18 +6,20 @@ Created on Jul 25, 2011
 
 __RCSID__ = "$Id$"
 
-from DIRAC.Core.Base.AgentModule                      import AgentModule
-from DIRAC                                            import S_OK, S_ERROR, gLogger
-from DIRAC.Core.DISET.RPCClient                       import RPCClient
+from DIRAC.Core.Base.AgentModule                               import AgentModule
+from DIRAC                                                     import S_OK, S_ERROR, gLogger
+from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 
-from ILCDIRAC.OverlaySystem.DB.OverlayDB                    import OverlayDB
-from ILCDIRAC.OverlaySystem.Client.OverlaySystemClient import OverlaySystemClient
+from ILCDIRAC.OverlaySystem.DB.OverlayDB                       import OverlayDB
+from ILCDIRAC.OverlaySystem.Client.OverlaySystemClient         import OverlaySystemClient
+
+AGENT_NAME = 'Overlay/ResetCounters'
 
 class ResetCounters ( AgentModule ):
   def initialize(self):
     self.am_setOption( "PollingTime", 60 )
     self.ovc = OverlaySystemClient()
-    self.jobmon = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
+    self.jobmon = JobMonitoringClient()
     return S_OK()
   
   def execute(self):
