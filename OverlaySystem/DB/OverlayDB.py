@@ -17,7 +17,7 @@ class OverlayDB ( DB ):
     self.logger = gLogger.getSubLogger('OverlayDB')
     DB.__init__( self, self.dbname, 'Overlay/OverlayDB', maxQueueSize  )
     self._createTables( { "OverlayData" : { 'Fields' : { 'Site' : "VARCHAR(256) UNIQUE NOT NULL",
-                                                          'NumberOfJobs' : "INTEGER NOT NULL DEFAULT 1"
+                                                          'NumberOfJobs' : "INTEGER DEFAULT 0"
                                                        },
                                              'PrimaryKey' : 'Site',
                                              'Indexes': {'Index':['Site']}
@@ -81,7 +81,28 @@ class OverlayDB ( DB ):
     req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(nbjobs,site)
     res = self._update( req, connection )
     return S_OK()
-  
+
+### Methods to fix the site
+  def getSites(self, connection = False):
+    connection = self.__getConnection( connection )
+    req = 'SELECT Site From OverlayData;'
+    res = self._query( req, connection )
+    if not res['OK']:
+      return S_ERROR("Could not get sites")
+    sites = []
+    for row in res['Value']:
+      sites.append(row[0])
+    return S_OK(sites)
+
+  def setJobsAtSites(self, sitedict, connection = False):
+    connection = self.__getConnection( connection )
+    for site,nbjobs in sitedict.items():
+      req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(nbjobs,site)
+      res = self._update( req, connection )
+      if not res['OK']:
+        return S_ERROR("Could not set nb of jobs at site %s"%site)
+      
+    return S_OK()
 ### Useful methods for the users
   
   def getJobsAtSite(self,site, connection = False ):
@@ -91,7 +112,7 @@ class OverlayDB ( DB ):
     nbjobs = 0
     res = self._checkSite(site, connection)
     if not res['OK']:
-      return S_OK(0)
+      return S_OK(nbjobs)
     nbjobs = res['Value'][0][0]
     return S_OK(nbjobs)
 

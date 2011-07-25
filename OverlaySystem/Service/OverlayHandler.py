@@ -36,3 +36,11 @@ class OverlayHandler(RequestHandler):
   def export_getJobsAtSite(self,site):
     return overlayDB.getJobsAtSite(site)
   
+  types_getSites = []
+  def export_getSites(self):
+    return overlayDB.getSites()
+  
+  types_setJobsAtSite = [ DictType ]
+  def export_setJobsAtSite(self,sitedict):
+    return overlayDB.setJobsAtSite(sitedict)
+  
