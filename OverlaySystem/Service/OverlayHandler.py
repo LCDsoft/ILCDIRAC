@@ -9,7 +9,7 @@ __RCSID__ = " $Id: $ "
 from DIRAC                                              import gLogger, gConfig, S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 
-from ILCDIRAC.OverlayService.DB.OverlayDB import OverlayDB
+from ILCDIRAC.OverlaySystem.DB.OverlayDB                import OverlayDB
 from types import *
 
 
@@ -41,6 +41,6 @@ class OverlayHandler(RequestHandler):
     return overlayDB.getSites()
   
   types_setJobsAtSite = [ DictType ]
-  def export_setJobsAtSite(self,sitedict):
-    return overlayDB.setJobsAtSite(sitedict)
+  def export_setJobsAtSites(self,sitedict):
+    return overlayDB.setJobsAtSites(sitedict)
   

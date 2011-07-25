@@ -10,21 +10,23 @@ from DIRAC.Core.Base.AgentModule                      import AgentModule
 from DIRAC                                            import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RPCClient                       import RPCClient
 
-from ILCDIRAC.Overlay.DB.OverlayDB                    import OverlayDB
+from ILCDIRAC.OverlaySystem.DB.OverlayDB                    import OverlayDB
+from ILCDIRAC.OverlaySystem.Client.OverlaySystemClient import OverlaySystemClient
 
 class ResetCounters ( AgentModule ):
   def initialize(self):
     self.am_setOption( "PollingTime", 60 )
-    self.overlayDB = OverlayDB()
+    self.ovc = OverlaySystemClient()
     self.jobmon = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
     return S_OK()
   
   def execute(self):
-    res = self.overlayDB.getSites()
+    res = self.ovc.getSites()
     if not res['OK']:
       return res
     sitedict = {}
     sites = res['Value']
+    gLogger.info("Will update info for sites %s"%sites)
     for site in sites:
       attribdict = {"Site":site,"ApplicationStatus":'Getting overlay files'}
       res = self.jobmon.getCurrentJobCounters(attribdict)
@@ -34,7 +36,8 @@ class ResetCounters ( AgentModule ):
         sitedict[site]=res['Value']['Running']
       else:
         sitedict[site]= 0
-    res = self.overlayDB.setJobsAtSites(sitedict)
+    gLogger.info("Setting new values %s"%sitedict)    
+    res = self.ovc.setJobsAtSites(sitedict)
     if not res['OK']:
       return res
     
