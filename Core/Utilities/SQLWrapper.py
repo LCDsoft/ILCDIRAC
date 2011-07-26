@@ -36,7 +36,8 @@ class SQLWrapper:
     self.MokkaDumpFile = ""
     if(len(dumpfile)<1):
       dumpfile= 'CLICMokkaDB.sql'
-      self.MokkaDumpFile = "%s/%s"%(softwareDir,dumpfile)
+      path = "%s/%s"%(softwareDir,dumpfile)
+      self.MokkaDumpFile = path
     else:
       self.MokkaDumpFile = "%s/%s"%(os.getcwd(),os.path.basename(dumpfile))
     if not os.environ.has_key('MOKKA_DUMP_FILE'):
@@ -108,10 +109,29 @@ class SQLWrapper:
         try:
           shutil.copytree(os.path.join(self.softDir,"mysql4grid"),os.path.join(localarea,"mysql4grid"), False)
         except Exception,x :
-          return S_ERROR("Could not copy back to LocalAra the mysql install dir: %s"%(str(x)))
+          return S_ERROR("Could not copy back to LocalArea the mysql install dir: %s"%(str(x)))
       self.softDir = localarea
-      
-      
+
+    ### So here lies the dragon: Beware of what you do!
+    ###
+    #                           / \  //\
+    #            |\___/|      /   \//  \\
+    #            /0  0  \__  /    //  | \ \    
+    #           /     /  \/_/    //   |  \  \  
+    #           @_^_@'/   \/_   //    |   \   \ 
+    #           //_^_/     \/_ //     |    \    \
+    #        ( //) |        \///      |     \     \
+    #      ( / /) _|_ /   )  //       |      \     _\
+    #    ( // /) '/,_ _ _/  ( ; -.    |    _ _\.-~        .-~~~^-.
+    #  (( / / )) ,-{        _      `-.|.-~-.           .~         `.
+    # (( // / ))  '/\      /                 ~-. _ .-~      .-~^-.  \
+    # (( /// ))      `.   {            }                   /      \  \
+    #  (( / ))     .----~-.\        \-'                 .~         \  `. \^-.
+    #             ///.----..>        \             _ -~             `.  ^-`  ^-_
+    #               ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~
+    #                                                                  /.-~
+    ######
+    #### Hell is the maintenance of that crap here below !  
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     removeLibc(self.softDir+"/mysql4grid/lib64/mysql")
