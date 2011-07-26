@@ -198,6 +198,10 @@ class MokkaAnalysis(ModuleBase):
       
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
       sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
+      res = sqlwrapper.setDBpath(myMokkaDir,self.dbslice)
+      if not res['OK']:
+        self.log.error("Failed to find the DB slice")
+        return res
       result = sqlwrapper.makedirs()
       if not result['OK']:
         self.setApplicationStatus('MySQL setup failed to create directories.')
