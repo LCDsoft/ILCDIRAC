@@ -15,6 +15,8 @@ import DIRAC
 from ILCDIRAC.Core.Utilities.TARsoft import TARinstall
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall 
 from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
+from DIRAC.Core.Utilities.Subprocess                                import systemCall
+
 natOS = NativeMachine()
 
 class CombinedSoftwareInstallation:
@@ -135,6 +137,19 @@ class CombinedSoftwareInstallation:
           break
       if failed:
         return DIRAC.S_ERROR("Failed to install software")
+      
+    if self.sharedArea:  
+      #List content  
+      DIRAC.gLogger.info("Listing content of shared area :")
+      res = systemCall( 5, ['ls', '-al',self.sharedArea] )
+      if not res['OK']:
+        DIRAC.glogger.error( 'Failed to list the shared area directory', res['Message'] )
+      elif res['Value'][0]:
+        DIRAC.glogger.error( 'Failed to list the shared area directory', res['Value'][2] )
+      else:
+        # no timeout and exit code is 0
+        DIRAC.glogger.info( res['Value'][1] )
+      
     return DIRAC.S_OK()
   
 def log( n, line ):
@@ -162,6 +177,7 @@ def SharedArea():
     if not os.path.isdir( sharedArea ):
       DIRAC.gLogger.error( 'Missing Shared Area Directory:', sharedArea )
       sharedArea = ''
+
   return sharedArea
 
 def CreateSharedArea():
