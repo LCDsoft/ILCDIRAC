@@ -22,11 +22,9 @@ import os,sys,re, tempfile, threading, time, shutil
 EXECUTION_RESULT = {}
 
 class SQLWrapper:
-  def __init__(self,dumpfile='',softwareDir='./',mokkaDBroot=''):
+  def __init__(self,softwareDir='./',mokkaDBroot=''):
     """Set initial variables
     
-    @param dumpfile: name of the sql dump that should be used if not default
-    @type dumpfile: string
     @param softwareDir: path to the location of the software installation
     @type softwareDir: string
     @param mokkaDBroot: path to the place where the DB will live
@@ -34,14 +32,6 @@ class SQLWrapper:
     
     """
     self.MokkaDumpFile = ""
-    if(len(dumpfile)<1):
-      dumpfile= 'CLICMokkaDB.sql'
-      path = "%s/%s"%(softwareDir,dumpfile)
-      self.MokkaDumpFile = path
-    else:
-      self.MokkaDumpFile = "%s/%s"%(os.getcwd(),os.path.basename(dumpfile))
-    if not os.environ.has_key('MOKKA_DUMP_FILE'):
-      os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
       
     self.MokkaTMPDir = ''
     self.applicationLog = '%s/mysqllog'%(os.getcwd())
@@ -59,8 +49,22 @@ class SQLWrapper:
     
     #mysqld threading
     self.bufferLimit = 10485760   
-    self.maxPeekLines = 20      
-  
+    self.maxPeekLines = 20
+    
+  def setDBpath(self,dbpath,dumpfile=''):
+    if(len(dumpfile)<1):
+      dumpfile= 'CLICMokkaDB.sql'
+      path = "%s/%s"%(dbpath,dumpfile)
+      self.MokkaDumpFile = path
+    else:
+      self.MokkaDumpFile = "%s/%s"%(os.getcwd(),os.path.basename(dumpfile))
+      
+    if not os.path.exists(self.MokkaDumpFile):
+        return S_ERROR("Default DB was not found")
+    if not os.environ.has_key('MOKKA_DUMP_FILE'):
+      os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
+    return S_OK()  
+      
   def makedirs(self):
     """Method to create all necessary directories for MySQL
     """
