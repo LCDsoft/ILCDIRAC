@@ -48,6 +48,15 @@ class RemoveSoft():
         self.log.error('%s: Could not find neither local area not shared area install'%app)
         continue
       myappDir = os.path.join(mySoftwareRoot,appDir)
+      
+      #### Hacky hack needed when the DB was in parallel to the Mokka version
+      if appname.lower()=='mokka':
+        dbloc = os.path.join(mySoftwareRoot,"CLICMokkaDB.sql")
+        if os.path.exists(dbloc):
+          try:
+            os.remove(dbloc)
+          except Exception, x:
+            self.log.error("Could not delete SQL DB file : %s"%(str(x)))  
       try:
         shutil.rmtree(myappDir)
       except Exception, x:
