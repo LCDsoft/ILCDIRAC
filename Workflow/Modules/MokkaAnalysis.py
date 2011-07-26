@@ -197,7 +197,7 @@ class MokkaAnalysis(ModuleBase):
       MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + self.GenRandString(8);
       
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
-      sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
+      sqlwrapper = SQLWrapper(mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
       res = sqlwrapper.setDBpath(myMokkaDir,self.dbslice)
       if not res['OK']:
         self.log.error("Failed to find the DB slice")
