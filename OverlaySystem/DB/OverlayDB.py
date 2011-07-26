@@ -97,7 +97,7 @@ class OverlayDB ( DB ):
   def setJobsAtSites(self, sitedict, connection = False):
     connection = self.__getConnection( connection )
     for site,nbjobs in sitedict.items():
-      req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(nbjobs,site)
+      req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(int(nbjobs),site)
       res = self._update( req, connection )
       if not res['OK']:
         return S_ERROR("Could not set nb of jobs at site %s"%site)
