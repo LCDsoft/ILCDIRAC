@@ -421,7 +421,7 @@ fi\n"""%(basename,lfile))
       lfile = prependpath+lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s"%file)
+    self.log.info("Getting %s"%lfile)
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
