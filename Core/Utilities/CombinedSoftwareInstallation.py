@@ -143,12 +143,12 @@ class CombinedSoftwareInstallation:
       DIRAC.gLogger.info("Listing content of shared area :")
       res = systemCall( 5, ['ls', '-al',self.sharedArea] )
       if not res['OK']:
-        DIRAC.glogger.error( 'Failed to list the shared area directory', res['Message'] )
+        DIRAC.gLogger.error( 'Failed to list the shared area directory', res['Message'] )
       elif res['Value'][0]:
-        DIRAC.glogger.error( 'Failed to list the shared area directory', res['Value'][2] )
+        DIRAC.gLogger.error( 'Failed to list the shared area directory', res['Value'][2] )
       else:
         # no timeout and exit code is 0
-        DIRAC.glogger.info( res['Value'][1] )
+        DIRAC.gLogger.info( res['Value'][1] )
       
     return DIRAC.S_OK()
   
