@@ -15,6 +15,7 @@ from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogC
 from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfevents
 from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
+from ILCDIRAC.Core.Utilities.WasteCPU                        import WasteCPUCycles
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -284,13 +285,17 @@ class OverlayInput (ModuleBase):
       if fail_count > max_fail_allowed:
         fail = True
         break
-      ### need to use some CPU otherwise sites think the job is stuck, lets count to 1e6
-      self.log.info("Counting up to 50e6 to prevent job from being marked as stalled")
-      for i in range(50000000):
-        i += 1
+
+      ##Now wait for a random time around 3 minutes
+      ###Actually, waste CPU time !!!
+      self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
+      res  = WasteCPUCycles(60*random.gauss(3,0.1))
+      if not res['OK']:
+        self.log.error("Could not waste as much CPU time as wanted, but whatever!")
+
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
-
+          
         usednumbers.append(fileindex)
 
         isDefault = False
@@ -320,17 +325,13 @@ class OverlayInput (ModuleBase):
         if not res['OK']:
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           fail_count += 1
-          time.sleep(60*random.gauss(3,0.1))
           continue
 
         if len(res['Value']['Failed']):
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
-          time.sleep(60*random.gauss(3,0.1))
           fail_count += 1
           continue
         filesobtained.append(self.lfns[fileindex])
-        ##Now wait for a random time around 3 minutes
-        time.sleep(60*random.gauss(3,0.1))
 
     #res = self.rm.getFile(filesobtained)
     #failed = len(res['Value']['Failed'])
