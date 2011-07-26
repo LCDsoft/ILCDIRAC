@@ -263,7 +263,7 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
     output.write("/Mokka/init/lcioEventParameter string processID %s\n"%processID)
       
   output.write("#Set event start number to value given as job parameter\n")  
-  output.write("/Mokka/init/startEventNumber %d"%startFrom)
+  output.write("/Mokka/init/startEventNumber %d\n"%startFrom)
   output.close()
   return S_OK(True)
 
