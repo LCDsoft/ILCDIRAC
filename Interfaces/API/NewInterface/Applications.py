@@ -223,7 +223,7 @@ class StdhepCut(Application):
       return S_ERROR("Cut file not found and is not an LFN")
     
     if not self.maxevts:
-      return self.S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
+      return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
     
     res = self._commonChecks() ##Check that job order is correct
     if not res['OK']:
