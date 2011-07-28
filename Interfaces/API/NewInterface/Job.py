@@ -1,0 +1,86 @@
+'''
+Created on Jul 28, 2011
+
+@author: Stephane Poss
+'''
+
+from DIRAC.Interfaces.API.Job import Job as DiracJob
+from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
+from DIRAC import S_ERROR,S_OK
+
+class Job(DiracJob):
+  """ ILCDIRAC job class
+  
+  Inherit most functionality from DIRAC Job class
+  """
+  def __init__(self):
+    DiracJob.__init__(self)
+    self.applicationlist = []
+    self.inputsandbox = []
+    self.check = True
+    self.systemConfig = ''
+    self.stepnumber = 0
+    
+  def setInputData(self):
+    return S_ERROR('This job class does not implement setInputData')
+  def setInputSandbox(self):
+    return S_ERROR('This job class does not implement setInputSandbox')
+  def setOuputData(self):
+    return S_ERROR('This job class does not implement setOutputData')
+  def setOutputSandbox(self):
+    return S_ERROR('This job class does not implement setOutputSandbox')
+  
+  def setIngnoreApplicationErrors(self):
+    """ Helper function
+    
+    Set a flag for all applications that they should not care about errors
+    """
+    self._addParameter(self.workflow, 'IgnoreAppError', 'JDL', True, 'To ignore application errors')
+    return S_OK()
+  
+  def dontcheckjob(self):
+    """ Helper function
+    
+    Called by users to remove checking of job.
+    """
+    self.check = False
+      
+  def AskUser(self):
+    """ Called from DiracILC class to prompt the user
+    """
+    if not self.check:
+      return S_OK()
+    else:
+      """ Ask the user if he wants to proceed
+      """
+      pass
+    return S_OK()
+  
+  def append(self,application):
+    """ Helper function
+    
+    This is the main part: call for every application
+    """
+    #Start by defining step number
+    self.stepnumber += 1
+
+    res = application._checkConsistency()
+    if not res['OK']:
+      return self._reportError("%s failed to check its consistency: %s"&(application.name,res['Message']))
+    
+    res = self._jobSpecificParams()
+    if not res['OK']:
+      return self._reportError("Failed job specific checks")
+    
+    res = application._analyseJob(self)
+    if not res['OK']:
+      return res
+    
+    params = application.getParameters()
+    
+    return S_OK()
+
+  def _jobSpecificParams(self):
+    """ Every type of job has to reimplement this method
+    """
+    return S_OK()
