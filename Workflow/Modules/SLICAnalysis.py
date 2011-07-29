@@ -147,10 +147,13 @@ class SLICAnalysis(ModuleBase):
     mySoftwareRoot = ''
     localArea = LocalArea()
     sharedArea = SharedArea()
+    area = ''
     if os.path.exists('%s%s%s' %(localArea,os.sep,slicDir)):
       mySoftwareRoot = '%s%s%s' %(localArea,os.sep,slicDir)
+      area = localArea
     if os.path.exists('%s%s%s' %(sharedArea,os.sep,slicDir)):
       mySoftwareRoot = '%s%s%s' %(sharedArea,os.sep,slicDir)
+      area = sharedArea
     if not mySoftwareRoot:
       self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
       return S_ERROR('Failed to discover software')
@@ -196,8 +199,8 @@ class SLICAnalysis(ModuleBase):
     if len(self.inmacFile)>0:
       self.inmacFile = os.path.basename(self.inmacFile)
       if not os.path.exists(self.inmacFile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inmacFile)):
-          self.inmacFile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inmacFile)
+        if os.path.exists(os.path.join(area,"steeringfilesV1",self.inmacFile)):
+          self.inmacFile = os.path.join(area,"steeringfilesV1",self.inmacFile)
       if not os.path.exists(self.inmacFile):
         return S_ERROR("Could not find mac file")    
         
