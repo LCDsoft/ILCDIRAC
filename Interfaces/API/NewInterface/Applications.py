@@ -17,8 +17,8 @@ import os,types
 #                 application framework
 #################################################################  
 class GenericApplication(Application):
-  def __init__(self):
-    Application.__init__(self)
+  def __init__(self,paramdict = None):
+    Application.__init__(self,paramdict)
     self.script = None
     self.dependencies = []
     self.modulename = "ApplicationScript"
@@ -225,7 +225,7 @@ class StdhepCut(Application):
     if not self.maxevts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
     
-    res = self._commonChecks() ##Check that job order is correct
+    res = self._checkRequiredApp() ##Check that job order is correct
     if not res['OK']:
       return res
     
