@@ -8,7 +8,8 @@ from DIRAC import S_OK,S_ERROR, gLogger
 import inspect, sys, string, types
 
 class Application:
-  def __init__(self):
+  def __init__(self,paramdict = None):
+    ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
     self.appname = None
     self.version = None
     self.nbevts = 0
@@ -27,6 +28,13 @@ class Application:
     ####Following are needed for error report
     self.log = gLogger
     self.errorDict = {}
+    self._setparams(paramdict)
+  
+  def __repr__(self):
+    return "naze"
+  
+  def _setparams(self,params):
+    pass
     
   def setName(self,name):
     """ Define name of application
@@ -94,7 +102,7 @@ class Application:
     """
     return S_OK()
 
-  def _commonChecks(self):
+  def _checkRequiredApp(self):
     """ Called by _checkConsistency when relevant
     """
     if self.inputapp:
@@ -106,6 +114,7 @@ class Application:
   def _analyseJob(self,job):
     """ Called from Job, does nothing for the moment but get the system config
     """
+    self.job = job
     self.systemconfig = job.systemConfig
     self.jobapps = job.applicationlist
     return S_OK()

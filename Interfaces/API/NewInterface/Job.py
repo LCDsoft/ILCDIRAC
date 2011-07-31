@@ -7,6 +7,7 @@ Created on Jul 28, 2011
 from DIRAC.Interfaces.API.Job import Job as DiracJob
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from DIRAC import S_ERROR,S_OK
+import string
 
 class Job(DiracJob):
   """ ILCDIRAC job class
@@ -38,14 +39,14 @@ class Job(DiracJob):
     self._addParameter(self.workflow, 'IgnoreAppError', 'JDL', True, 'To ignore application errors')
     return S_OK()
   
-  def dontcheckjob(self):
+  def dontCheckJob(self):
     """ Helper function
     
     Called by users to remove checking of job.
     """
     self.check = False
       
-  def AskUser(self):
+  def askUser(self):
     """ Called from DiracILC class to prompt the user
     """
     if not self.check:
@@ -64,18 +65,19 @@ class Job(DiracJob):
     #Start by defining step number
     self.stepnumber += 1
 
+    res = application._analyseJob(self)
+    if not res['OK']:
+      return res
+    
     res = application._checkConsistency()
     if not res['OK']:
-      return self._reportError("%s failed to check its consistency: %s"&(application.name,res['Message']))
+      return self._reportError("%s failed to check its consistency: %s"%(application,res['Message']))
     
     res = self._jobSpecificParams()
     if not res['OK']:
       return self._reportError("Failed job specific checks")
     
-    res = application._analyseJob(self)
-    if not res['OK']:
-      return res
-    
+
     params = application.getParameters()
     
     return S_OK()
@@ -84,3 +86,21 @@ class Job(DiracJob):
     """ Every type of job has to reimplement this method
     """
     return S_OK()
+
+  def _addSoftware( self, appName, appVersion ):
+    """ Private method
+    """
+
+    currentApp  = "%s.%s" % ( appName.lower(), appVersion )
+    swPackages  = 'SoftwarePackages'
+    description = 'ILC Software Packages to be installed'
+
+    if not self.workflow.findParameter( swPackages ):
+      self._addParameter( self.workflow, swPackages, 'JDL', currentApp, description )
+    else:
+      apps = self.workflow.findParameter( swPackages ).getValue()
+
+      if not currentApp in string.split( apps, ';' ):
+        apps += ';' + currentApp
+
+      self._addParameter( self.workflow, swPackages, 'JDL', apps, description )
