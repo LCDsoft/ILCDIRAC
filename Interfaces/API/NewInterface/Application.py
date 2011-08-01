@@ -31,7 +31,10 @@ class Application:
     self._setparams(paramdict)
   
   def __repr__(self):
-    return "naze"
+    str  = "%s"%self.appname
+    if self.version:
+      str += " %s"%self.version
+    return str
   
   def _setparams(self,params):
     pass
