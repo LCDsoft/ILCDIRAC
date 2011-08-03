@@ -9,7 +9,10 @@ def removeLibc(path):
   #return True
 
   curdir = os.getcwd()
-  os.chdir(path)
+  try:
+    os.chdir(path)
+  except:
+    return True  
   listlibs = os.listdir(os.getcwd())
   for lib in listlibs:
     if (lib.count("libc.so") or lib.count("libc-2.5") or lib.count("libm.so") 
