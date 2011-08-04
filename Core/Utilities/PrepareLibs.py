@@ -6,6 +6,9 @@ Created on Jan 26, 2011
 import os
 
 def removeLibc(path):
+  """ Remove libraries that can be problematic, like libc.so
+  @param path: path to look for libraries to remove
+  """
   #return True
 
   curdir = os.getcwd()

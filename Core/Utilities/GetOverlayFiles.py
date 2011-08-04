@@ -7,6 +7,8 @@ from DIRAC import gLogger
 import os
 
 def getOverlayFiles(evttype='gghad'):
+  """ Return the list of files contained in the overlay_BKG folder, where BKG can be anything
+  """
   localfiles = []
   if not os.path.exists("./overlayinput_"+evttype):
     gLogger.error('overlay directory does not exists')

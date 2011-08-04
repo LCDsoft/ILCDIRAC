@@ -19,7 +19,7 @@ from DIRAC.Core.Utilities.Subprocess                                import syste
 
 natOS = NativeMachine()
 
-class CombinedSoftwareInstallation:
+class CombinedSoftwareInstallation(object):
   def __init__(self,argumentsDict):
     """ Standard constructor
     

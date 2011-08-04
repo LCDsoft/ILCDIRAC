@@ -21,6 +21,13 @@ from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 import string,os
 
 def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
+  """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
+  @param systemConfig: System config used for the job
+  @param application: name of the application considered
+  @param applicationVersion: version of the application considered
+  @param mySoftwareRoot: Path to the location where the software is installed
+  @return: new LD_LIBRARY_PATH
+  """
   new_ld_lib_path = ""
   deps = resolveDepsTar(systemConfig,application,applicationVersion)
   for dep in deps:
@@ -46,6 +53,8 @@ def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
   return new_ld_lib_path
 
 def GetNewPATH(systemConfig,application,applicationVersion,mySoftwareRoot):
+  """ Same as L{GetNewLDLibs},but for the PATH
+  """
   new_path = ""
   deps = resolveDepsTar(systemConfig,application,applicationVersion)
   for dep in deps:
@@ -687,6 +696,8 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
   return S_OK(printtext)
 
 def PrepareTomatoSalad(inputxml,outputxml,inputSLCIO,outputFile,collection):
+  """ Prepare the proper steering file for Tomato
+  """
   if not inputxml:
     inputxml = file('default.xml')
     inputxml.write("""

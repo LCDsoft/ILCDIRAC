@@ -14,6 +14,8 @@ from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import os, urllib, tarfile, subprocess
 
 def TARinstall(app,config,area):
+  """ For the specified app, install all dependencies
+  """
   appName    = app[0].lower()
   appVersion = app[1]
   deps = resolveDeps(config,appName,appVersion)
@@ -30,6 +32,8 @@ def TARinstall(app,config,area):
   return res
 
 def install(app,config,area):
+  """ Actually install the applications. Set the environment for some of them.
+  """
   curdir = os.getcwd()
 
   appName    = app[0]
@@ -184,9 +188,13 @@ def install(app,config,area):
   return DIRAC.S_OK()
 
 def remove():
+  """ For the moment, this is done in L{RemoveSoft}
+  """
   pass
 
 def CanWrite(area):
+  """ Check if user is allowed to write in the area
+  """
   curdir = os.getcwd()
   os.chdir(area)
   try:
@@ -203,6 +211,8 @@ def CanWrite(area):
     
 
 def checkJava(dir):
+  """ Check if JAVA is availalbe locally.
+  """
   args = ['java',"-version"]
   try:
     p = subprocess.check_call(args)

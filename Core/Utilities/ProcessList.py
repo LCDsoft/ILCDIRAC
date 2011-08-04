@@ -1,6 +1,8 @@
 '''
 Created on Sep 21, 2010
 
+This object is the interface to the processlist.cfg that contains all the processes known to WHIZARD.
+
 @author: sposs
 '''
 from DIRAC import S_OK, S_ERROR, gLogger
@@ -8,7 +10,9 @@ from DIRAC.Core.Utilities.CFG import CFG
 from pprint import pprint
 import os, tempfile, shutil
 
-class ProcessList:
+class ProcessList(object):
+  """ The ProcessList uses internally the CFG utility to store the processes and their properties.
+  """
   def __init__(self,location):
     self.cfg = CFG()
     self.location = location
@@ -24,6 +28,8 @@ class ProcessList:
     #  self.OK = False
       
   def _writeProcessList(self,path):
+    """ Write to text
+    """
     handle,tmpName = tempfile.mkstemp()
     written = self.cfg.writeToFile(tmpName)
     os.close(handle)
@@ -42,9 +48,14 @@ class ProcessList:
       return False
     
   def isOK(self):
+    """ Check if the content is OK
+    """
     return self.OK
   
   def updateProcessList(self,processes):
+    """ Adds a new entry or updates an existing one.
+    @param processes: dictionary of processes to treat
+    """
     for process,dict in processes.items():
       if not self._existsProcess(process):
         self._addEntry(process,dict)
@@ -57,6 +68,8 @@ class ProcessList:
     return S_OK()
     
   def _addEntry(self,process,processdic):
+    """ Adds a new entry.
+    """
     if not self.cfg.isSection("Processes/%s"%process):
       self.cfg.createNewSection("Processes/%s"%process)
     self.cfg.setOption("Processes/%s/TarBallCSPath"%process, processdic['TarBallCSPath'])
@@ -72,27 +85,40 @@ class ProcessList:
     return S_OK()
   
   def getCSPath(self,process):
+    """ Return the path to the TarBall (for install)
+    @param process: process to look for
+    """
     return self.cfg.getOption("Processes/%s/TarBallCSPath"%process, None)
 
   def getInFile(self,process):
+    """ Get the associated whizard.in file to the process
+    """
     return self.cfg.getOption("Processes/%s/InFile"%process, None)
 
   def getProcesses(self):
+    """ Return the list of all processes available
+    """
     processesdict = self.cfg.getAsDict("Processes")
     processes = processesdict.keys()
     return processes
   
   def getProcessesDict(self):
+    """ Return all processes as a dictionary {'process':{'TarBall':Path, etc. etc.}}
+    """
     return self.cfg.getAsDict("Processes")
     
   
   def existsProcess(self,process):
+    """ Check if the specified process exists
+    """
     return S_OK(self._existsProcess(process))
 
   def _existsProcess(self,process):
     return self.cfg.isSection('Processes/%s' % process)
 
   def writeProcessList(self, alternativePath=None):
+    """ Write the process list
+    """
     destination = self.location
     if alternativePath:
       destination = alternativePath
@@ -102,6 +128,8 @@ class ProcessList:
     return S_OK(destination) 
   
   def printProcesses(self):
+    """ Dump to screen the content of the process list.
+    """
     processesdict = self.cfg.getAsDict("Processes")
     #for key,value in processesdict.items():
     #  print "%s: [%s], generated with '%s' with the model '%s' using diagram restrictions %s"%(key,value['Detail'],value['Generator'],value['Model'],value['Restrictions'])
