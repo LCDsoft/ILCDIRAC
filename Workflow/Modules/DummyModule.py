@@ -29,3 +29,4 @@ class DummyModule(ModuleBase):
   def execute(self):
     self.result = self.resolveInputVariables()
     return S_OK()  
+  

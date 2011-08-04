@@ -2,7 +2,7 @@
 # $HeadURL$
 #####################################################
 """
-Module to chacke the file contents
+Module to check the file contents
 """
 
 __RCSID__ = "$Id$"
