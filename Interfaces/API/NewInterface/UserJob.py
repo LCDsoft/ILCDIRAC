@@ -12,17 +12,27 @@ class UserJob(Job):
     Job.__init__(self)
     
   def setInputData(self):
+    """ Inherited from DIRAC.Job
+    """
     return S_OK() 
 
   def setInputSandbox(self,flist):
+    """ Mostly inherited from DIRAC.Job
+    """
     self.inputsandbox = flist
     return S_OK()
 
   def setOutputData(self):
+    """ Inherited from DIRAC.Job
+    """
     return S_OK() 
 
   def setOutputSandbox(self):
+    """ Inherited from DIRAC.Job
+    """
     return S_OK()
   
   def _jobSpecificParams(self):
+    """ Inherited from DIRAC.Job
+    """
     return S_OK()

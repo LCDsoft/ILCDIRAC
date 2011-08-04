@@ -8,6 +8,10 @@ from DIRAC import S_OK,S_ERROR, gLogger
 import inspect, sys, string, types
 
 class Application:
+  """ General application definition. Any new application should inherit from this class.
+  """
+  #nedd to define slots
+  ## __slots__ = []
   def __init__(self,paramdict = None):
     ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
     self.appname = None
@@ -31,12 +35,16 @@ class Application:
     self._setparams(paramdict)
   
   def __repr__(self):
+    """ String representation of the application
+    """
     str  = "%s"%self.appname
     if self.version:
       str += " %s"%self.version
     return str
   
   def _setparams(self,params):
+    """ Try to use setattr(self,param) and raise AttributeError in case it does not work.
+    """
     pass
     
   def setName(self,name):

@@ -23,13 +23,13 @@ class Job(DiracJob):
     self.stepnumber = 0
     
   def setInputData(self):
-    return S_ERROR('This job class does not implement setInputData')
+    return self._reportError('%s does not implement setInputData'%self.__name__)
   def setInputSandbox(self):
-    return S_ERROR('This job class does not implement setInputSandbox')
+    return self._reportError('This job class does not implement setInputSandbox')
   def setOuputData(self):
-    return S_ERROR('This job class does not implement setOutputData')
+    return self._reportError('This job class does not implement setOutputData')
   def setOutputSandbox(self):
-    return S_ERROR('This job class does not implement setOutputSandbox')
+    return self._reportError('This job class does not implement setOutputSandbox')
   
   def setIngnoreApplicationErrors(self):
     """ Helper function
@@ -78,7 +78,7 @@ class Job(DiracJob):
       return self._reportError("Failed job specific checks")
     
 
-    params = application.getParameters()
+    params = application._getParameters()
     
     return S_OK()
 

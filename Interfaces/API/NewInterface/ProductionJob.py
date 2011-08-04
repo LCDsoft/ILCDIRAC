@@ -14,6 +14,8 @@ class ProductionJob(Job):
     self.fc = FileCatalogClient()
     
   def setInputDataQuery(self,metadict):
+    """ Define the input data query needed
+    """
     res = self.fc.findFilesByMetadata(metadict)
     if not res['OK']:
       return res
@@ -22,9 +24,13 @@ class ProductionJob(Job):
     return S_OK()
   
   def createProd(self):
+    """ Create production.
+    """
     return S_OK()
   
   def finalizeProd(self):
+    """ Finalize definition: submit to Transformation service
+    """
     return S_OK()  
   
   def _jobSpecificParams(self,app):
