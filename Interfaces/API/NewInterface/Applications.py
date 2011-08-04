@@ -86,7 +86,7 @@ class Whizard(Application):
     self.process = ''
     if processlist:
       self.processlist = processlist
-    self.model = ''  
+    self.model = 'sm'  
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
