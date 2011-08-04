@@ -52,6 +52,8 @@ class SQLWrapper:
     self.maxPeekLines = 20
     
   def setDBpath(self,dbpath,dumpfile=''):
+    """ Look for the DB to use.
+    """
     if(len(dumpfile)<1):
       dumpfile= 'CLICMokkaDB.sql'
       path = "%s/%s"%(dbpath,dumpfile)

@@ -7,6 +7,8 @@ from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 import string,os
 
 def getNumberOfevents(inputfile):
+  """ Find from the FileCatalog the number of events in a file
+  """
   files = inputfile.split(";")
   fc = FileCatalogClient()
   nbevts = {} 

@@ -10,6 +10,8 @@ from math import log
 from DIRAC import S_OK, S_ERROR
 
 def WasteCPUCycles(timecut):
+  """ Waste, waste, and waste more CPU.
+  """
   a = 1e31
   first = time.clock()
   while time.clock()-first<timecut:

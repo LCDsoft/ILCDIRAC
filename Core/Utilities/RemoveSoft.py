@@ -8,7 +8,9 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,Shar
 from DIRAC import S_OK,S_ERROR, gConfig, gLogger
 import os,shutil
 
-class RemoveSoft():
+class RemoveSoft(object):
+  """ Utility to remove software from a site.
+  """
   def __init__(self):
     self.softs = ''
     self.apps = []
@@ -16,6 +18,8 @@ class RemoveSoft():
     self.systemConfig = ''
 
   def execute(self):
+    """ Look in folders (Shared Area and Local Area) and try ot remove the applications specified.
+    """
     if self.step_commons.has_key('Apps'):
       self.softs = self.step_commons['Apps']
     else:

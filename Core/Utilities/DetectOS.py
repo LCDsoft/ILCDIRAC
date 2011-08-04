@@ -256,7 +256,7 @@ supported_compilers = {
                        "osx105" : ["gcc401"],
                        "osx106" : ["gcc42"]
                        }
-class NativeMachine:
+class NativeMachine(object):
     def __init__(self):
         self._arch = None
         self._ostype = None

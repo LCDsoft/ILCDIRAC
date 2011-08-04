@@ -6,6 +6,8 @@ Created on Jun 28, 2010
 import os
 from DIRAC import S_OK,S_ERROR
 def resolveIFpaths(inputfiles):
+  """ Try to find out in which sub-directory are each file. In the future, should be useless if PoolXMLCatalog can be used. 
+  """
   listoffiles = []
   for file in inputfiles:
     listoffiles.append(os.path.basename(file))
