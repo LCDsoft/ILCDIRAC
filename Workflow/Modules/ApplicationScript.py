@@ -4,6 +4,8 @@
 '''
 Created on Jul 12, 2010
 
+Module used to run any application provided by the user. Is used when a specific environment is needed (e.g. ROOT).
+
 @author: sposs
 '''
 __RCSID__ = "$Id: $"
@@ -22,7 +24,8 @@ class ApplicationScript(ModuleBase):
     self.arguments = ''
 
   def applicationSpecificInputs(self):
-
+    """ Resolve the application specific parameters
+    """
     if self.step_commons.has_key('script'):
       self.script = self.step_commons['script']
       print self.script
@@ -34,6 +37,8 @@ class ApplicationScript(ModuleBase):
     return S_OK()
 
   def execute(self):
+    """ Run the application in a controlled environment
+    """
     self.result =self.resolveInputVariables()
     if not self.applicationName or not self.applicationVersion:
       self.result = S_ERROR( 'No Application defined' )

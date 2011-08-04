@@ -25,6 +25,8 @@ class ComputeOutputDataList(ModuleBase):
     self.listoutput = []
 
   def applicationSpecificInputs(self):
+    """ Update the workflow_commons dictionary with the current step's output
+    """
     if self.step_commons.has_key('listoutput'):
       self.listoutput = self.step_commons['listoutput']
 
