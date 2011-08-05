@@ -123,6 +123,7 @@ def install(app,config,area):
     
   ### Set env variables  
   basefolder = folder_name
+  removeLibc(os.path.join(os.getcwd(),basefolder)+"/LDLibs")
   if appName=="slic":
     os.environ['SLIC_DIR']= basefolder
     slicv = ''
@@ -161,7 +162,6 @@ def install(app,config,area):
     os.environ['PYTHONPATH']=os.environ['ROOTSYS']+"/lib"+":"+os.environ["PYTHONPATH"]
   elif appName=='java':
     os.environ['PATH'] = os.path.join(os.getcwd(),basefolder)+"/Executable:"+os.environ['PATH']
-    removeLibc(os.path.join(os.getcwd(),basefolder)+"/LDLibs")
     if os.environ.has_key('LD_LIBRARY_PATH'):
       os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(),basefolder)+"/LDLibs:"+os.environ['LD_LIBRARY_PATH']
     else:
