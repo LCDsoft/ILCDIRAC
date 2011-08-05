@@ -1,6 +1,8 @@
 '''
 Created on Jul 28, 2011
 
+New Job class, for the new interface.
+
 @author: Stephane Poss
 '''
 
@@ -22,13 +24,21 @@ class Job(DiracJob):
     self.systemConfig = ''
     self.stepnumber = 0
     
-  def setInputData(self):
+  def setInputData(self, lfns):
+    """ Overload method to cancel it
+    """
     return self._reportError('%s does not implement setInputData'%self.__name__)
-  def setInputSandbox(self):
+  def setInputSandbox(self, files):
+    """ Overload method to cancel it
+    """
     return self._reportError('This job class does not implement setInputSandbox')
-  def setOuputData(self):
+  def setOuputData(self, lfns, OutputSE = [], OutputPath = '' ):
+    """ Overload method to cancel it
+    """
     return self._reportError('This job class does not implement setOutputData')
-  def setOutputSandbox(self):
+  def setOutputSandbox(self, files):
+    """ Overload method to cancel it
+    """
     return self._reportError('This job class does not implement setOutputSandbox')
   
   def setIngnoreApplicationErrors(self):
@@ -39,15 +49,18 @@ class Job(DiracJob):
     self._addParameter(self.workflow, 'IgnoreAppError', 'JDL', True, 'To ignore application errors')
     return S_OK()
   
-  def dontCheckJob(self):
+  def dontPromptMe(self):
     """ Helper function
     
     Called by users to remove checking of job.
     """
     self.check = False
+    return S_OK()
       
-  def askUser(self):
-    """ Called from DiracILC class to prompt the user
+  def _askUser(self):
+    """ Private function
+    
+    Called from DiracILC class to prompt the user
     """
     if not self.check:
       return S_OK()
@@ -61,6 +74,8 @@ class Job(DiracJob):
     """ Helper function
     
     This is the main part: call for every application
+    @param application: Application instance
+    
     """
     #Start by defining step number
     self.stepnumber += 1
