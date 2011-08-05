@@ -61,11 +61,17 @@ class RemoveSoft(object):
             os.remove(dbloc)
           except Exception, x:
             self.log.error("Could not delete SQL DB file : %s"%(str(x)))  
-      try:
-        shutil.rmtree(myappDir)
-      except Exception, x:
-        self.log.error("Could not delete %s : %s"%(app,str(x)))  
-        failed.append(app)
+      if os.path.isdir(myappDir):
+        try:
+          shutil.rmtree(myappDir)
+        except Exception, x:
+          self.log.error("Could not delete %s : %s"%(app,str(x)))  
+          failed.append(app)
+      else:
+        try:
+          os.remove(myappDir)
+        except Exception, x:
+          self.log.error("Could not delete %s"%(myappDir,str(x)))
         
     if len(failed):
       return S_ERROR("Failed deleting applications %s"%failed)
