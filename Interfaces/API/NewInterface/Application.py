@@ -75,7 +75,7 @@ class Application:
     return str
   
   def _setparams(self,params):
-    """ Try to use setattr(self,param) and raise AttributeError in case it does not work.
+    """ Try to use setattr(self,param) and raise AttributeError in case it does not work. Even better, try to call the self.setParam(). Use eval() for that.
     """
     return S_OK()  
     
@@ -83,12 +83,14 @@ class Application:
   def setName(self,name):
     """ Define name of application
     """
+    self._checkArgs({ name : types.StringTypes } )
     self.appname = name
     return S_OK()  
     
   def setVersion(self,version):
     """ Define version to use
     """
+    self._checkArgs({ version : types.StringTypes } )
     self.version = version
     return S_OK()  
     
@@ -103,18 +105,21 @@ class Application:
   def setLogFile(self,logfile):
     """ Define application log file
     """
+    self._checkArgs({ logfile : types.StringTypes } )
     self.logfile = logfile
     return S_OK()  
   
   def setNbEvts(self,nbevts):
     """ Set the number of events to process
     """
+    self._checkArgs({ nbevts : types.IntType })
     self.nbevts = nbevts  
     return S_OK()  
     
   def setEnergy(self,energy):
     """ Set the energy to use
     """
+    self._checkArgs({ energy : types.IntType })
     self.energy = energy
     return S_OK()  
     
@@ -175,22 +180,6 @@ class Application:
     Should also call L{_checkRequiredApp} when needed.
     """
     return S_OK()
-  
-  def _addParametersToStep(self,step):
-    """ Method to be overloaded by every application. Add the parameters to the given step.
-    """
-    return S_OK()
-  
-  def _setParametersValues(self,stepinstance):
-    """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
-    """
-    return S_OK()
-
-  def _resolveLinkedParameters(self,stepinstance):
-    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See L{StdhepCut} for example.
-    Called from Job.
-    """
-    return S_OK()
 
   def _checkRequiredApp(self):
     """ Called by L{_checkConsistency} when relevant
@@ -202,15 +191,38 @@ class Application:
         else:
           idx = self._jobapps.index(app)
           self.inputappstep = self._jobsteps[idx]
+          
+    return S_OK()
+
+  def _addParametersToStep(self,step):
+    """ Method to be overloaded by every application. Add the parameters to the given step.
+    Called from Job
+    """
+    return S_OK()
+  
+  def _setParametersValues(self,stepinstance):
+    """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
+    Called from Job
+    """
+    return S_OK()
+
+  def _resolveLinkedParameters(self,stepinstance):
+    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See L{StdhepCut} for example.
+    Called from Job.
+    """
     return S_OK()
 
   def _analyseJob(self,job):
     """ Called from Job, only gives the application the knowledge of the Job (application, step, system config)
     """
     self.job = job
+    
     self._systemconfig = job.systemConfig
-    self._jobapps = job.applicationlist
-    self._jobsteps = job.steps
+    
+    self._jobapps      = job.applicationlist
+    
+    self._jobsteps     = job.steps
+    
     return S_OK()
 
   def _checkArgs( self, argNamesAndTypes ):
