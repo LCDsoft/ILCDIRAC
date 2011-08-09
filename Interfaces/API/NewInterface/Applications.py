@@ -248,5 +248,11 @@ class StdhepCut(Application):
       return res
     
     return S_OK()
-    
+  
+  def _resolveLinkedParameters(self,step):
+    if self.inputappstep:
+      res = step.setLink("InputFile",self.inputappstep.getName(),"OutputFile")
+      if not res:
+        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
+    return S_OK()  
     

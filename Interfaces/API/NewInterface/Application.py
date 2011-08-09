@@ -175,6 +175,11 @@ class Application:
     """
     return S_OK()
 
+  def _resolveLinkedParameters(self,step):
+    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See StdHepCut for example.
+    """
+    return S_OK()
+
   def _checkRequiredApp(self):
     """ Called by _checkConsistency when relevant
     """
