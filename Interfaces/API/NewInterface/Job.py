@@ -83,7 +83,6 @@ class Job(DiracJob):
     #Start by defining step number
     self.stepnumber = len(self.steps) + 1
     
-    self.applicationlist.append(application)
 
     res = application._analyseJob(self)
     if not res['OK']:
@@ -97,6 +96,9 @@ class Job(DiracJob):
     if not res['OK']:
       return self._reportError("Failed job specific checks")
     
+    ### Once the consistency has been checked, we can add the application to the list of apps.
+    self.applicationlist.append(application)
+
     ##Get the application's sandbox and add it to the job's
     self.inputsandbox.extend(application.inputSB)
 

@@ -41,10 +41,7 @@ class Application:
     #Application parameters: used when defining the steps in the workflow
     self.parameters = {}
     self.linkedparameters = {}
-    
-    #input application: will link the OutputFile of the guys in there with the InputFile of the self 
-    self._inputapp = []
-    
+        
     #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
     self._modulename = ''
     self._moduledescription = ''
@@ -57,6 +54,8 @@ class Application:
     #Internal member: hold the list of the job's application set before self: used when using getInputFromApp
     self._jobapps = []
     self._jobsteps = []
+    #input application: will link the OutputFile of the guys in there with the InputFile of the self 
+    self._inputapp = []
     #Needed to link the parameters.
     self.inputappstep = None
     
@@ -182,7 +181,7 @@ class Application:
     if self._inputapp:
       for app in self._inputapp:
         if not app in self._jobapps:
-          return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in question must be passed to job before.")
+          return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in question must be passed to job.append() before.")
         else:
           idx = self._jobapps.index(app)
           self.inputappstep = self._jobsteps[idx]
