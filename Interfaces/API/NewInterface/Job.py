@@ -132,10 +132,10 @@ class Job(DiracJob):
       ### Here we need to deal with the parameters, and the linked parameters 
       stepInstance.setValue(param)
 
-      ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
-    if application._inputapp:
-      linkedstep = application.inputappstep
-      step.setLink("InputFile",linkedstep,"OutputFile")    
+    ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
+    res = application._resolveLinkedParameters(step)
+    if not res['OK']:
+      return self._reportError("Failed to resolve linked parameters: %s"%res['Message'])   
     ##Finally, add the software packages if needed
     if application.appname and application.version:
       self._addSoftware(application.appname, application.version)
