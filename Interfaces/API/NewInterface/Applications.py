@@ -21,7 +21,11 @@ class GenericApplication(Application):
     Application.__init__(self,paramdict)
     self.script = None
     self.dependencies = []
-    self.modulename = "ApplicationScript"
+    self._modulename = "ApplicationScript"
+    self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
+    self._modules.append(self._createModule())
+    self._modules.append(self._getUserOutputDataModule())
+    
     
   def setScript(self,script):
     """ Define script to use
@@ -40,7 +44,7 @@ class GenericApplication(Application):
       } )
     
     self.dependencies.append(appdict)
-    
+      
   def _checkConsistency(self):
     """ Called from Job
     """
@@ -59,7 +63,9 @@ class GenericApplication(Application):
 class GetSRMFile(Application):
   def __init__(self):
     Application.__init__(self)
-    self.modulename = "GetSRMFile"
+    self._modulename = "GetSRMFile"
+    self._moduledescription = "Module to get files directly from Storage"
+    self._modules.append(self._createModule())
 
   def setFiles(self,fdict):
     """ Specify the files you need
@@ -81,7 +87,11 @@ class Whizard(Application):
   """
   def __init__(self,processlist=None):    
     Application.__init__(self)
-    self.modulename = 'WhizardAnalysis'
+    self._modulename = 'WhizardAnalysis'
+    self._moduledescription = 'Module to run WHIZARD'
+    self._modules.append(self._createModule())
+    self._modules.append(self._getUserOutputDataModule)
+    
     self.appname = 'whizard'
     self.process = ''
     if processlist:
@@ -164,7 +174,10 @@ class Pythia(Application):
   def __init__(self):
     Application.__init__(self)
     self.appname = 'pythia'
-    self.modulename = 'PythiaAnalysis'
+    self._modulename = 'PythiaAnalysis'
+    self._moduledescription = 'Module to run PYTHIA'
+    self._modules.append(self._createModule())
+    self._modules.append(self._getUserOutputDataModule)
     
   def _checkConsistency(self):
     if not self.version:
@@ -188,9 +201,14 @@ class StdhepCut(Application):
   def __init__(self):
     Application.__init__(self)
     self.appname = 'stdhepcut'
-    self.modulename = 'StdHepCut'
+    self._modulename = 'StdHepCut'
+    self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
+    self._modules.append(self._createModule())
+    self._modules.append(self._getUserOutputDataModule)
+    
     self.cutfile = None
     self.maxevts = 0
+    self.nbevtsperfile = 0
     
   def setCutFile(self,cutfile):
     """ Define cut file

@@ -6,8 +6,10 @@ New Job class, for the new interface.
 @author: Stephane Poss
 '''
 
-from DIRAC.Interfaces.API.Job import Job as DiracJob
-from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
+from DIRAC.Interfaces.API.Job                          import Job as DiracJob
+from ILCDIRAC.Interfaces.API.NewInterface.Application  import Application
+from DIRAC.Core.Workflow.Step                          import StepDefinition
+from DIRAC.Core.Workflow.Parameter                     import Parameter 
 from DIRAC import S_ERROR,S_OK
 import string
 
@@ -23,6 +25,7 @@ class Job(DiracJob):
     self.check = True
     self.systemConfig = ''
     self.stepnumber = 0
+    self.steps = []
     
   def setInputData(self, lfns):
     """ Overload method to cancel it
@@ -78,7 +81,9 @@ class Job(DiracJob):
     
     """
     #Start by defining step number
-    self.stepnumber += 1
+    self.stepnumber = len(self.steps) + 1
+    
+    self.applicationlist.append(application)
 
     res = application._analyseJob(self)
     if not res['OK']:
@@ -88,16 +93,54 @@ class Job(DiracJob):
     if not res['OK']:
       return self._reportError("%s failed to check its consistency: %s"%(application,res['Message']))
     
-    res = self._jobSpecificParams()
+    res = self._jobSpecificParams(application)
     if not res['OK']:
       return self._reportError("Failed job specific checks")
     
+    ##Get the application's sandbox and add it to the job's
+    self.inputsandbox.extend(application.inputSB)
 
+    ##Get the modules needed by the application
+    modules = application._modules
+    
+    ##Get the application's parameters to define the workflow
     params = application._getParameters()
     
+    ##Now we can create the step and add it to the workflow
+    #First we need a unique name, let's use the application name and step number
+    stepname = "%s_step_%s"%(application.appname,self.stepnumber)
+    step = StepDefinition(stepname)
+    self.steps.append(step)
+    #Now add the modules in the step
+    for module in modules:
+      step.addModule(module)
+      step.createModuleInstance(module.getType(),stepname)
+    
+    ##now define the step parameters
+    for param in params:
+      ###Here we need to deal with the param dictionary to create a proper constructor of Parameter
+      step.addParameter(Parameter(param))
+      
+    ##Now the step is defined, let's add it to the workflow
+    self.workflow.addStep(step)
+    
+    ###Now we need to get a step instance object to set the parameters' values
+    stepInstance = self.workflow.createStepInstance(stepname,stepname)
+    for param in params:
+      ### Here we need to deal with the parameters, and the linked parameters 
+      stepInstance.setValue(param)
+
+      ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
+    if application._inputapp:
+      linkedstep = application.inputappstep
+      step.setLink("InputFile",linkedstep,"OutputFile")    
+    ##Finally, add the software packages if needed
+    if application.appname and application.version:
+      self._addSoftware(application.appname, application.version)
+      
     return S_OK()
 
-  def _jobSpecificParams(self):
+  def _jobSpecificParams(self,application):
     """ Every type of job has to reimplement this method
     """
     return S_OK()

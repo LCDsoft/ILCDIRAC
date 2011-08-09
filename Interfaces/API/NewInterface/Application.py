@@ -3,35 +3,68 @@ Created on Jul 28, 2011
 
 @author: Stephane Poss
 '''
+from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 
 from DIRAC import S_OK,S_ERROR, gLogger
-import inspect, sys, string, types
+import inspect, sys, string, types, os
+
 
 class Application:
   """ General application definition. Any new application should inherit from this class.
   """
-  #nedd to define slots
+  #need to define slots
   ## __slots__ = []
   def __init__(self,paramdict = None):
     ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
+    
+    #application nane (executable)
     self.appname = None
+    #application version
     self.version = None
+    #Number of evetns to process
     self.nbevts = 0
+    #Steering file (duh!)
     self.steeringfile = None
+    #Input sandbox: steering file automatically added to SB
     self.inputSB = []
+    #Log file
     self.logfile = None
+    #Energy to use (duh! again)
     self.energy = 0
+    #Detector type (ILD or SID)
     self.detectortype = None
+    #Data type : gen, SIM, REC, DST
     self.datatype = None
+    #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
+    
+    #Application parameters: used when defining the steps in the workflow
     self.parameters = {}
-    self.inputapp = []
-    self.modulename = ''
-    self.systemconfig = ''
-    self.jobapps = []
+    self.linkedparameters = {}
+    
+    #input application: will link the OutputFile of the guys in there with the InputFile of the self 
+    self._inputapp = []
+    
+    #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
+    self._modulename = ''
+    self._moduledescription = ''
+    self._modules = []
+    self.importLocation = "ILCDIRAC.Workflow.Modules"
+        
+    #System Configuration: comes from Job definition
+    self._systemconfig = ''
+    
+    #Internal member: hold the list of the job's application set before self: used when using getInputFromApp
+    self._jobapps = []
+    self._jobsteps = []
+    #Needed to link the parameters.
+    self.inputappstep = None
+    
     ####Following are needed for error report
     self.log = gLogger
     self.errorDict = {}
+    
+    ### Next is to use the setattr method.
     self._setparams(paramdict)
   
   def __repr__(self):
@@ -45,38 +78,46 @@ class Application:
   def _setparams(self,params):
     """ Try to use setattr(self,param) and raise AttributeError in case it does not work.
     """
-    pass
+    return S_OK()  
+    
     
   def setName(self,name):
     """ Define name of application
     """
     self.appname = name
+    return S_OK()  
     
   def setVersion(self,version):
     """ Define version to use
     """
     self.version = version
+    return S_OK()  
     
   def setSteeringFile(self,steeringfile):
-    """ Set the steering file
+    """ Set the steering file, and add it to sandbox
     """
     self.steeringfile = steeringfile
-    self.inputSB.append(steeringfile) 
+    if os.path.exists(steeringfile) or steeringfile.lower().count("lfn:"):
+      self.inputSB.append(steeringfile) 
+    return S_OK()  
     
   def setLogFile(self,logfile):
     """ Define application log file
     """
     self.logfile = logfile
+    return S_OK()  
   
   def setNbEvts(self,nbevts):
     """ Set the number of evetns to process
     """
     self.nbevts = nbevts  
+    return S_OK()  
     
   def setEnergy(self,energy):
     """ Set the energy to use
     """
     self.energy = energy
+    return S_OK()  
     
   def setOutputFile(self,ofile):
     """ Set the output file
@@ -88,6 +129,7 @@ class Application:
       self.prodparameters[ofile]['detectortype'] = self.detectortype
     if self.datatype:
       self.prodparameters[ofile]['datatype']= self.datatype
+    return S_OK()  
   
   def getInputFromApp(self,app):
     """ Called to link applications
@@ -97,7 +139,8 @@ class Application:
     >>> marlin.getInputFromApp(mokka)
     
     """
-    self.inputapp.append(app)
+    self._inputapp.append(app)
+    return S_OK()  
 
 
 ########################################################################################
@@ -107,6 +150,26 @@ class Application:
     """ Called from Job class
     """
     return self.parameters
+
+  def _createModule(self):
+    """ Create Module definition. As it's generic code, all apps will use this.
+    """
+    module = ModuleDefinition(self._modulename)
+    module.setDescription(self._moduledescription)
+    body = 'from %s.%s import %s\n' % (self.importLocation, self._modulename, self._modulename)
+    module.setBody(body)
+    return module
+  
+  def _getUserOutputDataModule(self):
+    """ This is separated as not all applications require user specific output data (i.e. GetSRMFile and Overlay)
+    
+    The UserJobFinalization only runs last. It's called every step, but is running only if last.
+    """
+    userData = ModuleDefinition('UserJobFinalization')
+    userData.setDescription('Uploads user output data files with specific policies.')
+    body = 'from %s.%s import %s\n' % (self.importLocation, 'UserJobFinalization', 'UserJobFinalization')
+    userData.setBody(body)
+    return userData
   
   def _checkConsistency(self):
     """ Called from Job Class, overloaded by every class
@@ -116,18 +179,22 @@ class Application:
   def _checkRequiredApp(self):
     """ Called by _checkConsistency when relevant
     """
-    if self.inputapp:
-      for app in self.inputapp:
-        if not app in self.jobapps:
-          return S_ERROR("job order not correct: Pythia or whizard has to be passed to job.append before stdhepcut")    
+    if self._inputapp:
+      for app in self._inputapp:
+        if not app in self._jobapps:
+          return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in question must be passed to job before.")
+        else:
+          idx = self._jobapps.index(app)
+          self.inputappstep = self._jobsteps[idx]
     return S_OK()
 
   def _analyseJob(self,job):
     """ Called from Job, does nothing for the moment but get the system config
     """
     self.job = job
-    self.systemconfig = job.systemConfig
-    self.jobapps = job.applicationlist
+    self._systemconfig = job.systemConfig
+    self._jobapps = job.applicationlist
+    self._jobsteps = job.steps
     return S_OK()
 
   def _checkArgs( self, argNamesAndTypes ):
