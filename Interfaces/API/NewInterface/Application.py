@@ -107,7 +107,7 @@ class Application:
     return S_OK()  
   
   def setNbEvts(self,nbevts):
-    """ Set the number of evetns to process
+    """ Set the number of events to process
     """
     self.nbevts = nbevts  
     return S_OK()  
@@ -171,17 +171,19 @@ class Application:
     return userData
   
   def _checkConsistency(self):
-    """ Called from Job Class, overloaded by every class
+    """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
+    Should also call L{_checkRequiredApp} when needed.
     """
     return S_OK()
 
   def _resolveLinkedParameters(self,step):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See StdHepCut for example.
+    Called from Job.
     """
     return S_OK()
 
   def _checkRequiredApp(self):
-    """ Called by _checkConsistency when relevant
+    """ Called by L{_checkConsistency} when relevant
     """
     if self._inputapp:
       for app in self._inputapp:
@@ -193,7 +195,7 @@ class Application:
     return S_OK()
 
   def _analyseJob(self,job):
-    """ Called from Job, does nothing for the moment but get the system config
+    """ Called from Job, only gives the application the knowledge of the Job (application, step, system config)
     """
     self.job = job
     self._systemconfig = job.systemConfig
@@ -202,7 +204,7 @@ class Application:
     return S_OK()
 
   def _checkArgs( self, argNamesAndTypes ):
-    """ Private method
+    """ Private method to check the validity of the parameters
     """
 
     # inspect.stack()[1][0] returns the frame object ([0]) of the caller
