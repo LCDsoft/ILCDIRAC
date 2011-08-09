@@ -175,9 +175,19 @@ class Application:
     Should also call L{_checkRequiredApp} when needed.
     """
     return S_OK()
+  
+  def _addParametersToStep(self,step):
+    """ Method to be overloaded by every application. Add the parameters to the given step.
+    """
+    return S_OK()
+  
+  def _setParametersValues(self,stepinstance):
+    """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
+    """
+    return S_OK()
 
-  def _resolveLinkedParameters(self,step):
-    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See StdHepCut for example.
+  def _resolveLinkedParameters(self,stepinstance):
+    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See L{StdhepCut} for example.
     Called from Job.
     """
     return S_OK()

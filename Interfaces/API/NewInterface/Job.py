@@ -105,9 +105,6 @@ class Job(DiracJob):
     ##Get the modules needed by the application
     modules = application._modules
     
-    ##Get the application's parameters to define the workflow
-    params = application._getParameters()
-    
     ##Now we can create the step and add it to the workflow
     #First we need a unique name, let's use the application name and step number
     stepname = "%s_step_%s"%(application.appname,self.stepnumber)
@@ -118,22 +115,24 @@ class Job(DiracJob):
       step.addModule(module)
       step.createModuleInstance(module.getType(),stepname)
     
-    ##now define the step parameters
-    for param in params:
-      ###Here we need to deal with the param dictionary to create a proper constructor of Parameter
-      step.addParameter(Parameter(param))
+    ### add the parameters to  the step
+    res = application._addParametersToStep(step)
+    if not res['OK']:
+      return self._reportError("Failed to add parameters: %s"%res['Message'])   
       
     ##Now the step is defined, let's add it to the workflow
     self.workflow.addStep(step)
     
     ###Now we need to get a step instance object to set the parameters' values
     stepInstance = self.workflow.createStepInstance(stepname,stepname)
-    for param in params:
-      ### Here we need to deal with the parameters, and the linked parameters 
-      stepInstance.setValue(param)
 
+    ##Set the parameters values to the step instance
+    res = application._setParametersValues(stepInstance)
+    if not res['OK']:
+      return self._reportError("Failed to resolve parameters values: %s"%res['Message'])   
+    
     ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
-    res = application._resolveLinkedParameters(step)
+    res = application._resolveLinkedParameters(stepInstance)
     if not res['OK']:
       return self._reportError("Failed to resolve linked parameters: %s"%res['Message'])   
     ##Finally, add the software packages if needed
