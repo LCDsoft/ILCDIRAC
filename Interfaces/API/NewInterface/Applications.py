@@ -70,9 +70,13 @@ class GetSRMFile(Application):
   def setFiles(self,fdict):
     """ Specify the files you need
     
-    @param fdict: file dictionary: {file:site}
+    @param fdict: file dictionary: {file:site}, can be also ["{}","{}"] etc.
     @type fdict: dict or list
     """
+    kwargs = {"fdict":fdict}
+    if not type(fdict) == type("") and not type(fdict) == type([]):
+      return self._reportError('Expected string or list of strings for fdict', __name__, **kwargs)
+    
     self.filedict = fdict
   
   def _checkConsistency(self):
