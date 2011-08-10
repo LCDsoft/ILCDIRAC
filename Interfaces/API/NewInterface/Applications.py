@@ -77,7 +77,7 @@ class GenericApplication(Application):
     self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
 
   def _prodjobmodules(self,step):
     m1 = self._applicationModule()
@@ -89,15 +89,16 @@ class GenericApplication(Application):
     self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules    
+    return S_OK()    
 
-  def _addParametersToStep(self,step):
-    res = self._addBaseParameters(step)
+  def _addParametersToStep(self,stepdefinition):
+    res = self._addBaseParameters(stepdefinition)
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")
     return S_OK()
   
   def _setStepParametersValues(self, instance):
+    self._setBaseStepParametersValues(instance)
     for depn,depv in self.dependencies.items():
       self.job._addSoftware(depn,depv)
     return S_OK()
@@ -260,7 +261,7 @@ class Whizard(Application):
     self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
 
   def _prodjobmodules(self,step):
     m1 = self._applicationModule()
@@ -272,7 +273,7 @@ class Whizard(Application):
     self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
 
 #################################################################
 #            PYTHIA: Second Generator application
@@ -286,6 +287,10 @@ class Pythia(Application):
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
 
+  def _applicationModule(self):
+    m1 = self._createModule()
+    return m1  
+
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
     step.addModule(m1)
@@ -296,7 +301,7 @@ class Pythia(Application):
     self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
 
   def _prodjobmodules(self,step):
     m1 = self._applicationModule()
@@ -308,7 +313,7 @@ class Pythia(Application):
     self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
       
   def _checkConsistency(self):
     if not self.version:
@@ -338,6 +343,39 @@ class StdhepCut(Application):
     self.cutfile = None
     self.maxevts = 0
     self.nbevtsperfile = 0
+    
+  def setCutFile(self,cutfile):
+    """ Define cut file
+    """
+    self._checkArgs( {
+        'cutfile' : types.StringTypes
+      } )
+    self.cutfile = cutfile  
+
+  def setMaxNbEvts(self,nbevts):
+    """ Max number of events to keep in each file
+    """
+    self._checkArgs( {
+        'nbevts' : types.IntType
+      } )
+    self.maxevts = nbevts
+    
+  def setNbEvtsPerFile(self,nbevts):
+    """ Number of events per file
+    """
+    self._checkArgs( {
+        'nbevts' : types.IntType
+      } )
+    self.nbevtsperfile = nbevts  
+
+  def _applicationModule(self):
+    m1 = self._createModule()
+    m1.addParameter(Parameter("CutFile", "", "string", "", "", False, False, "Process to generate"))
+    self._modules.append(m1)  
+    return m1
+
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue("CutFile",self.cutfile)
 
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
@@ -363,30 +401,6 @@ class StdhepCut(Application):
     step.createModuleInstance(m2.getType(),step.getType())
     return self._modules
 
-    
-  def setCutFile(self,cutfile):
-    """ Define cut file
-    """
-    self._checkArgs( {
-        'cutfile' : types.StringTypes
-      } )
-    self.cutfile = cutfile  
-
-  def setMaxNbEvts(self,nbevts):
-    """ Max number of events to keep in each file
-    """
-    self._checkArgs( {
-        'nbevts' : types.IntType
-      } )
-    self.maxevts = nbevts
-    
-  def setNbEvtsPerFile(self,nbevts):
-    """ Number of events per file
-    """
-    self._checkArgs( {
-        'nbevts' : types.IntType
-      } )
-    self.nbevtsperfile = nbevts  
 
   def _checkConsistency(self):
     if not self.cutfile:

@@ -10,7 +10,7 @@ from DIRAC import S_OK,S_ERROR, gLogger
 import inspect, sys, string, types, os
 
 
-class Application:
+class Application(object):
   """ General application definition. Any new application should inherit from this class.
   """
   #need to define slots
@@ -21,13 +21,17 @@ class Application:
     #application nane (executable)
     self.appname = None
     #application version
-    self.version = None
+    self.version = ""
     #Number of evetns to process
     self.nbevts = 0
     #Steering file (duh!)
     self.steeringfile = None
     #Input sandbox: steering file automatically added to SB
     self.inputSB = []
+    #Input file
+    self.inputfile = None
+    #Output file
+    self.outputFile = None
     #Log file
     self.logfile = None
     #Energy to use (duh! again)
@@ -41,7 +45,6 @@ class Application:
     
     #Application parameters: used when defining the steps in the workflow
     self.parameters = {}
-    self.linkedparameters = {}
         
     #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
     self._modulename = ''
@@ -129,7 +132,7 @@ class Application:
     """ Set the output file
     """
     self._checkArgs({ ofile : types.StringTypes } )
-    self.parameters['OutputFile']['value']=ofile
+    self.outputFile = ofile
     self.prodparameters[ofile]={}
     if self.detectortype:
       self.prodparameters[ofile]['detectortype'] = self.detectortype
@@ -161,10 +164,6 @@ class Application:
 ########################################################################################
 #    More private methods: called by the applications of the jobs, but not by the users
 ########################################################################################
-  def _getParameters(self):
-    """ Called from Job class
-    """
-    return self.parameters
 
   def _createModule(self):
     """ Create Module definition. As it's generic code, all apps will use this.
@@ -209,13 +208,13 @@ class Application:
     """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs (userJobFinalization for instance)
     """
     self.log.error("This application does not implement the modules, you get an empty list")
-    return self._modules
+    return S_ERROR('Not implemented')
   
   def _prodjobmodules(self,step):
     """ Same as above, but the other way around.
     """
     self.log.error("This application does not implement the modules, you get an empty list")
-    return self._modules
+    return S_ERROR('Not implemented')
   
   def _checkConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
@@ -243,12 +242,18 @@ class Application:
     step.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
     step.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
     step.addParameter(Parameter("LogFile",           "", "string", "", "", False, False, "Log File"))
-    step.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
-    step.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     step.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
     step.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
+    #Following should be workflow parameters
+    step.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
+    step.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     return S_OK()
   
+  def _setBaseStepParametersValues(self,instance):
+    instance.setValue("ApplicationName",self.appname)
+    instance.setValue("ApplicationVersion", self.version)
+      
+      
   def _addParametersToStep(self,step):
     """ Method to be overloaded by every application. Add the parameters to the given step. Should call L{_addBaseParameters}.
     Called from Job
