@@ -67,28 +67,28 @@ class GenericApplication(Application):
     moduleinstance.setValue("script",self.script)
     moduleinstance.setValue('arguments',self.arguments)
   
-  def _userjobmodules(self,step):
+  def _userjobmodules(self,stepdefinition):
     m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    stepdefinition.addModule(m1)
+    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
     self._applicationModuleValues(m1i)
     
     m2 = self._getUserOutputDataModule()
     self._modules.append(m2)
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+    stepdefinition.addModule(m2)
+    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
     return S_OK()
 
-  def _prodjobmodules(self,step):
+  def _prodjobmodules(self,stepdefinition):
     m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    stepdefinition.addModule(m1)
+    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
     self._applicationModuleValues(m1i)
     
     m2 = self._getComputeOutputDataListModule()
     self._modules.append(m2)
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+    stepdefinition.addModule(m2)
+    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
     return S_OK()    
 
   def _addParametersToStep(self,stepdefinition):
@@ -127,7 +127,7 @@ class GetSRMFile(Application):
 
   def _applicationModule(self):
     m1 = self._createModule()
-    m1.addParameter(Parameter...)
+    #m1.addParameter(Parameter...)
     self._modules.append(m1)
     return m1
 
@@ -346,8 +346,8 @@ class Pythia(Application):
 class StdhepCut(Application): 
   """ Call stdhep cut after whizard of pythia
   """
-  def __init__(self):
-    Application.__init__(self)
+  def __init__(self, paramdict = None):
+    Application.__init__(self,paramdict)
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
@@ -429,9 +429,10 @@ class StdhepCut(Application):
     
     return S_OK()
   
-  def _resolveLinkedParameters(self,step):
+  def _resolveLinkedParameters(self,stepinstance):
     if self.inputappstep:
-      res = step.setLink("InputFile",self.inputappstep.getName(),"OutputFile")
+        
+      res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
     return S_OK()  
