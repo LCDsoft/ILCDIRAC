@@ -15,7 +15,7 @@ class Application(object):
   """
   #need to define slots
   ## __slots__ = []
-  def __init__(self,paramdict = None):
+  def __init__(self, paramdict = None):
     ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
     
     #application nane (executable)
@@ -149,7 +149,7 @@ class Application(object):
       self.inputSB.append(inputfile)  
     return S_OK()
   
-  def getInputFromApp(self,app):
+  def getInputFromApp(self,application):
     """ Called to link applications
     
     >>> mokka = Mokka()
@@ -157,7 +157,7 @@ class Application(object):
     >>> marlin.getInputFromApp(mokka)
     
     """
-    self._inputapp.append(app)
+    self._inputapp.append(application)
     return S_OK()  
 
 
@@ -221,13 +221,13 @@ class Application(object):
     """
     pass
 
-  def _userjobmodules(self,step):
+  def _userjobmodules(self,stepdefinition):
     """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs (userJobFinalization for instance)
     """
     self.log.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
-  def _prodjobmodules(self,step):
+  def _prodjobmodules(self,stepdefinition):
     """ Same as above, but the other way around.
     """
     self.log.error("This application does not implement the modules, you get an empty list")
@@ -252,32 +252,32 @@ class Application(object):
           
     return S_OK()
   
-  def _addBaseParameters(self,step):
+  def _addBaseParameters(self,stepdefinition):
     """ Add to step the default parameters: appname, version, steeringfile, nbevts, energy, logfile, inputfile, outputfile
     """
-    step.addParameter(Parameter("ApplicationName",   "", "string", "", "", False, False, "Application Name"))
-    step.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
-    step.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
-    step.addParameter(Parameter("LogFile",           "", "string", "", "", False, False, "Log File"))
-    step.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
-    step.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
+    stepdefinition.addParameter(Parameter("ApplicationName",   "", "string", "", "", False, False, "Application Name"))
+    stepdefinition.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
+    stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
+    stepdefinition.addParameter(Parameter("LogFile",           "", "string", "", "", False, False, "Log File"))
+    stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
+    stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
     #Following should be workflow parameters
-    step.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
-    step.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
+    stepdefinition.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
+    stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     return S_OK()
   
-  def _setBaseStepParametersValues(self,instance):
+  def _setBaseStepParametersValues(self,stepinstance):
     """ Set the values for the basic step parameters
     """
-    instance.setValue("ApplicationName",self.appname)
-    instance.setValue("ApplicationVersion", self.version)
+    stepinstance.setValue("ApplicationName",self.appname)
+    stepinstance.setValue("ApplicationVersion", self.version)
       
       
-  def _addParametersToStep(self,step):
+  def _addParametersToStep(self,stepdefinition):
     """ Method to be overloaded by every application. Add the parameters to the given step. Should call L{_addBaseParameters}.
     Called from Job
     """
-    return self._addBaseParameters(step)
+    return self._addBaseParameters(stepdefinition)
   
   def _setStepParametersValues(self,stepinstance):
     """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
