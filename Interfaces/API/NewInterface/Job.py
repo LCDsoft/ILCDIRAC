@@ -102,14 +102,15 @@ class Job(DiracJob):
     ##Get the application's sandbox and add it to the job's
     self.inputsandbox.extend(application.inputSB)
 
-    ##Get the modules needed by the application
-    modules = application._modules
-    
     ##Now we can create the step and add it to the workflow
     #First we need a unique name, let's use the application name and step number
     stepname = "%s_step_%s"%(application.appname,self.stepnumber)
     step = StepDefinition(stepname)
     self.steps.append(step)
+
+    ##Get the modules needed by the application
+    modules = self._jobSpecificModules(application,step)
+    
     #Now add the modules in the step
     for module in modules:
       step.addModule(module)
@@ -127,12 +128,12 @@ class Job(DiracJob):
     stepInstance = self.workflow.createStepInstance(stepname,stepname)
 
     ##Set the parameters values to the step instance
-    res = application._setParametersValues(stepInstance)
+    res = application._setStepParametersValues(stepInstance)
     if not res['OK']:
       return self._reportError("Failed to resolve parameters values: %s"%res['Message'])   
     
     ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
-    res = application._resolveLinkedParameters(stepInstance)
+    res = application._resolveLinkedStepParameters(stepInstance)
     if not res['OK']:
       return self._reportError("Failed to resolve linked parameters: %s"%res['Message'])   
     ##Finally, add the software packages if needed
@@ -140,6 +141,11 @@ class Job(DiracJob):
       self._addSoftware(application.appname, application.version)
       
     return S_OK()
+  
+  def _jobSpecificModules(self,application,step):
+    """ Returns the list of the job specific modules for the passed application. Is overloaded in ProductionJob class. UserJob uses the default.
+    """
+    return application._userjobmodules(step)
 
   def _jobSpecificParams(self,application):
     """ Every type of job has to reimplement this method

@@ -33,12 +33,15 @@ class ProductionJob(Job):
     """
     return S_OK()  
   
-  def _jobSpecificParams(self,app):
+  def _jobSpecificParams(self,application):
     """ For production additional checks are needed: ask the user
     """
-    if not app.logfile:
-      logf = app.appname+"_"+app.version+".log"
-      app.setLogFile(logf)
+    if not application.logfile:
+      logf = application.appname+"_"+application.version+"_Step_"+str(self.stepnumber)+".log"
+      application.setLogFile(logf)
       #in fact a bit more tricky as the log files have the prodID and jobID in them
     return S_OK()
+
+  def _jobSpecificModules(self,application,step):
+    return application._prodjobmodules(step)
   
