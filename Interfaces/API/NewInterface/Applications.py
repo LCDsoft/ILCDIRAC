@@ -5,7 +5,7 @@ Created on Jul 28, 2011
 '''
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.GeneratorModels import GeneratorModels
-
+from DIRAC.Core.Workflow.Parameter                  import Parameter
 from DIRAC import S_OK,S_ERROR
 
 
@@ -20,30 +20,87 @@ class GenericApplication(Application):
   def __init__(self,paramdict = None):
     Application.__init__(self,paramdict)
     self.script = None
-    self.dependencies = []
+    self.arguments = ''
+    self.dependencies = {}
     self._modulename = "ApplicationScript"
+    self.appname = self._modulename
     self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
-    self._modules.append(self._createModule())
-    self._modules.append(self._getUserOutputDataModule())
-    
-    
+      
   def setScript(self,script):
     """ Define script to use
     """
     self._checkArgs( {
         'script' : types.StringTypes
-      } )    
+      } )
+    if os.path.exists(script) or script.lower().count("lfn:"):
+      self.inputSB.append(script)
     self.script = script
     
+  def setArguments(self,arguments):
+    """ Define the arguments of the script (if any)
+    """
+    self._checkArgs( {
+        'script' : types.StringTypes
+      } )  
+    self.arguments = arguments
+      
   def addDependency(self,appdict):
     """ Define list of application you need
+    
+    >>> app.addDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
     """  
     #check that dict has proper structure
     self._checkArgs( {
         'appdict' : types.DictType
       } )
     
-    self.dependencies.append(appdict)
+    self.dependencies.update(appdict)
+
+  def _applicationModule(self):
+    m1 = self._createModule()
+    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Script to execute"))
+    m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
+    self._modules.append(m1)      
+    return m1
+  
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue("script",self.script)
+    moduleinstance.setValue('arguments',self.arguments)
+  
+  def _userjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getUserOutputDataModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+
+  def _prodjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getComputeOutputDataListModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules    
+
+  def _addParametersToStep(self,step):
+    res = self._addBaseParameters(step)
+    if not res["OK"]:
+      return S_ERROR("Failed to set base parameters")
+    return S_OK()
+  
+  def _setStepParametersValues(self, instance):
+    for depn,depv in self.dependencies.items():
+      self.job._addSoftware(depn,depv)
+    return S_OK()
       
   def _checkConsistency(self):
     """ Called from Job
@@ -64,8 +121,16 @@ class GetSRMFile(Application):
   def __init__(self):
     Application.__init__(self)
     self._modulename = "GetSRMFile"
+    self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
+
+  def _userjobmodules(self,step):
     self._modules.append(self._createModule())
+    return self._modules
+
+  def _prodjobmodules(self,step):
+    self.log.error("This application is not meant to be used in Production context")
+    return self._modules
 
   def setFiles(self,fdict):
     """ Specify the files you need
@@ -80,8 +145,16 @@ class GetSRMFile(Application):
     self.filedict = fdict
   
   def _checkConsistency(self):
+    if not self.filedict:
+      return S_ERROR("The file list was not defined")
     return S_OK()
 
+  def _addParametersToStep(self,step):
+    res = self._addBaseParameters(step)
+    if not res["OK"]:
+      return S_ERROR("Failed to set base parameters")
+    step.addParameter(Parameter("srmfiles", "", "string", "", "", False, False, "list of files to retrieve"))
+    return S_OK()
 
 #################################################################
 #            Whizard: First Generator application
@@ -93,8 +166,6 @@ class Whizard(Application):
     Application.__init__(self)
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
-    self._modules.append(self._createModule())
-    self._modules.append(self._getUserOutputDataModule)
     
     self.appname = 'whizard'
     self.process = ''
@@ -104,6 +175,7 @@ class Whizard(Application):
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
+    
     
   def setProcess(self,process):
     """ Define process
@@ -169,6 +241,39 @@ class Whizard(Application):
 
     return S_OK()  
 
+  def _applicationModule(self):
+    m1 = self._createModule()
+    m1.addParameter(Parameter("Process", "", "string", "", "", False, False, "Process to generate"))
+    self._modules.append(m1)      
+    return m1
+  
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue("Process",self.process)
+    
+  def _userjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getUserOutputDataModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+
+  def _prodjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getComputeOutputDataListModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+
 #################################################################
 #            PYTHIA: Second Generator application
 #################################################################    
@@ -180,9 +285,31 @@ class Pythia(Application):
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
-    self._modules.append(self._createModule())
-    self._modules.append(self._getUserOutputDataModule)
+
+  def _userjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
     
+    m2 = self._getUserOutputDataModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+
+  def _prodjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getComputeOutputDataListModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+      
   def _checkConsistency(self):
     if not self.version:
       return S_ERROR("Version not specified")
@@ -207,12 +334,35 @@ class StdhepCut(Application):
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
-    self._modules.append(self._createModule())
-    self._modules.append(self._getUserOutputDataModule)
     
     self.cutfile = None
     self.maxevts = 0
     self.nbevtsperfile = 0
+
+  def _userjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getUserOutputDataModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+
+  def _prodjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getComputeOutputDataListModule()
+    self._modules.append(m2)
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return self._modules
+
     
   def setCutFile(self,cutfile):
     """ Define cut file
@@ -240,7 +390,7 @@ class StdhepCut(Application):
 
   def _checkConsistency(self):
     if not self.cutfile:
-      return S_ERROR("Cut file not spcified")
+      return S_ERROR("Cut file not specified")
     elif not self.cutfile.lower().count("lfn:") and not os.path.exists(self.cutfile):
       return S_ERROR("Cut file not found and is not an LFN")
     

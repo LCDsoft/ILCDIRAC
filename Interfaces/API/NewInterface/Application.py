@@ -4,6 +4,7 @@ Created on Jul 28, 2011
 @author: Stephane Poss
 '''
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
+from DIRAC.Core.Workflow.Parameter                  import Parameter
 
 from DIRAC import S_OK,S_ERROR, gLogger
 import inspect, sys, string, types, os
@@ -97,6 +98,7 @@ class Application:
   def setSteeringFile(self,steeringfile):
     """ Set the steering file, and add it to sandbox
     """
+    self._checkArgs({ steeringfile : types.StringTypes } )
     self.steeringfile = steeringfile
     if os.path.exists(steeringfile) or steeringfile.lower().count("lfn:"):
       self.inputSB.append(steeringfile) 
@@ -135,6 +137,15 @@ class Application:
       self.prodparameters[ofile]['datatype']= self.datatype
     return S_OK()  
   
+  def setInputFile(self,inputfile):
+    """ Set the input file to use: stdhep, slcio, root, whatever
+    """
+    self._checkArgs({ inputfile : types.StringTypes } )
+    self.inputfile = inputfile
+    if os.path.exists(inputfile) or inputfile.lower().count("lfn:"):
+      self.inputSB.append(inputfile)  
+    return S_OK()
+  
   def getInputFromApp(self,app):
     """ Called to link applications
     
@@ -165,15 +176,46 @@ class Application:
     return module
   
   def _getUserOutputDataModule(self):
-    """ This is separated as not all applications require user specific output data (i.e. GetSRMFile and Overlay)
+    """ This is separated as not all applications require user specific output data (i.e. GetSRMFile and Overlay). Only used in UserJobs.
     
     The UserJobFinalization only runs last. It's called every step, but is running only if last.
     """
-    userData = ModuleDefinition('UserJobFinalization')
-    userData.setDescription('Uploads user output data files with specific policies.')
+    module = ModuleDefinition('UserJobFinalization')
+    module.setDescription('Uploads user output data files with specific policies.')
     body = 'from %s.%s import %s\n' % (self.importLocation, 'UserJobFinalization', 'UserJobFinalization')
-    userData.setBody(body)
-    return userData
+    module.setBody(body)
+    return module
+  
+  def _getComputeOutputDataListModule(self):
+    """ This is separated from the applications as this is used in production jobs only.
+    """
+    module = ModuleDefinition("ComputeOutputDataList")
+    module.setDescription("Compute the output data list to be treated by the last finalization")
+    body = 'from %s.%s import %s\n' % (self.importLocation, "ComputeOutputDataList", "ComputeOutputDataList" )
+    module.setBody(body)
+    return module
+  
+  def _applicationModule(self):
+    """ Create the module for the application, and add the parameters to it. Overloaded by every application class.
+    """
+    return None
+  
+  def _applicationModuleValues(self,moduleinstance):
+    """ Set the values for the modules parameters. Needs to be overloaded for each application.
+    """
+    pass
+
+  def _userjobmodules(self,step):
+    """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs (userJobFinalization for instance)
+    """
+    self.log.error("This application does not implement the modules, you get an empty list")
+    return self._modules
+  
+  def _prodjobmodules(self,step):
+    """ Same as above, but the other way around.
+    """
+    self.log.error("This application does not implement the modules, you get an empty list")
+    return self._modules
   
   def _checkConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
@@ -193,20 +235,33 @@ class Application:
           self.inputappstep = self._jobsteps[idx]
           
     return S_OK()
-
-  def _addParametersToStep(self,step):
-    """ Method to be overloaded by every application. Add the parameters to the given step.
-    Called from Job
+  
+  def _addBaseParameters(self,step):
+    """ Add to step the default parameters: appname, version, steeringfile, nbevts, energy, logfile, inputfile, outputfile
     """
+    step.addParameter(Parameter("ApplicationName",   "", "string", "", "", False, False, "Application Name"))
+    step.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
+    step.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
+    step.addParameter(Parameter("LogFile",           "", "string", "", "", False, False, "Log File"))
+    step.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
+    step.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
+    step.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
+    step.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
     return S_OK()
   
-  def _setParametersValues(self,stepinstance):
+  def _addParametersToStep(self,step):
+    """ Method to be overloaded by every application. Add the parameters to the given step. Should call L{_addBaseParameters}.
+    Called from Job
+    """
+    return self._addBaseParameters(step)
+  
+  def _setStepParametersValues(self,stepinstance):
     """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
     Called from Job
     """
     return S_OK()
 
-  def _resolveLinkedParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self,stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See L{StdhepCut} for example.
     Called from Job.
     """
