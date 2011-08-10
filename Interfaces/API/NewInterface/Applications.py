@@ -125,13 +125,25 @@ class GetSRMFile(Application):
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
 
+  def _applicationModule(self):
+    m1 = self._createModule()
+    m1.addParameter(Parameter...)
+    self._modules.append(m1)
+    return m1
+
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue()  
+  
   def _userjobmodules(self,step):
-    self._modules.append(self._createModule())
-    return self._modules
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    return S_OK()
 
   def _prodjobmodules(self,step):
     self.log.error("This application is not meant to be used in Production context")
-    return self._modules
+    return S_ERROR('Should not use in Production')
 
   def setFiles(self,fdict):
     """ Specify the files you need
