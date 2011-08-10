@@ -119,11 +119,25 @@ class GenericApplication(Application):
 #            GetSRMFile: as its name suggests...
 #################################################################  
 class GetSRMFile(Application):
+  """ Gets a given file from storage directly using srm path.
+  """
   def __init__(self):
     Application.__init__(self)
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
+
+  def setFiles(self,fdict):
+    """ Specify the files you need
+    
+    @param fdict: file dictionary: {file:site}, can be also ["{}","{}"] etc.
+    @type fdict: dict or list
+    """
+    kwargs = {"fdict":fdict}
+    if not type(fdict) == type("") and not type(fdict) == type([]):
+      return self._reportError('Expected string or list of strings for fdict', __name__, **kwargs)
+    
+    self.filedict = fdict
 
   def _applicationModule(self):
     m1 = self._createModule()
@@ -145,17 +159,6 @@ class GetSRMFile(Application):
     self.log.error("This application is not meant to be used in Production context")
     return S_ERROR('Should not use in Production')
 
-  def setFiles(self,fdict):
-    """ Specify the files you need
-    
-    @param fdict: file dictionary: {file:site}, can be also ["{}","{}"] etc.
-    @type fdict: dict or list
-    """
-    kwargs = {"fdict":fdict}
-    if not type(fdict) == type("") and not type(fdict) == type([]):
-      return self._reportError('Expected string or list of strings for fdict', __name__, **kwargs)
-    
-    self.filedict = fdict
   
   def _checkConsistency(self):
     if not self.filedict:
@@ -256,12 +259,12 @@ class Whizard(Application):
 
   def _applicationModule(self):
     m1 = self._createModule()
-    m1.addParameter(Parameter("Process", "", "string", "", "", False, False, "Process to generate"))
+    m1.addParameter(Parameter("evttype", "", "string", "", "", False, False, "Process to generate"))
     self._modules.append(m1)      
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("Process",self.process)
+    moduleinstance.setValue("evttype",self.process)
     
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
