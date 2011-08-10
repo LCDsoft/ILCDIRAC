@@ -267,6 +267,8 @@ class Application(object):
     return S_OK()
   
   def _setBaseStepParametersValues(self,instance):
+    """ Set the values for the basic step parameters
+    """
     instance.setValue("ApplicationName",self.appname)
     instance.setValue("ApplicationVersion", self.version)
       
