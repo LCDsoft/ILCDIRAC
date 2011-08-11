@@ -16,6 +16,14 @@ class Application(object):
   #need to define slots
   ## __slots__ = []
   def __init__(self, paramdict = None):
+    """ Can define the full application by passing a dictionary in the constructor.
+    
+    >>> app = Application({"Name":"marlin","Version":"v0111Prod","SteeringFile":"My_file.xml","NbEvts":1000})
+    
+    @param paramdict: Dictionary of parameters that can be set. Will throw an exception if one of them does not exist.
+    @type paramdict: dict
+    
+    """
     ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
     
     #application nane (executable)
@@ -86,6 +94,9 @@ class Application(object):
     
   def setName(self,name):
     """ Define name of application
+    
+    @param name: Name of the application. Normally, every application defines its own, so no need to call that one
+    @type name: string 
     """
     self._checkArgs({ name : types.StringTypes } )
     self.appname = name
@@ -93,6 +104,9 @@ class Application(object):
     
   def setVersion(self,version):
     """ Define version to use
+    
+    @param version: Version of the application to use
+    @type version: string
     """
     self._checkArgs({ version : types.StringTypes } )
     self.version = version
@@ -100,6 +114,9 @@ class Application(object):
     
   def setSteeringFile(self,steeringfile):
     """ Set the steering file, and add it to sandbox
+    
+    @param steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
+    @type steeringfile: string
     """
     self._checkArgs({ steeringfile : types.StringTypes } )
     self.steeringfile = steeringfile
@@ -109,6 +126,9 @@ class Application(object):
     
   def setLogFile(self,logfile):
     """ Define application log file
+    
+    @param logfile: Log file to use. Set by default if not set.
+    @type logfile: string
     """
     self._checkArgs({ logfile : types.StringTypes } )
     self.logfile = logfile
@@ -116,6 +136,9 @@ class Application(object):
   
   def setNbEvts(self,nbevts):
     """ Set the number of events to process
+    
+    @param nbevts: Number of events to process (or generate)
+    @type nbevts: int
     """
     self._checkArgs({ nbevts : types.IntType })
     self.nbevts = nbevts  
@@ -123,6 +146,9 @@ class Application(object):
     
   def setEnergy(self,energy):
     """ Set the energy to use
+    
+    @param energy: Energy used. Mostly needed at generation.
+    @type energy: int
     """
     self._checkArgs({ energy : types.IntType })
     self.energy = energy
@@ -130,6 +156,9 @@ class Application(object):
     
   def setOutputFile(self,ofile):
     """ Set the output file
+    
+    @param ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using L{getInputFromApp})
+    @type ofile: string
     """
     self._checkArgs({ ofile : types.StringTypes } )
     self.outputFile = ofile
@@ -142,6 +171,9 @@ class Application(object):
   
   def setInputFile(self,inputfile):
     """ Set the input file to use: stdhep, slcio, root, whatever
+    
+    @param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
+    @type inputfile: string
     """
     self._checkArgs({ inputfile : types.StringTypes } )
     self.inputfile = inputfile
@@ -156,6 +188,8 @@ class Application(object):
     >>> marlin = Marlin()
     >>> marlin.getInputFromApp(mokka)
     
+    @param application: Application to link against.
+    @type application: application
     """
     self._inputapp.append(application)
     return S_OK()  
