@@ -417,10 +417,6 @@ class Pythia(Application):
     if not self.version:
       return S_ERROR("Version not specified")
     
-    if not self.systemconfig:
-      return S_ERROR("System Config not set")
-    ##Check that pythia.self.version exists in CS by uing self.systemconfig
-    
     if not self.nbevts:
       return S_ERROR("Number of events to generate not defined")
 
@@ -437,7 +433,7 @@ class StdhepCut(Application):
   >>> py = Pythia()
   >>> cut = StdhepCut()
   >>> cut.getInputFromApp(py)
-  >>> cut.setCutFile("mycut.cfg")
+  >>> cut.setSteeringFile("mycut.cfg")
   >>> cut setMaxNbEvts(10)
   >>> cut.setNbEvtsPerFile(10)
   
@@ -447,26 +443,14 @@ class StdhepCut(Application):
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
     
-    self.cutfile = None
     self.maxevts = 0
     self.nbevtsperfile = 0
     Application.__init__(self,paramdict)
-    
-  def setCutFile(self,cutfile):
-    """ Define cut file
-    
-    @param cutfile: Cut file to use. Can be local file or LFN.
-    @type cutfile: string
-    """
-    self._checkArgs( {
-        'cutfile' : types.StringTypes
-      } )
-    self.cutfile = cutfile  
 
   def setMaxNbEvts(self,nbevts):
     """ Max number of events to keep in each file
     
-    @param nbevts: Maximum number of events to keep
+    @param nbevts: Maximum number of events to read from input file
     @type nbevts: int
     """
     self._checkArgs( {
@@ -487,11 +471,11 @@ class StdhepCut(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("CutFile", "", "string", "", "", False, False, "Process to generate"))
+    m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("CutFile",self.cutfile)
+    moduleinstance.setValue("MaxNbEvts",self.maxevts)
 
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
@@ -517,10 +501,10 @@ class StdhepCut(Application):
 
 
   def _checkConsistency(self):
-    if not self.cutfile:
+    if not self.steeringfile:
       return S_ERROR("Cut file not specified")
-    elif not self.cutfile.lower().count("lfn:") and not os.path.exists(self.cutfile):
-      return S_ERROR("Cut file not found and is not an LFN")
+    elif not self.steeringfile.lower().count("lfn:") and not os.path.exists(self.steeringfile):
+      return S_ERROR("Cut file not found locally and is not an LFN")
     
     if not self.maxevts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
