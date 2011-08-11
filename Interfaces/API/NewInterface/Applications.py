@@ -113,7 +113,6 @@ class GenericApplication(Application):
     m1 = self._createModule()
     m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Script to execute"))
     m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
-    self._modules.append(m1)      
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -127,7 +126,6 @@ class GenericApplication(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getUserOutputDataModule()
-    self._modules.append(m2)
     stepdefinition.addModule(m2)
     stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
     return S_OK()
@@ -202,7 +200,6 @@ class GetSRMFile(Application):
   def _applicationModule(self):
     m1 = self._createModule()
     #m1.addParameter(Parameter...)
-    self._modules.append(m1)
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
@@ -343,7 +340,6 @@ class Whizard(Application):
   def _applicationModule(self):
     m1 = self._createModule()
     m1.addParameter(Parameter("evttype", "", "string", "", "", False, False, "Process to generate"))
-    self._modules.append(m1)      
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -356,7 +352,6 @@ class Whizard(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getUserOutputDataModule()
-    self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
     return S_OK()
@@ -368,7 +363,6 @@ class Whizard(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getComputeOutputDataListModule()
-    self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
     return S_OK()
@@ -403,7 +397,6 @@ class Pythia(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getUserOutputDataModule()
-    self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
     return S_OK()
@@ -415,7 +408,6 @@ class Pythia(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getComputeOutputDataListModule()
-    self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
     return S_OK()
@@ -495,7 +487,6 @@ class StdhepCut(Application):
   def _applicationModule(self):
     m1 = self._createModule()
     m1.addParameter(Parameter("CutFile", "", "string", "", "", False, False, "Process to generate"))
-    self._modules.append(m1)  
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
@@ -508,10 +499,9 @@ class StdhepCut(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getUserOutputDataModule()
-    self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
 
   def _prodjobmodules(self,step):
     m1 = self._applicationModule()
@@ -520,10 +510,9 @@ class StdhepCut(Application):
     self._applicationModuleValues(m1i)
     
     m2 = self._getComputeOutputDataListModule()
-    self._modules.append(m2)
     step.addModule(m2)
     step.createModuleInstance(m2.getType(),step.getType())
-    return self._modules
+    return S_OK()
 
 
   def _checkConsistency(self):
