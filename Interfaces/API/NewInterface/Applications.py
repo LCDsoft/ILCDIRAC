@@ -157,7 +157,7 @@ class GenericApplication(Application):
     return S_OK()
       
   def _checkConsistency(self):
-    """ Called from Job
+    """ Checks that script and dependencies are set.
     """
     if not self.script:
       return S_ERROR("Script not defined")
@@ -173,6 +173,13 @@ class GenericApplication(Application):
 #################################################################  
 class GetSRMFile(Application):
   """ Gets a given file from storage directly using srm path.
+  
+  Usage:
+  
+  >>> gf = GetSRMFile()
+  >>> fdict = {"file":"srm://srm-public.cern.ch/castor/cern.ch/grid/ilc/prod/clic/1tev/Z_uds/gen/0/nobeam_nobrem_0-200.stdhep","site":"CERN-SRM"}
+  >>> fdict = str(fdict)
+  >>> gf.setFiles(fdict)
   """
   def __init__(self, paramdict = None):
     Application.__init__(self, paramdict)
@@ -229,7 +236,16 @@ class GetSRMFile(Application):
 #            Whizard: First Generator application
 #################################################################    
 class Whizard(Application):
-  """ Calls a whizard application step
+  """ Runs whizard to generate a given event type
+  
+  Usage:
+  
+  >>> wh = Whizard(dirac.getProcessList())
+  >>> wh.setProcess("ee_h_mumu")
+  >>> wh.setEnergy(500)
+  >>> wh.setNbEvts(1000)
+  >>> wh.setModel("SM")
+
   """
   def __init__(self, processlist = None, paramdict = None):    
     Application.__init__(self, paramdict)
@@ -248,6 +264,8 @@ class Whizard(Application):
     
   def setProcess(self,process):
     """ Define process
+    
+    @param process: Process to generate
     """
     self._checkArgs( {
         'process' : types.StringTypes
@@ -256,6 +274,9 @@ class Whizard(Application):
 
   def setLuminosity(self,lumi):
     """ Define luminosity to generate 
+    
+    @param lumi: Luminosity to generate. Not available if cross section is not known a priori. Use with care.
+    @type lumi: float
     """
     self._checkArgs( {
         'lumi' : types.FloatType
@@ -264,6 +285,9 @@ class Whizard(Application):
 
   def setRandomSeed(self,seed):
     """ Define random seed to use 
+    
+    @param seed: Seed to use during integration and generation. Default is Job ID.
+    @type seed: int
     """
     self._checkArgs( {
         'seed' : types.IntType
@@ -273,6 +297,9 @@ class Whizard(Application):
   
   def setParameterDict(self,paramdict):
     """ Parameters for Whizard steering files
+    
+    @param paramdict: Dictionary of parameters for the whizard templates. Most parameters are set on the fly.
+    @type paramdict: dict
     """
     self._checkArgs( {
         'paramdict' : types.DictType
@@ -282,6 +309,9 @@ class Whizard(Application):
   
   def setModel(self,model):
     """ Define Model
+    
+    @param model: Model to use for generation. Predefined list available in GeneratorModels class.
+    @type model: string
     """  
     self._checkArgs( {
         'model' : types.StringTypes
@@ -347,7 +377,14 @@ class Whizard(Application):
 #            PYTHIA: Second Generator application
 #################################################################    
 class Pythia(Application):
-  """ Call pythia
+  """ Call pythia.
+  
+  Usage:
+  
+  >>> py = Pythia()
+  >>> py.setVersion("tt_500gev_V2")
+  >>> py.setNbEvts(50)
+
   """
   def __init__(self,paramdict = None):
     Application.__init__(self,paramdict)
@@ -401,6 +438,15 @@ class Pythia(Application):
 ##########################################################################
 class StdhepCut(Application): 
   """ Call stdhep cut after whizard of pythia
+  
+  Usage:
+  >>> py = Pythia()
+  >>> cut = StdhepCut()
+  >>> cut.getInputFromApp(py)
+  >>> cut.setCutFile("mycut.cfg")
+  >>> cut setMaxNbEvts(10)
+  >>> cut.setNbEvtsPerFile(10)
+  
   """
   def __init__(self, paramdict = None):
     Application.__init__(self,paramdict)
@@ -414,6 +460,9 @@ class StdhepCut(Application):
     
   def setCutFile(self,cutfile):
     """ Define cut file
+    
+    @param cutfile: Cut file to use. Can be local file or LFN.
+    @type cutfile: string
     """
     self._checkArgs( {
         'cutfile' : types.StringTypes
@@ -422,6 +471,9 @@ class StdhepCut(Application):
 
   def setMaxNbEvts(self,nbevts):
     """ Max number of events to keep in each file
+    
+    @param nbevts: Maximum number of events to keep
+    @type nbevts: int
     """
     self._checkArgs( {
         'nbevts' : types.IntType
@@ -430,6 +482,9 @@ class StdhepCut(Application):
     
   def setNbEvtsPerFile(self,nbevts):
     """ Number of events per file
+    
+    @param nbevts: Number of evetns to keep in each file.
+    @type nbevts: int
     """
     self._checkArgs( {
         'nbevts' : types.IntType
@@ -487,7 +542,6 @@ class StdhepCut(Application):
   
   def _resolveLinkedParameters(self,stepinstance):
     if self.inputappstep:
-        
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
