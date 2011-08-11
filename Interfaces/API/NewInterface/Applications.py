@@ -1,12 +1,41 @@
 '''
 Created on Jul 28, 2011
 
-@author: Stephane Poss
+This module contains the definition of the different applications that can
+be used to create jobs.
+
+Example usage:
+
+>>> from ILCDIRAC.Interfaces.API.Applications import *
+>>> from ILCDIRAC.Interfaces.API.Job import Job 
+>>> from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+>>> dirac = DiracILC()
+>>> job = Job()
+>>> ga = GenericApplication()
+>>> ga.setScript("myscript.py")
+>>> ga.setArguments("some arguments")
+>>> ga.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
+>>> job.append(ga)
+>>> dirac.submit(job)
+
+It's also possible to set all the application's properties in the constructor
+
+>>> ga = GenericApplication({'Script':'myscript.py',"Arguments":"some arguments","Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
+
+but this is more an expert's functionality. 
+
+Running:
+
+>>> help(GenericApplication)
+
+prints out all the available methods.
+
+@author: Stephane Poss, Remi Ete, Ching Bon Lam
 '''
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
-from ILCDIRAC.Core.Utilities.GeneratorModels import GeneratorModels
-from DIRAC.Core.Workflow.Parameter                  import Parameter
-from DIRAC import S_OK,S_ERROR
+from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
+from DIRAC.Core.Workflow.Parameter                    import Parameter
+from DIRAC                                            import S_OK,S_ERROR
 
 
 import os,types
@@ -17,8 +46,18 @@ import os,types
 #                 application framework
 #################################################################  
 class GenericApplication(Application):
-  def __init__(self,paramdict = None):
-    Application.__init__(self,paramdict)
+  """ Run a script (python or shell) in an application environment. 
+  
+  Example:
+  
+  >>> ga = GenericApplication()
+  >>> ga.setScript("myscript.py")
+  >>> ga.setArguments("some command line arguments")
+  >>> ga.setDependency({"root":"5.26"})
+  
+  """
+  def __init__(self, paramdict = None):
+    Application.__init__(self, paramdict)
     self.script = None
     self.arguments = ''
     self.dependencies = {}
@@ -28,6 +67,9 @@ class GenericApplication(Application):
       
   def setScript(self,script):
     """ Define script to use
+    
+    @param script: Script to run on. Can be shell or python. Can be local file or LFN.
+    @type script: string
     """
     self._checkArgs( {
         'script' : types.StringTypes
@@ -35,19 +77,29 @@ class GenericApplication(Application):
     if os.path.exists(script) or script.lower().count("lfn:"):
       self.inputSB.append(script)
     self.script = script
+    return S_OK()
     
   def setArguments(self,arguments):
     """ Define the arguments of the script (if any)
+    
+    @param arguments: Arguments to pass to the command line call
+    @type arguments: string
+    
     """
     self._checkArgs( {
         'script' : types.StringTypes
       } )  
     self.arguments = arguments
+    return S_OK()
       
-  def addDependency(self,appdict):
+  def setDependency(self,appdict):
     """ Define list of application you need
     
-    >>> app.addDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
+    >>> app.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
+    
+    @param appdict: Dictionary of applciation to use: {"App":"version"}
+    @type appdict: dict
+    
     """  
     #check that dict has proper structure
     self._checkArgs( {
@@ -55,6 +107,7 @@ class GenericApplication(Application):
       } )
     
     self.dependencies.update(appdict)
+    return S_OK()
 
   def _applicationModule(self):
     m1 = self._createModule()
@@ -121,8 +174,8 @@ class GenericApplication(Application):
 class GetSRMFile(Application):
   """ Gets a given file from storage directly using srm path.
   """
-  def __init__(self):
-    Application.__init__(self)
+  def __init__(self, paramdict = None):
+    Application.__init__(self, paramdict)
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
@@ -178,8 +231,8 @@ class GetSRMFile(Application):
 class Whizard(Application):
   """ Calls a whizard application step
   """
-  def __init__(self,processlist=None):    
-    Application.__init__(self)
+  def __init__(self, processlist = None, paramdict = None):    
+    Application.__init__(self, paramdict)
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     
@@ -296,8 +349,8 @@ class Whizard(Application):
 class Pythia(Application):
   """ Call pythia
   """
-  def __init__(self):
-    Application.__init__(self)
+  def __init__(self,paramdict = None):
+    Application.__init__(self,paramdict)
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
