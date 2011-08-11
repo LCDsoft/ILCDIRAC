@@ -88,10 +88,13 @@ class Application(object):
     """ Try to use setattr(self,param) and raise AttributeError in case it does not work. Even better, try to call the self.setParam(). Use eval() for that.
     """
     for param,value in params.items():
+      if type(value) in types.StringTypes:
+        value = "'%s'"%value
       try:
-        exec "res = self.set%s(%s)"%(param,str(value))
+        
+        exec "self.set%s(%s)"%(param,str(value))
       except:
-        self.log.error("This application does not have a set%s method.")
+        self.log.error("This application does not have a set%s method."%param)
     return S_OK()  
     
     
@@ -227,34 +230,34 @@ class Application(object):
 #                                                                  /.-~
 ########################################################################################
 
-  def _createModule(self):
+  def _createModuleDefinition(self):
     """ Create Module definition. As it's generic code, all apps will use this.
     """
-    module = ModuleDefinition(self._modulename)
-    module.setDescription(self._moduledescription)
+    moduledefinition = ModuleDefinition(self._modulename)
+    moduledefinition.setDescription(self._moduledescription)
     body = 'from %s.%s import %s\n' % (self.importLocation, self._modulename, self._modulename)
-    module.setBody(body)
-    return module
+    moduledefinition.setBody(body)
+    return moduledefinition
   
   def _getUserOutputDataModule(self):
     """ This is separated as not all applications require user specific output data (i.e. GetSRMFile and Overlay). Only used in UserJobs.
     
     The UserJobFinalization only runs last. It's called every step, but is running only if last.
     """
-    module = ModuleDefinition('UserJobFinalization')
-    module.setDescription('Uploads user output data files with specific policies.')
+    moduledefinition = ModuleDefinition('UserJobFinalization')
+    moduledefinition.setDescription('Uploads user output data files with specific policies.')
     body = 'from %s.%s import %s\n' % (self.importLocation, 'UserJobFinalization', 'UserJobFinalization')
-    module.setBody(body)
-    return module
+    moduledefinition.setBody(body)
+    return moduledefinition
   
   def _getComputeOutputDataListModule(self):
     """ This is separated from the applications as this is used in production jobs only.
     """
-    module = ModuleDefinition("ComputeOutputDataList")
-    module.setDescription("Compute the output data list to be treated by the last finalization")
+    moduledefinition = ModuleDefinition("ComputeOutputDataList")
+    moduledefinition.setDescription("Compute the output data list to be treated by the last finalization")
     body = 'from %s.%s import %s\n' % (self.importLocation, "ComputeOutputDataList", "ComputeOutputDataList" )
-    module.setBody(body)
-    return module
+    moduledefinition.setBody(body)
+    return moduledefinition
   
   def _applicationModule(self):
     """ Create the module for the application, and add the parameters to it. Overloaded by every application class.
@@ -357,7 +360,7 @@ class Application(object):
     # inspect.stack()[1][0] returns the frame object ([0]) of the caller
     # function (stack()[1]).
     # The frame object is required for getargvalues. Getargvalues returns
-    # a typle with four items. The fourth item ([3]) contains the local
+    # a tuple with four items. The fourth item ([3]) contains the local
     # variables in a dict.
 
     args = inspect.getargvalues( inspect.stack()[ 1 ][ 0 ] )[ 3 ]
@@ -427,5 +430,5 @@ class Application(object):
       self.errorDict[methodName] = tmp
     else:
       self.errorDict[methodName] = [finalReport]
-    self.log.verbose( finalReport )
+    self.log.error( finalReport )
     return S_ERROR( finalReport )

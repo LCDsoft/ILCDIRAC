@@ -57,13 +57,14 @@ class GenericApplication(Application):
   
   """
   def __init__(self, paramdict = None):
-    Application.__init__(self, paramdict)
     self.script = None
     self.arguments = ''
     self.dependencies = {}
     self._modulename = "ApplicationScript"
     self.appname = self._modulename
     self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
+    ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
+    Application.__init__(self, paramdict)
       
   def setScript(self,script):
     """ Define script to use
@@ -110,7 +111,7 @@ class GenericApplication(Application):
     return S_OK()
 
   def _applicationModule(self):
-    m1 = self._createModule()
+    m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Script to execute"))
     m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
     return m1
@@ -180,10 +181,10 @@ class GetSRMFile(Application):
   >>> gf.setFiles(fdict)
   """
   def __init__(self, paramdict = None):
-    Application.__init__(self, paramdict)
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
+    Application.__init__(self, paramdict)
 
   def setFiles(self,fdict):
     """ Specify the files you need
@@ -198,7 +199,7 @@ class GetSRMFile(Application):
     self.filedict = fdict
 
   def _applicationModule(self):
-    m1 = self._createModule()
+    m1 = self._createModuleDefinition()
     #m1.addParameter(Parameter...)
     return m1
 
@@ -245,7 +246,6 @@ class Whizard(Application):
 
   """
   def __init__(self, processlist = None, paramdict = None):    
-    Application.__init__(self, paramdict)
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     
@@ -257,6 +257,7 @@ class Whizard(Application):
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
+    Application.__init__(self, paramdict)
     
     
   def setProcess(self,process):
@@ -338,7 +339,7 @@ class Whizard(Application):
     return S_OK()  
 
   def _applicationModule(self):
-    m1 = self._createModule()
+    m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("evttype", "", "string", "", "", False, False, "Process to generate"))
     return m1
   
@@ -381,13 +382,13 @@ class Pythia(Application):
 
   """
   def __init__(self,paramdict = None):
-    Application.__init__(self,paramdict)
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
+    Application.__init__(self,paramdict)
 
   def _applicationModule(self):
-    m1 = self._createModule()
+    m1 = self._createModuleDefinition()
     return m1  
 
   def _userjobmodules(self,step):
@@ -442,7 +443,6 @@ class StdhepCut(Application):
   
   """
   def __init__(self, paramdict = None):
-    Application.__init__(self,paramdict)
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
@@ -450,6 +450,7 @@ class StdhepCut(Application):
     self.cutfile = None
     self.maxevts = 0
     self.nbevtsperfile = 0
+    Application.__init__(self,paramdict)
     
   def setCutFile(self,cutfile):
     """ Define cut file
@@ -485,7 +486,7 @@ class StdhepCut(Application):
     self.nbevtsperfile = nbevts  
 
   def _applicationModule(self):
-    m1 = self._createModule()
+    m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("CutFile", "", "string", "", "", False, False, "Process to generate"))
     return m1
 
