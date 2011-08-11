@@ -278,7 +278,7 @@ class WhizardAnalysis(ModuleBase):
     script.write('echo Printing content of whizard.in \n')
     script.write('cat whizard.in\n')
     script.write('echo =============================\n')
-    script.write('ln -s %s/whizard.mdl\n'%mySoftDir)
+    script.write('cp  %s/whizard.mdl ./\n'%mySoftDir)
     if leshouchesfiles:
       if self.susymodel==1 and not os.path.exists('LesHouches.msugra_1.in'):
         script.write('cp %s/LesHouches_slsqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
@@ -287,10 +287,10 @@ class WhizardAnalysis(ModuleBase):
       script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
-        script.write('ln -s %s/%s\n'%(path_to_gridfiles,gridfile))
-    script.write('ln -s %s/whizard.prc\n'%mySoftDir)
+        script.write('cp %s/%s ./\n'%(path_to_gridfiles,gridfile))
+    script.write('cp %s/whizard.prc ./\n'%mySoftDir)
     if not os.path.exists("whizard.cut1"):
-      script.write('ln -s %s/whizard.cut1\n'%mySoftDir)
+      script.write('cp %s/whizard.cut1 ./\n'%mySoftDir)
     script.write('echo =============================\n')
     script.write('echo Printing content of whizard.prc \n')
     script.write('cat whizard.prc\n')
