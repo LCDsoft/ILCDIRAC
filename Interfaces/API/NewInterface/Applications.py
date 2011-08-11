@@ -440,6 +440,7 @@ class StdhepCut(Application):
   """ Call stdhep cut after whizard of pythia
   
   Usage:
+  
   >>> py = Pythia()
   >>> cut = StdhepCut()
   >>> cut.getInputFromApp(py)
