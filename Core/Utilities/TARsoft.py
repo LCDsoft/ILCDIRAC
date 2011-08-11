@@ -124,6 +124,8 @@ def install(app,config,area):
   ### Set env variables  
   basefolder = folder_name
   removeLibc(os.path.join(os.getcwd(),basefolder)+"/LDLibs")
+  if os.path.isdir(os.path.join(os.getcwd(),basefolder)+"/lib"):
+    removeLibc(os.path.join(os.getcwd(),basefolder)+"/lib")
   if appName=="slic":
     os.environ['SLIC_DIR']= basefolder
     slicv = ''
