@@ -79,8 +79,6 @@ class Application(object):
     self._setparams(paramdict)
   
   def __repr__(self):
-    """ String representation of the application
-    """
     str  = "%s"%self.appname
     if self.version:
       str += " %s"%self.version
