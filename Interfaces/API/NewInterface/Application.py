@@ -87,6 +87,11 @@ class Application(object):
   def _setparams(self,params):
     """ Try to use setattr(self,param) and raise AttributeError in case it does not work. Even better, try to call the self.setParam(). Use eval() for that.
     """
+    for param,value in params.items():
+      try:
+        exec "res = self.set%s(%s)"%(param,str(value))
+      except:
+        self.log.error("This application does not have a set%s method.")
     return S_OK()  
     
     
