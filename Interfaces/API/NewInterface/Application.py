@@ -318,7 +318,7 @@ class Application(object):
     return S_OK()
 
   def _resolveLinkedStepParameters(self,stepinstance):
-    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile) See L{StdhepCut} for example.
+    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile). See L{StdhepCut} for example.
     Called from Job.
     """
     return S_OK()
