@@ -27,27 +27,28 @@ class Application(object):
     ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
     
     #application nane (executable)
-    self.appname = None
+    self.appname = ""
     #application version
     self.version = ""
     #Number of evetns to process
     self.nbevts = 0
     #Steering file (duh!)
-    self.steeringfile = None
+    self.steeringfile = ""
     #Input sandbox: steering file automatically added to SB
     self.inputSB = []
     #Input file
-    self.inputfile = None
+    self.inputfile = ""
     #Output file
-    self.outputFile = None
+    self.outputFile = ""
+    self.outputPath = ""
     #Log file
-    self.logfile = None
+    self.logfile = ""
     #Energy to use (duh! again)
     self.energy = 0
     #Detector type (ILD or SID)
-    self.detectortype = None
+    self.detectortype = ""
     #Data type : gen, SIM, REC, DST
-    self.datatype = None
+    self.datatype = ""
     #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
     
@@ -57,7 +58,6 @@ class Application(object):
     #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
     self._modulename = ''
     self._moduledescription = ''
-    self._modules = []
     self.importLocation = "ILCDIRAC.Workflow.Modules"
         
     #System Configuration: comes from Job definition
@@ -166,6 +166,14 @@ class Application(object):
     if self.datatype:
       self.prodparameters[ofile]['datatype']= self.datatype
     return S_OK()  
+  
+  def setOutputPath(self,outputpath):
+    """ Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
+    """
+    self._checkArgs({ outputpath : types.StringTypes } )
+    self.outputPath = outputpath
+    
+    return S_OK()
   
   def setInputFile(self,inputfile):
     """ Set the input file to use: stdhep, slcio, root, whatever
@@ -293,6 +301,7 @@ class Application(object):
     stepdefinition.addParameter(Parameter("LogFile",           "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
     stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
+    stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
     #Following should be workflow parameters
     stepdefinition.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
     stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))

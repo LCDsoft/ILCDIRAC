@@ -18,8 +18,8 @@ class Job(DiracJob):
   
   Inherit most functionality from DIRAC Job class
   """
-  def __init__(self):
-    DiracJob.__init__(self)
+  def __init__(self, script = None):
+    DiracJob.__init__(self, script)
     self.applicationlist = []
     self.inputsandbox = []
     self.check = True

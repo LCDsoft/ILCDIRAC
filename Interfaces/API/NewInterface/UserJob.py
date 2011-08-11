@@ -8,8 +8,8 @@ from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from DIRAC import S_OK,S_ERROR
 
 class UserJob(Job):
-  def __init__(self):
-    Job.__init__(self)
+  def __init__(self, script = None):
+    Job.__init__(self, script)
     
   def setInputData(self):
     """ Inherited from DIRAC.Job
