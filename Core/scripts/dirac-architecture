@@ -1,0 +1,217 @@
+#!/usr/bin/env python
+#######################
+#$Header: /local/reps/dirac/DIRAC3/scripts/dirac-architecture,v 1.22 2009/09/28 15:38:55 sposs Exp $
+#######################
+#  to return the architecture tag to be used for CMTCONFIG or architecture
+#
+
+__RCSID__="$Id: dirac-architecture,v 1.22 2010/03/09 10:29 sposs Exp $"
+
+import sys, os, string, re
+
+# History:
+# ap, 11-aug-2004 : initial version
+# ap, 18-aug-2004 : check gcc version also on mac (Darwin)
+# jc, 9-mar-2007  : adapted for LHCb
+# sp, 9-mar-2010  : adapted for LCD
+
+
+def checkGcc() :
+
+    comp = None
+
+    chOutErr = os.popen("g++ --version", 'r')
+    compString = string.join(chOutErr.readlines())[:-1]  # skip \n
+    chOutErr.close()
+    # print "got: '" + compString + "'"
+
+    # On Mac OS X 10.4 the compiler is 4.0 (or 3.3) ...
+    compRe = re.compile('.* \(GCC\) (\d\.\d\.\d) .*')
+    compMat = compRe.match(compString)
+    if compMat:
+#        comp = "gcc"+compMat.group(1).replace(".", "")
+        comp = "gcc"+compMat.group(1).split(".")[0]+compMat.group(1).split(".")[1]
+    # differentiate between these two !
+    # this is necesary for RAL vobox
+    if ( string.find(compString, "2.96") != -1 ) : comp = "gcc296"
+    if ( string.find(compString, "g++ (GCC) 3.2\n") != -1 ) : comp = "gcc32"
+    if ( string.find(compString, "g++ (GCC) 3.2.3") != -1 ) : comp = "gcc323"
+
+    if ( string.find(compString, "g++ (GCC) 3.4") != -1 ) : comp = "gcc34"
+    if ( string.find(compString, "g++ (GCC) 4.3") != -1 ) : comp = "gcc43"
+
+    # On Mac OS X 10.3 (and SuSE 8.2) the compiler is 3.3 ...
+    if ( string.find(compString, "g++ (GCC) 3.3") != -1 ) : comp = "gcc33"
+    if ( string.find(compString, "g++ (Ubuntu 4.4.1-4ubuntu8) 4.4") != -1 ) : comp = "gcc44"
+
+    if ( not comp and string.find(compString, "(GCC) 4.0.1") != -1 ) : comp = "gcc40"
+
+    if not comp :
+        # errLog = open(".guessPlatf-comp.err",'w')
+        # errLog.write("\nUnknown compiler version found, please report:\n" + compString + "\n")
+        # errLog.close()
+        sys.stderr.write("\nERROR:\n")
+        sys.stderr.write("\tCompiler version '" + compString + "' is not supported, sorry.\n")
+        sys.stderr.write("\tFor information on supported platforms and porting see mailto:stephane.poss@cern.ch \n\n")
+        comp = "ERROR"
+#        sys.exit(-1)
+
+    return comp
+
+
+def guessHWArch() :
+
+    hwArch = "ia32" # set some default to make it work ...
+
+    arch = os.uname()[-1]
+
+    if re.compile(  'i\d86').match(arch) : hwArch = "ia32"
+    if re.compile( 'x86_64').match(arch) : hwArch = "amd64"
+#    if re.compile( 'x86_64').match(arch) : hwArch = "ia32"
+    if re.compile(   'ia64').match(arch) : hwArch = "ia64"
+    if re.compile('power mac', re.I).match(arch) : hwArch = "ppc"
+
+    return hwArch
+
+
+def guessPlatform() :
+    opSys = None
+    comp  = None
+    newSchema = False
+
+    # simple guesser ...
+    if ( os.uname()[0] == "SunOS" ) :
+        opSys = "sun4x_58"  # for now ...
+        chOutErr = os.popen("CC -V", 'r')
+        compString = string.join(chOutErr.readlines())[:-1]  # skip \n
+        chOutErr.close()
+        #print "got: '" + compString + "'"
+        comp = "CC-" + compString.split()[7]
+
+    elif ( os.uname()[0] == "Darwin" ) :
+        kernelVers = os.uname()[2]
+        if kernelVers[0] == '7' :
+            opSys = "osx103"
+        elif kernelVers[0] == '8' :
+            opSys = "osx104_" + guessHWArch()
+        elif kernelVers[0] == '9' :
+            opSys = "osx105_" + guessHWArch()
+        comp = checkGcc()
+
+    elif ( os.uname()[0] == "Linux" ) :
+        try:
+            # first try /etc/redhat-release:
+            issue = open("/etc/redhat-release", 'r')
+        except IOError:  # if it's not there, fall back to /etc/issue (which is used for announcements on lxslc3)
+            issue = open("/etc/issue", 'r')
+        except:
+            raise
+        lines = string.join(issue.readlines())
+        issue.close()
+
+        # should do this based on some libgcc/libstdc++ versions to determine compatibility
+
+        osRe = re.compile('.*Scientific Linux CERN SLC release (\d)\.(\d) .*')
+        osMat = osRe.match(lines)
+        if osMat:
+            if osMat.group(1) != '5':
+               opSys = "slc"+osMat.group(1)+"_" + guessHWArch()
+            else:
+               newSchema = True
+               opSys = os.uname()[-1]+"-slc"+osMat.group(1)+"-"
+
+        if not opSys:
+            if ( string.find(lines, "CentOS") != -1 and
+                 string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
+            elif ( string.find(lines, "CentOS") != -1 and
+                 string.find(lines, " 5") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc5-"
+                    newSchema = True
+            elif ( string.find(lines, "Red Hat Enterprise") != -1 and
+                 string.find(lines, " 5") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc5-"
+                    newSchema = True
+            elif ( string.find(lines, "Redhat Enterprise") != -1 and
+                 string.find(lines, " 5") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc5-"
+                    newSchema = True
+            elif ( string.find(lines, "Red Hat Enterprise") != -1 and
+                 string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
+            elif ( string.find(lines, "Scientific Linux") != -1 and
+                 string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
+            elif ( string.find(lines, "Scientific Linux") != -1 and
+                 string.find(lines, " 5") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc5-"
+                    newSchema = True
+            elif ( string.find(lines, "Ubuntu" ) != -1 and
+                 string.find(lines, "9.") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc5-"
+                    newSchema = True
+            elif ( string.find(lines, "Debian") != -1 and
+                 string.find(lines, " 4") != -1 ) : opSys = "slc4_"  + guessHWArch()
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "8.0") != -1 ) : opSys = "rh73"
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "8.1") != -1 ) : opSys = "rh73"
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "8.2") != -1 ) : opSys = "rh73"
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "8.2") != -1 ) : opSys = "rh73"
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "9.0") != -1 ) : opSys = "slc3_" + guessHWArch()    # guess !
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "9.1") != -1 ) : opSys = "suse91"  # not compatible
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "9.2") != -1 ) : opSys = "suse92"  # not compatible
+            elif ( string.find(lines, "SuSE") != -1 and
+                 string.find(lines, "9.3") != -1 ) : opSys = "suse93"  # not compatible
+            elif ( string.find(lines, "SUSE") != -1 and
+                 string.find(lines, "10.0") != -1 ) : opSys = "slc3_" + guessHWArch()
+            elif ( string.find(lines, "SUSE") != -1 and
+                 string.find(lines, "10.1") != -1 ) : opSys = "suse101"  # not compatible
+            elif ( string.find(lines, "SUSE") != -1 and
+                 string.find(lines, "10.2") != -1 ) : opSys = "suse102"  # not compatible
+            elif ( string.find(lines, "SUSE") != -1 and
+                 string.find(lines, "11.") != -1 ) : opSys = "suse11"  # not compatible
+            elif ( string.find(lines, "Mandriva Linux") != -1 and
+                 string.find(lines, "2007.0") != -1 ) : opSys = "slc3"  # not compatible
+
+        if not opSys :
+            # errLog = open(".guessPlatf-os.err",'w')
+            # errLog.write("\nUnknown operating system found, please report:\n" + lines + "\n")
+            # errLog.close()
+            sys.stderr.write("\nERROR:\n")
+            sys.stderr.write("\tOperating system version '" + lines + "' is not supported, sorry.\n")
+            sys.stderr.write("\tFor information on supported platforms mailto:stephane.poss@cern.ch \n\n")
+#            sys.exit(-1)
+            opSys = "ERROR"
+
+        comp = checkGcc()
+
+    if comp == "gcc346" and opSys[:4] == "slc4" :
+        comp = "gcc34"
+
+    if opSys.find('slc5') != -1 :
+        comp = "gcc43"
+
+    return (opSys, comp, newSchema)
+
+if __name__ == "__main__" :
+    osStr,comStr,newSchema = guessPlatform()
+    if osStr == "ERROR" or comStr == "ERROR":
+        print "ERROR"
+    else:
+        if newSchema:
+    	   arch = osStr+comStr+'-opt'
+    	else:
+    	   arch = osStr+'_'+comStr
+    	if len(sys.argv) > 1:
+    		if sys.argv[1] == 'python':
+    		 	baseDir = os.path.realpath( os.path.dirname( __file__ ) + "/../%s/bin/" % arch  )
+    		 	for pyStr in ( 'python2.4', 'python2.5', 'python' ):
+    		 		pythonLocation = '%s/%s' % ( baseDir, pyStr )
+    		 		if os.path.isfile( pythonLocation ):
+    		 			print pythonLocation
+    		 			break
+    	else:
+        	print arch
