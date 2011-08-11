@@ -11,18 +11,18 @@ Mokka analysis module. Called by Job Agent.
 
 __RCSID__ = "$Id$"
 
-from DIRAC.Core.Utilities.Subprocess                     import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles         import PrepareSteeringFile,GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareSteeringFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
-from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
-from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
-from DIRAC                                               import S_OK, S_ERROR, gLogger, gConfig
+from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC
 
@@ -54,6 +54,7 @@ class MokkaAnalysis(ModuleBase):
         self.startFrom = 0
         self.eventstring = ''
         self.processID = ''
+        self.randomseed = 42
 
 #############################################################################
     def applicationSpecificInputs(self):
