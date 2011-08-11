@@ -212,7 +212,7 @@ class ILCJob(Job):
        @type version: string
        @param in_file: path to whizard.in to use
        @type in_file: string
-       @param susymodel: model of susy to use, can be only slch (slepton and charginos) or sqhh (squarks and heavy higgs)
+       @param susymodel: model of susy to use, can be only chne (charginos neutralino) or slsqhh (slepton, squarks and heavy higgs)
        @param energy: CM energy to use
        @type energy: int
        @param nbevts: number of event to generate
@@ -606,7 +606,7 @@ class ILCJob(Job):
     @type inputFile: string
     @param outputFile: Output file name, default is same as input if set
     @type outputFile: string
-    @param MxNbEvts: Maximum number of events to retain
+    @param MaxNbEvts: Maximum number of events to retain
     @type MaxNbEvts: int
     
     """
