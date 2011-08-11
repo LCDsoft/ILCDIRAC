@@ -87,11 +87,12 @@ class Application(object):
   def _setparams(self,params):
     """ Try to use setattr(self,param) and raise AttributeError in case it does not work. Even better, try to call the self.setParam(). Use eval() for that.
     """
+    if not params:
+      return S_OK()
     for param,value in params.items():
       if type(value) in types.StringTypes:
         value = "'%s'"%value
       try:
-        
         exec "self.set%s(%s)"%(param,str(value))
       except:
         self.log.error("This application does not have a set%s method."%param)
@@ -104,7 +105,7 @@ class Application(object):
     @param name: Name of the application. Normally, every application defines its own, so no need to call that one
     @type name: string 
     """
-    self._checkArgs({ name : types.StringTypes } )
+    self._checkArgs({ 'name' : types.StringTypes } )
     self.appname = name
     return S_OK()  
     
@@ -114,7 +115,7 @@ class Application(object):
     @param version: Version of the application to use
     @type version: string
     """
-    self._checkArgs({ version : types.StringTypes } )
+    self._checkArgs({ 'version' : types.StringTypes } )
     self.version = version
     return S_OK()  
     
@@ -124,7 +125,7 @@ class Application(object):
     @param steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
     @type steeringfile: string
     """
-    self._checkArgs({ steeringfile : types.StringTypes } )
+    self._checkArgs({ 'steeringfile' : types.StringTypes } )
     self.steeringfile = steeringfile
     if os.path.exists(steeringfile) or steeringfile.lower().count("lfn:"):
       self.inputSB.append(steeringfile) 
@@ -136,7 +137,7 @@ class Application(object):
     @param logfile: Log file to use. Set by default if not set.
     @type logfile: string
     """
-    self._checkArgs({ logfile : types.StringTypes } )
+    self._checkArgs({ 'logfile' : types.StringTypes } )
     self.logfile = logfile
     return S_OK()  
   
@@ -146,7 +147,7 @@ class Application(object):
     @param nbevts: Number of events to process (or generate)
     @type nbevts: int
     """
-    self._checkArgs({ nbevts : types.IntType })
+    self._checkArgs({ 'nbevts' : types.IntType })
     self.nbevts = nbevts  
     return S_OK()  
     
@@ -156,7 +157,7 @@ class Application(object):
     @param energy: Energy used. Mostly needed at generation.
     @type energy: int
     """
-    self._checkArgs({ energy : types.IntType })
+    self._checkArgs({ 'energy' : types.IntType })
     self.energy = energy
     return S_OK()  
     
@@ -166,7 +167,7 @@ class Application(object):
     @param ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using L{getInputFromApp})
     @type ofile: string
     """
-    self._checkArgs({ ofile : types.StringTypes } )
+    self._checkArgs({ 'ofile' : types.StringTypes } )
     self.outputFile = ofile
     self.prodparameters[ofile]={}
     if self.detectortype:
@@ -178,7 +179,7 @@ class Application(object):
   def setOutputPath(self,outputpath):
     """ Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
     """
-    self._checkArgs({ outputpath : types.StringTypes } )
+    self._checkArgs({ 'outputpath' : types.StringTypes } )
     self.outputPath = outputpath
     
     return S_OK()
@@ -189,7 +190,7 @@ class Application(object):
     @param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
     @type inputfile: string
     """
-    self._checkArgs({ inputfile : types.StringTypes } )
+    self._checkArgs({ 'inputfile' : types.StringTypes } )
     self.inputfile = inputfile
     if os.path.exists(inputfile) or inputfile.lower().count("lfn:"):
       self.inputSB.append(inputfile)  

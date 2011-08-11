@@ -80,7 +80,7 @@ class GenericApplication(Application):
     self.script = script
     return S_OK()
     
-  def setArguments(self,arguments):
+  def setArguments(self,args):
     """ Define the arguments of the script (if any)
     
     @param arguments: Arguments to pass to the command line call
@@ -88,9 +88,9 @@ class GenericApplication(Application):
     
     """
     self._checkArgs( {
-        'script' : types.StringTypes
+        'args' : types.StringTypes
       } )  
-    self.arguments = arguments
+    self.arguments = args
     return S_OK()
       
   def setDependency(self,appdict):
