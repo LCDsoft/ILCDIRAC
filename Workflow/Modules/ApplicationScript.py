@@ -23,23 +23,12 @@ class ApplicationScript(ModuleBase):
     self.script = None
     self.arguments = ''
 
-  def applicationSpecificInputs(self):
-    """ Resolve the application specific parameters
-    """
-    if self.step_commons.has_key('script'):
-      self.script = self.step_commons['script']
-      print self.script
-    else:
-      self.log.warn('No script defined')
-    if self.step_commons.has_key('arguments'):
-      self.arguments = self.step_commons['arguments']
-      
-    return S_OK()
-
   def execute(self):
     """ Run the application in a controlled environment
     """
     self.result =self.resolveInputVariables()
+    # check that script is defined.
+    
     if not self.applicationName or not self.applicationVersion:
       self.result = S_ERROR( 'No Application defined' )
     if not self.applicationLog:

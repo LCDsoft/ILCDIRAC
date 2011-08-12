@@ -324,8 +324,9 @@ class ModuleBase(object):
     if self.workflow_commons.has_key('ParametricInputData'):
       self.InputData += ";"+self.workflow_commons['ParametricInputData']
 
-    if self.step_commons.has_key("outputFile"):
-      self.outputFile = self.step_commons["outputFile"]
+    if not self.outputFile:
+      if self.step_commons.has_key("outputFile"):
+        self.outputFile = self.step_commons["outputFile"]
 
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
