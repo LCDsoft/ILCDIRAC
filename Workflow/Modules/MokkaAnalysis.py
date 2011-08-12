@@ -68,6 +68,7 @@ class MokkaAnalysis(ModuleBase):
       if self.step_commons.has_key('startFrom'):
         self.startFrom = self.step_commons['startFrom']
 
+      #Need to keep until old prods are archived.
       if self.step_commons.has_key("steeringFile"):
         self.steeringFile = self.step_commons['steeringFile']
 
@@ -79,6 +80,7 @@ class MokkaAnalysis(ModuleBase):
 
       if self.step_commons.has_key('detectorModel'):
         self.detectorModel = self.step_commons['detectorModel']
+        
       if   self.step_commons.has_key('ProcessID'):
         self.processID = self.step_commons['ProcessID']
 

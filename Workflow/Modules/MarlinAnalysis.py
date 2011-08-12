@@ -54,7 +54,7 @@ class MarlinAnalysis(ModuleBase):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-      
+    ##TODO: Need to keep for old interface. Move to ModuleBase
     if self.step_commons.has_key('inputSlcio'):
       self.inputSLCIO =self.step_commons['inputSlcio']
       
@@ -67,12 +67,10 @@ class MarlinAnalysis(ModuleBase):
     if self.step_commons.has_key('inputGEAR'):
       self.inputGEAR=self.step_commons['inputGEAR']
       
-    if self.workflow_commons.has_key('JobType'):
-      self.jobType = self.workflow_commons['JobType']
-      
     if self.step_commons.has_key('EvtsToProcess'):
       self.evtstoprocess = str(self.step_commons['EvtsToProcess'])
-      
+    
+    ##Backward compat needed, cannot remove yet.  
     if self.step_commons.has_key('outputREC'):
       self.outputREC = self.step_commons['outputREC']
       
@@ -111,6 +109,7 @@ class MarlinAnalysis(ModuleBase):
         res = getNumberOfevents(self.InputData)
         if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
           self.workflow_commons["NbOfEvents"]=res["nbevts"]
+          self.evtstoprocess = res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
