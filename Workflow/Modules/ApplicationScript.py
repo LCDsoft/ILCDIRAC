@@ -27,8 +27,8 @@ class ApplicationScript(ModuleBase):
     """ Run the application in a controlled environment
     """
     self.result =self.resolveInputVariables()
-    # check that script is defined.
-    
+    if not self.script:
+      self.result = S_ERROR('Script undefined.')
     if not self.applicationName or not self.applicationVersion:
       self.result = S_ERROR( 'No Application defined' )
     if not self.applicationLog:
