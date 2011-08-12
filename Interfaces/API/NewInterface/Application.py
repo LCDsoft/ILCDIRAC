@@ -95,7 +95,7 @@ class Application(object):
       try:
         exec "self.set%s(%s)"%(param,str(value))
       except:
-        self.log.error("This application does not have a set%s method."%param)
+        self.log.error("The %s class does not have a set%s method."%(self.__class__.__name__,param))
     return S_OK()  
     
     
