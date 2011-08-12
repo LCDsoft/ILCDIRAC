@@ -18,7 +18,7 @@ from ILCDIRAC.Core.Utilities.ProductionData               import getLogPath
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
-import os,shutil,glob,string,random
+import os,shutil,glob,string,random, tarfile
 
 class UploadLogFile(ModuleBase):
 
@@ -187,16 +187,18 @@ class UploadLogFile(ModuleBase):
     # Recover the logs to a failover storage element
     self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE,res['Message'])
 
-    ######### REALLY NASTY TEMPORARY CODE #######################
-    # TODO: Use tar module if available
     tarFileDir = os.path.dirname(self.logdir)
     self.logLFNPath = '%s.gz' %self.logLFNPath
     tarFileName = os.path.basename(self.logLFNPath)
     start = os.getcwd()
     os.chdir(self.logdir)
     logTarFiles = os.listdir(self.logdir)
-    comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
-    res = shellCall(0,comm)
+    #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
+    tfile = tarfile.open(tarFileName,"w:gz")
+    for item in logTarFiles:
+      tfile.add(item)
+    tfile.close()
+    #res = shellCall(0,comm)
     if not os.path.exists(tarFileName):
       res = S_ERROR("File was not created")
     os.chdir(start)
@@ -204,10 +206,11 @@ class UploadLogFile(ModuleBase):
       self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Message']))
       self.setApplicationStatus('Failed To Create Log Tar Dir')
       return S_OK()#because if the logs are lost, it's not the end of the world.
-    if res['Value'][0]: #i.e. non-zero status
-      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
-      self.setApplicationStatus('Failed To Create Log Tar Dir')
-      return S_OK()#because if the logs are lost, it's not the end of the world.
+    
+    #if res['Value'][0]: #i.e. non-zero status
+    #  self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
+    #  self.setApplicationStatus('Failed To Create Log Tar Dir')
+    #  return S_OK()#because if the logs are lost, it's not the end of the world.
 
     ############################################################
     logURL = '<a href="http://ilc-logs.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
