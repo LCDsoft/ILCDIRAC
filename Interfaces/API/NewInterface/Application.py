@@ -312,7 +312,7 @@ class Application(object):
     stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
     #Following should be workflow parameters
-    stepdefinition.addParameter(Parameter("NbEvts",             0,    "int", "", "", False, False, "Number of events to process"))
+    stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
     stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     return S_OK()
   
