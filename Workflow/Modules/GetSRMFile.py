@@ -26,15 +26,13 @@ class GetSRMFile(ModuleBase):
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('GetSRMFile')
     self.rm = ReplicaManager()
-    self.filestxt = ""
+    self.srmfiles = ""
     self.files = []
     self.counter=1
     
   def applicationSpecificInputs(self):
-    if self.step_commons.has_key("srmfiles"):
-      self.filestxt = self.step_commons["srmfiles"]
-    if self.filestxt:
-      listoffiles = self.filestxt.split(";")
+    if self.srmfiles:
+      listoffiles = self.srmfiles.split(";")
       for f in listoffiles:
         self.files.append(eval(f))
     return S_OK()
@@ -46,9 +44,9 @@ class GetSRMFile(ModuleBase):
     result = self.resolveInputVariables()
     if not result['OK']:
       return result
-    if not self.filestxt:
-      self.log.error('Files txt where not found correctly: %s'%self.filestxt)
-      return S_ERROR('Files txt where not found correctly: %s'%self.filestxt)
+    if not self.srmfiles:
+      self.log.error('Files txt where not found correctly: %s'%self.srmfiles)
+      return S_ERROR('Files txt where not found correctly: %s'%self.srmfiles)
     
     if not type(self.files[0]) is type({}):
       self.log.error('Files where not found correctly: %s'%self.files)
