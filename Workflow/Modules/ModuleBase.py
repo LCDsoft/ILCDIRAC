@@ -40,6 +40,7 @@ class ModuleBase(object):
     self.applicationName = ''
     self.InputData = ''
     self.result = S_ERROR()
+    self.InputFile = ''
     self.OutputFile = ''
     self.jobType = ''
     self.stdError = ''
@@ -318,6 +319,10 @@ class ModuleBase(object):
       
     if self.workflow_commons.has_key('JobType'):
       self.jobType = self.workflow_commons['JobType']
+      
+    if self.step_commons.has_key('InputFile'):
+      self.InputFile =self.step_commons['InputFile']
+            
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
       
@@ -325,8 +330,10 @@ class ModuleBase(object):
       self.InputData += ";"+self.workflow_commons['ParametricInputData']
 
     if not self.OutputFile:
+      #this is to keep compatibility with old interface, where step param is with o  
       if self.step_commons.has_key("outputFile"):
         self.OutputFile = self.step_commons["outputFile"]
+      #this is for new interface where step param has O  
       if self.step_commons.has_key("OutputFile"):
         self.OutputFile = self.step_commons["OutputFile"]
 

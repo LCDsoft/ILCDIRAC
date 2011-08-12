@@ -50,9 +50,13 @@ class LCSIMAnalysis(ModuleBase):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
+    
+    #With new interface, this key should not be present, as SteeringFile is a
+    # module parameter
     if self.step_commons.has_key('inputXML'):
       self.xmlfile = self.step_commons['inputXML']
 
+    #TODO: Next is necessary for old interface, should be removed when old prods are archived.
     if self.step_commons.has_key('outputREC'):
       self.outputREC = self.step_commons['outputREC']
       

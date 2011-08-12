@@ -28,16 +28,17 @@ class PostGenSelection(ModuleBase):
     self.log = gLogger.getSubLogger( "PostGenSelection" )
     self.applicationName = 'PostGenSel'
     self.inputstdhep = ""
-    self.numberOfEvents = 0
+    self.NbEvtsKept = 0
       
   def applicationSpecificInputs(self):
 
     if self.step_commons.has_key('InputFile'):
       self.inputstdhep =self.step_commons['InputFile']
       
-    if self.step_commons.has_key('NbEvts'):
-      self.numberOfEvents = self.step_commons['NbEvts']
-    else:
+    if self.step_commons.has_key('NbEvtsKept'):
+      self.NbEvtsKept = self.step_commons['NbEvtsKept']
+
+    if not self.NbEvtsKept:
       return S_ERROR('Nb of events to keep MUST be specified')  
     
     if self.workflow_commons.has_key("IS_PROD"):
@@ -54,8 +55,6 @@ class PostGenSelection(ModuleBase):
           if self.workflow_commons.has_key("WhizardOutput"):
             self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
                                                 int(self.workflow_commons["JOB_ID"]))
-      if self.workflow_commons.has_key('InputData'):
-          self.InputData = self.workflow_commons['InputData']
 
       if self.InputData:
         if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -155,7 +154,7 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x DEBUG=ON\n')
     script.write('declare -x INDIR=$PWD/\n')
     script.write('declare -x MCGEN=WHIZARD\n')
-    comm='writestdhep 100000 %s %s > writestdhep.out\n'%(self.numberOfEvents,base_file)
+    comm='writestdhep 100000 %s %s > writestdhep.out\n'%(self.NbEvtsKept,base_file)
     self.log.info('Running %s'%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
