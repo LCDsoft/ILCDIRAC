@@ -36,7 +36,7 @@ class FailoverRequest(ModuleBase):
     self.inputData = []
 
   #############################################################################
-  def resolveInputVariables(self):
+  def applicationSpecificInputs(self):
     """ By convention the module input parameters are resolved here.
     """
     self.log.debug(self.workflow_commons)
@@ -62,15 +62,11 @@ class FailoverRequest(ModuleBase):
     if self.workflow_commons.has_key('FileReport'):
       self.fileReport = self.workflow_commons['FileReport']
 
-    if self.workflow_commons.has_key('InputData'):
-      self.inputData = self.workflow_commons['InputData']
-      if self.inputData:
-        if type(self.inputData) != type([]):
-          self.inputData = self.inputData.split(';')
-      else:
-        self.inputData=[]
+    if self.InputData:
+      if type(self.inputData) != type([]):
+          self.InputData = self.InputData.split(';')
 
-      self.inputData = [x.replace('LFN:','') for x in self.inputData]
+      self.InputData = [x.replace('LFN:','') for x in self.inputData]
 
     if self.workflow_commons.has_key('Request'):
       self.request = self.workflow_commons['Request']
@@ -101,9 +97,9 @@ class FailoverRequest(ModuleBase):
     if not self.fileReport:
       self.fileReport =  FileReport('Transformation/TransformationManager')
 
-    if self.inputData:
+    if self.InputData:
       inputFiles = self.fileReport.getFiles()
-      for lfn in self.inputData:
+      for lfn in self.InputData:
         if not lfn in inputFiles:
           self.log.verbose('No status populated for input data %s, setting to "Unused"' %lfn)
           result = self.fileReport.setFileStatus(int(self.productionID),lfn,'Unused')

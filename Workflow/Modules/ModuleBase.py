@@ -40,7 +40,7 @@ class ModuleBase(object):
     self.applicationName = ''
     self.InputData = ''
     self.result = S_ERROR()
-    self.outputFile = ''
+    self.OutputFile = ''
     self.jobType = ''
     self.stdError = ''
     self.debug = False
@@ -324,9 +324,11 @@ class ModuleBase(object):
     if self.workflow_commons.has_key('ParametricInputData'):
       self.InputData += ";"+self.workflow_commons['ParametricInputData']
 
-    if not self.outputFile:
+    if not self.OutputFile:
       if self.step_commons.has_key("outputFile"):
-        self.outputFile = self.step_commons["outputFile"]
+        self.OutputFile = self.step_commons["outputFile"]
+      if self.step_commons.has_key("OutputFile"):
+        self.OutputFile = self.step_commons["OutputFile"]
 
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
