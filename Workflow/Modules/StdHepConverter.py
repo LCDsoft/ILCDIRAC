@@ -23,19 +23,8 @@ class StdHepConverter(ModuleBase):
 
         self.STEP_NUMBER = ''
         self.log         = gLogger.getSubLogger( "StdHepConverter" )
-        self.args        = ''
-        #self.result      = S_ERROR()
-        self.jobID       = None
-
         # Step parameters
         self.applicationName = 'StdhepConverter'
-        self.applicationVersion = None
-        self.applicationLog     = None
-
-        #
-
-        if os.environ.has_key('JOBID'):
-            self.jobID = os.environ['JOBID']
 
         #
 

@@ -108,6 +108,7 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
       self.parameters['PROCESS']=self.evttype
+      
     if self.step_commons.has_key("JobIndex"):
       self.jobindex = self.step_commons["JobIndex"]
 

@@ -26,16 +26,19 @@ class StdHepCut(ModuleBase):
       self.cutfile = self.step_commons['CutFile']
     else:
       return S_ERROR('Cut file not defined')
+  
     if self.step_commons.has_key('MaxNbEvts'):
       self.MaxNbEvts = self.step_commons['MaxNbEvts']
-    if not self.outputFile:
+      
+    if not self.OutputFile:
       dircont = os.listdir("./")
       for file in dircont:
         if file.count(".stdhep"):
-          self.outputFile = file.rstrip(".stdhep")+"_reduced.stdhep"
+          self.OutputFile = file.rstrip(".stdhep")+"_reduced.stdhep"
           break
-      if not self.outputFile:
-        return S_ERROR("Could not find suitable outputFile name")
+      if not self.OutputFile:
+        return S_ERROR("Could not find suitable OutputFile name")
+    
     return S_OK()
 
   def execute(self):
@@ -84,7 +87,7 @@ class StdHepCut(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s'%self.MaxNbEvts
-    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.outputFile,os.path.basename(self.cutfile))
+    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.OutputFile,os.path.basename(self.cutfile))
     self.log.info("Running %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    

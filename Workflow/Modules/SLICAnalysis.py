@@ -48,7 +48,7 @@ class SLICAnalysis(ModuleBase):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-
+    ##NEed to keep for backward compat.
     if self.step_commons.has_key('numberOfEvents'):
         self.numberOfEvents = self.step_commons['numberOfEvents']
           
@@ -66,6 +66,7 @@ class SLICAnalysis(ModuleBase):
 
     if self.step_commons.has_key("RandomSeed"):
       self.randomseed = self.step_commons["RandomSeed"]
+    ##Move below to ModuleBase as common to Mokka
     elif self.workflow_commons.has_key("IS_PROD"):  
       self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
     elif self.jobID:
