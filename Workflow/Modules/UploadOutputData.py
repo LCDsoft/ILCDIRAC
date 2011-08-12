@@ -34,7 +34,6 @@ class UploadOutputData(ModuleBase):
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover',[])
 
     #List all parameters here
-    self.inputData = []
     self.outputDataFileMask = ''
     self.outputMode='Any' #or 'Local' for reco case
     self.outputList = []
@@ -133,12 +132,6 @@ class UploadOutputData(ModuleBase):
       self.prodOutputLFNs=self.workflow_commons['ProductionOutputData'].split(";")
     else:
       self.prodOutputLFNs = []
-    if self.workflow_commons.has_key('InputData'):
-      self.inputData = self.workflow_commons['InputData']
-
-    if self.inputData:
-      if type(self.inputData) != type([]):
-        self.inputData = self.inputData.split(';')
 
     return S_OK('Parameters resolved')
 
