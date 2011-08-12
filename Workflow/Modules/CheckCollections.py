@@ -49,7 +49,7 @@ class CheckCollections(ModuleBase):
 
         # Get input variables
 
-        result = self._resolveInputVariables()
+        result = self.resolveInputVariables()
 
         # Checks
 
@@ -170,34 +170,10 @@ exit $$appstatus
 
         return self.finalStatusReport(status)
 
-    def redirectLogOutput(self, fd, message):
 
-        sys.stdout.flush()
-
-        if self.applicationLog:
-
-            log = open(self.applicationLog,'a')
-            log.write(message+'\n')
-            log.close()
-
-        else:
-            self.log.error("Application Log file not defined")
-
-        if fd == 1:
-            self.stdError += message
-
-    def _resolveInputVariables(self):
-
-        if self.workflow_commons.has_key('SystemConfig'):
-            self.systemConfig = self.workflow_commons['SystemConfig']
-
-        if self.step_commons.has_key('applicationVersion'):
-            self.applicationVersion = self.step_commons['applicationVersion']
+    def applicationSpecificInputs(self):
 
         # Logfile
-
-        if self.step_commons.has_key('applicationLog'):
-            self.applicationLog = self.step_commons['applicationLog']
 
         if not self.applicationLog:
             self.applicationLog = 'CheckCollections_%s_Run_%s.log' %( self.applicationVersion, self.STEP_NUMBER )
