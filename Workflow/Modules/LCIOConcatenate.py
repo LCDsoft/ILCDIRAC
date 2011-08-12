@@ -31,7 +31,6 @@ class LCIOConcatenate(ModuleBase):
         
     # Step parameters
 
-    self.outputSLCIOFile    = None
     self.applicationName = "lcio"
     #
 
@@ -41,10 +40,7 @@ class LCIOConcatenate(ModuleBase):
     """ Resolve LCIO concatenate specific parameters, called from ModuleBase
     """
 
-    if self.step_commons.has_key('outputSLCIOFile'):
-      self.outputSLCIOFile = self.step_commons['outputSLCIOFile']
-
-    if not self.outputSLCIOFile:
+    if not self.OutputFile:
       return S_ERROR( 'No output file defined' )
 
     return S_OK('Parameters resolved')
@@ -98,7 +94,7 @@ exit $?
 """ %(
     LD_LIBRARY_PATH,
     PATH,
-    self.outputSLCIOFile
+    self.OutputFile
 )
 
     # Write script to file
