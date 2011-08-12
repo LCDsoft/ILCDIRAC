@@ -33,15 +33,9 @@ class CheckCollections(ModuleBase):
         self.applicationName = 'CheckCollections'
         # Step parameters
 
-        self.applicationVersion = None
-        self.applicationLog     = None
         self.inputSLCIOFiles    = None
         self.collections        = None
 
-        #
-
-        if os.environ.has_key('JOBID'):
-            self.jobID = os.environ['JOBID']
 
         print "%s initialized" % ( self.__str__() )
 
@@ -185,9 +179,6 @@ exit $$appstatus
             self.inputSLCIOFiles = [os.path.basename( file ) for file in self.inputSLCIOFiles]
 
         #
-
-        if self.step_commons.has_key('collections'):
-            self.collections = self.step_commons['collections'].split(";")
 
         if len( self.collections ) == 0:
             return S_ERROR( 'No list of collections defined to check for.' )
