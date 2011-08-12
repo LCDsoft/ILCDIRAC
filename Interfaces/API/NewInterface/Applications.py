@@ -200,11 +200,11 @@ class GetSRMFile(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    #m1.addParameter(Parameter...)
+    m1.addParameter(Parameter("srmfiles", "", "string", "", "", False, False, "list of files to retrieve"))
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue()  
+    moduleinstance.setValue("srmfiles",self.filedict)  
   
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
@@ -227,7 +227,6 @@ class GetSRMFile(Application):
     res = self._addBaseParameters(step)
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")
-    step.addParameter(Parameter("srmfiles", "", "string", "", "", False, False, "list of files to retrieve"))
     return S_OK()
 
 #################################################################
@@ -260,7 +259,7 @@ class Whizard(Application):
     Application.__init__(self, paramdict)
     
     
-  def setProcess(self,process):
+  def setEvtType(self,evttype):
     """ Define process
     
     @param process: Process to generate
