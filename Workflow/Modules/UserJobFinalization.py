@@ -164,7 +164,7 @@ class UserJobFinalization(ModuleBase):
       
       result = constructUserLFNs(int(self.jobID),vo,owner,self.userOutputData,self.userOutputPath)
       if not result['OK']:
-        self.log.error('Could not create production LFNs',result['Message'])
+        self.log.error('Could not create user LFNs',result['Message'])
         return result
       userOutputLFNs=result['Value']
 
