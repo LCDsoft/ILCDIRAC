@@ -133,7 +133,7 @@ class UploadLogFile(ModuleBase):
     res = self.determineRelevantFiles()
     if not res['OK']:
       self.log.error('Completely failed to select relevant log files.',res['Message'])
-      return S_OK()
+      return S_OK()#because if the logs are lost, it's not the end of the world.
     selectedFiles = res['Value']
     self.log.info('The following %s files were selected to be saved:\n%s' %(len(selectedFiles),string.join(selectedFiles,'\n')))
 
@@ -144,7 +144,7 @@ class UploadLogFile(ModuleBase):
     if not res['OK']:
       self.log.error('Completely failed to populate temporary log file directory.',res['Message'])
       self.setApplicationStatus('Failed To Populate Log Dir')
-      return S_OK()
+      return S_OK()#because if the logs are lost, it's not the end of the world.
     self.log.info('%s populated with log files.' % self.logdir)
 
     #########################################
@@ -197,15 +197,17 @@ class UploadLogFile(ModuleBase):
     logTarFiles = os.listdir(self.logdir)
     comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
     res = shellCall(0,comm)
+    if not os.path.exists(tarFileName):
+      res = S_ERROR("File was not created")
     os.chdir(start)
     if not res['OK']:
       self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Message']))
       self.setApplicationStatus('Failed To Create Log Tar Dir')
-      return S_OK()
+      return S_OK()#because if the logs are lost, it's not the end of the world.
     if res['Value'][0]: #i.e. non-zero status
       self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
       self.setApplicationStatus('Failed To Create Log Tar Dir')
-      return S_OK()
+      return S_OK()#because if the logs are lost, it's not the end of the world.
 
     ############################################################
     logURL = '<a href="http://ilc-logs.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
@@ -220,7 +222,7 @@ class UploadLogFile(ModuleBase):
     if not result['OK']:
       self.log.error('Failed to upload logs to all destinations')
       self.setApplicationStatus('Failed To Upload Logs')
-      return S_OK()
+      return S_OK() #because if the logs are lost, it's not the end of the world.
     
     #Now after all operations, retrieve potentially modified request object
     result = failoverTransfer.getRequestObject()
