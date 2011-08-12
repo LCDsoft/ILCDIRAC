@@ -45,7 +45,7 @@ class StdHepConverter(ModuleBase):
 
         # Get input variables
 
-        result = self._resolveInputVariables()
+        result = self.resolveInputVariables()
 
         if not result['OK']:
             return result
@@ -133,38 +133,11 @@ exit $?
 
         return self.finalStatusReport(status)
 
-    def redirectLogOutput(self, fd, message):
 
-        sys.stdout.flush()
-
-        if self.applicationLog:
-
-            log = open(self.applicationLog,'a')
-            log.write(message+'\n')
-            log.close()
-
-        else:
-            self.log.error("Application Log file not defined")
-
-        if fd == 1:
-            self.stdError += message
-
-    def _resolveInputVariables(self):
-
-        if self.workflow_commons.has_key('SystemConfig'):
-            self.systemConfig = self.workflow_commons['SystemConfig']
-
-        if self.step_commons.has_key('applicationVersion'):
-            self.applicationVersion = self.step_commons['applicationVersion']
-
-        # Logfile
-
-        if self.step_commons.has_key('applicationLog'):
-            self.applicationLog = self.step_commons['applicationLog']
+    def applicationSpecificInputs(self):
 
         if not self.applicationLog:
             self.applicationLog = 'StdHepConverter_%s_Run_%s.log' %( self.applicationVersion, self.STEP_NUMBER )
 
-        #
 
         return S_OK('Parameters resolved')
