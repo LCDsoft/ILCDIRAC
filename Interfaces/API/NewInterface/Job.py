@@ -11,7 +11,8 @@ from ILCDIRAC.Interfaces.API.NewInterface.Application  import Application
 from DIRAC.Core.Workflow.Step                          import StepDefinition
 from DIRAC.Core.Workflow.Parameter                     import Parameter 
 from DIRAC import S_ERROR,S_OK
-import string
+import string, inspect
+
 
 class Job(DiracJob):
   """ ILCDIRAC job class
@@ -167,3 +168,58 @@ class Job(DiracJob):
         apps += ';' + currentApp
 
       self._addParameter( self.workflow, swPackages, 'JDL', apps, description )
+
+  def _checkArgs( self, argNamesAndTypes ):
+    """ Private method to check the validity of the parameters
+    """
+
+    # inspect.stack()[1][0] returns the frame object ([0]) of the caller
+    # function (stack()[1]).
+    # The frame object is required for getargvalues. Getargvalues returns
+    # a tuple with four items. The fourth item ([3]) contains the local
+    # variables in a dict.
+
+    args = inspect.getargvalues( inspect.stack()[ 1 ][ 0 ] )[ 3 ]
+
+    #
+
+    for argName, argType in argNamesAndTypes.iteritems():
+
+      if not args.has_key(argName):
+        self._reportError(
+          'Method does not contain argument \'%s\'' % argName,
+          __name__,
+          **self._getArgsDict( 1 )
+        )
+
+      if not isinstance( args[argName], argType):
+        self._reportError(
+          'Argument \'%s\' is not of type %s' % ( argName, argType ),
+          __name__,
+          **self._getArgsDict( 1 )
+        )
+
+  def _getArgsDict( self, level = 0 ):
+    """ Private method
+    """
+
+    # Add one to stack level such that we take the caller function as the
+    # reference point for 'level'
+
+    level += 1
+
+    #
+
+    args = inspect.getargvalues( inspect.stack()[ level ][ 0 ] )
+    dict = {}
+
+    for arg in args[0]:
+
+      if arg == "self":
+        continue
+
+      # args[3] contains the 'local' variables
+
+      dict[arg] = args[3][arg]
+
+    return dict
