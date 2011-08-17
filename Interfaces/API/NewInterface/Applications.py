@@ -33,6 +33,7 @@ prints out all the available methods.
 @author: Stephane Poss, Remi Ete, Ching Bon Lam
 '''
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
+from ILCDIRAC.Core.Utilities.Processlist              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC                                            import S_OK,S_ERROR
@@ -245,21 +246,22 @@ class Whizard(Application):
 
   """
   def __init__(self, processlist = None, paramdict = None):    
+    
+    Application.__init__(self, paramdict)
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     self.parameterdict = {}
     self.appname = 'whizard'
     self.evttype = ''
-    if processlist:
-      self.processlist = processlist
     self.model = 'sm'  
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
     self.allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
+    if processlist:
+      self.processlist = processlist
     
-    Application.__init__(self, paramdict)
     
     
   def setEvtType(self,evttype):
@@ -321,10 +323,10 @@ class Whizard(Application):
     
   def _checkConsistency(self):
     #must be filled
-    if self.energy == 0 :
+    if not self.energy :
       print 'Energy set to 0 !'
       
-    if self.nbevts == 0 :
+    if not self.nbevts :
       print 'Number of events set to 0 !'
     
     if not self.evttype:
@@ -333,21 +335,28 @@ class Whizard(Application):
     if not self.processlist:
       return S_ERROR("Process list was not given")
     
-    ### TODO: In the future here lies the call the ProcessProduction about validity of process
+    if self.evttype:
+      if not self.processlist.existsProcess(self.evttype)['Value']:
+        self.logfile.info("Available processes are:")
+        self.processlist.printProcesses()
+        return S_ERROR('Process does no exists')
+      else:
+        cspath = self.processlist.getCSPath(self.evttype)
+        whiz_file = os.path.basename(cspath)
+        self.version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
+        
     if not self.version:
-      self.version = 'anything'###  Must be found in processlist, or 
-      if not self.version:
-        return S_ERROR("Version not set")
+      return S_ERROR('No version found')
       
-   if self.model:
+    if self.model:
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
-   if not self.steeringfile :
-     return S_ERROR('Steering File not given')
+    if not self.steeringfile :
+      return S_ERROR('Steering File not given')
    
-   if not self.outputFile :
-     return S_ERROR('Output File not set')
+    if not self.outputFile :
+      return S_ERROR('Output File not set')
    
     for key in self.parameterdict.keys():
       if not key in self.allowedparams:
