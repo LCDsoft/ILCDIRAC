@@ -317,6 +317,8 @@ class Whizard(Application):
     self. model = model
     
   def _checkConsistency(self):
+    #must be filled
+    
     if not self.evttype:
       return S_ERROR("Process not defined")
     if not self.processlist:
@@ -338,35 +340,51 @@ class Whizard(Application):
     return S_OK()  
 
   def _applicationModule(self):
-    m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("evttype", "", "string", "", "", False, False, "Process to generate"))
-    return m1
+    #must be filled
+    
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("evttype", "", "string", "", "", False, False, "Process to generate"))
+    return md1
   
   def _applicationModuleValues(self,moduleinstance):
+    #must be filled
+    
     moduleinstance.setValue("evttype",self.evttype)
     
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
+  def _userjobmodules(self,stepdefinition):
+    md1 = self._applicationModule()
+    stepdefinition.addModule(md1)
+    mi1 = stepdefinition.createModuleInstance(md1.getType(),stepdefinition.getType())
+    self._applicationModuleValues(mi1)
     
-    m2 = self._getUserOutputDataModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+    md2 = self._getUserOutputDataModule()
+    stepdefinition.addModule(md2)
+    stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
     return S_OK()
 
-  def _prodjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
+  def _prodjobmodules(self,stepdefinition):
+    md1 = self._applicationModule()
+    stepdefinition.addModule(md1)
+    m1i = stepdefinition.createModuleInstance(md1.getType(),stepdefinition.getType())
     self._applicationModuleValues(m1i)
     
-    m2 = self._getComputeOutputDataListModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+    md2 = self._getComputeOutputDataListModule()
+    stepdefinition.addModule(md2)
+    stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
     return S_OK()
 
+  def _addParametersToStep(self,stepdefinition):
+    #must be filled (overloaded)
+    
+  def _setStepParametersValues(self,stepinstance):
+    #must be filled (overloaded)
+    
+  def _resolveLinkedStepParameters(self,stepinstance):
+    #must be filled (overloaded)
+    
+    
+    
+    
 #################################################################
 #            PYTHIA: Second Generator application
 #################################################################    
