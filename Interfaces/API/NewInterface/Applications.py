@@ -249,7 +249,7 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     
     self.appname = 'whizard'
-    self.process = ''
+    self.evttype = ''
     if processlist:
       self.processlist = processlist
     self.model = 'sm'  
@@ -265,9 +265,9 @@ class Whizard(Application):
     @param process: Process to generate
     """
     self._checkArgs( {
-        'process' : types.StringTypes
+        'evttype' : types.StringTypes
       } )
-    self.process = process
+    self.evttype = evttype
 
   def setLuminosity(self,lumi):
     """ Define luminosity to generate 
@@ -317,7 +317,7 @@ class Whizard(Application):
     self. model = model
     
   def _checkConsistency(self):
-    if not self.process:
+    if not self.evttype:
       return S_ERROR("Process not defined")
     if not self.processlist:
       return S_ERROR("Process list was not given")
@@ -343,7 +343,7 @@ class Whizard(Application):
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("evttype",self.process)
+    moduleinstance.setValue("evttype",self.evttype)
     
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
