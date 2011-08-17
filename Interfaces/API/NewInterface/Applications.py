@@ -247,7 +247,7 @@ class Whizard(Application):
   def __init__(self, processlist = None, paramdict = None):    
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
-    
+    self.parameterdict = {}
     self.appname = 'whizard'
     self.evttype = ''
     if processlist:
@@ -329,14 +329,94 @@ class Whizard(Application):
       if not self.version:
         return S_ERROR("Version not set")
     ## Check that all keys are in the paramdict, set them to default if not set
-    if not self.parameterdict.has_key("PNAME1"):
-      self.parameterdict["PNAME1"] = 'e1'
-    ##And so on...
-      
     if self.model:
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
-
+   
+    parameters = []
+    param = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
+  
+    if not parameterdict.key() in param
+      return S_ERROR("Wrong keys in dictionnary")
+      
+    if not parameterdict.has_key('PNAME1'):
+      print "Assuming incoming beam 1 to be electrons"
+      parameters.append('PNAME1=e1')
+    else
+      parameters.append("PNAME1=%s" %parameterdict["PNAME1"] )
+      
+    if not parameterdict.has_key('PNAME2'):
+      print "Assuming incoming beam 2 to be positrons"
+      parameters.append('PNAME2=E1')
+     else
+      parameters.append("PNAME2=%s" %parameterdict["PNAME2"] )
+       
+    if not parameterdict.has_key('POLAB1'):
+      print "Assuming no polarization for beam 1"
+      parameters.append('POLAB1=0.0 0.0')
+    else
+      parameters.append("POLAR1=%s" %parameterdict["POLAR1"] )
+        
+    if not parameterdict.has_key('POLAB2'):
+      print "Assuming no polarization for beam 2"
+      parameters.append('POLAB2=0.0 0.0')
+    else
+      parameters.append("POLAR2=%s" %parameterdict["POLAR2"] )
+        
+    if not parameterdict.has_key('USERB1'):
+      print "Will put beam spectrum to True for beam 1"
+      parameters.append('USERB1=T')
+    else
+      parameters.append("USERB1=%s" %parameterdict["USERB1"] )
+        
+    if not parameterdict.has_key('USERB2'):
+      print "Will put beam spectrum to True for beam 2"
+      parameters.append('USERB2=T')
+    else
+      parameters.append("USERB2=%s" %parameterdict["USERB2"] )
+        
+    if not parameterdict.has_key('ISRB1'):
+      print "Will put ISR to True for beam 1"
+      parameters.append('ISRB1=T')
+    else
+      parameters.append("ISRB1=%s" %parameterdict["ISRB1"] )
+        
+    if not parameterdict.has_key('ISRB2'):
+      print "Will put ISR to True for beam 2"
+      parameters.append('ISRB2=T')
+    else
+      parameters.append("ISRB2=%s" %parameterdict["ISRB2"] )
+        
+    if not parameterdict.has_key('EPAB1'):
+      print "Will put EPA to False for beam 1"
+      parameters.append('EPAB1=F')
+    else
+      parameters.append("EPAB1=%s" %parameterdict["EPAB1"] )
+        
+    if not parameterdict.has_key('EPAB2'):
+      print "Will put EPA to False for beam 2"
+      parameters.append('EPAB2=F')
+    else
+      parameters.append("EPAB2=%s" %parameterdict["EPAB2"] )
+       
+    if not parameterdict.has_key('RECOIL'):
+      print "Will set Beam_recoil to False"
+      parameters.append('RECOIL=F')
+    else
+      parameters.append("RECOIL=%s" %parameterdict["RECOIL"] )
+        
+    if not parameterdict.has_key('INITIALS'):
+      print "Will set keep_initials to False"
+      parameters.append('INITIALS=F')
+    else
+      parameters.append("INITIALS=%s" %parameterdict["INITIALS"] )
+        
+    if not parameterdict.has_key('USERSPECTRUM'):
+      print "Will set USER_spectrum_on to +-11"
+      parameters.append('USERSPECTRUM=11')
+    else
+      parameters.append("USERSPECTRUM=%s" %parameterdict["USERSPECTRUM"] )
+      
     return S_OK()  
 
   def _applicationModule(self):
@@ -379,12 +459,8 @@ class Whizard(Application):
   def _setStepParametersValues(self,stepinstance):
     #must be filled (overloaded)
     
-  def _resolveLinkedStepParameters(self,stepinstance):
-    #must be filled (overloaded)
     
-    
-    
-    
+  
 #################################################################
 #            PYTHIA: Second Generator application
 #################################################################    
