@@ -321,6 +321,11 @@ class Whizard(Application):
     
   def _checkConsistency(self):
     #must be filled
+    if self.energy == 0 :
+      print 'Energy set to 0 !'
+      
+    if self.nbevts == 0 :
+      print 'Number of events set to 0 !'
     
     if not self.evttype:
       return S_ERROR("Process not defined")
@@ -334,7 +339,7 @@ class Whizard(Application):
       if not self.version:
         return S_ERROR("Version not set")
       
-    if self.model:
+   if self.model:
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
