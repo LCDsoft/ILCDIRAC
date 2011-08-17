@@ -38,7 +38,7 @@ from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC                                            import S_OK,S_ERROR
 
 
-import os,types
+import os, types, string
 
 
 #################################################################
@@ -256,6 +256,9 @@ class Whizard(Application):
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
+    self.allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
+    self.parameters = []
+    
     Application.__init__(self, paramdict)
     
     
@@ -332,89 +335,90 @@ class Whizard(Application):
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
-    parameters = []
-    param = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
-  
-    if not self.parameterdict.key() in param
-      return S_ERROR("Wrong keys in dictionnary")
-      
+    
+    for key in self.parameterdict.keys():
+      if not key in self.allowedparams:
+        return S_ERROR("Unknown parameter %s"%key)
+
     if not self.parameterdict.has_key('PNAME1'):
       print "Assuming incoming beam 1 to be electrons"
-      parameters.append('PNAME1=e1')
-    else
-      parameters.append("PNAME1=%s" %self.parameterdict["PNAME1"] )
+      self.parameters.append('PNAME1=e1')
+    else:
+      self.parameters.append("PNAME1=%s" %self.parameterdict["PNAME1"] )
       
     if not self.parameterdict.has_key('PNAME2'):
       print "Assuming incoming beam 2 to be positrons"
-      parameters.append('PNAME2=E1')
-     else
-      parameters.append("PNAME2=%s" %self.parameterdict["PNAME2"] )
+      self.parameters.append('PNAME2=E1')
+    else:
+      self.parameters.append("PNAME2=%s" %self.parameterdict["PNAME2"] )
        
     if not self.parameterdict.has_key('POLAB1'):
       print "Assuming no polarization for beam 1"
-      parameters.append('POLAB1=0.0 0.0')
-    else
-      parameters.append("POLAR1=%s" %self.parameterdict["POLAR1"] )
+      self.parameters.append('POLAB1=0.0 0.0')
+    else:
+      self.parameters.append("POLAR1=%s" %self.parameterdict["POLAR1"] )
         
     if not self.parameterdict.has_key('POLAB2'):
       print "Assuming no polarization for beam 2"
-      parameters.append('POLAB2=0.0 0.0')
-    else
-      parameters.append("POLAR2=%s" %self.parameterdict["POLAR2"] )
+      self.parameters.append('POLAB2=0.0 0.0')
+    else:
+      self.parameters.append("POLAR2=%s" %self.parameterdict["POLAR2"] )
         
     if not self.parameterdict.has_key('USERB1'):
       print "Will put beam spectrum to True for beam 1"
-      parameters.append('USERB1=T')
-    else
-      parameters.append("USERB1=%s" %self.parameterdict["USERB1"] )
+      self.parameters.append('USERB1=T')
+    else:
+      self.parameters.append("USERB1=%s" %self.parameterdict["USERB1"] )
         
     if not self.parameterdict.has_key('USERB2'):
       print "Will put beam spectrum to True for beam 2"
-      parameters.append('USERB2=T')
-    else
-      parameters.append("USERB2=%s" %self.parameterdict["USERB2"] )
+      self.parameters.append('USERB2=T')
+    else:
+      self.parameters.append("USERB2=%s" %self.parameterdict["USERB2"] )
         
     if not self.parameterdict.has_key('ISRB1'):
       print "Will put ISR to True for beam 1"
-      parameters.append('ISRB1=T')
-    else
-      parameters.append("ISRB1=%s" %self.parameterdict["ISRB1"] )
+      self.parameters.append('ISRB1=T')
+    else:
+      self.parameters.append("ISRB1=%s" %self.parameterdict["ISRB1"] )
         
     if not self.parameterdict.has_key('ISRB2'):
       print "Will put ISR to True for beam 2"
-      parameters.append('ISRB2=T')
-    else
-      parameters.append("ISRB2=%s" %self.parameterdict["ISRB2"] )
+      self.parameters.append('ISRB2=T')
+    else:
+      self.parameters.append("ISRB2=%s" %self.parameterdict["ISRB2"] )
         
     if not self.parameterdict.has_key('EPAB1'):
       print "Will put EPA to False for beam 1"
-      parameters.append('EPAB1=F')
-    else
-      parameters.append("EPAB1=%s" %self.parameterdict["EPAB1"] )
+      self.parameters.append('EPAB1=F')
+    else:
+      self.parameters.append("EPAB1=%s" %self.parameterdict["EPAB1"] )
         
     if not self.parameterdict.has_key('EPAB2'):
       print "Will put EPA to False for beam 2"
-      parameters.append('EPAB2=F')
-    else
-      parameters.append("EPAB2=%s" %self.parameterdict["EPAB2"] )
+      self.parameters.append('EPAB2=F')
+    else:
+      self.parameters.append("EPAB2=%s" %self.parameterdict["EPAB2"] )
        
     if not self.parameterdict.has_key('RECOIL'):
       print "Will set Beam_recoil to False"
-      parameters.append('RECOIL=F')
-    else
-      parameters.append("RECOIL=%s" %self.parameterdict["RECOIL"] )
+      self.parameters.append('RECOIL=F')
+    else:
+      self.parameters.append("RECOIL=%s" %self.parameterdict["RECOIL"] )
         
     if not self.parameterdict.has_key('INITIALS'):
       print "Will set keep_initials to False"
-      parameters.append('INITIALS=F')
-    else
-      parameters.append("INITIALS=%s" %self.parameterdict["INITIALS"] )
+      self.parameters.append('INITIALS=F')
+    else:
+      self.parameters.append("INITIALS=%s" %self.parameterdict["INITIALS"] )
         
     if not self.parameterdict.has_key('USERSPECTRUM'):
       print "Will set USER_spectrum_on to +-11"
-      parameters.append('USERSPECTRUM=11')
-    else
-      parameters.append("USERSPECTRUM=%s" %self.parameterdict["USERSPECTRUM"] )
+      self.parameters.append('USERSPECTRUM=11')
+    else:
+      self.parameters.append("USERSPECTRUM=%s" %self.parameterdict["USERSPECTRUM"] )
+    
+    self.parameters = string.join(self.parameters,";")
       
     return S_OK()  
 

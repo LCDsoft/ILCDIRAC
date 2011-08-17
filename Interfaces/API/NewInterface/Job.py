@@ -27,6 +27,7 @@ class Job(DiracJob):
     self.systemConfig = ''
     self.stepnumber = 0
     self.steps = []
+    self.nbevts = 0
     
   def setInputData(self, lfns):
     """ Overload method to cancel it
