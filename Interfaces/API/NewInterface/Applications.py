@@ -324,18 +324,26 @@ class Whizard(Application):
     
     if not self.evttype:
       return S_ERROR("Process not defined")
+    
     if not self.processlist:
       return S_ERROR("Process list was not given")
+    
     ### TODO: In the future here lies the call the ProcessProduction about validity of process
     if not self.version:
       self.version = 'anything'###  Must be found in processlist, or 
       if not self.version:
         return S_ERROR("Version not set")
+      
     if self.model:
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
-    
+   if not self.inputfile :
+     return S_ERROR('Input File not given')
+   
+   if not self.outputFile :
+     return S_ERROR('Output File not set')
+   
     for key in self.parameterdict.keys():
       if not key in self.allowedparams:
         return S_ERROR("Unknown parameter %s"%key)
