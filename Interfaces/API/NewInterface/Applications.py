@@ -1,4 +1,4 @@
-DIRAC.Core.Workflow.Step'''
+'''
 Created on Jul 28, 2011
 
 This module contains the definition of the different applications that can
@@ -495,7 +495,8 @@ class Whizard(Application):
     stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
     return S_OK()
 
-  def _addParametersToStep(self,stepdefinition): pass  # must be filled
+  def _addParametersToStep(self,stepdefinition): pass 
+   # must be filled
 
     
   def _setStepParametersValues(self,stepinstance): pass  # must be filled
