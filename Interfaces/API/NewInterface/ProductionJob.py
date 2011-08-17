@@ -8,6 +8,8 @@ __RCSID__ = "$Id: "
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from DIRAC.Resources.Catalog.Client.FileCatalogClient import FileCatalogClient
+from DIRAC.Core.Security.Misc import getProxyInfo
+
 from DIRAC import S_OK, S_ERROR, gConfig
 
 
@@ -20,6 +22,8 @@ class ProductionJob(Job):
     self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
+
+    self.proxyinfo = getProxyInfo()
 
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay']
     
@@ -71,6 +75,16 @@ class ProductionJob(Job):
   def createProduction(self):
     """ Create production.
     """
+    
+    if not self.proxyinfo['OK']:
+      return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
+    if self.proxyinfo['Value'].has_key('group'):
+      group = self.proxyinfo['Value']['group']
+      if not group=="ilc_prod":
+        return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
+    else:
+      return S_ERROR("Could not determine group, you do not have the right proxy.")
+    
     return S_OK()
   
   def finalizeProd(self):
@@ -81,9 +95,13 @@ class ProductionJob(Job):
   def _jobSpecificParams(self,application):
     """ For production additional checks are needed: ask the user
     """
+    
+    
+    
     if not application.logfile:
       logf = application.appname+"_"+application.version+"_Step_"+str(self.stepnumber)+".log"
       application.setLogFile(logf)
+      
       #in fact a bit more tricky as the log files have the prodID and jobID in them
     return S_OK()
 

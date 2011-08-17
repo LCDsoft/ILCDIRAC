@@ -85,8 +85,6 @@ class Application(object):
     return str
   
   def _setparams(self,params):
-    """ Try to use setattr(self,param) and raise AttributeError in case it does not work. Even better, try to call the self.setParam(). Use eval() for that.
-    """
     if not params:
       return S_OK()
     for param,value in params.items():
