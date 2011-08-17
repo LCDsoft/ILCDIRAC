@@ -138,6 +138,6 @@ class UserJob(Job):
     return S_OK()
   
   def _jobSpecificParams(self):
-    """ Inherited from DIRAC.Job
+    """ Not doing anything here, only used in ProductionJobs.
     """
     return S_OK()
