@@ -448,7 +448,14 @@ class Whizard(Application):
     #must be filled
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("evttype", "", "string", "", "", False, False, "Process to generate"))
+    md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
+    md1.addParameter(Parameter("RandomSeed",  "", "float",  "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("Lumi",        "", "float",  "", "", False, False, "Luminosity of beam"))
+    md1.addParameter(Parameter("SusyModel",   "", "string", "", "", False, False, "Model for generation"))
+    md1.addParameter(Parameter("InputFile",   "", "string", "", "", False, False, "Steering file"))
+    md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
+    md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -478,11 +485,10 @@ class Whizard(Application):
     stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
     return S_OK()
 
-  def _addParametersToStep(self,stepdefinition):
-    #must be filled (overloaded)
+  def _addParametersToStep(self,stepdefinition): pass  # must be filled
+
     
-  def _setStepParametersValues(self,stepinstance):
-    #must be filled (overloaded)
+  def _setStepParametersValues(self,stepinstance): pass  # must be filled
     
     
   
