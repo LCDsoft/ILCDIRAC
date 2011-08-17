@@ -1,4 +1,4 @@
-'''
+DIRAC.Core.Workflow.Step'''
 Created on Jul 28, 2011
 
 This module contains the definition of the different applications that can
@@ -36,6 +36,8 @@ from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.Processlist              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from DIRAC.Core.Workflow.Parameter                    import Parameter
+from DIRAC.Core.Workflow.Step                         import *
+from DIRAC.Core.Workflow.Module                       import *
 from DIRAC                                            import S_OK,S_ERROR
 
 
