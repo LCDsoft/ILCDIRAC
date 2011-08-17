@@ -338,8 +338,8 @@ class Whizard(Application):
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
-   if not self.inputfile :
-     return S_ERROR('Input File not given')
+   if not self.steeringfile :
+     return S_ERROR('Steering File not given')
    
    if not self.outputFile :
      return S_ERROR('Output File not set')
