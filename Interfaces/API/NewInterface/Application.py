@@ -300,7 +300,7 @@ class Application(object):
     return S_OK()
   
   def _addBaseParameters(self,stepdefinition):
-    """ Add to step the default parameters: appname, version, steeringfile, nbevts, energy, logfile, inputfile, outputfile
+    """ Add to step the default parameters: appname, version, steeringfile, (nbevts, Energy), LogFile, InputFile, OutputFile, OutputPath
     """
     stepdefinition.addParameter(Parameter("ApplicationName",   "", "string", "", "", False, False, "Application Name"))
     stepdefinition.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
