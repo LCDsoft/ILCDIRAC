@@ -254,6 +254,9 @@ class Whizard(Application):
     self.appname = 'whizard'
     self.evttype = ''
     self.model = 'sm'  
+    self.seed = 0
+    self.jobindex = None
+    self.steeringparameter = ''
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
@@ -449,8 +452,8 @@ class Whizard(Application):
     
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
-    md1.addParameter(Parameter("RandomSeed",  "", "float",  "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("Lumi",        "", "float",  "", "", False, False, "Luminosity of beam"))
+    md1.addParameter(Parameter("RandomSeed",  "",  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("Lumi",        "",  "float", "", "", False, False, "Luminosity of beam"))
     md1.addParameter(Parameter("SusyModel",   "", "string", "", "", False, False, "Model for generation"))
     md1.addParameter(Parameter("InputFile",   "", "string", "", "", False, False, "Steering file"))
     md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
@@ -459,9 +462,14 @@ class Whizard(Application):
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
-    #must be filled
-    
-    moduleinstance.setValue("evttype",self.evttype)
+
+    moduleinstance.setValue("evttype",      self.evttype)
+    moduleinstance.setValue("RandomSeed",   self.seed)
+    moduleinstance.setValue("Lumi",self.lumi)
+    moduleinstance.setValue("SusyModel",self.model)
+    moduleinstance.setValue("InputFile",self.steeringfile)
+    moduleinstance.setValue("JobIndex",self.jobindex)
+    moduleinstance.setValue("parameters",self.steeringparameters)
     
   def _userjobmodules(self,stepdefinition):
     md1 = self._applicationModule()
