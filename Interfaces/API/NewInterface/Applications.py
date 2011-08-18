@@ -825,7 +825,7 @@ class Mokka(Application):
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("dbSlice",         self.dbSlice)
     moduleinstance.setValue("ProcessID",       self.processID)
-    moduleinstance.setValue("debug",       self.debug)
+    moduleinstance.setValue("debug",           self.debug)
 
     
   def _resolveLinkedParameters(self,stepinstance):
