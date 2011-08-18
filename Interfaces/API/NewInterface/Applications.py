@@ -727,9 +727,9 @@ class Mokka(Application):
     
     
   def setStartFrom(self,startfrom):
-    """ Define from how mokka start in the input file
+    """ Define from how mokka start to read in the input file
     
-    @param startfrom: from how mokka start
+    @param startfrom: from how mokka start to read the input file
     @type startfrom: int
     """
     self._checkArgs( {
@@ -797,13 +797,15 @@ class Mokka(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
-    md1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
-    md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
-    md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
-    md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
-    md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("SteeringFile",        "", "string", "", "", False, False, "Steering file"))
+    md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
+    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
+    
+    
+    
+    
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
