@@ -1096,7 +1096,7 @@ class LCSIM(Application):
     md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
     md1.addParameter(Parameter("outputREC",             "", "string", "", "", False, False, "REC output file"))
     md1.addParameter(Parameter("outputDST",             "", "string", "", "", False, False, "DST output file"))
-
+    md1.addParameter(Parameter("debug",               None, "string", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -1105,7 +1105,7 @@ class LCSIM(Application):
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
     moduleinstance.setValue("outputREC",          self.outputRecFile)
     moduleinstance.setValue("outputDST",          self.outputDSTFile)
-
+    moduleinstance.setValue("debug",              self.debug)
     
   def _resolveLinkedStepParameters(self,stepinstance):
     if self.inputappstep:
