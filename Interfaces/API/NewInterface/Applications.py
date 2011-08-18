@@ -250,7 +250,6 @@ class Whizard(Application):
   """
   def __init__(self, processlist = None, paramdict = None):    
     
-    Application.__init__(self, paramdict)
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     self.parameterdict = {}
@@ -267,6 +266,7 @@ class Whizard(Application):
     self.parameters = []
     if processlist:
       self.processlist = processlist
+    Application.__init__(self, paramdict)
     
     
     
