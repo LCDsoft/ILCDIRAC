@@ -358,7 +358,6 @@ class Application(object):
   def _setBaseStepParametersValues(self,stepinstance):
     """ Set the values for the basic step parameters
     """
-    print "heyehye"
     stepinstance.setValue("ApplicationName",    self.appname)
     stepinstance.setValue("ApplicationVersion", self.version)
     stepinstance.setValue("applicationLog",     self.logfile)
