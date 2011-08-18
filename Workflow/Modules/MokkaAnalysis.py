@@ -43,7 +43,7 @@ class MokkaAnalysis(ModuleBase):
         self.enable = True
         self.STEP_NUMBER = ''
         self.log = gLogger.getSubLogger( "MokkaAnalysis" )
-        self.steeringFile = ''
+        self.SteeringFile = ''
         self.stdhepFile = ''
         self.macFile = ''
         self.run_number = 0
@@ -70,7 +70,7 @@ class MokkaAnalysis(ModuleBase):
 
       #Need to keep until old prods are archived.
       if self.step_commons.has_key("steeringFile"):
-        self.steeringFile = self.step_commons['steeringFile']
+        self.SteeringFile = self.step_commons['steeringFile']
 
       if self.step_commons.has_key('stdhepFile'):
         self.stdhepFile = self.step_commons['stdhepFile']
@@ -243,19 +243,19 @@ class MokkaAnalysis(ModuleBase):
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
-      self.steeringFile = os.path.basename(self.steeringFile)
-      if not os.path.exists(self.steeringFile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.steeringFile)):
+      self.SteeringFile = os.path.basename(self.SteeringFile)
+      if not os.path.exists(self.SteeringFile):
+        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)):
           try:
-            shutil.copy(os.path.join(mySoftwareRoot,"steeringfilesV1",self.steeringFile), "./"+self.steeringFile )
+            shutil.copy(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile), "./"+self.SteeringFile )
           except Exception,x:
             result = sqlwrapper.mysqlCleanUp()
-            return S_ERROR('Failed to access file %s: '%(self.steeringFile,str(x)))  
+            return S_ERROR('Failed to access file %s: '%(self.SteeringFile,str(x)))  
           #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
-      if not os.path.exists(self.steeringFile):
+      if not os.path.exists(self.SteeringFile):
         result = sqlwrapper.mysqlCleanUp()
         return S_ERROR("Could not find steering file")
-      steerok = PrepareSteeringFile(self.steeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
+      steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
                                     self.processID,
                                     self.debug,

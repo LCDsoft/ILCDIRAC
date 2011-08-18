@@ -41,7 +41,7 @@ class SLICAnalysis(ModuleBase):
     self.stdhepFile = ''
     self.randomseed = 0
     self.detectorModel = ''
-    self.inmacFile = ''
+    self.SteeringFile = ''
     self.eventstring = 'BeginEvent'
     
   def applicationSpecificInputs(self):
@@ -59,7 +59,7 @@ class SLICAnalysis(ModuleBase):
       self.stdhepFile = self.step_commons['stdhepFile']
       
     if self.step_commons.has_key("inputmacFile"):
-      self.inmacFile = self.step_commons['inputmacFile']
+      self.SteeringFile = self.step_commons['inputmacFile']
 
     if self.step_commons.has_key('detectorModel'):
       self.detectorModel = self.step_commons['detectorModel'] 
@@ -197,15 +197,15 @@ class SLICAnalysis(ModuleBase):
         self.log.error("Generator file not found")
         return res
       self.stdhepFile = res['Value'][0]
-    if len(self.inmacFile)>0:
-      self.inmacFile = os.path.basename(self.inmacFile)
-      if not os.path.exists(self.inmacFile):
-        if os.path.exists(os.path.join(area,"steeringfilesV1",self.inmacFile)):
-          self.inmacFile = os.path.join(area,"steeringfilesV1",self.inmacFile)
-      if not os.path.exists(self.inmacFile):
+    if len(self.SteeringFile)>0:
+      self.SteeringFile = os.path.basename(self.SteeringFile)
+      if not os.path.exists(self.SteeringFile):
+        if os.path.exists(os.path.join(area,"steeringfilesV1",self.SteeringFile)):
+          self.SteeringFile = os.path.join(area,"steeringfilesV1",self.SteeringFile)
+      if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find mac file")    
         
-    macok = PrepareMacFile(self.inmacFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputFile,self.debug)
+    macok = PrepareMacFile(self.SteeringFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputFile,self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
