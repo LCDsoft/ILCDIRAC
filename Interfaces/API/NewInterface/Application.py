@@ -244,7 +244,7 @@ class Application(object):
 ########################################################################################
 
   def _setApplicationModuleAndParameters(self,stepdefinition) :
-    """Create Application Module, add it to a Step and set values to Module. Call in every applications 
+    """Create Application Module, add it to a Step and set values to Module. Called in every applications 
     """
     m1 = self._applicationModule()
     stepdefinition.addModule(m1)
@@ -254,7 +254,7 @@ class Application(object):
   
   def _setUserJobFinalization(self,stepdefinition) :
     """ Create UserOutputDataModule and add it to Step. 
-    Call after the private method setApplicationModuleAndParameters in some user job applications
+    Called after the private method setApplicationModuleAndParameters in some user job applications
     """
     m2 = self._getUserOutputDataModule()
     stepdefinition.addModule(m2)
@@ -263,7 +263,7 @@ class Application(object):
   
   def _setOutputComputeDataList(self, stepdefinition) :
     """ Create ComputeOutputDataListModule and add it to Step. 
-    Call after the private method setApplicationModuleAndParameters in some production job applications
+    Called after the private method setApplicationModuleAndParameters in some production job applications
     """
     m2 = self._getComputeOutputDataListModule()
     self._modules.append(m2)
