@@ -264,7 +264,7 @@ class Whizard(Application):
     if processlist:
       self.processlist = processlist
     Application.__init__(self, paramdict)
-    ##Those 3 need to come after default constructor
+    ##Those 4 need to come after default constructor
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
@@ -690,9 +690,6 @@ class Mokka(Application):
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
      
-     
-     
-    
   def setRandomSeed(self,seed):
     """ Define random seed to use 
     
