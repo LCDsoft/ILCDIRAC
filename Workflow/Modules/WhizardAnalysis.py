@@ -37,7 +37,7 @@ class WhizardAnalysis(ModuleBase):
     self.debug = True
     self.log = gLogger.getSubLogger( "WhizardAnalysis" )
     self.SteeringFile = ''
-    self.stdhepFile = ''
+    self.OutputFile = ''
     self.NumberOfEvents = 1
     self.Lumi = 0
     self.applicationName = 'whizard'
@@ -124,16 +124,16 @@ class WhizardAnalysis(ModuleBase):
  
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
-        #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
         if self.workflow_commons.has_key('ProductionOutputData'):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_gen_"):
-              self.outputFile = os.path.basename(obj)
+              self.OutputFile = os.path.basename(obj)
               break
         else:
-          self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))
  
       
@@ -374,9 +374,9 @@ class WhizardAnalysis(ModuleBase):
     else:
       self.log.info( "Whizard execution completed successfully")
       ###Deal with output file
-      if len(self.outputFile):
+      if len(self.OutputFile):
         if os.path.exists(outputfilename+".001.stdhep"):
-          os.rename(outputfilename+".001.stdhep", self.outputFile)
+          os.rename(outputfilename+".001.stdhep", self.OutputFile)
         else:
           self.log.error( "Whizard execution did not produce a stdhep file" )
           self.setApplicationStatus('Whizard %s Failed to produce STDHEP file' %(self.applicationVersion))

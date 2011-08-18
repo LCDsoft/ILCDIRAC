@@ -27,14 +27,11 @@ class PostGenSelection(ModuleBase):
     self.enable = True 
     self.log = gLogger.getSubLogger( "PostGenSelection" )
     self.applicationName = 'PostGenSel'
-    self.inputstdhep = ""
+    self.InputFile = ""
     self.NbEvtsKept = 0
       
   def applicationSpecificInputs(self):
 
-    if self.step_commons.has_key('InputFile'):
-      self.inputstdhep =self.step_commons['InputFile']
-      
     if self.step_commons.has_key('NbEvtsKept'):
       self.NbEvtsKept = self.step_commons['NbEvtsKept']
 
@@ -43,14 +40,14 @@ class PostGenSelection(ModuleBase):
     
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
-        #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
         if self.workflow_commons.has_key('ProductionOutputData'):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_gen_"):
-              self.inputstdhep = os.path.basename(obj)
-              self.outputFile = self.inputstdhep
+              self.InputFile = os.path.basename(obj)
+              self.OutputFile = self.InputFile
         else:
           if self.workflow_commons.has_key("WhizardOutput"):
             self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
@@ -64,11 +61,11 @@ class PostGenSelection(ModuleBase):
           if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
             self.workflow_commons["Luminosity"]=res["lumi"]
 
-      if len(self.inputstdhep)==0 and not len(self.InputData)==0:
+      if len(self.InputFile)==0 and not len(self.InputData)==0:
         inputfiles = self.InputData.split(";")
         for files in inputfiles:
           if files.lower().count(".stdhep"):
-            self.inputstdhep = files
+            self.InputFile = files
             break
     
     return S_OK('Parameters resolved')
@@ -101,8 +98,8 @@ class PostGenSelection(ModuleBase):
       self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')
       return S_ERROR('Missing installation of PostGenSel!')
     mySoftDir = os.path.join(mySoftwareRoot,postgenDir)
-    self.inputstdhep= os.path.basename(self.inputstdhep)
-    base_file = self.inputstdhep.replace(".stdhep","")
+    self.InputFile= os.path.basename(self.InputFile)
+    base_file = self.InputFile.replace(".stdhep","")
     
     scriptName = 'PostGenSel_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)

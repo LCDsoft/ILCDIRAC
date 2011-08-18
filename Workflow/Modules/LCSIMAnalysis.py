@@ -198,7 +198,7 @@ class LCSIMAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find lcsim file")    
     lcsimfile = "job.lcsim"
-    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
+    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,runonslcio,jars,cachedir,self.OutputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file because %s"%res['Message'])
       return S_ERROR("Error creating lcsim file")
