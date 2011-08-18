@@ -926,7 +926,7 @@ class Marlin(Application):
       return res
 
 
-    if not self.jobtype == 'User' :
+    if not self._jobtype == 'User' :
       if not self.outputDstFile :
         return S_ERROR('Dst output file not given')  
       if not self.outputRecFile :
