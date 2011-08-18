@@ -679,16 +679,16 @@ class Mokka(Application):
   
   """
   def __init__(self, paramdict = None):
-    Application.__init__(self,paramdict)
-    self._modulename = 'MokkaAnalysis'
-    self._moduledescription = 'Module to run MOKKA'
-    self.appname = 'mokka'
+
     self.startFrom = 0
     self.macFile = ''
     self.detectortype = 'ILD'
     self.seed = 0
     self.dbslice = ''
-    
+    Application.__init__(self,paramdict)
+    self._modulename = 'MokkaAnalysis'
+    self._moduledescription = 'Module to run MOKKA'
+    self.appname = 'mokka'    
     
     
     
@@ -699,7 +699,7 @@ class Mokka(Application):
     @type macfile: string
     """
     self._checkArgs( {
-        'macfile' : types.StringType
+        'macfile' : types.StringTypes
       } )
     self.macFile = macfile
     
