@@ -34,7 +34,7 @@ prints out all the available methods.
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
-from ILCDIRAC.Core.Utilities.ProcessList              import *
+from ILCDIRAC.Core.Utilities.Processlist              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
@@ -64,12 +64,11 @@ class GenericApplication(Application):
     self.script = None
     self.arguments = ''
     self.dependencies = {}
-    ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
-    Application.__init__(self, paramdict)
-    #Those have to come last as the defaults from Application are not right
     self._modulename = "ApplicationScript"
     self.appname = self._modulename
     self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
+    ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
+    Application.__init__(self, paramdict)
       
   def setScript(self,script):
     """ Define script to use
@@ -186,10 +185,10 @@ class GetSRMFile(Application):
   >>> gf.setFiles(fdict)
   """
   def __init__(self, paramdict = None):
-    Application.__init__(self, paramdict)
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
+    Application.__init__(self, paramdict)
 
   def setFiles(self,fdict):
     """ Specify the files you need
@@ -251,10 +250,14 @@ class Whizard(Application):
   """
   def __init__(self, processlist = None, paramdict = None):    
     
+    Application.__init__(self, paramdict)
+    self._modulename = 'WhizardAnalysis'
+    self._moduledescription = 'Module to run WHIZARD'
     self.parameterdict = {}
+    self.appname = 'whizard'
+    self.evttype = ''
     self.model = 'sm'  
     self.seed = 0
-    self.lumi = 0
     self.jobindex = ''
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
@@ -263,12 +266,6 @@ class Whizard(Application):
     self.parameters = []
     if processlist:
       self.processlist = processlist
-    Application.__init__(self, paramdict)
-    ##Those 2 need to come after default constructor
-    self._modulename = 'WhizardAnalysis'
-    self._moduledescription = 'Module to run WHIZARD'
-    self.appname = 'whizard'
-    self.evttype = ''
     
     
     
@@ -344,10 +341,10 @@ class Whizard(Application):
   def _checkConsistency(self):
     #must be filled
     if not self.energy :
-      self.log.error('Energy set to 0 !')
+      print 'Energy set to 0 !'
       
     if not self.nbevts :
-      self.log.error('Number of events set to 0 !')
+      print 'Number of events set to 0 !'
     
     if not self.evttype:
       return S_ERROR("Process not defined")
@@ -373,6 +370,11 @@ class Whizard(Application):
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
+    if not self.steeringfile :
+      return S_ERROR('Steering File not given')
+   
+    if not self.outputFile :
+      return S_ERROR('Output File not set')
    
     for key in self.parameterdict.keys():
       if not key in self.allowedparams:
@@ -520,10 +522,10 @@ class Pythia(Application):
 
   """
   def __init__(self,paramdict = None):
-    Application.__init__(self,paramdict)
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
+    Application.__init__(self,paramdict)
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -577,13 +579,13 @@ class StdhepCut(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.maxevts = 0
-    self.nbevtsperfile = 0
-    Application.__init__(self,paramdict)
-
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
+    
+    self.maxevts = 0
+    self.nbevtsperfile = 0
+    Application.__init__(self,paramdict)
 
   def setMaxNbEvts(self,nbevts):
     """ Max number of events to keep in each file
@@ -660,3 +662,91 @@ class StdhepCut(Application):
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
     return S_OK()  
     
+    
+##########################################################################
+#            Mokka: Simulation after Whizard or StdHepCut
+##########################################################################
+class Mokka(Application): 
+  """ Call Mokka simulator after Whizard or StdHepCut
+  
+  Usage:
+  >>> wh = Whizard()
+  >>> mo = Mokka()
+  >>> mo.getInputFromApp(wh)
+  >>> mo.setSteeringFile("mycut.cfg")
+  >>> mo.setMaxNbEvts(10)
+  >>> mo.setNbEvtsPerFile(10)
+  
+  """
+  def __init__(self, paramdict = None):
+    Application.__init__(self,paramdict)
+    self._modulename = 'MokkaAnalysis'
+    self._moduledescription = 'Module to run MOKKA'
+    self.appname = 'mokka'
+    self.startFrom = 0
+    self.macFile = ''
+    self.detectortype = 'ILD'
+    self.seed = 0
+    self.dbslice = ''
+    
+    
+    
+    
+  def setMacFile(self,macfile):
+    """ Define Mac File
+    
+    @param macfile: Mac file for Mokka
+    @type macfile: string
+    """
+    self._checkArgs( {
+        'macfile' : types.StringType
+      } )
+    self.macFile = macfile
+    
+    
+  def setStartFrom(self,startfrom):
+    """ Define from how mokka start in the input file
+    
+    @param startfrom: from how mokka start
+    @type startfrom: int
+    """
+    self._checkArgs( {
+        'startfrom' : types.IntType
+      } )
+    self.startfrom = startfrom  
+    
+    
+  def setDBSlice(self,dbslice):
+    """ Define the data base that will use mokka. 
+    
+    @param dbslice: data base used by mokka. 
+    @type startfrom: int
+    """
+    self._checkArgs( {
+        'startfrom' : types.IntType
+      } )
+    self.startfrom = startfrom
+    
+    
+  def _userjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getUserOutputDataModule()
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return S_OK()
+
+  def _prodjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getComputeOutputDataListModule()
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return S_OK()
+  
