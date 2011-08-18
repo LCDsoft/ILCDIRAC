@@ -128,27 +128,16 @@ class GenericApplication(Application):
     moduleinstance.setValue('debug',self.debug)
   
   def _userjobmodules(self,stepdefinition):
-    m1 = self._applicationModule()
-    stepdefinition.addModule(m1)
-    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getUserOutputDataModule()
-    stepdefinition.addModule(m2)
-    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
-    return S_OK()
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if res1["OK"] and res2["OK"] :
+      return S_OK() 
 
   def _prodjobmodules(self,stepdefinition):
-    m1 = self._applicationModule()
-    stepdefinition.addModule(m1)
-    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    self._modules.append(m2)
-    stepdefinition.addModule(m2)
-    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
-    return S_OK()    
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if res1["OK"] and res2["OK"] :
+      return S_OK()    
 
   def _addParametersToStep(self,stepdefinition):
     res = self._addBaseParameters(stepdefinition)
