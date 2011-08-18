@@ -314,8 +314,13 @@ class Application(object):
   def _setBaseStepParametersValues(self,stepinstance):
     """ Set the values for the basic step parameters
     """
-    stepinstance.setValue("ApplicationName",self.appname)
+    stepinstance.setValue("ApplicationName",    self.appname)
     stepinstance.setValue("ApplicationVersion", self.version)
+    stepinstance.setValue("LogFile",            self.logfile)
+    stepinstance.setValue("SteeringFile",       self.steeringfile)
+    stepinstance.setValue("InputFile",          self.inputfile)
+    stepinstance.setValue("OutputFile",         self.outputFile)
+    stepinstance.setValue("OutputPath",         self.outputPath)
     return S_OK()
       
       
