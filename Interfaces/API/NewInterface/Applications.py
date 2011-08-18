@@ -354,7 +354,7 @@ class Whizard(Application):
     
     if self.evttype:
       if not self.processlist.existsProcess(self.evttype)['Value']:
-        self.logfile.info("Available processes are:")
+        self.log.info("Available processes are:")
         self.processlist.printProcesses()
         return S_ERROR('Process does no exists')
       else:
