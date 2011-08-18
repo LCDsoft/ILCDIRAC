@@ -977,22 +977,18 @@ class Marlin(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
-    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
-    md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
-    md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
+    md1.addParameter(Parameter("inputGEAR",     '', "string", "", "", False, False, "Input GEAR file"))
+    md1.addParameter(Parameter("outputDST",     '', "string", "", "", False, False, "Output DST file"))
+    md1.addParameter(Parameter("outputREC",     '', "string", "", "", False, False, "Output REC file"))
+    md1.addParameter(Parameter("EvtsToProcess",  0,    "int", "", "", False, False, "Number of events to process"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("inputGEAR",      self.inputGearFile)
-    moduleinstance.setValue("outputREC",   self.outputRecFile)
+    moduleinstance.setValue("inputGEAR",         self.inputGearFile)
+    moduleinstance.setValue("outputREC",         self.outputRecFile)
     moduleinstance.setValue("outputDST",         self.outputDstFile)
-    moduleinstance.setValue("EvtsToProcess",       self.evtsToProcess)
-    moduleinstance.setValue("dbSlice",         self.dbSlice)
-    moduleinstance.setValue("ProcessID",       self.processID)
+    moduleinstance.setValue("EvtsToProcess",     self.evtsToProcess)
 
     
   def _resolveLinkedParameters(self,stepinstance):
