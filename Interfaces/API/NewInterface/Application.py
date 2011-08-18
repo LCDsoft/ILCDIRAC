@@ -348,7 +348,8 @@ class Application(object):
     stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
-    stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
+    if self.outputFile:
+      stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
     #Following should be workflow parameters
     #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
@@ -364,7 +365,8 @@ class Application(object):
     stepinstance.setValue("SteeringFile",       self.steeringfile)
     if not self._inputapp:
       stepinstance.setValue("InputFile",          self.inputfile)
-    stepinstance.setValue("OutputFile",         self.outputFile)
+    if self.outputFile:  
+      stepinstance.setValue("OutputFile",         self.outputFile)
     stepinstance.setValue("OutputPath",         self.outputPath)
     return S_OK()
       
