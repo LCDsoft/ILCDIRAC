@@ -32,6 +32,7 @@ prints out all the available methods.
 
 @author: Stephane Poss, Remi Ete, Ching Bon Lam
 '''
+
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.Processlist              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
@@ -257,8 +258,7 @@ class Whizard(Application):
     self.evttype = ''
     self.model = 'sm'  
     self.seed = 0
-    self.jobindex = None
-    self.steeringparameter = ''
+    self.jobindex = ''
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
     self.datatype = 'gen'
@@ -325,6 +325,18 @@ class Whizard(Application):
       } )
 
     self. model = model
+    
+  def setJobIndex(self,index):
+    """ Define Job Index
+    
+    @param index: Index to use for generation
+    @type index: string
+    """  
+    self._checkArgs( {
+        'index' : types.StringTypes
+      } )
+
+    self.JobIndex = index
     
   def _checkConsistency(self):
     #must be filled
@@ -450,7 +462,6 @@ class Whizard(Application):
     return S_OK()  
 
   def _applicationModule(self):
-    #must be filled
     
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
@@ -460,7 +471,6 @@ class Whizard(Application):
     md1.addParameter(Parameter("InputFile",   "", "string", "", "", False, False, "Steering file"))
     md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
     md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
-    
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -471,7 +481,7 @@ class Whizard(Application):
     moduleinstance.setValue("SusyModel",self.model)
     moduleinstance.setValue("InputFile",self.steeringfile)
     moduleinstance.setValue("JobIndex",self.jobindex)
-    moduleinstance.setValue("parameters",self.steeringparameters)
+    moduleinstance.setValue("parameters",self.parameters)
     
   def _userjobmodules(self,stepdefinition):
     md1 = self._applicationModule()
@@ -495,12 +505,6 @@ class Whizard(Application):
     stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
     return S_OK()
 
-  def _addParametersToStep(self,stepdefinition): pass 
-   # must be filled
-
-    
-  def _setStepParametersValues(self,stepinstance): pass  # must be filled
-    
     
   
 #################################################################
