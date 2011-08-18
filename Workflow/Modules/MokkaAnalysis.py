@@ -54,7 +54,7 @@ class MokkaAnalysis(ModuleBase):
         self.startFrom = 0
         self.eventstring = ''
         self.processID = ''
-        self.RandomSeed = 42
+        self.RandomSeed = 0
 
 #############################################################################
     def applicationSpecificInputs(self):
