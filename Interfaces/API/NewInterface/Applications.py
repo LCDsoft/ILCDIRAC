@@ -64,11 +64,12 @@ class GenericApplication(Application):
     self.script = None
     self.arguments = ''
     self.dependencies = {}
+    ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
+    Application.__init__(self, paramdict)
+    #Those have to come last as the defaults from Application are not right
     self._modulename = "ApplicationScript"
     self.appname = self._modulename
     self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
-    ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
-    Application.__init__(self, paramdict)
       
   def setScript(self,script):
     """ Define script to use
@@ -185,10 +186,10 @@ class GetSRMFile(Application):
   >>> gf.setFiles(fdict)
   """
   def __init__(self, paramdict = None):
+    Application.__init__(self, paramdict)
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
-    Application.__init__(self, paramdict)
 
   def setFiles(self,fdict):
     """ Specify the files you need
@@ -250,14 +251,10 @@ class Whizard(Application):
   """
   def __init__(self, processlist = None, paramdict = None):    
     
-    Application.__init__(self, paramdict)
-    self._modulename = 'WhizardAnalysis'
-    self._moduledescription = 'Module to run WHIZARD'
     self.parameterdict = {}
-    self.appname = 'whizard'
-    self.evttype = ''
     self.model = 'sm'  
     self.seed = 0
+    self.lumi = 0
     self.jobindex = ''
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
@@ -266,6 +263,12 @@ class Whizard(Application):
     self.parameters = []
     if processlist:
       self.processlist = processlist
+    Application.__init__(self, paramdict)
+    ##Those 2 need to come after default constructor
+    self._modulename = 'WhizardAnalysis'
+    self._moduledescription = 'Module to run WHIZARD'
+    self.appname = 'whizard'
+    self.evttype = ''
     
     
     
@@ -341,10 +344,10 @@ class Whizard(Application):
   def _checkConsistency(self):
     #must be filled
     if not self.energy :
-      print 'Energy set to 0 !'
+      self.log.error('Energy set to 0 !')
       
     if not self.nbevts :
-      print 'Number of events set to 0 !'
+      self.log.error('Number of events set to 0 !')
     
     if not self.evttype:
       return S_ERROR("Process not defined")
@@ -361,7 +364,6 @@ class Whizard(Application):
         cspath = self.processlist.getCSPath(self.evttype)
         whiz_file = os.path.basename(cspath)
         self.version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
-        self.log.info("Found the process %s in whizard %s"%(self.evttype,self.version))
         
     if not self.version:
       return S_ERROR('No version found')
@@ -370,11 +372,6 @@ class Whizard(Application):
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
    
-    if not self.steeringfile :
-      return S_ERROR('Steering File not given')
-   
-    if not self.outputFile :
-      return S_ERROR('Output File not set')
    
     for key in self.parameterdict.keys():
       if not key in self.allowedparams:
@@ -522,10 +519,10 @@ class Pythia(Application):
 
   """
   def __init__(self,paramdict = None):
+    Application.__init__(self,paramdict)
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
-    Application.__init__(self,paramdict)
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -579,13 +576,13 @@ class StdhepCut(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.appname = 'stdhepcut'
-    self._modulename = 'StdHepCut'
-    self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
-    
     self.maxevts = 0
     self.nbevtsperfile = 0
     Application.__init__(self,paramdict)
+
+    self.appname = 'stdhepcut'
+    self._modulename = 'StdHepCut'
+    self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
 
   def setMaxNbEvts(self,nbevts):
     """ Max number of events to keep in each file
