@@ -609,6 +609,7 @@ class StdhepCut(Application):
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
+    m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
@@ -837,5 +838,154 @@ class Mokka(Application):
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
     return S_OK() 
   
+  
+##########################################################################
+#            Marlin: Reconstructor after Mokka
+##########################################################################
+class Marlin(Application): 
+  """ Call Marlin reconstructor after Mokka simulator
+  
+  Usage:
+  >>> mo = Mokka()
+  >>> marlin = Marlin()
+  >>> marlin.getInputFromApp(mo)
+  >>> marlin.setSteeringfile('SteeringFile.xml')
+  >>> marlin.setOutputRecFile('MyOutputRecFile.rec')
+  >>> marlin.setInputGearFile('MyInputGearFile.gear')
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.outputDstFile = ''
+    self.outputRecFile = ''
+    self.inputGearFile = ''
+    self.evtsToProcess = 0
+    Application.__init__(self,paramdict)
+    ##Those 5 need to come after default constructor
+    self._modulename = 'MarlinAnalysis'
+    self._moduledescription = 'Module to run MARLIN'
+    self.appname = 'marlin'    
+    self.datatype = 'REC'
+    self.detectortype = 'ILD'
+     
+    
+  def setInputGearFile(self,inputGearFile):
+    """ Define input gear file for Marlin reconstructor
+    
+    @param inputGearFile: input gear file  for Marlin reconstrcutor
+    @type inputGearFile: string
+    """
+    self._checkArgs( {
+        'inputGearFile' : types.StringTypes
+      } )
+
+    self.inputGearFile = inputGearFile
+    
+  def setOutputRecFile(self,outputRecFile):
+    """ Define output rec file for Marlin reconstructor
+    
+    @param outputRecFile: 
+    @type outputRecFile: string
+    """
+    self._checkArgs( {
+        'outputRecFile' : types.StringTypes
+      } )
+    self.outputRecFile = outputRecFile
+      
+    
+  def setOutputDstFile(self,outputDstFile):
+    """ Define output dst file for Marlin reconstructor
+    
+    @param outputDstFile: output dst file for Marlin reconstructor
+    @type outputDstFile: string
+    """
+    self._checkArgs( {
+        'outputDstFile' : types.StringTypes
+      } )
+    self.outputDstFile = outputDstFile
+    
+  def setEvtsToProcess(self,evtsToProcess):
+    """ Define the number of events to process for Marlin reconstructor
+    
+    @param evtsToProcess:  for Marlin reconstructor
+    @type evtsToProcess: string
+    """
+    self._checkArgs( {
+        'evtsToProcess' : types.StringTypes
+      } )
+    self.evtsToProcess = evtsToProcess
+    
+    
+    
+  def _userjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getUserOutputDataModule()
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return S_OK()
+
+  def _prodjobmodules(self,step):
+    m1 = self._applicationModule()
+    step.addModule(m1)
+    m1i = step.createModuleInstance(m1.getType(),step.getType())
+    self._applicationModuleValues(m1i)
+    
+    m2 = self._getComputeOutputDataListModule()
+    step.addModule(m2)
+    step.createModuleInstance(m2.getType(),step.getType())
+    return S_OK()
+  
+  def _checkConsistency(self):
+
+    if not self.energy :
+      self.log.error('Energy set to 0 !')
+      
+    if not self.nbevts :
+      self.log.error('Number of events set to 0 !')
+        
+    if not self.version:
+      return S_ERROR('No version found')   
+    
+    if not self.inputfile :
+      return S_ERROR('No Input File') 
+    
+    if not self.steeringfile :
+      return S_ERROR('No Steering File') 
+
+################################ must be filled ####################################
+      
+    return S_OK()  
+  
+  def _applicationModule(self):
+    
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
+    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
+    md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
+    md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
+    return md1
+  
+  def _applicationModuleValues(self,moduleinstance):
+
+    moduleinstance.setValue("RandomSeed",      self.seed)
+    moduleinstance.setValue("detectorModel",   self.detectorModel)
+    moduleinstance.setValue("macFile",         self.macFile)
+    moduleinstance.setValue("startFrom",       self.startFrom)
+    moduleinstance.setValue("dbSlice",         self.dbSlice)
+    moduleinstance.setValue("ProcessID",       self.processID)
+
+    
+  def _resolveLinkedParameters(self,stepinstance):
+    if self.inputappstep:
+      res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+      if not res:
+        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
+    return S_OK() 
   
   
