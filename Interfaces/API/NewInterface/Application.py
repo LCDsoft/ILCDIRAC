@@ -310,8 +310,8 @@ class Application(object):
     stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
     #Following should be workflow parameters
-    stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
-    stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
+    #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
+    #stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     return S_OK()
   
   def _setBaseStepParametersValues(self,stepinstance):
@@ -319,6 +319,7 @@ class Application(object):
     """
     stepinstance.setValue("ApplicationName",self.appname)
     stepinstance.setValue("ApplicationVersion", self.version)
+    return S_OK()
       
       
   def _addParametersToStep(self,stepdefinition):
@@ -331,7 +332,7 @@ class Application(object):
     """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
     Called from Job
     """
-    return S_OK()
+    return self._setBaseStepParametersValues(stepinstance)
 
   def _resolveLinkedStepParameters(self,stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile). See L{StdhepCut} for example.
