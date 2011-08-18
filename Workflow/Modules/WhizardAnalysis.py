@@ -42,7 +42,7 @@ class WhizardAnalysis(ModuleBase):
     self.Lumi = 0
     self.applicationName = 'whizard'
     self.evttype = ""
-    self.randomseed = 0
+    self.RandomSeed = 0
     self.energy = 3000
     self.getProcessInFile = False
     self.rm = ReplicaManager()
@@ -79,14 +79,15 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("Energy"):
       self.energy = self.step_commons["Energy"]
       self.parameters['ENERGY']=self.energy
- 
-    if self.step_commons.has_key("RandomSeed"):
-      self.randomseed = self.step_commons['RandomSeed']
-    elif self.workflow_commons.has_key("IS_PROD"):  
-      self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))
-    elif self.jobID:
-      self.randomseed = self.jobID
-    self.parameters['SEED'] = self.randomseed
+
+    if not self.RandomSeed:
+      if self.step_commons.has_key("RandomSeed"):
+        self.RandomSeed = self.step_commons['RandomSeed']
+      elif self.jobID:
+        self.RandomSeed = self.jobID
+    if self.workflow_commons.has_key("IS_PROD"):  
+      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))  
+    self.parameters['SEED'] = self.RandomSeed
 
     if self.step_commons.has_key('NbOfEvts'):
       self.NumberOfEvents = self.step_commons['NbOfEvts']
@@ -256,7 +257,7 @@ class WhizardAnalysis(ModuleBase):
     if self.jobindex:
       outputfilename = "%s_%s"%(outputfilename,self.jobindex)
     if not template:  
-      res = PrepareWhizardFile(self.SteeringFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+      res = PrepareWhizardFile(self.SteeringFile,outputfilename,self.energy,self.RandomSeed,self.NumberOfEvents,self.Lumi,"whizard.in")
     else:
       res = PrepareWhizardFileTemplate(self.SteeringFile,outputfilename,self.parameters,"whizard.in")
     if not res['OK']:
