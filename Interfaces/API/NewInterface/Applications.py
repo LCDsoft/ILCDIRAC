@@ -376,6 +376,12 @@ class Whizard(Application):
     if self.model:
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
+
+    if not self._jobtype == 'User':
+      if not self.outputFile:
+        return S_ERROR("Output File not defined")
+      if not self.outputPath:
+        return S_ERROR("Output Path not defined")
    
    
     for key in self.parameterdict.keys():
@@ -563,6 +569,12 @@ class Pythia(Application):
     
     if not self.nbevts:
       return S_ERROR("Number of events to generate not defined")
+    
+    if not self._jobtype == 'User':
+      if not self.outputFile:
+        return S_ERROR("Output File not defined")
+      if not self.outputPath:
+        return S_ERROR("Output Path not defined")
 
     return S_OK()
   
@@ -804,6 +816,16 @@ class Mokka(Application):
     
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
+    
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
+
+    if not self._jobtype == 'User':
+      if not self.outputFile:
+        return S_ERROR("Output File not defined")
+      if not self.outputPath:
+        return S_ERROR("Output Path not defined")
    
     return S_OK()  
   
@@ -859,7 +881,6 @@ class Marlin(Application):
     self.outputDstFile = ''
     self.outputRecFile = ''
     self.inputGearFile = ''
-    self.evtsToProcess = 0
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MarlinAnalysis'
@@ -904,18 +925,6 @@ class Marlin(Application):
       } )
     self.outputDstFile = outputDstFile
     
-  def setEvtsToProcess(self,evtsToProcess):
-    """ Define the number of events to process for Marlin reconstructor
-    
-    @param evtsToProcess: events to process for Marlin reconstructor
-    @type evtsToProcess: int
-    """
-    self._checkArgs( {
-        'evtsToProcess' : types.IntType
-      } )
-    self.evtsToProcess = evtsToProcess
-    
-    
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
     step.addModule(m1)
@@ -947,7 +956,7 @@ class Marlin(Application):
       self.log.error('Number of events set to 0 !')
         
     if not self.version:
-      return S_ERROR('No version found')   
+      return S_ERROR('Version not set!')   
     
     if not self.inputfile :
       self.log.error('No Input File') 
@@ -955,17 +964,21 @@ class Marlin(Application):
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
 
+    if not self.inputGearFile :
+      self.log.info('Input GEAR file not given')
+
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
+
+
     if not self.jobtype == 'User' :
       if not self.outputDstFile :
         return S_ERROR('Dst output file not given')  
       if not self.outputRecFile :
         return S_ERROR('Rec output file not given')
-      
       if not self.outputPath:
-        return S_ERROR('Outpath not given')
-    
-    if not self.inputGearFile :
-      self.log.info('Input GEAR file not given')
+        return S_ERROR("Output Path not defined")
      
     return S_OK()  
   
@@ -975,7 +988,6 @@ class Marlin(Application):
     md1.addParameter(Parameter("inputGEAR",     '', "string", "", "", False, False, "Input GEAR file"))
     md1.addParameter(Parameter("outputDST",     '', "string", "", "", False, False, "Output DST file"))
     md1.addParameter(Parameter("outputREC",     '', "string", "", "", False, False, "Output REC file"))
-    md1.addParameter(Parameter("EvtsToProcess",  0,    "int", "", "", False, False, "Number of events to process"))
     md1.addParameter(Parameter("debug",      False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
@@ -984,7 +996,6 @@ class Marlin(Application):
     moduleinstance.setValue("inputGEAR",         self.inputGearFile)
     moduleinstance.setValue("outputREC",         self.outputRecFile)
     moduleinstance.setValue("outputDST",         self.outputDstFile)
-    moduleinstance.setValue("EvtsToProcess",     self.evtsToProcess)
     moduleinstance.setValue("debug",             self.debug)
 
     
@@ -992,7 +1003,7 @@ class Marlin(Application):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
-        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
+        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getType())
     return S_OK() 
   
 
@@ -1118,6 +1129,10 @@ class LCSIM(Application):
    
     if not self.outputfile :
       self.log.error('Output file not given !')
+
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
       
     return S_OK()  
   

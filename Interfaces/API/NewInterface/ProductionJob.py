@@ -171,6 +171,8 @@ class ProductionJob(Job):
     ### Retrieve from the application the essential info to build the prod info.
     if not self.nbevts:
       self.nbevts = application.nbevts
+      if not self.nbevts:
+        return S_ERROR("Number of events to process is not defined.")
     elif not application.nbevts:
       res = application.setNbEvts(self.nbevts)
       if not res['OK']:
