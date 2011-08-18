@@ -1071,9 +1071,18 @@ class LCSIM(Application):
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
    
-    if not self.outputfile :
-      self.log.error('Output file not given !')
+    if not self.outputDstFile :
+      return ('DST output file not given !')
 
+    if not self.outputRecFile :
+      return ('REC output file not given !')
+    
+    if not self.aliasProperties :
+      self.log.info('no alias property set')
+    
+    if not self.extraParams :
+      self.log.info('no extra parameter set')
+    
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
@@ -1083,20 +1092,19 @@ class LCSIM(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
+    md1.addParameter(Parameter("ExtraParams",           "", "string", "", "", False, False, "Command line parameters to pass to java"))
+    md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
+    md1.addParameter(Parameter("outputREC",             "", "string", "", "", False, False, "REC output file"))
+    md1.addParameter(Parameter("outputDST",             "", "string", "", "", False, False, "DST output file"))
 
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",      self.seed)
-    moduleinstance.setValue("detectorModel",   self.detectorModel)
-    moduleinstance.setValue("macFile",         self.macFile)
-    moduleinstance.setValue("startFrom",       self.startFrom)
-    moduleinstance.setValue("dbSlice",         self.dbSlice)
-    moduleinstance.setValue("ProcessID",       self.processID)
+    moduleinstance.setValue("ExtraParams",        self.extraParams)
+    moduleinstance.setValue("aliasproperties",    self.aliasProperties)
+    moduleinstance.setValue("outputREC",          self.outputRecFile)
+    moduleinstance.setValue("outputDST",          self.outputDSTFile)
 
     
   def _resolveLinkedStepParameters(self,stepinstance):
