@@ -20,6 +20,8 @@ class ProductionJob(Job):
   def __init__(self, script = None):
     Job.__init__(self , script)
     self.prodVersion = __RCSID__
+    self.created = False
+    
     self.csSection = '/Operations/Production/Defaults'
     self.fc = FileCatalogClient()
     self.trc = TransformationClient()
@@ -89,6 +91,9 @@ class ProductionJob(Job):
     else:
       return S_ERROR("Could not determine group, you do not have the right proxy.")
 
+    if self.created:
+      return S_ERROR("Production already created.")
+
     workflowName = self.workflow.getName()
     fileName = '%s.xml' %workflowName
     self.log.verbose('Workflow XML file name is: %s' %fileName)
@@ -127,7 +132,20 @@ class ProductionJob(Job):
     self.currtrans.setStatus("Active")
     self.currtrans.setAgentType("Automatic")
     
-    
+    self.created = True
+    return S_OK()
+
+  def setNbOfTasks(self,nbtasks):
+    """ Define the number of tasks you want. Useful for generation jobs.
+    """
+    if not self.currtrans:
+      self.log.error("Not transformation defined earlier")
+      return S_ERROR("No transformation defined")
+    if self.inputBKSelection:
+      self.log.error("Meta data selection activated, should not specify the number of jobs")
+      return S_ERROR()
+    self.nbtasks = nbtasks
+    self.currtrans.setMaxNumberOfTasks(self.nbtasks)
     return S_OK()
   
   def finalizeProd(self):
@@ -138,6 +156,9 @@ class ProductionJob(Job):
   def _jobSpecificParams(self,application):
     """ For production additional checks are needed: ask the user
     """
+
+    if self.created:
+      return S_ERROR("The production was created, you cannot add new applications to the job.")
 
     if not application.logfile:
       logf = application.appname+"_"+application.version+"_Step_"+str(self.stepnumber)+".log"
