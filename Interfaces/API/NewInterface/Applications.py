@@ -561,6 +561,7 @@ class StdhepCut(Application):
   Usage:
   
   >>> py = Pythia()
+  ...
   >>> cut = StdhepCut()
   >>> cut.getInputFromApp(py)
   >>> cut.setSteeringFile("mycut.cfg")
@@ -663,6 +664,7 @@ class Mokka(Application):
   Usage:
   
   >>> wh = Whizard()
+  ...
   >>> mo = Mokka()
   >>> mo.getInputFromApp(wh)
   >>> mo.setSteeringFile("mycut.cfg")
@@ -676,7 +678,7 @@ class Mokka(Application):
     self.macFile = ''
     self.seed = 0
     self.dbSlice = ''
-    self.detectoModel = ''
+    self.detectorModel = ''
     self.processID = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
@@ -685,7 +687,6 @@ class Mokka(Application):
     self.appname = 'mokka'    
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
-    self.detectorModel = ''
      
   def setRandomSeed(self,seed):
     """ Define random seed to use 
@@ -821,14 +822,139 @@ class Mokka(Application):
       stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
     return S_OK() 
   
-########################### Must be implemented #######################
 
+##########################################################################
+#            SLICPandora : Simulation after Whizard or StdHepCut
+##########################################################################
+class SLICPandora(Application): 
+  """ Call SLICPandora simulator (after Whizard, Pythia, StdHepCut or SLIC)
+  
+  Usage:
+  
+  >>> slic = SLICPandora()
+  ...
+  >>> slicpandora = SLICPandora()
+  >>> slicpandora.getInputFromApp(slic)
+  >>> slicpandora.setPandoraSettings("~/SuperCheminDeLaMortQuiTue/MyPandoraSettings.xml")
+  >>> slicpandora.setInputFile('MyInputFile.slcio')
+  >>> slicpandora.setStartFrom(10)
+  
+  """
+  def __init__(self, paramdict = None):
 
+    self.startFrom = 0
+    self.pandoraSettings = ''
+    self.detectorModel = ''
+    Application.__init__(self,paramdict)
+    ##Those 5 need to come after default constructor
+    self._modulename = 'SlicPandoraAnalysis'
+    self._moduledescription = 'Module to run SLICPANDORA'
+    self.appname = 'slicpandora'    
+    self.datatype = 'SIM'
+    self.detectortype = 'SID'
+        
+    
+  def setDetectorModel(self,detectorModel):
+    """ Define detector to use for SlicPandora simulation 
+    
+    @param detectorModel: Detector Model to use for SlicPandora simulation. Default is ??????
+    @type detectorModel: string
+    """
+    self._checkArgs( {
+        'detectorModel' : types.StringTypes
+      } )
 
+    self.detectorModel = detectorModel    
+    
+    
+  def setStartFrom(self,startfrom):
+    """ Define from how slicpandora start to read in the input file
+    
+    @param startfrom: from how slicpandora start to read the input file
+    @type startfrom: int
+    """
+    self._checkArgs( {
+        'startfrom' : types.IntType
+      } )
+    self.startfrom = startfrom  
+    
+    
+  def setPandoraSettings(self,pandoraSettings):
+    """ Define the path where pandora settings are
+    
+    @param pandoraSettings: path where pandora settings are
+    @type pandoraSettings: string
+    """
+    self._checkArgs( {
+        'pandoraSettings' : types.StringTypes
+      } )
+    self.pandoraSettings = pandoraSettings  
+    
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()
+  
+  def _checkConsistency(self):
+
+    if not self.version:
+      return S_ERROR('No version found')   
+    
+    if not self.steeringfile :
+      return S_ERROR('No Steering File') 
+    
+    if not self.pandoraSettings :
+      return S_ERROR('No Pandora Settings')
+    
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
+
+    if not self._jobtype == 'User':
+      if not self.outputFile:
+        return S_ERROR("Output File not defined")
+      if not self.outputPath:
+        return S_ERROR("Output Path not defined")
+      
+    if not self.startFrom :
+      self.log.info('No startFrom define for SlicPandora : start from the begining')
+      
+    return S_OK()  
+  
+  def _applicationModule(self):
+    
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("PandoraSettings",   "", "string", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("DetectorXML",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, "From how SlicPandora start to read the input file"))
+    md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
+    return md1
+  
+  def _applicationModuleValues(self,moduleinstance):
+
+    moduleinstance.setValue("PandoraSettings",    self.pandoraSettings)
+    moduleinstance.setValue("DetectorXML",        self.detectorModel)
+    moduleinstance.setValue("startFrom",          self.startFrom)
+    moduleinstance.setValue("debug",              self.debug)
+
+    
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()
 
 
 ##########################################################################
-#            Mokka: Simulation after Whizard or StdHepCut
+#            SLIC : Simulation after Whizard or StdHepCut
 ##########################################################################
 class SLIC(Application): 
   """ Call SLIC simulator (after Whizard, Pythia or StdHepCut)
@@ -847,15 +973,14 @@ class SLIC(Application):
 
     self.startFrom = 0
     self.seed = 0
-    self.detectoModel = ''
+    self.detectorModel = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
-    self._modulename = 'MokkaAnalysis'
-    self._moduledescription = 'Module to run MOKKA'
-    self.appname = 'mokka'    
+    self._modulename = 'SLICAnalysis'
+    self._moduledescription = 'Module to run SLIC'
+    self.appname = 'slic'    
     self.datatype = 'SIM'
-    self.detectortype = 'ILD'
-    self.detectorModel = ''
+    self.detectortype = 'SID'
      
   def setRandomSeed(self,seed):
     """ Define random seed to use 
@@ -870,9 +995,9 @@ class SLIC(Application):
     self.seed = seed    
     
   def setDetectorModel(self,detectorModel):
-    """ Define detector to use for Mokka simulation 
+    """ Define detector to use for Slic simulation 
     
-    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
+    @param detectorModel: Detector Model to use for Slic simulation. Default is ??????
     @type detectorModel: string
     """
     self._checkArgs( {
@@ -883,9 +1008,9 @@ class SLIC(Application):
     
     
   def setStartFrom(self,startfrom):
-    """ Define from how mokka start to read in the input file
+    """ Define from how slic start to read in the input file
     
-    @param startfrom: from how mokka start to read the input file
+    @param startfrom: from how slic start to read the input file
     @type startfrom: int
     """
     self._checkArgs( {
@@ -926,6 +1051,9 @@ class SLIC(Application):
       if not self.outputPath:
         return S_ERROR("Output Path not defined")
    
+    if not self.startFrom :
+      self.log.info('No startFrom define for Slic : start from the begining')
+    
     return S_OK()  
   
   def _applicationModule(self):
@@ -933,7 +1061,7 @@ class SLIC(Application):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
+    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Slic start to read the input file"))
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
