@@ -364,6 +364,7 @@ class Whizard(Application):
         cspath = self.processlist.getCSPath(self.evttype)
         whiz_file = os.path.basename(cspath)
         self.version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
+        self.log.info("Found the process %s in whizard %s"%(self.evttype,self.version))
         
     if not self.version:
       return S_ERROR('No version found')
