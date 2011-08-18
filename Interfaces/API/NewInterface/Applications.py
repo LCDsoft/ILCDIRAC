@@ -258,7 +258,7 @@ class Whizard(Application):
     self.jobindex = ''
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
-    self.datatype = 'gen'
+    self.evttype = ''
     self.allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
     if processlist:
@@ -268,8 +268,7 @@ class Whizard(Application):
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
-    self.evttype = ''
-    
+    self.datatype = 'gen'
     
     
   def setEvtType(self,evttype):
@@ -680,15 +679,19 @@ class Mokka(Application):
 
     self.startFrom = 0
     self.macFile = ''
-    self.detectortype = 'ILD'
     self.seed = 0
-    self.dbslice = ''
+    self.dbSlice = ''
+    self.detectoModel = ''
     Application.__init__(self,paramdict)
-    ##Those 3 need to come after default constructor
+    ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
     self._moduledescription = 'Module to run MOKKA'
     self.appname = 'mokka'    
-    
+    self.datatype = 'SIM'
+    self.detectortype = 'ILD'
+     
+     
+     
     
   def setRandomSeed(self,seed):
     """ Define random seed to use 
@@ -701,6 +704,18 @@ class Mokka(Application):
       } )
 
     self.seed = seed    
+    
+  def setDetectorModel(self,detectorModel):
+    """ Define detector to use for Mokka simulation 
+    
+    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????.
+    @type detectorModel: string
+    """
+    self._checkArgs( {
+        'detectorModel' : types.StringTypes
+      } )
+
+    self.detectorModel = detectorModel    
     
   def setMacFile(self,macfile):
     """ Define Mac File
@@ -726,16 +741,16 @@ class Mokka(Application):
     self.startfrom = startfrom  
     
     
-  def setDBSlice(self,dbslice):
+  def setDbSlice(self,dbSlice):
     """ Define the data base that will use mokka. 
     
-    @param dbslice: data base used by mokka. 
-    @type dbslice: string
+    @param dbSlice: data base used by mokka. 
+    @type dbSlice: string
     """
     self._checkArgs( {
-        'dbslice' : types.StringTypes
+        'dbSlice' : types.StringTypes
       } )
-    self.dbslice = dbslice
+    self.dbSlice = dbSlice
     
     
   def _userjobmodules(self,step):
@@ -777,8 +792,28 @@ class Mokka(Application):
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
    
+    if not self.outputfile :
+      self.log.error('Output file not given !')
+      
     return S_OK()  
   
+  def _applicationModule(self):
+    
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
+    md1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
+    md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
+    md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
+    md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
+    md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    return md1
+  
+  def _applicationModuleValues(self,moduleinstance):
+
+    moduleinstance.setValue("RandomSeed",   self.seed)
+
+    
   
   
   def _resolveLinkedParameters(self,stepinstance):
