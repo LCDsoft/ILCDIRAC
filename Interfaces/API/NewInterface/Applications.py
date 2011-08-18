@@ -130,14 +130,16 @@ class GenericApplication(Application):
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
-    if res1["OK"] and res2["OK"] :
-      return S_OK() 
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
   def _prodjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
-    if res1["OK"] and res2["OK"] :
-      return S_OK()    
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
 
   def _addParametersToStep(self,stepdefinition):
     res = self._addBaseParameters(stepdefinition)
@@ -205,12 +207,11 @@ class GetSRMFile(Application):
     moduleinstance.setValue("srmfiles",self.filedict)  
     moduleinstance.setValue("debug",self.debug)  
   
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    return S_OK()
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    if not res1["OK"]  :
+      return S_ERROR("userjobmodules method failed")
+    return S_OK() 
 
   def _prodjobmodules(self,step):
     self.log.error("This application is not meant to be used in Production context")
@@ -484,25 +485,17 @@ class Whizard(Application):
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):
-    m1 = self._applicationModule()
-    stepdefinition.addModule(m1)
-    mi1 = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
-    self._applicationModuleValues(mi1)
-    
-    m2 = self._getUserOutputDataModule()
-    stepdefinition.addModule(m2)
-    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
-    return S_OK()
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
   def _prodjobmodules(self,stepdefinition):
-    m1 = self._applicationModule()
-    stepdefinition.addModule(m1)
-    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    stepdefinition.addModule(m2)
-    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
     return S_OK()
 
     
@@ -530,26 +523,18 @@ class Pythia(Application):
     m1 = self._createModuleDefinition()
     return m1  
 
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getUserOutputDataModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
-    return S_OK()
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
-  def _prodjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
     return S_OK()
       
   def _checkConsistency(self):
@@ -774,26 +759,18 @@ class Mokka(Application):
     self.dbSlice = dbSlice
     
     
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getUserOutputDataModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
-    return S_OK()
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
-  def _prodjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
     return S_OK()
   
   def _checkConsistency(self):
@@ -910,26 +887,18 @@ class Marlin(Application):
       } )
     self.outputDstFile = outputDstFile
     
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getUserOutputDataModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
-    return S_OK()
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
-  def _prodjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
     return S_OK()
   
   def _checkConsistency(self):
@@ -1071,26 +1040,18 @@ class LCSIM(Application):
     self.extraParams = extraparams     
     
     
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getUserOutputDataModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
-    return S_OK()
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
-  def _prodjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
     return S_OK()
   
   def _checkConsistency(self):
