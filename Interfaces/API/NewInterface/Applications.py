@@ -821,6 +821,179 @@ class Mokka(Application):
       stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
     return S_OK() 
   
+########################### Must be implemented #######################
+
+
+
+
+
+##########################################################################
+#            Mokka: Simulation after Whizard or StdHepCut
+##########################################################################
+class SLIC(Application): 
+  """ Call SLIC simulator (after Whizard, Pythia or StdHepCut)
+  
+  Usage:
+  
+  >>> wh = Whizard()
+  >>> slic = SLIC()
+  >>> slic.getInputFromApp(wh)
+  >>> slic.setSteeringFile("mycut.cfg")
+  >>> slic.setMacFile('MyMacFile.mac')
+  >>> slic.setStartFrom(10)
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.startFrom = 0
+    self.macFile = ''
+    self.seed = 0
+    self.dbSlice = ''
+    self.detectoModel = ''
+    self.processID = ''
+    Application.__init__(self,paramdict)
+    ##Those 5 need to come after default constructor
+    self._modulename = 'MokkaAnalysis'
+    self._moduledescription = 'Module to run MOKKA'
+    self.appname = 'mokka'    
+    self.datatype = 'SIM'
+    self.detectortype = 'ILD'
+    self.detectorModel = ''
+     
+  def setRandomSeed(self,seed):
+    """ Define random seed to use 
+    
+    @param seed: Seed to use during integration and generation. Default is Job ID.
+    @type seed: int
+    """
+    self._checkArgs( {
+        'seed' : types.IntType
+      } )
+
+    self.seed = seed    
+    
+  def setDetectorModel(self,detectorModel):
+    """ Define detector to use for Mokka simulation 
+    
+    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
+    @type detectorModel: string
+    """
+    self._checkArgs( {
+        'detectorModel' : types.StringTypes
+      } )
+
+    self.detectorModel = detectorModel    
+    
+  def setMacFile(self,macfile):
+    """ Define Mac File
+    
+    @param macfile: Mac file for Mokka
+    @type macfile: string
+    """
+    self._checkArgs( {
+        'macfile' : types.StringTypes
+      } )
+    self.macFile = macfile
+    
+    
+  def setStartFrom(self,startfrom):
+    """ Define from how mokka start to read in the input file
+    
+    @param startfrom: from how mokka start to read the input file
+    @type startfrom: int
+    """
+    self._checkArgs( {
+        'startfrom' : types.IntType
+      } )
+    self.startfrom = startfrom  
+    
+    
+  def setProcessID(self,processID):
+    """ Define the ID's process
+    
+    @param processID: ID's process
+    @type processID: string
+    """
+    self._checkArgs( {
+        'processID' : types.StringTypes
+      } )
+    self.processID = processID
+    
+    
+  def setDbSlice(self,dbSlice):
+    """ Define the data base that will use mokka
+    
+    @param dbSlice: data base used by mokka
+    @type dbSlice: string
+    """
+    self._checkArgs( {
+        'dbSlice' : types.StringTypes
+      } )
+    self.dbSlice = dbSlice
+    
+    
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()
+  
+  def _checkConsistency(self):
+
+    if not self.version:
+      return S_ERROR('No version found')   
+    
+    if not self.steeringfile :
+      return S_ERROR('No Steering File') 
+    
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
+
+    if not self._jobtype == 'User':
+      if not self.outputFile:
+        return S_ERROR("Output File not defined")
+      if not self.outputPath:
+        return S_ERROR("Output Path not defined")
+   
+    return S_OK()  
+  
+  def _applicationModule(self):
+    
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
+    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
+    md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
+    md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
+    md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
+    return md1
+  
+  def _applicationModuleValues(self,moduleinstance):
+
+    moduleinstance.setValue("RandomSeed",      self.seed)
+    moduleinstance.setValue("detectorModel",   self.detectorModel)
+    moduleinstance.setValue("macFile",         self.macFile)
+    moduleinstance.setValue("startFrom",       self.startFrom)
+    moduleinstance.setValue("dbSlice",         self.dbSlice)
+    moduleinstance.setValue("ProcessID",       self.processID)
+    moduleinstance.setValue("debug",           self.debug)
+
+    
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()   
+  
   
 ##########################################################################
 #            Marlin: Reconstructor after Mokka
