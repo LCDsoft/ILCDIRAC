@@ -326,7 +326,7 @@ class ModuleBase(object):
       self.jobType = self.workflow_commons['JobType']
       
     if self.step_commons.has_key('InputFile'):
-      self.InputFile =self.step_commons['InputFile']
+      self.InputFile = self.step_commons['InputFile']
             
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']

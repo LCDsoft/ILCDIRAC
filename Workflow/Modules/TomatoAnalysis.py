@@ -22,20 +22,20 @@ class TomatoAnalysis(MarlinAnalysis):
     self.applicationName = "Tomato"
     self.log = gLogger.getSubLogger( "TomatoAnalysis" )
     self.collection = ''
-    self.inputSLCIO = ''
+    self.InputFile = ''
     
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Collections'):
       self.collection = self.step_commons['Collections']
     
     if self.step_commons.has_key('InputSLCIO'):
-      self.inputSLCIO =   self.step_commons['InputSLCIO']
+      self.InputFile =   self.step_commons['InputSLCIO']
     
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
-          self.inputSLCIO += files+";"
-      self.inputSLCIO = self.inputSLCIO.rstrip(";")
+          self.InputFile += files+";"
+      self.InputFile = self.InputFile.rstrip(";")
     return S_OK()  
 
   def execute(self):
