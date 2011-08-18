@@ -682,6 +682,7 @@ class Mokka(Application):
     self.seed = 0
     self.dbSlice = ''
     self.detectoModel = ''
+    self.processID = 0     # number or string????
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
@@ -736,6 +737,20 @@ class Mokka(Application):
         'startfrom' : types.IntType
       } )
     self.startfrom = startfrom  
+    
+    
+  def setProcessID(self,processID):
+    """ Define the ID's process
+    
+    @param processID: ID's process
+    @type processID: int 
+    """
+    #number or string???
+    
+    self._checkArgs( {
+        'processID' : types.IntType
+      } )
+    self.processID = processID
     
     
   def setDbSlice(self,dbSlice):
@@ -802,6 +817,7 @@ class Mokka(Application):
     md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
     md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
+    md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -811,6 +827,7 @@ class Mokka(Application):
     moduleinstance.setValue("macFile",         self.macFile)
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("dbSlice",         self.dbSlice)
+    moduleinstance.setValue("ProcessID",       self.processID)
 
     
   def _resolveLinkedParameters(self,stepinstance):
