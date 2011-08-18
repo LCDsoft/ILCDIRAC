@@ -12,6 +12,7 @@ import string,types
 class UserJob(Job):
   def __init__(self, script = None):
     Job.__init__(self, script)
+    self.type = 'User'
     
   #############################################################################
   def setInputData( self, lfns ):

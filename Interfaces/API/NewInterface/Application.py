@@ -49,6 +49,10 @@ class Application(object):
     self.detectortype = ""
     #Data type : gen, SIM, REC, DST
     self.datatype = ""
+    
+    ##Debug mode
+    self.debug = False
+    
     #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
         
@@ -63,6 +67,7 @@ class Application(object):
     #Internal member: hold the list of the job's application set before self: used when using getInputFromApp
     self._jobapps = []
     self._jobsteps = []
+    self._jobtype = ''
     #input application: will link the OutputFile of the guys in there with the InputFile of the self 
     self._inputapp = []
     #Needed to link the parameters.
@@ -204,6 +209,18 @@ class Application(object):
     self._inputapp.append(application)
     return S_OK()  
 
+  def setDebug(self,debug = True):
+    """ Set the applciation to debug mode
+    
+    >>> app = Application()
+    >>> app.setDebug()
+    
+    @param debug: Set the applciation to debug mode. Default is True when called. If not, then it's false.
+    @type debug: bool
+    """
+    self._checkArgs({ "debug": types.BooleanType} )
+    self.debug = debug
+    return S_OK()
 
 ########################################################################################
 #    More private methods: called by the applications of the jobs, but not by the users
@@ -302,7 +319,7 @@ class Application(object):
     stepdefinition.addParameter(Parameter("ApplicationName",   "", "string", "", "", False, False, "Application Name"))
     stepdefinition.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
     stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
-    stepdefinition.addParameter(Parameter("LogFile",           "", "string", "", "", False, False, "Log File"))
+    stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
     stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
@@ -316,7 +333,7 @@ class Application(object):
     """
     stepinstance.setValue("ApplicationName",    self.appname)
     stepinstance.setValue("ApplicationVersion", self.version)
-    stepinstance.setValue("LogFile",            self.logfile)
+    stepinstance.setValue("applicationLog",     self.logfile)
     stepinstance.setValue("SteeringFile",       self.steeringfile)
     stepinstance.setValue("InputFile",          self.inputfile)
     stepinstance.setValue("OutputFile",         self.outputFile)
@@ -352,6 +369,8 @@ class Application(object):
     self._jobapps      = job.applicationlist
     
     self._jobsteps     = job.steps
+    
+    self._jobtype      = job.type
     
     return S_OK()
 
