@@ -335,7 +335,8 @@ class Application(object):
     stepinstance.setValue("ApplicationVersion", self.version)
     stepinstance.setValue("applicationLog",     self.logfile)
     stepinstance.setValue("SteeringFile",       self.steeringfile)
-    stepinstance.setValue("InputFile",          self.inputfile)
+    if not self._inputapp:
+      stepinstance.setValue("InputFile",          self.inputfile)
     stepinstance.setValue("OutputFile",         self.outputFile)
     stepinstance.setValue("OutputPath",         self.outputPath)
     return S_OK()
