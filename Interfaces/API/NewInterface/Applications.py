@@ -461,15 +461,15 @@ class Whizard(Application):
 
   def _applicationModule(self):
     
-    md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
-    md1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
-    md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
-    md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
-    md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
-    md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
-    return md1
+    m1 = self._createModuleDefinition()
+    m1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
+    m1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
+    m1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
+    m1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
+    m1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
+    m1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
+    m1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    return m1
   
   def _applicationModuleValues(self,moduleinstance):
 
@@ -482,25 +482,25 @@ class Whizard(Application):
     moduleinstance.setValue("parameters",   self.parameters)
     
   def _userjobmodules(self,stepdefinition):
-    md1 = self._applicationModule()
-    stepdefinition.addModule(md1)
-    mi1 = stepdefinition.createModuleInstance(md1.getType(),stepdefinition.getType())
+    m1 = self._applicationModule()
+    stepdefinition.addModule(m1)
+    mi1 = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
     self._applicationModuleValues(mi1)
     
-    md2 = self._getUserOutputDataModule()
-    stepdefinition.addModule(md2)
-    stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
+    m2 = self._getUserOutputDataModule()
+    stepdefinition.addModule(m2)
+    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
     return S_OK()
 
   def _prodjobmodules(self,stepdefinition):
-    md1 = self._applicationModule()
+    m1 = self._applicationModule()
     stepdefinition.addModule(md1)
-    m1i = stepdefinition.createModuleInstance(md1.getType(),stepdefinition.getType())
+    mi = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
     self._applicationModuleValues(m1i)
     
-    md2 = self._getComputeOutputDataListModule()
-    stepdefinition.addModule(md2)
-    stepdefinition.createModuleInstance(md2.getType(),stepdefinition.getType())
+    m2 = self._getComputeOutputDataListModule()
+    stepdefinition.addModule(m2)
+    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
     return S_OK()
 
     
@@ -914,7 +914,6 @@ class Marlin(Application):
         'evtsToProcess' : types.StringTypes
       } )
     self.evtsToProcess = evtsToProcess
-    
     
     
   def _userjobmodules(self,step):
