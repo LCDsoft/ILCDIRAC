@@ -846,11 +846,8 @@ class SLIC(Application):
   def __init__(self, paramdict = None):
 
     self.startFrom = 0
-    self.macFile = ''
     self.seed = 0
-    self.dbSlice = ''
     self.detectoModel = ''
-    self.processID = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
@@ -884,17 +881,6 @@ class SLIC(Application):
 
     self.detectorModel = detectorModel    
     
-  def setMacFile(self,macfile):
-    """ Define Mac File
-    
-    @param macfile: Mac file for Mokka
-    @type macfile: string
-    """
-    self._checkArgs( {
-        'macfile' : types.StringTypes
-      } )
-    self.macFile = macfile
-    
     
   def setStartFrom(self,startfrom):
     """ Define from how mokka start to read in the input file
@@ -906,30 +892,6 @@ class SLIC(Application):
         'startfrom' : types.IntType
       } )
     self.startfrom = startfrom  
-    
-    
-  def setProcessID(self,processID):
-    """ Define the ID's process
-    
-    @param processID: ID's process
-    @type processID: string
-    """
-    self._checkArgs( {
-        'processID' : types.StringTypes
-      } )
-    self.processID = processID
-    
-    
-  def setDbSlice(self,dbSlice):
-    """ Define the data base that will use mokka
-    
-    @param dbSlice: data base used by mokka
-    @type dbSlice: string
-    """
-    self._checkArgs( {
-        'dbSlice' : types.StringTypes
-      } )
-    self.dbSlice = dbSlice
     
     
   def _userjobmodules(self,stepdefinition):
@@ -971,10 +933,7 @@ class SLIC(Application):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
-    md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
-    md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
@@ -982,10 +941,7 @@ class SLIC(Application):
 
     moduleinstance.setValue("RandomSeed",      self.seed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
-    moduleinstance.setValue("macFile",         self.macFile)
     moduleinstance.setValue("startFrom",       self.startFrom)
-    moduleinstance.setValue("dbSlice",         self.dbSlice)
-    moduleinstance.setValue("ProcessID",       self.processID)
     moduleinstance.setValue("debug",           self.debug)
 
     
