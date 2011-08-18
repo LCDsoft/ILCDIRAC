@@ -674,7 +674,7 @@ class StdhepCut(Application):
     
     return S_OK()
   
-  def _resolveLinkedParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self,stepinstance):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
@@ -852,7 +852,7 @@ class Mokka(Application):
     moduleinstance.setValue("debug",           self.debug)
 
     
-  def _resolveLinkedParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self,stepinstance):
     print 'hehe'
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
@@ -1001,7 +1001,7 @@ class Marlin(Application):
     moduleinstance.setValue("debug",             self.debug)
 
     
-  def _resolveLinkedParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self,stepinstance):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
@@ -1157,7 +1157,7 @@ class LCSIM(Application):
     moduleinstance.setValue("ProcessID",       self.processID)
 
     
-  def _resolveLinkedParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self,stepinstance):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
