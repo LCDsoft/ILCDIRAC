@@ -769,7 +769,13 @@ class Mokka(Application):
       self.log.error('Number of events set to 0 !')
         
     if not self.version:
-      return S_ERROR('No version found')     
+      return S_ERROR('No version found')   
+    
+    if not self.inputfile :
+      return S_ERROR('No Input File') 
+    
+    if not self.steeringfile :
+      return S_ERROR('No Steering File') 
    
     return S_OK()  
   
@@ -781,3 +787,6 @@ class Mokka(Application):
       if not res:
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
     return S_OK() 
+  
+  
+  
