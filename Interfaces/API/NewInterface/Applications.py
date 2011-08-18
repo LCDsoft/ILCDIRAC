@@ -851,7 +851,7 @@ class Marlin(Application):
   >>> marlin.getInputFromApp(mo)
   >>> marlin.setSteeringfile('SteeringFile.xml')
   >>> marlin.setOutputRecFile('MyOutputRecFile.rec')
-  >>> marlin.setInputGearFile('MyInputGearFile.gear')
+  >>> marlin.setOutputDstFile('MyOutputDstFile.dst')
   
   """
   def __init__(self, paramdict = None):
@@ -956,8 +956,19 @@ class Marlin(Application):
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
 
-################################ must be filled ####################################
-      
+    if self.jobtype == 'User':
+      if not self.outputDstFile :
+        self.log.error('Dst output file not given')  
+      if not self.outputRecFile :
+        self.log.error('Rec output file not given')
+    elif self.jobtype =='Prod'
+      if not self.outputDstFile :
+        return S_ERROR('Dst output file not given')  
+      if not self.outputRecFile :
+        return S_ERROR('Rec output file not given')
+    else :
+      return S_ERROR('Job type is not defined') 
+     
     return S_OK()  
   
   def _applicationModule(self):
