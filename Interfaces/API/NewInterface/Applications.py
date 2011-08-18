@@ -683,7 +683,7 @@ class Mokka(Application):
     self.seed = 0
     self.dbSlice = ''
     self.detectoModel = ''
-    self.processID = 0     # number or string????
+    self.processID = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
@@ -744,12 +744,10 @@ class Mokka(Application):
     """ Define the ID's process
     
     @param processID: ID's process
-    @type processID: int 
+    @type processID: string
     """
-    #number or string???
-    
     self._checkArgs( {
-        'processID' : types.IntType
+        'processID' : types.StringTypes
       } )
     self.processID = processID
     
@@ -872,7 +870,7 @@ class Marlin(Application):
   def setInputGearFile(self,inputGearFile):
     """ Define input gear file for Marlin reconstructor
     
-    @param inputGearFile: input gear file  for Marlin reconstrcutor
+    @param inputGearFile: input gear file for Marlin reconstrcutor
     @type inputGearFile: string
     """
     self._checkArgs( {
@@ -884,7 +882,7 @@ class Marlin(Application):
   def setOutputRecFile(self,outputRecFile):
     """ Define output rec file for Marlin reconstructor
     
-    @param outputRecFile: 
+    @param outputRecFile: output rec file for Marlin reconstructor
     @type outputRecFile: string
     """
     self._checkArgs( {
@@ -907,11 +905,11 @@ class Marlin(Application):
   def setEvtsToProcess(self,evtsToProcess):
     """ Define the number of events to process for Marlin reconstructor
     
-    @param evtsToProcess:  for Marlin reconstructor
-    @type evtsToProcess: string
+    @param evtsToProcess: events to process for Marlin reconstructor
+    @type evtsToProcess: int
     """
     self._checkArgs( {
-        'evtsToProcess' : types.StringTypes
+        'evtsToProcess' : types.IntType
       } )
     self.evtsToProcess = evtsToProcess
     
@@ -960,13 +958,19 @@ class Marlin(Application):
         self.log.error('Dst output file not given')  
       if not self.outputRecFile :
         self.log.error('Rec output file not given')
-    elif self.jobtype =='Prod' :
+    elif self.jobtype == 'Prod' :
       if not self.outputDstFile :
         return S_ERROR('Dst output file not given')  
       if not self.outputRecFile :
         return S_ERROR('Rec output file not given')
     else :
       return S_ERROR('Job type is not defined') 
+    
+    if not self.inputGearFile :
+      self.log.info('Input GEAR file nott given')
+    
+    if not self.evtsToProcess :
+      return S_ERROR('Number of events to process not set')
      
     return S_OK()  
   
@@ -983,10 +987,10 @@ class Marlin(Application):
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",      self.seed)
-    moduleinstance.setValue("detectorModel",   self.detectorModel)
-    moduleinstance.setValue("macFile",         self.macFile)
-    moduleinstance.setValue("startFrom",       self.startFrom)
+    moduleinstance.setValue("inputGEAR",      self.inputGearFile)
+    moduleinstance.setValue("outputREC",   self.outputRecFile)
+    moduleinstance.setValue("outputDST",         self.outputDstFile)
+    moduleinstance.setValue("EvtsToProcess",       self.evtsToProcess)
     moduleinstance.setValue("dbSlice",         self.dbSlice)
     moduleinstance.setValue("ProcessID",       self.processID)
 
