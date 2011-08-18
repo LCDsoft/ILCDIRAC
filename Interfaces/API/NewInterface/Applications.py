@@ -494,8 +494,8 @@ class Whizard(Application):
 
   def _prodjobmodules(self,stepdefinition):
     m1 = self._applicationModule()
-    stepdefinition.addModule(md1)
-    mi = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
+    stepdefinition.addModule(m1)
+    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
     self._applicationModuleValues(m1i)
     
     m2 = self._getComputeOutputDataListModule()
