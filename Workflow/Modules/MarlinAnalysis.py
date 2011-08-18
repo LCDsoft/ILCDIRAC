@@ -41,7 +41,7 @@ class MarlinAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.inputSLCIO = ''
-    self.inputXML=''
+    self.SteeringFile =''
     self.inputGEAR =''
     self.outputREC = ''
     self.outputDST = ''
@@ -62,7 +62,7 @@ class MarlinAnalysis(ModuleBase):
       self.inputSLCIO += ";" + self.workflow_commons['ParametricInputSandbox']
             
     if self.step_commons.has_key('inputXML'):
-      self.inputXML=self.step_commons['inputXML']
+      self.SteeringFile=self.step_commons['inputXML']
       
     if self.step_commons.has_key('inputGEAR'):
       self.inputGEAR=self.step_commons['inputGEAR']
@@ -187,14 +187,14 @@ class MarlinAnalysis(ModuleBase):
       if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)):
         self.inputGEAR = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)
       
-    self.inputXML = os.path.basename(self.inputXML)
-    if not os.path.exists(self.inputXML):
-      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputXML)):
-        self.inputXML = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputXML)
-    if not self.inputXML:
+    self.SteeringFile = os.path.basename(self.SteeringFile)
+    if not os.path.exists(self.SteeringFile):
+      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)):
+        self.SteeringFile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)
+    if not self.SteeringFile:
       return S_ERROR("Could not find steering file")
     
-    res = PrepareXMLFile(finalXML,self.inputXML,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
+    res = PrepareXMLFile(finalXML,self.SteeringFile,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s'%res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')

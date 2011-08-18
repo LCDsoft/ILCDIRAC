@@ -37,7 +37,7 @@ class LCSIMAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "LCSIMAnalysis" )
     self.result = S_ERROR()
     self.sourcedir = ''
-    self.xmlfile = ''
+    self.SteeringFile = ''
     self.inputSLCIO = ''
     self.outputREC = ""
     self.outputDST = ""
@@ -51,10 +51,8 @@ class LCSIMAnalysis(ModuleBase):
     @return: S_OK()
     """
     
-    #With new interface, this key should not be present, as SteeringFile is a
-    # module parameter
     if self.step_commons.has_key('inputXML'):
-      self.xmlfile = self.step_commons['inputXML']
+      self.SteeringFile = self.step_commons['inputXML']
 
     #TODO: Next is necessary for old interface, should be removed when old prods are archived.
     if self.step_commons.has_key('outputREC'):
@@ -192,15 +190,15 @@ class LCSIMAnalysis(ModuleBase):
     if os.path.exists(os.path.join(cachedir,".lcsim")) and os.path.exists(aliasproperties):
       self.log.verbose("Copy alias.properties file in %s"%(os.path.join(cachedir,".lcsim")))
       shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
-    if len(self.xmlfile):
-      self.xmlfile = os.path.basename(self.xmlfile)
-      if not os.path.exists(self.xmlfile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.xmlfile)):
-          self.xmlfile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.xmlfile)
-      if not os.path.exists(self.xmlfile):
+    if len(self.SteeringFile):
+      self.SteeringFile = os.path.basename(self.SteeringFile)
+      if not os.path.exists(self.SteeringFile):
+        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)):
+          self.SteeringFile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)
+      if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find lcsim file")    
     lcsimfile = "job.lcsim"
-    res = PrepareLCSIMFile(self.xmlfile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
+    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,runonslcio,jars,cachedir,self.outputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file because %s"%res['Message'])
       return S_ERROR("Error creating lcsim file")

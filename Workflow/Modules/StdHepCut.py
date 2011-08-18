@@ -18,12 +18,12 @@ class StdHepCut(ModuleBase):
     self.log = gLogger.getSubLogger( "stdhepCut" )
     self.applicationName = 'stdhepCut'
     self.STEP_NUMBER = ''
-    self.cutfile = ''
+    self.SteeringFile = ''
     self.MaxNbEvts = 0
     
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('CutFile'):
-      self.cutfile = self.step_commons['CutFile']
+      self.SteeringFile = self.step_commons['CutFile']
     else:
       return S_ERROR('Cut file not defined')
   
@@ -87,7 +87,7 @@ class StdHepCut(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s'%self.MaxNbEvts
-    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.OutputFile,os.path.basename(self.cutfile))
+    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.OutputFile,os.path.basename(self.SteeringFile))
     self.log.info("Running %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    

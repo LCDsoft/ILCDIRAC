@@ -39,6 +39,8 @@ class ModuleBase(object):
     self.applicationVersion=''
     self.applicationName = ''
     self.InputData = ''
+    self.SteeringFile = ''
+    
     self.result = S_ERROR()
     self.InputFile = ''
     self.OutputFile = ''
@@ -316,6 +318,9 @@ class ModuleBase(object):
     if self.step_commons.has_key('applicationVersion'):
       self.applicationVersion = self.step_commons['applicationVersion']
       self.applicationLog = self.step_commons['applicationLog']
+    
+    if self.step_commons.has_key('SteeringFile'):
+      self.SteeringFile = self.step_commons['SteeringFile']
       
     if self.workflow_commons.has_key('JobType'):
       self.jobType = self.workflow_commons['JobType']

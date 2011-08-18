@@ -36,7 +36,7 @@ class WhizardAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.debug = True
     self.log = gLogger.getSubLogger( "WhizardAnalysis" )
-    self.inFile = ''
+    self.SteeringFile = ''
     self.stdhepFile = ''
     self.NumberOfEvents = 1
     self.Lumi = 0
@@ -100,7 +100,7 @@ class WhizardAnalysis(ModuleBase):
       self.susymodel = self.step_commons['SusyModel']
       
     if self.step_commons.has_key("InputFile"):
-      self.inFile = os.path.basename(self.step_commons["InputFile"])
+      self.SteeringFile = os.path.basename(self.step_commons["InputFile"])
 
     if not len(self.inFile):
       self.getProcessInFile = True
@@ -215,7 +215,7 @@ class WhizardAnalysis(ModuleBase):
       list_of_gridfiles = os.listdir(path_to_gridfiles)
       
     template=False
-    if self.inFile.count("template"):
+    if self.SteeringFile.count("template"):
       template=True
     ## Get from process file the proper whizard.in file
     if self.getProcessInFile:
@@ -234,7 +234,7 @@ class WhizardAnalysis(ModuleBase):
         template=True
       try:
         shutil.copy("%s/%s"%(mySoftDir,whizardin), "./whizardnew.in")
-        self.inFile = "whizardnew.in"
+        self.SteeringFile = "whizardnew.in"
       except:
         self.log.error("Could not copy %s from %s"%(whizardin,mySoftDir))
         self.setApplicationStatus('Failed getting whizard.in file')
@@ -256,9 +256,9 @@ class WhizardAnalysis(ModuleBase):
     if self.jobindex:
       outputfilename = "%s_%s"%(outputfilename,self.jobindex)
     if not template:  
-      res = PrepareWhizardFile(self.inFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
+      res = PrepareWhizardFile(self.SteeringFile,outputfilename,self.energy,self.randomseed,self.NumberOfEvents,self.Lumi,"whizard.in")
     else:
-      res = PrepareWhizardFileTemplate(self.inFile,outputfilename,self.parameters,"whizard.in")
+      res = PrepareWhizardFileTemplate(self.SteeringFile,outputfilename,self.parameters,"whizard.in")
     if not res['OK']:
       self.log.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
