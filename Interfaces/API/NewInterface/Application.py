@@ -310,7 +310,7 @@ class Application(object):
         else:
           idx = self._jobapps.index(app)
           self.inputappstep = self._jobsteps[idx]
-          
+          print self.inputappstep
     return S_OK()
   
   def _addBaseParameters(self,stepdefinition):
