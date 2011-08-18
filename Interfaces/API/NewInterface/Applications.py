@@ -796,24 +796,12 @@ class Mokka(Application):
   
   def _checkConsistency(self):
 
-    if not self.energy :
-      self.log.error('Energy set to 0 !')
-      
-    if not self.nbevts :
-      self.log.error('Number of events set to 0 !')
-        
     if not self.version:
       return S_ERROR('No version found')   
-    
-    if not self.inputfile :
-      return S_ERROR('No Input File') 
     
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
    
-    if not self.outputfile :
-      self.log.error('Output file not given !')
-      
     return S_OK()  
   
   def _applicationModule(self):
