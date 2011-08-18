@@ -853,6 +853,7 @@ class Mokka(Application):
 
     
   def _resolveLinkedStepParameters(self,stepinstance):
+    print self.inputappstep
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       print res
