@@ -44,7 +44,7 @@ class MokkaAnalysis(ModuleBase):
         self.STEP_NUMBER = ''
         self.log = gLogger.getSubLogger( "MokkaAnalysis" )
         self.SteeringFile = ''
-        self.stdhepFile = ''
+        self.InputFile = ''
         self.macFile = ''
         self.run_number = 0
         self.firstEventNumber = 1
@@ -73,7 +73,7 @@ class MokkaAnalysis(ModuleBase):
         self.SteeringFile = self.step_commons['steeringFile']
 
       if self.step_commons.has_key('stdhepFile'):
-        self.stdhepFile = self.step_commons['stdhepFile']
+        self.InputFile = self.step_commons['stdhepFile']
       
       if self.step_commons.has_key('macFile'):
         self.macFile = self.step_commons['macFile']
@@ -104,12 +104,12 @@ class MokkaAnalysis(ModuleBase):
               if obj.lower().count("_sim_"):
                 self.outputFile = os.path.basename(obj)
               elif obj.lower().count("_gen_"):
-                self.stdhepFile = os.path.basename(obj)
+                self.InputFile = os.path.basename(obj)
           else:
             self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
             if self.workflow_commons.has_key("WhizardOutput"):
-              self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+              self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
                                                 int(self.workflow_commons["JOB_ID"]))
       
       if self.InputData:
@@ -124,11 +124,11 @@ class MokkaAnalysis(ModuleBase):
           if   res.has_key('EvtType') and not self.processID:
             self.processID = res['EvtType']
 
-      if len(self.stdhepFile)==0 and not len(self.InputData)==0:
+      if len(self.InputFile)==0 and not len(self.InputData)==0:
         inputfiles = self.InputData.split(";")
         for files in inputfiles:
           if files.lower().find(".stdhep")>-1 or files.lower().find(".hepevt")>-1:
-            self.stdhepFile = files
+            self.InputFile = files
             break
         
       return S_OK('Parameters resolved')
@@ -232,14 +232,14 @@ class MokkaAnalysis(ModuleBase):
       mokkasteer = "mokka.steer"
       ###prepare steering file
       #first, I need to take the stdhep file, find its path (possible LFN)      
-      if len(self.stdhepFile)>0:
-        #self.stdhepFile = os.path.basename(self.stdhepFile)
-        res = resolveIFpaths([self.stdhepFile])
+      if len(self.InputFile)>0:
+        #self.InputFile = os.path.basename(self.InputFile)
+        res = resolveIFpaths([self.InputFile])
         if not res['OK']:
           self.log.error("Generator file not found")
           result = sqlwrapper.mysqlCleanUp()
           return res
-        self.stdhepFile = res['Value'][0]
+        self.InputFile = res['Value'][0]
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
@@ -255,7 +255,7 @@ class MokkaAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         result = sqlwrapper.mysqlCleanUp()
         return S_ERROR("Could not find steering file")
-      steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.stdhepFile,
+      steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.InputFile,
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
                                     self.processID,
                                     self.debug,
