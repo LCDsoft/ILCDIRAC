@@ -961,7 +961,7 @@ class Marlin(Application):
         self.log.error('Dst output file not given')  
       if not self.outputRecFile :
         self.log.error('Rec output file not given')
-    elif self.jobtype =='Prod'
+    elif self.jobtype =='Prod' :
       if not self.outputDstFile :
         return S_ERROR('Dst output file not given')  
       if not self.outputRecFile :
