@@ -34,7 +34,7 @@ prints out all the available methods.
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
-from ILCDIRAC.Core.Utilities.Processlist              import *
+from ILCDIRAC.Core.Utilities.ProcessList              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
