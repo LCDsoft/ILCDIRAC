@@ -264,7 +264,7 @@ class Whizard(Application):
     if processlist:
       self.processlist = processlist
     Application.__init__(self, paramdict)
-    ##Those 2 need to come after default constructor
+    ##Those 3 need to come after default constructor
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
@@ -342,7 +342,7 @@ class Whizard(Application):
     self.JobIndex = index
     
   def _checkConsistency(self):
-    #must be filled
+
     if not self.energy :
       self.log.error('Energy set to 0 !')
       
@@ -672,8 +672,8 @@ class Mokka(Application):
   >>> mo = Mokka()
   >>> mo.getInputFromApp(wh)
   >>> mo.setSteeringFile("mycut.cfg")
-  >>> mo.setMaxNbEvts(10)
-  >>> mo.setNbEvtsPerFile(10)
+  >>> mo.setMacFile('MyMacFile.mac')
+  >>> mo.setStartFrom(10)
   
   """
   def __init__(self, paramdict = None):
@@ -684,11 +684,23 @@ class Mokka(Application):
     self.seed = 0
     self.dbslice = ''
     Application.__init__(self,paramdict)
+    ##Those 3 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
     self._moduledescription = 'Module to run MOKKA'
     self.appname = 'mokka'    
     
     
+  def setRandomSeed(self,seed):
+    """ Define random seed to use 
+    
+    @param seed: Seed to use during integration and generation. Default is Job ID.
+    @type seed: int
+    """
+    self._checkArgs( {
+        'seed' : types.IntType
+      } )
+
+    self.seed = seed    
     
   def setMacFile(self,macfile):
     """ Define Mac File
@@ -718,12 +730,12 @@ class Mokka(Application):
     """ Define the data base that will use mokka. 
     
     @param dbslice: data base used by mokka. 
-    @type startfrom: int
+    @type dbslice: string
     """
     self._checkArgs( {
-        'startfrom' : types.IntType
+        'dbslice' : types.StringTypes
       } )
-    self.startfrom = startfrom
+    self.dbslice = dbslice
     
     
   def _userjobmodules(self,step):
@@ -748,3 +760,24 @@ class Mokka(Application):
     step.createModuleInstance(m2.getType(),step.getType())
     return S_OK()
   
+  def _checkConsistency(self):
+
+    if not self.energy :
+      self.log.error('Energy set to 0 !')
+      
+    if not self.nbevts :
+      self.log.error('Number of events set to 0 !')
+        
+    if not self.version:
+      return S_ERROR('No version found')     
+   
+    return S_OK()  
+  
+  
+  
+  def _resolveLinkedParameters(self,stepinstance):
+    if self.inputappstep:
+      res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+      if not res:
+        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
+    return S_OK() 
