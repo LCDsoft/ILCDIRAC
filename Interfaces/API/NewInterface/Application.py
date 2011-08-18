@@ -51,9 +51,6 @@ class Application(object):
     self.datatype = ""
     #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
-    
-    #Application parameters: used when defining the steps in the workflow
-    self.parameters = {}
         
     #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
     self._modulename = ''
