@@ -186,6 +186,7 @@ class GetSRMFile(Application):
   >>> fdict = {"file":"srm://srm-public.cern.ch/castor/cern.ch/grid/ilc/prod/clic/1tev/Z_uds/gen/0/nobeam_nobrem_0-200.stdhep","site":"CERN-SRM"}
   >>> fdict = str(fdict)
   >>> gf.setFiles(fdict)
+  
   """
   def __init__(self, paramdict = None):
     Application.__init__(self, paramdict)
@@ -347,10 +348,10 @@ class Whizard(Application):
   def _checkConsistency(self):
 
     if not self.energy :
-      self.log.error('Energy set to 0 !')
+      return S_ERROR('Energy not set')
       
     if not self.nbevts :
-      self.log.error('Number of events set to 0 !')
+      return S_ERROR('Number of events not set!')
     
     if not self.evttype:
       return S_ERROR("Process not defined")
@@ -673,9 +674,10 @@ class StdhepCut(Application):
 #            Mokka: Simulation after Whizard or StdHepCut
 ##########################################################################
 class Mokka(Application): 
-  """ Call Mokka simulator after Whizard, Pythia or StdHepCut
+  """ Call Mokka simulator (after Whizard, Pythia or StdHepCut)
   
   Usage:
+  
   >>> wh = Whizard()
   >>> mo = Mokka()
   >>> mo.getInputFromApp(wh)
@@ -835,16 +837,15 @@ class Mokka(Application):
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getType())
     return S_OK() 
   
-
-
-
+  
 ##########################################################################
 #            Marlin: Reconstructor after Mokka
 ##########################################################################
 class Marlin(Application): 
-  """ Call Marlin reconstructor after Mokka simulator
+  """ Call Marlin reconstructor (after Mokka simulator)
   
   Usage:
+  
   >>> mo = Mokka()
   >>> marlin = Marlin()
   >>> marlin.getInputFromApp(mo)
@@ -949,29 +950,22 @@ class Marlin(Application):
       return S_ERROR('No version found')   
     
     if not self.inputfile :
-      return S_ERROR('No Input File') 
+      self.log.error('No Input File') 
     
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
 
-    if self.jobtype == 'User':
-      if not self.outputDstFile :
-        self.log.error('Dst output file not given')  
-      if not self.outputRecFile :
-        self.log.error('Rec output file not given')
-    elif self.jobtype == 'Prod' :
+    if not self.jobtype == 'User' :
       if not self.outputDstFile :
         return S_ERROR('Dst output file not given')  
       if not self.outputRecFile :
         return S_ERROR('Rec output file not given')
-    else :
-      return S_ERROR('Job type is not defined') 
+      
+      if not self.outputPath:
+        return S_ERROR('Outpath not given')
     
     if not self.inputGearFile :
-      self.log.info('Input GEAR file nott given')
-    
-    if not self.evtsToProcess :
-      return S_ERROR('Number of events to process not set')
+      self.log.info('Input GEAR file not given')
      
     return S_OK()  
   
@@ -1007,103 +1001,80 @@ class Marlin(Application):
 #            LCSIM: Reconstructor after SLIC Simulation
 ##########################################################################
 class LCSIM(Application): 
-  """ Call LCSIM Reconstructor after SLIC Simulation
+  """ Call LCSIM Reconstructor (after SLIC Simulation)
   
   Usage:
+  
   >>> slic = SLIC()
   >>> lcsim = LCSIM()
   >>> lcsim.getInputFromApp(slic)
-  >>> lcsim.setSteeringFile("mycut.cfg")
-  >>> lcsim.setMacFile('MyMacFile.mac')
+  >>> lcsim.setSteeringFile("MySteeringFile.slcio")
+  >>> lcsim.set
   >>> lcsim.setStartFrom(10)
   
   """
   def __init__(self, paramdict = None):
 
-    self.startFrom = 0
-    self.macFile = ''
-    self.seed = 0
-    self.dbSlice = ''
-    self.detectoModel = ''
-    self.processID = ''
+    self.extraParams = ''
+    self.aliasProperties = ''
+    self.outputDstFile = ''
+    self.outputRecFile = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
-    self._modulename = 'MokkaAnalysis'
-    self._moduledescription = 'Module to run MOKKA'
-    self.appname = 'mokka'    
-    self.datatype = 'SIM'
-    self.detectortype = 'ILD'
+    self._modulename = 'LCSIMAnalysis'
+    self._moduledescription = 'Module to run LCSIM'
+    self.appname = 'lcsim'
+    self.datatype = 'REC'
+    self.detectortype = 'SID'
      
-  def setRandomSeed(self,seed):
-    """ Define random seed to use 
+  def setOutputRecFile(self,outputRecFile):
+    """ Define output rec file for LCSIM reconstructor
     
-    @param seed: Seed to use during integration and generation. Default is Job ID.
-    @type seed: int
+    @param outputRecFile: output rec file for LCSIM reconstructor
+    @type outputRecFile: string
     """
     self._checkArgs( {
-        'seed' : types.IntType
+        'outputRecFile' : types.StringTypes
+                       } )
+    self.outputRecFile = outputRecFile
+      
+    
+  def setOutputDstFile(self,outputDstFile):
+    """ Define output dst file for LCSIM reconstructor
+    
+    @param outputDstFile: output dst file for LCSIM reconstructor
+    @type outputDstFile: string
+    """
+    self._checkArgs( {
+        'outputDstFile' : types.StringTypes
+      } )
+    self.outputDstFile = outputDstFile 
+            
+    
+  def setAliasProperties(self,alias):
+    """ Define the path to the alias.properties file name that will be used 
+    
+    @param alias: Path to the alias.properties file name that will be used
+    @type alias: string
+    """
+    self._checkArgs( {
+        'alias' : types.StringTypes
       } )
 
-    self.seed = seed    
+    self.aliasProperties = alias     
     
-  def setDetectorModel(self,detectorModel):
-    """ Define detector to use for Mokka simulation 
     
-    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
-    @type detectorModel: string
+  def setExtraParams(self,extraparams):
+    """ Define command line parameters to pass to java
+    
+    @param extraparams: Command line parameters to pass to java
+    @type extraparams: string
     """
     self._checkArgs( {
-        'detectorModel' : types.StringTypes
+        'extraparams' : types.StringTypes
       } )
 
-    self.detectorModel = detectorModel    
-    
-  def setMacFile(self,macfile):
-    """ Define Mac File
-    
-    @param macfile: Mac file for Mokka
-    @type macfile: string
-    """
-    self._checkArgs( {
-        'macfile' : types.StringTypes
-      } )
-    self.macFile = macfile
-    
-    
-  def setStartFrom(self,startfrom):
-    """ Define from how mokka start to read in the input file
-    
-    @param startfrom: from how mokka start to read the input file
-    @type startfrom: int
-    """
-    self._checkArgs( {
-        'startfrom' : types.IntType
-      } )
-    self.startfrom = startfrom  
-    
-    
-  def setProcessID(self,processID):
-    """ Define the ID's process
-    
-    @param processID: ID's process
-    @type processID: string
-    """
-    self._checkArgs( {
-        'processID' : types.StringTypes
-      } )
-    self.processID = processID
-    
-    
-  def setDbSlice(self,dbSlice):
-    """ Define the data base that will use mokka
-    
-    @param dbSlice: data base used by mokka
-    @type dbSlice: string
-    """
-    self._checkArgs( {
-        'dbSlice' : types.StringTypes
-      } )
-    self.dbSlice = dbSlice
+    self.extraParams = extraparams     
     
     
   def _userjobmodules(self,step):
@@ -1155,10 +1126,8 @@ class LCSIM(Application):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
-    md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
-    md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
+
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
