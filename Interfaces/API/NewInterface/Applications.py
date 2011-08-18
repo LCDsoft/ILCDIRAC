@@ -341,10 +341,10 @@ class Whizard(Application):
   def _checkConsistency(self):
     #must be filled
     if not self.energy :
-      print 'Energy set to 0 !'
+      self.log.error('Energy set to 0 !')
       
     if not self.nbevts :
-      print 'Number of events set to 0 !'
+      self.log.error('Number of events set to 0 !')
     
     if not self.evttype:
       return S_ERROR("Process not defined")

@@ -92,11 +92,11 @@ class Job(DiracJob):
     
     res = application._checkConsistency()
     if not res['OK']:
-      return self._reportError("%s failed to check its consistency: %s"%(application,res['Message']))
+      return S_ERROR("%s failed to check its consistency: %s"%(application,res['Message']))
     
     res = self._jobSpecificParams(application)
     if not res['OK']:
-      return self._reportError("Failed job specific checks")
+      return S_ERROR("Failed job specific checks")
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
     self.applicationlist.append(application)
@@ -113,12 +113,12 @@ class Job(DiracJob):
     ##Set the modules needed by the application
     res = self._jobSpecificModules(application,stepdefinition)
     if not res['OK']:
-      return self._reportError("Failed to add modules: %s"%res['Message'])
+      return S_ERROR("Failed to add modules: %s"%res['Message'])
   
     ### add the parameters to  the step
     res = application._addParametersToStep(stepdefinition)
     if not res['OK']:
-      return self._reportError("Failed to add parameters: %s"%res['Message'])   
+      return S_ERROR("Failed to add parameters: %s"%res['Message'])   
       
     ##Now the step is defined, let's add it to the workflow
     self.workflow.addStep(stepdefinition)
@@ -129,12 +129,12 @@ class Job(DiracJob):
     ##Set the parameters values to the step instance
     res = application._setStepParametersValues(stepInstance)
     if not res['OK']:
-      return self._reportError("Failed to resolve parameters values: %s"%res['Message'])   
+      return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
     
     ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
     res = application._resolveLinkedStepParameters(stepInstance)
     if not res['OK']:
-      return self._reportError("Failed to resolve linked parameters: %s"%res['Message'])
+      return S_ERROR("Failed to resolve linked parameters: %s"%res['Message'])
   
     ##Finally, add the software packages if needed
     if application.appname and application.version:
