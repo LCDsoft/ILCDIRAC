@@ -21,7 +21,7 @@ class ProductionJob(Job):
     Job.__init__(self , script)
     self.prodVersion = __RCSID__
     self.created = False
-    
+    self.type = 'Production'
     self.csSection = '/Operations/Production/Defaults'
     self.fc = FileCatalogClient()
     self.trc = TransformationClient()

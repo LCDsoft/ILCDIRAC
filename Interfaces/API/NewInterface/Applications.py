@@ -119,11 +119,13 @@ class GenericApplication(Application):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Script to execute"))
     m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
+    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
     moduleinstance.setValue("script",self.script)
     moduleinstance.setValue('arguments',self.arguments)
+    moduleinstance.setValue('debug',self.debug)
   
   def _userjobmodules(self,stepdefinition):
     m1 = self._applicationModule()
@@ -206,10 +208,12 @@ class GetSRMFile(Application):
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("srmfiles", "", "string", "", "", False, False, "list of files to retrieve"))
+    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
     moduleinstance.setValue("srmfiles",self.filedict)  
+    moduleinstance.setValue("debug",self.debug)  
   
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
@@ -460,16 +464,17 @@ class Whizard(Application):
     return S_OK()  
 
   def _applicationModule(self):
-    
-    m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
-    m1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
-    m1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
-    m1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
-    m1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
-    m1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
-    m1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
-    return m1
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
+    md1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
+    md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
+    md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
+    md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
+    md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
+    return md1
+
   
   def _applicationModuleValues(self,moduleinstance):
 
@@ -480,6 +485,7 @@ class Whizard(Application):
     moduleinstance.setValue("SteeringFile", self.steeringfile)
     moduleinstance.setValue("JobIndex",     self.jobindex)
     moduleinstance.setValue("parameters",   self.parameters)
+    moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):
     m1 = self._applicationModule()
@@ -609,11 +615,13 @@ class StdhepCut(Application):
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
-    m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
+    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
+
     return m1
 
   def _applicationModuleValues(self,moduleinstance):
     moduleinstance.setValue("MaxNbEvts",self.maxevts)
+    moduleinstance.setValue("debug",    self.debug)
 
   def _userjobmodules(self,step):
     m1 = self._applicationModule()
@@ -817,6 +825,7 @@ class Mokka(Application):
     md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
     md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
     md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
+    md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -827,13 +836,14 @@ class Mokka(Application):
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("dbSlice",         self.dbSlice)
     moduleinstance.setValue("ProcessID",       self.processID)
+    moduleinstance.setValue("debug",       self.debug)
 
     
   def _resolveLinkedParameters(self,stepinstance):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
       if not res:
-        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getName())
+        return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getType())
     return S_OK() 
   
   
@@ -981,6 +991,7 @@ class Marlin(Application):
     md1.addParameter(Parameter("outputDST",     '', "string", "", "", False, False, "Output DST file"))
     md1.addParameter(Parameter("outputREC",     '', "string", "", "", False, False, "Output REC file"))
     md1.addParameter(Parameter("EvtsToProcess",  0,    "int", "", "", False, False, "Number of events to process"))
+    md1.addParameter(Parameter("debug",      False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -989,6 +1000,7 @@ class Marlin(Application):
     moduleinstance.setValue("outputREC",         self.outputRecFile)
     moduleinstance.setValue("outputDST",         self.outputDstFile)
     moduleinstance.setValue("EvtsToProcess",     self.evtsToProcess)
+    moduleinstance.setValue("debug",             self.debug)
 
     
   def _resolveLinkedParameters(self,stepinstance):
