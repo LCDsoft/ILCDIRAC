@@ -808,7 +808,7 @@ class Mokka(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
     md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
