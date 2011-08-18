@@ -705,7 +705,7 @@ class Mokka(Application):
   def setDetectorModel(self,detectorModel):
     """ Define detector to use for Mokka simulation 
     
-    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????.
+    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
     @type detectorModel: string
     """
     self._checkArgs( {
@@ -739,9 +739,9 @@ class Mokka(Application):
     
     
   def setDbSlice(self,dbSlice):
-    """ Define the data base that will use mokka. 
+    """ Define the data base that will use mokka
     
-    @param dbSlice: data base used by mokka. 
+    @param dbSlice: data base used by mokka
     @type dbSlice: string
     """
     self._checkArgs( {
@@ -799,22 +799,20 @@ class Mokka(Application):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("RandomSeed",           0,  "float", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("SteeringFile",        "", "string", "", "", False, False, "Steering file"))
     md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Mokka start to read the input file"))
-    
-    
-    
-    
+    md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",   self.seed)
+    moduleinstance.setValue("RandomSeed",      self.seed)
+    moduleinstance.setValue("detectorModel",   self.detectorModel)
+    moduleinstance.setValue("macFile",         self.macFile)
+    moduleinstance.setValue("startFrom",       self.startFrom)
+    moduleinstance.setValue("dbSlice",         self.dbSlice)
 
     
-  
-  
   def _resolveLinkedParameters(self,stepinstance):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
