@@ -477,9 +477,9 @@ class Whizard(Application):
     moduleinstance.setValue("RandomSeed",   self.seed)
     moduleinstance.setValue("Lumi",         self.lumi)
     moduleinstance.setValue("Model",        self.model)
-    moduleinstance.setValue("SteeringFile",    self.steeringfile)
+    moduleinstance.setValue("SteeringFile", self.steeringfile)
     moduleinstance.setValue("JobIndex",     self.jobindex)
-    moduleinstance.setValue("parameters",self.parameters)
+    moduleinstance.setValue("parameters",   self.parameters)
     
   def _userjobmodules(self,stepdefinition):
     md1 = self._applicationModule()
