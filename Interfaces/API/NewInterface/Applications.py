@@ -855,6 +855,7 @@ class Mokka(Application):
   def _resolveLinkedParameters(self,stepinstance):
     if self.inputappstep:
       res = stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+      print res
       if not res:
         return S_ERROR("Failed to resolve InputFile from %s's OutputFile, possibly not defined."%self.inputappstep.getType())
     return S_OK() 
