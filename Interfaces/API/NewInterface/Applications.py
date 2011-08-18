@@ -699,6 +699,7 @@ class Mokka(Application):
     self.appname = 'mokka'    
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
+    self.detectorModel = ''
      
   def setRandomSeed(self,seed):
     """ Define random seed to use 
