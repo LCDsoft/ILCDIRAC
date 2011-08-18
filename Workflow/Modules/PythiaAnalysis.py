@@ -32,16 +32,16 @@ class PythiaAnalysis(ModuleBase):
     
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
-        #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
         if self.workflow_commons.has_key('ProductionOutputData'):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-          baseoutputfile = self.outputFile.split(".stdhep")[0]
+          baseoutputfile = self.OutputFile.split(".stdhep")[0]
           for obj in outputlist:
             if obj.count(baseoutputfile):
-              self.outputFile = os.path.basename(obj)
+              self.OutputFile = os.path.basename(obj)
         else:
-          self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))
     
     return S_OK()
@@ -114,7 +114,7 @@ class PythiaAnalysis(ModuleBase):
       script.write('declare -x LD_LIBRARY_PATH=%s\n'%new_ld_lib_path)
     script.write("declare -x NBEVTS=%s\n"%self.NumberOfEvents)
     script.write("declare -x LumiFile=%s\n"%self.lumifile)
-    script.write("declare -x OUTPUTFILE=%s\n"%self.outputFile)
+    script.write("declare -x OUTPUTFILE=%s\n"%self.OutputFile)
     script.write('echo ======================================\n')
     script.write('env | sort >> localEnv.log\n')
     comm = "%s/%s_%s.exe\n"%(myappDir,self.applicationName,self.applicationVersion)

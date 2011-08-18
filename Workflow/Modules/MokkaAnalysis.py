@@ -96,17 +96,17 @@ class MokkaAnalysis(ModuleBase):
       
       if self.workflow_commons.has_key("IS_PROD"):
         if self.workflow_commons["IS_PROD"]:
-          #self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          #self.OutputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
           #                                  int(self.workflow_commons["JOB_ID"]))
           if self.workflow_commons.has_key('ProductionOutputData'):
             outputlist = self.workflow_commons['ProductionOutputData'].split(";")
             for obj in outputlist:
               if obj.lower().count("_sim_"):
-                self.outputFile = os.path.basename(obj)
+                self.OutputFile = os.path.basename(obj)
               elif obj.lower().count("_gen_"):
                 self.InputFile = os.path.basename(obj)
           else:
-            self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+            self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
             if self.workflow_commons.has_key("WhizardOutput"):
               self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
@@ -259,7 +259,7 @@ class MokkaAnalysis(ModuleBase):
                                     self.macFile,self.numberOfEvents,self.startFrom,self.randomseed,path_to_particle_tbl,
                                     self.processID,
                                     self.debug,
-                                    self.outputFile)
+                                    self.OutputFile)
       if not steerok['OK']:
         self.log.error('Failed to create MOKKA steering file')
         return S_ERROR('Failed to create MOKKA steering file')

@@ -38,7 +38,7 @@ class SLICAnalysis(ModuleBase):
     self.result = S_ERROR()
     self.applicationName = 'SLIC'
     self.startFrom = 0
-    self.stdhepFile = ''
+    self.InputFile = ''
     self.randomseed = 0
     self.detectorModel = ''
     self.SteeringFile = ''
@@ -56,7 +56,7 @@ class SLICAnalysis(ModuleBase):
       self.startFrom = self.step_commons['startFrom']
 
     if self.step_commons.has_key('stdhepFile'):
-      self.stdhepFile = self.step_commons['stdhepFile']
+      self.InputFile = self.step_commons['stdhepFile']
       
     if self.step_commons.has_key("inputmacFile"):
       self.SteeringFile = self.step_commons['inputmacFile']
@@ -74,7 +74,7 @@ class SLICAnalysis(ModuleBase):
 
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
-        self.outputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
 
     if self.InputData:
@@ -87,11 +87,11 @@ class SLICAnalysis(ModuleBase):
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
       
-    if len(self.stdhepFile)==0 and not len(self.InputData)==0:
+    if len(self.InputFile)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".stdhep")>-1 or files.lower().find(".hepevt")>-1:
-          self.stdhepFile = files
+          self.InputFile = files
           break
           
     return S_OK('Parameters resolved')
@@ -191,12 +191,12 @@ class SLICAnalysis(ModuleBase):
     #self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
     
     slicmac = 'slicmac.mac'
-    if len(self.stdhepFile)>0:
-      res = resolveIFpaths([self.stdhepFile])
+    if len(self.InputFile)>0:
+      res = resolveIFpaths([self.InputFile])
       if not res['OK']:
         self.log.error("Generator file not found")
         return res
-      self.stdhepFile = res['Value'][0]
+      self.InputFile = res['Value'][0]
     if len(self.SteeringFile)>0:
       self.SteeringFile = os.path.basename(self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
@@ -205,7 +205,7 @@ class SLICAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find mac file")    
         
-    macok = PrepareMacFile(self.SteeringFile,slicmac,self.stdhepFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.outputFile,self.debug)
+    macok = PrepareMacFile(self.SteeringFile,slicmac,self.InputFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.OutputFile,self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')

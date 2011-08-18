@@ -102,7 +102,7 @@ class TomatoAnalysis(MarlinAnalysis):
     listofslcio = res['Value']
  
     finalXML = 'tomato.xml'   
-    res= PrepareTomatoSalad(finalXML,self.outputFile,listofslcio,self.collection)
+    res= PrepareTomatoSalad(finalXML,self.OutputFile,listofslcio,self.collection)
     if not res['OK']:
       self.log.error('Could not prepare the Tomato XML: %s'%res['Message'])
       self.setApplicationStatus('Failed to setup Tomato')

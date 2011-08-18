@@ -33,7 +33,7 @@ class CheckCollections(ModuleBase):
         self.applicationName = 'CheckCollections'
         # Step parameters
 
-        self.inputSLCIOFiles    = None
+        self.InputFile    = None
         self.collections        = None
 
 
@@ -118,7 +118,7 @@ exit $$appstatus
         scriptContent = scriptContent.substitute(
             LD_LIBRARY_PATH_ = LD_LIBRARY_PATH,
             PATH_            = PATH,
-            files            = self.inputSLCIOFiles,
+            files            = self.InputFile,
             collections      = self.collections
         )
 
@@ -173,11 +173,8 @@ exit $$appstatus
             self.applicationLog = 'CheckCollections_%s_Run_%s.log' %( self.applicationVersion, self.STEP_NUMBER )
 
         #
-
-        if self.step_commons.has_key('inputSLCIOFiles'):
-            self.inputSLCIOFiles = self.step_commons['inputSLCIOFiles'].split(";")
-            self.inputSLCIOFiles = [os.path.basename( file ) for file in self.inputSLCIOFiles]
-
+        self.InputFile = self.InputFile.split(";")
+        self.InputFile = [os.path.basename( file ) for file in self.InputFile]
         #
 
         if len( self.collections ) == 0:

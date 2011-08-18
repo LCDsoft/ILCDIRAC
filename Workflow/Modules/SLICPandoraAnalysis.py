@@ -30,7 +30,7 @@ class SLICPandoraAnalysis (ModuleBase):
     self.applicationName = 'SLICPandora'
     self.pandorasettings = ""
     self.detectorxml = ""
-    self.inputSLCIO = ""
+    self.InputFile = ""
     self.numberOfEvents = -1
     self.startFrom = 0
     self.eventstring = ''
@@ -44,7 +44,7 @@ class SLICPandoraAnalysis (ModuleBase):
       self.detectorxml = self.step_commons["DetectorXML"]
 
     if self.step_commons.has_key("inputSlcio"):
-      self.inputSLCIO = self.step_commons["inputSlcio"]         
+      self.InputFile = self.step_commons["inputSlcio"]         
 
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -60,12 +60,12 @@ class SLICPandoraAnalysis (ModuleBase):
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
       
-    if len(self.inputSLCIO)==0 and not len(self.InputData)==0:
+    if len(self.InputFile)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
-          self.inputSLCIO += files+";"
-      self.inputSLCIO = self.inputSLCIO.rstrip(";")
+          self.InputFile += files+";"
+      self.InputFile = self.InputFile.rstrip(";")
            
     return S_OK('Parameters resolved')
   
@@ -117,7 +117,7 @@ class SLICPandoraAnalysis (ModuleBase):
 
     new_path = GetNewPATH(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
 
-    inputfilelist = self.inputSLCIO.split(";")    
+    inputfilelist = self.InputFile.split(";")    
     res = resolveIFpaths(inputfilelist)
     if not res['OK']:
       self.setApplicationStatus('SLICPandora: missing slcio file')
@@ -200,7 +200,7 @@ class SLICPandoraAnalysis (ModuleBase):
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable"%myslicPandoraDir
     if prefixpath:
-      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.outputFile,str(self.numberOfEvents))
+      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.OutputFile,str(self.numberOfEvents))
       self.log.info("Will run %s"%comm)
       script.write(comm)
     else:
