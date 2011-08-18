@@ -258,6 +258,7 @@ class Whizard(Application):
     self.evttype = ''
     self.model = 'sm'  
     self.seed = 0
+    self.lumi = 0
     self.jobindex = ''
     self.leshouchesfiles = None
     self.generatormodels = GeneratorModels()
