@@ -79,7 +79,7 @@ class WhizardAnalysis(ModuleBase):
 
     if self.step_commons.has_key("Energy"):
       self.energy = self.step_commons["Energy"]
-      self.parameters['ENERGY']=self.energy
+    self.parameters['ENERGY']=self.energy
 
     if not self.RandomSeed:
       if self.step_commons.has_key("RandomSeed"):
@@ -92,7 +92,7 @@ class WhizardAnalysis(ModuleBase):
 
     if self.step_commons.has_key('NbOfEvts'):
       self.NumberOfEvents = self.step_commons['NbOfEvts']
-      self.parameters['NBEVTS']=self.NumberOfEvents
+    self.parameters['NBEVTS']=self.NumberOfEvents
       
     if self.step_commons.has_key('Lumi'):
       self.Lumi = self.step_commons['Lumi']
@@ -109,7 +109,7 @@ class WhizardAnalysis(ModuleBase):
       
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
-      self.parameters['PROCESS']=self.evttype
+    self.parameters['PROCESS']=self.evttype
       
     if self.step_commons.has_key("JobIndex"):
       self.jobindex = self.step_commons["JobIndex"]
