@@ -24,6 +24,7 @@ class Job(DiracJob):
     self.log = gLogger.getSubLogger("ILCJob")
     self.applicationlist = []
     self.inputsandbox = []
+    self.outputsandbox = []
     self.check = True
     self.systemConfig = ''
     self.stepnumber = 0
