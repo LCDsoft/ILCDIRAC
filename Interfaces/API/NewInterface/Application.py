@@ -345,8 +345,8 @@ class Application(object):
   def _addBaseParameters(self,stepdefinition):
     """ Add to step the default parameters: appname, version, steeringfile, (nbevts, Energy), LogFile, InputFile, OutputFile, OutputPath
     """
-    stepdefinition.addParameter(Parameter("ApplicationName",   "", "string", "", "", False, False, "Application Name"))
-    stepdefinition.addParameter(Parameter("ApplicationVersion","", "string", "", "", False, False, "Application Version"))
+    stepdefinition.addParameter(Parameter("applicationName",   "", "string", "", "", False, False, "Application Name"))
+    stepdefinition.addParameter(Parameter("applicationVersion","", "string", "", "", False, False, "Application Version"))
     stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
@@ -361,8 +361,8 @@ class Application(object):
   def _setBaseStepParametersValues(self,stepinstance):
     """ Set the values for the basic step parameters
     """
-    stepinstance.setValue("ApplicationName",    self.appname)
-    stepinstance.setValue("ApplicationVersion", self.version)
+    stepinstance.setValue("applicationName",    self.appname)
+    stepinstance.setValue("applicationVersion", self.version)
     stepinstance.setValue("applicationLog",     self.logfile)
     stepinstance.setValue("SteeringFile",       self.steeringfile)
     if not self._inputapp:
