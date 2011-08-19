@@ -104,7 +104,7 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("InputFile"):
       self.SteeringFile = os.path.basename(self.step_commons["InputFile"])
 
-    if not len(self.inFile):
+    if not len(self.SteeringFile):
       self.getProcessInFile = True
       
     if self.step_commons.has_key("EvtType"):
@@ -114,9 +114,9 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("JobIndex"):
       self.jobindex = self.step_commons["JobIndex"]
 
-    if self.inFile == "whizard.in":
-      os.rename(self.inFile, "whizardnew.in")
-      self.inFile = "whizardnew.in"
+    if self.SteeringFile == "whizard.in":
+      os.rename(self.SteeringFile, "whizardnew.in")
+      self.SteeringFile = "whizardnew.in"
  
     if self.step_commons.has_key("parameters"):
       self.steeringparameters= self.step_commons["parameters"]
