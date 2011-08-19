@@ -662,7 +662,7 @@ class Whizard(Application):
   def _applicationModule(self):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
-    md1.addParameter(Parameter("RandomSeed",   0,  "float", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("RandomSeed",   0,    "int", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
     md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
     md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
