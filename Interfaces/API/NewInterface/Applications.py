@@ -229,6 +229,200 @@ class GetSRMFile(Application):
       return S_ERROR("Failed to set base parameters")
     return S_OK()
 
+
+#################################################################
+#                    ROOT principal class
+#################################################################  
+class Root(Application):
+  """ Root principal class. Will inherit in RootExe and RootMacro classes, so don't use this!
+  """
+  def __init__(self, paramdict = None):
+    self.arguments = ''
+    Application.__init__(self, paramdict)
+    
+  def setScript(self,script):
+    self.log.error("Don't use this!")
+    return S_ERROR("Not allowed here")
+  
+  def setMacro(self,macro):
+    self.log.error("Don't use this!")
+    return S_ERROR("Not allowed here")
+
+     
+  def setArguments(self,args):
+    """ Define the arguments of the script (if any)
+    
+    @param arguments: Arguments to pass to the command line call
+    @type arguments: string
+    
+    """
+    self._checkArgs( {
+        'args' : types.StringTypes
+      } )  
+    self.arguments = args
+    return S_OK()
+      
+
+
+  def _applicationModule(self):
+    m1 = self._createModuleDefinition()
+    m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
+    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
+    return m1
+  
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue('arguments',self.arguments)
+    moduleinstance.setValue("script",self.script)
+    moduleinstance.setValue('debug',self.debug)
+    
+  
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
+
+
+#################################################################
+#            Root Script Application: use a script in an 
+#                 application framework
+#################################################################  
+class RootScript(Root):
+  """ Run a script (root executable or shell) in the root application environment. 
+  
+  Example:
+  
+  >>> rootsc = RootScript()
+  >>> rootsc.setScript("myscript.exe")
+  >>> rootsc.setArguments("some command line arguments")
+  
+  """
+  def __init__(self, paramdict = None):
+    self.script = None
+    Root.__init__(self, paramdict)
+    self._modulename = "RootExecutableAnalysis"
+    self.appname = self._modulename
+    self._moduledescription = 'Root application script'
+      
+  def setScript(self,executable):
+    """ Define executable to use
+    
+    @param executable: Script to run on. Can be shell or root executable. Must be a local file.
+    @type executable: string
+    """
+    self._checkArgs( {
+        'script' : types.StringTypes
+      } )
+    if os.path.exists(executable) :
+      self.inputSB.append(executable)
+    self.script = executable
+    return S_OK()
+    
+  def setArguments(self,args):
+    """ Define the arguments of the script (if any)
+    
+    @param arguments: Arguments to pass to the command line call
+    @type arguments: string
+    
+    """
+    self._checkArgs( {
+        'args' : types.StringTypes
+      } )  
+    self.arguments = args
+    return S_OK()
+      
+      
+  def _applicationModule(self):
+    m1 = Root._applicationModule()
+    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Executable file or shell script to execute"))
+    return m1
+  
+  
+  def _checkConsistency(self):
+    """ Checks that script is set.
+    """
+    if not self.script:
+      return S_ERROR("Script not defined")
+    elif not os.path.exists(self.script):
+      return S_ERROR("Specified script was not found on disk")
+      
+    return S_OK()
+
+
+#################################################################
+#            Root Script Application: use a script in an 
+#                 application framework
+#################################################################  
+class RootMacro(Root):
+  """ Run a root macro in the root application environment. 
+  
+  Example:
+  
+  >>> rootmac = RootScript()
+  >>> rootmac.setMacro("mymacro.C")
+  >>> rootmac.setArguments("some command line arguments")
+  
+  """
+  def __init__(self, paramdict = None):
+    self.script = None
+    Root.__init__(self, paramdict)
+    self._modulename = "RootExecutableAnalysis"
+    self.appname = self._modulename
+    self._moduledescription = 'Root application script'
+      
+  def setMacro(self,macro):
+    """ Define macro to use
+    
+    @param macro: Macro to run on. Must be a local C file.
+    @type macro: string
+    """
+    self._checkArgs( {
+        'macro' : types.StringTypes
+      } )
+    if os.path.exists(macro) :
+      self.inputSB.append(macro)
+    self.script = macro
+    return S_OK()
+    
+  def setArguments(self,args):
+    """ Define the arguments of the script (if any)
+    
+    @param arguments: Arguments to pass to the command line call
+    @type arguments: string
+    
+    """
+    self._checkArgs( {
+        'args' : types.StringTypes
+      } )  
+    self.arguments = args
+    return S_OK()
+      
+      
+  def _applicationModule(self):
+    m1 = Root._applicationModule()
+    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Macro to execute"))
+    return m1
+  
+  
+  def _checkConsistency(self):
+    """ Checks that macro is set.
+    """
+    if not self.script:
+      return S_ERROR("Macro not defined")
+    elif not os.path.exists(self.script):
+      return S_ERROR("Specified macro was not found on disk")
+      
+    return S_OK()
+
+
 #################################################################
 #            Whizard: First Generator application
 #################################################################    
