@@ -408,12 +408,6 @@ class RootMacro(Root):
     self.arguments = args
     return S_OK()
       
-      
-  def _applicationModule(self):
-    m1 = Root._applicationModule()
-    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Macro to execute"))
-    return m1
-  
   
   def _checkConsistency(self):
     """ Checks that macro is set.
