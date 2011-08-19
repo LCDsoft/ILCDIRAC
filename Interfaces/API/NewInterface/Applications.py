@@ -236,13 +236,16 @@ class GetSRMFile(Application):
 class Root(Application):
   """ Root principal class. Will inherit in RootExe and RootMacro classes, so don't use this (you can't anyway)!
   """
+  
   def __init__(self, paramdict = None):
     self.arguments = ''
     Application.__init__(self, paramdict)
     
+    
   def setScript(self,script):
     self.log.error("Don't use this!")
     return S_ERROR("Not allowed here")
+  
   
   def setMacro(self,macro):
     self.log.error("Don't use this!")
@@ -263,17 +266,18 @@ class Root(Application):
     return S_OK()
       
 
-
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
-    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
+    m1.addParameter(Parameter("arguments",    "", "string", "", "", False, False, "Arguments to pass to the script"))
+    m1.addParameter(Parameter("script",       "", "string", "", "", False, False, "Script to execute"))
+    m1.addParameter(Parameter("debug",     False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
+  
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue('arguments',self.arguments)
-    moduleinstance.setValue("script",self.script)
-    moduleinstance.setValue('debug',self.debug)
+    moduleinstance.setValue('arguments',   self.arguments)
+    moduleinstance.setValue("script",      self.script)
+    moduleinstance.setValue('debug',       self.debug)
     
   
   def _userjobmodules(self,stepdefinition):
@@ -282,6 +286,7 @@ class Root(Application):
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
+
 
   def _prodjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -312,6 +317,7 @@ class RootScript(Root):
     self.appname = self._modulename
     self._moduledescription = 'Root application script'
       
+      
   def setScript(self,executable):
     """ Define executable to use
     
@@ -326,6 +332,7 @@ class RootScript(Root):
     self.script = executable
     return S_OK()
     
+    
   def setArguments(self,args):
     """ Define the arguments of the script (if any)
     
@@ -339,13 +346,7 @@ class RootScript(Root):
     self.arguments = args
     return S_OK()
       
-      
-  def _applicationModule(self):
-    m1 = Root._applicationModule()
-    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Executable file or shell script to execute"))
-    return m1
-  
-  
+
   def _checkConsistency(self):
     """ Checks that script is set.
     """
@@ -378,6 +379,7 @@ class RootMacro(Root):
     self.appname = self._modulename
     self._moduledescription = 'Root application script'
       
+      
   def setMacro(self,macro):
     """ Define macro to use
     
@@ -391,6 +393,7 @@ class RootMacro(Root):
       self.inputSB.append(macro)
     self.script = macro
     return S_OK()
+    
     
   def setArguments(self,args):
     """ Define the arguments of the script (if any)
