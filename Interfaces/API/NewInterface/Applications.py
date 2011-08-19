@@ -377,9 +377,9 @@ class RootMacro(Root):
   def __init__(self, paramdict = None):
     self.script = None
     Root.__init__(self, paramdict)
-    self._modulename = "RootExecutableAnalysis"
+    self._modulename = "RootMacroAnalysis"
     self.appname = self._modulename
-    self._moduledescription = 'Root application script'
+    self._moduledescription = 'Root macro execution'
       
       
   def setMacro(self,macro):
