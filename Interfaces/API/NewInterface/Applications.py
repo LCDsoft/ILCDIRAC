@@ -295,6 +295,16 @@ class Root(Application):
       return S_ERROR('prodjobmodules failed')
     return S_OK()    
 
+  def _checkConsistency(self):
+    """ Checks that script is set.
+    """
+    if not self.script:
+      return S_ERROR("Script or macro not defined")
+    if not self.version:
+      return S_ERROR("You need to specify the Root version")
+    
+      
+    return S_OK()
 
 #################################################################
 #            Root Script Application: use a script in the 
@@ -327,9 +337,10 @@ class RootScript(Root):
     self._checkArgs( {
         'script' : types.StringTypes
       } )
-    if os.path.exists(executable) :
-      self.inputSB.append(executable)
+
     self.script = executable
+    if os.path.exists(executable) or executable.lower().count("lfn:"):
+      self.inputSB.append(executable)
     return S_OK()
     
     
@@ -347,15 +358,6 @@ class RootScript(Root):
     return S_OK()
       
 
-  def _checkConsistency(self):
-    """ Checks that script is set.
-    """
-    if not self.script:
-      return S_ERROR("Script not defined")
-    elif not os.path.exists(self.script):
-      return S_ERROR("Specified script was not found on disk")
-      
-    return S_OK()
 
 
 #################################################################
@@ -389,9 +391,10 @@ class RootMacro(Root):
     self._checkArgs( {
         'macro' : types.StringTypes
       } )
-    if os.path.exists(macro) :
-      self.inputSB.append(macro)
+
     self.script = macro
+    if os.path.exists(macro) or macro.lower().count("lfn:"):
+      self.inputSB.append(macro)
     return S_OK()
     
     
@@ -407,17 +410,7 @@ class RootMacro(Root):
       } )  
     self.arguments = args
     return S_OK()
-      
-  
-  def _checkConsistency(self):
-    """ Checks that macro is set.
-    """
-    if not self.script:
-      return S_ERROR("Macro not defined")
-    elif not os.path.exists(self.script):
-      return S_ERROR("Specified macro was not found on disk")
-      
-    return S_OK()
+
 
 
 #################################################################
