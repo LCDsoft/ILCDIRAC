@@ -73,6 +73,8 @@ class Application(object):
     #Needed to link the parameters.
     self.inputappstep = None
     
+    #flag set to true in Job.append
+    self.addedtojob = False
     ####Following are needed for error report
     self.log = gLogger
     self.errorDict = {}
@@ -404,6 +406,13 @@ class Application(object):
     
     return S_OK()
 
+  def _addedtojob(self):
+    """ Called from Job to tell the application that it is added to job and the parameter values are set.
+    
+    Prevents the user from thinking he can change the values after the app was added to job.
+    """
+    self.addedtojob = True
+  
   def _checkArgs( self, argNamesAndTypes ):
     """ Private method to check the validity of the parameters
     """
