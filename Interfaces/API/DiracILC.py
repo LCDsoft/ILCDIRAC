@@ -112,6 +112,15 @@ class DiracILC(Dirac):
     return list
   
   def _do_check(self,job):
+    #Start by taking care of sandbox
+    if hasattr(job,"inputsandbox"):
+      if type( job.inputsandbox ) == list and len( job.inputsandbox ):
+        resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
+        fileList = string.join( resolvedFiles, ";" )
+        description = 'Input sandbox file list'
+        job._addParameter( job.workflow, 'InputSandbox', 'JDL', fileList, description )
+          
+      
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages")
     if apps:
