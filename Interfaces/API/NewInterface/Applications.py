@@ -303,8 +303,16 @@ class Root(Application):
     if not self.version:
       return S_ERROR("You need to specify the Root version")
     
-      
+    res = self._checkRequiredApp() ##Check that job order is correct
+    if not res['OK']:
+      return res
+          
     return S_OK()
+  
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()  
 
 #################################################################
 #            Root Script Application: use a script in the 
@@ -458,6 +466,9 @@ class Whizard(Application):
     self._checkArgs( {
         'evttype' : types.StringTypes
       } )
+    if self.addedtojob:
+      self.log.error("Cannot modify this attribute once application has been added to Job")
+      return S_ERROR("Cannot modify")
     self.evttype = evttype
 
   def setLuminosity(self,lumi):
@@ -517,7 +528,7 @@ class Whizard(Application):
         'index' : types.StringTypes
       } )
 
-    self.JobIndex = index
+    self.jobindex = index
     
   def _checkConsistency(self):
 
@@ -551,9 +562,13 @@ class Whizard(Application):
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
 
+    if not self.outputFile :
+      self.outputFile = self.evttype
+      if self.jobindex :
+        self.outputFile += "_"+self.jobindex
+      self.outputFile += "_gen.stdhep"  
+
     if not self._jobtype == 'User':
-      if not self.outputFile:
-        return S_ERROR("Output File not defined")
       if not self.outputPath:
         return S_ERROR("Output Path not defined")
    
@@ -652,7 +667,7 @@ class Whizard(Application):
     md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
     md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
     md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
-    md1.addParameter(Parameter("parameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, "Specific steering parameters"))
     md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return md1
 
@@ -665,7 +680,7 @@ class Whizard(Application):
     moduleinstance.setValue("Model",        self.model)
     moduleinstance.setValue("SteeringFile", self.steeringfile)
     moduleinstance.setValue("JobIndex",     self.jobindex)
-    moduleinstance.setValue("parameters",   self.parameters)
+    moduleinstance.setValue("steeringparameters",   self.parameters)
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):

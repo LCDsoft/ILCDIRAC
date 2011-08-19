@@ -105,7 +105,6 @@ class Job(DiracJob):
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
     self.applicationlist.append(application)
-
     ##Get the application's sandbox and add it to the job's
     self.inputsandbox.extend(application.inputSB)
 
@@ -144,6 +143,8 @@ class Job(DiracJob):
     if not res['OK']:
       self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
       return S_ERROR("Failed to resolve linked parameters: %s"%res['Message'])
+    #Now prevent overwriting of parameter values.
+    application._addedtojob()
   
     ##Finally, add the software packages if needed
     if application.appname and application.version:
