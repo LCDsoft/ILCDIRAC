@@ -29,18 +29,17 @@ class RootExecutableAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "RootExecutableAnalysis" )
     self.applicationName = 'ROOT'
-    self.appli = ''
-    self.args = ''
+    self.script = ''
+    self.arguments = ''
       
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    if self.step_commons.has_key("script"):
-      self.appli = self.step_commons["script"]
-    if self.step_commons.has_key("args"):
-      self.args = self.step_commons["args"]
 
+    if not self.script:
+      return S_ERROR("Script no defined")
+    
     return S_OK('Parameters resolved') 
   
   def execute(self):
@@ -76,10 +75,10 @@ class RootExecutableAnalysis(ModuleBase):
     #  mySoftwareRoot = localArea
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
-    if len(self.appli)<1:
+    if len(self.script)<1:
       return S_ERROR("Executable file not defined")
      
-    self.appli = os.path.basename(self.appli)
+    self.script = os.path.basename(self.script)
 
     
     scriptName = 'Root_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
@@ -111,8 +110,8 @@ class RootExecutableAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    script.write("chmod u+x %s\n"%self.appli)
-    comm = "./%s %s \n"%(self.appli,self.args)
+    script.write("chmod u+x %s\n"%self.script)
+    comm = "./%s %s \n"%(self.script,self.arguments)
     self.log.info("Will run %s"%(comm))
     script.write(comm)
     
