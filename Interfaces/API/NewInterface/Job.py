@@ -146,6 +146,9 @@ class Job(DiracJob):
     #Now prevent overwriting of parameter values.
     application._addedtojob()
   
+    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
+
+  
     ##Finally, add the software packages if needed
     if application.appname and application.version:
       self._addSoftware(application.appname, application.version)
