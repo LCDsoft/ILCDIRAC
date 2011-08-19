@@ -29,6 +29,7 @@ class Job(DiracJob):
     self.stepnumber = 0
     self.steps = []
     self.nbevts = 0
+    self.systemConfig = 'x86_64-slc5-gcc43-opt'
     
   def setInputData(self, lfns):
     """ Overload method to cancel it
