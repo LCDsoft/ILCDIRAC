@@ -722,6 +722,8 @@ class Mokka(Application):
         'macfile' : types.StringTypes
       } )
     self.macFile = macfile
+    if os.path.exists(macfile) or macfile.lower().count("lfn:"):
+      self.inputSB.append(macfile) 
     
     
   def setStartFrom(self,startfrom):
@@ -758,6 +760,8 @@ class Mokka(Application):
         'dbSlice' : types.StringTypes
       } )
     self.dbSlice = dbSlice
+    if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
+      self.inputSB.append(dbSlice) 
     
     
   def _userjobmodules(self,stepdefinition):
@@ -822,135 +826,6 @@ class Mokka(Application):
       stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
     return S_OK() 
   
-
-##########################################################################
-#            SLICPandora : Simulation after Whizard or StdHepCut
-##########################################################################
-class SLICPandora(Application): 
-  """ Call SLICPandora simulator (after Whizard, Pythia, StdHepCut or SLIC)
-  
-  Usage:
-  
-  >>> slic = SLICPandora()
-  ...
-  >>> slicpandora = SLICPandora()
-  >>> slicpandora.getInputFromApp(slic)
-  >>> slicpandora.setPandoraSettings("~/SuperCheminDeLaMortQuiTue/MyPandoraSettings.xml")
-  >>> slicpandora.setInputFile('MyInputFile.slcio')
-  >>> slicpandora.setStartFrom(10)
-  
-  """
-  def __init__(self, paramdict = None):
-
-    self.startFrom = 0
-    self.pandoraSettings = ''
-    self.detectorModel = ''
-    Application.__init__(self,paramdict)
-    ##Those 5 need to come after default constructor
-    self._modulename = 'SlicPandoraAnalysis'
-    self._moduledescription = 'Module to run SLICPANDORA'
-    self.appname = 'slicpandora'    
-    self.datatype = 'SIM'
-    self.detectortype = 'SID'
-        
-    
-  def setDetectorModel(self,detectorModel):
-    """ Define detector to use for SlicPandora simulation 
-    
-    @param detectorModel: Detector Model to use for SlicPandora simulation. Default is ??????
-    @type detectorModel: string
-    """
-    self._checkArgs( {
-        'detectorModel' : types.StringTypes
-      } )
-
-    self.detectorModel = detectorModel    
-    
-    
-  def setStartFrom(self,startfrom):
-    """ Define from how slicpandora start to read in the input file
-    
-    @param startfrom: from how slicpandora start to read the input file
-    @type startfrom: int
-    """
-    self._checkArgs( {
-        'startfrom' : types.IntType
-      } )
-    self.startfrom = startfrom  
-    
-    
-  def setPandoraSettings(self,pandoraSettings):
-    """ Define the path where pandora settings are
-    
-    @param pandoraSettings: path where pandora settings are
-    @type pandoraSettings: string
-    """
-    self._checkArgs( {
-        'pandoraSettings' : types.StringTypes
-      } )
-    self.pandoraSettings = pandoraSettings  
-    
-  def _userjobmodules(self,stepdefinition):
-    res1 = self._setApplicationModuleAndParameters(stepdefinition)
-    res2 = self._setUserJobFinalization(stepdefinition)
-    if not res1["OK"] or not res2["OK"] :
-      return S_ERROR('userjobmodules failed')
-    return S_OK() 
-
-  def _prodjobmodules(self,stepdefinition):
-    res1 = self._setApplicationModuleAndParameters(stepdefinition)
-    res2 = self._setOutputComputeDataList(stepdefinition)
-    if not res1["OK"] or not res2["OK"] :
-      return S_ERROR('prodjobmodules failed')
-    return S_OK()
-  
-  def _checkConsistency(self):
-
-    if not self.version:
-      return S_ERROR('No version found')   
-    
-    if not self.steeringfile :
-      return S_ERROR('No Steering File') 
-    
-    if not self.pandoraSettings :
-      return S_ERROR('No Pandora Settings')
-    
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
-
-    if not self._jobtype == 'User':
-      if not self.outputFile:
-        return S_ERROR("Output File not defined")
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
-      
-    if not self.startFrom :
-      self.log.info('No startFrom define for SlicPandora : start from the begining')
-      
-    return S_OK()  
-  
-  def _applicationModule(self):
-    
-    md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("PandoraSettings",   "", "string", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("DetectorXML",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, "From how SlicPandora start to read the input file"))
-    md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
-    return md1
-  
-  def _applicationModuleValues(self,moduleinstance):
-
-    moduleinstance.setValue("PandoraSettings",    self.pandoraSettings)
-    moduleinstance.setValue("DetectorXML",        self.detectorModel)
-    moduleinstance.setValue("startFrom",          self.startFrom)
-    moduleinstance.setValue("debug",              self.debug)
-
-    
-  def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
-    return S_OK()
 
 
 ##########################################################################
@@ -1038,9 +913,6 @@ class SLIC(Application):
     if not self.version:
       return S_ERROR('No version found')   
     
-    if not self.steeringfile :
-      return S_ERROR('No Steering File') 
-    
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
@@ -1061,7 +933,7 @@ class SLIC(Application):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("startFrom",            0, "string", "", "", False, False, "From how Slic start to read the input file"))
+    md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, "From how Slic start to read the input file"))
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
@@ -1120,6 +992,8 @@ class Marlin(Application):
       } )
 
     self.inputGearFile = inputGearFile
+    if os.path.exists(inputGearFile) or inputGearFile.lower().count("lfn:"):
+      self.inputSB.append(inputGearFile) 
     
   def setOutputRecFile(self,outputRecFile):
     """ Define output rec file for Marlin reconstructor
@@ -1131,6 +1005,7 @@ class Marlin(Application):
         'outputRecFile' : types.StringTypes
       } )
     self.outputRecFile = outputRecFile
+    self.prodparameters[self.outputRecFile]['datatype']= 'REC'
       
     
   def setOutputDstFile(self,outputDstFile):
@@ -1143,6 +1018,7 @@ class Marlin(Application):
         'outputDstFile' : types.StringTypes
       } )
     self.outputDstFile = outputDstFile
+    self.prodparameters[self.outputDstFile]['datatype']= 'DST'
     
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1169,12 +1045,6 @@ class Marlin(Application):
     if not self.version:
       return S_ERROR('Version not set!')   
     
-    if not self.inputfile :
-      self.log.error('No Input File') 
-    
-    if not self.steeringfile :
-      return S_ERROR('No Steering File') 
-
     if not self.inputGearFile :
       self.log.info('Input GEAR file not given')
 
@@ -1215,10 +1085,8 @@ class Marlin(Application):
       stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
     return S_OK() 
   
-
-
 ##########################################################################
-#            LCSIM: Reconstructor after SLIC Simulation
+#            LCSIM: Reconstruction after SLIC Simulation
 ##########################################################################
 class LCSIM(Application): 
   """ Call LCSIM Reconstructor (after SLIC Simulation)
@@ -1228,8 +1096,7 @@ class LCSIM(Application):
   >>> slic = SLIC()
   >>> lcsim = LCSIM()
   >>> lcsim.getInputFromApp(slic)
-  >>> lcsim.setSteeringFile("MySteeringFile.slcio")
-  >>> lcsim.set
+  >>> lcsim.setSteeringFile("MySteeringFile.xml")
   >>> lcsim.setStartFrom(10)
   
   """
@@ -1257,6 +1124,7 @@ class LCSIM(Application):
         'outputRecFile' : types.StringTypes
                        } )
     self.outputRecFile = outputRecFile
+    self.prodparameters[self.outputRecFile]['datatype']= 'REC'
       
     
   def setOutputDstFile(self,outputDstFile):
@@ -1269,6 +1137,7 @@ class LCSIM(Application):
         'outputDstFile' : types.StringTypes
       } )
     self.outputDstFile = outputDstFile 
+    self.prodparameters[self.outputDstFile]['datatype']= 'DST'
             
     
   def setAliasProperties(self,alias):
@@ -1282,6 +1151,8 @@ class LCSIM(Application):
       } )
 
     self.aliasProperties = alias     
+    if os.path.exists(alias) or alias.lower().count("lfn:"):
+      self.inputSB.append(alias) 
     
     
   def setExtraParams(self,extraparams):
@@ -1321,25 +1192,7 @@ class LCSIM(Application):
         
     if not self.version:
       return S_ERROR('No version found')   
-    
-    if not self.inputfile :
-      return S_ERROR('No Input File') 
-    
-    if not self.steeringfile :
-      return S_ERROR('No Steering File') 
-   
-    if not self.outputDstFile :
-      return ('DST output file not given !')
-
-    if not self.outputRecFile :
-      return ('REC output file not given !')
-    
-    if not self.aliasProperties :
-      self.log.info('no alias property set')
-    
-    if not self.extraParams :
-      self.log.info('no extra parameter set')
-    
+        
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
@@ -1368,3 +1221,131 @@ class LCSIM(Application):
     if self.inputappstep:
       stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
     return S_OK()
+  
+##########################################################################
+#            SLICPandora : Run Pandora in the SID context
+##########################################################################
+class SLICPandora(Application): 
+  """ Call SLICPandora 
+  
+  Usage:
+  
+  >>> lcsim = LCSIM()
+  ...
+  >>> slicpandora = SLICPandora()
+  >>> slicpandora.getInputFromApp(lcsim)
+  >>> slicpandora.setPandoraSettings("~/GreatPathToHeaven/MyPandoraSettings.xml")
+  >>> slicpandora.setStartFrom(10)
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.startFrom = 0
+    self.pandoraSettings = ''
+    self.detectorModel = ''
+    Application.__init__(self,paramdict)
+    ##Those 5 need to come after default constructor
+    self._modulename = 'SLICPandoraAnalysis'
+    self._moduledescription = 'Module to run SLICPANDORA'
+    self.appname = 'slicpandora'    
+    self.datatype = 'SIM'
+    self.detectortype = 'SID'
+        
+    
+  def setDetectorModel(self,detectorModel):
+    """ Define detector to use for SlicPandora simulation 
+    
+    @param detectorModel: Detector Model to use for SlicPandora simulation. Default is ??????
+    @type detectorModel: string
+    """
+    self._checkArgs( {
+        'detectorModel' : types.StringTypes
+      } )
+
+    self.detectorModel = detectorModel    
+    if os.path.exists(detectorModel) or detectorModel.lower().count("lfn:"):
+      self.inputSB.append(detectorModel)   
+    
+  def setStartFrom(self,startfrom):
+    """ Define from how slicpandora start to read in the input file
+    
+    @param startfrom: from how slicpandora start to read the input file
+    @type startfrom: int
+    """
+    self._checkArgs( {
+        'startfrom' : types.IntType
+      } )
+    self.startfrom = startfrom     
+    
+  def setPandoraSettings(self,pandoraSettings):
+    """ Define the path where pandora settings are
+    
+    @param pandoraSettings: path where pandora settings are
+    @type pandoraSettings: string
+    """
+    self._checkArgs( {
+        'pandoraSettings' : types.StringTypes
+      } )
+    self.pandoraSettings = pandoraSettings  
+    if os.path.exists(pandoraSettings) or pandoraSettings.lower().count("lfn:"):
+      self.inputSB.append(pandoraSettings)    
+    
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()
+  
+  def _checkConsistency(self):
+
+    if not self.version:
+      return S_ERROR('No version found')   
+    
+    if not self.pandoraSettings :
+      return S_ERROR('No Pandora Settings')
+    
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
+
+    if not self._jobtype == 'User':
+      if not self.outputFile:
+        return S_ERROR("Output File not defined")
+      if not self.outputPath:
+        return S_ERROR("Output Path not defined")
+      
+    if not self.startFrom :
+      self.log.info('No startFrom define for SlicPandora : start from the begining')
+      
+    return S_OK()  
+  
+  def _applicationModule(self):
+    
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("PandoraSettings",   "", "string", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("DetectorXML",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, "From how SlicPandora start to read the input file"))
+    md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
+    return md1
+  
+  def _applicationModuleValues(self,moduleinstance):
+
+    moduleinstance.setValue("PandoraSettings",    self.pandoraSettings)
+    moduleinstance.setValue("DetectorXML",        self.detectorModel)
+    moduleinstance.setValue("startFrom",          self.startFrom)
+    moduleinstance.setValue("debug",              self.debug)
+
+    
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()
+
