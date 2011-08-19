@@ -96,7 +96,7 @@ class WhizardAnalysis(ModuleBase):
       
     if self.step_commons.has_key('Lumi'):
       self.Lumi = self.step_commons['Lumi']
-      self.parameters['LUMI']=self.Lumi
+    self.parameters['LUMI']=self.Lumi
       
     if self.step_commons.has_key('SusyModel'):
       self.susymodel = self.step_commons['SusyModel']
