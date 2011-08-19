@@ -317,6 +317,7 @@ class ModuleBase(object):
       self.applicationName = self.step_commons['applicationName']      
     if self.step_commons.has_key('applicationVersion'):
       self.applicationVersion = self.step_commons['applicationVersion']
+    if self.step_commons.has_key('applicationLog'):
       self.applicationLog = self.step_commons['applicationLog']
     
     if self.step_commons.has_key('SteeringFile'):
