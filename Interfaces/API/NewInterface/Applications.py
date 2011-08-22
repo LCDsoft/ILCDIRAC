@@ -1782,11 +1782,13 @@ class CheckCollections(Application):
   def _checkConsistency(self):
     """ Checks that all needed parameters are set
     """
-    if not self.InputSLCIOFiles :
-      return S_ERROR('No SLCIO files given')  
-      
-    if not self.BkgEvtType :
+
+    if not self.collections :
       return S_ERROR('No collections to check')
+
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
       
     return S_OK()
   
@@ -1847,6 +1849,10 @@ class SLCIOConcatenate(Application):
     if not self.OutputFile :
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self.log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
+
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
       
     return S_OK()
   
@@ -1922,6 +1928,10 @@ class PostGenSelection(Application):
       
     if not self.NbEvtsToKeep :
       return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
+
+    res = self._checkRequiredApp()
+    if not res['OK']:
+      return res
       
     return S_OK()  
 
