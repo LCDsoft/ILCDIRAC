@@ -40,20 +40,19 @@ class OverlayInput (ModuleBase):
     self.nbofeventsperfile = 100
     self.lfns = []
     self.nbfilestoget = 0
-    self.evttype= 'gghad'
+    self.BkgEvtType= 'gghad'
     self.bxoverlay = 0
     self.ggtohadint = 3.2
     self.nbsigeventsperfile = 0
     self.nbinputsigfile=1
-    self.nsigevts = 0
+    self.NbSigEvtsPerJob = 0
     self.rm = ReplicaManager()
     self.fc = FileCatalogClient()
     self.site = DIRAC.siteName()
 
 
   def applicationSpecificInputs(self):
-    for key,val in self.step_commons.items():
-      self.log.info("%s=%s" % (key, val))
+
     if self.step_commons.has_key('Detector'):
       self.detector = self.step_commons['Detector']
     else:
@@ -74,10 +73,10 @@ class OverlayInput (ModuleBase):
       self.prodid = self.step_commons['ProdID']
 
     if self.step_commons.has_key('NbSigEvtsPerJob'):
-      self.nsigevts = self.step_commons['NbSigEvtsPerJob']
+      self.NbSigEvtsPerJob = self.step_commons['NbSigEvtsPerJob']
 
     if self.step_commons.has_key('BkgEvtType'):
-      self.evttype = self.step_commons['BkgEvtType']
+      self.BkgEvtType = self.step_commons['BkgEvtType']
 
     #if self.workflow_commons.has_key('Site'):
     #  self.site = self.workflow_commons['Site']
@@ -89,14 +88,14 @@ class OverlayInput (ModuleBase):
       else:
         return S_ERROR("Could not find number of signal events per input file")
       self.nbinputsigfile = len(self.InputData.split(";"))
-    if not self.nsigevts and not self.nbsigeventsperfile:
+    if not self.NbSigEvtsPerJob and not self.nbsigeventsperfile:
       return S_ERROR("Could not determine the number of signal events per input file")
     return S_OK("Input variables resolved")
 
   def __getFilesFromFC(self):
     meta = {}
     meta['Energy']=self.energy
-    meta['EvtType']=self.evttype
+    meta['EvtType']=self.BkgEvtType
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
 
@@ -196,14 +195,14 @@ class OverlayInput (ModuleBase):
     if availableevents < numberofeventstoget:
       return S_ERROR("Number of gg->had events available is less than requested")
 
-    if not self.nsigevts:
+    if not self.NbSigEvtsPerJob:
       ##Compute Nsignal events
-      self.nsigevts = self.nbinputsigfile*self.nbsigeventsperfile
-    if not self.nsigevts:
+      self.NbSigEvtsPerJob = self.nbinputsigfile*self.nbsigeventsperfile
+    if not self.NbSigEvtsPerJob:
       return S_ERROR('Could not determine the number of signal events per job')
 
     ##Now determine how many files are needed to cover all signal events
-    totnboffilestoget = int(ceil(self.nsigevts*numberofeventstoget/self.nbofeventsperfile))
+    totnboffilestoget = int(ceil(self.NbSigEvtsPerJob*numberofeventstoget/self.nbofeventsperfile))
 
     ##Limit ourself to some configuration maximum
     res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)
@@ -272,8 +271,8 @@ class OverlayInput (ModuleBase):
 
     self.log.info('Will obtain %s files for overlay'%totnboffilestoget)
 
-    os.mkdir("./overlayinput_"+self.evttype)
-    os.chdir("./overlayinput_"+self.evttype)
+    os.mkdir("./overlayinput_"+self.BkgEvtType)
+    os.chdir("./overlayinput_"+self.BkgEvtType)
     filesobtained = []
     usednumbers = []
     fail = False
