@@ -1244,7 +1244,7 @@ class OverlayInput(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("BXOverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
+    m1.addParameter(Parameter("bxoverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
     m1.addParameter(Parameter("ggtohadint",           0,  "float", "", "", False, False, "Optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2"))
     m1.addParameter(Parameter("NbSigEvtsPerJob",      0,    "int", "", "", False, False, "Number of signal events per job"))
     m1.addParameter(Parameter("BkgEvtType",          "", "string", "", "", False, False, "Background type. Default is gg -> had"))
@@ -1253,7 +1253,7 @@ class OverlayInput(Application):
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("BXOverlay",         self.BXOverlay)
+    moduleinstance.setValue("bxoverlay",         self.BXOverlay)
     moduleinstance.setValue('ggtohadint',        self.ggtohadint)
     moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
     moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
@@ -1298,8 +1298,8 @@ class OverlayInput(Application):
       self.BkgEvtType = 'gghad'
       self.log.info("Background event type is gg -> had by default")
       
-    if not self.detectortype == 'ILD' or self.detectortype == 'SID':
-      return S_ERROR('Detector type not set or wrong detector type')
+    if not self.detectortype in ['ILD','SID']:
+      return S_ERROR('Detector type not set or wrong detector type, allowed values are ILD or SID.')
         
     
     if not self.energy :
