@@ -161,8 +161,14 @@ class Job(DiracJob):
     return application._userjobmodules(step)
 
   def _jobSpecificParams(self,application):
-    """ Every type of job has to reimplement this method
+    """ Every type of job has to reimplement this method. By default, just set the log file if not provided
     """
+    if not application.logfile:      
+      logf = application.appname
+      if application.version:
+        logf += "_"+application.version
+      logf += "_Step_%s.log"%self.stepnumber  
+      application.setLogFile(logf)
     return S_OK()
 
   def _addSoftware( self, appName, appVersion ):
