@@ -10,7 +10,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
 
-from DIRAC.Resources.Catalog.Client.FileCatalogClient import FileCatalogClient
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Security.Misc import getProxyInfo
 
 from DIRAC import S_OK, S_ERROR, gConfig
