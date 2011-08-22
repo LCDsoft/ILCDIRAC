@@ -750,6 +750,79 @@ class Pythia(Application):
         return S_ERROR("Output Path not defined")
 
     return S_OK()
+ 
+ 
+#################################################################
+#     PostGenSelection : Helper to filter generator selection 
+#################################################################  
+class PostGenSelection(Application):
+  """ Helper to filter generator selection
+  
+  Example:
+  
+  >>> postGenSel = PostGenSelection()
+  >>> postGenSel.setNbEvtsToKeep(30)
+
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.NbEvtsToKeep = 0
+    Application.__init__(self, paramdict)
+    self._modulename = "PostGenSelection"
+    self.appname = self._modulename
+    self._moduledescription = 'Helper to filter generator selection'
+      
+  def setNbEvtsToKeep(self,NbEvtsToKeep):
+    """ Set the number of events to keep in the input file
+    
+    @param NbEvtsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
+    @type NbEvtsToKeep: int
+    
+    """  
+    self._checkArgs( {
+        'NbEvtsToKeep' : types.IntType
+      } )
+    
+    self.NbEvtsToKeep = NbEvtsToKeep
+    return S_OK()
+
+
+  def _applicationModule(self):
+    m1 = self._createModuleDefinition()
+    m1.addParameter( Parameter( "NbEvtsKept",           0,   "int", "", "", False, False, "Number of events to keep" ) )
+    m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
+    return m1
+  
+
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKeep)
+    moduleinstance.setValue('debug',                       self.debug)
+   
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
+
+  def _checkConsistency(self):
+    """ Checks that all needed parameters are set
+    """ 
+      
+    if not self.NbEvtsToKeep :
+      return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
+      
+    return S_OK()  
+  
+ 
   
 ##########################################################################
 #            StdhepCut: apply generator level cuts after pythia or whizard
@@ -1862,9 +1935,9 @@ class SLCIOConcatenate(Application):
     return S_OK()
   
 #################################################################
-#     PostGenSelection : Helper to filter generator selection 
+#     Tomato : Helper to filter generator selection 
 #################################################################  
-class PostGenSelection(Application):
+class Tomato(Application):
   """ Helper to filter generator selection
   
   Example:
@@ -1876,24 +1949,25 @@ class PostGenSelection(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.NbEvtsToKeep = 0
+    self.XMLFile = ''
+    self.
     Application.__init__(self, paramdict)
-    self._modulename = "PostGenSelection"
+    self._modulename = "TomatoAnalysis"
     self.appname = self._modulename
-    self._moduledescription = 'Helper to filter generator selection'
+    self._moduledescription = 'Helper Application'
       
-  def setNbEvtsToKeep(self,NbEvtsToKeep):
-    """ Set the number of events to keep in the input file
+  def setXMLFile(self,xmlFile):
+    """ Set the the xml file to run Tomato
     
-    @param NbEvtsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
-    @type NbEvtsToKeep: int
+    @param xmlFile: number of events to keep in the input file. Must be inferior to the number of events.
+    @type xmlFile: int
     
     """  
     self._checkArgs( {
-        'NbEvtsToKeep' : types.IntType
+        'xmlFile' : types.IntType
       } )
     
-    self.NbEvtsToKeep = NbEvtsToKeep
+    self.XMLFile = xmlFile
     return S_OK()
 
 
