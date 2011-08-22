@@ -1680,9 +1680,6 @@ class SLICPandora(Application):
     if not self.version:
       return S_ERROR('No version found')   
     
-    if not self.pandoraSettings :
-      return S_ERROR('No Pandora Settings')
-    
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
