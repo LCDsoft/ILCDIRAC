@@ -1573,7 +1573,7 @@ class LCSIM(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("ExtraParams",           "", "string", "", "", False, False, "Command line parameters to pass to java"))
+    md1.addParameter(Parameter("extraparams",           "", "string", "", "", False, False, "Command line parameters to pass to java"))
     md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
     md1.addParameter(Parameter("outputREC",             "", "string", "", "", False, False, "REC output file"))
     md1.addParameter(Parameter("outputDST",             "", "string", "", "", False, False, "DST output file"))
@@ -1582,7 +1582,7 @@ class LCSIM(Application):
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("ExtraParams",        self.extraParams)
+    moduleinstance.setValue("extraparams",        self.extraParams)
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
     moduleinstance.setValue("outputREC",          self.outputRecFile)
     moduleinstance.setValue("outputDST",          self.outputDSTFile)
@@ -1698,16 +1698,16 @@ class SLICPandora(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("PandoraSettings",   "", "string", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("DetectorXML",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("pandorasettings",   "", "string", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("detectorxml",       "", "string", "", "", False, False, "Detecor model for simulation"))
     md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, "From how SlicPandora start to read the input file"))
     md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("PandoraSettings",    self.pandoraSettings)
-    moduleinstance.setValue("DetectorXML",        self.detectorModel)
+    moduleinstance.setValue("pandorasettings",    self.pandoraSettings)
+    moduleinstance.setValue("detectorxml",        self.detectorModel)
     moduleinstance.setValue("startFrom",          self.startFrom)
     moduleinstance.setValue("debug",              self.debug)
 
