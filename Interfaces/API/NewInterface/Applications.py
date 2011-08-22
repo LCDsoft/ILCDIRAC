@@ -1170,6 +1170,7 @@ class OverlayInput(Application):
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
     self.BkgEvtType = ''
+    self.inputenergy = ''
     self.prodid = 0
     Application.__init__(self, paramdict)
     self._modulename = "OverlayInput"
@@ -1318,9 +1319,7 @@ class OverlayInput(Application):
     if not self.detectortype in ['ILD','SID'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
         
-    if not self.energy :
-      return S_ERROR('Energy not set! OverlayInput is not so happy...')
-    
+
     return S_OK() 
   
   

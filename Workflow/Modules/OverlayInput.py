@@ -36,7 +36,8 @@ class OverlayInput (ModuleBase):
     self.printoutflag = ''
     self.prodid = 0
     self.detector = ""
-    self.energy='3tev'
+    self.energytouse=''
+    self.energy = 0
     self.nbofeventsperfile = 100
     self.lfns = []
     self.nbfilestoget = 0
@@ -55,15 +56,24 @@ class OverlayInput (ModuleBase):
 
     if self.step_commons.has_key('Detector'):
       self.detector = self.step_commons['Detector']
-    else:
+    if not self.detector:
       return S_ERROR('Detector model not defined')
 
     if self.step_commons.has_key('Energy'):
-      self.energy = self.step_commons['Energy']
+      self.energytouse = self.step_commons['Energy']
+
+    if self.energy:
+      if self.energy/1000:
+        self.energytouse = "%stev"%self.energy/1000
+      else:
+        self.energytouse = "%sgev"%self.energy
+        
+    if not self.energytouse:
+      return S_ERROR("Energy not set anywhere!")
 
     if self.step_commons.has_key('BXOverlay'):
       self.bxoverlay = self.step_commons['BXOverlay']
-    else:
+    if not self.bxoverlay:
       return S_ERROR("BXOverlay parameter not defined")
 
     if self.step_commons.has_key('ggtohadint'):
@@ -94,12 +104,12 @@ class OverlayInput (ModuleBase):
 
   def __getFilesFromFC(self):
     meta = {}
-    meta['Energy']=self.energy
+    meta['Energy']=self.energytouse
     meta['EvtType']=self.BkgEvtType
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
 
-    res= gConfig.getOption("/Operations/Overlay/%s/%s/ProdID"%(self.detector,self.energy),0)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/ProdID"%(self.detector,self.energytouse),0)
     meta['ProdID']= res['Value']
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
@@ -115,7 +125,7 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events
-    res= gConfig.getOption("/Operations/Overlay/%s/%s/NbEvts"%(self.detector,self.energy),100)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/NbEvts"%(self.detector,self.energytouse),100)
     self.nbofeventsperfile = res['Value']
 
     #res = self.fc.getCompatibleMetadata(meta)

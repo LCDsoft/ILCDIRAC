@@ -30,6 +30,7 @@ class Job(DiracJob):
     self.stepnumber = 0
     self.steps = []
     self.nbevts = 0
+    self.energy = 0
     self.setSystemConfig('x86_64-slc5-gcc43-opt')
     
   def setInputData(self, lfns):
@@ -161,7 +162,7 @@ class Job(DiracJob):
     return application._userjobmodules(step)
 
   def _jobSpecificParams(self,application):
-    """ Every type of job has to reimplement this method. By default, just set the log file if not provided
+    """ Every type of job has to reimplement this method. By default, just set the log file if not provided and the energy.
     """
     if not application.logfile:      
       logf = application.appname
@@ -169,6 +170,20 @@ class Job(DiracJob):
         logf += "_"+application.version
       logf += "_Step_%s.log"%self.stepnumber  
       application.setLogFile(logf)
+    
+    if self.energy:
+      if not application.energy:
+        application.setEnergy(self.energy)
+      elif application.energy != self.energy:
+        return S_ERROR("You have to use always the same energy per job.")
+    else:
+      if application.energy:
+        self.energy = application.energy
+      else:
+        return S_ERROR("Energy must be set somewhere.")
+     
+    if self.energy:
+      self._addParameter(self.workflow, "Energy", "int", self.energy, "Energy used")
     return S_OK()
 
   def _addSoftware( self, appName, appVersion ):

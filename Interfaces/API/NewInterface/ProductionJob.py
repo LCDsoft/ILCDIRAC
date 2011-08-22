@@ -75,6 +75,7 @@ class ProductionJob(Job):
     if not res['OK']:
       return res
     """ Also get the compatible metadata such as energy, evttype, etc, populate dictionary
+    Beware of energy: need to convert to gev (3tev -> 3000, 500gev -> 500)
     """
     return S_OK()
   
@@ -189,7 +190,8 @@ class ProductionJob(Job):
       res = application.setEnergy(self.energy)
       if not res['OK']:
         return res
-      
+    if self.energy:
+      self._setParameter( "Energy", "int", self.energy, "Energy used")      
     return S_OK()
 
   def _jobSpecificModules(self,application,step):
