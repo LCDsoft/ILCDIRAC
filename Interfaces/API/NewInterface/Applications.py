@@ -1946,7 +1946,7 @@ class SLCIOConcatenate(Application):
 #     Tomato : Helper to filter generator selection 
 #################################################################  
 class Tomato(Application):
-  """ Helper over Marlin reconstruction
+  """ Helper application over Marlin reconstruction
   
   Example:
   
@@ -1963,7 +1963,7 @@ class Tomato(Application):
     Application.__init__(self, paramdict)
     self._modulename = "TomatoAnalysis"
     self.appname = 'marlin'
-    self._moduledescription = 'Helper Application'
+    self._moduledescription = 'Helper Application over Marlin reconstruction'
       
   def setLibTomato(self,libTomato):
     """ Set the the optional Tomato library with the user version
