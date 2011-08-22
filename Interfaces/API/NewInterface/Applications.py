@@ -88,8 +88,8 @@ class GenericApplication(Application):
   def setArguments(self,args):
     """ Define the arguments of the script (if any)
     
-    @param arguments: Arguments to pass to the command line call
-    @type arguments: string
+    @param args: Arguments to pass to the command line call
+    @type args: string
     
     """
     self._checkArgs( {
@@ -265,8 +265,8 @@ class Root(Application):
   def setArguments(self,args):
     """ Define the arguments of the script (if any)
     
-    @param arguments: Arguments to pass to the command line call
-    @type arguments: string
+    @param args: Arguments to pass to the command line call
+    @type args: string
     
     """
     self._checkArgs( {
@@ -471,7 +471,8 @@ class Whizard(Application):
   def setEvtType(self,evttype):
     """ Define process
     
-    @param process: Process to generate
+    @param evttype: Process to generate
+    @type evttype: string
     """
     self._checkArgs( {
         'evttype' : types.StringTypes
@@ -1439,8 +1440,8 @@ class Marlin(Application):
   def setGearFile(self,GearFile):
     """ Define input gear file for Marlin reconstructor
     
-    @param inputGearFile: input gear file for Marlin reconstrcutor
-    @type inputGearFile: string
+    @param GearFile: input gear file for Marlin reconstrcutor
+    @type GearFile: string
     """
     self._checkArgs( {
         'GearFile' : types.StringTypes
