@@ -752,10 +752,11 @@ class Pythia(Application):
     
     if not self.nbevts:
       return S_ERROR("Number of events to generate not defined")
+
+    if not self.outputFile:
+      return S_ERROR("Output File not defined")
     
     if not self._jobtype == 'User':
-      if not self.outputFile:
-        return S_ERROR("Output File not defined")
       if not self.outputPath:
         return S_ERROR("Output Path not defined")
 
