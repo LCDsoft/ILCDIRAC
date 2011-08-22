@@ -1212,6 +1212,21 @@ class OverlayInput(Application):
     return S_OK()
 
 
+  def setDetectorType(self,detectortype):
+    """ Set the detector type. Must be 'ILD' or 'SID'
+    
+    @param detectortype: Detector type. Must be 'ILD' or 'SID'
+    @type detectortype: string
+    
+    """  
+    self._checkArgs( {
+        'detectortype' : types.StringTypes
+      } )
+    
+    self.detectortype = detectortype
+    return S_OK()
+
+
   def setBkgEvtType(self,BkgEvtType):
     """ Define the background type. Default is gg -> had 
     
@@ -1271,6 +1286,10 @@ class OverlayInput(Application):
       self.BXOverlay = 60
       self.log.info("Using default number of BX to overlay: 60")
       
+    if self._jobtype == 'User' :
+      if not self.NbSigEvtsPerJob :
+        return S_ERROR("Number of signal event per job is not defined")    
+      
     if not self.ggtohadint :
       self.ggtohadint = 3.2
       self.log.info("Number of GG -> had is set to 3.2 by default")  
@@ -1278,6 +1297,13 @@ class OverlayInput(Application):
     if not self.BkgEvtType :
       self.BkgEvtType = 'gghad'
       self.log.info("Background event type is gg -> had by default")
+      
+    if not self.detectortype == 'ILD' or self.detectortype == 'SID':
+      return S_ERROR('Detector type not set or wrong detector type')
+        
+    
+    if not self.energy :
+      return S_ERROR('Energy not set! OverlayInput is not so happy...')
     
     return S_OK() 
   
