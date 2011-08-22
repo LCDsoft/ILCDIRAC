@@ -1790,6 +1790,10 @@ class CheckCollections(Application):
       
     return S_OK()
   
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()
   
 #################################################################
 #     SLCIOConcatenate : Helper to concatenate SLCIO files 
@@ -1800,60 +1804,26 @@ class SLCIOConcatenate(Application):
   Example:
   
   >>> slicoconca = SLCIOConcatenate()
-  >>> slicoconca.setInputSLCIOFiles( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
-  >>> slicoconca.setOutputSLCIOFile(myNewSLCIOFile.slcio)
+  >>> slicoconca.setInputFile( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
+  >>> slicoconca.setOutputFile(myNewSLCIOFile.slcio)
   
   """
   def __init__(self, paramdict = None):
 
-    self.InputSLCIOFiles = []
     self.OutputSLCIOFile = ''
     Application.__init__(self, paramdict)
     self._modulename = "SLCIOConcatenate"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to concatenate SLCIO files'
-      
-  def setInputSLCIOFiles(self,InputSLCIOFiles):
-    """ Set the SLCIO files in a list
-    
-    @param InputSLCIOFiles: SLCIO files. Must be a list
-    @type InputSLCIOFiles: list
-    
-    """  
-    self._checkArgs( {
-        'InputSLCIOFiles' : types.ListType
-      } )
-    
-    self.InputSLCIOFiles = InputSLCIOFiles
-    return S_OK()
-
-
-  def setOutputSLCIOFile(self,OutputSLCIOFile):
-    """ Set the SLCIO output file name
-    
-    @param OutputSLCIOFile: SLCIO output file
-    @type OutputSLCIOFile: string
-    
-    """  
-    self._checkArgs( {
-        'OutputSLCIOFile' : types.StringTypes
-      } )
-    
-    self.OutputSLCIOFile = OutputSLCIOFile
-    return S_OK()
 
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "inputSLCIOFiles",     "",  "list", "", "", False, False, "Input slcio files" ) )
-    m1.addParameter( Parameter( "outputSLCIOFile",     "","string", "", "", False, False, "SLCIO output file" ) )
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
     return m1
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("inputSLCIOFiles",             self.InputSLCIOFiles)
-    moduleinstance.setValue('outputSLCIOFile',             self.OutputSLCIOFile)
     moduleinstance.setValue('debug',                       self.debug)
    
   def _userjobmodules(self,stepdefinition):
@@ -1882,6 +1852,10 @@ class SLCIOConcatenate(Application):
       
     return S_OK()
   
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()
   
 #################################################################
 #     PostGenSelection : Helper to filter generator selection 
