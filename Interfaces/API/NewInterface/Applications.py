@@ -1926,4 +1926,9 @@ class PostGenSelection(Application):
       return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
       
     return S_OK()  
+
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self.inputappstep:
+      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    return S_OK()
   
