@@ -2017,7 +2017,7 @@ class Tomato(Application):
     if not self.inputfile :
       return S_ERROR('Input file not given! Try again!')
       
-    if not self.NbEvtsToKeep :
+    if not self.libTomato :
       self.log.info('Tomato library not given. It will run without it')
 
     res = self._checkRequiredApp()
