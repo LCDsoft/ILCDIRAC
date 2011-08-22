@@ -137,8 +137,3 @@ class UserJob(Job):
       return self._reportError( 'Expected file string or list of files for output sandbox contents', **kwargs )
 
     return S_OK()
-  
-  def _jobSpecificParams(self,application):
-    """ Not doing anything here, only used in ProductionJobs.
-    """
-    return S_OK()
