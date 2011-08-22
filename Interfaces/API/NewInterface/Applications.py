@@ -1948,49 +1948,50 @@ class SLCIOConcatenate(Application):
 #     Tomato : Helper to filter generator selection 
 #################################################################  
 class Tomato(Application):
-  """ Helper to filter generator selection
+  """ Helper over Marlin reconstruction
   
   Example:
   
-  >>> postGenSel = PostGenSelection()
-  >>> postGenSel.setNbEvtsToKeep(30)
+  >>> cannedTomato = Tomato()
+  >>> cannedTomato.setInputFile ( [pouette_1.slcio , pouette_2.slcio] )
+  >>> cannedTomato.setSteeringFile ( MySteeringFile.xml )
+  >>> cannedTomato.setLibTomato ( MyUserVersionOfTomato )
 
   
   """
   def __init__(self, paramdict = None):
 
-    self.XMLFile = ''
-    self.
+    self.libTomato = ''
     Application.__init__(self, paramdict)
     self._modulename = "TomatoAnalysis"
     self.appname = self._modulename
     self._moduledescription = 'Helper Application'
       
-  def setXMLFile(self,xmlFile):
-    """ Set the the xml file to run Tomato
+  def setLibTomato(self,libTomato):
+    """ Set the the optional Tomato library with the user version
     
-    @param xmlFile: number of events to keep in the input file. Must be inferior to the number of events.
-    @type xmlFile: int
+    @param libTomato: Tomato library
+    @type libTomato: string
     
     """  
     self._checkArgs( {
-        'xmlFile' : types.IntType
+        'libTomato' : types.StringTypes
       } )
     
-    self.XMLFile = xmlFile
+    self.libTomato = libTomato
     return S_OK()
 
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "NbEvtsKept",           0,   "int", "", "", False, False, "Number of events to keep" ) )
-    m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
+    m1.addParameter( Parameter( "libTomato",           '',   "string", "", "", False, False, "Tomato library" ))
+    m1.addParameter( Parameter( "debug",            False,     "bool", "", "", False, False, "debug mode"))
     return m1
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKeep)
-    moduleinstance.setValue('debug',                       self.debug)
+    moduleinstance.setValue('libTomato',     self.libTomato)
+    moduleinstance.setValue('debug',         self.debug)
    
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2009,9 +2010,15 @@ class Tomato(Application):
   def _checkConsistency(self):
     """ Checks that all needed parameters are set
     """ 
+    
+    if not self.steeringfile :
+      return S_ERROR('Steering file not given! Try again!')
+    
+    if not self.inputfile :
+      return S_ERROR('Input file not given! Try again!')
       
     if not self.NbEvtsToKeep :
-      return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
+      self.log.info('Tomato library not given. It will run without it')
 
     res = self._checkRequiredApp()
     if not res['OK']:
