@@ -2012,7 +2012,7 @@ class Tomato(Application):
     """ 
     
     if not self.steeringfile :
-      return S_ERROR('Steering file not given! Try again!')
+      self.log.info('Steering file not given! Try again!')
     
     if not self.inputfile :
       return S_ERROR('Input file not given! Try again!')
