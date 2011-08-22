@@ -42,7 +42,7 @@ class OverlayInput (ModuleBase):
     self.lfns = []
     self.nbfilestoget = 0
     self.BkgEvtType= 'gghad'
-    self.bxoverlay = 0
+    self.BXOverlay = 0
     self.ggtohadint = 3.2
     self.nbsigeventsperfile = 0
     self.nbinputsigfile=1
@@ -72,8 +72,8 @@ class OverlayInput (ModuleBase):
       return S_ERROR("Energy not set anywhere!")
 
     if self.step_commons.has_key('BXOverlay'):
-      self.bxoverlay = self.step_commons['BXOverlay']
-    if not self.bxoverlay:
+      self.BXOverlay = self.step_commons['BXOverlay']
+    if not self.BXOverlay:
       return S_ERROR("BXOverlay parameter not defined")
 
     if self.step_commons.has_key('ggtohadint'):
@@ -199,7 +199,7 @@ class OverlayInput (ModuleBase):
 
   def __getFilesLocaly(self):
 
-    numberofeventstoget = ceil(self.bxoverlay*self.ggtohadint)
+    numberofeventstoget = ceil(self.BXOverlay*self.ggtohadint)
     nbfiles = len(self.lfns)
     availableevents = nbfiles*self.nbofeventsperfile
     if availableevents < numberofeventstoget:
