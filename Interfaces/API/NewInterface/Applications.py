@@ -342,7 +342,7 @@ class RootScript(Root):
     self.script = None
     Root.__init__(self, paramdict)
     self._modulename = "RootExecutableAnalysis"
-    self.appname = self._modulename
+    self.appname = 'root'
     self._moduledescription = 'Root application script'
       
       
@@ -396,7 +396,7 @@ class RootMacro(Root):
     self.script = None
     Root.__init__(self, paramdict)
     self._modulename = "RootMacroAnalysis"
-    self.appname = self._modulename
+    self.appname = 'root'
     self._moduledescription = 'Root macro execution'
       
       
@@ -780,7 +780,7 @@ class PostGenSelection(Application):
     self.NbEvtsToKeep = 0
     Application.__init__(self, paramdict)
     self._modulename = "PostGenSelection"
-    self.appname = self._modulename
+    self.appname = 'postgensel'
     self._moduledescription = 'Helper to filter generator selection'
       
   def setNbEvtsToKeep(self,NbEvtsToKeep):
@@ -1815,11 +1815,11 @@ class CheckCollections(Application):
   
   """
   def __init__(self, paramdict = None):
-
     self.collections = []
+    self.version = 'HEAD'
     Application.__init__(self, paramdict)
     self._modulename = "CheckCollections"
-    self.appname = self._modulename
+    self.appname = 'lcio'
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
 
   def setCollections(self,CollectionList):
@@ -1895,18 +1895,16 @@ class SLCIOConcatenate(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.OutputSLCIOFile = ''
+    self.version = 'HEAD'
     Application.__init__(self, paramdict)
     self._modulename = "SLCIOConcatenate"
-    self.appname = self._modulename
+    self.appname = 'lcio'
     self._moduledescription = 'Helper call to concatenate SLCIO files'
-
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
     return m1
-  
 
   def _applicationModuleValues(self,moduleinstance):
     moduleinstance.setValue('debug',                       self.debug)
@@ -1964,7 +1962,7 @@ class Tomato(Application):
     self.libTomato = ''
     Application.__init__(self, paramdict)
     self._modulename = "TomatoAnalysis"
-    self.appname = self._modulename
+    self.appname = 'marlin'
     self._moduledescription = 'Helper Application'
       
   def setLibTomato(self,libTomato):
@@ -2010,13 +2008,10 @@ class Tomato(Application):
   def _checkConsistency(self):
     """ Checks that all needed parameters are set
     """ 
+
+    if not self.version:
+      return S_ERROR("You need to specify which version of Marlin to use.")
     
-    if not self.steeringfile :
-      self.log.info('Steering file not given! Try again!')
-    
-    if not self.inputfile :
-      return S_ERROR('Input file not given! Try again!')
-      
     if not self.libTomato :
       self.log.info('Tomato library not given. It will run without it')
 
