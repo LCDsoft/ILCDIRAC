@@ -1812,3 +1812,95 @@ class CheckCollections(Application):
     return S_OK()
   
   
+#################################################################
+#     SLCIOConcatenate : Helper to concatenate SLCIO files 
+#################################################################  
+class SLCIOConcatenate(Application):
+  """ Helper to concatenate slcio files
+  
+  Example:
+  
+  >>> slicoconca = SLCIOConcatenate()
+  >>> slicoconca.setInputSLCIOFiles( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
+  >>> slicoconca.setOutputSLCIOFile(myNewSLCIOFile.slcio)
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.InputSLCIOFiles = []
+    self.OutputSLCIOFile = ''
+    Application.__init__(self, paramdict)
+    self._modulename = "SLCIOConcatenate"
+    self.appname = self._modulename
+    self._moduledescription = 'Helper call to concatenate SLCIO files'
+      
+  def setInputSLCIOFiles(self,InputSLCIOFiles):
+    """ Set the SLCIO files in a list
+    
+    @param InputSLCIOFiles: SLCIO files. Must be a list
+    @type InputSLCIOFiles: list
+    
+    """  
+    self._checkArgs( {
+        'InputSLCIOFiles' : types.ListType
+      } )
+    
+    self.InputSLCIOFiles = InputSLCIOFiles
+    return S_OK()
+
+
+  def setOutputSLCIOFile(self,OutputSLCIOFile):
+    """ Set the SLCIO output file name
+    
+    @param OutputSLCIOFile: SLCIO output file
+    @type OutputSLCIOFile: string
+    
+    """  
+    self._checkArgs( {
+        'OutputSLCIOFile' : types.StringTypes
+      } )
+    
+    self.OutputSLCIOFile = OutputSLCIOFile
+    return S_OK()
+
+
+  def _applicationModule(self):
+    m1 = self._createModuleDefinition()
+    m1.addParameter( Parameter( "inputSLCIOFiles",     "", "list", "", "", False, False, "Input slcio files" ) )
+    m1.addParameter( Parameter( "collections",         "", "list", "", "", False, False, "Collections to check for" ) )
+    m1.addParameter( Parameter( "debug",            False, "bool", "", "", False, False, "debug mode"))
+    return m1
+  
+
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue("inputSLCIOFiles",             self.InputSLCIOFiles)
+    moduleinstance.setValue('outputSLCIOFile',             self.collections)
+    moduleinstance.setValue('debug',                       self.debug)
+   
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
+
+  def _checkConsistency(self):
+    """ Checks that all needed parameters are set
+    """
+    if not self.InputSLCIOFiles :
+      return S_ERROR('No SLCIO files given')  
+      
+    if not self.OutputSLCIOFile :
+      self.OutputSLCIOFile = 'OutputSLCIOFileConcatenate.slcio'
+      self.log.info('No output file name specified. Output file : OutputSLCIOFileConcatenate.slcio')
+      
+    return S_OK()
+  
+  
