@@ -1816,8 +1816,9 @@ class CheckCollections(Application):
   """
   def __init__(self, paramdict = None):
     self.collections = []
-    self.version = 'HEAD'
     Application.__init__(self, paramdict)
+    if not self.version:
+      self.version = 'HEAD'
     self._modulename = "CheckCollections"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
@@ -1895,8 +1896,9 @@ class SLCIOConcatenate(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.version = 'HEAD'
     Application.__init__(self, paramdict)
+    if not self.version:
+      self.version = 'HEAD'
     self._modulename = "SLCIOConcatenate"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to concatenate SLCIO files'
@@ -1961,8 +1963,10 @@ class Tomato(Application):
 
     self.libTomato = ''
     Application.__init__(self, paramdict)
+    if not self.version:
+      self.version = 'HEAD'
     self._modulename = "TomatoAnalysis"
-    self.appname = 'marlin'
+    self.appname = 'tomato'
     self._moduledescription = 'Helper Application over Marlin reconstruction'
       
   def setLibTomato(self,libTomato):
