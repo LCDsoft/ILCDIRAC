@@ -1181,7 +1181,7 @@ class OverlayInput(Application):
     @type bxoverlay: float
     """
     self._checkArgs( {
-        'bxoverlay' : types.FloatType
+        'bxoverlay' : types.IntType
       } )
     self.BXOverlay = bxoverlay
     return S_OK()
@@ -1270,10 +1270,8 @@ class OverlayInput(Application):
     """ Checks that all needed parameters are set
     """
     if not self.BXOverlay :
-      return S_ERROR("BXOverlay is not defined")
-      
-    if not self.NbSigEvtsPerJob :
-      return S_ERROR("Number of signal event per job is not defined")  
+      self.BXOverlay = 60
+      self.log.info("Using default number of BX to overlay: 60")
       
     if not self.ggtohadint :
       self.ggtohadint = 3.2
