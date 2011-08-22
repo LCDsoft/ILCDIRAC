@@ -117,9 +117,9 @@ class GenericApplication(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Script to execute"))
-    m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
-    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
+    m1.addParameter(Parameter("script",      "", "string", "", "", False, False, "Script to execute"))
+    m1.addParameter(Parameter("arguments",   "", "string", "", "", False, False, "Arguments to pass to the script"))
+    m1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -1660,7 +1660,7 @@ class LCSIM(Application):
     md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
     md1.addParameter(Parameter("outputREC",             "", "string", "", "", False, False, "REC output file"))
     md1.addParameter(Parameter("outputDST",             "", "string", "", "", False, False, "DST output file"))
-    md1.addParameter(Parameter("debug",               None, "string", "", "", False, False, "debug mode"))
+    md1.addParameter(Parameter("debug",              False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
