@@ -1910,42 +1910,42 @@ class PostGenSelection(Application):
   Example:
   
   >>> postGenSel = PostGenSelection()
-  >>> postGenSel.setNbEvtsToKept(30)
+  >>> postGenSel.setNbEvtsToKeep(30)
 
   
   """
   def __init__(self, paramdict = None):
 
-    self.NbEvtsToKept = 0
+    self.NbEvtsToKeep = 0
     Application.__init__(self, paramdict)
     self._modulename = "PostGenSelection"
     self.appname = self._modulename
     self._moduledescription = 'Helper to filter generator selection'
       
-  def setNbEvtsToKept(self,NbEvtsToKept):
-    """ Set the number of events to kept in the input file
+  def setNbEvtsToKeep(self,NbEvtsToKeep):
+    """ Set the number of events to keep in the input file
     
-    @param NbEvtsToKept: number of events to kept in the input file. Must be inferior to the number of events.
-    @type NbEvtsToKept: int
+    @param NbEvtsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
+    @type NbEvtsToKeep: int
     
     """  
     self._checkArgs( {
-        'NbEvtsToKept' : types.IntType
+        'NbEvtsToKeep' : types.IntType
       } )
     
-    self.NbEvtsToKept = NbEvtsToKept
+    self.NbEvtsToKeep = NbEvtsToKeep
     return S_OK()
 
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "NbEvtsKept",          "",   "int", "", "", False, False, "Number of events to kept" ) )
+    m1.addParameter( Parameter( "NbEvtsKept",           0,   "int", "", "", False, False, "Number of events to keep" ) )
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
     return m1
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKept)
+    moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKeep)
     moduleinstance.setValue('debug',                       self.debug)
    
   def _userjobmodules(self,stepdefinition):
@@ -1966,8 +1966,8 @@ class PostGenSelection(Application):
     """ Checks that all needed parameters are set
     """ 
       
-    if not self.NbEvtsToKept :
-      return S_ERROR('Number of events to kept was not given! Throw your brain to the trash and try again!')
+    if not self.NbEvtsToKeep :
+      return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
       
     return S_OK()  
   
