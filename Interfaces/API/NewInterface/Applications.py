@@ -1316,7 +1316,7 @@ class OverlayInput(Application):
       self.log.info("Background event type is gg -> had by default")
       
     if not self.detectortype in ['ILD','SID'] :
-      return S_ERROR('Detector type not set or wrong detector type')
+      return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
         
     if not self.energy :
       return S_ERROR('Energy not set! OverlayInput is not so happy...')
