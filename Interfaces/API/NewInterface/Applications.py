@@ -243,7 +243,7 @@ class GetSRMFile(Application):
 #################################################################
 #                    ROOT master class
 #################################################################  
-class Root(Application):
+class _Root(Application):
   """ Root principal class. Will inherit in RootExe and RootMacro classes, so don't use this (you can't anyway)!
   """
   
@@ -328,7 +328,7 @@ class Root(Application):
 #            Root Script Application: use a script in the 
 #                    Root application framework
 #################################################################  
-class RootScript(Root):
+class RootScript(_Root):
   """ Run a script (root executable or shell) in the root application environment. 
   
   Example:
@@ -366,7 +366,7 @@ class RootScript(Root):
 #            Root Macro Application: use a macro in the 
 #                   Root application framework
 #################################################################  
-class RootMacro(Root):
+class RootMacro(_Root):
   """ Run a root macro in the root application environment. 
   
   Example:
