@@ -1863,15 +1863,15 @@ class SLCIOConcatenate(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "inputSLCIOFiles",     "", "list", "", "", False, False, "Input slcio files" ) )
-    m1.addParameter( Parameter( "outputSLCIOFile",     "", "list", "", "", False, False, "Collections to check for" ) )
-    m1.addParameter( Parameter( "debug",            False, "bool", "", "", False, False, "debug mode"))
+    m1.addParameter( Parameter( "inputSLCIOFiles",     "",  "list", "", "", False, False, "Input slcio files" ) )
+    m1.addParameter( Parameter( "outputSLCIOFile",     "","string", "", "", False, False, "SLCIO output file" ) )
+    m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
     return m1
   
 
   def _applicationModuleValues(self,moduleinstance):
     moduleinstance.setValue("inputSLCIOFiles",             self.InputSLCIOFiles)
-    moduleinstance.setValue('outputSLCIOFile',             self.collections)
+    moduleinstance.setValue('outputSLCIOFile',             self.OutputSLCIOFile)
     moduleinstance.setValue('debug',                       self.debug)
    
   def _userjobmodules(self,stepdefinition):
