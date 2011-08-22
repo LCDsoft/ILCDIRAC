@@ -1279,15 +1279,13 @@ class OverlayInput(Application):
   
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
-    res2 = self._setUserJobFinalization(stepdefinition)
-    if not res1["OK"] or not res2["OK"] :
+    if not res1["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
   def _prodjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
-    res2 = self._setOutputComputeDataList(stepdefinition)
-    if not res1["OK"] or not res2["OK"] :
+    if not res1["OK"] :
       return S_ERROR('prodjobmodules failed')
     return S_OK()    
 
