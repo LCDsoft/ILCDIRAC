@@ -1746,40 +1746,38 @@ class CheckCollections(Application):
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
       
-  def setDetectorType(self,detectortype):
-    """ Set the detector type. Must be 'ILD' or 'SID'
+  def setInputSLCIOFiles(self,SLCIOlist):
+    """ Set the SLCIO files in a list
     
-    @param detectortype: Detector type. Must be 'ILD' or 'SID'
-    @type detectortype: string
+    @param SLCIOlist: SLCIO files. Must be a list
+    @type SLCIOlist: list
     
     """  
     self._checkArgs( {
-        'detectortype' : types.StringTypes
+        'SLCIOlist' : types.ListType
       } )
     
-    self.detectortype = detectortype
+    self.InputSLCIOFiles = SLCIOlist
     return S_OK()
 
 
-  def setBkgEvtType(self,BkgEvtType):
-    """ Define the background type. Default is gg -> had 
+  def setCollections(self,CollectionList):
+    """ Set collections. Must be a list
     
-    @param BkgEvtType: Background type. Default is gg -> had 
-    @type BkgEvtType: string
+    @param CollectionList: Collections. Must be a list
+    @type CollectionList: list
     
     """  
     self._checkArgs( {
-        'BkgEvtType' : types.StringTypes
+        'CollectionList' : types.ListType
       } )
     
-    self.BkgEvtType = BkgEvtType
+    self.collections = CollectionList
     return S_OK()
 
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "applicationVersion",  "", "string", "", "", False, False, "Application version" ) )
-    m1.addParameter( Parameter( "applicationLog",      "", "string", "", "", False, False, "Name of the output file of the application" ) )
     m1.addParameter( Parameter( "inputSLCIOFiles",     "", "string", "", "", False, False, "Input slcio files" ) )
     m1.addParameter( Parameter( "collections",         "", "string", "", "", False, False, "Collections to check for" ) )
     m1.addParameter( Parameter( "debug",            False,   "bool", "", "", False, False, "debug mode"))
@@ -1787,11 +1785,9 @@ class CheckCollections(Application):
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("BXOverlay",         self.BXOverlay)
-    moduleinstance.setValue('ggtohadint',        self.ggtohadint)
-    moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
-    moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
-    moduleinstance.setValue('debug',             self.debug)
+    moduleinstance.setValue("inputSLCIOFiles",         self.InputSLCIOFiles)
+    moduleinstance.setValue('collections',             self.collections)
+    moduleinstance.setValue('debug',                   self.debug)
   
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1807,38 +1803,15 @@ class CheckCollections(Application):
       return S_ERROR('prodjobmodules failed')
     return S_OK()    
 
-  def _addParametersToStep(self,stepdefinition):
-    res = self._addBaseParameters(stepdefinition)
-    if not res["OK"]:
-      return S_ERROR("Failed to set base parameters")
-    return S_OK()
-      
   def _checkConsistency(self):
     """ Checks that all needed parameters are set
     """
-    if not self.BXOverlay :
-      self.BXOverlay = 60
-      self.log.info("Using default number of BX to overlay: 60")
-      
-    if self._jobtype == 'User' :
-      if not self.NbSigEvtsPerJob :
-        return S_ERROR("Number of signal event per job is not defined")    
-      
-    if not self.ggtohadint :
-      self.ggtohadint = 3.2
-      self.log.info("Number of GG -> had is set to 3.2 by default")  
+    if not self.InputSLCIOFiles :
+      return S_ERROR('No SLCIO files given')  
       
     if not self.BkgEvtType :
-      self.BkgEvtType = 'gghad'
-      self.log.info("Background event type is gg -> had by default")
+      return S_ERROR('No collections to check')
       
-    if not self.detectortype == 'ILD' or self.detectortype == 'SID':
-      return S_ERROR('Detector type not set or wrong detector type')
-        
-    
-    if not self.energy :
-      return S_ERROR('Energy not set! OverlayInput is not so happy...')
-    
     return S_OK()
   
   
