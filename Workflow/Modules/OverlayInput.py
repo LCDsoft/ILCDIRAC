@@ -64,7 +64,7 @@ class OverlayInput (ModuleBase):
 
     if self.energy:
       if self.energy/1000:
-        self.energytouse = "%stev"%self.energy/1000
+        self.energytouse = "%stev"%(self.energy/1000)
       else:
         self.energytouse = "%sgev"%self.energy
         
