@@ -1702,7 +1702,7 @@ class SLICPandora(Application):
     self._modulename = 'SLICPandoraAnalysis'
     self._moduledescription = 'Module to run SLICPANDORA'
     self.appname = 'slicpandora'    
-    self.datatype = 'SIM'
+    self.datatype = 'REC'
     self.detectortype = 'SID'
         
     
