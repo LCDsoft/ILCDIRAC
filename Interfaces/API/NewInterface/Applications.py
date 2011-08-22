@@ -1727,33 +1727,17 @@ class CheckCollections(Application):
   Example:
   
   >>> check = OverlayInput()
-  >>> check.setInputSLCIOFiles( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
-  >>> check.setCollections( [] )
+  >>> check.setInputFile( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
+  >>> check.setCollections( ["some_collection_name"] )
   
   """
   def __init__(self, paramdict = None):
 
-    self.InputSLCIOFiles = []
     self.collections = []
     Application.__init__(self, paramdict)
     self._modulename = "CheckCollections"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
-      
-  def setInputSLCIOFiles(self,SLCIOlist):
-    """ Set the SLCIO files in a list
-    
-    @param SLCIOlist: SLCIO files. Must be a list
-    @type SLCIOlist: list
-    
-    """  
-    self._checkArgs( {
-        'SLCIOlist' : types.ListType
-      } )
-    
-    self.InputSLCIOFiles = SLCIOlist
-    return S_OK()
-
 
   def setCollections(self,CollectionList):
     """ Set collections. Must be a list
@@ -1772,14 +1756,12 @@ class CheckCollections(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "inputSLCIOFiles",     "", "list", "", "", False, False, "Input slcio files" ) )
-    m1.addParameter( Parameter( "collections",         "", "list", "", "", False, False, "Collections to check for" ) )
+    m1.addParameter( Parameter( "collections",         [], "list", "", "", False, False, "Collections to check for" ) )
     m1.addParameter( Parameter( "debug",            False, "bool", "", "", False, False, "debug mode"))
     return m1
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("inputSLCIOFiles",         self.InputSLCIOFiles)
     moduleinstance.setValue('collections',             self.collections)
     moduleinstance.setValue('debug',                   self.debug)
   
