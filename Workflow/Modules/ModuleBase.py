@@ -40,7 +40,7 @@ class ModuleBase(object):
     self.applicationName = ''
     self.InputData = ''
     self.SteeringFile = ''
-    
+    self.energy = 0
     self.result = S_ERROR()
     self.InputFile = ''
     self.OutputFile = ''
@@ -326,6 +326,9 @@ class ModuleBase(object):
     if self.workflow_commons.has_key('JobType'):
       self.jobType = self.workflow_commons['JobType']
       
+    if self.workflow_commons.has_key('Energy'):
+      self.energy = self.workflow_commons['Energy']
+
     if self.step_commons.has_key('InputFile'):
       self.InputFile = self.step_commons['InputFile']
             
@@ -343,6 +346,7 @@ class ModuleBase(object):
       if self.step_commons.has_key("OutputFile"):
         self.OutputFile = self.step_commons["OutputFile"]
 
+    #Next is also a module parameter, should be already set
     if self.step_commons.has_key('debug'):
       self.debug =  self.step_commons['debug']
 

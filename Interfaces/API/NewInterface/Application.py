@@ -156,7 +156,7 @@ class Application(object):
   def setEnergy(self,energy):
     """ Set the energy to use
     
-    @param energy: Energy used. Mostly needed at generation.
+    @param energy: Energy used in GeV
     @type energy: int
     """
     self._checkArgs({ 'energy' : types.IntType })
