@@ -1154,82 +1154,97 @@ class SLIC(Application):
 #            OverlayInput : 
 #################################################################  
 class OverlayInput(Application):
-  """ Run a script (python or shell) in an application environment. 
+  """ Helper call to define Overlay processor/driver inputs. 
   
   Example:
   
-  >>> ga = GenericApplication()
-  >>> ga.setScript("myscript.py")
-  >>> ga.setArguments("some command line arguments")
-  >>> ga.setDependency({"root":"5.26"})
+  >>> over = OverlayInput()
+  >>> over.setBXOverlay(300)
+  >>> over.setArguments("some command line arguments")
+  >>> over.setDependency({"root":"5.26"})
   
   """
   def __init__(self, paramdict = None):
-    self.script = None
-    self.arguments = ''
-    self.dependencies = {}
-    ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
+    self.BXOverlay = None
+    self.ggtohadint = 0
+    self.NbSigEvtsPerJob = 0
+    self.BkgEvtType = ''
     Application.__init__(self, paramdict)
-    #Those have to come last as the defaults from Application are not right
-    self._modulename = "ApplicationScript"
+    self._modulename = "OverlayInput"
     self.appname = self._modulename
-    self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
+    self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
       
-  def setScript(self,script):
-    """ Define script to use
+  def setBXOverlay(self,bxoverlay):
+    """ Define bunch crossings to overlay
     
-    @param script: Script to run on. Can be shell or python. Can be local file or LFN.
-    @type script: string
+    @param bxoverlay: Bunch crossings to overlay.
+    @type bxoverlay: float
     """
     self._checkArgs( {
-        'script' : types.StringTypes
+        'bxoverlay' : types.FloatType
       } )
-    if os.path.exists(script) or script.lower().count("lfn:"):
-      self.inputSB.append(script)
-    self.script = script
+    self.BXOverlay = bxoverlay
     return S_OK()
     
-  def setArguments(self,args):
-    """ Define the arguments of the script (if any)
+  def setGGToHadInt(self,ggtohadint):
+    """ Define the optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2
     
-    @param arguments: Arguments to pass to the command line call
-    @type arguments: string
+    @param ggtohadint: optional number of gamma gamma -> hadrons interactions per bunch crossing
+    @type ggtohadint: float
     
     """
     self._checkArgs( {
-        'args' : types.StringTypes
+        'ggtohadint' : types.FloatType
       } )  
-    self.arguments = args
+    self.ggtohadint = ggtohadint
     return S_OK()
       
-  def setDependency(self,appdict):
-    """ Define list of application you need
+  def setNbSigEvtsPerJob(self,nbsigevtsperjob):
+    """ Set the number of signal events per job
     
-    >>> app.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
-    
-    @param appdict: Dictionary of applciation to use: {"App":"version"}
-    @type appdict: dict
+    @param nbsigevtsperjob: Number of signal events per job
+    @type nbsigevtsperjob: int
     
     """  
-    #check that dict has proper structure
     self._checkArgs( {
-        'appdict' : types.DictType
+        'nbsigevtsperjob' : types.IntType
       } )
     
-    self.dependencies.update(appdict)
+    self.NbSigEvtsPerJob = nbsigevtsperjob
     return S_OK()
+
+
+  def setBkgEvtType(self,BkgEvtType):
+    """ Define the background type. Default is gg -> had 
+    
+    @param BkgEvtType: Background type. Default is gg -> had 
+    @type BkgEvtType: string
+    
+    """  
+    self._checkArgs( {
+        'BkgEvtType' : types.StringTypes
+      } )
+    
+    self.BkgEvtType = BkgEvtType
+    return S_OK()
+
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("script", "", "string", "", "", False, False, "Script to execute"))
-    m1.addParameter(Parameter("arguments", "", "string", "", "", False, False, "Arguments to pass to the script"))
-    m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
+    m1.addParameter(Parameter("BXOverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
+    m1.addParameter(Parameter("ggtohadint",           0,  "float", "", "", False, False, "Optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2"))
+    m1.addParameter(Parameter("NbSigEvtsPerJob",      0,    "int", "", "", False, False, "Number of signal events per job"))
+    m1.addParameter(Parameter("BkgEvtType",          "", "string", "", "", False, False, "Background type. Default is gg -> had"))
+    m1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
+
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("script",self.script)
-    moduleinstance.setValue('arguments',self.arguments)
-    moduleinstance.setValue('debug',self.debug)
+    moduleinstance.setValue("BXOverlay",         self.BXOverlay)
+    moduleinstance.setValue('ggtohadint',        self.ggtohadint)
+    moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
+    moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
+    moduleinstance.setValue('debug',             self.debug)
   
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1250,23 +1265,24 @@ class OverlayInput(Application):
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")
     return S_OK()
-  
-  def _setStepParametersValues(self, instance):
-    self._setBaseStepParametersValues(instance)
-    for depn,depv in self.dependencies.items():
-      self.job._addSoftware(depn,depv)
-    return S_OK()
       
   def _checkConsistency(self):
-    """ Checks that script and dependencies are set.
+    """ Checks that all needed parameters are set
     """
-    if not self.script:
-      return S_ERROR("Script not defined")
-    elif not self.script.lower().count("lfn:") and not os.path.exists(self.script):
-      return S_ERROR("Specified script is not an LFN and was not found on disk")
+    if not self.BXOverlay :
+      return S_ERROR("BXOverlay is not defined")
       
-    if not len(self.dependencies):
-      return S_ERROR("Dependencies not set")
+    if not self.NbSigEvtsPerJob :
+      return S_ERROR("Number of signal event per job is not defined")  
+      
+    if not self.ggtohadint :
+      self.ggtohadint = 3.2
+      self.log.info("Number of GG -> had is set to 3.2 by default")  
+      
+    if not self.BkgEvtType :
+      self.BkgEvtType = 'gghad'
+      self.log.info("Background event type is gg -> had by default")
+    
     return S_OK() 
   
   
