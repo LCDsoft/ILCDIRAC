@@ -1151,7 +1151,8 @@ class SLIC(Application):
   
   
 #################################################################
-#            OverlayInput : 
+#            OverlayInput : Helper call to define 
+#              Overlay processor/driver inputs
 #################################################################  
 class OverlayInput(Application):
   """ Helper call to define Overlay processor/driver inputs. 
@@ -1244,19 +1245,21 @@ class OverlayInput(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("bxoverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
+    m1.addParameter(Parameter("BXOverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
     m1.addParameter(Parameter("ggtohadint",           0,  "float", "", "", False, False, "Optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2"))
     m1.addParameter(Parameter("NbSigEvtsPerJob",      0,    "int", "", "", False, False, "Number of signal events per job"))
     m1.addParameter(Parameter("BkgEvtType",          "", "string", "", "", False, False, "Background type. Default is gg -> had"))
+    m1.addParameter(Parameter("Detector",            "", "string", "", "", False, False, "Detector model. Must be ILD or SID"))
     m1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
 
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("bxoverlay",         self.BXOverlay)
+    moduleinstance.setValue("BXOverlay",         self.BXOverlay)
     moduleinstance.setValue('ggtohadint',        self.ggtohadint)
     moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
     moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
+    moduleinstance.setValue('Detector',          self.detectortype)
     moduleinstance.setValue('debug',             self.debug)
   
   def _userjobmodules(self,stepdefinition):
@@ -1298,10 +1301,9 @@ class OverlayInput(Application):
       self.BkgEvtType = 'gghad'
       self.log.info("Background event type is gg -> had by default")
       
-    if not self.detectortype in ['ILD','SID']:
-      return S_ERROR('Detector type not set or wrong detector type, allowed values are ILD or SID.')
+    if not self.detectortype in ['ILD','SID'] :
+      return S_ERROR('Detector type not set or wrong detector type')
         
-    
     if not self.energy :
       return S_ERROR('Energy not set! OverlayInput is not so happy...')
     
@@ -1707,3 +1709,122 @@ class SLICPandora(Application):
       stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
     return S_OK()
 
+
+#################################################################
+#            CheckCollection : Helper to check collection 
+#################################################################  
+class CheckCollections(Application):
+  """ Helper to check collection 
+  
+  Example:
+  
+  >>> check = OverlayInput()
+  >>> check.setInputSLCIOFiles( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
+  >>> check.setCollections( [] )
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.InputSLCIOFiles = []
+    self.collections = []
+    Application.__init__(self, paramdict)
+    self._modulename = "CheckCollections"
+    self.appname = self._modulename
+    self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
+      
+  def setDetectorType(self,detectortype):
+    """ Set the detector type. Must be 'ILD' or 'SID'
+    
+    @param detectortype: Detector type. Must be 'ILD' or 'SID'
+    @type detectortype: string
+    
+    """  
+    self._checkArgs( {
+        'detectortype' : types.StringTypes
+      } )
+    
+    self.detectortype = detectortype
+    return S_OK()
+
+
+  def setBkgEvtType(self,BkgEvtType):
+    """ Define the background type. Default is gg -> had 
+    
+    @param BkgEvtType: Background type. Default is gg -> had 
+    @type BkgEvtType: string
+    
+    """  
+    self._checkArgs( {
+        'BkgEvtType' : types.StringTypes
+      } )
+    
+    self.BkgEvtType = BkgEvtType
+    return S_OK()
+
+
+  def _applicationModule(self):
+    m1 = self._createModuleDefinition()
+    m1.addParameter( Parameter( "applicationVersion",  "", "string", "", "", False, False, "Application version" ) )
+    m1.addParameter( Parameter( "applicationLog",      "", "string", "", "", False, False, "Name of the output file of the application" ) )
+    m1.addParameter( Parameter( "inputSLCIOFiles",     "", "string", "", "", False, False, "Input slcio files" ) )
+    m1.addParameter( Parameter( "collections",         "", "string", "", "", False, False, "Collections to check for" ) )
+    m1.addParameter( Parameter( "debug",            False,   "bool", "", "", False, False, "debug mode"))
+    return m1
+  
+
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue("BXOverlay",         self.BXOverlay)
+    moduleinstance.setValue('ggtohadint',        self.ggtohadint)
+    moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
+    moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
+    moduleinstance.setValue('debug',             self.debug)
+  
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
+
+  def _addParametersToStep(self,stepdefinition):
+    res = self._addBaseParameters(stepdefinition)
+    if not res["OK"]:
+      return S_ERROR("Failed to set base parameters")
+    return S_OK()
+      
+  def _checkConsistency(self):
+    """ Checks that all needed parameters are set
+    """
+    if not self.BXOverlay :
+      self.BXOverlay = 60
+      self.log.info("Using default number of BX to overlay: 60")
+      
+    if self._jobtype == 'User' :
+      if not self.NbSigEvtsPerJob :
+        return S_ERROR("Number of signal event per job is not defined")    
+      
+    if not self.ggtohadint :
+      self.ggtohadint = 3.2
+      self.log.info("Number of GG -> had is set to 3.2 by default")  
+      
+    if not self.BkgEvtType :
+      self.BkgEvtType = 'gghad'
+      self.log.info("Background event type is gg -> had by default")
+      
+    if not self.detectortype == 'ILD' or self.detectortype == 'SID':
+      return S_ERROR('Detector type not set or wrong detector type')
+        
+    
+    if not self.energy :
+      return S_ERROR('Energy not set! OverlayInput is not so happy...')
+    
+    return S_OK()
+  
+  
