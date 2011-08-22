@@ -190,12 +190,18 @@ class Application(object):
     """ Set the input file to use: stdhep, slcio, root, whatever
     
     @param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
-    @type inputfile: string
+    @type inputfile: string or list
     """
-    self._checkArgs({ 'inputfile' : types.StringTypes } )
-    self.inputfile = inputfile
-    if os.path.exists(inputfile) or inputfile.lower().count("lfn:"):
-      self.inputSB.append(inputfile)  
+    if not type(inputfile) in types.StringTypes and not type(inputfile)==type([]):
+      return self._reportError("InputFile must be string or list")
+    if not type(inputfile)==type([]):
+      inputfile = [inputfile]
+    for f in inputfile:
+      if os.path.exists(f) or f.lower().count("lfn:"):
+        self.inputSB.append(f)
+        
+    self.inputfile = string.join(inputfile,";")
+
     return S_OK()
   
   def getInputFromApp(self,application):

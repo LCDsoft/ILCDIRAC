@@ -1878,9 +1878,9 @@ class SLCIOConcatenate(Application):
   
   Example:
   
-  >>> slicoconca = SLCIOConcatenate()
-  >>> slicoconca.setInputFile( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
-  >>> slicoconca.setOutputFile(myNewSLCIOFile.slcio)
+  >>> slcioconcat = SLCIOConcatenate()
+  >>> slcioconcat.setInputFile( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
+  >>> slcioconcat.setOutputFile(myNewSLCIOFile.slcio)
   
   """
   def __init__(self, paramdict = None):
