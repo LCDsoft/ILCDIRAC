@@ -1843,12 +1843,10 @@ class SLCIOConcatenate(Application):
   def _checkConsistency(self):
     """ Checks that all needed parameters are set
     """
-    if not self.InputSLCIOFiles :
-      return S_ERROR('No SLCIO files given')  
       
-    if not self.OutputSLCIOFile :
-      self.OutputSLCIOFile = 'OutputSLCIOFileConcatenate.slcio'
-      self.log.info('No output file name specified. Output file : OutputSLCIOFileConcatenate.slcio')
+    if not self.OutputFile :
+      self.setOutputFile('LCIOFileConcatenated.slcio')
+      self.log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
       
     return S_OK()
   
