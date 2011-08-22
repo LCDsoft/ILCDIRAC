@@ -1161,6 +1161,8 @@ class OverlayInput(Application):
   
   >>> over = OverlayInput()
   >>> over.setBXOverlay(300)
+  >>> over.setGGToHadInt(3.2)
+  >>> over.setNbSigEvtsPerJob(10)
   
   """
   def __init__(self, paramdict = None):
@@ -1168,6 +1170,7 @@ class OverlayInput(Application):
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
     self.BkgEvtType = ''
+    self.prodid = 0
     Application.__init__(self, paramdict)
     self._modulename = "OverlayInput"
     self.appname = self._modulename
@@ -1241,15 +1244,25 @@ class OverlayInput(Application):
     
     self.BkgEvtType = BkgEvtType
     return S_OK()
-
+  
+#  def setProdIDToUse(self,prodid):
+#    """ Optional parameter: Define the production ID to use as input
+#    
+#    @param prodid: Production ID
+#    @type prodid: int
+#    """
+#    self._checkArgs({"prodid" : types.IntType})
+#    self.prodid = prodid
+#    return S_OK()
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("BXOverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
     m1.addParameter(Parameter("ggtohadint",           0,  "float", "", "", False, False, "Optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2"))
     m1.addParameter(Parameter("NbSigEvtsPerJob",      0,    "int", "", "", False, False, "Number of signal events per job"))
+    m1.addParameter(Parameter("prodid",               0,    "int", "", "", False, False, "ProdID to use"))
     m1.addParameter(Parameter("BkgEvtType",          "", "string", "", "", False, False, "Background type. Default is gg -> had"))
-    m1.addParameter(Parameter("Detector",            "", "string", "", "", False, False, "Detector model. Must be ILD or SID"))
+    m1.addParameter(Parameter("detector",            "", "string", "", "", False, False, "Detector model. Must be ILD or SID"))
     m1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
@@ -1258,8 +1271,9 @@ class OverlayInput(Application):
     moduleinstance.setValue("BXOverlay",         self.BXOverlay)
     moduleinstance.setValue('ggtohadint',        self.ggtohadint)
     moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
+    moduleinstance.setValue('prodid',            self.prodid)
     moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
-    moduleinstance.setValue('Detector',          self.detectortype)
+    moduleinstance.setValue('detector',          self.detectortype)
     moduleinstance.setValue('debug',             self.debug)
   
   def _userjobmodules(self,stepdefinition):
