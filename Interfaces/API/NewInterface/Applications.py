@@ -1901,3 +1901,73 @@ class SLCIOConcatenate(Application):
     return S_OK()
   
   
+#################################################################
+#     PostGenSelection : Helper to filter generator selection 
+#################################################################  
+class PostGenSelection(Application):
+  """ Helper to filter generator selection
+  
+  Example:
+  
+  >>> postGenSel = PostGenSelection()
+  >>> postGenSel.setNbEvtsToKept(30)
+
+  
+  """
+  def __init__(self, paramdict = None):
+
+    self.NbEvtsToKept = 0
+    Application.__init__(self, paramdict)
+    self._modulename = "PostGenSelection"
+    self.appname = self._modulename
+    self._moduledescription = 'Helper to filter generator selection'
+      
+  def setNbEvtsToKept(self,NbEvtsToKept):
+    """ Set the number of events to kept in the input file
+    
+    @param NbEvtsToKept: number of events to kept in the input file. Must be inferior to the number of events.
+    @type NbEvtsToKept: int
+    
+    """  
+    self._checkArgs( {
+        'NbEvtsToKept' : types.IntType
+      } )
+    
+    self.NbEvtsToKept = NbEvtsToKept
+    return S_OK()
+
+
+  def _applicationModule(self):
+    m1 = self._createModuleDefinition()
+    m1.addParameter( Parameter( "NbEvtsKept",          "",   "int", "", "", False, False, "Number of events to kept" ) )
+    m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
+    return m1
+  
+
+  def _applicationModuleValues(self,moduleinstance):
+    moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKept)
+    moduleinstance.setValue('debug',                       self.debug)
+   
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
+
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
+
+  def _checkConsistency(self):
+    """ Checks that all needed parameters are set
+    """ 
+      
+    if not self.NbEvtsToKept :
+      return S_ERROR('Number of events to kept was not given! Throw your brain to the trash and try again!')
+      
+    return S_OK()  
+  
