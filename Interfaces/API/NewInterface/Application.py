@@ -192,8 +192,9 @@ class Application(object):
     @param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
     @type inputfile: string or list
     """
+    kwargs = {"inputfile":inputfile}
     if not type(inputfile) in types.StringTypes and not type(inputfile)==type([]):
-      return self._reportError("InputFile must be string or list")
+      return self._reportError("InputFile must be string or list of strings",__name__,**kwargs)
     if not type(inputfile)==type([]):
       inputfile = [inputfile]
     for f in inputfile:
