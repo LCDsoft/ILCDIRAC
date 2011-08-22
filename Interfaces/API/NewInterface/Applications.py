@@ -1160,8 +1160,6 @@ class OverlayInput(Application):
   
   >>> over = OverlayInput()
   >>> over.setBXOverlay(300)
-  >>> over.setArguments("some command line arguments")
-  >>> over.setDependency({"root":"5.26"})
   
   """
   def __init__(self, paramdict = None):
