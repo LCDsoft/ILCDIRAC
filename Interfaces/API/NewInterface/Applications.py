@@ -1301,19 +1301,19 @@ class Marlin(Application):
     self.detectortype = 'ILD'
      
     
-  def setInputGearFile(self,inputGearFile):
+  def setGearFile(self,GearFile):
     """ Define input gear file for Marlin reconstructor
     
     @param inputGearFile: input gear file for Marlin reconstrcutor
     @type inputGearFile: string
     """
     self._checkArgs( {
-        'inputGearFile' : types.StringTypes
+        'GearFile' : types.StringTypes
       } )
 
-    self.inputGearFile = inputGearFile
-    if os.path.exists(inputGearFile) or inputGearFile.lower().count("lfn:"):
-      self.inputSB.append(inputGearFile) 
+    self.inputGearFile = GearFile
+    if os.path.exists(GearFile) or GearFile.lower().count("lfn:"):
+      self.inputSB.append(GearFile) 
     
   def setOutputRecFile(self,outputRecFile):
     """ Define output rec file for Marlin reconstructor
