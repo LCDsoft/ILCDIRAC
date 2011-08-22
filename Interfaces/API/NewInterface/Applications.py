@@ -219,8 +219,18 @@ class GetSRMFile(Application):
 
   
   def _checkConsistency(self):
+
     if not self.filedict:
       return S_ERROR("The file list was not defined")
+    
+    if type(self.filedict) == type({}):
+      return S_ERROR("Type is not correct, is cannot be a dictionary.")
+        
+    if type(self.filedict) == type(""):
+      self.filedict = [str(self.filedict)]
+    if type(self.filedict) == type([]):
+      self.filedict = string.join(self.filedict,";")
+
     return S_OK()
 
   def _addParametersToStep(self,step):
