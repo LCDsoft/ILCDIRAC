@@ -361,22 +361,6 @@ class RootScript(Root):
       self.inputSB.append(executable)
     return S_OK()
     
-    
-  def setArguments(self,args):
-    """ Define the arguments of the script (if any)
-    
-    @param arguments: Arguments to pass to the command line call
-    @type arguments: string
-    
-    """
-    self._checkArgs( {
-        'args' : types.StringTypes
-      } )  
-    self.arguments = args
-    return S_OK()
-      
-
-
 
 #################################################################
 #            Root Macro Application: use a macro in the 
@@ -414,21 +398,6 @@ class RootMacro(Root):
     if os.path.exists(macro) or macro.lower().count("lfn:"):
       self.inputSB.append(macro)
     return S_OK()
-    
-    
-  def setArguments(self,args):
-    """ Define the arguments of the script (if any)
-    
-    @param arguments: Arguments to pass to the command line call
-    @type arguments: string
-    
-    """
-    self._checkArgs( {
-        'args' : types.StringTypes
-      } )  
-    self.arguments = args
-    return S_OK()
-
 
 
 #################################################################
