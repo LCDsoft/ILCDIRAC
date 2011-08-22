@@ -86,7 +86,7 @@ class GenericApplication(Application):
     return S_OK()
     
   def setArguments(self,args):
-    """ Define the arguments of the script (if any)
+    """ Optional: Define the arguments of the script
     
     @param args: Arguments to pass to the command line call
     @type args: string
@@ -263,7 +263,7 @@ class _Root(Application):
 
      
   def setArguments(self,args):
-    """ Define the arguments of the script (if any)
+    """ Optional: Define the arguments of the script
     
     @param args: Arguments to pass to the command line call
     @type args: string
@@ -340,7 +340,7 @@ class RootScript(_Root):
   """
   def __init__(self, paramdict = None):
     self.script = None
-    Root.__init__(self, paramdict)
+    _Root.__init__(self, paramdict)
     self._modulename = "RootExecutableAnalysis"
     self.appname = 'root'
     self._moduledescription = 'Root application script'
@@ -378,7 +378,7 @@ class RootMacro(_Root):
   """
   def __init__(self, paramdict = None):
     self.script = None
-    Root.__init__(self, paramdict)
+    _Root.__init__(self, paramdict)
     self._modulename = "RootMacroAnalysis"
     self.appname = 'root'
     self._moduledescription = 'Root macro execution'
@@ -412,7 +412,7 @@ class Whizard(Application):
   >>> wh.setProcess("ee_h_mumu")
   >>> wh.setEnergy(500)
   >>> wh.setNbEvts(1000)
-  >>> wh.setModel("SM")
+  >>> wh.setModel("sm")
 
   """
   def __init__(self, processlist = None, paramdict = None):    
@@ -438,7 +438,7 @@ class Whizard(Application):
     
     
   def setEvtType(self,evttype):
-    """ Define process
+    """ Define process. If the process given is not found, when calling job.append a full list is printed.
     
     @param evttype: Process to generate
     @type evttype: string
@@ -452,7 +452,7 @@ class Whizard(Application):
     self.evttype = evttype
 
   def setLuminosity(self,lumi):
-    """ Define luminosity to generate 
+    """ Optional: Define luminosity to generate 
     
     @param lumi: Luminosity to generate. Not available if cross section is not known a priori. Use with care.
     @type lumi: float
@@ -463,9 +463,9 @@ class Whizard(Application):
     self.lumi = lumi
 
   def setRandomSeed(self,seed):
-    """ Define random seed to use 
+    """ Optional: Define random seed to use. Default is Job ID.
     
-    @param seed: Seed to use during integration and generation. Default is Job ID.
+    @param seed: Seed to use during integration and generation. 
     @type seed: int
     """
     self._checkArgs( {
@@ -487,7 +487,7 @@ class Whizard(Application):
     self.parameterdict = paramdict
   
   def setModel(self,model):
-    """ Define Model
+    """ Optional: Define Model
     
     @param model: Model to use for generation. Predefined list available in GeneratorModels class.
     @type model: string
@@ -499,7 +499,7 @@ class Whizard(Application):
     self. model = model
     
   def setJobIndex(self,index):
-    """ Define Job Index
+    """ Optional: Define Job Index. Added in the file name between the event type and the extension.
     
     @param index: Index to use for generation
     @type index: string
@@ -689,7 +689,9 @@ class Pythia(Application):
   
   >>> py = Pythia()
   >>> py.setVersion("tt_500gev_V2")
+  >>> py.setEnergy(500) #Can look like a duplication of info, but trust me, it's needed.
   >>> py.setNbEvts(50)
+  >>> py.setOutputFile("myfile.stdhep")
 
   """
   def __init__(self,paramdict = None):
@@ -942,7 +944,7 @@ class Mokka(Application):
     self.detectortype = 'ILD'
      
   def setRandomSeed(self,seed):
-    """ Define random seed to use 
+    """ Optional: Define random seed to use. Default is JobID. 
     
     @param seed: Seed to use during integration and generation. Default is Job ID.
     @type seed: int
@@ -966,7 +968,7 @@ class Mokka(Application):
     self.detectorModel = detectorModel    
     
   def setMacFile(self,macfile):
-    """ Define Mac File
+    """ Optional: Define Mac File. Useful if using particle gun.
     
     @param macfile: Mac file for Mokka
     @type macfile: string
@@ -980,7 +982,7 @@ class Mokka(Application):
     
     
   def setStartFrom(self,startfrom):
-    """ Define from how mokka start to read in the input file
+    """ Optional: Define from where mokka starts to read in the generator file
     
     @param startfrom: from how mokka start to read the input file
     @type startfrom: int
@@ -992,7 +994,7 @@ class Mokka(Application):
     
     
   def setProcessID(self,processID):
-    """ Define the ID's process
+    """ Optional: Define the processID. This is added to the event header.
     
     @param processID: ID's process
     @type processID: string
@@ -1004,7 +1006,7 @@ class Mokka(Application):
     
     
   def setDbSlice(self,dbSlice):
-    """ Define the data base that will use mokka
+    """ Optional: Define the data base that will use mokka
     
     @param dbSlice: data base used by mokka
     @type dbSlice: string
@@ -1111,9 +1113,9 @@ class SLIC(Application):
     self.detectortype = 'SID'
      
   def setRandomSeed(self,seed):
-    """ Define random seed to use 
+    """ Optional: Define random seed to use. Default is Job ID.
     
-    @param seed: Seed to use during integration and generation. Default is Job ID.
+    @param seed: Seed to use during simulation. 
     @type seed: int
     """
     self._checkArgs( {
@@ -1136,7 +1138,7 @@ class SLIC(Application):
     
     
   def setStartFrom(self,startfrom):
-    """ Define from how slic start to read in the input file
+    """ Optional: Define from how slic start to read in the input file
     
     @param startfrom: from how slic start to read the input file
     @type startfrom: int
@@ -1287,7 +1289,7 @@ class OverlayInput(Application):
 
 
   def setBkgEvtType(self,BkgEvtType):
-    """ Define the background type. Default is gg -> had 
+    """ Optional: Define the background type. Default is gg -> had. For the moment only gghad is used.
     
     @param BkgEvtType: Background type. Default is gg -> had 
     @type BkgEvtType: string
@@ -1407,7 +1409,7 @@ class Marlin(Application):
      
     
   def setGearFile(self,GearFile):
-    """ Define input gear file for Marlin reconstructor
+    """ Define input gear file for Marlin
     
     @param GearFile: input gear file for Marlin reconstrcutor
     @type GearFile: string
@@ -1421,9 +1423,9 @@ class Marlin(Application):
       self.inputSB.append(GearFile) 
     
   def setOutputRecFile(self,outputRecFile):
-    """ Define output rec file for Marlin reconstructor
+    """ Optional: Define output rec file for Marlin
     
-    @param outputRecFile: output rec file for Marlin reconstructor
+    @param outputRecFile: output rec file for Marlin
     @type outputRecFile: string
     """
     self._checkArgs( {
@@ -1434,9 +1436,9 @@ class Marlin(Application):
       
     
   def setOutputDstFile(self,outputDstFile):
-    """ Define output dst file for Marlin reconstructor
+    """ Optional: Define output dst file for Marlin
     
-    @param outputDstFile: output dst file for Marlin reconstructor
+    @param outputDstFile: output dst file for Marlin
     @type outputDstFile: string
     """
     self._checkArgs( {
@@ -1471,7 +1473,7 @@ class Marlin(Application):
       return S_ERROR('Version not set!')   
     
     if not self.inputGearFile :
-      self.log.info('Input GEAR file not given')
+      self.log.info('GEAR file not given')
 
     res = self._checkRequiredApp()
     if not res['OK']:
@@ -1540,9 +1542,9 @@ class LCSIM(Application):
     self.detectortype = 'SID'
      
   def setOutputRecFile(self,outputRecFile):
-    """ Define output rec file for LCSIM reconstructor
+    """ Optional: Define output rec file for LCSIM
     
-    @param outputRecFile: output rec file for LCSIM reconstructor
+    @param outputRecFile: output rec file for LCSIM
     @type outputRecFile: string
     """
     self._checkArgs( {
@@ -1553,9 +1555,9 @@ class LCSIM(Application):
       
     
   def setOutputDstFile(self,outputDstFile):
-    """ Define output dst file for LCSIM reconstructor
+    """ Optional: Define output dst file for LCSIM
     
-    @param outputDstFile: output dst file for LCSIM reconstructor
+    @param outputDstFile: output dst file for LCSIM
     @type outputDstFile: string
     """
     self._checkArgs( {
@@ -1566,7 +1568,7 @@ class LCSIM(Application):
             
     
   def setAliasProperties(self,alias):
-    """ Define the path to the alias.properties file name that will be used 
+    """ Optional: Define the path to the alias.properties file name that will be used 
     
     @param alias: Path to the alias.properties file name that will be used
     @type alias: string
@@ -1581,7 +1583,7 @@ class LCSIM(Application):
     
     
   def setExtraParams(self,extraparams):
-    """ Define command line parameters to pass to java
+    """ Optional: Define command line parameters to pass to java
     
     @param extraparams: Command line parameters to pass to java
     @type extraparams: string
@@ -1692,7 +1694,7 @@ class SLICPandora(Application):
       self.inputSB.append(detectorModel)   
     
   def setStartFrom(self,startfrom):
-    """ Define from how slicpandora start to read in the input file
+    """ Optional: Define from where slicpandora start to read in the input file
     
     @param startfrom: from how slicpandora start to read the input file
     @type startfrom: int
@@ -1703,7 +1705,7 @@ class SLICPandora(Application):
     self.startfrom = startfrom     
     
   def setPandoraSettings(self,pandoraSettings):
-    """ Define the path where pandora settings are
+    """ Optional: Define the path where pandora settings are
     
     @param pandoraSettings: path where pandora settings are
     @type pandoraSettings: string
@@ -1919,7 +1921,7 @@ class SLCIOConcatenate(Application):
 #     Tomato : Helper to filter generator selection 
 #################################################################  
 class Tomato(Application):
-  """ Helper application over Marlin reconstruction
+  """ Helper application over Tomato analysis
   
   Example:
   
@@ -1941,7 +1943,7 @@ class Tomato(Application):
     self._moduledescription = 'Helper Application over Marlin reconstruction'
       
   def setLibTomato(self,libTomato):
-    """ Set the the optional Tomato library with the user version
+    """ Optional: Set the the optional Tomato library with the user version
     
     @param libTomato: Tomato library
     @type libTomato: string
