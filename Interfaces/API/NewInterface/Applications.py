@@ -1778,9 +1778,9 @@ class CheckCollections(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter( Parameter( "inputSLCIOFiles",     "", "string", "", "", False, False, "Input slcio files" ) )
-    m1.addParameter( Parameter( "collections",         "", "string", "", "", False, False, "Collections to check for" ) )
-    m1.addParameter( Parameter( "debug",            False,   "bool", "", "", False, False, "debug mode"))
+    m1.addParameter( Parameter( "inputSLCIOFiles",     "", "list", "", "", False, False, "Input slcio files" ) )
+    m1.addParameter( Parameter( "collections",         "", "list", "", "", False, False, "Collections to check for" ) )
+    m1.addParameter( Parameter( "debug",            False, "bool", "", "", False, False, "debug mode"))
     return m1
   
 
