@@ -18,8 +18,8 @@ class Application(object):
   def __init__(self, paramdict = None):
     """ Can define the full application by passing a dictionary in the constructor.
     
-    >>> app = Application({"Name":"marlin","Version":"v0111Prod",\
-                          "SteeringFile":"My_file.xml","NbEvts":1000})
+    >>> app = Application({"Name":"marlin","Version":"v0111Prod",
+    ...                    "SteeringFile":"My_file.xml","NbEvts":1000})
     
     @param paramdict: Dictionary of parameters that can be set. Will throw an exception if one of them does not exist.
     @type paramdict: dict
