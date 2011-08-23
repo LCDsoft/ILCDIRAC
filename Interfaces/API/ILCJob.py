@@ -2428,7 +2428,7 @@ class ILCJob(Job):
   def testing(self,dict):
     self.StepCount += 1
     self._addParameter(self.workflow, 'TotalSteps', 'String', self.StepCount, 'Total number of steps')
-    self._addParameter(self.workflow, "test","dict",dict,"testing dict")
+    self._addParameter(self.workflow, "test","list",dict,"testing dict")
     return S_OK()
 
   def checkWorkflowParams(self):
