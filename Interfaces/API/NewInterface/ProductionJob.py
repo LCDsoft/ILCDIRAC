@@ -1,5 +1,7 @@
 '''
-Created on Jul 28, 2011
+Production Job class. Used to define new productions. 
+
+Mostly similar to L{UserJob}, but cannot be (and should not be) used liek the UserJob class.
 
 @author: Stephane Poss
 '''
