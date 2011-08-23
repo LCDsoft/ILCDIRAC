@@ -800,10 +800,17 @@ class PostGenSelection(Application):
       
     if not self.NbEvtsToKeep :
       return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
-      
+    
+    res = self._checkRequiredApp() ##Check that job order is correct
+    if not res['OK']:
+      return res      
+    
     return S_OK()  
   
- 
+  def _resolveLinkedStepParameters(self,stepinstance):
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+    return S_OK()   
   
 ##########################################################################
 #            StdhepCut: apply generator level cuts after pythia or whizard
@@ -903,8 +910,8 @@ class StdhepCut(Application):
     return S_OK()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()  
     
     
@@ -1075,8 +1082,8 @@ class Mokka(Application):
 
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK() 
   
 
@@ -1199,8 +1206,8 @@ class SLIC(Application):
 
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()   
   
   
@@ -1520,8 +1527,8 @@ class Marlin(Application):
 
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK() 
   
 ##########################################################################
@@ -1665,8 +1672,8 @@ class LCSIM(Application):
     moduleinstance.setValue("debug",              self.debug)
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
   
 ##########################################################################
@@ -1789,8 +1796,8 @@ class SLICPandora(Application):
 
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
 
 
@@ -1870,8 +1877,8 @@ class CheckCollections(Application):
     return S_OK()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
   
 #################################################################
@@ -1933,8 +1940,8 @@ class SLCIOConcatenate(Application):
     return S_OK()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
   
 #################################################################
@@ -2019,7 +2026,7 @@ class Tomato(Application):
     return S_OK()  
 
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
   
