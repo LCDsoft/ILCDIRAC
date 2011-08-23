@@ -1401,9 +1401,9 @@ class Marlin(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.dstpath = ''
+    self.outputDstPath = ''
     self.outputDstFile = ''
-    self.recpath = ''
+    self.outputRecPath = ''
     self.outputRecFile = ''
     self.inputGearFile = ''
     Application.__init__(self,paramdict)
@@ -1443,7 +1443,7 @@ class Marlin(Application):
     self.outputRecFile = outputRecFile
     self.prodparameters[self.outputRecFile]['datatype']= 'REC'
     if path:
-      self.recpath = path      
+      self.outputRecPath = path      
     
   def setOutputDstFile(self,outputDstFile, path = None):
     """ Optional: Define output dst file for Marlin
@@ -1459,7 +1459,7 @@ class Marlin(Application):
     self.outputDstFile = outputDstFile
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
     if path:
-      self.dstpath = path    
+      self.outputDstPath = path    
       
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1551,9 +1551,9 @@ class LCSIM(Application):
     self.extraParams = ''
     self.aliasProperties = ''
     self.outputDstFile = ''
-    self.dstpath = ''
+    self.outputDstPath = ''
     self.outputRecFile = ''
-    self.recpath = ''
+    self.outputRecPath = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
@@ -1576,7 +1576,7 @@ class LCSIM(Application):
     self.outputRecFile = outputRecFile
     self.prodparameters[self.outputRecFile]['datatype']= 'REC'
     if path:
-      self.recpath = path
+      self.outputRecPath = path
     
   def setOutputDstFile(self,outputDstFile, path = None):
     """ Optional: Define output dst file for LCSIM
@@ -1592,7 +1592,7 @@ class LCSIM(Application):
     self.outputDstFile = outputDstFile 
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
     if path:
-      self.dstpath = path            
+      self.outputDstPath = path            
     
   def setAliasProperties(self,alias):
     """ Optional: Define the path to the alias.properties file name that will be used 
