@@ -3,6 +3,8 @@ User Job class. Used to define (guess what?) user jobs!
 
 
 @author: Stephane Poss
+@author: Remi Ete
+@author: Ching Bon Lam
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
