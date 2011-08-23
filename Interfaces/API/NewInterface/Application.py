@@ -1,7 +1,9 @@
 '''
-Created on Jul 28, 2011
+Base application class. All applications inherit this class.
 
 @author: Stephane Poss
+@author: Remi Ete
+@author: Ching Bon Lam
 '''
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter

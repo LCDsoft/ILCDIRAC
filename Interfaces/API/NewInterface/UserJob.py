@@ -1,5 +1,6 @@
 '''
-Created on Jul 28, 2011
+User Job class. Used to define (guess what?) user jobs!
+
 
 @author: Stephane Poss
 '''
