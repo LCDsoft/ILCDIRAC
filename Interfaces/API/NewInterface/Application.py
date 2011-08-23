@@ -252,7 +252,7 @@ class Application(object):
     """
     self.log.info('Attribute list :')
     for key,val in self.__dict__.items():
-      if not key.count("_"):
+      if not key[0]=="_":
         print key,":",val
     
 #    for att in self.__dict__.keys() :
