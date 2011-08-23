@@ -76,7 +76,7 @@ class Application(object):
     #input application: will link the OutputFile of the guys in there with the InputFile of the self 
     self._inputapp = []
     #Needed to link the parameters.
-    self.inputappstep = None
+    self._inputappstep = None
     
     #flag set to true in Job.append
     self.addedtojob = False
@@ -362,7 +362,7 @@ class Application(object):
           return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in question must be passed to job.append() before.")
         else:
           idx = self._jobapps.index(app)
-          self.inputappstep = self._jobsteps[idx]
+          self._inputappstep = self._jobsteps[idx]
     return S_OK()
   
   def _addBaseParameters(self,stepdefinition):
