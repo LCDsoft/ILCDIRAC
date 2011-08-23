@@ -248,9 +248,9 @@ class Application(object):
     return S_OK()
 
   def listAttributes(self):
-    """ Method to list attributes for users. Does'nt list any private or semi-private attributes
+    """ Method to list attributes for users. Doesn't list any private or semi-private attributes
     """
-    self.log.info('Attribute list :')
+    print 'Attribute list :'
     for key,val in self.__dict__.items():
       if not key[0]=="_":
         print key,":",val
