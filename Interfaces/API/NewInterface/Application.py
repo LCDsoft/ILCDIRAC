@@ -44,6 +44,8 @@ class Application(object):
     #Output file
     self.outputFile = ""
     self.outputPath = ""
+    self.outputSE = ''
+    self.listofoutput = []
     #Log file
     self.logfile = ""
     #Energy to use (duh! again)
@@ -62,7 +64,7 @@ class Application(object):
     #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
     self._modulename = ''
     self._moduledescription = ''
-    self.importLocation = "ILCDIRAC.Workflow.Modules"
+    self._importLocation = "ILCDIRAC.Workflow.Modules"
         
     #System Configuration: comes from Job definition
     self._systemconfig = ''
@@ -166,27 +168,38 @@ class Application(object):
     self.energy = energy
     return S_OK()  
     
-  def setOutputFile(self,ofile):
+  def setOutputFile(self,ofile, path = None):
     """ Set the output file
     
     @param ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using L{getInputFromApp})
     @type ofile: string
+    @param path: Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
+    @type path: string
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
+    
     self.outputFile = ofile
     self.prodparameters[ofile]={}
     if self.detectortype:
       self.prodparameters[ofile]['detectortype'] = self.detectortype
     if self.datatype:
       self.prodparameters[ofile]['datatype']= self.datatype
+    
+    if path:
+      self._checkArgs({ 'path' : types.StringTypes } )
+      self.outputPath = path
+      
     return S_OK()  
   
-  def setOutputPath(self,outputpath):
-    """ Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
-    """
-    self._checkArgs({ 'outputpath' : types.StringTypes } )
-    self.outputPath = outputpath
+  def setOutputSE(self,se):
+    """ Set the output storage element for all files produced by this application.
     
+    @param se: Storage element name. Example CERN-SRM, IN2P3-SRM, RAL-SRM, IMPERIAL-SRM
+    @type se: string
+  
+    """
+    self._checkArgs({ 'se' : types.StringTypes } )
+    self.outputSE = se
     return S_OK()
   
   def setInputFile(self,inputfile):
@@ -288,7 +301,7 @@ class Application(object):
     """
     moduledefinition = ModuleDefinition(self._modulename)
     moduledefinition.setDescription(self._moduledescription)
-    body = 'from %s.%s import %s\n' % (self.importLocation, self._modulename, self._modulename)
+    body = 'from %s.%s import %s\n' % (self._importLocation, self._modulename, self._modulename)
     moduledefinition.setBody(body)
     return moduledefinition
   
@@ -299,7 +312,7 @@ class Application(object):
     """
     moduledefinition = ModuleDefinition('UserJobFinalization')
     moduledefinition.setDescription('Uploads user output data files with specific policies.')
-    body = 'from %s.%s import %s\n' % (self.importLocation, 'UserJobFinalization', 'UserJobFinalization')
+    body = 'from %s.%s import %s\n' % (self._importLocation, 'UserJobFinalization', 'UserJobFinalization')
     moduledefinition.setBody(body)
     return moduledefinition
   
@@ -308,7 +321,7 @@ class Application(object):
     """
     moduledefinition = ModuleDefinition("ComputeOutputDataList")
     moduledefinition.setDescription("Compute the output data list to be treated by the last finalization")
-    body = 'from %s.%s import %s\n' % (self.importLocation, "ComputeOutputDataList", "ComputeOutputDataList" )
+    body = 'from %s.%s import %s\n' % (self._importLocation, "ComputeOutputDataList", "ComputeOutputDataList" )
     moduledefinition.setBody(body)
     return moduledefinition
   
@@ -361,8 +374,10 @@ class Application(object):
     stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
     if len(self.outputFile):
-      stepdefinition.addParameter(Parameter("OutputFile",        "", "string", "", "", False, False, "Output File"))
+      stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False, False, "Output File"))
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
+    stepdefinition.addParameter(Parameter("OutputSE",          "", "string", "", "", False, False, "Output File storage element"))
+    stepdefinition.addParameter(Parameter('listoutput',        [],   "list", "", "", False, False, "list of output file name"))
     #Following should be workflow parameters
     #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
     #stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
@@ -371,15 +386,18 @@ class Application(object):
   def _setBaseStepParametersValues(self,stepinstance):
     """ Set the values for the basic step parameters
     """
+        
     stepinstance.setValue("applicationName",    self.appname)
     stepinstance.setValue("applicationVersion", self.version)
     stepinstance.setValue("applicationLog",     self.logfile)
     stepinstance.setValue("SteeringFile",       self.steeringfile)
     if not self._inputapp:
-      stepinstance.setValue("InputFile",          self.inputfile)
+      stepinstance.setValue("InputFile",        self.inputfile)
     if len(self.outputFile):  
-      stepinstance.setValue("OutputFile",         self.outputFile)
+      stepinstance.setValue("OutputFile",       self.outputFile)
     stepinstance.setValue("OutputPath",         self.outputPath)
+    stepinstance.setValue("OutputSE",           self.outputSE)
+    stepinstance.setValue('listoutput',         self.listofoutput)
     return S_OK()
       
       
@@ -404,7 +422,7 @@ class Application(object):
   def _analyseJob(self,job):
     """ Called from Job, only gives the application the knowledge of the Job (application, step, system config)
     """
-    self.job = job
+    self._job = job
     
     self._systemconfig = job.systemConfig
     
