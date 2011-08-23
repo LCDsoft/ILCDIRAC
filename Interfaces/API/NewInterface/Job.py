@@ -1,9 +1,9 @@
 '''
-Created on Jul 28, 2011
-
-New Job class, for the new interface.
+New Job class, for the new interface. This job class should not be used to create jobs. Use L{UserJob} or L{ProductionJob}.
 
 @author: Stephane Poss
+@author: Remi Ete
+@author: Ching Bon Lam
 '''
 
 from DIRAC.Interfaces.API.Job                          import Job as DiracJob
