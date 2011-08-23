@@ -254,7 +254,7 @@ class Application(object):
     for att in self.__dict__.keys() :
       if att[0:2] in ['__','_'] :
         pass
-      if self.__dict__.[att] = None :
+      if self.__dict__[att] = None :
         pass 
       else :
         self.log.info( att , ' : ' , self.__dict__[att] )
