@@ -247,6 +247,20 @@ class Application(object):
     self.debug = debug
     return S_OK()
 
+  def listAttributes(self):
+    """ Method to list attributes for users. Does'nt list any private or semi-private attributes
+    """
+    self.log.info('Attribute list :')
+    for att in __dict__.keys() :
+      if att[0:2] in ['__','_'] :
+        pass
+      if __dict__.[att] = None :
+        pass 
+      else :
+        self.log.info( att , ' : ' , __dict__[att] )
+        
+      
+
 ########################################################################################
 #    More private methods: called by the applications of the jobs, but not by the users
 #    Please, do not touch when you don't know what you are doing.
