@@ -1472,7 +1472,7 @@ class Marlin(Application):
     
     ## Here one needs to take care of listoutput
     if self.outputPath:
-      self.listofoutput.append({'OutputFile':'@{OutputFile}',"outputPath":"@{OutputPath}","outputDataSE":self.outputSE})
+      self._listofoutput.append({'OutputFile':'@{OutputFile}',"outputPath":"@{OutputPath}","outputDataSE":self.outputSE})
     
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
