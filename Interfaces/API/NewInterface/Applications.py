@@ -191,18 +191,18 @@ class GetSRMFile(Application):
   def setFiles(self,fdict):
     """ Specify the files you need
     
-    @param fdict: file dictionary: {file:site}, can be also ["{}","{}"] etc.
+    @param fdict: file dictionary: {file:site}, can be also [{},{}] etc.
     @type fdict: dict or list
     """
     kwargs = {"fdict":fdict}
-    if not type(fdict) == type("") and not type(fdict) == type([]):
-      return self._reportError('Expected string or list of strings for fdict', __name__, **kwargs)
+    if not type(fdict) == type({}) and not type(fdict) == type([]):
+      return self._reportError('Expected dict or list of dicts for fdict', __name__, **kwargs)
     
     self.filedict = fdict
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("srmfiles", "", "string", "", "", False, False, "list of files to retrieve"))
+    m1.addParameter(Parameter("srmfiles", [], "list", "", "", False, False, "list of files to retrieve"))
     m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
     return m1
 
@@ -227,12 +227,7 @@ class GetSRMFile(Application):
       return S_ERROR("The file list was not defined")
     
     if type(self.filedict) == type({}):
-      return S_ERROR("Type is not correct, is cannot be a dictionary.")
-        
-    if type(self.filedict) == type(""):
-      self.filedict = [str(self.filedict)]
-    if type(self.filedict) == type([]):
-      self.filedict = string.join(self.filedict,";")
+      self.filedict = [self.filedict]
 
     return S_OK()
 
@@ -1399,7 +1394,9 @@ class Marlin(Application):
   """
   def __init__(self, paramdict = None):
 
+    self.dstpath = ''
     self.outputDstFile = ''
+    self.recpath = ''
     self.outputRecFile = ''
     self.inputGearFile = ''
     Application.__init__(self,paramdict)
@@ -1425,31 +1422,38 @@ class Marlin(Application):
     if os.path.exists(GearFile) or GearFile.lower().count("lfn:"):
       self.inputSB.append(GearFile) 
     
-  def setOutputRecFile(self,outputRecFile):
+  def setOutputRecFile(self,outputRecFile, path = None):
     """ Optional: Define output rec file for Marlin
     
     @param outputRecFile: output rec file for Marlin
     @type outputRecFile: string
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @type path: string
     """
     self._checkArgs( {
         'outputRecFile' : types.StringTypes
       } )
     self.outputRecFile = outputRecFile
     self.prodparameters[self.outputRecFile]['datatype']= 'REC'
-      
+    if path:
+      self.recpath = path      
     
-  def setOutputDstFile(self,outputDstFile):
+  def setOutputDstFile(self,outputDstFile, path = None):
     """ Optional: Define output dst file for Marlin
     
     @param outputDstFile: output dst file for Marlin
     @type outputDstFile: string
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @type path: string
     """
     self._checkArgs( {
         'outputDstFile' : types.StringTypes
       } )
     self.outputDstFile = outputDstFile
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
-    
+    if path:
+      self.dstpath = path    
+      
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
@@ -1458,6 +1462,11 @@ class Marlin(Application):
     return S_OK() 
 
   def _prodjobmodules(self,stepdefinition):
+    
+    ## Here one needs to take care of listoutput
+    if self.outputPath:
+      self.listofoutput.append({'OutputFile':'@{OutputFile}',"outputPath":"@{OutputPath}","outputDataSE":self.outputSE})
+    
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -1484,12 +1493,12 @@ class Marlin(Application):
 
 
     if not self._jobtype == 'User' :
-      if not self.outputDstFile :
-        return S_ERROR('Dst output file not given')  
-      if not self.outputRecFile :
-        return S_ERROR('Rec output file not given')
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
+      if not self.outputSE:
+        return S_ERROR("Output storage element must be specified")
+      if not self.outputRecFile or not self.outputDstFile:
+        return S_ERROR('REC and DST output file names must be given.')
+      if not self.recpath or not self.dstpath:
+        return S_ERROR("Output Path (REC and DST) must be defined")
      
     return S_OK()  
   
@@ -1535,7 +1544,9 @@ class LCSIM(Application):
     self.extraParams = ''
     self.aliasProperties = ''
     self.outputDstFile = ''
+    self.dstpath = ''
     self.outputRecFile = ''
+    self.recpath = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
@@ -1544,31 +1555,37 @@ class LCSIM(Application):
     self.datatype = 'REC'
     self.detectortype = 'SID'
      
-  def setOutputRecFile(self,outputRecFile):
+  def setOutputRecFile(self,outputRecFile, path = None):
     """ Optional: Define output rec file for LCSIM
     
     @param outputRecFile: output rec file for LCSIM
     @type outputRecFile: string
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @type path: string
     """
     self._checkArgs( {
         'outputRecFile' : types.StringTypes
                        } )
     self.outputRecFile = outputRecFile
     self.prodparameters[self.outputRecFile]['datatype']= 'REC'
-      
+    if path:
+      self.recpath = path
     
-  def setOutputDstFile(self,outputDstFile):
+  def setOutputDstFile(self,outputDstFile, path = None):
     """ Optional: Define output dst file for LCSIM
     
     @param outputDstFile: output dst file for LCSIM
     @type outputDstFile: string
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @type path: string
     """
     self._checkArgs( {
         'outputDstFile' : types.StringTypes
       } )
     self.outputDstFile = outputDstFile 
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
-            
+    if path:
+      self.dstpath = path            
     
   def setAliasProperties(self,alias):
     """ Optional: Define the path to the alias.properties file name that will be used 
