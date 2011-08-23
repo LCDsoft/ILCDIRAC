@@ -45,7 +45,7 @@ class Application(object):
     self.outputFile = ""
     self.outputPath = ""
     self.outputSE = ''
-    self.listofoutput = []
+    self._listofoutput = []
     #Log file
     self.logfile = ""
     #Energy to use (duh! again)
@@ -415,7 +415,7 @@ class Application(object):
       stepinstance.setValue("OutputFile",       self.outputFile)
     stepinstance.setValue("OutputPath",         self.outputPath)
     stepinstance.setValue("OutputSE",           self.outputSE)
-    stepinstance.setValue('listoutput',         self.listofoutput)
+    stepinstance.setValue('listoutput',         self._listofoutput)
     return S_OK()
       
       
