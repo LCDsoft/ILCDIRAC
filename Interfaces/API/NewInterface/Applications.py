@@ -1,6 +1,4 @@
 '''
-Created on Jul 28, 2011
-
 This module contains the definition of the different applications that can
 be used to create jobs.
 
@@ -30,7 +28,12 @@ Running:
 
 prints out all the available methods.
 
-@author: Stephane Poss, Remi Ete, Ching Bon Lam
+Warning: Once an application has been added to a job, it is not possible to change the parameters. This is unfortunate, and will be fixed eventually. 
+It should be possible to change the parameters up to the point the job is actually submitted.
+
+@author: Stephane Poss
+@author: Remi Ete
+@author: Ching Bon Lam
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
