@@ -217,7 +217,7 @@ class GetSRMFile(Application):
     return S_OK() 
 
   def _prodjobmodules(self,step):
-    self.log.error("This application is not meant to be used in Production context")
+    self._log.error("This application is not meant to be used in Production context")
     return S_ERROR('Should not use in Production')
 
   
@@ -251,12 +251,12 @@ class _Root(Application):
     
     
   def setScript(self,script):
-    self.log.error("Don't use this!")
+    self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
   
   
   def setMacro(self,macro):
-    self.log.error("Don't use this!")
+    self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
      
@@ -445,7 +445,7 @@ class Whizard(Application):
         'evttype' : types.StringTypes
       } )
     if self.addedtojob:
-      self.log.error("Cannot modify this attribute once application has been added to Job")
+      self._log.error("Cannot modify this attribute once application has been added to Job")
       return S_ERROR("Cannot modify")
     self.evttype = evttype
 
@@ -524,14 +524,14 @@ class Whizard(Application):
     
     if self.evttype:
       if not self.processlist.existsProcess(self.evttype)['Value']:
-        self.log.info("Available processes are:")
+        self._log.info("Available processes are:")
         self.processlist.printProcesses()
         return S_ERROR('Process does no exists')
       else:
         cspath = self.processlist.getCSPath(self.evttype)
         whiz_file = os.path.basename(cspath)
         self.version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
-        self.log.info("Found the process %s in whizard %s"%(self.evttype,self.version))
+        self._log.info("Found the process %s in whizard %s"%(self.evttype,self.version))
         
     if not self.version:
       return S_ERROR('No version found')
@@ -1184,7 +1184,7 @@ class SLIC(Application):
         return S_ERROR("Output Path not defined")
    
     if not self.startFrom :
-      self.log.info('No startFrom define for Slic : start from the begining')
+      self._log.info('No startFrom define for Slic : start from the begining')
     
     return S_OK()  
   
@@ -1361,7 +1361,7 @@ class OverlayInput(Application):
     """
     if not self.BXOverlay :
       self.BXOverlay = 60
-      self.log.info("Using default number of BX to overlay: 60")
+      self._log.info("Using default number of BX to overlay: 60")
       
     if self._jobtype == 'User' :
       if not self.NbSigEvtsPerJob :
@@ -1369,11 +1369,11 @@ class OverlayInput(Application):
       
     if not self.ggtohadint :
       self.ggtohadint = 3.2
-      self.log.info("Number of GG -> had is set to 3.2 by default")  
+      self._log.info("Number of GG -> had is set to 3.2 by default")  
       
     if not self.BkgEvtType :
       self.BkgEvtType = 'gghad'
-      self.log.info("Background event type is gg -> had by default")
+      self._log.info("Background event type is gg -> had by default")
       
     if not self.detectortype in ['ILD','SID'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
@@ -1483,16 +1483,16 @@ class Marlin(Application):
   def _checkConsistency(self):
 
     if not self.energy :
-      self.log.error('Energy set to 0 !')
+      self._log.error('Energy set to 0 !')
       
     if not self.nbevts :
-      self.log.error('Number of events set to 0 !')
+      self._log.error('Number of events set to 0 !')
         
     if not self.version:
       return S_ERROR('Version not set!')   
     
     if not self.inputGearFile :
-      self.log.info('GEAR file not given')
+      self._log.info('GEAR file not given')
 
     res = self._checkRequiredApp()
     if not res['OK']:
@@ -1639,10 +1639,10 @@ class LCSIM(Application):
   def _checkConsistency(self):
 
     if not self.energy :
-      self.log.error('Energy set to 0 !')
+      self._log.error('Energy set to 0 !')
       
     if not self.nbevts :
-      self.log.error('Number of events set to 0 !')
+      self._log.error('Number of events set to 0 !')
         
     if not self.version:
       return S_ERROR('No version found')   
@@ -1774,7 +1774,7 @@ class SLICPandora(Application):
         return S_ERROR("Output Path not defined")
       
     if not self.startFrom :
-      self.log.info('No startFrom define for SlicPandora : start from the begining')
+      self._log.info('No startFrom define for SlicPandora : start from the begining')
       
     return S_OK()  
   
@@ -1931,7 +1931,7 @@ class SLCIOConcatenate(Application):
       
     if not self.OutputFile :
       self.setOutputFile('LCIOFileConcatenated.slcio')
-      self.log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
+      self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
     res = self._checkRequiredApp()
     if not res['OK']:
@@ -2017,7 +2017,7 @@ class Tomato(Application):
       return S_ERROR("You need to specify which version of Marlin to use.")
     
     if not self.libTomato :
-      self.log.info('Tomato library not given. It will run without it')
+      self._log.info('Tomato library not given. It will run without it')
 
     res = self._checkRequiredApp()
     if not res['OK']:

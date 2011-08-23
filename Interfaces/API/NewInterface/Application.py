@@ -81,8 +81,8 @@ class Application(object):
     #flag set to true in Job.append
     self.addedtojob = False
     ####Following are needed for error report
-    self.log = gLogger
-    self.errorDict = {}
+    self._log = gLogger
+    self._errorDict = {}
     
     ### Next is to use the setattr method.
     self._setparams(paramdict)
@@ -102,7 +102,7 @@ class Application(object):
       try:
         exec "self.set%s(%s)"%(param,str(value))
       except:
-        self.log.error("The %s class does not have a set%s method."%(self.__class__.__name__,param))
+        self._log.error("The %s class does not have a set%s method."%(self.__class__.__name__,param))
     return S_OK()  
     
     
@@ -338,13 +338,13 @@ class Application(object):
   def _userjobmodules(self,stepdefinition):
     """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs (userJobFinalization for instance)
     """
-    self.log.error("This application does not implement the modules, you get an empty list")
+    self._log.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
   def _prodjobmodules(self,stepdefinition):
     """ Same as above, but the other way around.
     """
-    self.log.error("This application does not implement the modules, you get an empty list")
+    self._log.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
   def _checkConsistency(self):
@@ -512,11 +512,11 @@ class Application(object):
       if kwargs[key]:
         arguments.append( '%s = %s ( %s )' % ( key, kwargs[key], type( kwargs[key] ) ) )
     finalReport = 'Problem with %s.%s() call:\nArguments: %s\nMessage: %s\n' % ( className, methodName, string.join( arguments, ', ' ), message )
-    if self.errorDict.has_key( methodName ):
-      tmp = self.errorDict[methodName]
+    if self._errorDict.has_key( methodName ):
+      tmp = self._errorDict[methodName]
       tmp.append( finalReport )
-      self.errorDict[methodName] = tmp
+      self._errorDict[methodName] = tmp
     else:
-      self.errorDict[methodName] = [finalReport]
-    self.log.error( finalReport )
+      self._errorDict[methodName] = [finalReport]
+    self._log.error( finalReport )
     return S_ERROR( finalReport )
