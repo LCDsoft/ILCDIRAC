@@ -1,7 +1,7 @@
 '''
 Production Job class. Used to define new productions. 
 
-Mostly similar to L{UserJob}, but cannot be (and should not be) used liek the UserJob class.
+Mostly similar to L{UserJob}, but cannot be (and should not be) used like the UserJob class.
 
 @author: Stephane Poss
 @author: Remi Ete
