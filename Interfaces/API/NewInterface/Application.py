@@ -251,13 +251,13 @@ class Application(object):
     """ Method to list attributes for users. Does'nt list any private or semi-private attributes
     """
     self.log.info('Attribute list :')
-    for att in __dict__.keys() :
+    for att in self.__dict__.keys() :
       if att[0:2] in ['__','_'] :
         pass
-      if __dict__.[att] = None :
+      if self.__dict__.[att] = None :
         pass 
       else :
-        self.log.info( att , ' : ' , __dict__[att] )
+        self.log.info( att , ' : ' , self.__dict__[att] )
         
       
 
