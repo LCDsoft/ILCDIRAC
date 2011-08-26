@@ -45,6 +45,7 @@ class LCSIMAnalysis(ModuleBase):
     self.applicationName = 'LCSIM'
     self.eventstring = ''
     self.extraparams = ''
+    self.OutputFile = '' #Set in ModuleBase
      
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
