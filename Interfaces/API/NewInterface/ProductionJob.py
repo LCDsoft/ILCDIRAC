@@ -252,10 +252,10 @@ class ProductionJob(Job):
     if hasattr(application,"setOutputRecFile"):
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
       fname = self.basename+"_rec.slcio"
-      application.OutputRecFile(fname,path)  
+      application.setOutputRecFile(fname,path)  
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"
       fname = self.basename+"_dst.slcio"
-      application.OutputDstFile(fname,path)  
+      application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/"+application.datatype+"/"
       extension = 'stdhep'
