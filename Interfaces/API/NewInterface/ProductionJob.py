@@ -10,14 +10,16 @@ Mostly similar to L{UserJob}, but cannot be (and should not be) used like the Us
 
 __RCSID__ = "$Id: "
 
-from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
+from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-from DIRAC.TransformationSystem.Client.Transformation import Transformation
+from DIRAC.TransformationSystem.Client.Transformation       import Transformation
 
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-from DIRAC.Core.Security.Misc import getProxyInfo
+from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogClient
+from DIRAC.Core.Security.Misc                               import getProxyInfo
 
-from DIRAC import S_OK, S_ERROR, gConfig
+from math                                                   import modf
+
+from DIRAC                                                  import S_OK, S_ERROR, gConfig
 
 
 class ProductionJob(Job):
@@ -32,13 +34,18 @@ class ProductionJob(Job):
     self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
+    self.basename = ''
+    self.basepath = "/ilc/prod/"
+    self.evttype = ''
+    self.machine = 'clic'
+
+    self.outputStorage = ''
 
     self.proxyinfo = getProxyInfo()
 
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay']
     
-    is_prod = "IS_PROD"
-    self._addParameter(self.workflow, is_prod, 'JDL', True, "This job is a production job")
+    self._addParameter(self.workflow, "IS_PROD", 'JDL', True, "This job is a production job")
     if not script:
       self.__setDefaults()
       
@@ -71,6 +78,11 @@ class ProductionJob(Job):
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
      
+  def setOutputSE(self,outputse):
+    """ Define where the output file(s) will go. 
+    """
+    self.outputStorage = outputse
+    return S_OK()
     
   def setInputDataQuery(self,metadict):
     """ Define the input data query needed
@@ -78,10 +90,21 @@ class ProductionJob(Job):
     res = self.fc.findFilesByMetadata(metadict)
     if not res['OK']:
       return res
+    lfns = res['Value']
+    if not len(lfns):
+      return S_ERROR("No files found")
     """ Also get the compatible metadata such as energy, evttype, etc, populate dictionary
     Beware of energy: need to convert to gev (3tev -> 3000, 500gev -> 500)
     """
     return S_OK()
+
+  def setMachine(self,machine):
+    self.machine = machine
+
+  def getBasePath(self):
+    """ Return the base path. Updated by L{setInputDataQuery}.
+    """
+    return self.basepath
   
   def createProduction(self,name = None):
     """ Create production.
@@ -187,8 +210,9 @@ class ProductionJob(Job):
       self.nbevts = application.nbevts
     
     if not self.energy:
-      self.energy = application.energy
-      if not self.energy:
+      if application.energy:
+        self.energy = application.energy
+      else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
     elif not application.energy:
       res = application.setEnergy(self.energy)
@@ -196,6 +220,51 @@ class ProductionJob(Job):
         return res
     if self.energy:
       self._setParameter( "Energy", "int", self.energy, "Energy used")      
+      
+    if not self.evttype:
+      if hasattr(application,'evttype'):
+        self.evttype = application.evttype
+      else:
+        return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
+      
+    if not self.outputStorage:
+      return S_ERROR("You need to specify the Output storage element")
+    
+    res = application.setOutputSE(self.outputStorage)
+    if not res['OK']:
+      return res
+    
+    energypath = ''
+    fracappen = modf(self.energy/1000.)
+    if fracappen[1]>0:
+      energypath = "%s"%int(fracappen[1])
+      if fracappen[0]>0:
+        energypath =  "%s"%(self.energy/1000.)
+      energypath += 'tev/'  
+    else:
+      energypath =  "%sgev/"%(self.energy/1000.)
+    
+    if not self.machine[-1]=='/':
+      self.machine += "/"
+    if not self.evttype[-1]=='/':
+      self.evttype += '/'  
+      
+    ###Need to resolve file names and paths
+    if hasattr(application,"outputRecFile"):
+      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
+      fname = self.basename+"_rec.slcio"
+      application.OutputRecFile(fname,path)  
+      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"
+      fname = self.basename+"_dst.slcio"
+      application.OutputDstFile(fname,path)  
+    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
+      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/"+application.datatype+"/"
+      extension = 'stdhep'
+      if application.datatype=='SIM':
+        extension = 'slcio'
+      fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
+      application.setOutputFile(fname,path)  
+      
     return S_OK()
 
   def _jobSpecificModules(self,application,step):
