@@ -46,7 +46,7 @@ class MarlinAnalysis(ModuleBase):
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.evtstoprocess = ''
+    self.NumberOfEvents = ''
     self.eventstring = ''
     self.envdict = {}
     
@@ -68,7 +68,7 @@ class MarlinAnalysis(ModuleBase):
       self.inputGEAR=self.step_commons['inputGEAR']
       
     if self.step_commons.has_key('EvtsToProcess'):
-      self.evtstoprocess = str(self.step_commons['EvtsToProcess'])
+      self.NumberOfEvents = str(self.step_commons['EvtsToProcess'])
     
     ##Backward compat needed, cannot remove yet.  
     if self.step_commons.has_key('outputREC'):
@@ -109,7 +109,7 @@ class MarlinAnalysis(ModuleBase):
         res = getNumberOfevents(self.InputData)
         if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
           self.workflow_commons["NbOfEvents"]=res["nbevts"]
-          self.evtstoprocess = res["nbevts"]
+          self.NumberOfEvents = res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
@@ -194,7 +194,7 @@ class MarlinAnalysis(ModuleBase):
     if not self.SteeringFile:
       return S_ERROR("Could not find steering file")
     
-    res = PrepareXMLFile(finalXML,self.SteeringFile,self.inputGEAR,listofslcio,self.evtstoprocess,self.outputREC,self.outputDST,self.debug)
+    res = PrepareXMLFile(finalXML,self.SteeringFile,self.inputGEAR,listofslcio,self.NumberOfEvents,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s'%res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
