@@ -249,7 +249,7 @@ class ProductionJob(Job):
       self.evttype += '/'  
       
     ###Need to resolve file names and paths
-    if hasattr(application,"outputRecFile"):
+    if hasattr(application,"setOutputRecFile"):
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
       fname = self.basename+"_rec.slcio"
       application.OutputRecFile(fname,path)  
