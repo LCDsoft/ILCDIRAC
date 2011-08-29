@@ -304,7 +304,6 @@ class Application(object):
     Called after the private method setApplicationModuleAndParameters in some production job applications
     """
     m2 = self._getComputeOutputDataListModule()
-    self._modules.append(m2)
     stepdefinition.addModule(m2)
     stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
     return S_OK()
