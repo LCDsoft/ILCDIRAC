@@ -148,7 +148,7 @@ class Job(DiracJob):
     application._addedtojob()
   
     self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
-
+    self._addParameter(self.workflow, 'NbOfEvts', 'int', application.nbevts, "Number of evetns to process")
   
     ##Finally, add the software packages if needed
     if application.appname and application.version:
