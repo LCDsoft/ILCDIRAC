@@ -555,79 +555,79 @@ class Whizard(Application):
         return S_ERROR("Unknown parameter %s"%key)
 
     if not self.parameterdict.has_key('PNAME1'):
-      self.log.info("Assuming incoming beam 1 to be electrons")
+      self._log.info("Assuming incoming beam 1 to be electrons")
       self.parameters.append('PNAME1=e1')
     else:
       self.parameters.append("PNAME1=%s" %self.parameterdict["PNAME1"] )
       
     if not self.parameterdict.has_key('PNAME2'):
-      self.log.info("Assuming incoming beam 2 to be positrons")
+      self._log.info("Assuming incoming beam 2 to be positrons")
       self.parameters.append('PNAME2=E1')
     else:
       self.parameters.append("PNAME2=%s" %self.parameterdict["PNAME2"] )
        
     if not self.parameterdict.has_key('POLAB1'):
-      self.log.info("Assuming no polarization for beam 1")
+      self._log.info("Assuming no polarization for beam 1")
       self.parameters.append('POLAB1=0.0 0.0')
     else:
       self.parameters.append("POLAR1=%s" %self.parameterdict["POLAR1"] )
         
     if not self.parameterdict.has_key('POLAB2'):
-      self.log.info("Assuming no polarization for beam 2")
+      self._log.info("Assuming no polarization for beam 2")
       self.parameters.append('POLAB2=0.0 0.0')
     else:
       self.parameters.append("POLAR2=%s" %self.parameterdict["POLAR2"] )
         
     if not self.parameterdict.has_key('USERB1'):
-      self.log.info("Will put beam spectrum to True for beam 1")
+      self._log.info("Will put beam spectrum to True for beam 1")
       self.parameters.append('USERB1=T')
     else:
       self.parameters.append("USERB1=%s" %self.parameterdict["USERB1"] )
         
     if not self.parameterdict.has_key('USERB2'):
-      self.log.info("Will put beam spectrum to True for beam 2")
+      self._log.info("Will put beam spectrum to True for beam 2")
       self.parameters.append('USERB2=T')
     else:
       self.parameters.append("USERB2=%s" %self.parameterdict["USERB2"] )
         
     if not self.parameterdict.has_key('ISRB1'):
-      self.log.info("Will put ISR to True for beam 1")
+      self._log.info("Will put ISR to True for beam 1")
       self.parameters.append('ISRB1=T')
     else:
       self.parameters.append("ISRB1=%s" %self.parameterdict["ISRB1"] )
         
     if not self.parameterdict.has_key('ISRB2'):
-      self.log.info("Will put ISR to True for beam 2")
+      self._log.info("Will put ISR to True for beam 2")
       self.parameters.append('ISRB2=T')
     else:
       self.parameters.append("ISRB2=%s" %self.parameterdict["ISRB2"] )
         
     if not self.parameterdict.has_key('EPAB1'):
-      self.log.info("Will put EPA to False for beam 1")
+      self._log.info("Will put EPA to False for beam 1")
       self.parameters.append('EPAB1=F')
     else:
       self.parameters.append("EPAB1=%s" %self.parameterdict["EPAB1"] )
         
     if not self.parameterdict.has_key('EPAB2'):
-      self.log.info("Will put EPA to False for beam 2")
+      self._log.info("Will put EPA to False for beam 2")
       self.parameters.append('EPAB2=F')
     else:
       self.parameters.append("EPAB2=%s" %self.parameterdict["EPAB2"] )
        
     if not self.parameterdict.has_key('RECOIL'):
-      self.log.info("Will set Beam_recoil to False")
+      self._log.info("Will set Beam_recoil to False")
       self.parameters.append('RECOIL=F')
     else:
       self.parameters.append("RECOIL=%s" %self.parameterdict["RECOIL"] )
         
     if not self.parameterdict.has_key('INITIALS'):
-      self.log.info("Will set keep_initials to False")
+      self._log.info("Will set keep_initials to False")
       self.parameters.append('INITIALS=F')
     else:
       self.parameters.append("INITIALS=%s" %self.parameterdict["INITIALS"] )
         
     if not self.parameterdict.has_key('USERSPECTRUM'):
-      self.log.info("Will set USER_spectrum_on to +-11")
+      self._log.info("Will set USER_spectrum_on to +-11")
       self.parameters.append('USERSPECTRUM=11')
     else:
       self.parameters.append("USERSPECTRUM=%s" %self.parameterdict["USERSPECTRUM"] )
