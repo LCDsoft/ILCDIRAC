@@ -547,8 +547,7 @@ class Whizard(Application):
       self.outputFile += "_gen.stdhep"  
 
     if not self._jobtype == 'User':
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
    
    
     for key in self.parameterdict.keys():
@@ -693,10 +692,12 @@ class Pythia(Application):
 
   """
   def __init__(self,paramdict = None):
+    self.evttype = ''
     Application.__init__(self,paramdict)
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
+    self.datatype = 'gen'
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -720,6 +721,9 @@ class Pythia(Application):
     if not self.version:
       return S_ERROR("Version not specified")
     
+    #Resolve event type, needed for production jobs
+    self.evttype = self.version.split("_")[0]
+    
     if not self.nbevts:
       return S_ERROR("Number of events to generate not defined")
 
@@ -727,8 +731,7 @@ class Pythia(Application):
       return S_ERROR("Output File not defined")
     
     if not self._jobtype == 'User':
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
 
     return S_OK()
  
@@ -1051,10 +1054,7 @@ class Mokka(Application):
       return res
 
     if not self._jobtype == 'User':
-      if not self.outputFile:
-        return S_ERROR("Output File not defined")
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
    
     return S_OK()  
   
@@ -1178,10 +1178,7 @@ class SLIC(Application):
       return res
 
     if not self._jobtype == 'User':
-      if not self.outputFile:
-        return S_ERROR("Output File not defined")
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
    
     if not self.startFrom :
       self._log.info('No startFrom define for Slic : start from the begining')
@@ -1500,12 +1497,9 @@ class Marlin(Application):
 
 
     if not self._jobtype == 'User' :
-      if not self.outputSE:
-        return S_ERROR("Output storage element must be specified")
-      if not self.outputRecFile or not self.outputDstFile:
-        return S_ERROR('REC and DST output file names must be given.')
-      if not self.recpath or not self.dstpath:
-        return S_ERROR("Output Path (REC and DST) must be defined")
+      if not self.outputFile:
+        self._listofoutput.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":'@{OutputSE}'})
      
     return S_OK()  
   
@@ -1513,16 +1507,12 @@ class Marlin(Application):
     
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("inputGEAR",     '', "string", "", "", False, False, "Input GEAR file"))
-    md1.addParameter(Parameter("outputDST",     '', "string", "", "", False, False, "Output DST file"))
-    md1.addParameter(Parameter("outputREC",     '', "string", "", "", False, False, "Output REC file"))
     md1.addParameter(Parameter("debug",      False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
     moduleinstance.setValue("inputGEAR",         self.inputGearFile)
-    moduleinstance.setValue("outputREC",         self.outputRecFile)
-    moduleinstance.setValue("outputDST",         self.outputDstFile)
     moduleinstance.setValue("debug",             self.debug)
 
     
@@ -1550,10 +1540,6 @@ class LCSIM(Application):
 
     self.extraParams = ''
     self.aliasProperties = ''
-    self.outputDstFile = ''
-    self.outputDstPath = ''
-    self.outputRecFile = ''
-    self.outputRecPath = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
@@ -1650,6 +1636,19 @@ class LCSIM(Application):
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
+    
+    if not self._jobtype =='User':
+      #slicp = False
+      if self._inputapp and not self.outputFile:
+        for app in self._inputapp:
+          if app.appname == 'slicpandora':
+            self._listofoutput.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":'@{OutputSE}'})
+            self._listofoutput.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":'@{OutputSE}'})
+            #slicp = True
+            break
+      #if not slicp:
+      #  self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
+      
       
     return S_OK()  
   
@@ -1658,8 +1657,6 @@ class LCSIM(Application):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("extraparams",           "", "string", "", "", False, False, "Command line parameters to pass to java"))
     md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
-    md1.addParameter(Parameter("outputREC",             "", "string", "", "", False, False, "REC output file"))
-    md1.addParameter(Parameter("outputDST",             "", "string", "", "", False, False, "DST output file"))
     md1.addParameter(Parameter("debug",              False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
@@ -1667,8 +1664,6 @@ class LCSIM(Application):
 
     moduleinstance.setValue("extraparams",        self.extraParams)
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
-    moduleinstance.setValue("outputREC",          self.outputRecFile)
-    moduleinstance.setValue("outputDST",          self.outputDSTFile)
     moduleinstance.setValue("debug",              self.debug)
     
   def _resolveLinkedStepParameters(self,stepinstance):
@@ -1766,12 +1761,6 @@ class SLICPandora(Application):
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
-
-    if not self._jobtype == 'User':
-      if not self.outputFile:
-        return S_ERROR("Output File not defined")
-      if not self.outputPath:
-        return S_ERROR("Output Path not defined")
       
     if not self.startFrom :
       self._log.info('No startFrom define for SlicPandora : start from the begining')

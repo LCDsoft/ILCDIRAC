@@ -44,6 +44,10 @@ class Application(object):
     #Output file
     self.outputFile = ""
     self.outputPath = ""
+    self.outputDstFile = ''
+    self.outputDstPath = ''
+    self.outputRecFile = ''
+    self.outputRecPath = ''    
     self.outputSE = ''
     self._listofoutput = []
     #Log file
@@ -164,7 +168,7 @@ class Application(object):
     @param energy: Energy used in GeV
     @type energy: int
     """
-    self._checkArgs({ 'energy' : types.IntType })
+    self._checkArgs({ 'energy' : types.FloatType })
     self.energy = energy
     return S_OK()  
     
@@ -254,16 +258,7 @@ class Application(object):
     for key,val in self.__dict__.items():
       if not key[0]=="_":
         print key,":",val
-    
-#    for att in self.__dict__.keys() :
-#      if att[0:2] in ['__','_'] :
-#        pass
-#      if self.__dict__[att] = None :
-#        pass 
-#      else :
-#        self.log.info( att , ' : ' , self.__dict__[att] )
-        
-      
+
 
 ########################################################################################
 #    More private methods: called by the applications of the jobs, but not by the users
@@ -393,7 +388,14 @@ class Application(object):
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", False, False, "Input File"))
     if len(self.outputFile):
       stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False, False, "Output File"))
+    if len(self.outputFile):
+      stepdefinition.addParameter(Parameter("outputDST",      "", "string", "", "", False, False, "Output DST File"))
+    if len(self.outputFile):
+      stepdefinition.addParameter(Parameter("outputREC",      "", "string", "", "", False, False, "Output REC File"))
+      
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, False, "Output File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathREC",     "", "string", "", "", False, False, "Output REC File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathDST",     "", "string", "", "", False, False, "Output DST File path on the grid"))
     stepdefinition.addParameter(Parameter("OutputSE",          "", "string", "", "", False, False, "Output File storage element"))
     stepdefinition.addParameter(Parameter('listoutput',        [],   "list", "", "", False, False, "list of output file name"))
     #Following should be workflow parameters
@@ -413,7 +415,13 @@ class Application(object):
       stepinstance.setValue("InputFile",        self.inputfile)
     if len(self.outputFile):  
       stepinstance.setValue("OutputFile",       self.outputFile)
+    if len(self.outputRecFile):  
+      stepinstance.setValue("outputREC",        self.outputRecFile)
+    if len(self.outputDstFile):  
+      stepinstance.setValue("outputDST",        self.outputDstFile)
     stepinstance.setValue("OutputPath",         self.outputPath)
+    stepinstance.setValue("outputPathREC",      self.outputRecPath)
+    stepinstance.setValue("outputPathDST",      self.outputDstPath)
     stepinstance.setValue("OutputSE",           self.outputSE)
     stepinstance.setValue('listoutput',         self._listofoutput)
     return S_OK()
