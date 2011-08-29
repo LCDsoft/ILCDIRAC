@@ -331,7 +331,7 @@ class ModuleBase(object):
       self.energy = self.workflow_commons['Energy']
 
     if self.workflow_commons.has_key('NbOfEvts'):
-      self.NumberOfEvents = self.step_commons['NbOfEvts']
+      self.NumberOfEvents = self.workflow_commons['NbOfEvts']
 
 
     if self.step_commons.has_key('InputFile'):
