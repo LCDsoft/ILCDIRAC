@@ -307,6 +307,9 @@ class ProductionJob(Job):
       self.machine += "/"
     if not self.evttype[-1]=='/':
       self.evttype += '/'  
+    
+    if not self.basename:
+      self.basename = self.evttype
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
