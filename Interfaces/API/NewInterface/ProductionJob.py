@@ -250,6 +250,7 @@ class ProductionJob(Job):
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
+      print "hey!!!!!"
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
