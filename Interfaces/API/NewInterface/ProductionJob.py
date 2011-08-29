@@ -250,7 +250,6 @@ class ProductionJob(Job):
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
-      print "hey!!!!!"
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
@@ -258,7 +257,11 @@ class ProductionJob(Job):
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
-      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/"+application.datatype+"/"
+      path = self.basepath+self.machine+energypath+self.evttype
+      if hasattr(application,"detectortype"):
+        if application.detectortype:
+          path += application.detectortype+"/"
+      path += application.datatype+"/"
       self.log.info("Will store the files under %s"%path)
       extension = 'stdhep'
       if application.datatype=='SIM':
