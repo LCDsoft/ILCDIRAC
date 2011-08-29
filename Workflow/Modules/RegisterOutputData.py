@@ -73,88 +73,99 @@ class RegisterOutputData(ModuleBase):
       metamach['Machine']=elements[3]
       meta.update(metamach)
       machine = string.join(elements[0:4],"/")
-      res = self.fc.setMetadata(machine,metamach)
-      if not res['OK']:
-        self.log.error('Could not register metadata Machine, with value %s for %s'%(elements[3],machine))
-        return res
+      if self.enable:
+        res = self.fc.setMetadata(machine,metamach)
+        if not res['OK']:
+          self.log.error('Could not register metadata Machine, with value %s for %s'%(elements[3],machine))
+          return res
       metaen={}
       metaen['Energy']=elements[4]
       meta.update(metaen)
       energy = string.join(elements[0:5],"/")
-      res = self.fc.setMetadata(energy,metaen)
-      if not res['OK']:
-        self.log.error('Could not register metadata Energy, with value %s for %s'%(elements[4],energy))
-        return res      
+      if self.enable:
+        res = self.fc.setMetadata(energy,metaen)
+        if not res['OK']:
+          self.log.error('Could not register metadata Energy, with value %s for %s'%(elements[4],energy))
+          return res      
       metaevt={}
       metaevt['EvtType']=elements[5]
       meta.update(metaevt)
       evttype = string.join(elements[0:6],"/")
-      res = self.fc.setMetadata(evttype,metaevt)
-      if not res['OK']:
-        self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
-        return res
+      if self.enable:
+        res = self.fc.setMetadata(evttype,metaevt)
+        if not res['OK']:
+          self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
+          return res
       prodid = ''
       if elements[6].lower() == 'gen':
         metadat={}
         metadat['Datatype']=elements[6]
         meta.update(metadat)
         datatype = string.join(elements[0:7],"/")
-        res = self.fc.setMetadata(datatype,metadat)
-        if not res['OK']:
-          self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[6],datatype))
-          return res
+        if self.enable:
+          res = self.fc.setMetadata(datatype,metadat)
+          if not res['OK']:
+            self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[6],datatype))
+            return res
         metaprodid['ProdID'] = elements[7]
         meta.update(metaprodid)
         prodid = string.join(elements[0:8],"/")
-        res = self.fc.setMetadata(prodid,metaprodid)
-        if not res['OK']:
-          self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[7],prodid))
-          return res
+        if self.enable:
+          res = self.fc.setMetadata(prodid,metaprodid)
+          if not res['OK']:
+            self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[7],prodid))
+            return res
         
       else:
         metadet={}
         metadet['DetectorType']=elements[6]
         detectortype=string.join(elements[0:7],"/")
-        res = self.fc.setMetadata(detectortype,metadet)
-        if not res['OK']:
-          self.log.error('Could not register metadata DetectorType, with value %s for %s'%(elements[6],detectortype))
-          return res
+        if self.enable:
+          res = self.fc.setMetadata(detectortype,metadet)
+          if not res['OK']:
+            self.log.error('Could not register metadata DetectorType, with value %s for %s'%(elements[6],detectortype))
+            return res
         metadat={}
         metadat['Datatype']=elements[7]
         datatype = string.join(elements[0:8],"/")
-        res = self.fc.setMetadata(datatype,metadat)
-        if not res['OK']:
-          self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[7],datatype))
-          return res 
+        if self.enable:
+          res = self.fc.setMetadata(datatype,metadat)
+          if not res['OK']:
+            self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[7],datatype))
+            return res 
         metaprodid['ProdID'] = elements[8]
         prodid = string.join(elements[0:9],"/")
-        res = self.fc.setMetadata(prodid,metaprodid)
-        if not res['OK']:
-          self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
-          return res
+        if self.enable:
+          res = self.fc.setMetadata(prodid,metaprodid)
+          if not res['OK']:
+            self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
+            return res
         
       if self.nbofevents:
         metaprodid['NumberOfEvents']=self.nbofevents
-        res = self.fc.setMetadata(prodid,metaprodid)
-        if not res['OK']:
-          self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,prodid))
-          return res
+        if self.enable:
+          res = self.fc.setMetadata(prodid,metaprodid)
+          if not res['OK']:
+            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,prodid))
+            return res
       if self.luminosity:
         metaprodid['Luminosity']=self.luminosity
-        res = self.fc.setMetadata(prodid,metaprodid)
-        if not res['OK']:
-          self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,prodid))
-          return res
+        if self.enable:
+          res = self.fc.setMetadata(prodid,metaprodid)
+          if not res['OK']:
+            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,prodid))
+            return res
       meta.update(metaprodid)
       self.log.info("Registered %s with tags %s"%(files,meta))
       
       ###Now, set the ancestors
       if self.InputData:
         inputdata = self.InputData.split(";")
-        res = self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
-        if not res['OK']:
-          self.log.error('Registration of Ancestors for %s failed'%files)
-          return res
+        if self.enable:
+          res = self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
+          if not res['OK']:
+            self.log.error('Registration of Ancestors for %s failed'%files)
+            return res
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       #res = self.fc.setMetadata(os.path.dirname(files),meta)
       #if not res['OK']:
