@@ -9,7 +9,8 @@ Mostly similar to L{UserJob}, but cannot be (and should not be) used like the Us
 '''
 
 __RCSID__ = "$Id: "
-
+from DIRAC.Core.Workflow.Module                             import ModuleDefinition
+from DIRAC.Core.Workflow.Step                               import StepDefinition
 from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC.TransformationSystem.Client.Transformation       import Transformation
@@ -20,6 +21,8 @@ from DIRAC.Core.Security.Misc                               import getProxyInfo
 from math                                                   import modf
 
 from DIRAC                                                  import S_OK, S_ERROR, gConfig
+
+import string
 
 
 class ProductionJob(Job):
@@ -104,6 +107,63 @@ class ProductionJob(Job):
     """ Return the base path. Updated by L{setInputDataQuery}.
     """
     return self.basepath
+  
+  def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
+    """ Add finalization step
+
+    @param uploadData: Upload or not the data to the storage
+    @param uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
+    @param sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
+    @param registerData: Register data in the file catalog
+    @todo: Do the registration only once, instead of once for each job
+
+    """
+    self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
+    dataUpload = ModuleDefinition('UploadOutputData')
+    dataUpload.setDescription('Uploads the output data')
+    self._addParameter(dataUpload,'Enable','bool',False,'EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
+    dataUpload.setBody(body)
+
+    failoverRequest = ModuleDefinition('FailoverRequest')
+    failoverRequest.setDescription('Sends any failover requests')
+    self._addParameter(failoverRequest,'Enable','bool',False,'EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','FailoverRequest')
+    failoverRequest.setBody(body)
+
+    registerdata = ModuleDefinition('RegisterOutputData')
+    registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
+    self._addParameter(registerdata,'Enable','bool',False,'EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','RegisterOutputData')
+    registerdata.setBody(body)
+
+    logUpload = ModuleDefinition('UploadLogFile')
+    logUpload.setDescription('Uploads the output log files')
+    self._addParameter(logUpload,'Enable','bool',False,'EnableFlag')
+    body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
+    logUpload.setBody(body)
+
+    finalization = StepDefinition('Job_Finalization')
+    finalization.addModule(dataUpload)
+    up = finalization.createModuleInstance('UploadOutputData','dataUpload')
+    up.setValue("Enable",uploadData)
+
+    finalization.addModule(registerdata)
+    ro = finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
+    ro.setValue("Enable",registerData)
+
+    finalization.addModule(logUpload)
+    ul  = finalization.createModuleInstance('UploadLogFile','logUpload')
+    ul.setValue("Enable",uploadLog)
+
+    finalization.addModule(failoverRequest)
+    fr = finalization.createModuleInstance('FailoverRequest','failoverRequest')
+    fr.setValue("Enable",sendFailover)
+    
+    self.workflow.addStep(finalization)
+    finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
+
+    return S_OK()
   
   def createProduction(self,name = None):
     """ Create production.
