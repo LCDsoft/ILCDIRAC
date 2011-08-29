@@ -302,14 +302,15 @@ class ProductionJob(Job):
       energypath += 'tev/'  
     else:
       energypath =  "%sgev/"%(self.energy/1000.)
+
+    if not self.basename:
+      self.basename = self.evttype
     
     if not self.machine[-1]=='/':
       self.machine += "/"
     if not self.evttype[-1]=='/':
       self.evttype += '/'  
     
-    if not self.basename:
-      self.basename = self.evttype
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
