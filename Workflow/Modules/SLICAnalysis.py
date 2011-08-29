@@ -37,6 +37,7 @@ class SLICAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "SLICAnalysis" )
     self.result = S_ERROR()
     self.applicationName = 'SLIC'
+    self.NumberOfEvents = 0
     self.startFrom = 0
     self.InputFile = ''
     self.randomseed = 0
@@ -50,7 +51,7 @@ class SLICAnalysis(ModuleBase):
     """
     ##NEed to keep for backward compat.
     if self.step_commons.has_key('numberOfEvents'):
-        self.numberOfEvents = self.step_commons['numberOfEvents']
+        self.NumberOfEvents = self.step_commons['numberOfEvents']
           
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
@@ -82,8 +83,8 @@ class SLICAnalysis(ModuleBase):
         res = getNumberOfevents(self.InputData)
         if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
           self.workflow_commons["NbOfEvents"]=res["nbevts"]
-          if not self.numberOfEvents:
-            self.numberOfEvents=res["nbevts"]
+          if not self.NumberOfEvents:
+            self.NumberOfEvents=res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
       
@@ -205,7 +206,7 @@ class SLICAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find mac file")    
         
-    macok = PrepareMacFile(self.SteeringFile,slicmac,self.InputFile,self.numberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.OutputFile,self.debug)
+    macok = PrepareMacFile(self.SteeringFile,slicmac,self.InputFile,self.NumberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.OutputFile,self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')

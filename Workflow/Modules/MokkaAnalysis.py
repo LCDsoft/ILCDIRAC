@@ -50,7 +50,7 @@ class MokkaAnalysis(ModuleBase):
         self.firstEventNumber = 1
         self.applicationName = 'Mokka'
         self.dbslice = ''
-        self.numberOfEvents = 0
+        self.NumberOfEvents = 0
         self.startFrom = 0
         self.eventstring = ''
         self.processID = ''
@@ -63,7 +63,7 @@ class MokkaAnalysis(ModuleBase):
       """
 
       if self.step_commons.has_key('numberOfEvents'):
-          self.numberOfEvents = self.step_commons['numberOfEvents']
+          self.NumberOfEvents = self.step_commons['numberOfEvents']
           
       if self.step_commons.has_key('startFrom'):
         self.startFrom = self.step_commons['startFrom']
@@ -120,8 +120,8 @@ class MokkaAnalysis(ModuleBase):
           res = getNumberOfevents(self.InputData)
           if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
             self.workflow_commons["NbOfEvents"]=res["nbevts"]
-            if not self.numberOfEvents:
-              self.numberOfEvents=res["nbevts"]
+            if not self.NumberOfEvents:
+              self.NumberOfEvents=res["nbevts"]
           if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
             self.workflow_commons["Luminosity"]=res["lumi"]
           if   res.has_key('EvtType') and not self.processID:
@@ -259,7 +259,7 @@ class MokkaAnalysis(ModuleBase):
         result = sqlwrapper.mysqlCleanUp()
         return S_ERROR("Could not find steering file")
       steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.InputFile,
-                                    self.macFile,self.numberOfEvents,self.startFrom,self.RandomSeed,path_to_particle_tbl,
+                                    self.macFile,self.NumberOfEvents,self.startFrom,self.RandomSeed,path_to_particle_tbl,
                                     self.processID,
                                     self.debug,
                                     self.OutputFile)

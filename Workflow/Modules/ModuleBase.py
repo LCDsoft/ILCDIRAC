@@ -41,6 +41,7 @@ class ModuleBase(object):
     self.InputData = ''
     self.SteeringFile = ''
     self.energy = 0
+    self.NumberOfEvents = 0
     self.result = S_ERROR()
     self.InputFile = ''
     self.OutputFile = ''
@@ -328,6 +329,10 @@ class ModuleBase(object):
       
     if self.workflow_commons.has_key('Energy'):
       self.energy = self.workflow_commons['Energy']
+
+    if self.workflow_commons.has_key('NbOfEvts'):
+      self.NumberOfEvents = self.step_commons['NbOfEvts']
+
 
     if self.step_commons.has_key('InputFile'):
       self.InputFile = self.step_commons['InputFile']

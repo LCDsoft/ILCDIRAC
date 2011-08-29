@@ -31,7 +31,7 @@ class SLICPandoraAnalysis (ModuleBase):
     self.pandorasettings = ""
     self.detectorxml = ""
     self.InputFile = ""
-    self.numberOfEvents = -1
+    self.NumberOfEvents = -1
     self.startFrom = 0
     self.eventstring = ''
       
@@ -55,7 +55,7 @@ class SLICPandoraAnalysis (ModuleBase):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
     if self.step_commons.has_key('EvtsToProcess'):
-        self.numberOfEvents = self.step_commons['EvtsToProcess']
+        self.NumberOfEvents = self.step_commons['EvtsToProcess']
           
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
@@ -200,7 +200,7 @@ class SLICPandoraAnalysis (ModuleBase):
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable"%myslicPandoraDir
     if prefixpath:
-      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.OutputFile,str(self.numberOfEvents))
+      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.OutputFile,str(self.NumberOfEvents))
       self.log.info("Will run %s"%comm)
       script.write(comm)
     else:
