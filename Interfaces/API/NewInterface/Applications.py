@@ -540,7 +540,7 @@ class Whizard(Application):
       if not self.generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
 
-    if not self.outputFile :
+    if not self.outputFile and self._jobtype == 'User':
       self.outputFile = self.evttype
       if self.jobindex :
         self.outputFile += "_"+self.jobindex
