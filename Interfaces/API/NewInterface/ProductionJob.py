@@ -57,7 +57,6 @@ class ProductionJob(Job):
     self.setCPUTime('300000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
-    self.setFileMask('')
 
     #version control
     self._setParameter('productionVersion', 'string', self.prodVersion, 'ProdAPIVersion')
