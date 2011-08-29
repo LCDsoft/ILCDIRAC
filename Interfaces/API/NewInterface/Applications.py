@@ -1438,6 +1438,7 @@ class Marlin(Application):
         'outputRecFile' : types.StringTypes
       } )
     self.outputRecFile = outputRecFile
+    self.prodparameters[self.outputRecFile] = {}
     self.prodparameters[self.outputRecFile]['datatype']= 'REC'
     if path:
       self.outputRecPath = path      
@@ -1454,6 +1455,7 @@ class Marlin(Application):
         'outputDstFile' : types.StringTypes
       } )
     self.outputDstFile = outputDstFile
+    self.prodparameters[self.outputDstFile] = {}
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
     if path:
       self.outputDstPath = path    
@@ -1560,6 +1562,7 @@ class LCSIM(Application):
         'outputRecFile' : types.StringTypes
                        } )
     self.outputRecFile = outputRecFile
+    self.prodparameters[self.outputRecFile] = {}
     self.prodparameters[self.outputRecFile]['datatype']= 'REC'
     if path:
       self.outputRecPath = path
@@ -1576,6 +1579,7 @@ class LCSIM(Application):
         'outputDstFile' : types.StringTypes
       } )
     self.outputDstFile = outputDstFile 
+    self.prodparameters[self.outputDstFile] = {}
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
     if path:
       self.outputDstPath = path            
