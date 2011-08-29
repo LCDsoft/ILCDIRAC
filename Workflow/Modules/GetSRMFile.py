@@ -26,15 +26,14 @@ class GetSRMFile(ModuleBase):
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('GetSRMFile')
     self.rm = ReplicaManager()
-    self.srmfiles = ""
+    self.srmfiles = []
     self.files = []
     self.counter=1
     
   def applicationSpecificInputs(self):
-    if self.srmfiles:
-      listoffiles = self.srmfiles.split(";")
-      for f in listoffiles:
-        self.files.append(eval(f))
+    if not self.srmfiles:
+      return S_ERROR("List of files to treat is not set")
+    self.files = self.srmfiles
     return S_OK()
   
   def execute(self):
