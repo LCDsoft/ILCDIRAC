@@ -258,6 +258,7 @@ class ProductionJob(Job):
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/"+application.datatype+"/"
+      self.log.info("Will store the files under %s"%path)
       extension = 'stdhep'
       if application.datatype=='SIM':
         extension = 'slcio'
