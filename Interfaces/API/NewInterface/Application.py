@@ -85,7 +85,7 @@ class Application(object):
     #flag set to true in Job.append
     self.addedtojob = False
     ####Following are needed for error report
-    self._log = gLogger
+    self._log = gLogger.getSubLogger(self.__class__.__name__)
     self._errorDict = {}
     
     ### Next is to use the setattr method.
