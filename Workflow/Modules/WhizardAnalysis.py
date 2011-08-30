@@ -396,5 +396,5 @@ class WhizardAnalysis(ModuleBase):
         return S_ERROR(messageout)
     else:
       self.setApplicationStatus(messageout)
-    return S_OK(messageout)
+    return S_OK(self.OutputFile)
     
