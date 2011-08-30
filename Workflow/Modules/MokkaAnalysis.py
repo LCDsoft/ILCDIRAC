@@ -236,6 +236,7 @@ class MokkaAnalysis(ModuleBase):
       ###prepare steering file
       #first, I need to take the stdhep file, find its path (possible LFN)      
       if len(self.InputFile)>0:
+        print self.InputFile
         #self.InputFile = os.path.basename(self.InputFile)
         res = resolveIFpaths([self.InputFile])
         if not res['OK']:
