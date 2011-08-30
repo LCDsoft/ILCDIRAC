@@ -387,9 +387,9 @@ class Application(object):
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "",  True, False, "Input File"))
     if len(self.outputFile):
       stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False,  False, "Output File"))
-    if len(self.outputFile):
+    if len(self.outputDstFile):
       stepdefinition.addParameter(Parameter("outputDST",       "", "string", "", "", False,  False, "Output DST File"))
-    if len(self.outputFile):
+    if len(self.outputRecFile):
       stepdefinition.addParameter(Parameter("outputREC",      "", "string", "", "",  False,  False, "Output REC File"))
       
     stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "",  True, False, "Output File path on the grid"))
