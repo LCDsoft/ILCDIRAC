@@ -100,8 +100,10 @@ class MarlinAnalysis(ModuleBase):
                                            int(self.workflow_commons["JOB_ID"]))
           self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
-          if self.workflow_commons.has_key("MokkaOutput"):
-            self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+          #if self.workflow_commons.has_key("MokkaOutput"):
+          #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+          #                                    int(self.workflow_commons["JOB_ID"]))
+          self.InputFile = getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
           
     if self.InputData:
