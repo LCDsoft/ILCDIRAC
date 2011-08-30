@@ -46,7 +46,7 @@ class MarlinAnalysis(ModuleBase):
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.NumberOfEvents = ''
+    self.NumberOfEvents = 0
     self.eventstring = ''
     self.envdict = {}
     
@@ -68,7 +68,7 @@ class MarlinAnalysis(ModuleBase):
       self.inputGEAR=self.step_commons['inputGEAR']
       
     if self.step_commons.has_key('EvtsToProcess'):
-      self.NumberOfEvents = str(self.step_commons['EvtsToProcess'])
+      self.NumberOfEvents = self.step_commons['EvtsToProcess']
     
     ##Backward compat needed, cannot remove yet.  
     if self.step_commons.has_key('outputREC'):
