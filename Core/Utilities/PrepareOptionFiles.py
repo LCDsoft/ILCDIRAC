@@ -328,10 +328,10 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
         com = Comment("input file list changed")
         glob.insert(0,com)
         param.text = inputSLCIO
-      if len(numberofevts)>0:
+      if numberofevts >0:
         if param.attrib['name']=='MaxRecordNumber':
           if param.attrib.has_key('value'):
-            param.attrib['value'] = numberofevts
+            param.attrib['value'] = str(numberofevts)
             com = Comment("MaxRecordNumber changed")
             glob.insert(0,com)
             
