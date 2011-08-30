@@ -1481,9 +1481,6 @@ class Marlin(Application):
   
   def _checkConsistency(self):
 
-    if not self.energy :
-      self._log.error('Energy set to 0 !')
-      
     if not self.nbevts :
       self._log.error('Number of events set to 0 !')
         
@@ -1491,7 +1488,7 @@ class Marlin(Application):
       return S_ERROR('Version not set!')   
     
     if not self.inputGearFile :
-      self._log.info('GEAR file not given')
+      self._log.info('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
 
     res = self._checkRequiredApp()
     if not res['OK']:
