@@ -1497,6 +1497,8 @@ class Marlin(Application):
     if not res['OK']:
       return res
 
+    if not self.inputGearFile:
+      self.inputGearFile = 'GearOutput.xml'
 
     if not self._jobtype == 'User' :
       if not self.outputFile:
