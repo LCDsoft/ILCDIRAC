@@ -70,7 +70,7 @@ class FailoverRequest(ModuleBase):
 
     if self.workflow_commons.has_key('Request'):
       self.request = self.workflow_commons['Request']
-    else:
+    if not self.request:
       self.request = RequestContainer()
       self.request.setRequestName('job_%s_request.xml' % self.jobID)
       self.request.setJobID(self.jobID)
