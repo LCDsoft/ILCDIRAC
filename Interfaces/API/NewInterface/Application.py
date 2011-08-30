@@ -384,17 +384,17 @@ class Application(object):
     stepdefinition.addParameter(Parameter("applicationVersion","", "string", "", "", False, False, "Application Version"))
     stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
-    stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "", True, False, "Input File"))
+    stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "",  True, False, "Input File"))
     if len(self.outputFile):
-      stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False, True, "Output File"))
+      stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False,  True, "Output File"))
     if len(self.outputFile):
-      stepdefinition.addParameter(Parameter("outputDST",       "", "string", "", "", False, True, "Output DST File"))
+      stepdefinition.addParameter(Parameter("outputDST",       "", "string", "", "", False,  True, "Output DST File"))
     if len(self.outputFile):
-      stepdefinition.addParameter(Parameter("outputREC",      "", "string", "", "", False,  True, "Output REC File"))
+      stepdefinition.addParameter(Parameter("outputREC",      "", "string", "", "",  False,  True, "Output REC File"))
       
-    stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "", False, True, "Output File path on the grid"))
-    stepdefinition.addParameter(Parameter("outputPathREC",     "", "string", "", "", False, True, "Output REC File path on the grid"))
-    stepdefinition.addParameter(Parameter("outputPathDST",     "", "string", "", "", False, True, "Output DST File path on the grid"))
+    stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "",  True, False, "Output File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathREC",     "", "string", "", "",  True, False, "Output REC File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathDST",     "", "string", "", "",  True, False, "Output DST File path on the grid"))
     stepdefinition.addParameter(Parameter("OutputSE",          "", "string", "", "",  True, False, "Output File storage element"))
     stepdefinition.addParameter(Parameter('listoutput',        [],   "list", "", "", False, False, "list of output file name"))
     #Following should be workflow parameters
