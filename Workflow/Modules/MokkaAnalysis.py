@@ -395,7 +395,7 @@ class MokkaAnalysis(ModuleBase):
         if status==106:
           message = 'Mokka %s reached end of input generator file' %(self.applicationVersion)
         self.setApplicationStatus(message)
-      return S_OK(message)
+      return S_OK({'OutputFile':self.OutputFile})
 
     #############################################################################
 
