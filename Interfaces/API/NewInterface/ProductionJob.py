@@ -42,6 +42,8 @@ class ProductionJob(Job):
     self.evttype = ''
     self.machine = 'clic'
 
+    self.description = ''
+
     self.outputStorage = ''
 
     self.proxyinfo = getProxyInfo()
@@ -102,6 +104,14 @@ class ProductionJob(Job):
 
   def setMachine(self,machine):
     self.machine = machine
+
+  def setDescription(self,desc):
+    """ Set the production's description
+    
+    @param desc: Description
+    """
+    self.description = desc
+    return S_OK()
 
   def getBasePath(self):
     """ Return the base path. Updated by L{setInputDataQuery}.
@@ -202,7 +212,7 @@ class ProductionJob(Job):
     ###Create Tranformation
     Trans = Transformation()
     Trans.setTransformationName(name)
-    Trans.setDescription(self.workflow.getDescrShort())
+    Trans.setDescription(self.description)
     Trans.setLongDescription(self.workflow.getDescription())
     Trans.setType(self.type)
     self.prodparameters['JobType']=self.type
