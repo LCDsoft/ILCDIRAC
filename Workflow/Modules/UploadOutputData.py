@@ -113,7 +113,15 @@ class UploadOutputData(ModuleBase):
                 break
         self.outputList = olist
         self.log.verbose("OutputList : %s"%self.outputList)
-        
+      else:
+        olist = []
+        for obj in self.outputList:
+          appdict = obj
+          appdict['outputFile'] = getProdFilename(obj['outputFile'],int(self.workflow_commons["PRODUCTION_ID"]),
+                                                  int(self.workflow_commons["JOB_ID"]))
+          olist.append(appdict)
+        self.outputList = olist
+        self.log.verbose("OutputList : %s"%self.outputList)  
 
     if self.workflow_commons.has_key('outputMode'):
       self.outputMode = self.workflow_commons['outputMode']
