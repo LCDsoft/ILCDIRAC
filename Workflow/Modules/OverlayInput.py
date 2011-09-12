@@ -111,6 +111,8 @@ class OverlayInput (ModuleBase):
 
     res= gConfig.getOption("/Operations/Overlay/%s/%s/ProdID"%(self.detector,self.energytouse),0)
     meta['ProdID']= res['Value']
+    if self.prodid:
+      meta['ProdID'] = self.prodid
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
     #  return res
