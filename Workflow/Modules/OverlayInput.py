@@ -32,7 +32,7 @@ class OverlayInput (ModuleBase):
     self.applicationName = 'OverlayInput'
     self.curdir = os.getcwd()
 
-    self.applicationLog = self.curdir+"/"+'Overlay.log'
+    self.applicationLog = ''
     self.printoutflag = ''
     self.prodid = 0
     self.detector = ""
