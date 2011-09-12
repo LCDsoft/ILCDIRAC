@@ -634,6 +634,8 @@ fi\n"""%(basename,lfile))
     if not self.result['OK']:
       return self.result
 
+    self.applicationLog = self.curdir+"/"+self.applicationLog
+
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
       return S_OK('OverlayInput should not proceed as previous step did not end properly')
