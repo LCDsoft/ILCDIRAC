@@ -50,7 +50,7 @@ class Job(DiracJob):
     """
     return self._reportError('This job class does not implement setOutputSandbox')
   
-  def setIngnoreApplicationErrors(self):
+  def setIgnoreApplicationErrors(self):
     """ Helper function
     
     Set a flag for all applications that they should not care about errors
