@@ -397,6 +397,7 @@ class OverlayInput (ModuleBase):
     #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
     script.write("""
 if [ ! -s %s ]; then
+  echo "Using rfcp instead"
   rfcp %s ./
 fi\n"""%(basename,lfile))
     script.write('declare -x appstatus=$?\n')
