@@ -22,7 +22,7 @@ from math                                                   import modf
 
 from DIRAC                                                  import S_OK, S_ERROR, gConfig
 
-import string
+import string, os, shutil
 
 
 class ProductionJob(Job):
@@ -48,8 +48,11 @@ class ProductionJob(Job):
 
     self.proxyinfo = getProxyInfo()
 
+    self.inputdataquery = False
+    self.plugin = 'Standard'
+
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay']
-    
+    self.prodparameters = {}
     self._addParameter(self.workflow, "IS_PROD", 'JDL', True, "This job is a production job")
     if not script:
       self.__setDefaults()
@@ -81,13 +84,60 @@ class ProductionJob(Job):
     else:
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
-     
+      
+  #############################################################################
+  def setProdGroup(self,group):
+    """ Sets a user defined tag for the production as appears on the monitoring page
+    """
+    self.prodGroup = group
+  #############################################################################
+  def setProdPlugin(self,plugin):
+    """ Sets the plugin to be used to creating the production jobs
+    """
+    self.plugin = plugin
+    
+  #############################################################################
+  def setJobFileGroupSize(self,files):
+    """ Sets the number of files to be input to each job created.
+    """
+    self.jobFileGroupSize = files
+    self.prodparameters['NbInputFiles'] = files
+  #############################################################################
+  def setProdType(self,prodType):
+    """Set prod type.
+    """
+    if not prodType in self.prodTypes:
+      raise TypeError,'Prod must be one of %s' %(string.join(self.prodTypes,', '))
+    self.setType(prodType)
+  #############################################################################
+  def setWorkflowName(self,name):
+    """Set workflow name.
+    """
+    self.workflow.setName(name)
+    self.name = name
+
+  #############################################################################
+  def setWorkflowDescription(self,desc):
+    """Set workflow name.
+    """
+    self.workflow.setDescription(desc)
+             
+  #############################################################################
+  def createWorkflow(self):
+    """ Create XML for local testing.
+    """
+    name = '%s.xml' % self.name
+    if os.path.exists(name):
+      shutil.move(name,'%s.backup' %name)
+    self.workflow.toXMLFile(name)
+    
+  #############################################################################
   def setOutputSE(self,outputse):
     """ Define where the output file(s) will go. 
     """
     self.outputStorage = outputse
     return S_OK()
-    
+  
   def setInputDataQuery(self,metadict):
     """ Define the input data query needed
     """
@@ -100,6 +150,8 @@ class ProductionJob(Job):
     """ Also get the compatible metadata such as energy, evttype, etc, populate dictionary
     Beware of energy: need to convert to gev (3tev -> 3000, 500gev -> 500)
     """
+    
+    self.inputdataquery = True
     return S_OK()
 
   def setMachine(self,machine):
@@ -213,14 +265,15 @@ class ProductionJob(Job):
     Trans = Transformation()
     Trans.setTransformationName(name)
     Trans.setDescription(self.description)
-    Trans.setLongDescription(self.workflow.getDescription())
+    Trans.setLongDescription(self.description)
     Trans.setType(self.type)
     self.prodparameters['JobType']=self.type
-    Trans.setPlugin('Standard')
-    Trans.setGroupSize(self.jobFileGroupSize)
+    Trans.setPlugin(self.plugin)
+    if self.inputdataquery:
+      Trans.setGroupSize(self.jobFileGroupSize)
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
-    Trans.setEventsPerTask(self.prodparameters['nbevts']*self.prodparameters['NbInputFiles'])
+    Trans.setEventsPerTask(self.nbevts)
     res = Trans.addTransformation()
     if not res['OK']:
       print res['Message']
@@ -288,7 +341,7 @@ class ProductionJob(Job):
       if not res['OK']:
         return res
     if self.energy:
-      self._setParameter( "Energy", "int", self.energy, "Energy used")      
+      self._setParameter( "Energy", "int", int(self.energy), "Energy used")      
       
     if not self.evttype:
       if hasattr(application,'evttype'):

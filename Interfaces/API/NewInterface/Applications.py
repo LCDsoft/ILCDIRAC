@@ -1234,6 +1234,11 @@ class OverlayInput(Application):
     self._modulename = "OverlayInput"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
+
+  def setProdID(self,pid):
+    self._checkArgs( {'pid': types.IntType})
+    self.prodid = pid
+    return S_OK()
       
   def setBXOverlay(self,bxoverlay):
     """ Define bunch crossings to overlay
