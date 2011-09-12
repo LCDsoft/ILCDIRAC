@@ -138,6 +138,7 @@ class ProductionJob(Job):
     self.outputStorage = outputse
     return S_OK()
   
+  #############################################################################
   def setInputDataQuery(self,metadict):
     """ Define the input data query needed
     """
