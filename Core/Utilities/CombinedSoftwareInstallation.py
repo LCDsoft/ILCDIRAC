@@ -188,10 +188,10 @@ def CreateSharedArea():
   if not os.environ.has_key('VO_ILC_SW_DIR') and not os.environ.has_key("OSG_APP"):
     DIRAC.gLogger.info( 'VO_ILC_SW_DIR and OSG_APP not defined.' )
     return False
-  sharedArea = ''
+  sharedArea = '.'
   if os.environ.has_key('VO_ILC_SW_DIR'):
     sharedArea = os.environ['VO_ILC_SW_DIR']
-  elif   os.environ.has_key("OSG_APP"):
+  elif os.environ.has_key("OSG_APP"):
     sharedArea = os.environ["OSG_APP"]
   if sharedArea == '.':
     DIRAC.gLogger.info( 'VO_ILC_SW_DIR or OSG_APP points to "."' )
