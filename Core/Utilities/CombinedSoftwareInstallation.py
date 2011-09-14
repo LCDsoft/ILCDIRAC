@@ -185,13 +185,16 @@ def CreateSharedArea():
    Method to be used by SAM jobs to make sure the proper directory structure is created
    if it does not exists
   """
-  if not os.environ.has_key('VO_ILC_SW_DIR'):
-    DIRAC.gLogger.info( 'VO_ILC_SW_DIR not defined.' )
+  if not os.environ.has_key('VO_ILC_SW_DIR') and not os.environ.has_key("OSG_APP"):
+    DIRAC.gLogger.info( 'VO_ILC_SW_DIR and OSG_APP not defined.' )
     return False
-
-  sharedArea = os.environ['VO_ILC_SW_DIR']
+  sharedArea = ''
+  if os.environ.has_key('VO_ILC_SW_DIR'):
+    sharedArea = os.environ['VO_ILC_SW_DIR']
+  elif   os.environ.has_key("OSG_APP"):
+    sharedArea = os.environ["OSG_APP"]
   if sharedArea == '.':
-    DIRAC.gLogger.info( 'VO_ILC_SW_DIR points to "."' )
+    DIRAC.gLogger.info( 'VO_ILC_SW_DIR or OSG_APP points to "."' )
     return False
 
   if not os.path.isdir( sharedArea ):
