@@ -36,7 +36,7 @@ class UserJobFinalization(ModuleBase):
     self.defaultOutputSE = gConfig.getValue( '/Resources/StorageElementGroups/Tier1-USER',[])    
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover',[])
     #List all parameters here
-    self.userFileCatalog='FileCatalog'
+    self.userFileCatalog=['FileCatalog']
     self.request = None
     self.lastStep = False
     #Always allow any files specified by users    
@@ -300,7 +300,7 @@ class UserJobFinalization(ModuleBase):
     self.log.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
     time.sleep(10)
     for lfn,repSE in replication.items():
-      result = rm.replicateAndRegister(lfn,repSE)#,catalog=self.userFileCatalog)
+      result = rm.replicateAndRegister(lfn,repSE,catalog=self.userFileCatalog)
       if not result['OK']:
         self.log.info('Replication failed with below error but file already exists in Grid storage with at least one replica:\n%s' %(result))
 
