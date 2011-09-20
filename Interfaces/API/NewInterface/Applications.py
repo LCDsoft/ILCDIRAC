@@ -228,12 +228,13 @@ class GetSRMFile(Application):
     if type(self.filedict) == type({}):
       self.filedict = [self.filedict]
 
+    ##For the getInputFromApp to work, we nedd to tell the application about the expected OutputFile
     flist = ''
     for fdict in self.filedict:
       f = fdict['file']
       bname = f.split("/")[-1]
       flist += bname+";"
-
+      
     self.OutputFile = flist.rstrip(";")
         
     return S_OK()
