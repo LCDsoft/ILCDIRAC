@@ -180,7 +180,8 @@ class Job(DiracJob):
       if application.energy:
         self.energy = application.energy
       else:
-        return S_ERROR("Energy must be set somewhere.")
+        self.log.info("Energy not set for this step")
+      #  return S_ERROR("Energy must be set somewhere.")
      
     if self.energy:
       self._addParameter(self.workflow, "Energy", "float", self.energy, "Energy used")
