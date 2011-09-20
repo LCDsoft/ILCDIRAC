@@ -1423,6 +1423,8 @@ class Marlin(Application):
     self.appname = 'marlin'    
     self.datatype = 'REC'
     self.detectortype = 'ILD'
+    if not self.nbevts:
+      self.nbevts = -1
      
     
   def setGearFile(self,GearFile):

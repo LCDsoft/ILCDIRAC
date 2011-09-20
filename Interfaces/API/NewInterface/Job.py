@@ -101,7 +101,7 @@ class Job(DiracJob):
     
     res = self._jobSpecificParams(application)
     if not res['OK']:
-      self.log.error("Failed job specific checks")
+      self.log.error("Failed job specific checks: %s",res['Message'])
       return S_ERROR("Failed job specific checks")
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
@@ -183,7 +183,7 @@ class Job(DiracJob):
         return S_ERROR("Energy must be set somewhere.")
      
     if self.energy:
-      self._addParameter(self.workflow, "Energy", "int", self.energy, "Energy used")
+      self._addParameter(self.workflow, "Energy", "float", self.energy, "Energy used")
     return S_OK()
 
   def _addSoftware( self, appName, appVersion ):
