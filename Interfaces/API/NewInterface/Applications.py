@@ -1,14 +1,14 @@
-'''
+"""
 This module contains the definition of the different applications that can
 be used to create jobs.
 
 Example usage:
 
->>> from ILCDIRAC.Interfaces.API.Applications import *
->>> from ILCDIRAC.Interfaces.API.Job import Job 
+>>> from ILCDIRAC.Interfaces.API.NewInterface.Applications import *
+>>> from ILCDIRAC.Interfaces.API.NewInterface.UserJob import * 
 >>> from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 >>> dirac = DiracILC()
->>> job = Job()
+>>> job = UserJob()
 >>> ga = GenericApplication()
 >>> ga.setScript("myscript.py")
 >>> ga.setArguments("some arguments")
@@ -18,7 +18,7 @@ Example usage:
 
 It's also possible to set all the application's properties in the constructor
 
->>> ga = GenericApplication({'Script':'myscript.py',"Arguments":"some arguments","Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
+>>> ga = GenericApplication({"Script":"myscript.py","Arguments":"some arguments","Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
 
 but this is more an expert's functionality. 
 
@@ -34,7 +34,7 @@ It should be possible to change the parameters up to the point the job is actual
 @author: Stephane Poss
 @author: Remi Ete
 @author: Ching Bon Lam
-'''
+"""
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.ProcessList              import *
@@ -178,7 +178,6 @@ class GetSRMFile(Application):
   
   >>> gf = GetSRMFile()
   >>> fdict = {"file":"srm://srm-public.cern.ch/castor/cern.ch/grid/ilc/prod/clic/1tev/Z_uds/gen/0/nobeam_nobrem_0-200.stdhep","site":"CERN-SRM"}
-  >>> fdict = str(fdict)
   >>> gf.setFiles(fdict)
   
   """
@@ -229,6 +228,14 @@ class GetSRMFile(Application):
     if type(self.filedict) == type({}):
       self.filedict = [self.filedict]
 
+    flist = ''
+    for fdict in self.filedict:
+      f = fdict['file']
+      bname = f.split("/")[-1]
+      flist += bname+";"
+
+    self.OutputFile = flist.rstrip(";")
+        
     return S_OK()
 
   def _addParametersToStep(self,step):
@@ -930,7 +937,7 @@ class Mokka(Application):
   ...
   >>> mo = Mokka()
   >>> mo.getInputFromApp(wh)
-  >>> mo.setSteeringFile("mycut.cfg")
+  >>> mo.setSteeringFile("mysteer.steer")
   >>> mo.setMacFile('MyMacFile.mac')
   >>> mo.setStartFrom(10)
   
