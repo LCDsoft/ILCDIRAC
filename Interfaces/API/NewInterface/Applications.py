@@ -42,7 +42,7 @@ from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
 from DIRAC.Core.Workflow.Module                       import *
-from DIRAC                                            import S_OK,S_ERROR
+from DIRAC                                            import S_OK,S_ERROR, gConfig
 
 
 import os, types, string
@@ -1387,10 +1387,22 @@ class OverlayInput(Application):
       
     if not self.detectortype in ['ILD','SID'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
-        
-
+    
     return S_OK() 
   
+  def _checkFinalConsistency(self):
+    """ Final check of consistency: the overlay files for the specifed energy must exist
+    """
+    res = gConfig.getSections("/Operations/Overlay/%s"%self.detectortype)
+    if not res['OK']:
+      return S_ERROR("Could not find the detector type")
+    if int(self.energy)/1000:
+      energytouse = "%stev"%(int(self.energy)/1000)
+    else:
+      energytouse = "%sgev"%(int(self.energy))
+    if not energytouse in res['Value']:
+      return S_ERROR("No overlay files corresponding to %s"%energytouse)
+    return S_OK()
   
   
 ##########################################################################
