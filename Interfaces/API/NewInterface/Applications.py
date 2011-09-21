@@ -1006,7 +1006,7 @@ class Mokka(Application):
     self._checkArgs( {
         'startfrom' : types.IntType
       } )
-    self.startfrom = startfrom  
+    self.startFrom = startfrom  
     
     
   def setProcessID(self,processID):

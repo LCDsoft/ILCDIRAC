@@ -168,9 +168,9 @@ class Application(object):
     @param energy: Energy used in GeV
     @type energy: float
     """
-    if not type(energy)==type(1.1):
-      energy = float(energy)
-    self._checkArgs({ 'energy' : types.FloatType })
+    #if not type(energy)==type(1.1):
+    #  energy = float(energy)
+    self._checkArgs({ 'energy' : types.IntType })
     self.energy = energy
     return S_OK()  
     
