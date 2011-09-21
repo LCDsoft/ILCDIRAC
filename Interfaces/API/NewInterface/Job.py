@@ -184,7 +184,7 @@ class Job(DiracJob):
       #  return S_ERROR("Energy must be set somewhere.")
      
     if self.energy:
-      self._addParameter(self.workflow, "Energy", "float", self.energy, "Energy used")
+      self._addParameter(self.workflow, "Energy", "int", self.energy, "Energy used")
     return S_OK()
 
   def _addSoftware( self, appName, appVersion ):
