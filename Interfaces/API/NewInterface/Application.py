@@ -168,9 +168,9 @@ class Application(object):
     @param energy: Energy used in GeV
     @type energy: float
     """
-    #if not type(energy)==type(1.1):
-    #  energy = float(energy)
-    self._checkArgs({ 'energy' : types.IntType })
+    if not type(energy)==type(1.1):
+      energy = float(energy)
+    self._checkArgs({ 'energy' : types.FloatType })
     self.energy = energy
     return S_OK()  
     
@@ -364,6 +364,12 @@ class Application(object):
   def _checkConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
     Should also call L{_checkRequiredApp} when needed.
+    """
+    return S_OK()
+  
+  def _checkFinalConsistency(self):
+    """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
+    Some info are passed from the job to the applications: this is then used to check that it makes the app valid 
     """
     return S_OK()
 

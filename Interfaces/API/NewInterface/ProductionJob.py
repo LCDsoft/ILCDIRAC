@@ -342,7 +342,7 @@ class ProductionJob(Job):
       if not res['OK']:
         return res
     if self.energy:
-      self._setParameter( "Energy", "int", int(self.energy), "Energy used")      
+      self._setParameter( "Energy", "float", self.energy, "Energy used")      
       
     if not self.evttype:
       if hasattr(application,'evttype'):

@@ -103,6 +103,11 @@ class Job(DiracJob):
     if not res['OK']:
       self.log.error("Failed job specific checks: %s",res['Message'])
       return S_ERROR("Failed job specific checks")
+
+    res = application._checkFinalConsistency()
+    if not res['OK']:
+      self.log.error("%s failed to check its consistency: %s"%(application,res['Message']))
+      return S_ERROR("%s failed to check its consistency: %s"%(application,res['Message']))
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
     self.applicationlist.append(application)
@@ -180,11 +185,11 @@ class Job(DiracJob):
       if application.energy:
         self.energy = application.energy
       else:
-        self.log.info("Energy not set for this step")
+        self.log.warn("Energy not set for this step")
       #  return S_ERROR("Energy must be set somewhere.")
      
     if self.energy:
-      self._addParameter(self.workflow, "Energy", "int", self.energy, "Energy used")
+      self._addParameter(self.workflow, "Energy", "float", self.energy, "Energy used")
     return S_OK()
 
   def _addSoftware( self, appName, appVersion ):
