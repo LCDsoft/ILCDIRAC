@@ -1393,6 +1393,8 @@ class OverlayInput(Application):
   def _checkFinalConsistency(self):
     """ Final check of consistency: the overlay files for the specifed energy must exist
     """
+    if not self.energy:
+      return  S_ERROR("Energy MUST be spcified for the overlay")
     res = gConfig.getSections("/Operations/Overlay/%s"%self.detectortype)
     if not res['OK']:
       return S_ERROR("Could not find the detector type")
