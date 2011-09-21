@@ -235,7 +235,7 @@ class GetSRMFile(Application):
       bname = f.split("/")[-1]
       flist += bname+";"
       
-    self.OutputFile = flist.rstrip(";")
+    self.setOutputFile(flist.rstrip(";"))
         
     return S_OK()
 
