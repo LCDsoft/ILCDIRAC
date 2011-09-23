@@ -63,10 +63,10 @@ class OverlayInput (ModuleBase):
       self.energytouse = self.step_commons['Energy']
 
     if self.energy:
-      if self.energy/1000:
-        self.energytouse = "%stev"%(self.energy/1000)
+      if int(self.energy)/1000:
+        self.energytouse = "%stev"%(int(self.energy)/1000)
       else:
-        self.energytouse = "%sgev"%self.energy
+        self.energytouse = "%sgev"%(int(self.energy))
         
     if not self.energytouse:
       return S_ERROR("Energy not set anywhere!")
