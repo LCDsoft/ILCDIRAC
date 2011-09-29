@@ -101,7 +101,7 @@ class Job(DiracJob):
     
     res = self._jobSpecificParams(application)
     if not res['OK']:
-      self.log.error("Failed job specific checks: %s",res['Message'])
+      self.log.error("%s failed job specific checks: %s"%(application,res['Message']))
       return S_ERROR("Failed job specific checks")
 
     res = application._checkFinalConsistency()
