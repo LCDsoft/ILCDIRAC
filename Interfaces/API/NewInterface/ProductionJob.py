@@ -206,15 +206,13 @@ class ProductionJob(Job):
     self.basepath = "/ilc/prod/"
     if compatmeta.has_key("Machine"):
       if type(compatmeta["Machine"]) in types.StringTypes:
-        self.basepath += compatmeta["Machine"]+"/"
+        self.machine = compatmeta["Machine"]+"/"
       if type(compatmeta["Machine"]) == type([]):
-        self.basepath += compatmeta["Machine"][0]+"/"
+        self.machine = compatmeta["Machine"][0]+"/"
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
-        self.basepath += compatmeta["Energy"]+"/"
         self.energycat = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
-        self.basepath += compatmeta["Energy"][0]+"/"
         self.energycat = compatmeta["Energy"][0]
         
     if self.energycat.count("tev"):
@@ -223,11 +221,6 @@ class ProductionJob(Job):
       self.energy = 1.*int(self.energycat.split("gev")[0])
     else:
       self.energy = 1.*int(self.energycat)  
-    if compatmeta.has_key("EvtType"):
-      if type(compatmeta["EvtType"]) in types.StringTypes:
-        self.basepath += compatmeta["EvtType"]+"/"
-      if type(compatmeta["EvtType"]) == type([]):
-        self.basepath += compatmeta["EvtType"][0]+"/"
     gendata = False
     if compatmeta.has_key('Datatype'):
       if type(compatmeta['Datatype']) in types.StringTypes:
