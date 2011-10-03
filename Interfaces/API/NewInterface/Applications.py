@@ -1958,6 +1958,9 @@ class SLCIOConcatenate(Application):
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
+    if not self._jobtype == 'User':
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
