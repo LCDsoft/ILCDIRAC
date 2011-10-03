@@ -167,6 +167,10 @@ class SLICPandoraAnalysis (ModuleBase):
           self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
           return S_ERROR('Could not find PandoraSettings file')
     
+    oldversion = False
+    if self.applicationVersion in ['CLIC_CDR', 'CDR1', 'CDR2', 'CDR0', 'V2', 'V3', 'V4']:
+      oldversion = True
+    
     scriptName = 'SLICPandora_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
     script = open(scriptName,'w')
@@ -200,7 +204,10 @@ class SLICPandoraAnalysis (ModuleBase):
     elif (os.path.exists("%s/Executable/PandoraFrontend"%myslicPandoraDir)):
       prefixpath ="%s/Executable"%myslicPandoraDir
     if prefixpath:
-      comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.OutputFile,str(self.NumberOfEvents))
+      if oldversion:
+        comm = '%s/PandoraFrontend %s %s %s %s %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.OutputFile,str(self.NumberOfEvents))
+      else:
+        comm = '%s/PandoraFrontend -g %s -c %s -i %s -o %s -r %s\n'%(prefixpath,self.detectorxml,self.pandorasettings,runonslcio,self.OutputFile,str(self.NumberOfEvents))
       self.log.info("Will run %s"%comm)
       script.write(comm)
     else:
