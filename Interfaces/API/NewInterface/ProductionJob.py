@@ -40,6 +40,7 @@ class ProductionJob(Job):
     self.basename = ''
     self.basepath = "/ilc/prod/"
     self.evttype = ''
+    self.datatype = ''
     self.machine = 'clic'
 
     self.description = ''
@@ -210,10 +211,10 @@ class ProductionJob(Job):
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.basepath += compatmeta["Energy"]+"/"
-        self.energy=compatmeta["Energy"]
+        self.energy = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
         self.basepath += compatmeta["Energy"][0]+"/"
-        self.energy=compatmeta["Energy"][0]        
+        self.energy = compatmeta["Energy"][0]        
     if compatmeta.has_key("EvtType"):
       if type(compatmeta["EvtType"]) in types.StringTypes:
         self.basepath += compatmeta["EvtType"]+"/"
@@ -222,9 +223,11 @@ class ProductionJob(Job):
     gendata = False
     if compatmeta.has_key('Datatype'):
       if type(compatmeta['Datatype']) in types.StringTypes:
+        self.datatype = compatmeta['Datatype']
         if compatmeta['Datatype'] == 'gen':
           gendata = True
       if type(compatmeta['Datatype']) == type([]):
+        self.datatype = compatmeta['Datatype'][0]
         if compatmeta['Datatype'][0] == 'gen':
           gendata = True
     if compatmeta.has_key("DetectorType") and not gendata:
@@ -469,6 +472,8 @@ class ProductionJob(Job):
       if hasattr(application,"detectortype"):
         if application.detectortype:
           path += application.detectortype+"/"
+      if not application.datatype and self.datatype:
+        application.datatype = self.datatype
       path += application.datatype+"/"
       self.log.info("Will store the files under %s"%path)
       extension = 'stdhep'
