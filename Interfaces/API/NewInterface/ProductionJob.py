@@ -211,10 +211,17 @@ class ProductionJob(Job):
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.basepath += compatmeta["Energy"]+"/"
-        self.energy = compatmeta["Energy"]
+        self.energycat = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
         self.basepath += compatmeta["Energy"][0]+"/"
-        self.energy = compatmeta["Energy"][0]        
+        self.energycat = compatmeta["Energy"][0]
+        
+    if self.energycat.count("tev"):
+      self.energy = 1000.*int(self.energycat.split("tev")[0])
+    elif self.energycat.count("gev"):
+      self.energy = 1.*int(self.energycat.split("gev")[0])
+    else:
+      self.energy = 1.*int(self.energycat)  
     if compatmeta.has_key("EvtType"):
       if type(compatmeta["EvtType"]) in types.StringTypes:
         self.basepath += compatmeta["EvtType"]+"/"
