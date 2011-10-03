@@ -634,6 +634,8 @@ fi\n"""%(basename,lfile))
     if not self.result['OK']:
       return self.result
 
+    if not self.applicationLog:
+      self.applicationLog = 'Overlay_input.log'
     self.applicationLog = os.path.join(os.getcwd(),self.applicationLog)
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
