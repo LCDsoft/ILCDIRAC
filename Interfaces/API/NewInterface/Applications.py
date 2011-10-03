@@ -1521,7 +1521,7 @@ class Marlin(Application):
       return S_ERROR('Version not set!')   
     
     if not self.inputGearFile :
-      self._log.info('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
+      self._log.warn('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
 
     res = self._checkRequiredApp()
     if not res['OK']:
