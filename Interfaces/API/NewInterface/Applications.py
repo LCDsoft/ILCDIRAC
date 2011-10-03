@@ -1915,8 +1915,8 @@ class SLCIOConcatenate(Application):
   Example:
   
   >>> slcioconcat = SLCIOConcatenate()
-  >>> slcioconcat.setInputFile( [slcioFile_1.slcio , slcioFile_2.slcio , slcioFile_3.slcio] )
-  >>> slcioconcat.setOutputFile(myNewSLCIOFile.slcio)
+  >>> slcioconcat.setInputFile( ["slcioFile_1.slcio" , "slcioFile_2.slcio" , "slcioFile_3.slcio"] )
+  >>> slcioconcat.setOutputFile("myNewSLCIOFile.slcio")
   
   """
   def __init__(self, paramdict = None):
@@ -1954,7 +1954,7 @@ class SLCIOConcatenate(Application):
     """ Checks that all needed parameters are set
     """
       
-    if not self.OutputFile :
+    if not self.outputFile :
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
