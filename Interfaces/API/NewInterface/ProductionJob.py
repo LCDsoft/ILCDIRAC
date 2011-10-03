@@ -39,6 +39,7 @@ class ProductionJob(Job):
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.jobFileGroupSize = 1
+    self.nbtasks = 1
     self.basename = ''
     self.basepath = "/ilc/prod/"
     self.evttype = ''
@@ -56,7 +57,7 @@ class ProductionJob(Job):
     self.inputBKSelection = {}
     self.plugin = 'Standard'
 
-    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay']
+    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge']
     self.prodparameters = {}
     self._addParameter(self.workflow, "IS_PROD", 'JDL', True, "This job is a production job")
     if not script:
@@ -402,9 +403,6 @@ class ProductionJob(Job):
     if not currtrans:
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
-    if self.nbtasks:
-      print "Nb of tasks defined already, should not use InputDataQuery"
-      return S_ERROR()
     if metadata:
       self.inputBKSelection=metadata
 
