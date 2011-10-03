@@ -200,7 +200,7 @@ class ProductionJob(Job):
       #else:
       #  return self._reportError('Nb of events does not have any type recognised')
 
-    self.basename = self.process
+    self.basename = self.evttype
     self.basepath = "/ilc/prod/"
     if compatmeta.has_key("Machine"):
       if type(compatmeta["Machine"]) in types.StringTypes:
