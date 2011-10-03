@@ -104,6 +104,7 @@ class ProductionJob(Job):
     """
     self.jobFileGroupSize = files
     self.prodparameters['NbInputFiles'] = files
+    
   #############################################################################
   def setProdType(self,prodType):
     """Set prod type.
@@ -409,6 +410,7 @@ class ProductionJob(Job):
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
     elif not application.nbevts:
+      self.nbevts = self.jobFileGroupSize*self.nbevts
       res = application.setNbEvts(self.nbevts)
       if not res['OK']:
         return res
