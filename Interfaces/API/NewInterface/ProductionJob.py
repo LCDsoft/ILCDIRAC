@@ -480,8 +480,8 @@ class ProductionJob(Job):
       if hasattr(application,"detectortype"):
         if application.detectortype:
           path += application.detectortype+"/"
-      elif self.detector:
-        path += self.detector+"/"
+        elif self.detector:
+          path += self.detector+"/"
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype+"/"
