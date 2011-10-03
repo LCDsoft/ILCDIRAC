@@ -994,7 +994,9 @@ class Mokka(Application):
       } )
     self.macFile = macfile
     if os.path.exists(macfile) or macfile.lower().count("lfn:"):
-      self.inputSB.append(macfile) 
+      self.inputSB.append(macfile)
+    else:
+      self._log.warn("Mac file not found locally and is not an lfn, I hope you know what you are doing...")  
     
     
   def setStartFrom(self,startfrom):
@@ -1032,8 +1034,10 @@ class Mokka(Application):
       } )
     self.dbSlice = dbSlice
     if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
-      self.inputSB.append(dbSlice) 
-    
+      self.inputSB.append(dbSlice)
+    else:
+      self._log.warn("DB slice not found locally and is not an lfn, I hope you know what you are doing...")  
+      
     
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
