@@ -30,6 +30,7 @@ class ProductionJob(Job):
     Job.__init__(self , script)
     self.prodVersion = __RCSID__
     self.created = False
+    self.checked = False
     self.type = 'Production'
     self.csSection = '/Operations/Production/Defaults'
     self.fc = FileCatalogClient()
@@ -37,6 +38,7 @@ class ProductionJob(Job):
     self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
+    self.jobFileGroupSize = 1
     self.basename = ''
     self.basepath = "/ilc/prod/"
     self.evttype = ''
@@ -102,6 +104,8 @@ class ProductionJob(Job):
   def setJobFileGroupSize(self,files):
     """ Sets the number of files to be input to each job created.
     """
+    if self.checked:
+      return self._reportError("This input is needed at the beginning of the production definition: it's needed for total number of evts.")
     self.jobFileGroupSize = files
     self.prodparameters['NbInputFiles'] = files
     
@@ -237,6 +241,7 @@ class ProductionJob(Job):
         self.detector = compatmeta["DetectorType"]
       if type(compatmeta["DetectorType"]) == type([]):
         self.detector = compatmeta["DetectorType"][0]    
+    self.inputBKSelection = metadata
     self.inputdataquery = True
     return S_OK()
 
@@ -360,14 +365,15 @@ class ProductionJob(Job):
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
     Trans.setEventsPerTask(self.nbevts)
+    Trans.setStatus("Active")
+    Trans.setAgentType("Automatic")
     res = Trans.addTransformation()
     if not res['OK']:
       print res['Message']
       return res
     self.currtrans = Trans
-    self.currtrans.setStatus("Active")
-    self.currtrans.setAgentType("Automatic")
-    
+    if self.inputBKSelection:
+      res = self.applyInputDataQuery()
     self.created = True
     return S_OK()
 
@@ -382,6 +388,29 @@ class ProductionJob(Job):
       return S_ERROR()
     self.nbtasks = nbtasks
     self.currtrans.setMaxNumberOfTasks(self.nbtasks)
+    return S_OK()
+
+  def applyInputDataQuery(self,metadata=None,prodid=None):
+    """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
+    """
+    currtrans = 0
+    if self.currtrans:
+      currtrans = self.currtrans.getTransformationID()['Value']
+    if prodid:
+      currtrans = prodid
+    if not currtrans:
+      print "Not transformation defined earlier"
+      return S_ERROR("No transformation defined")
+    if self.nbtasks:
+      print "Nb of tasks defined already, should not use InputDataQuery"
+      return S_ERROR()
+    if metadata:
+      self.inputBKSelection=metadata
+
+    client = TransformationClient()
+    res = client.createTransformationInputDataQuery(currtrans,self.inputBKSelection)
+    if not res['OK']:
+      return res
     return S_OK()
   
   def finalizeProd(self):
@@ -486,6 +515,8 @@ class ProductionJob(Job):
         extension = 'slcio'
       fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
       application.setOutputFile(fname,path)  
+    self.basepath = path
+    self.checked = True
       
     return S_OK()
 
