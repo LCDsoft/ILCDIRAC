@@ -1924,7 +1924,7 @@ class SLCIOConcatenate(Application):
     Application.__init__(self, paramdict)
     if not self.version:
       self.version = 'HEAD'
-    self._modulename = "SLCIOConcatenate"
+    self._modulename = "LCIOConcatenate"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to concatenate SLCIO files'
 
