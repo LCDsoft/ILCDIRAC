@@ -22,7 +22,7 @@ from math                                                   import modf
 
 from DIRAC                                                  import S_OK, S_ERROR, gConfig
 
-import string, os, shutil
+import string, os, shutil, types
 
 
 class ProductionJob(Job):
@@ -139,10 +139,10 @@ class ProductionJob(Job):
     return S_OK()
   
   #############################################################################
-  def setInputDataQuery(self,metadict):
+  def setInputDataQuery(self,metadata):
     """ Define the input data query needed
     """
-    res = self.fc.findFilesByMetadata(metadict)
+    res = self.fc.findFilesByMetadata(metadata)
     if not res['OK']:
       return res
     lfns = res['Value']
@@ -151,7 +151,87 @@ class ProductionJob(Job):
     """ Also get the compatible metadata such as energy, evttype, etc, populate dictionary
     Beware of energy: need to convert to gev (3tev -> 3000, 500gev -> 500)
     """
+    metakeys = metadata.keys()
+    client = FileCatalogClient()
+    res = client.getMetadataFields()
+    if not res['OK']:
+      print "Could not contact File Catalog"
+      self.explainInputDataQuery()
+      return S_ERROR()
+    metaFCkeys = res['Value'].keys()
+    for key in metakeys:
+      for meta in metaFCkeys:
+        if meta != key:
+          if meta.lower() == key.lower():
+            return self._reportError("Key syntax error %s, should be %s" % (key, meta))
+      if not metaFCkeys.count(key):
+        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
+
+    if not   metadata.has_key("ProdID"):
+      return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
     
+    res = client.findFilesByMetadata(metadata)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for available files")
+    elif len(res['Value']) < 1:
+      return self._reportError('Could not find any files corresponding to the query issued')
+    directory = os.path.dirname(res['Value'][0])
+    res = client.getDirectoryMetadata(directory)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for directory metadata")
+    #res =   client.getCompatibleMetadata(metadata)
+    #if not res['OK']:
+    #  return self._reportError("Error looking up the catalog for compatible metadata")
+    compatmeta = res['Value']
+    compatmeta.update(metadata)
+    if compatmeta.has_key('EvtType'):
+      if type(compatmeta['EvtType']) in types.StringTypes:
+        self.process  = compatmeta['EvtType']
+      if type(compatmeta['EvtType']) == type([]):
+        self.process = compatmeta['EvtType'][0]
+    else:
+      return self._reportError("EvtType is not in the metadata, it has to be!")
+    if compatmeta.has_key('NumberOfEvents'):
+      if type(compatmeta['NumberOfEvents']) == type([]):
+        self.nbofevents = compatmeta['NumberOfEvents'][0]
+      else:
+        #type(compatmeta['NumberOfEvents']) in types.StringTypes:
+        self.nbofevents = compatmeta['NumberOfEvents']
+      #else:
+      #  return self._reportError('Nb of events does not have any type recognised')
+
+    self.basename = self.process
+    self.basepath = "/ilc/prod/"
+    if compatmeta.has_key("Machine"):
+      if type(compatmeta["Machine"]) in types.StringTypes:
+        self.basepath += compatmeta["Machine"]+"/"
+      if type(compatmeta["Machine"]) == type([]):
+        self.basepath += compatmeta["Machine"][0]+"/"
+    if compatmeta.has_key("Energy"):
+      if type(compatmeta["Energy"]) in types.StringTypes:
+        self.basepath += compatmeta["Energy"]+"/"
+        self.energy=compatmeta["Energy"]
+      if type(compatmeta["Energy"]) == type([]):
+        self.basepath += compatmeta["Energy"][0]+"/"
+        self.energy=compatmeta["Energy"][0]        
+    if compatmeta.has_key("EvtType"):
+      if type(compatmeta["EvtType"]) in types.StringTypes:
+        self.basepath += compatmeta["EvtType"]+"/"
+      if type(compatmeta["EvtType"]) == type([]):
+        self.basepath += compatmeta["EvtType"][0]+"/"
+    gendata = False
+    if compatmeta.has_key('Datatype'):
+      if type(compatmeta['Datatype']) in types.StringTypes:
+        if compatmeta['Datatype'] == 'gen':
+          gendata = True
+      if type(compatmeta['Datatype']) == type([]):
+        if compatmeta['Datatype'][0] == 'gen':
+          gendata = True
+    if compatmeta.has_key("DetectorType") and not gendata:
+      if type(compatmeta["DetectorType"]) in types.StringTypes:
+        self.detector = compatmeta["DetectorType"]
+      if type(compatmeta["DetectorType"]) == type([]):
+        self.detector = compatmeta["DetectorType"][0]    
     self.inputdataquery = True
     return S_OK()
 
