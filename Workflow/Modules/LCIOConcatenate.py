@@ -12,6 +12,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
+from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 
 import DIRAC
 import os
@@ -42,6 +43,17 @@ class LCIOConcatenate(ModuleBase):
 
     if not self.OutputFile:
       return S_ERROR( 'No output file defined' )
+    
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
+              self.OutputFile = os.path.basename(obj)
+        else:
+          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"]))
 
     return S_OK('Parameters resolved')
 
