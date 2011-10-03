@@ -53,6 +53,7 @@ class ProductionJob(Job):
     self.proxyinfo = getProxyInfo()
 
     self.inputdataquery = False
+    self.inputBKSelection = {}
     self.plugin = 'Standard'
 
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay']
