@@ -1954,7 +1954,7 @@ class SLCIOConcatenate(Application):
     """ Checks that all needed parameters are set
     """
       
-    if not self.outputFile :
+    if not self.outputFile and self._jobtype =='User' :
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
