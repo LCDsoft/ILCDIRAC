@@ -186,17 +186,17 @@ class ProductionJob(Job):
     compatmeta.update(metadata)
     if compatmeta.has_key('EvtType'):
       if type(compatmeta['EvtType']) in types.StringTypes:
-        self.process  = compatmeta['EvtType']
+        self.evttype  = compatmeta['EvtType']
       if type(compatmeta['EvtType']) == type([]):
-        self.process = compatmeta['EvtType'][0]
+        self.evttype = compatmeta['EvtType'][0]
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
     if compatmeta.has_key('NumberOfEvents'):
       if type(compatmeta['NumberOfEvents']) == type([]):
-        self.nbofevents = compatmeta['NumberOfEvents'][0]
+        self.nbevts = compatmeta['NumberOfEvents'][0]
       else:
         #type(compatmeta['NumberOfEvents']) in types.StringTypes:
-        self.nbofevents = compatmeta['NumberOfEvents']
+        self.nbevts = compatmeta['NumberOfEvents']
       #else:
       #  return self._reportError('Nb of events does not have any type recognised')
 
