@@ -236,7 +236,10 @@ class MokkaAnalysis(ModuleBase):
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
       if os.path.exists("mokka.steer"):
-        shutil.move("mokka.steer", "mymokka.steer")
+        try:
+          shutil.move("mokka.steer", "mymokka.steer")
+        except:
+          self.log.error("Failed renaming the steering file")
         self.SteeringFile = "mymokka.steer"
         
       ###prepare steering file
