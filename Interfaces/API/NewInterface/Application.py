@@ -158,7 +158,7 @@ class Application(object):
     @param nbevts: Number of events to process (or generate)
     @type nbevts: int
     """
-    self._checkArgs({ 'nbevts' : types.IntType })
+    self._checkArgs({ 'nbevts' : types.LongType })
     self.nbevts = nbevts  
     return S_OK()  
     

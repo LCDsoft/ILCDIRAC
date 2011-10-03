@@ -194,10 +194,10 @@ class ProductionJob(Job):
       return self._reportError("EvtType is not in the metadata, it has to be!")
     if compatmeta.has_key('NumberOfEvents'):
       if type(compatmeta['NumberOfEvents']) == type([]):
-        self.nbevts = compatmeta['NumberOfEvents'][0]
+        self.nbevts = int(compatmeta['NumberOfEvents'][0])
       else:
         #type(compatmeta['NumberOfEvents']) in types.StringTypes:
-        self.nbevts = compatmeta['NumberOfEvents']
+        self.nbevts = int(compatmeta['NumberOfEvents'])
       #else:
       #  return self._reportError('Nb of events does not have any type recognised')
 
