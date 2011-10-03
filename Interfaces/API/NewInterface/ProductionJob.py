@@ -477,7 +477,7 @@ class ProductionJob(Job):
       path += application.datatype+"/"
       self.log.info("Will store the files under %s"%path)
       extension = 'stdhep'
-      if application.datatype=='SIM':
+      if application.datatype=='SIM' or application.datatype=='REC':
         extension = 'slcio'
       fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
       application.setOutputFile(fname,path)  
