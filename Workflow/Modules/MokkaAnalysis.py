@@ -235,6 +235,10 @@ class MokkaAnalysis(ModuleBase):
 
       ###steering file that will be used to run
       mokkasteer = "mokka.steer"
+      if os.path.exists("mokka.steer"):
+        shutil.move("mokka.steer", "mymokka.steer")
+        self.SteeringFile = "mymokka.steer"
+        
       ###prepare steering file
       #first, I need to take the stdhep file, find its path (possible LFN)      
       if len(self.InputFile)>0:
