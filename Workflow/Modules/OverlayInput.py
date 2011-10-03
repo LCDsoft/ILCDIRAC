@@ -634,7 +634,7 @@ fi\n"""%(basename,lfile))
     if not self.result['OK']:
       return self.result
 
-    self.applicationLog = self.curdir+"/"+self.applicationLog
+    self.applicationLog = os.path.join(os.getcwd(),self.applicationLog)
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
