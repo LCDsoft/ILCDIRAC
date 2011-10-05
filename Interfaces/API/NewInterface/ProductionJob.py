@@ -276,44 +276,44 @@ class ProductionJob(Job):
     self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
-    self._addParameter(dataUpload,'Enable','bool',False,'EnableFlag')
+    self._addParameter(dataUpload,'enable','bool',False,'EnableFlag')
     body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
     dataUpload.setBody(body)
 
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
-    self._addParameter(failoverRequest,'Enable','bool',False,'EnableFlag')
+    self._addParameter(failoverRequest,'enable','bool',False,'EnableFlag')
     body = string.replace(self.importLine,'<MODULE>','FailoverRequest')
     failoverRequest.setBody(body)
 
     registerdata = ModuleDefinition('RegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
-    self._addParameter(registerdata,'Enable','bool',False,'EnableFlag')
+    self._addParameter(registerdata,'enable','bool',False,'EnableFlag')
     body = string.replace(self.importLine,'<MODULE>','RegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
-    self._addParameter(logUpload,'Enable','bool',False,'EnableFlag')
+    self._addParameter(logUpload,'enable','bool',False,'EnableFlag')
     body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
     logUpload.setBody(body)
 
     finalization = StepDefinition('Job_Finalization')
     finalization.addModule(dataUpload)
     up = finalization.createModuleInstance('UploadOutputData','dataUpload')
-    up.setValue("Enable",uploadData)
+    up.setValue("enable",uploadData)
 
     finalization.addModule(registerdata)
     ro = finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
-    ro.setValue("Enable",registerData)
+    ro.setValue("enable",registerData)
 
     finalization.addModule(logUpload)
     ul  = finalization.createModuleInstance('UploadLogFile','logUpload')
-    ul.setValue("Enable",uploadLog)
+    ul.setValue("enable",uploadLog)
 
     finalization.addModule(failoverRequest)
     fr = finalization.createModuleInstance('FailoverRequest','failoverRequest')
-    fr.setValue("Enable",sendFailover)
+    fr.setValue("enable",sendFailover)
     
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
