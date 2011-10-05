@@ -73,10 +73,16 @@ class Job(DiracJob):
     """
     if not self.check:
       return S_OK()
+    for app in self.applicationlist:
+      print app
+      app.listAttributes()
+      print "\n"
+    answer = raw_input('Proceed and submit job(s)? (Y/N): ')
+    if not answer.lower() in ('y', 'yes'):
+      return S_ERROR("User did not validate")
     else:
-      """ Ask the user if he wants to proceed
-      """
-      pass
+      # no more debug output in further loops
+      self.check = False
     return S_OK()
   
   def append(self,application):
