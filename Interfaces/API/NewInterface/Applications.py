@@ -428,10 +428,10 @@ class Whizard(Application):
     self.seed = 0
     self.lumi = 0
     self.jobindex = ''
-    self.leshouchesfiles = None
-    self.generatormodels = GeneratorModels()
+    self._leshouchesfiles = None
+    self._generatormodels = GeneratorModels()
     self.evttype = ''
-    self.allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
+    self._allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
     if processlist:
       self._processlist = processlist
@@ -545,7 +545,7 @@ class Whizard(Application):
       return S_ERROR('No version found')
       
     if self.model:
-      if not self.generatormodels.has_key(self.model):
+      if not self._generatormodels.has_key(self.model):
         return S_ERROR("Unknown model %s"%self.model)
 
     if not self.outputFile and self._jobtype == 'User':
@@ -559,7 +559,7 @@ class Whizard(Application):
    
    
     for key in self.parameterdict.keys():
-      if not key in self.allowedparams:
+      if not key in self._allowedparams:
         return S_ERROR("Unknown parameter %s"%key)
 
     if not self.parameterdict.has_key('PNAME1'):
