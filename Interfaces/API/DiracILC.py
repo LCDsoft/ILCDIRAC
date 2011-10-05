@@ -29,6 +29,7 @@ class DiracILC(Dirac):
     Dirac.__init__(self,WithRepo=WithRepo, RepoLocation=RepoLocation)
     self.log = gLogger
     self.software_versions = {}
+    self.checked = False
     self.pl = None
     
   def getProcessList(self):    
@@ -58,7 +59,15 @@ class DiracILC(Dirac):
     
     @return: S_OK() or S_ERROR()
     """
-    return self._do_check(job)
+    res = self._do_check(job)
+    if not res['OK']:
+      return res
+    if not self.checked:
+      res = job._askUser()
+      if not res['OK']:
+        return res
+      self.checked = True
+    return S_OK()
     
   def checkparams(self,job):
     """Helper method
@@ -79,7 +88,7 @@ class DiracILC(Dirac):
       for method, errorList in formulationErrors.items():
         self.log.error( '>>>> Error in %s() <<<<\n%s' % ( method, string.join( errorList, '\n' ) ) )
       return S_ERROR( formulationErrors )
-    return self._do_check(job)
+    return self.preSubmissionChecks(job,mode='')
 
   def giveProcessList(self):
     """ Returns the list of Processes

@@ -60,6 +60,11 @@ class ILCJob(Job):
     else:
       self.log.warn('Process list was not given, limited WHIZARD functionality') 
     self.prodparameters = {}
+    
+  def _askUser(self):
+    """ Method need to be forward compatible
+    """
+    return S_OK()    
 
   def setApplicationScript(self, appName, appVersion, script, arguments=None, log=None, logInOutputData=False):
     """ method needed by Ganga, and also for pyroot
