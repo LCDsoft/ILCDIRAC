@@ -434,7 +434,7 @@ class Whizard(Application):
     self.allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
     if processlist:
-      self.processlist = processlist
+      self._processlist = processlist
     Application.__init__(self, paramdict)
     ##Those 4 need to come after default constructor
     self._modulename = 'WhizardAnalysis'
@@ -527,16 +527,16 @@ class Whizard(Application):
     if not self.evttype:
       return S_ERROR("Process not defined")
     
-    if not self.processlist:
+    if not self._processlist:
       return S_ERROR("Process list was not given")
     
     if self.evttype:
-      if not self.processlist.existsProcess(self.evttype)['Value']:
+      if not self._processlist.existsProcess(self.evttype)['Value']:
         self._log.info("Available processes are:")
-        self.processlist.printProcesses()
+        self._processlist.printProcesses()
         return S_ERROR('Process does no exists')
       else:
-        cspath = self.processlist.getCSPath(self.evttype)
+        cspath = self._processlist.getCSPath(self.evttype)
         whiz_file = os.path.basename(cspath)
         self.version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
         self._log.info("Found the process %s in whizard %s"%(self.evttype,self.version))
