@@ -264,7 +264,7 @@ class Application(object):
     print 'Attribute list :'
     for key,val in self.__dict__.items():
       if not key[0]=="_":
-        print key,":",val
+        print "  ",key,":",val
 
 
 ########################################################################################
