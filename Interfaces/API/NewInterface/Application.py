@@ -161,6 +161,11 @@ class Application(object):
     self._checkArgs({ 'nbevts' : types.IntType })
     self.nbevts = nbevts  
     return S_OK()  
+
+  def setNumberOfEvents(self,nbevts):
+    """ Set the number of events to process, alias to setNbEvts
+    """
+    return self.setNbEvts(nbevts)
     
   def setEnergy(self,energy):
     """ Set the energy to use
