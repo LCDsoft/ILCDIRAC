@@ -507,7 +507,7 @@ class ProductionJob(Job):
           path += self.detector+"/"
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
-      path += application.datatype+"/"
+      path += application.datatype
       self.log.info("Will store the files under %s"%path)
       extension = 'stdhep'
       if application.datatype=='SIM' or application.datatype=='REC':
