@@ -62,7 +62,7 @@ class ILCJob(Job):
     self.prodparameters = {}
     
   def _askUser(self):
-    """ Method need to be forward compatible
+    """ Method needed to be forward compatible
     """
     return S_OK()    
 
