@@ -336,6 +336,8 @@ class MarlinAnalysis(ModuleBase):
     return res
   
   def GetInputFiles(self):
+    if self.ignoremissingInput:
+      return S_OK("")
     inputfilelist = self.InputFile.split(";")
     res = resolveIFpaths(inputfilelist)
     if not res['OK']:

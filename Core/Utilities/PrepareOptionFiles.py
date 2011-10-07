@@ -323,7 +323,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   lciolistfound = False
   for param in params:
     if param.attrib.has_key('name'):
-      if param.attrib['name']=='LCIOInputFiles':
+      if param.attrib['name']=='LCIOInputFiles' and inputSLCIO:
         lciolistfound = True
         com = Comment("input file list changed")
         glob.insert(0,com)
@@ -349,7 +349,7 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
           param.text = "SILENT"
           com = Comment("verbosity changed")
           glob.insert(0,com)
-  if not lciolistfound:
+  if not lciolistfound and inputSLCIO:
     name = {}
     name["name"]="LCIOInputFiles"
     lciolist = Element("parameter",name)
