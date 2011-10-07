@@ -41,6 +41,7 @@ class Application(object):
     self.inputSB = []
     #Input file
     self.inputfile = ""
+    self.forget_about_Input = False
     #Output file
     self.outputFile = ""
     self.outputPath = ""
@@ -232,6 +233,14 @@ class Application(object):
 
     return S_OK()
   
+  def setForgetAboutInput(self):
+    """ Do not overwrite the input set in the SteeringFile
+    """
+    
+    self.forget_about_Input = True
+    
+    return S_OK()
+  
   def getInputFromApp(self,application):
     """ Called to link applications
     
@@ -264,6 +273,8 @@ class Application(object):
     print 'Attribute list :'
     for key,val in self.__dict__.items():
       if not key[0]=="_":
+        if not val:
+          val = "Not defined"
         print "  ",key,":",val
 
 
@@ -398,6 +409,7 @@ class Application(object):
     stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "",  True, False, "Input File"))
+    stepdefinition.addParameter(Parameter("ForgetInput",    False,"boolean", "", "", False, False, "Do not overwrite input steering"))
     if len(self.outputFile):
       stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False,  False, "Output File"))
     if len(self.outputDstFile):
@@ -425,6 +437,7 @@ class Application(object):
     stepinstance.setValue("SteeringFile",       self.steeringfile)
     if not self._inputapp:
       stepinstance.setValue("InputFile",        self.inputfile)
+    stepinstance.setValue( "ForgetInput",       self.forget_about_Input)
     if len(self.outputFile):  
       stepinstance.setValue("OutputFile",       self.outputFile)
     if len(self.outputRecFile):  
