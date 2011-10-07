@@ -502,7 +502,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
     return S_ERROR("Found Exception %s %s"%(Exception,x))
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
-  if filesinlcsim:
+  if filesinlcsim and len(inputslcio):
     filesinlcsim.clear()
   else:
     baseelem = tree.find("lcsim")
