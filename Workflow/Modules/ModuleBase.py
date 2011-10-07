@@ -44,6 +44,7 @@ class ModuleBase(object):
     self.NumberOfEvents = 0
     self.result = S_ERROR()
     self.InputFile = ''
+    self.ignoremissingInput = False
     self.OutputFile = ''
     self.jobType = ''
     self.stdError = ''
@@ -336,6 +337,9 @@ class ModuleBase(object):
 
     if self.step_commons.has_key('InputFile'):
       self.InputFile = self.step_commons['InputFile']
+    
+    if self.step_commons.has_key('ForgetInput'):
+      self.ignoremissingInput = self.step_commons['ForgetInput']
             
     if self.workflow_commons.has_key('InputData'):
       self.InputData = self.workflow_commons['InputData']
