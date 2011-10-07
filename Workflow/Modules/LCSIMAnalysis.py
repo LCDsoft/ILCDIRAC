@@ -158,13 +158,14 @@ class LCSIMAnalysis(ModuleBase):
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"lcsim",self.applicationVersion,mySoftwareRoot)
 
-    #runonslcio = []
-    inputfilelist = self.InputFile.split(";")
-    res = resolveIFpaths(inputfilelist)
-    if not res['OK']:
-      self.setApplicationStatus('LCSIM: missing input slcio file')
-      return S_ERROR('Missing slcio file!')
-    runonslcio = res['Value']
+    runonslcio = []
+    if self.InputFile:
+      inputfilelist = self.InputFile.split(";")
+      res = resolveIFpaths(inputfilelist)
+      if not res['OK']:
+        self.setApplicationStatus('LCSIM: missing input slcio file')
+        return S_ERROR('Missing slcio file!')
+      runonslcio = res['Value']
     #for inputfile in inputfilelist:
     #  self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
     #  runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
