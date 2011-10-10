@@ -226,8 +226,9 @@ class ModuleBase(object):
     for fileName,metadata in fileInfo.items():
       if not os.path.exists(fileName):
         self.log.error('Output data file %s does not exist locally' %fileName)
-        return S_ERROR('Output Data Not Found')
-
+        if not self.ignoreapperrors:
+          return S_ERROR('Output Data Not Found')
+        del fileInfo[fileName]
     #Check the list of files against the output file mask (if it exists)
     #candidateFiles = {}
     #if fileMask:
