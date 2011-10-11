@@ -326,8 +326,8 @@ class _Root(Application):
     return S_OK()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self.inputappstep:
-      stepinstance.setLink("InputFile",self.inputappstep.getType(),"OutputFile")
+    if self._inputappstep:
+      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()  
 
 #################################################################
@@ -377,7 +377,7 @@ class RootMacro(_Root):
   
   Example:
   
-  >>> rootmac = RootScript()
+  >>> rootmac = RootMacro()
   >>> rootmac.setMacro("mymacro.C")
   >>> rootmac.setArguments("some command line arguments")
   
