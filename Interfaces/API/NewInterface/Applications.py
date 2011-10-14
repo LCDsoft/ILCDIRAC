@@ -359,7 +359,7 @@ class RootScript(_Root):
     @type executable: string
     """
     self._checkArgs( {
-        'script' : types.StringTypes
+        'executable' : types.StringTypes
       } )
 
     self.script = executable
@@ -578,13 +578,13 @@ class Whizard(Application):
       self._log.info("Assuming no polarization for beam 1")
       self.parameters.append('POLAB1=0.0 0.0')
     else:
-      self.parameters.append("POLAR1=%s" %self.parameterdict["POLAR1"] )
+      self.parameters.append("POLAB1=%s" %self.parameterdict["POLAB1"] )
         
     if not self.parameterdict.has_key('POLAB2'):
       self._log.info("Assuming no polarization for beam 2")
       self.parameters.append('POLAB2=0.0 0.0')
     else:
-      self.parameters.append("POLAR2=%s" %self.parameterdict["POLAR2"] )
+      self.parameters.append("POLAB2=%s" %self.parameterdict["POLAB2"] )
         
     if not self.parameterdict.has_key('USERB1'):
       self._log.info("Will put beam spectrum to True for beam 1")
