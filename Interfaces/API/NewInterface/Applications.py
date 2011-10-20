@@ -545,7 +545,7 @@ class Whizard(Application):
       return S_ERROR('No version found')
       
     if self.model:
-      if not self._generatormodels.has_key(self.model):
+      if not self._generatormodels.hasModel(self.model)['OK']:
         return S_ERROR("Unknown model %s"%self.model)
 
     if not self.outputFile and self._jobtype == 'User':

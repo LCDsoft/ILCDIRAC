@@ -256,9 +256,9 @@ class WhizardAnalysis(ModuleBase):
       if self.susymodel==2:
         if os.path.exists("%s/LesHouches_chne.msugra_1.in"%(mySoftDir)):
           leshouchesfiles = True
-    if self.Model and self.genmodel.has_key[self.Model]:
-      if self.genmodel[self.Model]:
-        if os.path.exists("%s/%s"%(mySoftDir,self.genmodel[self.Model])):
+    if self.Model:
+      if self.genmodel.hasModel(self.Model)['OK']:
+        if os.path.exists("%s/%s"%(mySoftDir,self.genmodel.getFile(self.Model)['Value'])):
           leshouchesfiles = True
     if os.path.exists("LesHouches.msugra_1.in"):
       leshouchesfiles = True
@@ -297,8 +297,8 @@ class WhizardAnalysis(ModuleBase):
           script.write('cp %s/LesHouches_slsqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
         elif self.susymodel==2:
           script.write('cp %s/LesHouches_chne.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
-        elif self.genmodel[self.Model]:
-          script.write('cp %s/%s ./LesHouches.msugra_1.in\n'%(mySoftDir,self.genmodel[self.Model]))
+        elif self.genmodel.getFile(self.Model)['Value']:
+          script.write('cp %s/%s ./LesHouches.msugra_1.in\n'%(mySoftDir,self.genmodel.getFile(self.Model)['Value']))
       script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
