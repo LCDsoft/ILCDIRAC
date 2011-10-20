@@ -6,10 +6,25 @@
 """
 __RCSID__ = " $Id: $ "
 
-class GeneratorModels(dict):
+from DIRAC import gConfig,S_OK,S_ERROR
+
+class GeneratorModels():
   """ Contains the list of known models
   """
   def __init__(self):
-    self["sm"] = None
-    self["slsqhh"] = "LesHouches_slsqhh.msugra_1.in"
-    self["chne"] = "LesHouches_chne.msugra_1.in"
+    self.models = {}
+    res = gConfig.getOptionsDict("/Operations/Models")
+    if res['OK']:
+      self.models = res['Value']
+
+  def hasModel(self,model):
+    if self.models.has_key(model):
+      return S_OK()
+    else:
+      return S_ERROR("Model %s is not defined, use any of %s"%(model, self.models.keys()))
+
+  def getFile(self,model):
+    res = self.hasModel(model)
+    if not res['OK']:
+      return res
+    return S_OK(self.models[model])
