@@ -248,20 +248,28 @@ class WhizardAnalysis(ModuleBase):
         return S_ERROR("Failed to obtain %s"%whizardin)
 
     ##Check existence of Les Houches input file
-    leshouchesfiles = False
-    if self.susymodel:
-      if self.susymodel==1:
-        if os.path.exists("%s/LesHouches_slsqhh.msugra_1.in"%(mySoftDir)):
-          leshouchesfiles = True
-      if self.susymodel==2:
-        if os.path.exists("%s/LesHouches_chne.msugra_1.in"%(mySoftDir)):
-          leshouchesfiles = True
-    if self.Model:
-      if self.genmodel.hasModel(self.Model)['OK']:
-        if os.path.exists("%s/%s"%(mySoftDir,self.genmodel.getFile(self.Model)['Value'])):
-          leshouchesfiles = True
-    if os.path.exists("LesHouches.msugra_1.in"):
-      leshouchesfiles = True
+    leshouchesfiles = ''
+    if not os.path.exists("LesHouches.msugra_1.in"):
+      if self.susymodel:
+        if self.susymodel==1:
+          if os.path.exists("%s/LesHouches_slsqhh.msugra_1.in"%(mySoftDir)):
+            leshouchesfiles = "%s/LesHouches_slsqhh.msugra_1.in"%(mySoftDir)
+        if self.susymodel==2:
+          if os.path.exists("%s/LesHouches_chne.msugra_1.in"%(mySoftDir)):
+            leshouchesfiles = "%s/LesHouches_chne.msugra_1.in"%(mySoftDir)
+      if self.Model:
+        if self.genmodel.hasModel(self.Model)['OK']:
+          if self.genmodel.getFile(self.Model)['OK']:
+            if os.path.exists("%s/%s"%(mySoftDir,self.genmodel.getFile(self.Model)['Value'])):
+              leshouchesfiles = "%s/%s"%(mySoftDir,self.genmodel.getFile(self.Model)['Value'])
+            else:
+              return S_ERROR("The LesHouches file was not found. Probably you are using a wrong version of whizard.") 
+          else:
+            self.log.warn("No file found attached to model %s"%self.Model)
+        else:
+          return S_ERROR("No Model %s defined"%self.Model)
+    else:
+      leshouchesfiles = "LesHouches.msugra_1.in"
 
     outputfilename = self.evttype
     if self.jobindex:
@@ -292,13 +300,8 @@ class WhizardAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('cp  %s/whizard.mdl ./\n'%mySoftDir)
     if leshouchesfiles:
-      if not os.path.exists('LesHouches.msugra_1.in'):
-        if self.susymodel==1:
-          script.write('cp %s/LesHouches_slsqhh.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
-        elif self.susymodel==2:
-          script.write('cp %s/LesHouches_chne.msugra_1.in ./LesHouches.msugra_1.in\n'%mySoftDir)
-        elif self.genmodel.getFile(self.Model)['Value']:
-          script.write('cp %s/%s ./LesHouches.msugra_1.in\n'%(mySoftDir,self.genmodel.getFile(self.Model)['Value']))
+      if not leshouchesfiles=='LesHouches.msugra_1.in':
+        script.write('cp %s ./LesHouches.msugra_1.in\n'%(leshouchesfiles))
       script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
