@@ -425,7 +425,7 @@ class ProductionJob(Job):
       return S_ERROR("The production was created, you cannot add new applications to the job.")
 
     if not application.logfile:
-      logf = application.appname+"_"+application.version+"_Step_"+str(self.stepnumber)+".log"
+      logf = application.appname+"_"+application.version+"_@{STEP_ID}.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
