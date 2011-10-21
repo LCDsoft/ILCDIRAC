@@ -433,6 +433,7 @@ class Whizard(Application):
     self.evttype = ''
     self._allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
+    self._processlist = None
     if processlist:
       self._processlist = processlist
     Application.__init__(self, paramdict)
