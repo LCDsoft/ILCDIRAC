@@ -27,4 +27,6 @@ class GeneratorModels():
     res = self.hasModel(model)
     if not res['OK']:
       return res
+    if not self.models[model]:
+      return S_ERROR("No file attached to model %s"%model)
     return S_OK(self.models[model])
