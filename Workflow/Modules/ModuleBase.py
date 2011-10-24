@@ -334,7 +334,7 @@ class ModuleBase(object):
 
     if self.workflow_commons.has_key('NbOfEvts'):
       self.NumberOfEvents = self.workflow_commons['NbOfEvts']
-
+      self.workflow_commons['NbOfEvents'] = self.NumberOfEvents
 
     if self.step_commons.has_key('InputFile'):
       self.InputFile = self.step_commons['InputFile']
