@@ -1113,7 +1113,6 @@ class SLIC(Application):
   >>> slic = SLIC()
   >>> slic.getInputFromApp(wh)
   >>> slic.setSteeringFile("mycut.cfg")
-  >>> slic.setMacFile('MyMacFile.mac')
   >>> slic.setStartFrom(10)
   
   """
