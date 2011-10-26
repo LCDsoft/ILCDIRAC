@@ -1112,7 +1112,7 @@ class SLIC(Application):
   >>> wh = Whizard()
   >>> slic = SLIC()
   >>> slic.getInputFromApp(wh)
-  >>> slic.setSteeringFile("mycut.cfg")
+  >>> slic.setSteeringFile("mymacrofile.mac")
   >>> slic.setStartFrom(10)
   
   """
