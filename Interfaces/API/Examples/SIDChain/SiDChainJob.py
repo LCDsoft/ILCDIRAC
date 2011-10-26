@@ -99,7 +99,7 @@ for switch in switches:
 	if opt in ('O','overlay'):
 		overlayBX = int(arg)
 	if opt in ('w','overlayweight'):
-		overlayBX = float(arg)
+		overlayWeight = float(arg)
 	if opt in ('p','process'):
 		process = arg
 	if opt in ('P','pandora'):
@@ -376,7 +376,7 @@ for inputFile in lfnlist:
 		job.setSystemConfig ( systemConfig )
 		job.setName ( detector+"_"+process+"_"+jobTitle )
 		job.setBannedSites( bannedSites )
-		job.setDestination('LCG.CERN.ch')
+		#job.setDestination('LCG.CERN.ch')
 		
 		if debug:
 			print ''
