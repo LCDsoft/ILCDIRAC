@@ -1150,8 +1150,16 @@ class SLIC(Application):
     self._checkArgs( {
         'detectorModel' : types.StringTypes
       } )
-
-    self.detectorModel = detectorModel    
+    if detectorModel.lower().count("lfn:"):
+      self.inputSB.append(detectorModel)
+    elif detectorModel.lower().count(".zip"):
+      if os.path.exists(detectorModel):
+        self.inputSB.append(detectorModel)
+      else:
+        self._log.info("Specified detector model does not exist locally, I hope you know what you're doing")
+    
+    
+    self.detectorModel = os.path.basename(detectorModel).replace(".zip","")
     
     
   def setStartFrom(self,startfrom):
