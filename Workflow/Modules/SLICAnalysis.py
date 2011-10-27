@@ -185,8 +185,8 @@ class SLICAnalysis(ModuleBase):
       self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
     except:
       os.unlink(self.detectorModel+".zip")
-      continue
-    
+      self.log.error('Failed to unzip detector model')
+      return S_ERROR('Failed to unzip detector model')
     #unzip detector model
     #self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
     
