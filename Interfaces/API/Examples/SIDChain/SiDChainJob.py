@@ -292,6 +292,9 @@ for inputFile in lfnlist:
 			for key, rep, count in counter:
 				if key.count('output') and count:
 					outputData.append( rep )		# add to list of output files if key denotes some output and is present in template
+			if slicPandoraVer and lcsimVer:
+				outputData.append( outputFile+'_REC.slcio' )
+				outputData.append( outputFile+'_DST.slcio' )
 		else:
 			if slicPandoraVer and lcsimVer:
 				outputData.append( outputFile+'_REC.slcio' )
