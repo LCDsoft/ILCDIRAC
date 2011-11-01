@@ -191,12 +191,18 @@ class LCSIMAnalysis(ModuleBase):
     except:
       self.log.error("Could not create .lcsim folder !")
     if os.path.exists(os.path.join(cachedir,".lcsim")):
+      lcsimfolder = os.path.join(cachedir,".lcsim")
       if os.path.exists(aliasproperties):
-        self.log.verbose("Copy alias.properties file in %s"%(os.path.join(cachedir,".lcsim")))
-        shutil.copy(aliasproperties,os.path.join(cachedir,".lcsim",aliasproperties))
+        self.log.verbose("Copy alias.properties file in %s"%(lcsimfolder))
+        shutil.copy(aliasproperties,os.path.join(lcsimfolder,aliasproperties))
       if os.path.exists(os.path.basename(self.detectorModel)):
-        self.log.verbose("Copy detector model.zip into the .lcsim folder")
-        shutil.copy(os.path.basename(self.detectorModel),os.path.join(cachedir,".lcsim",os.path.basename(self.detectorModel)))
+        try:
+          os.mkdir(os.path.join(lcsimfolder,"detectors"))
+        except:
+          self.log.error("Could not create detectors folder !")
+        if os.path.exists(os.path.join(lcsimfolder,"detectors")):
+          self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
+          shutil.copy(os.path.basename(self.detectorModel),os.path.join(lcsimfolder,"detectors",os.path.basename(self.detectorModel)))
       
       
     if len(self.SteeringFile):
