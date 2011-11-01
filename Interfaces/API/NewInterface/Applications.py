@@ -1589,6 +1589,7 @@ class LCSIM(Application):
     self.appname = 'lcsim'
     self.datatype = 'REC'
     self.detectortype = 'SID'
+    self.detectorModel = ''
      
   def setOutputRecFile(self,outputRecFile, path = None):
     """ Optional: Define output rec file for LCSIM
@@ -1637,7 +1638,14 @@ class LCSIM(Application):
     self.aliasProperties = alias     
     if os.path.exists(alias) or alias.lower().count("lfn:"):
       self.inputSB.append(alias) 
-    
+  
+  def setDetectorModel(self,model):
+    self._checkArgs( {
+        'model' : types.StringTypes
+      } )    
+    self.detectorModel = model
+    if os.path.exists(model) or model.lower().count("lfn:"):
+      self.inputSB.append(model)
     
   def setExtraParams(self,extraparams):
     """ Optional: Define command line parameters to pass to java
@@ -1676,6 +1684,10 @@ class LCSIM(Application):
         
     if not self.version:
       return S_ERROR('No version found')   
+    
+    if self.detectorModel:
+      if not self.detectorModel.lower().count(".zip"):
+        return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. Or use the alias.properties.")
         
     res = self._checkRequiredApp()
     if not res['OK']:
@@ -1702,6 +1714,7 @@ class LCSIM(Application):
     md1.addParameter(Parameter("extraparams",           "", "string", "", "", False, False, "Command line parameters to pass to java"))
     md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
     md1.addParameter(Parameter("debug",              False,   "bool", "", "", False, False, "debug mode"))
+    md1.addParameter(Parameter("detectorModel",         "", "string", "", "", False, False, "detector model zip file"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -1709,6 +1722,7 @@ class LCSIM(Application):
     moduleinstance.setValue("extraparams",        self.extraParams)
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
     moduleinstance.setValue("debug",              self.debug)
+    moduleinstance.setValue("detectorModel",      self.detectorModel)
     
   def _resolveLinkedStepParameters(self,stepinstance):
     if self._inputappstep:
