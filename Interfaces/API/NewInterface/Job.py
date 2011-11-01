@@ -118,7 +118,10 @@ class Job(DiracJob):
     ### Once the consistency has been checked, we can add the application to the list of apps.
     self.applicationlist.append(application)
     ##Get the application's sandbox and add it to the job's
-    self.inputsandbox.extend(application.inputSB)
+    for isb in application.inputSB:
+      if not isb in self.inputsandbox:
+        self.inputsandbox.append(isb)
+    #self.inputsandbox.extend(application.inputSB)
 
     ##Now we can create the step and add it to the workflow
     #First we need a unique name, let's use the application name and step number
