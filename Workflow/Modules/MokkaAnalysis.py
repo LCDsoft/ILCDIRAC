@@ -49,7 +49,7 @@ class MokkaAnalysis(ModuleBase):
         self.run_number = 0
         self.firstEventNumber = 1
         self.applicationName = 'Mokka'
-        self.dbslice = ''
+        self.dbSlice = ''
         self.NumberOfEvents = 0
         self.startFrom = 0
         self.eventstring = ''
@@ -95,7 +95,7 @@ class MokkaAnalysis(ModuleBase):
       
         
       if self.step_commons.has_key('dbSlice'):
-        self.dbslice = self.step_commons['dbSlice']
+        self.dbSlice = self.step_commons['dbSlice']
       
       if self.workflow_commons.has_key("IS_PROD"):
         if self.workflow_commons["IS_PROD"]:
@@ -206,7 +206,7 @@ class MokkaAnalysis(ModuleBase):
       
       #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
       sqlwrapper = SQLWrapper(mySoftwareRoot,MokkaDBrandomName)#mySoftwareRoot)
-      res = sqlwrapper.setDBpath(myMokkaDir,self.dbslice)
+      res = sqlwrapper.setDBpath(myMokkaDir,self.dbSlice)
       if not res['OK']:
         self.log.error("Failed to find the DB slice")
         return res
