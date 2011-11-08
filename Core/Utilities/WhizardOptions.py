@@ -26,10 +26,10 @@ class WhizardOption(object):
 <luminosity type="float" value="0">
 <!-- Integrated luminosity in fb-1 -->
 </luminosity>
-<polarized_beams type="T/F" value="F">
+<polarized_beams type="T/F" value="T">
 <!-- If true, the helicity content of the beams must be specified below in the blocks beam_input. -->
 </polarized_beams>
-<structured_beams type="T/F" value="F">
+<structured_beams type="T/F" value="T">
 <!-- If true, the nature of the incoming beams must be specified below in the blocks beam_input. -->
 </structured_beams>
 <beam_recoil type="T/F" value="F">
@@ -112,7 +112,7 @@ class WhizardOption(object):
 <read_grids_raw type="T/F" value="F">
 <!-- If true, search first for binary grid files, then for ASCII grids. If false, do search first for ASCII.. -->
 </read_grids_raw>
-<read_grids_force type="T/F" value="F">
+<read_grids_force type="T/F" value="T">
 <!-- Set this to T if you want to read the grids from file even if some parameters have changed. Use with care! This may result in a program crash if the grid structures are incompatible. -->
 </read_grids_force>
 <read_grids_file type="string" value="">
@@ -234,7 +234,7 @@ class WhizardOption(object):
 <safety_factor type="float" value="1">
 <!-- Multiply the estimate for the highest weight by this factor before starting event generation. -->
 </safety_factor>
-<write_events type="T/F" value="F">
+<write_events type="T/F" value="T">
 <!-- Write generated events to file whizard.evt to be used by an external analysis package. -->
 </write_events>
 <write_events_format type="integer" value="20">
@@ -243,7 +243,7 @@ class WhizardOption(object):
 <write_events_file type="string" value="">
 <!-- If nonempty, use string as filename for writing events, where the file extension will be appended. -->
 </write_events_file>
-<events_per_file type="integer" value="0">
+<events_per_file type="integer" value="500000">
 <!-- If positive, begin a new event file once the number of entries exceeds this number. The event file counter is appended to each event file name, separated with a dot (before the file extension). This feature applies only to non-binary event formats. -->
 </events_per_file>
 <bytes_per_file type="integer" value="0">
@@ -255,7 +255,7 @@ class WhizardOption(object):
 <max_file_count type="integer" value="999">
 <!-- Limit for the event file counter; if this limit is exceeded, event generation is terminated. (For weighted events only, this is an error condition since the event sample must be complete for being usable.) -->
 </max_file_count>
-<write_events_raw type="T/F" value="T">
+<write_events_raw type="T/F" value="F">
 <!-- Write events to whizard.evx in condensed binary format, so they can be internally reused in another run. -->
 </write_events_raw>
 <write_events_raw_file type="string" value="">
@@ -270,10 +270,10 @@ class WhizardOption(object):
 <read_events_raw_file type="string" value="">
 <!-- Read raw events from string.evx instead. -->
 </read_events_raw_file>
-<keep_beam_remnants type="T/F" value="F">
+<keep_beam_remnants type="T/F" value="T">
 <!-- Keep the beam remnants in the event record when applying structure functions. See Sec. 4.4.8. -->
 </keep_beam_remnants>
-<keep_initials type="T/F" value="F">
+<keep_initials type="T/F" value="T">
 <!-- Keep the beam particles and the partons which initiate the hard scattering in the event record. See Sec. 4.4.8. -->
 </keep_initials>
 <guess_color_flow type="T/F" value="F">
@@ -282,7 +282,7 @@ class WhizardOption(object):
 <recalculate type="T/F" value="F">
 <!-- Recalculate the matrix element value for each event of a previously generated sample. Setting this flag automatically turns on reading grids and events from file. -->
 </recalculate>
-<fragment type="T/F" value="F">
+<fragment type="T/F" value="T">
 <!-- Fragment the events depending on the value of fragmentation_method (see Sec. 4.8). -->
 </fragment>
 <fragmentation_method type="integer" value="3">
@@ -291,8 +291,8 @@ class WhizardOption(object):
 <user_fragmentation_mode type="integer" value="0">
 <!-- When user-defined fragmentation routines are called, this parameter may select different modes. -->
 </user_fragmentation_mode>
-<pythia_parameters type="string" value="">
-<!-- String to be given to PYTHI's pygive call before starting event generation. This allows to modify PYTHIA/JETSET properties, set particle masses, etc. The string is also available within user-defined fragmentation routines and can there be abused for different purposes. -->
+<pythia_parameters type="string" value="PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ;MSTJ(28)=2 ;PARJ(21)=0.40000;PARJ(41)=0.11000; PARJ(42)=0.52000; PARJ(81)=0.25000; PARJ(82)=1.90000; MSTJ(11)=3; PARJ(54)=-0.03100; PARJ(55)=-0.00200;PARJ(1)=0.08500; PARJ(3)=0.45000; PARJ(4)=0.02500; PARJ(2)=0.31000; PARJ(11)=0.60000; PARJ(12)=0.40000; PARJ(13)=0.72000;PARJ(14)=0.43000; PARJ(15)=0.08000; PARJ(16)=0.08000; PARJ(17)=0.17000; MSTP(3)=1; MDCY(25,2)=219 ; MDCY(25,3)=1 ;">
+<!-- String to be given to PYTHIA's pygive call before starting event generation. This allows to modify PYTHIA/JETSET properties, set particle masses, etc. The string is also available within user-defined fragmentation routines and can there be abused for different purposes. -->
 </pythia_parameters>
 <pythia_processes type="string" value="">
 <!-- PYTHIA background processes to be simulated in addition to the WHIZARD processes: A list of integers separated by blanks, enclosed in quotation marks. Refer to the PYTHIA manual for the list of processes. -->
@@ -657,6 +657,7 @@ class WhizardOption(object):
 </beam_input_2>
 </whizard>
 """)
+    
   def toXML(self,fname='whizard.xml'):
     tree = ElementTree(self.whizardxml)
     tree.write(fname)
@@ -678,6 +679,13 @@ class WhizardOption(object):
     return S_OK(options)
     
   def changeAndReturn(self,paramdict):
+    res = self.checkFields(paramdict)
+    if not res['OK']:
+      return res
+    for key,val in paramdict.items():
+      for subkey in val.keys():
+        subelement = self.whizardxml.find(key+"/"+subkey)
+        subelement.attrib['value'] = val[subkey]
     return S_OK(self.whizardxml)
   
   def checkFields(self,paramdict):
