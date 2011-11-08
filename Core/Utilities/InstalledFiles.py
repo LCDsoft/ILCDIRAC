@@ -16,5 +16,5 @@ def Exists(file):
   if file in files:
     return S_OK()
   else:
-    return S_ERROR("File %s is not installed with the other steering files."%file)
+    return S_ERROR("File %s is not available locally nor in the software installation."%file)
   
