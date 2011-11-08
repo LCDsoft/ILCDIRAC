@@ -39,6 +39,7 @@ It should be possible to change the parameters up to the point the job is actual
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.ProcessList              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
+from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
 from DIRAC.Core.Workflow.Module                       import *
@@ -1062,6 +1063,11 @@ class Mokka(Application):
     if not self.steeringfile :
       return S_ERROR('No Steering File') 
     
+    if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
+      res = Exists(self.steeringfile)
+      if not res['OK']:
+        return res  
+    
     res = self._checkRequiredApp()
     if not res['OK']:
       return res
@@ -1192,6 +1198,11 @@ class SLIC(Application):
 
     if not self.version:
       return S_ERROR('No version found')   
+    if self.steeringfile:
+      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
+        res = Exists(self.steeringfile)
+        if not res['OK']:
+          return res  
     
     res = self._checkRequiredApp()
     if not res['OK']:
@@ -1527,9 +1538,20 @@ class Marlin(Application):
         
     if not self.version:
       return S_ERROR('Version not set!')   
+
+    if self.steeringfile:
+      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
+        res = Exists(self.steeringfile)
+        if not res['OK']:
+          return res  
     
     if not self.inputGearFile :
       self._log.warn('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
+    if self.inputGearFile:
+      if not os.path.exists(self.inputGearFile) and not self.inputGearFile.lower().count("lfn:"):
+        res = Exists(self.inputGearFile)
+        if not res['OK']:
+          return res  
 
     res = self._checkRequiredApp()
     if not res['OK']:
@@ -1684,6 +1706,12 @@ class LCSIM(Application):
         
     if not self.version:
       return S_ERROR('No version found')   
+
+    if self.steeringfile:
+      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
+        res = Exists(self.steeringfile)
+        if not res['OK']:
+          return res  
     
     if self.detectorModel:
       if not self.detectorModel.lower().count(".zip"):
@@ -1815,6 +1843,12 @@ class SLICPandora(Application):
 
     if not self.version:
       return S_ERROR('No version found')   
+
+    if self.steeringfile:
+      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
+        res = Exists(self.steeringfile)
+        if not res['OK']:
+          return res  
     
     res = self._checkRequiredApp()
     if not res['OK']:
