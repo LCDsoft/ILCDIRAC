@@ -12,7 +12,7 @@ def Exists(file):
            "clic_cdr_postPandoraOverlay.lcsim","clic_ild_cdr.gear",
            "clic_ild_cdr500.gear","clic_ild_cdr_steering_overlay.xml",
            "clic_ild_cdr500_steering_overlay.xml","clic_ild_cdr_steering.xml",
-           "clic_ild_cdr500_steering.xml"]
+           "clic_ild_cdr500_steering.xml","GearOutput.xml"]
   if file in files:
     return S_OK()
   else:
