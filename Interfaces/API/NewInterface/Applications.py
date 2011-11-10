@@ -1177,7 +1177,7 @@ class SLIC(Application):
     self._checkArgs( {
         'startfrom' : types.IntType
       } )
-    self.startfrom = startfrom  
+    self.startFrom = startfrom  
     
     
   def _userjobmodules(self,stepdefinition):
