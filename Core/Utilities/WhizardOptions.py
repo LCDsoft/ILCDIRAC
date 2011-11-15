@@ -1,6 +1,10 @@
 '''
 Created on Nov 3, 2011
 
+
+for SUSY speacil treatment of the pythia parameters have to be thought of: if the model is SUSY, then need to add
+ IMSS(1)=11; IMSS(21)=71; IMSS(22)=71;
+ 
 @author: Stephane Poss
 '''
 
@@ -20,7 +24,7 @@ class WhizardOption(object):
 <cm_frame type="T/F" value="T">
 <!-- if true, the c.m. frame is the lab frame, the beams are in +/- z directions, and the total c.m. energy is given by sqrts. If false, the beam energies and directions must be specified below in the blocks beam_input. -->
 </cm_frame>
-<sqrts type="float" value="0">
+<sqrts type="float" value="3000">
 <!-- If this number is greater than the sum of the incoming particle masses, it specifies the c.m. energy of the initial state in GeV. Applies only if cm_frame is true, and is ignored for decay processes. -->
 </sqrts>
 <luminosity type="float" value="0">
@@ -38,7 +42,7 @@ class WhizardOption(object):
 <recoil_conserve_momentum type="T/F" value="F">
 <!-- Applies only if beam_recoil is set: if true, keep momentum balance between parton and recoil momenta at the expense of energy balance. If false, keep energy balance at the expense of momentum balance. -->
 </recoil_conserve_momentum>
-<filename type="string" value="">
+<filename type="string" value="whizard">
 <!-- Base filename (w/o extension) to be used for all input/output files instead of the string "whizard". -->
 </filename>
 <directory type="string" value="">
@@ -175,15 +179,15 @@ class WhizardOption(object):
 <massive_fsr type="T/F" value="T">
 <!-- Whether the radiation of a massive particle in the final state is relevant for the phase space configuration. -->
 </massive_fsr>
-<threshold_mass type="float" value="50">
+<threshold_mass type="float" value="-10">
 <!-- A particle with a mass up to this value will be considered as massless for the purpose of phase-space setup. (But the true mass is taken into account when the particle appears as a resonant intermediate state.) -->
 </threshold_mass>
-<threshold_mass_t type="float" value="200">
+<threshold_mass_t type="float" value="-10">
 <!-- A particle with a mass up to this value will be considered as massless for the purpose of phase-space setup, when it appears as a t-channel propagator. -->
 </threshold_mass_t>
-<initial_decays_fatal type="T/F" value="T">
+<!-- <initial_decays_fatal type="T/F" value="T"> -->
 <!-- As the phase space maps cannot describe on-shell decays of beam particles properly, WHIZARD normally gives a fatal error when such configurations are encountered. This option changes this to a warning at the price of a potentially screwed phase space setup. -->
-</initial_decays_fatal>
+<!-- </initial_decays_fatal> -->
 <default_jet_cut type="float" value="10">
 <!-- The default invariant mass cut in GeV applied to pairs of massless colored particles. -->
 </default_jet_cut>
@@ -196,7 +200,7 @@ class WhizardOption(object):
 <default_q_cut type="float" value="4">
 <!-- The default Q cut in GeV applied to photon and gluon exchange. -->
 </default_q_cut>
-<write_default_cuts_file type="string" value="file">
+<write_default_cuts_file type="string" value="">
 <!-- If nonempty, write the list of default cuts to this file (augmented by the file extension) instead of the default. Note that the settings in this file are overwritten by a user-defined cut configuration, if present. -->
 </write_default_cuts_file>
 <read_cuts_file type="string" value="">
@@ -291,7 +295,7 @@ class WhizardOption(object):
 <user_fragmentation_mode type="integer" value="0">
 <!-- When user-defined fragmentation routines are called, this parameter may select different modes. -->
 </user_fragmentation_mode>
-<pythia_parameters type="string" value="PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ;MSTJ(28)=2 ;PARJ(21)=0.40000;PARJ(41)=0.11000; PARJ(42)=0.52000; PARJ(81)=0.25000; PARJ(82)=1.90000; MSTJ(11)=3; PARJ(54)=-0.03100; PARJ(55)=-0.00200;PARJ(1)=0.08500; PARJ(3)=0.45000; PARJ(4)=0.02500; PARJ(2)=0.31000; PARJ(11)=0.60000; PARJ(12)=0.40000; PARJ(13)=0.72000;PARJ(14)=0.43000; PARJ(15)=0.08000; PARJ(16)=0.08000; PARJ(17)=0.17000; MSTP(3)=1; MDCY(25,2)=219 ; MDCY(25,3)=1 ;">
+<pythia_parameters type="string" value="PMAS(25,1)=120.; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ;MSTJ(28)=2 ;PARJ(21)=0.40000;PARJ(41)=0.11000; PARJ(42)=0.52000; PARJ(81)=0.25000; PARJ(82)=1.90000; MSTJ(11)=3; PARJ(54)=-0.03100; PARJ(55)=-0.00200;PARJ(1)=0.08500; PARJ(3)=0.45000; PARJ(4)=0.02500; PARJ(2)=0.31000; PARJ(11)=0.60000; PARJ(12)=0.40000; PARJ(13)=0.72000;PARJ(14)=0.43000; PARJ(15)=0.08000; PARJ(16)=0.08000; PARJ(17)=0.17000; MSTP(3)=1;">
 <!-- String to be given to PYTHIA's pygive call before starting event generation. This allows to modify PYTHIA/JETSET properties, set particle masses, etc. The string is also available within user-defined fragmentation routines and can there be abused for different purposes. -->
 </pythia_parameters>
 <pythia_processes type="string" value="">
@@ -330,13 +334,15 @@ class WhizardOption(object):
 <shower_mb type="float" value="4.8">
 <!-- The constituent b quark mass mb as used by the internal shower. The default is 4.8 GeV.diagnostics_input -->
 </shower_mb>
+</simulation_input>
+<diagnostics_input>
 <chattiness type="integer" value="4">
 <!-- How much information to show on screen: (0) only fatal errors, (1) and non-fatal errors, (2) and warnings, (3) and messages, (4) and results, (5) and debugging messages (if any). -->
 </chattiness>
 <catch_signals type="T/F" value="T">
 <!-- If the compiler supports it, try to catch external signals such as SIGINT and SIGXCPU and exit gracefully, closing files first. -->
 </catch_signals>
-<time_limit type="integer" value="0">
+<time_limit type="integer" value="0"> -->
 <!-- If nonzero, exit gracefully after the given number of minutes has passed. This is useful to prevent an external kill within a batch environment. -->
 </time_limit>
 <warn_empty_channel type="T/F" value="F">
@@ -426,7 +432,7 @@ class WhizardOption(object):
 <slha_ignore_errors type="T/F" value="F">
 <!-- If this is false, an error signaled in the SLHA input file (in the SPINFO or DCINFO block) will cause WHIZARD to stop before calculating anything. If true, such errors will be displayed, but the run continues. -->
 </slha_ignore_errors>
-</simulation_input>
+</diagnostics_input>
 <parameter_input>
 <GF type="float" value="1.16639E-5">
 <!-- Fermi constant -->
@@ -446,7 +452,7 @@ class WhizardOption(object):
 <me type="float" value="0.">
 <!-- electron mass -->
 </me>
-<mmu type="float" value="0.1057">
+<mmu type="float" value="0.1066">
 <!-- muon mass -->
 </mmu>
 <mtau type="float" value="1.777">
@@ -541,7 +547,7 @@ class WhizardOption(object):
 <USER_spectrum_mode type="integer" value="11">
 <!-- User spectrum -->
 </USER_spectrum_mode>
-<ISR_on type="T/F" value="F">
+<ISR_on type="T/F" value="T">
 <!-- Whether to apply ISR (electron or positron beam). -->
 </ISR_on>
 <ISR_alpha type="float" value="0.0072993">
@@ -580,7 +586,7 @@ class WhizardOption(object):
 <EPA_x0 type="float" value="0">
 <!-- The lower cutoff on the energy fraction of the incoming photon -->
 </EPA_x0>
-<EPA_x1 type="float" value="1">
+<EPA_x1 type="float" value="0">
 <!-- The upper cutoff on the energy fraction of the incoming photon -->
 </EPA_x1>
 </beam_input_1>
@@ -612,7 +618,7 @@ class WhizardOption(object):
 <USER_spectrum_mode type="integer" value="-11">
 <!-- User spectrum -->
 </USER_spectrum_mode>
-<ISR_on type="T/F" value="F">
+<ISR_on type="T/F" value="T">
 <!-- Whether to apply ISR (electron or positron beam). -->
 </ISR_on>
 <ISR_alpha type="float" value="0.0072993">
@@ -651,7 +657,7 @@ class WhizardOption(object):
 <EPA_x0 type="float" value="0">
 <!-- The lower cutoff on the energy fraction of the incoming photon -->
 </EPA_x0>
-<EPA_x1 type="float" value="1">
+<EPA_x1 type="float" value="0">
 <!-- The upper cutoff on the energy fraction of the incoming photon -->
 </EPA_x1>
 </beam_input_2>
@@ -718,9 +724,10 @@ class WhizardOption(object):
           val = '0.0 0.0'
         if val=='0..0..0':
           val = '\n 1 20000\n 10 20000\n 1 20000'
-        lines.append('%s = %s'%(subelem.tag,val))
+        lines.append(' %s = %s'%(subelem.tag,val))
       lines.append('/')
     of = file(fname,"w")
     of.write("\n".join(lines))
+    of.write("\n")
     return S_OK()
   
