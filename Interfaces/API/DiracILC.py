@@ -22,7 +22,7 @@ class DiracILC(Dirac):
   
   Adding specific ILC functionalities to the Dirac class, and implement the preSubmissionChecks method
   """
-  def __init__(self, WithRepo=False, RepoLocation=''):
+  def __init__(self, withRepo=False, repoLocation=''):
     """Internal initialization of the ILCDIRAC API.
     """
     #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
