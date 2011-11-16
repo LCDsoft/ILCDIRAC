@@ -499,6 +499,28 @@ class Whizard(Application):
     self.parameterdict = paramdict
 
   def setFullParameterDict(self,dict):
+    """ Parameters for Whizard steering files, better than above as much more complete (cannot be more complete)
+    
+    >>> pdict = {}
+    >>> pdict['process_input'] = {}
+    >>> pdict['process_input']['process_id']='h_n1n1'#processes here are not those of the templates, but those of the whizard.prc
+    >>> pdict['process_input']['sqrts'] = 3000.
+    >>> pdict['simulation_input'] = {}
+    >>> pdict['simulation_input']['n_events'] = 100
+    >>> pdict['beam_input_1'] = {}
+    >>> pdict['beam_input_1']['polarization']='1.0 0.0'
+    >>> pdict['beam_input_1']['USER_spectrum_mode'] = 11
+    >>> pdict['beam_input_2'] = {}
+    >>> pdict['beam_input_2']['polarization']='0.0 1.0'
+    >>> pdict['beam_input_2']['USER_spectrum_mode'] = -11
+    >>> wh.setFullParameterDict(pdict)
+    
+    The first key correspinds to the section of the whizard.in, while the second correspond to the possible parameters.
+    All keys/values can be found on th WHIZARD documentation: http://projects.hepforge.org/whizard/manual_w1/manual005.html
+    
+    @param dict: Dictionnary of parameters
+    @type dict: dict
+    """
     self._checkArgs( {
         'dict' : types.DictType
       } )
@@ -589,15 +611,21 @@ class Whizard(Application):
       return S_ERROR("Process list was not given")
     
     if self.evttype:
-      if not self._processlist.existsProcess(self.evttype)['Value']:
-        self._log.info("Available processes are:")
-        self._processlist.printProcesses()
-        return S_ERROR('Process does no exists')
-      else:
-        cspath = self._processlist.getCSPath(self.evttype)
-        whiz_file = os.path.basename(cspath)
-        self.version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
-        self._log.info("Found the process %s in whizard %s"%(self.evttype,self.version))
+      processes = self.evttype.split()
+      for process in processes:
+        if not self._processlist.existsProcess(process)['Value']:
+          self._log.info("Available processes are:")
+          self._processlist.printProcesses()
+          return S_ERROR('Process does no exists')
+        else:
+          cspath = self._processlist.getCSPath(process)
+          whiz_file = os.path.basename(cspath)
+          version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
+          if self.version:
+            if self.version != version:
+              return S_ERROR("All processes to consider are not available in the same WHIZARD version")
+          self.version = version
+          self._log.info("Found the process %s in whizard %s"%(process,self.version))
         
     if not self.version:
       return S_ERROR('No version found')
