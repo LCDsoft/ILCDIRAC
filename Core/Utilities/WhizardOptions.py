@@ -14,7 +14,7 @@ from xml.etree.ElementTree                                import Element
 from DIRAC import S_OK,S_ERROR
 
 
-class WhizardOption(object):
+class WhizardOptions(object):
   def __init__(self):
     self.whizardxml = fromstring("""<whizard>
 <process_input>
