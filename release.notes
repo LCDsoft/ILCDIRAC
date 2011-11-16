@@ -1,3 +1,10 @@
+[v4r1p1]
+*Interfaces
+CHANGE: Fixing the new WHIZARD interface
+
+*Workflow Modules
+FIX: Prevent whizard from failing at startup
+
 [v4r1p0]
 
 *Core
