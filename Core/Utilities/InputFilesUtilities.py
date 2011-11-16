@@ -15,7 +15,8 @@ def getNumberOfevents(inputfile):
   nbevts['nbevts'] = 0
   nbevts['lumi'] = 0
   for file in files:
-    print file
+    if not file:
+      continue
     res = fc.getDirectoryMetadata(file)
     if not res['OK']:
         continue
