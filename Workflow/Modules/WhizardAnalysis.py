@@ -58,6 +58,7 @@ class WhizardAnalysis(ModuleBase):
     self.steeringparameters = ''
     self.options = WhizardOptions()
     self.optionsdict = {}
+    self.OptionsDictStr = ''
     
   def obtainProcessList(self):
     """Internal function
@@ -129,12 +130,14 @@ class WhizardAnalysis(ModuleBase):
       self.steeringparameters= self.step_commons["parameters"]
     listofparams= self.steeringparameters.split(";")
     for param in listofparams:
-      self.parameters[param.split("=")[0]]=param.split("=")[1]
+      if param.count("="):
+        self.parameters[param.split("=")[0]]=param.split("=")[1]
  
-    try:
-      self.optionsdict = eval(self.OptionsDictStr)
-    except:
-      return S_ERROR("Could not convert string to dictionary for optionsdict")
+    if self.OptionsDictStr:
+      try:
+        self.optionsdict = eval(self.OptionsDictStr)
+      except:
+        return S_ERROR("Could not convert string to dictionary for optionsdict")
  
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:

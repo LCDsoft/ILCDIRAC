@@ -447,7 +447,7 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
     self.datatype = 'gen'
-    self.wo = WhizardOptions()
+    self._wo = WhizardOptions()
     
   def setEvtType(self,evttype):
     """ Define process. If the process given is not found, when calling job.append a full list is printed.
@@ -498,12 +498,13 @@ class Whizard(Application):
 
     self.parameterdict = paramdict
 
-  def SetFullParameterDict(self,dict):
+  def setFullParameterDict(self,dict):
     self._checkArgs( {
         'dict' : types.DictType
       } )
 
     self.optionsdict = dict
+    self._wo.changeAndReturn(dict)
   
   def setModel(self,model):
     """ Optional: Define Model
@@ -541,10 +542,10 @@ class Whizard(Application):
       if not self.evttype:
         return S_ERROR("Process not defined")
     else:
-      res = self.wo.checkFields(self.optionsdict)
+      res = self._wo.checkFields(self.optionsdict)
       if not res['OK']:
         return res
-      res = self.wo.getValue("process_input/process_id")
+      res = self._wo.getValue("process_input/process_id")
       if not len(res['Value']):
         if self.evttype:
           if not self.optionsdict.has_key('process_input'):
@@ -554,8 +555,11 @@ class Whizard(Application):
           return S_ERROR("Event type not specified")
       self.evttype = res['Value']
       
-      res = self.wo.getValue("process_input/sqrts")
-      energy = eval(res['Value'])
+      res = self._wo.getValue("process_input/sqrts")
+      if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
+        energy = res['Value']
+      else:
+        energy = eval(res['Value'])
       if not energy:
         if self.energy:
           if not self.optionsdict.has_key('process_input'):
@@ -566,8 +570,11 @@ class Whizard(Application):
           return S_ERROR("Energy set to 0")
       self.energy = energy
       
-      res = self.wo.getValue("simulation_input/n_events")
-      nbevts = eval(res['Value'])
+      res = self._wo.getValue("simulation_input/n_events")
+      if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
+        nbevts = res['Value']
+      else:
+        nbevts = eval(res['Value'])      
       if not nbevts:
         if self.nbevts:
           if not self.optionsdict.has_key('simulation_input'):
