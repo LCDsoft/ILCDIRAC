@@ -348,6 +348,9 @@ class ModuleBase(object):
     if self.workflow_commons.has_key('ParametricInputData'):
       self.InputData += ";"+self.workflow_commons['ParametricInputData']
 
+    if self.InputData==";":
+      self.InputData = ''
+
     if not self.OutputFile:
       #this is to keep compatibility with old interface, where step param is with o  
       if self.step_commons.has_key("outputFile"):

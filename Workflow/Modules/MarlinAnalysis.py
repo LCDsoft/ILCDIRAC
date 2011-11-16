@@ -106,7 +106,7 @@ class MarlinAnalysis(ModuleBase):
           self.InputFile = getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
           
-    if self.InputData != ";":
+    if len(self.InputData):
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
         res = getNumberOfevents(self.InputData)
         if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
@@ -115,7 +115,7 @@ class MarlinAnalysis(ModuleBase):
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
-    if len(self.InputFile)==0 and not self.InputData != ";":
+    if len(self.InputFile)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
