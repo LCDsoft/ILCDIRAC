@@ -10,7 +10,8 @@ __RCSID__ = "$Id: $"
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
-from DIRAC.Core.Security.Misc                              import getProxyInfo
+from DIRAC.Core.Security.ProxyInfo                         import getProxyInfo
+
 from DIRAC.Core.Utilities                                  import List
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
