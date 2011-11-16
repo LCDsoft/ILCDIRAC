@@ -40,6 +40,8 @@ from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.ProcessList              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
+from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions
+
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
 from DIRAC.Core.Workflow.Module                       import *
@@ -429,6 +431,8 @@ class Whizard(Application):
     self.seed = 0
     self.lumi = 0
     self.jobindex = ''
+    self.optionsdictstr = ''
+    self.optionsdict = {}
     self._leshouchesfiles = None
     self._generatormodels = GeneratorModels()
     self.evttype = ''
@@ -443,7 +447,7 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
     self.datatype = 'gen'
-    
+    self.wo = WhizardOptions()
     
   def setEvtType(self,evttype):
     """ Define process. If the process given is not found, when calling job.append a full list is printed.
@@ -493,6 +497,13 @@ class Whizard(Application):
       } )
 
     self.parameterdict = paramdict
+
+  def SetFullParameterDict(self,dict):
+    self._checkArgs( {
+        'dict' : types.DictType
+      } )
+
+    self.optionsdict = dict
   
   def setModel(self,model):
     """ Optional: Define Model
@@ -520,15 +531,53 @@ class Whizard(Application):
     
   def _checkConsistency(self):
 
-    if not self.energy :
-      return S_ERROR('Energy not set')
+    if not self.optionsdict:
+      if not self.energy :
+        return S_ERROR('Energy not set')
       
-    if not self.nbevts :
-      return S_ERROR('Number of events not set!')
+      if not self.nbevts :
+        return S_ERROR('Number of events not set!')
     
-    if not self.evttype:
-      return S_ERROR("Process not defined")
-    
+      if not self.evttype:
+        return S_ERROR("Process not defined")
+    else:
+      res = self.wo.checkFields(self.optionsdict)
+      if not res['OK']:
+        return res
+      res = self.wo.getValue("process_input/process_id")
+      if not len(res['Value']):
+        if self.evttype:
+          if not self.optionsdict.has_key('process_input'):
+            self.optionsdict['process_input'] = {}
+          self.optionsdict['process_input']['process_id']=self.evttype
+        else:
+          return S_ERROR("Event type not specified")
+      self.evttype = res['Value']
+      
+      res = self.wo.getValue("process_input/sqrts")
+      energy = eval(res['Value'])
+      if not energy:
+        if self.energy:
+          if not self.optionsdict.has_key('process_input'):
+            self.optionsdict['process_input'] = {}
+          self.optionsdict['process_input']['sqrts']=self.energy
+          energy = self.energy
+        else:
+          return S_ERROR("Energy set to 0")
+      self.energy = energy
+      
+      res = self.wo.getValue("simulation_input/n_events")
+      nbevts = eval(res['Value'])
+      if not nbevts:
+        if self.nbevts:
+          if not self.optionsdict.has_key('simulation_input'):
+            self.optionsdict['simulation_input'] = {}
+          self.optionsdict['simulation_input']['n_events']=self.nbevts
+          nbevts = self.nbevts
+        else:
+          return S_ERROR("Number of events set to 0")
+      self.nbevts = nbevts
+      
     if not self._processlist:
       return S_ERROR("Process list was not given")
     
@@ -559,90 +608,92 @@ class Whizard(Application):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
    
-   
-    for key in self.parameterdict.keys():
-      if not key in self._allowedparams:
-        return S_ERROR("Unknown parameter %s"%key)
+    if not self.optionsdict and  self.parameterdict:
+      for key in self.parameterdict.keys():
+        if not key in self._allowedparams:
+          return S_ERROR("Unknown parameter %s"%key)
 
-    if not self.parameterdict.has_key('PNAME1'):
-      self._log.info("Assuming incoming beam 1 to be electrons")
-      self.parameters.append('PNAME1=e1')
-    else:
-      self.parameters.append("PNAME1=%s" %self.parameterdict["PNAME1"] )
+      if not self.parameterdict.has_key('PNAME1'):
+        self._log.info("Assuming incoming beam 1 to be electrons")
+        self.parameters.append('PNAME1=e1')
+      else:
+        self.parameters.append("PNAME1=%s" %self.parameterdict["PNAME1"] )
       
-    if not self.parameterdict.has_key('PNAME2'):
-      self._log.info("Assuming incoming beam 2 to be positrons")
-      self.parameters.append('PNAME2=E1')
-    else:
-      self.parameters.append("PNAME2=%s" %self.parameterdict["PNAME2"] )
+      if not self.parameterdict.has_key('PNAME2'):
+        self._log.info("Assuming incoming beam 2 to be positrons")
+        self.parameters.append('PNAME2=E1')
+      else:
+        self.parameters.append("PNAME2=%s" %self.parameterdict["PNAME2"] )
        
-    if not self.parameterdict.has_key('POLAB1'):
-      self._log.info("Assuming no polarization for beam 1")
-      self.parameters.append('POLAB1=0.0 0.0')
-    else:
-      self.parameters.append("POLAB1=%s" %self.parameterdict["POLAB1"] )
-        
-    if not self.parameterdict.has_key('POLAB2'):
-      self._log.info("Assuming no polarization for beam 2")
-      self.parameters.append('POLAB2=0.0 0.0')
-    else:
-      self.parameters.append("POLAB2=%s" %self.parameterdict["POLAB2"] )
-        
-    if not self.parameterdict.has_key('USERB1'):
-      self._log.info("Will put beam spectrum to True for beam 1")
-      self.parameters.append('USERB1=T')
-    else:
-      self.parameters.append("USERB1=%s" %self.parameterdict["USERB1"] )
-        
-    if not self.parameterdict.has_key('USERB2'):
-      self._log.info("Will put beam spectrum to True for beam 2")
-      self.parameters.append('USERB2=T')
-    else:
-      self.parameters.append("USERB2=%s" %self.parameterdict["USERB2"] )
-        
-    if not self.parameterdict.has_key('ISRB1'):
-      self._log.info("Will put ISR to True for beam 1")
-      self.parameters.append('ISRB1=T')
-    else:
-      self.parameters.append("ISRB1=%s" %self.parameterdict["ISRB1"] )
-        
-    if not self.parameterdict.has_key('ISRB2'):
-      self._log.info("Will put ISR to True for beam 2")
-      self.parameters.append('ISRB2=T')
-    else:
-      self.parameters.append("ISRB2=%s" %self.parameterdict["ISRB2"] )
-        
-    if not self.parameterdict.has_key('EPAB1'):
-      self._log.info("Will put EPA to False for beam 1")
-      self.parameters.append('EPAB1=F')
-    else:
-      self.parameters.append("EPAB1=%s" %self.parameterdict["EPAB1"] )
-        
-    if not self.parameterdict.has_key('EPAB2'):
-      self._log.info("Will put EPA to False for beam 2")
-      self.parameters.append('EPAB2=F')
-    else:
-      self.parameters.append("EPAB2=%s" %self.parameterdict["EPAB2"] )
-       
-    if not self.parameterdict.has_key('RECOIL'):
-      self._log.info("Will set Beam_recoil to False")
-      self.parameters.append('RECOIL=F')
-    else:
-      self.parameters.append("RECOIL=%s" %self.parameterdict["RECOIL"] )
-        
-    if not self.parameterdict.has_key('INITIALS'):
-      self._log.info("Will set keep_initials to False")
-      self.parameters.append('INITIALS=F')
-    else:
-      self.parameters.append("INITIALS=%s" %self.parameterdict["INITIALS"] )
-        
-    if not self.parameterdict.has_key('USERSPECTRUM'):
-      self._log.info("Will set USER_spectrum_on to +-11")
-      self.parameters.append('USERSPECTRUM=11')
-    else:
-      self.parameters.append("USERSPECTRUM=%s" %self.parameterdict["USERSPECTRUM"] )
-    
-    self.parameters = string.join(self.parameters,";")
+      if not self.parameterdict.has_key('POLAB1'):
+        self._log.info("Assuming no polarization for beam 1")
+        self.parameters.append('POLAB1=0.0 0.0')
+      else:
+        self.parameters.append("POLAB1=%s" % self.parameterdict["POLAB1"])
+          
+      if not self.parameterdict.has_key('POLAB2'):
+        self._log.info("Assuming no polarization for beam 2")
+        self.parameters.append('POLAB2=0.0 0.0')
+      else:
+        self.parameters.append("POLAB2=%s" % self.parameterdict["POLAB2"])
+          
+      if not self.parameterdict.has_key('USERB1'):
+        self._log.info("Will put beam spectrum to True for beam 1")
+        self.parameters.append('USERB1=T')
+      else:
+        self.parameters.append("USERB1=%s" % self.parameterdict["USERB1"])
+          
+      if not self.parameterdict.has_key('USERB2'):
+        self._log.info("Will put beam spectrum to True for beam 2")
+        self.parameters.append('USERB2=T')
+      else:
+        self.parameters.append("USERB2=%s" % self.parameterdict["USERB2"])
+          
+      if not self.parameterdict.has_key('ISRB1'):
+        self._log.info("Will put ISR to True for beam 1")
+        self.parameters.append('ISRB1=T')
+      else:
+        self.parameters.append("ISRB1=%s" % self.parameterdict["ISRB1"])
+          
+      if not self.parameterdict.has_key('ISRB2'):
+        self._log.info("Will put ISR to True for beam 2")
+        self.parameters.append('ISRB2=T')
+      else:
+        self.parameters.append("ISRB2=%s" % self.parameterdict["ISRB2"])
+          
+      if not self.parameterdict.has_key('EPAB1'):
+        self._log.info("Will put EPA to False for beam 1")
+        self.parameters.append('EPAB1=F')
+      else:
+        self.parameters.append("EPAB1=%s" % self.parameterdict["EPAB1"])
+          
+      if not self.parameterdict.has_key('EPAB2'):
+        self._log.info("Will put EPA to False for beam 2")
+        self.parameters.append('EPAB2=F')
+      else:
+        self.parameters.append("EPAB2=%s" % self.parameterdict["EPAB2"])
+         
+      if not self.parameterdict.has_key('RECOIL'):
+        self._log.info("Will set Beam_recoil to False")
+        self.parameters.append('RECOIL=F')
+      else:
+        self.parameters.append("RECOIL=%s" % self.parameterdict["RECOIL"])
+          
+      if not self.parameterdict.has_key('INITIALS'):
+        self._log.info("Will set keep_initials to False")
+        self.parameters.append('INITIALS=F')
+      else:
+        self.parameters.append("INITIALS=%s" % self.parameterdict["INITIALS"])
+          
+      if not self.parameterdict.has_key('USERSPECTRUM'):
+        self._log.info("Will set USER_spectrum_on to +-11")
+        self.parameters.append('USERSPECTRUM=11')
+      else:
+        self.parameters.append("USERSPECTRUM=%s" % self.parameterdict["USERSPECTRUM"])
+      
+      self.parameters = string.join(self.parameters, ";")
+    elif self.optionsdict:
+      self.optionsdictstr = str(self.optionsdict)
       
     return S_OK()  
 
@@ -655,6 +706,7 @@ class Whizard(Application):
     md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
     md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
     md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, "Specific steering parameters"))
+    md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, "Options dict to create full whizard.in on the fly"))
     md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return md1
 
@@ -668,6 +720,7 @@ class Whizard(Application):
     moduleinstance.setValue("SteeringFile", self.steeringfile)
     moduleinstance.setValue("JobIndex",     self.jobindex)
     moduleinstance.setValue("steeringparameters",   self.parameters)
+    moduleinstance.setValue("OptionsDictStr", self.optionsdictstr)
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):

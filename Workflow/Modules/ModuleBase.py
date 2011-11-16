@@ -12,7 +12,7 @@ from DIRAC  import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from DIRAC.RequestManagementSystem.Client.DISETSubRequest import DISETSubRequest
-from DIRAC.Core.Security.Misc import getProxyInfoAsString
+from DIRAC.Core.Security.ProxyInfo import getProxyInfoAsString
 from DIRAC.Resources.Catalog.PoolXMLFile import getGUID
 from DIRAC.Core.Utilities.Adler import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport import FileReport
