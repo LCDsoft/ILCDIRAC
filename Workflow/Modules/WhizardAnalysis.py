@@ -11,18 +11,18 @@ Created on Sep 22, 2010
 
 __RCSID__ = "$Id$"
 
-from DIRAC.Core.Utilities.Subprocess                     import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                import ModuleBase
+from DIRAC.Core.Utilities.Subprocess                       import shellCall
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFile
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareWhizardFileTemplate,GetNewLDLibs
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
-from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
-from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
-
+from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFile
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFileTemplate,GetNewLDLibs
+from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
+from ILCDIRAC.Core.Utilities.ProcessList                   import ProcessList
+from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
+from ILCDIRAC.Core.Utilities.PrepareLibs                   import removeLibc
+from ILCDIRAC.Core.Utilities.GeneratorModels               import GeneratorModels
+from ILCDIRAC.Core.Utilities.WhizardOptions                import WhizardOptions
 
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
@@ -56,6 +56,8 @@ class WhizardAnalysis(ModuleBase):
     self.genmodel = GeneratorModels()
     self.eventstring = ''
     self.steeringparameters = ''
+    self.options = WhizardOptions()
+    self.optionsdict = {}
     
   def obtainProcessList(self):
     """Internal function
@@ -109,7 +111,7 @@ class WhizardAnalysis(ModuleBase):
     if self.step_commons.has_key("InputFile"):
       self.SteeringFile = os.path.basename(self.step_commons["InputFile"])
 
-    if not len(self.SteeringFile):
+    if not len(self.SteeringFile) and not self.optionsdict:
       self.getProcessInFile = True
       
     if self.step_commons.has_key("EvtType"):
@@ -128,6 +130,11 @@ class WhizardAnalysis(ModuleBase):
     listofparams= self.steeringparameters.split(";")
     for param in listofparams:
       self.parameters[param.split("=")[0]]=param.split("=")[1]
+ 
+    try:
+      self.optionsdict = eval(self.OptionsDictStr)
+    except:
+      return S_ERROR("Could not convert string to dictionary for optionsdict")
  
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
@@ -274,7 +281,11 @@ class WhizardAnalysis(ModuleBase):
     outputfilename = self.evttype
     if self.jobindex:
       outputfilename = "%s_%s"%(outputfilename,self.jobindex)
-    if not template:  
+      
+    if self.optionsdict:
+      self.options.changeAndReturn(self.optionsdict)
+      res = self.options.toWhizardDotIn("whizard.in")
+    elif not template:  
       res = PrepareWhizardFile(self.SteeringFile,outputfilename,self.energy,self.RandomSeed,self.NumberOfEvents,self.Lumi,"whizard.in")
     else:
       res = PrepareWhizardFileTemplate(self.SteeringFile,outputfilename,self.parameters,"whizard.in")

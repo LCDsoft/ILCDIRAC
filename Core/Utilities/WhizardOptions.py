@@ -683,7 +683,11 @@ class WhizardOptions(object):
     for subelements in element.getchildren():
       options.append(subelements.tag)
     return S_OK(options)
-    
+  
+  def getValue(self,field):
+    element = self.whizardxml.find(field)
+    return S_OK(element.attrib['value'])  
+
   def changeAndReturn(self,paramdict):
     res = self.checkFields(paramdict)
     if not res['OK']:
@@ -729,5 +733,5 @@ class WhizardOptions(object):
     of = file(fname,"w")
     of.write("\n".join(lines))
     of.write("\n")
-    return S_OK()
+    return S_OK(True)
   
