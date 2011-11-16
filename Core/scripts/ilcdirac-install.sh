@@ -2,7 +2,7 @@
 
 version=$1
 if [ -z "$version" ]; then
-  version=ILC-HEAD
+  version=v4r1p1
 fi
 
 extension=$2
@@ -13,7 +13,7 @@ fi
 
 wget http://lhcbproject.web.cern.ch/lhcbproject/dist/DIRAC3/dirac-install
 chmod +x dirac-install
-./dirac-install -r $version -e $extension
+./dirac-install -l ILCDIRAC -r $version
 
 vo=ilc
 setup=ILC-Production
