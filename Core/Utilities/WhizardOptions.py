@@ -247,7 +247,7 @@ class WhizardOptions(object):
 <write_events_file type="string" value="">
 <!-- If nonempty, use string as filename for writing events, where the file extension will be appended. -->
 </write_events_file>
-<events_per_file type="integer" value="500000">
+<events_per_file type="integer" value="5000000">
 <!-- If positive, begin a new event file once the number of entries exceeds this number. The event file counter is appended to each event file name, separated with a dot (before the file extension). This feature applies only to non-binary event formats. -->
 </events_per_file>
 <bytes_per_file type="integer" value="0">
