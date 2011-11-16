@@ -515,8 +515,8 @@ class Whizard(Application):
     >>> pdict['beam_input_2']['USER_spectrum_mode'] = -11
     >>> wh.setFullParameterDict(pdict)
     
-    The first key correspinds to the section of the whizard.in, while the second correspond to the possible parameters.
-    All keys/values can be found on th WHIZARD documentation: http://projects.hepforge.org/whizard/manual_w1/manual005.html
+    The first key corresponds to the sections of the whizard.in, while the second corresponds to the possible parameters.
+    All keys/values can be found in the WHIZARD documentation: U{http://projects.hepforge.org/whizard/manual_w1/manual005.html}
     
     @param dict: Dictionnary of parameters
     @type dict: dict
