@@ -1,0 +1,11 @@
+[v4r1p0]
+
+*Core
+NEW: Utility that knows the available steering files that shoudl come with the applications
+
+*Applications
+NEW: Possible to use directly the whizard options from http://projects.hepforge.org/whizard/manual_w1/manual005.html
+
+*Workflow Modules
+NEW: Support for Whizard full options
+FIX: InputData glitch
