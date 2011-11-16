@@ -183,7 +183,7 @@ class MarlinAnalysis(ModuleBase):
         except Exception,x:
           self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
     
-    finalXML = "marlinxml.xml"
+    finalXML = "marlinxml_"+self.STEP_NUMBER+".xml"
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if not os.path.exists(self.inputGEAR):
       if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)):
