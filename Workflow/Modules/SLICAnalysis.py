@@ -78,7 +78,7 @@ class SLICAnalysis(ModuleBase):
         self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
 
-    if self.InputData:
+    if len(self.InputData):
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
         res = getNumberOfevents(self.InputData)
         if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
