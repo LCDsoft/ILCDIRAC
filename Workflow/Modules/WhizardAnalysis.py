@@ -137,7 +137,7 @@ class WhizardAnalysis(ModuleBase):
         if not self.optionsdict.has_key('integration_input'):
           self.optionsdict['integration_input']={}
         if not self.optionsdict['integration_input'].has_key('seed'):
-          self.optionsdict['integration_input']['seed']=self.RandomSeed
+          self.optionsdict['integration_input']['seed']=int(self.RandomSeed)
       except:
         return S_ERROR("Could not convert string to dictionary for optionsdict")
 
