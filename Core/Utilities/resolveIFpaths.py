@@ -21,7 +21,7 @@ def resolveIFpaths(inputfiles):
   for dir in os.listdir(os.getcwd()):
     if os.path.isdir(dir):
       listofdirs.append(dir)
-  filefound = False
+  filesnotfound = []
   for f in listoffiles:
     filefound = False
     if os.path.exists(f):
@@ -34,6 +34,8 @@ def resolveIFpaths(inputfiles):
           listofdirs.remove(dir)
           filefound = True
           break
-  if not filefound:
-    return S_ERROR("resolveIFPath: Input file not found locally")
+    if not filefound:
+      filesnotfound.append(f)
+  if len(filesnotfound):
+    return S_ERROR("resolveIFPath: Input file(s) '%s' not found locally"%(", ".join(filesnotfound)))
   return S_OK(listofpaths)
