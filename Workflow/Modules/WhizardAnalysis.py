@@ -292,7 +292,9 @@ class WhizardAnalysis(ModuleBase):
       
     if self.optionsdict:
       print self.optionsdict
-      self.options.changeAndReturn(self.optionsdict)
+      res = self.options.changeAndReturn(self.optionsdict)
+      if not res['OK']:
+        return res
       res = self.options.toWhizardDotIn("whizard.in")
     elif not template:  
       res = PrepareWhizardFile(self.SteeringFile,outputfilename,self.energy,self.RandomSeed,self.NumberOfEvents,self.Lumi,"whizard.in")
