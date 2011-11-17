@@ -136,6 +136,10 @@ class WhizardAnalysis(ModuleBase):
     if self.OptionsDictStr:
       try:
         self.optionsdict = eval(self.OptionsDictStr)
+        if not self.optionsdict.has_key('simulation_input'):
+          self.optionsdict['simulation_input']={}
+        if not self.optionsdict['simulation_input'].has_key('seed'):
+          self.optionsdict['simulation_input']['seed']=self.RandomSeed
       except:
         return S_ERROR("Could not convert string to dictionary for optionsdict")
  
