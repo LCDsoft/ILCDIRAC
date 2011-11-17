@@ -709,20 +709,20 @@ class WhizardOptions(object):
         subelement = self.whizardxml.find(key+"/"+subkey)
         if subelement==None:
           return S_ERROR("Key %s/%s is not in the allowed parameters"%(key,subkey))
-        type = subelement.attrib['type']
-        if type=='float':
-          if not type(value)==type(1.1):
+        etype = subelement.attrib['type']
+        if etype=='float':
+          if not type(value)==types.FloatType and not type(value)==types.IntType:
             return S_ERROR("%s should be a float"%(key+"/"+subkey))
-        elif type =='T/F':
+        elif etype =='T/F':
           if value != 'T' and value != 'F':
             return S_ERROR("%s should be either 'T' or 'F'"%(key+"/"+subkey))
-        elif type == 'integer' or type == '0/1/2/3':
+        elif etype == 'integer' or type == '0/1/2/3':
           if not type(value)==types.IntType:
             return S_ERROR("%s should be an integer"%(key+"/"+subkey))
-        elif type == 'string':
+        elif etype == 'string':
           if not type(value) in types.StringTypes:
             return S_ERROR("%s should be a string"%(key+"/"+subkey))
-        elif type == 'floatarray':
+        elif etype == 'floatarray':
           error = False
           if not type(value) in types.StringTypes:
             error = True
