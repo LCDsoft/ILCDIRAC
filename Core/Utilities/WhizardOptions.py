@@ -11,6 +11,8 @@ for SUSY speacil treatment of the pythia parameters have to be thought of: if th
 from xml.etree.ElementTree                                import ElementTree,fromstring
 from xml.etree.ElementTree                                import Element
 
+import types
+
 from DIRAC import S_OK,S_ERROR
 
 
@@ -703,10 +705,33 @@ class WhizardOptions(object):
       element = self.whizardxml.find(key)
       if element==None:
         return S_ERROR("Element %s is not in the allowed parameters"%key)
-      for subkey in val.keys():
+      for subkey,value in val.items():
         subelement = self.whizardxml.find(key+"/"+subkey)
         if subelement==None:
           return S_ERROR("Key %s/%s is not in the allowed parameters"%(key,subkey))
+        type = subelement.attrib['type']
+        if type=='float':
+          if not type(value)==type(1.1):
+            return S_ERROR("%s should be a float"%(key+"/"+subkey))
+        elif type =='T/F':
+          if value != 'T' and value != 'F':
+            return S_ERROR("%s should be either 'T' or 'F'"%(key+"/"+subkey))
+        elif type == 'integer' or type == '0/1/2/3':
+          if not type(value)==types.IntType:
+            return S_ERROR("%s should be an integer"%(key+"/"+subkey))
+        elif type == 'string':
+          if not type(value) in types.StringTypes:
+            return S_ERROR("%s should be a string"%(key+"/"+subkey))
+        elif type == 'floatarray':
+          error = False
+          if not type(value) in types.StringTypes:
+            error = True
+          else:
+            valelem = value.split()
+            if len(valelem)<2:
+              error = True
+          if error: 
+            return S_ERROR("%s should be a string with spaces, e.g. '0 1 2 3'"%(key+"/"+subkey))
     return S_OK()
   
   def toWhizardDotIn(self,fname):
