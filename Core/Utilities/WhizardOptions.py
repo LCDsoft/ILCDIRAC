@@ -56,7 +56,7 @@ class WhizardOptions(object):
 </input_slha_format>
 </process_input>
 <integration_input>
-<calls type="floatarray" value="1 20000 10 20000 1 20000">
+<calls type="floatarray" value="1 50000 10 50000 1 1500000">
 <!-- Array describing the number of iterations and number of calls per integration pass. Default values depend on the selected process. See below in subsection 4.6 for details. -->
 </calls>
 <seed type="integer" value="">
