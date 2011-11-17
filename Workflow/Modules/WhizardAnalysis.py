@@ -111,9 +111,6 @@ class WhizardAnalysis(ModuleBase):
       
     if self.step_commons.has_key("InputFile"):
       self.SteeringFile = os.path.basename(self.step_commons["InputFile"])
-
-    if not len(self.SteeringFile) and not self.optionsdict:
-      self.getProcessInFile = True
       
     if self.step_commons.has_key("EvtType"):
       self.evttype = os.path.basename(self.step_commons["EvtType"])
@@ -134,6 +131,7 @@ class WhizardAnalysis(ModuleBase):
         self.parameters[param.split("=")[0]]=param.split("=")[1]
  
     if self.OptionsDictStr:
+      self.log.info("Will use whizard.in definition from WhizardOptions.")
       try:
         self.optionsdict = eval(self.OptionsDictStr)
         if not self.optionsdict.has_key('simulation_input'):
@@ -142,6 +140,9 @@ class WhizardAnalysis(ModuleBase):
           self.optionsdict['simulation_input']['seed']=self.RandomSeed
       except:
         return S_ERROR("Could not convert string to dictionary for optionsdict")
+
+    if not len(self.SteeringFile) and not self.optionsdict:
+      self.getProcessInFile = True
  
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
