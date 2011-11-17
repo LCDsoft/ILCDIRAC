@@ -1,0 +1,159 @@
+<lcsim xmlns:lcsim="http://www.lcsim.org/schemas/lcsim/1.0"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+    xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/lcsim/1.0/lcsim.xsd">
+    <inputFiles>
+		<file>input.slcio</file>
+    </inputFiles>
+    <control>
+        <numberOfEvents>-1</numberOfEvents>
+        <verbose>false</verbose>
+        <printDriverStatistics>true</printDriverStatistics>
+		<printDriversDetailed>true</printDriversDetailed>
+    </control>
+    <execute>
+        <driver name="EventMarkerDriver"/>
+   		<driver name="MuonEndcapSelector"/>
+   		<driver name="MuonBarrelSelector"/>
+        <driver name="TrackHitRemover"/>
+        <driver name="VertexBarrelSetup"/>
+        <driver name="VertexEndcapSetup"/>
+        <driver name="TrackerBarrelSetup"/>
+        <driver name="TrackerEndcapSetup"/>
+        <driver name="TrackerForwardSetup"/>
+        <driver name="ReadoutDriver"/>
+        <driver name="TrackerDigi"/>
+        <driver name="VertexDigi"/>
+        <driver name="HelicalTrackHitDriver" />
+        <driver name="SeedTracker" />
+        <driver name="MCTrackStateDriver"/>
+        <driver name="Writer"/>
+    </execute>
+    <classpath>
+    		<jarUrl>http://www.cern.ch/lcd-data/software/analysis.jar</jarUrl>
+    </classpath>
+    <drivers>
+    		<!-- Driver to give some feedback on progress -->
+        <driver name="EventMarkerDriver"
+                type="org.lcsim.job.EventMarkerDriver">
+            <eventInterval>1</eventInterval>
+        </driver>
+        <!-- Driver to select only hits in layers which are meant to be active -->
+        <driver name="MuonEndcapSelector"
+				type="org.lcsim.recon.calorimetry.CalorimeterLayerSelector">
+			<collectionName>MuonEndcapHits</collectionName>
+			<activeLayers>0 1 2 7 8 9 15 16 17</activeLayers>
+			</driver>
+		<!-- Driver to select only hits in layers which are meant to be active -->
+		<driver name="MuonBarrelSelector"
+				type="org.lcsim.recon.calorimetry.CalorimeterLayerSelector">
+			<collectionName>MuonBarrelHits</collectionName>
+			<activeLayers>0 1 2 7 8 9 15 16 17</activeLayers>
+		</driver>
+		<!-- Driver to remove hits in overlapping tracking modules to avoid confusion in track reconstruction -->
+        <driver name="TrackHitRemover"
+				type="org.lcsim.recon.cheater.RemoveMultipleTrackHitsCheater">
+       	</driver>
+        <driver name="ReadoutDriver"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.SimTrackerHitReadoutDriver">
+            <readoutCollections>SiVertexBarrelHits SiVertexEndcapHits SiTrackerBarrelHits SiTrackerEndcapHits SiTrackerForwardHits</readoutCollections>
+        </driver>
+        <driver name="TrackerBarrelSetup"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.SiTrackerBarrelSensorSetup">
+            <subdetectorName>SiTrackerBarrel</subdetectorName>
+            <readoutElectrodesPitch>0.050</readoutElectrodesPitch>
+            <senseElectrodesPitch>0.025</senseElectrodesPitch>
+            <transferEfficiencies>0.986 0.419</transferEfficiencies>
+        </driver>
+        <driver name="TrackerEndcapSetup"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.SiTrackerEndcap2SensorSetup">
+            <subdetectorName>SiTrackerEndcap</subdetectorName>
+            <readoutPitch>0.050</readoutPitch>
+            <sensePitch>0.025</sensePitch>
+            <transferEfficiencies>0.986 0.419</transferEfficiencies>
+        </driver>
+        <driver name="VertexBarrelSetup"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.SiVertexBarrelSensorSetup">
+            <subdetectorName>SiVertexBarrel</subdetectorName>
+            <readoutPitchX>0.02</readoutPitchX>
+            <readoutPitchY>0.02</readoutPitchY>
+            <sensePitchX>0.02</sensePitchX>
+            <sensePitchY>0.02</sensePitchY>
+            <transferEfficiency>1.0</transferEfficiency>
+        </driver>
+        <driver name="VertexEndcapSetup"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.SiVertexEndcapSensorSetup">
+            <subdetectorName>SiVertexEndcap</subdetectorName>
+            <readoutPitchX>0.02</readoutPitchX>
+            <readoutPitchY>0.02</readoutPitchY>
+            <sensePitchX>0.02</sensePitchX>
+            <sensePitchY>0.02</sensePitchY>
+            <transferEfficiency>1.0</transferEfficiency>
+        </driver>
+        <driver name="TrackerForwardSetup"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.SiVertexEndcapSensorSetup">
+            <subdetectorName>SiTrackerForward</subdetectorName>
+            <readoutPitchX>0.02</readoutPitchX>
+            <readoutPitchY>0.02</readoutPitchY>
+            <sensePitchX>0.02</sensePitchX>
+            <sensePitchY>0.02</sensePitchY>
+            <transferEfficiency>1.0</transferEfficiency>
+        </driver>
+        <driver name="TrackerDigi"
+                type="org.lcsim.recon.tracking.digitization.sisim.config.StripDigiSetupDriver">
+            <subdetectorNames>SiTrackerBarrel SiTrackerEndcap</subdetectorNames>
+            <rawHitsCollectionName>TKR_RawTrackerHits</rawHitsCollectionName>
+            <trackerHitsCollectionName>TKR_TrackerHits</trackerHitsCollectionName> 
+            <maxClusterSize>10</maxClusterSize>
+            <noiseIntercept>0.</noiseIntercept>
+            <noiseSlope>0.</noiseSlope>
+            <noiseThreshold>6000.</noiseThreshold>
+            <readoutNeighborThreshold>6000.</readoutNeighborThreshold>
+            <seedThreshold>6000.</seedThreshold>
+            <neighborThreshold>6000.</neighborThreshold>
+            <centralStripAveragingThreshold>4</centralStripAveragingThreshold>
+            <oneClusterErr>0.288675135</oneClusterErr>
+            <twoClusterErr>0.2</twoClusterErr>
+            <threeClusterErr>0.333333333</threeClusterErr>
+            <fourClusterErr>0.5</fourClusterErr>
+            <fiveClusterErr>1.0</fiveClusterErr>
+        </driver>
+        <driver name="VertexDigi" 
+                type="org.lcsim.recon.tracking.digitization.sisim.config.PixelDigiSetupDriver">
+            <subdetectorNames>SiVertexBarrel SiVertexEndcap SiTrackerForward</subdetectorNames> 
+            <rawHitsCollectionName>VXD_RawTrackerHits</rawHitsCollectionName>
+            <trackerHitsCollectionName>VXD_TrackerHits</trackerHitsCollectionName>
+            <maxClusterSize>10</maxClusterSize>
+            <noiseIntercept>0.</noiseIntercept>
+            <noiseSlope>0.</noiseSlope>
+            <noiseThreshold>100.</noiseThreshold>
+            <readoutNeighborThreshold>100.</readoutNeighborThreshold>
+            <seedThreshold>100.</seedThreshold>
+            <neighborThreshold>100.</neighborThreshold>
+            <oneClusterErr>0.288675135</oneClusterErr>
+            <twoClusterErr>0.2</twoClusterErr>
+            <threeClusterErr>0.333333333</threeClusterErr>
+            <fourClusterErr>0.5</fourClusterErr>
+            <fiveClusterErr>1.0</fiveClusterErr>
+        </driver>
+        <!-- Driver to create helical track hits from clusters -->
+        <driver name="HelicalTrackHitDriver"
+                type="org.lcsim.fit.helicaltrack.HelicalTrackHitDriver">
+            <digiCollectionNames>VXD_TrackerHits TKR_TrackerHits</digiCollectionNames>
+            <outputCollectionName>HelicalTrackHits</outputCollectionName>
+        </driver>
+        <!-- Track reconstruction driver-->
+        <driver name="SeedTracker"
+                type="org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper">
+            <strategyFile>defaultStrategies.xml</strategyFile>
+        </driver>
+        <!-- Driver to calculate track states for Pandora -->
+        <driver name="MCTrackStateDriver"
+                type="org.lcsim.recon.tracking.seedtracker.SeedTrackerTrackStateDriver"/>
+        <!-- Driver to write output slcio file -->
+        <driver name="Writer"
+                type="org.lcsim.util.loop.LCIODriver">
+            <writeOnlyCollections>BeamCalHits EcalBarrelHits EcalEndcapHits HcalBarrelHits HcalEndcapHits HcalPlugHits LumiCalHits MCParticle MCParticleEndPointEnergy MuonBarrelHits MuonEndcapHits SiTrackerBarrelHits SiTrackerEndcapHits SiTrackerForwardHits SiVertexBarrelHits SiVertexEndcapHits HelicalTrackHits HelicalTrackMCRelations StateAtECal StateAtEnd StateAtStart Tracks</writeOnlyCollections>
+            <outputFilePath>__outputFile__.slcio</outputFilePath>
+        </driver>
+    </drivers>
+</lcsim>
