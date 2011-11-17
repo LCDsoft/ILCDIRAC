@@ -291,6 +291,7 @@ class WhizardAnalysis(ModuleBase):
       outputfilename = "%s_%s"%(outputfilename,self.jobindex)
       
     if self.optionsdict:
+      print self.optionsdict
       self.options.changeAndReturn(self.optionsdict)
       res = self.options.toWhizardDotIn("whizard.in")
     elif not template:  
