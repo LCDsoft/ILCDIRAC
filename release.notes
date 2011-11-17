@@ -1,3 +1,7 @@
+[v4r1p8]
+*WhizardAnalysis
+Bugfix: random seed not cast is now cast to int
+
 [v4r1p7]
 *WhizardOptions
 Add type checking of options
