@@ -1,3 +1,13 @@
+[v4r1p2]
+*Interfaces
+NEW: Support for multiple processes in whizard
+
+*WhizardOptions
+Increased default number of calls
+
+*WhizardAnalysis
+Seed was not set right.
+
 [v4r1p1]
 *Interfaces
 CHANGE: Fixing the new WHIZARD interface
