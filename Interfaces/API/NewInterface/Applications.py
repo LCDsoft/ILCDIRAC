@@ -431,7 +431,7 @@ class Whizard(Application):
     self.seed = 0
     self.lumi = 0
     self.jobindex = ''
-    self.optionsdictstr = ''
+    self._optionsdictstr = ''
     self.optionsdict = {}
     self._leshouchesfiles = None
     self._generatormodels = GeneratorModels()
@@ -516,7 +516,7 @@ class Whizard(Application):
     >>> wh.setFullParameterDict(pdict)
     
     The first key corresponds to the sections of the whizard.in, while the second corresponds to the possible parameters.
-    All keys/values can be found in the WHIZARD documentation: U{http://projects.hepforge.org/whizard/manual_w1/manual005.html}
+    All keys/values can be found in the WHIZARD documentation: U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc11}
     
     @param dict: Dictionnary of parameters
     @type dict: dict
@@ -728,7 +728,7 @@ class Whizard(Application):
       
       self.parameters = string.join(self.parameters, ";")
     elif self.optionsdict:
-      self.optionsdictstr = str(self.optionsdict)
+      self._optionsdictstr = str(self.optionsdict)
       
     return S_OK()  
 
@@ -755,7 +755,7 @@ class Whizard(Application):
     moduleinstance.setValue("SteeringFile", self.steeringfile)
     moduleinstance.setValue("JobIndex",     self.jobindex)
     moduleinstance.setValue("steeringparameters",   self.parameters)
-    moduleinstance.setValue("OptionsDictStr", self.optionsdictstr)
+    moduleinstance.setValue("OptionsDictStr", self._optionsdictstr)
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):
