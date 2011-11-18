@@ -196,7 +196,7 @@ class WhizardOptions(object):
 <default_mass_cut type="float" value="4">
 <!-- The default invariant mass cut in GeV applied to pair production of massless colorless charged particles and to photon emission. -->
 </default_mass_cut>
-<default_energy_cut type="float" value="4">
+<default_energy_cut type="float" value="10">
 <!-- The default energy cut in GeV applied to photon and gluon emission. -->
 </default_energy_cut>
 <default_q_cut type="float" value="4">
