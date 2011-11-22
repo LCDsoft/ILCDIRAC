@@ -379,10 +379,10 @@ class MokkaAnalysis(ModuleBase):
           os.rename("out.slcio", self.outputFile)
 
       failed = False
-      if not status == 0 and not status==106 and not status==10:
+      if not status in [0,106,9]:
         self.log.error( "Mokka execution completed with errors:" )
         failed = True
-      elif status==106 or status==10:
+      elif status in [106,9]:
         self.log.info( "Mokka execution reached end of input generator file")
       else:
         self.log.info( "Mokka execution finished successfully")
@@ -398,7 +398,7 @@ class MokkaAnalysis(ModuleBase):
         if not self.ignoreapperrors:
           return S_ERROR(message)
       else:
-        if status==106:
+        if status in [106,9]:
           message = 'Mokka %s reached end of input generator file' %(self.applicationVersion)
         self.setApplicationStatus(message)
       return S_OK({'OutputFile':self.OutputFile})
