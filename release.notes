@@ -1,3 +1,7 @@
+[v4r1p9]
+*WhizardAnalysis
+Bugfix: mokka status code for end-of-input-file is 9, not 10
+
 [v4r1p8]
 *WhizardAnalysis
 Bugfix: random seed not cast is now cast to int
