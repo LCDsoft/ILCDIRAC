@@ -109,7 +109,7 @@ class GenericApplication(Application):
     
     >>> app.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
     
-    @param appdict: Dictionary of applciation to use: {"App":"version"}
+    @param appdict: Dictionary of application to use: {"App":"version"}
     @type appdict: dict
     
     """  
@@ -156,7 +156,7 @@ class GenericApplication(Application):
   def _setStepParametersValues(self, instance):
     self._setBaseStepParametersValues(instance)
     for depn,depv in self.dependencies.items():
-      self.job._addSoftware(depn,depv)
+      self._job._addSoftware(depn,depv)
     return S_OK()
       
   def _checkConsistency(self):
@@ -168,7 +168,7 @@ class GenericApplication(Application):
       return S_ERROR("Specified script is not an LFN and was not found on disk")
       
     if not len(self.dependencies):
-      return S_ERROR("Dependencies not set")
+      return S_ERROR("Dependencies not set: No application to install. If correct you should use job.setExecutable")
     return S_OK()  
   
 #################################################################
