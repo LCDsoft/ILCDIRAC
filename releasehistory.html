@@ -1,0 +1,2947 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.8: http://docutils.sourceforge.net/" />
+<title>Package ILCDIRAC</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7056 2011-06-17 10:50:48Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="package-ilcdirac">
+<h1 class="title">Package ILCDIRAC</h1>
+
+<div class="section" id="version-v4r2p1">
+<h1>Version v4r2p1</h1>
+<div class="section" id="new">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Support for parametric parameters in ApplicationScript</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r2p0">
+<h1>Version v4r2p0</h1>
+<div class="section" id="id1">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>ProcessProductionSystem</dt>
+<dd><ul class="first last simple">
+<li>Reimport the ProcessProduction in the release mechanism</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p9">
+<h1>Version v4r1p9</h1>
+<div class="section" id="bugfix">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Mokka reaches en-of-file error has status code 9, not 10</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p8">
+<h1>Version v4r1p8</h1>
+<div class="section" id="id2">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>RandomSeed was not valid</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p7">
+<h1>Version v4r1p7</h1>
+<div class="section" id="change">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Add type checking in whizardOptions</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p6">
+<h1>Version v4r1p6</h1>
+<div class="section" id="id3">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Key for seed was not right.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p5">
+<h1>Version v4r1p5</h1>
+<div class="section" id="id4">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Check return value when updating the WhizardOptions</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p4">
+<h1>Version v4r1p4</h1>
+<div class="section" id="id5">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>added messages</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p3">
+<h1>Version v4r1p3</h1>
+<div class="section" id="id6">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Added message in resolveIFpath, needed to debug</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p2">
+<h1>Version v4r1p2</h1>
+<div class="section" id="id7">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Better support for WHIZARD new option style: handling of multiple process in particular</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id8">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Increase default number of calls in whizard options</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id9">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Whizard's seed was not set to desired value</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p1">
+<h1>Version v4r1p1</h1>
+<div class="section" id="id10">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Better support for WHIZARD new option style</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id11">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Whizard should not fail anymore</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r1p0">
+<h1>Version v4r1p0</h1>
+<div class="section" id="id12">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Utility that holds the available steering files</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Support for full options from WHIZARD</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id13">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Add support for Whizard options and fix small InputData glitch</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v4r0p0">
+<h1>Version v4r0p0</h1>
+<div class="section" id="id14">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>OverlaySystem</dt>
+<dd><ul class="first last simple">
+<li>No Change, needed version to move towards v6</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r4p1">
+<h1>Version v3r4p1</h1>
+</div>
+<div class="section" id="version-v3r4p0">
+<h1>Version v3r4p0</h1>
+<div class="section" id="id15">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Set detectormodel zip file in LCSIM to avoid downloading it from the web every job</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Allow for handling of detector model in LCSIM passed in ISB</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r3p4">
+<h1>Version v3r3p4</h1>
+<div class="section" id="id16">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>One break and continue statement</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r3p3">
+<h1>Version v3r3p3</h1>
+<div class="section" id="id17">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Detector.zip was not unzipped if passed</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r3p2">
+<h1>Version v3r3p2</h1>
+<div class="section" id="id18">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Handling of NbOfEvts in file registration fixed</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r3p1">
+<h1>Version v3r3p1</h1>
+<div class="section" id="id19">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>GeneratorModels: getFile returns S_ERROR when no file is attached to a given model (e.g. sm)</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Adapt to new GeneratorModels way of doing things.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r3p0">
+<h1>Version v3r3p0</h1>
+<div class="section" id="id20">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Handling of available models is done through the CS</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Adapt to new handling of models</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id21">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Proper handling of Model</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r2p1">
+<h1>Version v3r2p1</h1>
+<div class="section" id="id22">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Proper handling of LesHouches file</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r2p0">
+<h1>Version v3r2p0</h1>
+<div class="section" id="id23">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Not needed to specify input if one passes it as dcap directly in xml</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id24">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>couple of things, better handling of nb evts.</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Account for new model definition</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r1p1">
+<h1>Version v3r1p1</h1>
+<div class="section" id="id25">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Install software also in OSG_APP if defined</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id26">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Improved interfaces, several bug fixes</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Adapt for new interface of slicPandora, several fixes, in particular for LCIOConcatenate (works in prod context)</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r1p0">
+<h1>Version v3r1p0</h1>
+<div class="section" id="id27">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Install software also in OSG_APP if defined</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id28">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interface</dt>
+<dd><ul class="first last simple">
+<li>Improved interfaces, several bug fixes</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Adapt for new interface of slicPandora, several fixes, in particular for LCIOConcatenate (works in prod context)</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v3r0p0">
+<h1>Version v3r0p0</h1>
+<div class="section" id="id29">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Many small things</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Added new Interface, for testing purposes</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Many updates on all modules to fit the new Interface</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r5p5">
+<h1>Version v2r5p5</h1>
+<div class="section" id="id30">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>soft links do not work, one needs to copy the things for whizard.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r5p4">
+<h1>Version v2r5p4</h1>
+<div class="section" id="id31">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>remove the incompatible libs during install, but also in lib folder</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r5p3">
+<h1>Version v2r5p3</h1>
+<div class="section" id="id32">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>remove the incompatible libs during install</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r5p2">
+<h1>Version v2r5p2</h1>
+<div class="section" id="id33">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>removing lib when no rights fails.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r5p1">
+<h1>Version v2r5p1</h1>
+<div class="section" id="id34">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Path to steering files was not properly set</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r5p0">
+<h1>Version v2r5p0</h1>
+<div class="section" id="id35">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Remove software module also removes the DB slice if found, fixed glitch in Mokka steering file</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>MokkaAnalysis: now the DB slice is checked before usage, as it's now  supposed to be in the Mokka directory</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r4p0">
+<h1>Version v2r4p0</h1>
+<div class="section" id="id36">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>WasteCPU utility, that does what its name suggests. Added the dragon in SQLWrapper</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id37">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>OverlaySystem</dt>
+<dd><ul class="first last simple">
+<li>Using Client instead of RPCClient call</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput now uses WasteCPU utility</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r3p0">
+<h1>Version v2r3p0</h1>
+<div class="section" id="id38">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>OverlaySystem</dt>
+<dd><ul class="first last simple">
+<li>OverlaySystem now comes with Agent to reset the job counters once per hours</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r2p0">
+<h1>Version v2r2p0</h1>
+<div class="section" id="id39">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Added run number to Mokka and SLIC files, same as randomseed for the moment</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p10">
+<h1>Version v2r1p10</h1>
+<div class="section" id="id40">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput reports standby number once every 10 miutes</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p9">
+<h1>Version v2r1p9</h1>
+<div class="section" id="id41">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>add a count to 50000000 between each file in Overlay to prevent sites from thinking the job is stalled</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p8">
+<h1>Version v2r1p8</h1>
+<div class="section" id="id42">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>add a count to 1000000 between each file in Overlay to prevent sites from thinking the job is stalled</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p7">
+<h1>Version v2r1p7</h1>
+<div class="section" id="id43">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>chdir was missing</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p6">
+<h1>Version v2r1p6</h1>
+<div class="section" id="id44">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Do not check for stalled when getting the fiels with rm.getFile()</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p5">
+<h1>Version v2r1p5</h1>
+<div class="section" id="id45">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In Marlin, location of gear file was not correctly specified</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p4">
+<h1>Version v2r1p4</h1>
+<div class="section" id="id46">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>mysql4grid directory sent back to LocalArea, only if it's not there</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p3">
+<h1>Version v2r1p3</h1>
+<div class="section" id="id47">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>mysql4grid directory sent back to LocalArea</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p2">
+<h1>Version v2r1p2</h1>
+<div class="section" id="id48">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Changing directory was done too late, the app was never found</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p1">
+<h1>Version v2r1p1</h1>
+<div class="section" id="id49">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>checking that one is allowed to write in the area was done before checking that the application was there.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r1p0">
+<h1>Version v2r1p0</h1>
+<div class="section" id="id50">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>added message in case of success of soft removal</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Workflow modeules now look into the software dir for default location of steering files if they are not in the cur dir</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v2r0p0">
+<h1>Version v2r0p0</h1>
+<div class="section" id="id51">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Allow installation in SharedArea by default. Fall back to LocalArea when not possible to use.</li>
+<li>RemoveApp module to remove applications</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Added MCReconstruction_Overlay as valid production type, Added interface to remove applications: experts ONLY!</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r19p0">
+<h1>Version v1r19p0</h1>
+<div class="section" id="id52">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>OverlaySystem</dt>
+<dd><ul class="first last simple">
+<li>Service to handle properly the overlay</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput uses OverlaySystem</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p16">
+<h1>Version v1r18p16</h1>
+<div class="section" id="id53">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput at RAL is failing (again)</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p15">
+<h1>Version v1r18p15</h1>
+<div class="section" id="id54">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Number of events per job was not properly treated.</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput at RAL is failing</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p14">
+<h1>Version v1r18p14</h1>
+<div class="section" id="id55">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In OverlayInput, dccp command for Imperial site had wrong argument</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p13">
+<h1>Version v1r18p13</h1>
+<div class="section" id="id56">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In OverlayInput, Control the number of concurrent download per site, even for CERN, CC and Imperial</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p12">
+<h1>Version v1r18p12</h1>
+<div class="section" id="id57">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In OverlayInput, use dcap protocol in imperial</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p11">
+<h1>Version v1r18p11</h1>
+<div class="section" id="id58">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In OverlayInput, allow direct access in IMPERIAL</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p10">
+<h1>Version v1r18p10</h1>
+<div class="section" id="id59">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In OverlayInput, don't use FC to get number of events per file, use CS parameter instead. Also count failures, and if too many (CS parameter =20), return error</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p9">
+<h1>Version v1r18p9</h1>
+<div class="section" id="id60">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>In OverlayInput, if running at CERN, use also rfcp if xrdcp fails. Add IN2P3-CC as a site that can use xrdcp</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p8">
+<h1>Version v1r18p8</h1>
+<div class="section" id="id61">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Default number of events to process in SLICPandora must be -1.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p7">
+<h1>Version v1r18p7</h1>
+<div class="section" id="id62">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>use of lower in name matching killed matching (Again).</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p6">
+<h1>Version v1r18p6</h1>
+<div class="section" id="id63">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>use of lower in name matching killed matching.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p5">
+<h1>Version v1r18p5</h1>
+<div class="section" id="id64">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Naming convention in UploadOutputData, for easier maintenance</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p4">
+<h1>Version v1r18p4</h1>
+<div class="section" id="id65">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Fixed Pythia Module outputFile name in Prod context</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p3">
+<h1>Version v1r18p3</h1>
+<div class="section" id="id66">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Fixed Pythia Module outputFile name in Prod context</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p2">
+<h1>Version v1r18p2</h1>
+<div class="section" id="id67">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Fixed Production.py</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Fixed Pythia Module outputFile name</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p1">
+<h1>Version v1r18p1</h1>
+<div class="section" id="id68">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Fixed Production.py</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Fixed Pythia Module outputFile name</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r18p0">
+<h1>Version v1r18p0</h1>
+<div class="section" id="id69">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Added Pythia Step</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p10">
+<h1>Version v1r17p10</h1>
+<div class="section" id="id70">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Added printout of files obtained in overlay</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p9">
+<h1>Version v1r17p9</h1>
+<div class="section" id="id71">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>don't account for the dirac_directory things when nsls</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p8">
+<h1>Version v1r17p8</h1>
+<div class="section" id="id72">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>don't account for the dirac_directory things when nsls</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p7">
+<h1>Version v1r17p7</h1>
+<div class="section" id="id73">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput: when running at CERN, get the file list from CASTOR</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p6">
+<h1>Version v1r17p6</h1>
+<div class="section" id="id74">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput failed to find metadata because specified prodID was not correct</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p5">
+<h1>Version v1r17p5</h1>
+<div class="section" id="id75">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>if overlayInput runs at CERN, it will get the files with xrdcp</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p4">
+<h1>Version v1r17p4</h1>
+<div class="section" id="id76">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>OverlayInput will wait no longer than 300 minutes, else declare as failed.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id77">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>whizard was throwing an uncaught exception when the lumi was not found</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p3">
+<h1>Version v1r17p3</h1>
+<div class="section" id="id78">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Overlayinput was downloading all files twice!</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p2">
+<h1>Version v1r17p2</h1>
+<div class="section" id="id79">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>LCSIM now has a new parameter, extraparams, that can be used to pass command line parameters</li>
+<li>GetSRMFile now limits the number of parallel downloads to 100 by default (CS parameter) to avoid time outs from disk server</li>
+<li>More messages during overlay input module</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p1">
+<h1>Version v1r17p1</h1>
+<div class="section" id="id80">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Default Log file name now includes step number, so one can run 2 times or more the same application, and the log file does not get erased</li>
+<li>Missing process list message is now a warning.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id81">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>OutputREC files and OutputDST were not set properly in LCSIM</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r17p0">
+<h1>Version v1r17p0</h1>
+<div class="section" id="id82">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Overlay now allows only 200 parallel file downloads, CS parameter</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id83">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>add-software script puts the file at IN2P3 and the replication request is to CERN</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Parameters are now properly placed in the CS</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Added proper SVN keywords</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p17">
+<h1>Version v1r16p17</h1>
+<div class="section" id="id84">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Again the tag name is wrong...</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p16">
+<h1>Version v1r16p16</h1>
+<div class="section" id="id85">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Fix logic bug in OverlayInput as it used to download as many files as there are signal events.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p15">
+<h1>Version v1r16p15</h1>
+<div class="section" id="id86">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>level of message warning does not exists, but warn does</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p14">
+<h1>Version v1r16p14</h1>
+<div class="section" id="id87">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>USER_spectrum_mode was not set properly in whizard</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p13">
+<h1>Version v1r16p13</h1>
+<div class="section" id="id88">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>: Support for user spectrum in whizard.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id89">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Also look at the Number of bunch train to overlay before looking at the files.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p12">
+<h1>Version v1r16p12</h1>
+<div class="section" id="id90">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Disable CPU check while getting the overlay files as there is a risk it takes too much time</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p11">
+<h1>Version v1r16p11</h1>
+<div class="section" id="id91">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflo</dt>
+<dd><ul class="first last simple">
+<li>Disable CPU check while getting the overlay files as there is a risk it takes too much time</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p10">
+<h1>Version v1r16p10</h1>
+<div class="section" id="id92">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>tag number was wrong</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p9">
+<h1>Version v1r16p9</h1>
+<div class="section" id="id93">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>dirac-ilc-add-software and add-whizard now create a replication request for new tar balls.</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Module to print out the Workflow parameters only</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>For next major dirac release, ParametricInputSandbox will be possible with Marlin</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id94">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Now when getting the overlay fioles, wait for 3 minutes on average (gauss distributed, sigma=0.1)</li>
+<li>Use common method between application modules (not for Mokka though) to report the final status</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p8">
+<h1>Version v1r16p8</h1>
+<div class="section" id="id95">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Script to obtain the productions summaries</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id96">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Production API now get the directory metadata to pass to daughters</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Catch message in whizard log to declare the job as successful</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p7">
+<h1>Version v1r16p7</h1>
+<div class="section" id="id97">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Get the directorymetadata of the InputData files to get the number of events.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p6">
+<h1>Version v1r16p6</h1>
+<div class="section" id="id98">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Look for overlay files only if needed</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p5">
+<h1>Version v1r16p5</h1>
+<div class="section" id="id99">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Allow setting of event by event parameter ProcessID. Can be set by users' jobs and automatically resolved for production jobs</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p4">
+<h1>Version v1r16p4</h1>
+<div class="section" id="id100">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Handle the particle.tbl file for Mokka</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p3">
+<h1>Version v1r16p3</h1>
+<div class="section" id="id101">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Catch the luminosity generated by whizard for a job, and pass it to the workflow_commons definition</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p2">
+<h1>Version v1r16p2</h1>
+<div class="section" id="id102">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>dirac-ilc-add-software</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r16p1">
+<h1>Version v1r16p1</h1>
+<div class="section" id="id103">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>PrepareTomatoSalad: prepare the xml file for running tomato</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id104">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>MarlinAnalysis can be subclassed easily: TomatoAnalysis is a subclass</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p7">
+<h1>Version v1r15p7</h1>
+<div class="section" id="id105">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>CheckXMLValidity utility to check at submission time the validity of the xml steering files</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id106">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Use new CheckXMLValidity utility for Marlin and LCSIM</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p6">
+<h1>Version v1r15p6</h1>
+<div class="section" id="id107">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Switch to ignore application errors, use setIgnoreApplicationErrors() method of ILCJob to enable</li>
+<li>validate input xml files during submission, catches most typos.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id108">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>allow for user defined LesHouches file if whizard.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p5">
+<h1>Version v1r15p5</h1>
+<div class="section" id="id109">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Processlist is now passed as inputsandbox, so if downloading fails the first time, the job gets rescheduled</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id110">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Production API: do not look for detector model if the data type is gen</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>SLICAnalysis: outputslcio -&gt; outputFile</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p4">
+<h1>Version v1r15p4</h1>
+<div class="section" id="id111">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Registration of production files ancestors</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p3">
+<h1>Version v1r15p3</h1>
+<div class="section" id="id112">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Add MCGeneration as a possible Production type</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id113">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Added memory requirement for java in LCSIM</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id114">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>With new Script interface, our scripts would not work. Made ilc-proxy-init deprecated, use proxy-init instead</li>
+<li>Overlay input for LCSIM did not work (created exception)</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p2">
+<h1>Version v1r15p2</h1>
+<div class="section" id="id115">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>bad workflow tag</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p1">
+<h1>Version v1r15p1</h1>
+<div class="section" id="id116">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>bad workflow tag</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r15p0">
+<h1>Version v1r15p0</h1>
+<p>CHANGE: move to DIRAC v5r12p7</p>
+<div class="section" id="id117">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Utility to obtain a prod proxy if needed, useful in prod submission scripts</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>support for Tomato, check collections, lcio concat: currently in test phase</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Support for overlay in LCSIM</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id118">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Modified scripts for sid jobs</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Moved many parameters from many sub classes to mother class (ModuleBase): easier maintenance</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r14p0">
+<h1>Version v1r14p0</h1>
+<div class="section" id="id119">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>SID production submission scripts</li>
+<li>SID chain job submission scripts, and directory containing necessary files</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id120">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>software addition uses Request object for replication.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id121">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>now remove system libs from all application on site. In the future, should remove them at tar ball creation time</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Pass basename of xml file in LCSIM instead of parameter value</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r13p3">
+<h1>Version v1r13p3</h1>
+<div class="section" id="id122">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Gear file can also be a text in the xml parameters, not only a value</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r13p2">
+<h1>Version v1r13p2</h1>
+<div class="section" id="id123">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Added utilities for overlay input</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>interface for overlay</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Module for Overlay Input</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id124">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>fix import location in LCSIMAnalysis</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r13p1">
+<h1>Version v1r13p1</h1>
+<div class="section" id="id125">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>fix LD_LIBRARY_PATH for whizard</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r13p0">
+<h1>Version v1r13p0</h1>
+<div class="section" id="id126">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Utility to remove the libc provided in the software packages</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Script to submit productions in slic context</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id127">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>All worflow modules check that log file is present</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r12p1">
+<h1>Version v1r12p1</h1>
+<div class="section" id="id128">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>bug fix in MokkaAnalysis</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r12p0">
+<h1>Version v1r12p0</h1>
+<div class="section" id="id129">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Now Mokka uses random seed for every job. Users can set their own seed.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r11p2">
+<h1>Version v1r11p2</h1>
+<div class="section" id="id130">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>take new interface of writestdhep into account</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r11p1">
+<h1>Version v1r11p1</h1>
+<div class="section" id="id131">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Bug in CombimedSoftware installation</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Several errors remained in PostGenSel module</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r11p0">
+<h1>Version v1r11p0</h1>
+<div class="section" id="id132">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>added script to obtain list of available software: no need to use web page</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>added PostGenSel step to allow &quot;generator level&quot; cuts</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p7">
+<h1>Version v1r10p7</h1>
+<div class="section" id="id133">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>All applications are also replicated to IN2P3-SRM</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>jobindex in whizard can be anything</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>in whizard, when PYSTOP was called, application was still OK, now not anymore</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id134">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>XML file for LCSIM is now a parameter in the Production API</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p6">
+<h1>Version v1r10p6</h1>
+<div class="section" id="id135">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>TARSoft was failing installation of lcio</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p5">
+<h1>Version v1r10p5</h1>
+<div class="section" id="id136">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>LCIO specific install: environment vars are set</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id137">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Allowed models in Whizard for susy are slsqhh and chne</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p4">
+<h1>Version v1r10p4</h1>
+<div class="section" id="id138">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>allow choice of SUSY model in whizard</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p3">
+<h1>Version v1r10p3</h1>
+<div class="section" id="id139">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>added beam_ercoil and keep_initials as parameters</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p2">
+<h1>Version v1r10p2</h1>
+<div class="section" id="id140">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Registration of file in FC failed because FC changed</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p1">
+<h1>Version v1r10p1</h1>
+<div class="section" id="id141">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>PrepareOptionsFile had a bug in Preparation of whizard.in</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r10p0">
+<h1>Version v1r10p0</h1>
+<div class="section" id="id142">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Whizard step in DIRAC</li>
+<li>SLIC Pandora step is in ProductionAPI</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>WhizardAnalysis module</li>
+<li>FailoverRequest module: publish requests and update file status in transformation system</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id143">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Whizard default .in file is now whizard.template.in, and is templated</li>
+<li>Propagate the number of events and luminosity through productions</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Production and user job API takes parameters for whizard, to fill in the template</li>
+<li>complete LCSIM step in production API: input and output are treated properly</li>
+<li>Production details are available from web interface</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>UserLFN now uses current credentials to guess the VO: suitable for ILC and CALICE run</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r9p0">
+<h1>Version v1r9p0</h1>
+<div class="section" id="id144">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>add resolveOFnames to change output files in production context</li>
+<li>script/dirac-ilc-add-whizard: define in DIRAC a new whizard version</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Add possibility to get a file using its SRM path FIXME: startFrom in mokka is 0 by default instead of 1.</li>
+<li>SLICPandora step definition</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>GetSRMFile module: used to get a file given its SRM path. Useful to get a file that is not registered in the DIRAC FC.</li>
+<li>RegisterOutputData: set the metadata flags for production data</li>
+<li>SLICPandora Module</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id145">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>check that application software is not empty after untarring</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>allow arguments in ApplicationScript. To be used for pyroot scripts</li>
+<li>add IS_PROD to workflow parameters, for Production API only</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>handle production context properly: input and output file names depend on prod ID and job ID</li>
+<li>check that applications are actually there before running, and if not return an error.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r7p1">
+<h1>Version v1r7p1</h1>
+<div class="section" id="id146">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>add comments in created steering and xml TODO: idem for SLIC and LCIM FIXME: replace rstrip by replace in TARSoft.py</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>Marlin does not need to be specified the inputslcio list, as it is taken from inputdata if mokka step is not run before</li>
+<li>overload setBannedSites</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r7p0">
+<h1>Version v1r7p0</h1>
+<div class="section" id="id147">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Reshuffle CombinedSoftwareInstallation so that we use the SharedArea</li>
+<li>TARSoft: don't redownload the applications if they are already there. Had to do some tricks to manage slic folder name TODO: what about LCSIM</li>
+<li>in TARSoft, use ReplicaManager if url does not start with <a class="reference external" href="http://">http://</a></li>
+<li>better check in SQLWrapper that TMP dir is properly created. Also do proper remove of TMP dir, whatever happened to the socket.</li>
+<li>better handling of SQLWrapper errors</li>
+<li>Add modules needed by UserJobFinalization</li>
+<li>adapt ProdutionData to ILC needs, basically removing everything</li>
+<li>To be able to use InputData, need to import InputDataResolution.</li>
+<li>dirac-ilc-add-sofware.py: now add to TarBallURL location the tar ball</li>
+<li>update detectOS after discussion with Hubert, comment out slc4 binary support</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>In presubmissionchecks, check that outputpath, if used, does not contain /../, /./, or //, and does not end with /.</li>
+<li>All applications now call the UserJobFinalization module, and setOutputData is ILC specific.</li>
+<li>Check that outputdata and outputsandbox do not contain the same things and output data does not allow wildcard FIXME: checks where not done properly, all things were not checked FIXME: add TotalSteps in setROOT</li>
+<li>allow to use LFNs for steering and xml files for Mokka and Marlin</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>handle return value of SQLWrapper in MokkaWrapper</li>
+<li>check if input slcio is present for Marlin before running</li>
+<li>add UserJobFinalization module, taken from LHCb</li>
+<li>prepare for using InputData: find out where the files are on the fly and pass the full path to PrepareOptionsfiles</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r6p2">
+<h1>Version v1r6p2</h1>
+</div>
+<div class="section" id="version-v1r6p1">
+<h1>Version v1r6p1</h1>
+</div>
+<div class="section" id="version-v1r6p0">
+<h1>Version v1r6p0</h1>
+<div class="section" id="id148">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>dirac-ilc-add-software, utility to add software in CS</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id149">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>use elif statements</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>handle end of file reached in Mokka, avoid job declared as failed.</li>
+<li>in Marlin if nb of events to process is not specified, use -1 i.e. all events.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r5p0">
+<h1>Version v1r5p0</h1>
+<div class="section" id="id150">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>Take into account dependencies in installation phase.</li>
+<li>Set convention that folder containing application is same as tar ball name minus .tar.gz and .tgz</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Get base folder  name based on CS content, allows for multiple version of the same software to run FIXME: Running marlin: duplicated processors were not properly removed from MARLIN_DLL.</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r4p0">
+<h1>Version v1r4p0</h1>
+<div class="section" id="id151">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>add DiracILC with specification of preSubmissionChecks</li>
+</ul>
+</dd>
+<dt>DataManagementSystem</dt>
+<dd><ul class="first last simple">
+<li>add DataManagementSystem, for dirac-dms-gridify-castor-file script</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id152">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>add in PrepareOptionsFiles the relevant methods for SLIC and LCSIM FIXME: fixes to the methods for Mokka and Marlin.</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>add the relevant bits of code for the definition of SLIC and LCSIM jobs</li>
+<li>add the possibility to run on mac files in mokka</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>add relevant workflow for SLIC and LCSIM</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r3p0">
+<h1>Version v1r3p0</h1>
+<div class="section" id="id153">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>add ilc-install.sh script FIXME: Fix PrepareOptions such that the parsing of options is done properly</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>in ILCJob, possibility to run Mokka and Marlin in one job</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r2p0">
+<h1>Version v1r2p0</h1>
+<div class="section" id="id154">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>rewrite of SQLwrapper</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r1p0">
+<h1>Version v1r1p0</h1>
+<div class="section" id="id155">
+<h2>CHANGE</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>start working on InputDataResolution</li>
+</ul>
+</dd>
+<dt>ConfigurationSystem</dt>
+<dd><ul class="first last simple">
+<li>adapt UsersAndGroups to LCD : comment references to LFC</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>finish dev of LCDJob</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section" id="id156">
+<h2>BUGFIX</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>Fix several bugs</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section" id="version-v1r0p0">
+<h1>Version v1r0p0</h1>
+<p>NEW: first release</p>
+<div class="section" id="id157">
+<h2>NEW</h2>
+<blockquote>
+<dl class="docutils">
+<dt>Core</dt>
+<dd><ul class="first last simple">
+<li>first import</li>
+</ul>
+</dd>
+<dt>ConfigurationSystem</dt>
+<dd><ul class="first last simple">
+<li>first import</li>
+</ul>
+</dd>
+<dt>Interfaces</dt>
+<dd><ul class="first last simple">
+<li>first import</li>
+</ul>
+</dd>
+<dt>Workflow</dt>
+<dd><ul class="first last simple">
+<li>first import</li>
+</ul>
+</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+</div>
+</body>
+</html>
