@@ -1,3 +1,7 @@
+[v4r2p2]
+*ApplicationScript
+Bug in self.workflow_commons call
+
 [v4r2p1]
 *ApplicationScript
 Support for Parametric parameters
