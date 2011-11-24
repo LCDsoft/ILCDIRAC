@@ -24,8 +24,8 @@ class ApplicationScript(ModuleBase):
     self.arguments = ''
  
   def applicationSpecificInputs(self):
-    if self.worflow_commons.has_key('ParametricParameters'):
-      self.arguments = self.worflow_commons['ParametricParameters']
+    if self.workflow_commons.has_key('ParametricParameters'):
+      self.arguments = self.workflow_commons['ParametricParameters']
     return S_OK()
 
   def execute(self):
