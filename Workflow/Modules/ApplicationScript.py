@@ -22,6 +22,11 @@ class ApplicationScript(ModuleBase):
     self.log = gLogger.getSubLogger( "ScriptAnalysis" )
     self.script = None
     self.arguments = ''
+ 
+  def applicationSpecificInputs(self):
+    if self.worflow_commons.has_key('ParametricParameters'):
+      self.arguments = self.worflow_commons['ParametricParameters']
+    return S_OK()
 
   def execute(self):
     """ Run the application in a controlled environment
@@ -51,7 +56,7 @@ class ApplicationScript(ModuleBase):
       Cmd.append(self.arguments)
 
     command = ' '.join(Cmd)
-    print 'Command = %s' %(command)  #Really print here as this is useful to see
+    self.log.info( 'Command = %s' %(command))  #Really print here as this is useful to see
     
     com = []
     cmdSep = 'echo "%s"' %('='*50)
