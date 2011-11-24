@@ -1,3 +1,7 @@
+[v4r2p1]
+*ApplicationScript
+Support for Parametric parameters
+
 [v4r2p0]
 *ProcessProductionSystem
 Re import it in the release framework
