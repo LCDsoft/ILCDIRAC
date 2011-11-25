@@ -129,7 +129,10 @@ class DiracILC(Dirac):
         description = 'Input sandbox file list'
         job._addParameter( job.workflow, 'InputSandbox', 'JDL', fileList, description )
           
-      
+    res = self.checkInputSandboxLFNs(job)
+    if not res['OK']:
+      return res
+    
     sysconf = job.systemConfig
     apps = job.workflow.findParameter("SoftwarePackages")
     if apps:
