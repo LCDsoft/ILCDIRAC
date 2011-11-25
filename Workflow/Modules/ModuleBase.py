@@ -347,7 +347,7 @@ class ModuleBase(object):
       
     if self.workflow_commons.has_key('ParametricInputData'):
       self.InputData += ";"+self.workflow_commons['ParametricInputData']
-
+    self.InputData = self.InputData.rstrip(";")
     if self.InputData==";":
       self.InputData = ''
 

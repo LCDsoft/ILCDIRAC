@@ -22,10 +22,10 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
-from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
-from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
@@ -60,7 +60,8 @@ class MarlinAnalysis(ModuleBase):
       
     if self.workflow_commons.has_key('ParametricInputSandbox'):
       self.InputFile += ";" + self.workflow_commons['ParametricInputSandbox']
-            
+    self.InputFile = self.InputFile.rstrip(";")
+      
     if self.step_commons.has_key('inputXML'):
       self.SteeringFile=self.step_commons['inputXML']
       
