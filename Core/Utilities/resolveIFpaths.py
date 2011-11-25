@@ -12,10 +12,12 @@ def resolveIFpaths(inputfiles):
   listoffiles = []
   string = "Will look for:"
   for file in inputfiles:
+    if not len(file):
+      continue
     listoffiles.append(os.path.basename(file))
-    string += "%s\n"%file
+    string += "%s\n"%os.path.basename(file)
   gLogger.info(string)
-  
+
   listofpaths = []
   listofdirs = []
   for dir in os.listdir(os.getcwd()):
