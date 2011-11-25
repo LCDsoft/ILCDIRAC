@@ -1,3 +1,7 @@
+[v4r2p3]
+*MarlinApplication
+Bug fix in tretment of input files
+
 [v4r2p2]
 *ApplicationScript
 Bug in self.workflow_commons call
