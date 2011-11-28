@@ -16,7 +16,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 from DIRAC.TransformationSystem.Client.Transformation       import Transformation
 
 from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogClient
-from DIRAC.Core.Security.Misc                               import getProxyInfo
+from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
 from math                                                   import modf
 
