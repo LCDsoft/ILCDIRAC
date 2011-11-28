@@ -55,7 +55,7 @@ class MokkaAnalysis(ModuleBase):
         self.eventstring = ''
         self.processID = ''
         self.RandomSeed = 0
-
+        self.mcRunNumber = 0
 #############################################################################
     def applicationSpecificInputs(self):
       """ Resolve all input variables for the module here.
@@ -99,6 +99,7 @@ class MokkaAnalysis(ModuleBase):
       
       if self.workflow_commons.has_key("IS_PROD"):
         if self.workflow_commons["IS_PROD"]:
+          self.mcRunNumber = self.RandomSeed
           #self.OutputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
           #                                  int(self.workflow_commons["JOB_ID"]))
           if self.workflow_commons.has_key('ProductionOutputData'):
@@ -268,7 +269,9 @@ class MokkaAnalysis(ModuleBase):
         result = sqlwrapper.mysqlCleanUp()
         return S_ERROR("Could not find steering file")
       steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.InputFile,
-                                    self.macFile,self.NumberOfEvents,self.startFrom,self.RandomSeed,path_to_particle_tbl,
+                                    self.macFile,self.NumberOfEvents,self.startFrom,self.RandomSeed,
+                                    self.mcRunNumber,
+                                    path_to_particle_tbl,
                                     self.processID,
                                     self.debug,
                                     self.OutputFile)
