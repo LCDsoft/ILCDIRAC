@@ -1022,6 +1022,8 @@ class StdhepCut(Application):
 class Mokka(Application): 
   """ Call Mokka simulator (after Whizard, Pythia or StdHepCut)
   
+  To ensure reproductibility, the RandomSeed is used as mcRunNumber. By default it's the jobID.
+  
   Usage:
   
   >>> wh = Whizard()
@@ -1051,6 +1053,8 @@ class Mokka(Application):
      
   def setRandomSeed(self,seed):
     """ Optional: Define random seed to use. Default is JobID. 
+    
+    Also used as mcRunNumber.
     
     @param seed: Seed to use during integration and generation. Default is Job ID.
     @type seed: int
