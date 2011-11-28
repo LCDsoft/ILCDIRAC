@@ -1065,13 +1065,12 @@ class Mokka(Application):
       } )
 
     self.seed = seed    
+    
   def setmcRunNumber(self,runnumber):
-    """ Optional: Define random seed to use. Default is JobID. 
-    
-    Also used as mcRunNumber.
-    
-    @param seed: Seed to use during integration and generation. Default is Job ID.
-    @type seed: int
+    """ Optional: Define mcRunNumber to use. Default is 0. In Production jobs, is equal to RandomSeed
+        
+    @param runnumber: mcRunNumber parameter of Mokka
+    @type runnumber: int
     """
     self._checkArgs( {
         'runnumber' : types.IntType
