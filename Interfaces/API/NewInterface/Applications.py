@@ -1040,6 +1040,7 @@ class Mokka(Application):
     self.startFrom = 0
     self.macFile = ''
     self.seed = 0
+    self.runnumber = 0
     self.dbSlice = ''
     self.detectorModel = ''
     self.processID = ''
@@ -1064,6 +1065,19 @@ class Mokka(Application):
       } )
 
     self.seed = seed    
+  def setmcRunNumber(self,runnumber):
+    """ Optional: Define random seed to use. Default is JobID. 
+    
+    Also used as mcRunNumber.
+    
+    @param seed: Seed to use during integration and generation. Default is Job ID.
+    @type seed: int
+    """
+    self._checkArgs( {
+        'runnumber' : types.IntType
+      } )
+
+    self.runnumber = runnumber    
     
   def setDetectorModel(self,detectorModel):
     """ Define detector to use for Mokka simulation 
@@ -1173,6 +1187,7 @@ class Mokka(Application):
     
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("mcRunNumber",          0,    "int", "", "", False, False, "mcRunNumber parameter for Mokka"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
     md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, "From where Mokka start to read the input file"))
@@ -1185,6 +1200,7 @@ class Mokka(Application):
 
     moduleinstance.setValue("RandomSeed",      self.seed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
+    moduleinstance.setValue("mcRunNumber",     self.runnumber)
     moduleinstance.setValue("macFile",         self.macFile)
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("dbSlice",         self.dbSlice)
