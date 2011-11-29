@@ -1,3 +1,7 @@
+[v4r2p5]
+*DownloadInputData
+Release was buggy.
+
 [v4r2p4]
 *MokkaApplication
 mcRunNumber is equal to the RandomSeed only in the Production jobs, will be settable in next major version 
