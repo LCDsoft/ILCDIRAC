@@ -10,6 +10,7 @@ for SUSY speacil treatment of the pythia parameters have to be thought of: if th
 
 from xml.etree.ElementTree                                import ElementTree,fromstring
 from xml.etree.ElementTree                                import Element
+from ILCDIRAC.Core.Utilities.GeneratorModels              import GeneratorModels
 
 import types
 
@@ -17,7 +18,8 @@ from DIRAC import S_OK,S_ERROR
 
 
 class WhizardOptions(object):
-  def __init__(self):
+  def __init__(self,model="sm"):
+    modelparams = self.modelParams(model)
     self.whizardxml = fromstring("""<whizard>
 <process_input>
 <process_id type="string" value="">
@@ -435,92 +437,7 @@ class WhizardOptions(object):
 <!-- If this is false, an error signaled in the SLHA input file (in the SPINFO or DCINFO block) will cause WHIZARD to stop before calculating anything. If true, such errors will be displayed, but the run continues. -->
 </slha_ignore_errors>
 </diagnostics_input>
-<parameter_input>
-<GF type="float" value="1.16639E-5">
-<!-- Fermi constant -->
-</GF>
-<mZ type="float" value="91.1882">
-<!-- Z-boson mass -->
-</mZ>
-<mW type="float" value="80.419">
-<!-- W-boson mass -->
-</mW>
-<mH type="float" value="120">
-<!-- Higgs mass -->
-</mH>
-<alphas type="float" value="0.1178">
-<!-- Strong coupling constant alpha_s(MZ) -->
-</alphas>
-<me type="float" value="0.">
-<!-- electron mass -->
-</me>
-<mmu type="float" value="0.1066">
-<!-- muon mass -->
-</mmu>
-<mtau type="float" value="1.777">
-<!-- tau-lepton mass -->
-</mtau>
-<ms type="float" value="0.">
-<!-- s-quark mass -->
-</ms>
-<mc type="float" value="0.54">
-<!-- c-quark mass -->
-</mc>
-<mb type="float" value="2.9">
-<!-- b-quark mass -->
-</mb>
-<mtop type="float" value="174">
-<!-- t-quark mass -->
-</mtop>
-<wtop type="float" value="1.523">
-<!-- t-quark width -->
-</wtop>
-<wZ type="float" value="2.443">
-<!-- Z-boson width -->
-</wZ>
-<wW type="float" value="2.049">
-<!-- W-boson width -->
-</wW>
-<wH type="float" value="0.3605E-02">
-<!-- Higgs width -->
-</wH>
-<vckm11 type="float" value="0.97383">
-<!-- Vud -->
-</vckm11>
-<vckm12 type="float" value="0.2272">
-<!-- Vus -->
-</vckm12>
-<vckm13 type="float" value="0.00396">
-<!-- Vub -->
-</vckm13>
-<vckm21 type="float" value="-0.2271">
-<!-- Vcd -->
-</vckm21>
-<vckm22 type="float" value="0.97296">
-<!-- Vcs -->
-</vckm22>
-<vckm23 type="float" value="0.04221">
-<!-- Vcb -->
-</vckm23>
-<vckm31 type="float" value="0.00814">
-<!-- Vtd -->
-</vckm31>
-<vckm32 type="float" value="-0.04161">
-<!-- Vts -->
-</vckm32>
-<vckm33 type="float" value="0.99910">
-<!-- Vtb -->
-</vckm33>
-<khgaz type="float" value="1.000">
-<!-- anomaly Higgs coupling K factors -->
-</khgaz>
-<khgaga type="float" value="1.000">
-<!-- anomaly Higgs coupling K factors -->
-</khgaga>
-<khgg type="float" value="1.000">
-<!-- anomaly Higgs coupling K factors -->
-</khgg>
-</parameter_input>
+%s
 <beam_input_1>
 <energy type="float" value="0">
 <!-- If greater than the beam particle mass, this specifies the beam energy in the lab frame. Otherwise, the beam energy is set equal to the particle mass (fixed target). -->
@@ -664,7 +581,21 @@ class WhizardOptions(object):
 </EPA_x1>
 </beam_input_2>
 </whizard>
-""")
+"""%modelparams)
+    
+  def modelParams(self,model):
+    modelparams = []
+    genmodel = GeneratorModels()
+    res = genmodel.getParamsForWhizard(model)
+    if not res['OK']:
+      return ""
+    modelparams.append("<parameter_input>")
+
+    modelparams.append(res['Value'])
+    
+    modelparams.append("</parameter_input>")
+    
+    return "\n".join(modelparams)
     
   def toXML(self,fname='whizard.xml'):
     tree = ElementTree(self.whizardxml)
