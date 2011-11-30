@@ -19,6 +19,8 @@ from DIRAC import S_OK,S_ERROR
 
 class WhizardOptions(object):
   def __init__(self,model="sm"):
+    self.genmodel = GeneratorModels()
+    self.paramdict = {}
     modelparams = self.modelParams(model)
     self.whizardxml = fromstring("""<whizard>
 <process_input>
@@ -582,11 +584,22 @@ class WhizardOptions(object):
 </beam_input_2>
 </whizard>
 """%modelparams)
+    self.getInputFiles(model)
+  
+  def getInputFiles(self,model):
+    self.paramdict['process_input'] = {}
+    res = self.genmodel.getFile(model) 
+    if not res['OK']:
+      self.paramdict['process_input']['input_file'] = ''
+      self.paramdict['process_input']['input_slha_format'] = 'F'
+    else:
+      self.paramdict['process_input']['input_file'] = res['Value']
+      self.paramdict['process_input']['input_slha_format'] = 'T'
+    
     
   def modelParams(self,model):
     modelparams = []
-    genmodel = GeneratorModels()
-    res = genmodel.getParamsForWhizard(model)
+    res = self.genmodel.getParamsForWhizard(model)
     if not res['OK']:
       return ""
     modelparams.append("<parameter_input>")
@@ -622,10 +635,11 @@ class WhizardOptions(object):
     return S_OK(element.attrib['value'])  
 
   def changeAndReturn(self,paramdict):
-    res = self.checkFields(paramdict)
+    self.paramdict.update(paramdict)
+    res = self.checkFields(self.paramdict)
     if not res['OK']:
       return res
-    for key,val in paramdict.items():
+    for key,val in self.paramdict.items():
       for subkey in val.keys():
         subelement = self.whizardxml.find(key+"/"+subkey)
         subelement.attrib['value'] = val[subkey]

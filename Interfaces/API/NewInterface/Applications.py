@@ -447,7 +447,7 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
     self.datatype = 'gen'
-    self._wo = WhizardOptions()
+    
     
   def setEvtType(self,evttype):
     """ Define process. If the process given is not found, when calling job.append a full list is printed.
@@ -553,6 +553,8 @@ class Whizard(Application):
     self.jobindex = index
     
   def _checkConsistency(self):
+
+    self._wo = WhizardOptions(self.model)
 
     if not self.optionsdict:
       if not self.energy :
