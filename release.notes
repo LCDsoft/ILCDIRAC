@@ -1,4 +1,8 @@
 [v4r2p5]
+*WhizardAnalysis
+NEW: Handle for model parameters
+
+[v4r2p5]
 *DownloadInputData
 Release was buggy.
 
