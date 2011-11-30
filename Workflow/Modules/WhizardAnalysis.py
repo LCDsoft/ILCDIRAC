@@ -56,7 +56,7 @@ class WhizardAnalysis(ModuleBase):
     self.genmodel = GeneratorModels()
     self.eventstring = ''
     self.steeringparameters = ''
-    self.options = WhizardOptions()
+    self.options = None
     self.optionsdict = {}
     self.OptionsDictStr = ''
     
@@ -291,7 +291,8 @@ class WhizardAnalysis(ModuleBase):
       outputfilename = "%s_%s"%(outputfilename,self.jobindex)
       
     if self.optionsdict:
-      print self.optionsdict
+      self.log.info("Using: %s"%self.optionsdict)
+      self.options = WhizardOptions(self.Model)
       res = self.options.changeAndReturn(self.optionsdict)
       if not res['OK']:
         return res
