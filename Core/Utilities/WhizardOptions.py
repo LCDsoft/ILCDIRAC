@@ -587,14 +587,16 @@ class WhizardOptions(object):
     self.getInputFiles(model)
   
   def getInputFiles(self,model):
-    self.paramdict['process_input'] = {}
-    res = self.genmodel.getFile(model) 
-    if not res['OK']:
-      self.paramdict['process_input']['input_file'] = ''
-      self.paramdict['process_input']['input_slha_format'] = 'F'
-    else:
-      self.paramdict['process_input']['input_file'] = res['Value']
-      self.paramdict['process_input']['input_slha_format'] = 'T'
+    if not self.paramdict.has_key('process_input'):
+      self.paramdict['process_input'] = {}
+    if not self.paramdict['process_input'].has_key('input_file'):
+      res = self.genmodel.getFile(model) 
+      if not res['OK']:
+        self.paramdict['process_input']['input_file'] = ''
+        self.paramdict['process_input']['input_slha_format'] = 'F'
+      else:
+        self.paramdict['process_input']['input_file'] = res['Value']
+        self.paramdict['process_input']['input_slha_format'] = 'T'
     
     
   def modelParams(self,model):
