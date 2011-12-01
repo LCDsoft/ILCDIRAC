@@ -1,3 +1,7 @@
+[v4r2p7]
+*WhizardOptions
+NEW: Make sure not to ovewrite the user's input file
+
 [v4r2p5]
 *WhizardAnalysis
 NEW: Handle for model parameters
