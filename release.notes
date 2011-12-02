@@ -1,3 +1,7 @@
+[v5r0p0]
+* All
+Move to DIRAC v6r0
+
 [v4r2p7]
 *WhizardOptions
 NEW: Make sure not to ovewrite the user's input file
