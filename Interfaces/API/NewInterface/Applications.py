@@ -569,6 +569,7 @@ class Whizard(Application):
       res = self._wo.checkFields(self.optionsdict)
       if not res['OK']:
         return res
+      self._wo.changeAndReturn(self.optionsdict)
       res = self._wo.getValue("process_input/process_id")
       if not len(res['Value']):
         if self.evttype:
