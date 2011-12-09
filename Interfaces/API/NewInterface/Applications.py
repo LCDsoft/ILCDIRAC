@@ -526,7 +526,7 @@ class Whizard(Application):
       } )
 
     self.optionsdict = dict
-    self._wo.changeAndReturn(dict)
+    #self._wo.changeAndReturn(dict)
   
   def setModel(self,model):
     """ Optional: Define Model
