@@ -160,7 +160,9 @@ class SLICPandoraAnalysis (ModuleBase):
     
     if not os.path.exists(os.path.basename(self.pandorasettings)):
       self.pandorasettings  = "PandoraSettings.xml"
-      if os.path.exists(os.path.join(mySoftwareRoot,slicPandoraDir,'Settings',self.pandorasettings)):
+      if os.path.exists("./Settings/%s"%self.pandorasettings):
+        self.pandorasettings = "./Settings/%s"%self.pandorasettings
+      elif os.path.exists(os.path.join(mySoftwareRoot,slicPandoraDir,'Settings',self.pandorasettings)):
         try:
           shutil.copy(os.path.join(mySoftwareRoot,slicPandoraDir,'Settings',self.pandorasettings),os.path.join(os.getcwd(),self.pandorasettings))
         except Exception,x:
