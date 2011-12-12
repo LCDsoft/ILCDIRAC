@@ -230,6 +230,7 @@ class SLICAnalysis(ModuleBase):
     script.write('declare -x G4NEUTRONHPDATA=$(ls -d $GEANT4_DATA_ROOT/G4NDL*)\n')
     script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/%s\n'%(mySoftwareRoot,os.environ['LCDD_VERSION']))
     script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n'%(mySoftwareRoot,os.environ['SLIC_VERSION']))
+    script.write('declare -x MALLOC_CHECK_=0\n')
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
