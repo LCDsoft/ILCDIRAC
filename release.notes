@@ -1,3 +1,7 @@
+[v5r0p3
+* __init__
+Wrong patch number, now OK
+
 [v5r0p2]
 * SLICAnalysis
 Added lib to LD_LIBRARY_PATH 
