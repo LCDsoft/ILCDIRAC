@@ -231,7 +231,8 @@ class SLICAnalysis(ModuleBase):
     script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/%s\n'%(mySoftwareRoot,os.environ['LCDD_VERSION']))
     script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n'%(mySoftwareRoot,os.environ['SLIC_VERSION']))
     script.write('declare -x MALLOC_CHECK_=0\n')
-    script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH'%(mySoftwareRoot))
+    if os.path.exists("%s/lib"%(mySoftwareRoot)):
+      script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH'%(mySoftwareRoot))
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
