@@ -217,11 +217,12 @@ class SLICAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n'%(mySoftwareRoot,os.environ['XERCES_VERSION']))
-    if new_ld_lib_path:
-      script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n'%new_ld_lib_path)
-    else:
-      script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR\n')
+    if os.environ['XERCES_VERSION']:
+      script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n'%(mySoftwareRoot,os.environ['XERCES_VERSION']))
+      if new_ld_lib_path:
+        script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n'%new_ld_lib_path)
+      else:
+        script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR\n')
       
     script.write('declare -x GEANT4_DATA_ROOT=%s/packages/geant4/data\n'%mySoftwareRoot)
     script.write('declare -x G4LEVELGAMMADATA=$(ls -d $GEANT4_DATA_ROOT/PhotonEvaporation*)\n')
