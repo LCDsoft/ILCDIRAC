@@ -1,4 +1,8 @@
-[v5r0p3
+[v5r0p4]
+* TARSoft, SLICAnalyis
+Take care that xerces directory is in the slic tar ball before doing stuff with it
+
+[v5r0p3]
 * __init__
 Wrong patch number, now OK
 
