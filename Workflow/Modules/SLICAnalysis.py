@@ -140,9 +140,9 @@ class SLICAnalysis(ModuleBase):
     if not os.environ.has_key('LCDD_VERSION'):
       self.log.error('LCDD_VERSION not found, probably the software installation failed')
       return S_ERROR('LCDD_VERSION not found, probably the software installation failed')
-    if not os.environ.has_key('XERCES_VERSION'):
-      self.log.error('XERCES_VERSION not found, probably the software installation failed')
-      return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
+    #if not os.environ.has_key('XERCES_VERSION'):
+    #  self.log.error('XERCES_VERSION not found, probably the software installation failed')
+    #  return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
 
 
     slicDir = os.environ['SLIC_DIR']
@@ -217,7 +217,7 @@ class SLICAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    if os.environ['XERCES_VERSION']:
+    if os.environ.has_key('XERCES_VERSION'):
       script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n'%(mySoftwareRoot,os.environ['XERCES_VERSION']))
       if new_ld_lib_path:
         script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n'%new_ld_lib_path)
