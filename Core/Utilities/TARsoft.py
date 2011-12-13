@@ -134,7 +134,8 @@ def install(app,config,area):
     try:
       slicv = os.listdir(os.path.join(basefolder,'packages/slic/'))[0]
       lcddv = os.listdir(os.path.join(basefolder,'packages/lcdd/'))[0]
-      xercesv =os.listdir(os.path.join(basefolder,'packages/xerces/'))[0]
+      if os.path.exists(os.path.join(basefolder,'packages/xerces/')):
+        xercesv =os.listdir(os.path.join(basefolder,'packages/xerces/'))[0]
     except:
       os.chdir(curdir)
       return DIRAC.S_ERROR("Could not resolve slic env variables, folder content does not match usual pattern")
