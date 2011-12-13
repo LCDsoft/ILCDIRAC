@@ -18,7 +18,7 @@ class DummyModule(ModuleBase):
   """
   def __init__(self):
     ModuleBase.__init__(self)
-    self.resutl = S_ERROR()
+    self.result = S_ERROR()
     self.log = gLogger.getSubLogger( "DummyModuleChecking" )
     
   def applicationSpecificInputs(self):
