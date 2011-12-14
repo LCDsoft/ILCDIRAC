@@ -30,9 +30,9 @@ if not os.path.exists(tarballloc):
   sys.exit(2)
 
 from DIRAC.DataMAnagementSystem.Client.ReplicaManager import ReplicaManager
-from DIRAC.FrameworkSystem.Client.NotificationClient     import NotificationClient
-from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
-
+from DIRAC.FrameworkSystem.Client.NotificationClient  import NotificationClient
+from DIRAC.Interfaces.API.DiracAdmin                  import DiracAdmin
+from DIRAC.Core.Security.Misc                         import getProxyInfo
 from DIRAC import gConfig,S_OK,S_ERROR
 import DIRAC
 
@@ -54,30 +54,29 @@ def upload(path,appTar):
     return S_ERROR()
   else:
     lfnpath = "%s%s"%(path,appTar)
-    res = rm.putAndRegister(lfnpath,appTar,"IN2P3-SRM")
+    res = rm.putAndRegister(lfnpath,appTar,"CERN-SRM")
     if not res['OK']:
       return res
-    res = request.addSubRequest({'Attributes':{'Operation':'replicateAndRegister',
-                                               'TargetSE':'CERN-SRM','ExecutionOrder':0}},
-                                 'transfer')
-    #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
+    res = rm.replicateAndRegister(lfnpath,"RAL-SRM")
     if not res['OK']:
-      return res
-    index = result['Value']
-    fileDict = {'LFN':lfnpath,'Status':'Waiting'}
-    request.setSubRequestFiles(index,'transfer',[fileDict])
-    requestName = appTar.replace('.tgz','')
-    request.setRequestAttributes({'RequestName':requestName})
-    requestxml = request.toXML()['Value']
-    res = requestClient.setRequest(requestName,requestxml)
+      print "Replication to RAL-SRM failed"
+    res = rm.replicateAndRegister(lfnpath,"IMPERIAL-SRM")
     if not res['OK']:
-      print 'Could not set replication request %s'%res['Message']
+      print "Replication to IMPERIAL-SRM failed"
+    res = rm.replicateAndRegister(lfnpath,"FNAL-SRM")
+    if not res['OK']:
+      print "Replication to FNAL-SRM failed"
+    res = rm.replicateAndRegister(lfnpath,"IN2P3-SRM")
+    if not res['OK']:
+      print "Replication to IN2P3-SRM failed"
     return S_OK('Application uploaded')
   return S_OK()
 
 
 
 diracAdmin = DiracAdmin()
+
+email = getProxyInfo()
 
 
 modifiedCS = False
