@@ -71,7 +71,9 @@ class CombinedSoftwareInstallation(object):
     self.ceConfigs = natOS.CMTSupportedConfig()
 
     self.sharedArea = SharedArea()
+    DIRAC.gLogger.info("SharedArea is %s"%self.sharedArea)
     self.localArea  = LocalArea()
+    DIRAC.gLogger.info("LocalArea is %s"%self.localArea)
     
   def execute(self):
     """ Main method of the class executed by DIRAC jobAgent
@@ -111,6 +113,7 @@ class CombinedSoftwareInstallation(object):
       if CreateSharedArea():
         self.sharedArea = SharedArea()
         areas.append(self.sharedArea)
+        DIRAC.gLogger.info("Will attempt to install in shared area")
     else:
       areas.append(self.sharedArea)
     areas.append(self.localArea)       
@@ -172,7 +175,7 @@ def SharedArea():
     sharedArea = DIRAC.gConfig.getValue('/LocalSite/SharedArea')
     DIRAC.gLogger.debug( 'Using CE SharedArea at "%s"' % sharedArea )
 
-  if sharedArea:
+  if len(sharedArea):
     # if defined, check that it really exists
     if not os.path.isdir( sharedArea ):
       DIRAC.gLogger.error( 'Missing Shared Area Directory:', sharedArea )
