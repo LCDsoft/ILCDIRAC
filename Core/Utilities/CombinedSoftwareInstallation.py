@@ -112,8 +112,9 @@ class CombinedSoftwareInstallation(object):
     if not self.sharedArea:
       if CreateSharedArea():
         self.sharedArea = SharedArea()
-        areas.append(self.sharedArea)
-        DIRAC.gLogger.info("Will attempt to install in shared area")
+        if self.sharedArea:
+          areas.append(self.sharedArea)
+          DIRAC.gLogger.info("Will attempt to install in shared area")
     else:
       areas.append(self.sharedArea)
     areas.append(self.localArea)       
