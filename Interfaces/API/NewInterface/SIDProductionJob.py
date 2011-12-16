@@ -4,12 +4,74 @@ class SIDProductionJob(ProductionJob):
   def __init__(self):
     ProductionJob.__init__(self)
     self.machine = 'ilc'
+    self.basepath = '/ilc/prod/ilc/mc-dbd/sid'
     
   def setInputDataQuery(self,metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
     """
-    res = self.fc.findFilesByMetadata(metadata)
+    metakeys = metadata.keys()
+    client = FileCatalogClient()
+    res = client.getMetadataFields()
+    if not res['OK']:
+      print "Could not contact File Catalog"
+      self.explainInputDataQuery()
+      return S_ERROR()
+    metaFCkeys = res['Value'].keys()
+    for key in metakeys:
+      for meta in metaFCkeys:
+        if meta != key:
+          if meta.lower() == key.lower():
+            return self._reportError("Key syntax error %s, should be %s" % (key, meta))
+      if not metaFCkeys.count(key):
+        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
+    if not   metadata.has_key("ProdID"):
+      return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
+    
+    res = client.findFilesByMetadata(metadata)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for available files")
+    elif len(res['Value']) < 1:
+      return self._reportError('Could not find any files corresponding to the query issued')
+    directory = os.path.dirname(res['Value'][0])
+    res = client.getDirectoryMetadata(directory)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for directory metadata")
+    
+    compatmeta = res['Value']
+    compatmeta.update(metadata)
+    if compatmeta.has_key('EvtType'):
+      if type(compatmeta['EvtType']) in types.StringTypes:
+        self.evttype  = compatmeta['EvtType']
+      if type(compatmeta['EvtType']) == type([]):
+        self.evttype = compatmeta['EvtType'][0]
+    else:
+      return self._reportError("EvtType is not in the metadata, it has to be!")
+    if compatmeta.has_key('NumberOfEvents'):
+      if type(compatmeta['NumberOfEvents']) == type([]):
+        self.nbevts = int(compatmeta['NumberOfEvents'][0])
+      else:
+        self.nbevts = int(compatmeta['NumberOfEvents'])
 
+
+    self.basename = "" #TO BE DEFINED
+    
+    if compatmeta.has_key("Energy"):
+      if type(compatmeta["Energy"]) in types.StringTypes:
+        self.energycat = compatmeta["Energy"]
+      if type(compatmeta["Energy"]) == type([]):
+        self.energycat = compatmeta["Energy"][0]
+        
+    if self.energycat.count("tev"):
+      self.energy = 1000.*int(self.energycat.split("tev")[0])
+    elif self.energycat.count("gev"):
+      self.energy = 1.*int(self.energycat.split("gev")[0])
+    else:
+      self.energy = 1.*int(self.energycat)  
+    
+    self.inputBKSelection = metadata
+    self.inputdataquery = True
+    return S_OK()    
+    
   def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
     """ Add finalization step
 
@@ -148,27 +210,19 @@ class SIDProductionJob(ProductionJob):
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
-      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
+      path = self.basepath+energypath+self.evttype+"/REC/"
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
-      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"
+      path = self.basepath+energypath+self.evttype+"/DST/"
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
-      path = self.basepath+self.machine+energypath+self.evttype
-      if hasattr(application,"detectortype"):
-        if application.detectortype:
-          path += application.detectortype+"/"
-        elif self.detector:
-          path += self.detector+"/"
+      path = self.basepath+energypath+self.evttype
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
       self.log.info("Will store the files under %s"%path)
-      extension = 'stdhep'
-      if application.datatype=='SIM' or application.datatype=='REC':
-        extension = 'slcio'
-      fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
+      fname = self.basename+"_%s"%(application.datatype.lower())+".slcio"
       application.setOutputFile(fname,path)  
       
     self.basepath = path
