@@ -59,6 +59,9 @@ class ProductionJob(Job):
 
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge']
     self.prodparameters = {}
+    self.prodparameters['NbInputFiles'] = 1
+    self.prodparameters['nbevts']  = 0 
+    self.prodparameters["SWPackages"] = ''
     self._addParameter(self.workflow, "IS_PROD", 'JDL', True, "This job is a production job")
     if not script:
       self.__setDefaults()
@@ -245,6 +248,10 @@ class ProductionJob(Job):
         self.detector = compatmeta["DetectorType"][0]    
     self.inputBKSelection = metadata
     self.inputdataquery = True
+    
+    self.prodparameters['nbevts'] = self.nbevts 
+    self.prodparameters["FCInputQuery"] = self.inputBKSelection
+
     return S_OK()
 
   def setMachine(self,machine):
@@ -412,10 +419,59 @@ class ProductionJob(Job):
       return res
     return S_OK()
   
-  def finalizeProd(self):
+  def finalizeProd(self,prodid=None,prodinfo=None):
     """ Finalize definition: submit to Transformation service
     """
+    currtrans = 0
+    if self.currtrans:
+      currtrans = self.currtrans.getTransformationID()['Value']
+    if prodid:
+      currtrans = prodid
+    if not currtrans:
+      print "Not transformation defined earlier"
+      return S_ERROR("No transformation defined")
+    if prodinfo:
+      self.prodparameters = prodinfo
+      
+    info = []
+    info.append('%s Production %s has following parameters:\n' %(self.prodparameters['JobType'],currtrans))
+    if self.prodparameters.has_key("Process"):
+      info.append('- Process %s'%self.prodparameters['Process'])
+    if self.prodparameters.has_key("Energy"):
+      info.append('- Energy %s GeV'%self.prodparameters["Energy"])
+    info.append("- %s events per job"%(self.prodparameters['nbevts']*self.prodparameters['NbInputFiles']))
+    if self.prodparameters.has_key('lumi'):
+      if self.prodparameters['lumi']:
+        info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']*self.prodparameters['NbInputFiles']))
+    if self.prodparameters.has_key('FCInputQuery'):
+      info.append('Using InputDataQuery :')
+      for n,v in self.prodparameters['FCInputQuery'].items():
+        info.append('    %s = %s' %(n,v))
+        
+    info.append('- SW packages %s'%self.prodparameters["SWPackages"])
+
+    infoString = string.join(info,'\n')
+    self.prodparameters['DetailedInfo']=infoString
+    for n,v in self.prodparameters.items():
+      result = self._setProdParameter(currtrans,n,v)
+      if not result['OK']:
+        self.log.error(result['Message'])
+
     return S_OK()  
+  #############################################################################
+  def _setProdParameter(self,prodID,pname,pvalue):
+    """Set a production parameter.
+    """
+    if type(pvalue)==type([]):
+      pvalue=string.join(pvalue,'\n')
+
+    prodClient = RPCClient('Transformation/TransformationManager',timeout=120)
+    if type(pvalue)==type(2):
+      pvalue = str(pvalue)
+    result = prodClient.setTransformationParameter(int(prodID),str(pname),str(pvalue))
+    if not result['OK']:
+      self.log.error('Problem setting parameter %s for production %s and value:\n%s' %(prodID,pname,pvalue))
+    return result
   
   def _jobSpecificParams(self,application):
     """ For production additional checks are needed: ask the user
@@ -457,15 +513,22 @@ class ProductionJob(Job):
         return res
     if self.energy:
       self._setParameter( "Energy", "float", self.energy, "Energy used")      
+      self.prodparameters["Energy"] = self.energy
       
     if not self.evttype:
       if hasattr(application,'evttype'):
         self.evttype = application.evttype
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
+      self.prodparameters['Process'] = self.evttype
       
     if not self.outputStorage:
       return S_ERROR("You need to specify the Output storage element")
+    
+    if self.prodparameters["SWPackages"]:
+      self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.version)
+    else :
+      self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
     
     res = application.setOutputSE(self.outputStorage)
     if not res['OK']:
