@@ -5,6 +5,7 @@
 Created on Sep 8, 2010
 
 @author: sposs
+@author: jmccormi
 '''
 __RCSID__ = "$Id: RegisterOutputData.py 44185 2011-10-24 08:17:07Z sposs $"
 
