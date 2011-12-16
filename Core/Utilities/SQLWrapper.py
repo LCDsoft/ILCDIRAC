@@ -137,7 +137,7 @@ class SQLWrapper:
     #               ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~
     #                                                                  /.-~
     ######
-    #### Hell is the maintenance of that crap here below !  
+    #### Hell is the maintenance of the crap below!  
     os.chdir(self.softDir)
     DIRAC.gLogger.verbose('setup local mokka database')
     removeLibc(self.softDir+"/mysql4grid/lib64/mysql")
