@@ -62,11 +62,11 @@ class SIDProductionJob(ProductionJob):
         self.energycat = compatmeta["Energy"][0]
         
     if self.energycat.count("tev"):
-      self.energy = 1000.*int(self.energycat.split("tev")[0])
+      self.energy = 1000.*Decimal(self.energycat.split("tev")[0])
     elif self.energycat.count("gev"):
-      self.energy = 1.*int(self.energycat.split("gev")[0])
+      self.energy = 1.*Decimal(self.energycat.split("gev")[0])
     else:
-      self.energy = 1.*int(self.energycat)  
+      self.energy = 1.*Decimal(self.energycat)  
     
     self.inputBKSelection = metadata
     self.inputdataquery = True
@@ -164,15 +164,15 @@ class SIDProductionJob(ProductionJob):
     
     if not self.energy:
       if application.energy:
-        self.energy = application.energy
+        self.energy = Decimal(str(application.energy))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
     elif not application.energy:
-      res = application.setEnergy(self.energy)
+      res = application.setEnergy(float(self.energy))
       if not res['OK']:
         return res
     if self.energy:
-      self._setParameter( "Energy", "float", self.energy, "Energy used")      
+      self._setParameter( "Energy", "float", float(self.energy), "Energy used")      
       
     if not self.evttype:
       if hasattr(application,'evttype'):
@@ -190,14 +190,11 @@ class SIDProductionJob(ProductionJob):
     
     ###Below modify according to SID conventions
     energypath = ''
-    fracappen = modf(self.energy/1000.)
+    fracappen = modf(float(self.energy)/1000.)
     if fracappen[1]>0:
-      energypath = "%s"%int(fracappen[1])
-      if fracappen[0]>0:
-        energypath =  "%s"%(self.energy/1000.)
-      energypath += 'tev/'  
+      energypath = "%stev/"%(self.energy/Decimal("1000."))
     else:
-      energypath =  "%sgev/"%(self.energy/1000.)
+      energypath =  "%sgev/"%(self.energy/Decimal("1000."))
 
     if not self.basename:
       self.basename = self.evttype
