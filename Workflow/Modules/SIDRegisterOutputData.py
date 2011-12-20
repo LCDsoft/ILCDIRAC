@@ -71,6 +71,7 @@ class SIDRegisterOutputData(ModuleBase):
     for files in self.prodOutputLFNs:
       elements = files.split("/")
       metaprodid = {}
+      metaforfiles = {}
       meta = {}  
       metaen={}
       metaen['Energy']=elements[5]
@@ -109,20 +110,21 @@ class SIDRegisterOutputData(ModuleBase):
           return res
         
       if self.nbofevents:
-        metaprodid['NumberOfEvents']=self.nbofevents
+        metaforfiles['NumberOfEvents']=self.nbofevents
         if self.enable:
-          res = self.fc.setMetadata(prodid,metaprodid)
+          res = self.fc.setMetadata(files,metaforfiles)
           if not res['OK']:
-            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,prodid))
+            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,files))
             return res
       if self.luminosity:
-        metaprodid['Luminosity']=self.luminosity
+        metaforfiles['Luminosity']=self.luminosity
         if self.enable:
-          res = self.fc.setMetadata(prodid,metaprodid)
+          res = self.fc.setMetadata(files,metaforfiles)
           if not res['OK']:
-            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,prodid))
+            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,files))
             return res
       meta.update(metaprodid)
+      meta.update(metaforfiles)
       self.log.info("Registered %s with tags %s"%(files,meta))
       
       ###Now, set the ancestors
