@@ -356,7 +356,7 @@ class WhizardAnalysis(ModuleBase):
     comm = 'sh -c "./%s"' %(scriptName)    
     self.setApplicationStatus('Whizard %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
     self.stdError = ''
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=209715200)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
