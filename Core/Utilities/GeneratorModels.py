@@ -119,7 +119,7 @@ class GeneratorModels():
 <!-- anomaly Higgs coupling K factors -->
 </khgg>
 """
-    elif model=="":
+    else:
       params = """
       """
     return S_OK(params)
