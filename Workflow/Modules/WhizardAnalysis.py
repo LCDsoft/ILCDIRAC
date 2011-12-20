@@ -358,6 +358,8 @@ class WhizardAnalysis(ModuleBase):
     self.stdError = ''
     self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=209715200)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
+    if not self.result['OK']:
+      self.log.error("Failed with error %s"%self.result['Message'])
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
