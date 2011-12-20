@@ -70,6 +70,7 @@ class RegisterOutputData(ModuleBase):
     for files in self.prodOutputLFNs:
       elements = files.split("/")
       metaprodid = {}
+      metafiles = {}
       meta = {}  
       metamach = {}
       metamach['Machine']=elements[3]
@@ -144,20 +145,21 @@ class RegisterOutputData(ModuleBase):
             return res
         
       if self.nbofevents:
-        metaprodid['NumberOfEvents']=self.nbofevents
+        metafiles['NumberOfEvents']=self.nbofevents
         if self.enable:
-          res = self.fc.setMetadata(prodid,metaprodid)
+          res = self.fc.setMetadata(files,metafiles)
           if not res['OK']:
-            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,prodid))
+            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,files))
             return res
       if self.luminosity:
-        metaprodid['Luminosity']=self.luminosity
+        metafiles['Luminosity']=self.luminosity
         if self.enable:
-          res = self.fc.setMetadata(prodid,metaprodid)
+          res = self.fc.setMetadata(files,metafiles)
           if not res['OK']:
-            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,prodid))
+            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,files))
             return res
       meta.update(metaprodid)
+      meta.update(metafiles)
       self.log.info("Registered %s with tags %s"%(files,meta))
       
       ###Now, set the ancestors
