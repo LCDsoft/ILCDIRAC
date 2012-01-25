@@ -40,7 +40,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from ILCDIRAC.Core.Utilities.ProcessList              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
-from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions
+from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, getDict
 
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
@@ -447,7 +447,11 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
     self.datatype = 'gen'
-    
+  
+  def getPDict(self):
+    """ Provide predefined parameter dictionary
+    """
+    return getDict()
     
   def setEvtType(self,evttype):
     """ Define process. If the process given is not found, when calling job.append a full list is printed.

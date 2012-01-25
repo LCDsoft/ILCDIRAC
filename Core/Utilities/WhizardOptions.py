@@ -16,6 +16,16 @@ import types
 
 from DIRAC import S_OK,S_ERROR
 
+def getDict():
+  pdict = {}
+  pdict['process_input'] = {}
+  pdict['integration_input'] = {}
+  pdict['simulation_input']= {}
+  pdict['diagnostics_input'] = {}
+  pdict['beam_input_1'] = {}
+  pdict['beam_input_2'] = {}
+
+  return S_OK(pdict)
 
 class WhizardOptions(object):
   def __init__(self,model="sm"):
