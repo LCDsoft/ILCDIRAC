@@ -1567,7 +1567,8 @@ class Marlin(Application):
     self.outputRecPath = ''
     self.outputRecFile = ''
     self.inputGearFile = ''
-    self.processorlist = []
+    self.processorlisttouse = []
+    self.processorlisttoexclude = []
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MarlinAnalysis'
@@ -1630,7 +1631,7 @@ class Marlin(Application):
   def setProcessorsToUse(self,list):
     """ Define processor list to use
     
-    Overwrite the default list (full reco). Useful for users wuilling to do dedicated analysis (TPC, Vertex digi, etc.)
+    Overwrite the default list (full reco). Useful for users willing to do dedicated analysis (TPC, Vertex digi, etc.)
     
     >>> ma.setProcessorsToUse(['libMarlinTPC.so','libMarlinReco.so','libOverlay.so','libMarlinTrkProcessors.so'])
     
@@ -1640,7 +1641,21 @@ class Marlin(Application):
     self._checkArgs( {
         'list' : types.ListType
       } )
-    self.processorlist = list
+    self.processorlisttouse= list
+  def setProcessorsToExclude(self,list):
+    """ Define processor list to exclude
+    
+    Overwrite the default list (full reco). Useful for users willing to do dedicated analysis (TPC, Vertex digi, etc.)
+    
+    >>> ma.setProcessorsToExclude(['libLCFIVertex.so'])
+    
+    @param list: list of processors to exclude
+    @type list: list
+    """
+    self._checkArgs( {
+        'list' : types.ListType
+      } )
+    self.processorlisttoexclude = list
       
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1700,15 +1715,17 @@ class Marlin(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("inputGEAR",     '', "string", "", "", False, False, "Input GEAR file"))
-    md1.addParameter(Parameter("ProcessorList",     [], "list", "", "", False, False, "List of processors"))
-    md1.addParameter(Parameter("debug",      False,   "bool", "", "", False, False, "debug mode"))
+    md1.addParameter(Parameter("inputGEAR",              '', "string", "", "", False, False, "Input GEAR file"))
+    md1.addParameter(Parameter("ProcessorListToUse",     [], "list", "", "", False, False, "List of processors to use"))
+    md1.addParameter(Parameter("ProcessorListToExclude", [], "list", "", "", False, False, "List of processors to exclude"))
+    md1.addParameter(Parameter("debug",               False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
     moduleinstance.setValue("inputGEAR",         self.inputGearFile)
-    moduleinstance.setValue('ProcessorList',     self.processorlist)
+    moduleinstance.setValue('ProcessorListToUse',     self.processorlisttouse)
+    moduleinstance.setValue('ProcessorListToExclude',     self.processorlisttoexclude)
     moduleinstance.setValue("debug",             self.debug)
 
     
