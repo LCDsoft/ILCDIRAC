@@ -1563,6 +1563,7 @@ class Marlin(Application):
     self.outputRecPath = ''
     self.outputRecFile = ''
     self.inputGearFile = ''
+    self.processorlist = []
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MarlinAnalysis'
@@ -1621,6 +1622,12 @@ class Marlin(Application):
     self.prodparameters[self.outputDstFile]['datatype']= 'DST'
     if path:
       self.outputDstPath = path    
+  
+  def setProcessorsToUse(self,list):
+    self._checkArgs( {
+        'list' : types.ListType
+      } )
+    self.processorlist = list
       
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1681,12 +1688,14 @@ class Marlin(Application):
     
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("inputGEAR",     '', "string", "", "", False, False, "Input GEAR file"))
+    md1.addParameter(Parameter("ProcessorList",     [], "list", "", "", False, False, "List of processors"))
     md1.addParameter(Parameter("debug",      False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
 
     moduleinstance.setValue("inputGEAR",         self.inputGearFile)
+    moduleinstance.setValue('ProcessorList',     self.processorlist)
     moduleinstance.setValue("debug",             self.debug)
 
     
