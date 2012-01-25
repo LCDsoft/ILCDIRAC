@@ -49,7 +49,8 @@ class MarlinAnalysis(ModuleBase):
     self.NumberOfEvents = 0
     self.eventstring = ''
     self.envdict = {}
-    self.ProcessorList = []
+    self.ProcessorListToUse = []
+    self.ProcessorListToExclude = []
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -265,14 +266,24 @@ class MarlinAnalysis(ModuleBase):
     finallist = []
     items = marlindll.split(":")
     #Care for user defined list of processors, useful when someone does not want to run the full reco
-    if len(self.ProcessorList):
-      for processor in self.ProcessorList:
+    if len(self.ProcessorListToUse):
+      for processor in self.ProcessorListToUse:
         for item in items:
           if item.count(processor):
             finallist.append(item)
     else:
       finallist = items
+    items = finallist
+    #Care for user defined excluded list of processors, useful when someone does not want to run the full reco
+    if len(self.ProcessorListToExclude):
+      for item in items:
+        for processor in self.ProcessorListToExclude:
+          if item.count(processor):
+            finallist.remove(item)
+    else:
+      finallist = items
     marlindll = string.join(finallist,":")
+    
     return S_OK(marlindll)
 
   def runMarlin(self,inputxml,envdict):
