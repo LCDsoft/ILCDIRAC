@@ -49,6 +49,7 @@ class MarlinAnalysis(ModuleBase):
     self.NumberOfEvents = 0
     self.eventstring = ''
     self.envdict = {}
+    self.ProcessorList = []
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -260,7 +261,17 @@ class MarlinAnalysis(ModuleBase):
         except:
           pass
       
-    marlindll = "%s%s"%(string.join(temp,":"),userlib)    
+    marlindll = "%s%s"%(string.join(temp,":"),userlib)
+    finallist = []
+    items = marlindll.split(":")
+    if len(self.ProcessorList):
+      for processor in self.ProcessorList:
+        for item in items:
+          if item.count(processor):
+            finallist.append(item)
+    else:
+      finallist = items
+    marlindll = string.join(finallist,":")
     return S_OK(marlindll)
 
   def runMarlin(self,inputxml,envdict):
