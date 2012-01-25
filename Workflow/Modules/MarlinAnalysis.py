@@ -264,6 +264,7 @@ class MarlinAnalysis(ModuleBase):
     marlindll = "%s%s"%(string.join(temp,":"),userlib)
     finallist = []
     items = marlindll.split(":")
+    #Care for user defined list of processors, useful when someone does not want to run the full reco
     if len(self.ProcessorList):
       for processor in self.ProcessorList:
         for item in items:

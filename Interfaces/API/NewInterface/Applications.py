@@ -1624,6 +1624,15 @@ class Marlin(Application):
       self.outputDstPath = path    
   
   def setProcessorsToUse(self,list):
+    """ Define processor list to use
+    
+    Overwrite the default list (full reco). Useful for users wuilling to do dedicated analysis (TPC, Vertex digi, etc.)
+    
+    >>> ma.setProcessorsToUse(['libMarlinTPC.so','libMarlinReco.so','libOverlay.so','libMarlinTrkProcessors.so'])
+    
+    @param list: list of processors to use
+    @type list: list
+    """
     self._checkArgs( {
         'list' : types.ListType
       } )
