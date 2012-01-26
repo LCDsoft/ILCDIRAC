@@ -1,4 +1,10 @@
-from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import *
+from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+from DIRAC import S_OK,S_ERROR
+
+import os,types,string
+from decimal import Decimal
+
 
 class SIDProductionJob(ProductionJob):
   def __init__(self):

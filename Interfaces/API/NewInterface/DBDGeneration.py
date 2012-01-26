@@ -12,6 +12,8 @@ import string
 class DBDGeneration(ProductionJob):
   def __init__(self, script = None):
     ProductionJob.__init__(self, script)
+    self.basepath = '/ilc/prod/ilc/mc-dbd/generated'
+    
     
   def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
     """ Add finalization step
@@ -106,5 +108,8 @@ class DBDGeneration(ProductionJob):
       self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.version)
     else :
       self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
+
+    #Mandatory
+    self.checked = True
              
     return S_OK()
