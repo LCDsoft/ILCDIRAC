@@ -48,7 +48,7 @@ class ProductionJob(Job):
     self.datatype = ''
     self.machine = 'clic'
     self.detector = ''
-
+    self.currtrans = None
     self.description = ''
 
     self.outputStorage = ''
@@ -500,9 +500,11 @@ class ProductionJob(Job):
       res = application.setNbEvts(self.nbevts)
       if not res['OK']:
         return res
-      
+    
     if application.nbevts > 0 and self.nbevts > application.nbevts:
       self.nbevts = application.nbevts
+
+    self.prodparameters['nbevts'] = self.nbevts
     
     if not self.energy:
       if application.energy:
