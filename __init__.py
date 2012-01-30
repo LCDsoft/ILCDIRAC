@@ -7,7 +7,7 @@ __path__ = extend_path(__path__, __name__)
 # Define Version
 
 majorVersion = 6
-minorVersion = 0
+minorVersion = 2
 patchLevel   = 0
 preVersion   = 0
     
