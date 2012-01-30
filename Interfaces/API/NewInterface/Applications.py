@@ -652,6 +652,7 @@ class Whizard(Application):
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['evttype'] = self.evttype
       self.prodparameters['model'] = self.model
+      self.prodparameters['Energy'] = self.energy
       self.prodparameters['whizardparams'] = self.optionsdict
    
     if not self.optionsdict and  self.parameterdict:
@@ -841,6 +842,8 @@ class Pythia(Application):
     
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self.prodparamters['nbevts'] = self.nbevts
+      self.prodparamters['evttype'] = self.evttype
 
     return S_OK()
  
@@ -1190,6 +1193,10 @@ class Mokka(Application):
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self.prodparameters['mokka_steeringfile'] = self.steeringfile
+      if self.detectorModel:
+        self.prodparameters['mokka_detectormodel'] = self.detectorModel
+      self.prodparameters['detectorType'] = self.detectortype
    
     return S_OK()  
   
@@ -1328,6 +1335,10 @@ class SLIC(Application):
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self.prodparameters['slic_steeringfile'] = self.steeringfile
+      self.prodparameters['detectorType'] = self.detectortype
+      if self.detectorModel:
+        self.prodparameters['slic_detectormodel'] = self.detectorModel
    
     if not self.startFrom :
       self._log.info('No startFrom define for Slic : start from the begining')
@@ -1514,9 +1525,6 @@ class OverlayInput(Application):
       self.BXOverlay = 60
       self._log.info("Using default number of BX to overlay: 60")
       
-    if self._jobtype == 'User' :
-      if not self.NbSigEvtsPerJob :
-        return S_ERROR("Number of signal event per job is not defined")    
       
     if not self.ggtohadint :
       self.ggtohadint = 3.2
@@ -1528,6 +1536,14 @@ class OverlayInput(Application):
       
     if not self.detectortype in ['ILD','SID'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
+
+    if self._jobtype == 'User' :
+      if not self.NbSigEvtsPerJob :
+        return S_ERROR("Number of signal event per job is not defined")
+    else:
+      self.prodparameters['detectorType'] = self.detectortype
+      self.prodparameters['BXOverlay']  = self.BXOverlay
+      self.prodparameters['GGtoHadInt'] = self.ggtohadint
     
     return S_OK() 
   
@@ -1713,7 +1729,11 @@ class Marlin(Application):
       if not self.outputFile:
         self._listofoutput.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":'@{OutputSE}'})
         self._listofoutput.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":'@{OutputSE}'})
-     
+      self.prodparameters['detectorType'] = self.detectortype
+      self.prodparameters['marlin_gearfile'] = self.inputGearFile
+      self.prodparameters['marlin_steeringfile'] = self.steeringfile
+      
+
     return S_OK()  
   
   def _applicationModule(self):
@@ -1883,6 +1903,11 @@ class LCSIM(Application):
             self._listofoutput.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":'@{OutputSE}'})
             #slicp = True
             break
+      self.prodparameters['detectorType'] = self.detectortype
+      self.prodparameters['lcsim_detectorModel'] = self.detectorModel
+      self.prodparameters['lcsim_steeringfile'] = self.steeringfile
+      
+
       #if not slicp:
       #  self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
       
@@ -2010,6 +2035,11 @@ class SLICPandora(Application):
     if not self.startFrom :
       self._log.info('No startFrom define for SlicPandora : start from the begining')
       
+    if not self._jobtype =='User':
+      self.prodparameters['slicpandora_steeringfile'] = self.steeringfile
+      self.prodparameters['slicpandora_detectorModel'] = self.detectorModel
+      
+        
     return S_OK()  
   
   def _applicationModule(self):
