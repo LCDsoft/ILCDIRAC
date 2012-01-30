@@ -208,7 +208,7 @@ class UploadOutputData(ModuleBase):
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self.request)
 
-    catalogs = ['FileCatalog']
+    catalogs = ['FileCatalog','LcgFileCatalog']
 
 
     #One by one upload the files with failover if necessary
