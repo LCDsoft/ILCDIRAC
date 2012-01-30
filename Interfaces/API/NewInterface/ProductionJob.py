@@ -579,8 +579,20 @@ class ProductionJob(Job):
       fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
       application.setOutputFile(fname,path)  
     self.basepath = path
+
+    res = self._updateProdParameters(application)
+    if not res['OK']:
+      return res
+    
     self.checked = True
       
+    return S_OK()
+
+  def _updateProdParameters(self,application):
+    try:
+      self.prodparameters.update(application.prodparameters)
+    except Exception,x:
+      return S_ERROR("%s: %s"%(Exception,str(x)))
     return S_OK()
 
   def _jobSpecificModules(self,application,step):

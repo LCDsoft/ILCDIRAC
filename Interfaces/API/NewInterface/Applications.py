@@ -648,7 +648,11 @@ class Whizard(Application):
       self.outputFile += "_gen.stdhep"  
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self.prodparameters['nbevts'] = self.nbevts
+      self.prodparameters['evttype'] = self.evttype
+      self.prodparameters['model'] = self.model
+      self.prodparameters['whizardparams'] = self.optionsdict
    
     if not self.optionsdict and  self.parameterdict:
       for key in self.parameterdict.keys():
