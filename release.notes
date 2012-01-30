@@ -1,3 +1,7 @@
+[v6r2p0]
+* Workflow
+Several updates to match DBD use case, fix meta data registration for file level, Add specific modules for DBD.
+
 [v6r0p2]
 New Release to move to v6r1p6
 
