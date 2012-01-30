@@ -228,6 +228,10 @@ class SIDProductionJob(ProductionJob):
       self.log.info("Will store the files under %s"%path)
       fname = self.basename+"_%s"%(application.datatype.lower())+".slcio"
       application.setOutputFile(fname,path)  
+    
+    res = self._updateProdParameters(application)
+    if not res['OK']:
+      return res
       
     self.basepath = path
     self.checked = True
