@@ -87,7 +87,6 @@ class DBDGeneration(ProductionJob):
       self.nbevts = application.nbevts
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
-    self.prodparameters['nbevts'] = self.nbevts
 
     if not self.energy:
       if application.energy:
@@ -112,6 +111,10 @@ class DBDGeneration(ProductionJob):
       self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.version)
     else :
       self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
+
+    res = self._updateProdParameters(application)
+    if not res['OK']:
+      return res
 
     #Mandatory
     self.checked = True
