@@ -145,16 +145,18 @@ class RegisterOutputData(ModuleBase):
             return res
         
       if self.nbofevents:
-        metafiles['NumberOfEvents']=self.nbofevents
+        nbevts = {}
+        nbevts['NumberOfEvents']=self.nbofevents
         if self.enable:
-          res = self.fc.setMetadata(files,metafiles)
+          res = self.fc.setMetadata(files,nbevts)
           if not res['OK']:
             self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,files))
             return res
       if self.luminosity:
-        metafiles['Luminosity']=self.luminosity
+        lumi = {}
+        lumi['Luminosity']=self.luminosity
         if self.enable:
-          res = self.fc.setMetadata(files,metafiles)
+          res = self.fc.setMetadata(files,lumi)
           if not res['OK']:
             self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,files))
             return res
