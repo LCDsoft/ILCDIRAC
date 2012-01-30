@@ -87,6 +87,8 @@ class DBDGeneration(ProductionJob):
       self.nbevts = application.nbevts
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
+    self.prodparameters['nbevts'] = self.nbevts
+
     if not self.energy:
       if application.energy:
         self.energy = Decimal(str(application.energy))
