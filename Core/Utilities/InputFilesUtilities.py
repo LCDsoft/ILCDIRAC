@@ -12,19 +12,34 @@ def getNumberOfevents(inputfile):
   files = inputfile.split(";")
   fc = FileCatalogClient()
   nbevts = {} 
-  nbevts['nbevts'] = 0
-  nbevts['lumi'] = 0
+  luminosity = 0
+  numberofevents = 0
+  evttype = ''
   for file in files:
     if not file:
       continue
-    res = fc.getDirectoryMetadata(file)
+    res = fc.getFileUserMetadata(file)
     if not res['OK']:
-        continue
+        continue  
     tags= res['Value']
     if tags.has_key("NumberOfEvents"):
-      nbevts['nbevts']+=tags["NumberOfEvents"]
+      numberofevents+=tags["NumberOfEvents"]
     if tags.has_key("Luminosity"):
-      nbevts['lumi']+=tags["Luminosity"]
+      luminosity+=tags["Luminosity"]
+    #if tags.has_key("EvtType"):
+    #  evttype=tags["EvtType"]
+    
+    res = fc.getDirectoryMetadata(file)
+    if not res['OK']:
+        continue  
+    #tags= res['Value']
+    #if tags.has_key("NumberOfEvents"):
+    #  numberofevents+=tags["NumberOfEvents"]
+    #if tags.has_key("Luminosity"):
+    #  luminosity+=tags["Luminosity"]
     if tags.has_key("EvtType"):
-      nbevts['EvtType']=tags["EvtType"]
+      evttype=tags["EvtType"]
+  nbevts['nbevts'] = numberofevents
+  nbevts['lumi'] = luminosity
+  nbevts['EvtType'] = evttype
   return nbevts
