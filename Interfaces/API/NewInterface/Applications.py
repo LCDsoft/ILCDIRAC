@@ -650,7 +650,7 @@ class Whizard(Application):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
-      self.prodparameters['evttype'] = self.evttype
+      self.prodparameters['Process'] = self.evttype
       self.prodparameters['model'] = self.model
       self.prodparameters['Energy'] = self.energy
       self.prodparameters['whizardparams'] = self.optionsdict
@@ -842,8 +842,8 @@ class Pythia(Application):
     
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
-      self.prodparamters['nbevts'] = self.nbevts
-      self.prodparamters['evttype'] = self.evttype
+      self.prodparameters['nbevts'] = self.nbevts
+      self.prodparameters['Process'] = self.evttype
 
     return S_OK()
  
