@@ -73,11 +73,11 @@ def upload(path,appTar):
     return S_ERROR()
   else:
     lfnpath = "%s%s"%(path,appTar)
-    res = rm.putAndRegister(lfnpath,appTar,"IN2P3-SRM")
+    res = rm.putAndRegister(lfnpath,appTar,"CERN-SRM")
     if not res['OK']:
       return res
     res = request.addSubRequest({'Attributes':{'Operation':'replicateAndRegister',
-                                               'TargetSE':'CERN-SRM','ExecutionOrder':0}},
+                                               'TargetSE':'IN2P3-SRM','ExecutionOrder':0}},
                                  'transfer')
     #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
     if not res['OK']:
