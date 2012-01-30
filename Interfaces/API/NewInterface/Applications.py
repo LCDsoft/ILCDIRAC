@@ -641,6 +641,10 @@ class Whizard(Application):
       if not self._generatormodels.hasModel(self.model)['OK']:
         return S_ERROR("Unknown model %s"%self.model)
 
+    if self.outputFile:
+      if self.outputFile.count("/"):
+        return S_ERROR("The OutputFile name is a file name, not a path. Remove any / in there")
+
     if not self.outputFile and self._jobtype == 'User':
       self.outputFile = self.evttype
       if self.jobindex :
