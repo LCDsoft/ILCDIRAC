@@ -12,7 +12,9 @@ import string
 class DBDGeneration(ProductionJob):
   def __init__(self, script = None):
     ProductionJob.__init__(self, script)
+    self.machine = 'ilc'
     self.basepath = '/ilc/prod/ilc/mc-dbd/generated'
+    self._addParameter(self.workflow, "IS_DBD_GENPROD", 'JDL', True, "This job is a production job")
     
     
   def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):

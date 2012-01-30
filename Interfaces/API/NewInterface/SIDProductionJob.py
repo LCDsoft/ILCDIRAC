@@ -3,6 +3,7 @@ from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC import S_OK,S_ERROR
 
 import os,types,string
+from math import modf
 from decimal import Decimal
 
 
