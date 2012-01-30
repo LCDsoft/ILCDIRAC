@@ -178,7 +178,7 @@ class UploadLogFile(ModuleBase):
         #storageElement = StorageElement(self.logSE)
         #pfn = storageElement.getPfnForLfn(self.logFilePath)['Value']
         #logURL = getPfnForProtocol(res['Value'],'http')['Value']
-        logURL = '<a href="http://volcd01.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
+        logURL = '<a href="http://volcd03.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
         self.setJobParameter('Log URL',logURL)
         self.log.info('Logs for this job may be retrieved from %s' % logURL)
         return S_OK()
@@ -221,7 +221,7 @@ class UploadLogFile(ModuleBase):
     failoverTransfer = FailoverTransfer(self.request)
     random.shuffle(self.failoverSEs)
     self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, string.join(self.failoverSEs,', ')))
-    result = failoverTransfer.transferAndRegisterFile(tarFileName,'%s/%s' %(tarFileDir,tarFileName),self.logLFNPath,self.failoverSEs,fileGUID=None,fileCatalog='FileCatalog')
+    result = failoverTransfer.transferAndRegisterFile(tarFileName,'%s/%s' %(tarFileDir,tarFileName),self.logLFNPath,self.failoverSEs,fileGUID=None,fileCatalog=['FileCatalog','LcgFileCatalog'])
     if not result['OK']:
       self.log.error('Failed to upload logs to all destinations')
       self.setApplicationStatus('Failed To Upload Logs')
