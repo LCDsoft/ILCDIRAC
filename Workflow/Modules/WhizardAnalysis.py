@@ -93,7 +93,7 @@ class WhizardAnalysis(ModuleBase):
         self.RandomSeed = self.step_commons['RandomSeed']
       elif self.jobID:
         self.RandomSeed = self.jobID
-    if self.workflow_commons.has_key("IS_PROD"):  
+    if self.workflow_commons.has_key("IS_PROD") or self.workflow_commons.has_key("IS_DBD_GEN_PROD"):  
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"]))+str(int(self.workflow_commons["JOB_ID"])))  
     self.parameters['SEED'] = self.RandomSeed
 
@@ -157,8 +157,19 @@ class WhizardAnalysis(ModuleBase):
         else:
           self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))
- 
-      
+          
+    if self.workflow_commons.has_key("IS_DBD_GEN_PROD"):
+      if self.workflow_commons["IS_DBD_GEN_PROD"]:
+        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                  int(self.workflow_commons["JOB_ID"]))
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            self.OutputFile = os.path.basename(obj)
+            break
+        else:
+          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                            int(self.workflow_commons["JOB_ID"]))        
     return S_OK()
 
   def execute(self):
