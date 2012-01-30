@@ -1,3 +1,10 @@
+[v6r2p1]
+* Core
+Update how the metadata is obtained.
+* Interfaces 
+Fix productions API, and add finalization
+ 
+
 [v6r2p0]
 * Workflow
 Several updates to match DBD use case, fix meta data registration for file level, Add specific modules for DBD.
