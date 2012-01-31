@@ -219,7 +219,7 @@ class LCSIMAnalysis(ModuleBase):
       return S_ERROR("Error creating lcsim file")
     else:
       self.log.verbose("File job.lcsim created properly")
-    self.eventstring = res['Value']
+    self.eventstring = [res['Value']]
     
     scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
