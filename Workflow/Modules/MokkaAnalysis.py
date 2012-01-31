@@ -26,7 +26,7 @@ from DIRAC                                                import S_OK, S_ERROR, 
 
 import DIRAC
 
-import re, os, sys, shutil
+import  os, shutil
 
 #random string generator 
 import string
@@ -52,7 +52,7 @@ class MokkaAnalysis(ModuleBase):
         self.dbSlice = ''
         self.NumberOfEvents = 0
         self.startFrom = 0
-        self.eventstring = ['']
+        self.eventstring = ['>>> Event']
         self.processID = ''
         self.RandomSeed = 0
         self.mcRunNumber = 0
