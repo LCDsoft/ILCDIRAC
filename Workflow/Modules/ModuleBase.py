@@ -52,7 +52,7 @@ class ModuleBase(object):
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
-    self.eventstring = ''
+    self.eventstring = ['']
     self.ignoreapperrors = False
 
   #############################################################################
@@ -391,9 +391,13 @@ class ModuleBase(object):
     """
     sys.stdout.flush()
     if message:
-      if self.eventstring:
-        if re.search(self.eventstring,message):
-          print message
+      if type(self.eventstring) == type(' '):
+        self.eventstring = [self.eventstring]
+      if len(self.eventstring): 
+        if len(self.eventstring[0]):
+          for string in self.eventstring:
+            if re.search(string,message):
+              print message
       else:
         print message
       if self.applicationLog:

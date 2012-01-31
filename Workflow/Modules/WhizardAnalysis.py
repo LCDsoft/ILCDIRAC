@@ -54,7 +54,8 @@ class WhizardAnalysis(ModuleBase):
     self.susymodel = 0
     self.Model = ''
     self.genmodel = GeneratorModels()
-    self.eventstring = ''
+    self.eventstring = ['! Event sample corresponds to luminosity', '*** Fatal error:','PYSTOP','No matrix element available',
+                        'Floating point exception','Event generation finished.']
     self.steeringparameters = ''
     self.options = None
     self.optionsdict = {}
