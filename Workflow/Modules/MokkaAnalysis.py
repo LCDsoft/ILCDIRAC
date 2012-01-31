@@ -52,7 +52,7 @@ class MokkaAnalysis(ModuleBase):
         self.dbSlice = ''
         self.NumberOfEvents = 0
         self.startFrom = 0
-        self.eventstring = ''
+        self.eventstring = ['']
         self.processID = ''
         self.RandomSeed = 0
         self.mcRunNumber = 0

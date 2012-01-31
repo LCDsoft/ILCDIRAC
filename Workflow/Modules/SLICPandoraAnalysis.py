@@ -33,7 +33,7 @@ class SLICPandoraAnalysis (ModuleBase):
     self.InputFile = ""
     self.NumberOfEvents = -1
     self.startFrom = 0
-    self.eventstring = ''
+    self.eventstring = ['']
       
   def applicationSpecificInputs(self):
 

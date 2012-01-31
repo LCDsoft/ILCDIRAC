@@ -43,7 +43,7 @@ class SLICAnalysis(ModuleBase):
     self.randomseed = 0
     self.detectorModel = ''
     self.SteeringFile = ''
-    self.eventstring = 'BeginEvent'
+    self.eventstring = ['BeginEvent']
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.

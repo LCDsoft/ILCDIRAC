@@ -43,7 +43,7 @@ class LCSIMAnalysis(ModuleBase):
     self.outputDST = ""
     self.aliasproperties = ''
     self.applicationName = 'LCSIM'
-    self.eventstring = ''
+    self.eventstring = ['']
     self.extraparams = ''
     self.OutputFile = '' #Set in ModuleBase
     self.detectorModel = ''
