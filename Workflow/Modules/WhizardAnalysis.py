@@ -54,8 +54,9 @@ class WhizardAnalysis(ModuleBase):
     self.susymodel = 0
     self.Model = ''
     self.genmodel = GeneratorModels()
-    self.eventstring = ['! Event sample corresponds to luminosity', '*** Fatal error:','PYSTOP','No matrix element available',
-                        'Floating point exception','Event generation finished.']
+    self.eventstring = ['! ', '*** Fatal error:','PYSTOP','No matrix element available',
+                        'Floating point exception','Event generation finished.'," n_events","luminosity"," sum "]
+    self.excludeAllButEventString = True
     self.steeringparameters = ''
     self.options = None
     self.optionsdict = {}
@@ -198,6 +199,9 @@ class WhizardAnalysis(ModuleBase):
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
       return S_OK('Whizard should not proceed as previous step did not end properly')
+
+    #if self.debug:
+    #  self.excludeAllButEventString = False
 
     whizardDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"whizard",self.applicationVersion),'')
     if not whizardDir:
