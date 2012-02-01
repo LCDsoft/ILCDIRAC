@@ -6,6 +6,9 @@ Created on Jan 26, 2012
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC                                                  import S_OK, S_ERROR, gConfig
+
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+
 from decimal import Decimal
 import string
 
@@ -16,6 +19,59 @@ class DBDGeneration(ProductionJob):
     self.basepath = '/ilc/prod/ilc/mc-dbd/generated'
     self._addParameter(self.workflow, "IS_DBD_GENPROD", 'JDL', True, "This job is a production job")
     
+  def addCatalogEntry(self,catalogdict,prodid = None):
+    if not self.created:
+      return S_ERROR("You need to have created the production before calling this")
+    
+    allowedkeys = ['process_id',
+#'process_names',
+'process_type',
+#'CM_energy_in_GeV',
+'program_name_version',
+'pythia_version',
+'stdhep_version',
+#'OS_version_build=2.6.18-238.5.1.el5;x86_64;GNU/Linux',
+#'OS_version_run=2.6.18-194.32.1.el5;x86_64;GNU/Linux'
+#'libc_version=glibc-2.5-49.el5_5.7.x86_64',
+#'fortran_version',
+'hadronisation_tune',
+'tau_decays',
+#'beam_particle1',
+#'beam_particle2',
+'polarization1',
+'polarization2',
+'luminosity',
+'cross_section_in_fb',
+'cross_section_error_in_fb',
+#'lumi_file',
+'file_type',
+#'total_number_of_events',
+#'number_of_files',
+#'file_names',
+#'number_of_events_in_files',
+'fileurl',
+#'logurl',
+'comment']
+    for key in catalogdict.keys():
+      if not key in allowedkeys:
+        return S_ERROR("No allowed to use this key '%s', please check"%key)
+      
+    whizardparams = self.prodparameters['whizardparams']
+    processes = whizardparams['process_input']['process_id']
+    energy = whizardparams['process_input']['sqrts']
+    beam_particle1 = whizardparams['beam_input_1']['particle_name']
+    beam_particle2 = whizardparams['beam_input_2']['particle_name']
+    currtrans = 0
+    if self.currtrans:
+      currtrans = self.currtrans.getTransformationID()['Value']
+    if prodid:
+      currtrans = prodid
+    
+    fc = FileCatalogClient()
+    
+    
+            
+    return S_OK()  
     
   def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
     """ Add finalization step
