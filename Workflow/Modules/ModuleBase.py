@@ -53,6 +53,7 @@ class ModuleBase(object):
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
     self.eventstring = ['']
+    self.excludeAllButEventString = False
     self.ignoreapperrors = False
 
   #############################################################################
@@ -397,12 +398,19 @@ class ModuleBase(object):
         if len(self.eventstring[0]):
           for string in self.eventstring:
             if re.search(string,message):
-              print message
+              print message 
       else:
         print message
       if self.applicationLog:
         log = open(self.applicationLog,'a')
-        log.write(message+'\n')
+        if self.excludeAllButEventString:
+          if len(self.eventstring): 
+            if len(self.eventstring[0]):  
+              for string in self.eventstring:
+                if re.search(string,message):
+                  log.write(message+'\n')
+        else:
+          log.write(message+'\n')
         log.close()
       else:
         self.log.error("Application Log file not defined")
