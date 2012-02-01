@@ -55,7 +55,7 @@ class WhizardAnalysis(ModuleBase):
     self.Model = ''
     self.genmodel = GeneratorModels()
     self.eventstring = ['! ', '*** Fatal error:','PYSTOP','No matrix element available',
-                        'Floating point exception','Event generation finished.'," n_events","luminosity"," sum "]
+                        'Floating point exception','Event generation finished.'," n_events","luminosity","  sum            "]
     self.excludeAllButEventString = True
     self.steeringparameters = ''
     self.options = None
