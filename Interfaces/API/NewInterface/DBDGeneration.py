@@ -69,8 +69,21 @@ class DBDGeneration(ProductionJob):
     
     fc = FileCatalogClient()
     
+    result = fc.createDirectory(self.basepath)
+    if result['OK']:
+      if result['Value']['Successful']:
+        if result['Value']['Successful'].has_key(self.basepath):
+          print "Successfully created directory:", self.basepath
+      elif result['Value']['Failed']:
+        if result['Value']['Failed'].has_key(self.basepath):  
+          print 'Failed to create directory:',result['Value']['Failed'][self.basepath]
+    else:
+      print 'Failed to create directory:',result['Message']
     
-            
+    metadict = {}
+    res = fc.setMetadata(self.basepath,metadict)
+    if not res['OK']:
+      self.log.error("Could not preset metadata")        
     return S_OK()  
     
   def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
