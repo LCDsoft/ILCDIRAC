@@ -52,9 +52,13 @@ class DBDGeneration(ProductionJob):
 'fileurl',
 #'logurl',
 'comment']
+    
+    inputdict = {}
     for key in catalogdict.keys():
       if not key in allowedkeys:
         return S_ERROR("No allowed to use this key '%s', please check"%key)
+      else:
+        inputdict[key]=catalogdict[key]
       
     whizardparams = self.prodparameters['whizardparams']
     processes = whizardparams['process_input']['process_id']
@@ -66,6 +70,8 @@ class DBDGeneration(ProductionJob):
       currtrans = self.currtrans.getTransformationID()['Value']
     if prodid:
       currtrans = prodid
+    
+    self.basepath += "/"+str(currtrans).zfill(8) 
     
     fc = FileCatalogClient()
     
@@ -81,6 +87,13 @@ class DBDGeneration(ProductionJob):
       print 'Failed to create directory:',result['Message']
     
     metadict = {}
+    
+    metadict['process_names']=processes
+    metadict['CM_energy_in_GeV']=energy
+    metadict['beam_particle1']=beam_particle1
+    metadict['beam_particle2']=beam_particle2
+    metadict.update(inputdict)
+    
     res = fc.setMetadata(self.basepath,metadict)
     if not res['OK']:
       self.log.error("Could not preset metadata")        
