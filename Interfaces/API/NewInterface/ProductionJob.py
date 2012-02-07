@@ -51,6 +51,8 @@ class ProductionJob(Job):
     self.currtrans = None
     self.description = ''
 
+    self.finalMetaDict = {}
+
     self.outputStorage = ''
 
     self.proxyinfo = getProxyInfo()
@@ -422,7 +424,7 @@ class ProductionJob(Job):
     return S_OK()
   
   def finalizeProd(self,prodid=None,prodinfo=None):
-    """ Finalize definition: submit to Transformation service
+    """ Finalize definition: submit to Transformation service and register metadata
     """
     currtrans = 0
     if self.currtrans:
@@ -459,8 +461,16 @@ class ProductionJob(Job):
       if not result['OK']:
         self.log.error(result['Message'])
 
+    res = self._registerMetadata()
+    if not res['OK']:
+      return res
     return S_OK()  
   #############################################################################
+  
+  def _registerMetadata(self):
+    
+    return S_OK()
+  
   def _setProdParameter(self,prodID,pname,pvalue):
     """Set a production parameter.
     """
