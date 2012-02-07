@@ -76,8 +76,9 @@ class RegisterOutputData(ModuleBase):
       metamach['Machine']=elements[3]
       meta.update(metamach)
       machine = string.join(elements[0:4],"/")
+      res = S_OK()
       if self.enable:
-        res = self.fc.setMetadata(machine,metamach)
+        #res = self.fc.setMetadata(machine,metamach)
         if not res['OK']:
           self.log.error('Could not register metadata Machine, with value %s for %s'%(elements[3],machine))
           return res
@@ -86,7 +87,7 @@ class RegisterOutputData(ModuleBase):
       meta.update(metaen)
       energy = string.join(elements[0:5],"/")
       if self.enable:
-        res = self.fc.setMetadata(energy,metaen)
+        #res = self.fc.setMetadata(energy,metaen)
         if not res['OK']:
           self.log.error('Could not register metadata Energy, with value %s for %s'%(elements[4],energy))
           return res      
@@ -95,7 +96,7 @@ class RegisterOutputData(ModuleBase):
       meta.update(metaevt)
       evttype = string.join(elements[0:6],"/")
       if self.enable:
-        res = self.fc.setMetadata(evttype,metaevt)
+        #res = self.fc.setMetadata(evttype,metaevt)
         if not res['OK']:
           self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
           return res
@@ -106,7 +107,7 @@ class RegisterOutputData(ModuleBase):
         meta.update(metadat)
         datatype = string.join(elements[0:7],"/")
         if self.enable:
-          res = self.fc.setMetadata(datatype,metadat)
+          #res = self.fc.setMetadata(datatype,metadat)
           if not res['OK']:
             self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[6],datatype))
             return res
