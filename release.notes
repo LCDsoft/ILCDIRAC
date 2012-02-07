@@ -1,3 +1,10 @@
+[v6r4p0]
+* Workflow
+Adapt to support the new lumi_linker structure
+
+* SoftwareManagement
+Stub for software management
+
 [v6r2p1]
 * Core
 Update how the metadata is obtained.
