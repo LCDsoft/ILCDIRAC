@@ -47,7 +47,7 @@ class DBDGenRegisterOutputData(ModuleBase):
     for files in self.prodOutputLFNs:
       metadict = {}
       path = files
-    
+      
       res = self.fc.setMetadata(path,metadict)
       if not res['OK']:
         self.log.error("Could not register %s for %s"%(metadict,path))
