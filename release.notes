@@ -1,3 +1,7 @@
+[v6r4p1]
+* Workflow
+Bug fix in FailoverRequest module: the files did not get their statuses updated
+
 [v6r4p0]
 * Workflow
 Adapt to support the new lumi_linker structure
