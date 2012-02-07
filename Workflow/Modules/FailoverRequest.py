@@ -63,10 +63,10 @@ class FailoverRequest(ModuleBase):
       self.fileReport = self.workflow_commons['FileReport']
 
     if self.InputData:
-      if type(self.inputData) != type([]):
+      if type(self.InputData) != type([]):
           self.InputData = self.InputData.split(';')
 
-      self.InputData = [x.replace('LFN:','') for x in self.inputData]
+      self.InputData = [x.replace('LFN:','') for x in self.InputData]
 
     if self.workflow_commons.has_key('Request'):
       self.request = self.workflow_commons['Request']
