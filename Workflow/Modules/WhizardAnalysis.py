@@ -248,6 +248,12 @@ class WhizardAnalysis(ModuleBase):
     os.environ['EBEAM'] = path_to_beam_spectra+"/ebeam_in_linker_000"
     os.environ['PBEAM'] = path_to_beam_spectra+"/pbeam_in_linker_000"
 
+    os.environ['LUMI_EE_LINKER'] = path_to_beam_spectra+"/lumi_ee_linker_000"
+    os.environ['LUMI_EG_LINKER'] = path_to_beam_spectra+"/lumi_eg_linker_000"
+    os.environ['LUMI_GE_LINKER'] = path_to_beam_spectra+"/lumi_ge_linker_000"
+    os.environ['LUMI_GG_LINKER'] = path_to_beam_spectra+"/lumi_gg_linker_000"
+    
+
     list_of_gridfiles = []
     if path_to_gridfiles:
       list_of_gridfiles = os.listdir(path_to_gridfiles)
