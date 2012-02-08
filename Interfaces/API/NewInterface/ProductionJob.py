@@ -33,6 +33,7 @@ class ProductionJob(Job):
     self.prodVersion = __RCSID__
     self.created = False
     self.checked = False
+    self.transfid = 0
     self.type = 'Production'
     self.csSection = '/Operations/Production/Defaults'
     self.fc = FileCatalogClient()
@@ -382,15 +383,15 @@ class ProductionJob(Job):
       print res['Message']
       return res
     self.currtrans = Trans
-    transfid = Trans.getTransformationID()['Value']
+    self.transfid = Trans.getTransformationID()['Value']
 
     if self.inputBKSelection:
-      res = self.applyInputDataQuery(prodid=transfid)
+      res = self.applyInputDataQuery()
     Trans.setAgentType("Automatic")  
     Trans.setStatus("Active")
     
-    self.basepath += "/"+str(transfid).zfill(8)
-    self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts,"ProdID":transfid}
+    self.basepath += "/"+str(self.transfid).zfill(8)
+    self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts,"ProdID":self.transfid}
     self.created = True
     return S_OK()
 
@@ -410,19 +411,18 @@ class ProductionJob(Job):
   def applyInputDataQuery(self,metadata=None,prodid=None):
     """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
     """
-    currtrans = 0
-    if not prodid and self.currtrans:
-      currtrans = self.currtrans.getTransformationID()['Value']
-    if prodid:
-      currtrans = prodid
-    if not currtrans:
+    if not self.transfid and self.currtrans:
+      self.transfid = self.currtrans.getTransformationID()['Value']
+    elif prodid:
+      self.transfid = prodid
+    if not self.transfid:
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
     if metadata:
       self.inputBKSelection=metadata
 
     client = TransformationClient()
-    res = client.createTransformationInputDataQuery(currtrans,self.inputBKSelection)
+    res = client.createTransformationInputDataQuery(self.transfid,self.inputBKSelection)
     if not res['OK']:
       return res
     return S_OK()
