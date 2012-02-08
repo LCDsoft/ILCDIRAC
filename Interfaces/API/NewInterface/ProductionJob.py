@@ -192,14 +192,15 @@ class ProductionJob(Job):
     elif len(res['Value']) < 1:
       return self._reportError('Could not find any directories corresponding to the query issued')
     dirs = res['Value'].values()
-    res = self.fc.getDirectoryMetadata(dirs[0])
-    if not res['OK']:
-      return self._reportError("Error looking up the catalog for directory metadata")
+    for dir in dirs:
+      res = self.fc.getDirectoryMetadata(dir)
+      if not res['OK']:
+        return self._reportError("Error looking up the catalog for directory metadata")
     #res =   client.getCompatibleMetadata(metadata)
     #if not res['OK']:
     #  return self._reportError("Error looking up the catalog for compatible metadata")
-    compatmeta = res['Value']
-    compatmeta.update(metadata)
+      compatmeta = res['Value']
+      compatmeta.update(metadata)
     if compatmeta.has_key('EvtType'):
       if type(compatmeta['EvtType']) in types.StringTypes:
         self.evttype  = compatmeta['EvtType']
@@ -230,11 +231,11 @@ class ProductionJob(Job):
         self.energycat = compatmeta["Energy"][0]
         
     if self.energycat.count("tev"):
-      self.energy = 1000.*Decimal(self.energycat.split("tev")[0])
+      self.energy = Decimal("1000.")*Decimal(self.energycat.split("tev")[0])
     elif self.energycat.count("gev"):
-      self.energy = 1.*Decimal(self.energycat.split("gev")[0])
+      self.energy = Decimal("1.")*Decimal(self.energycat.split("gev")[0])
     else:
-      self.energy = 1.*Decimal(self.energycat)  
+      self.energy = Decimal("1.")*Decimal(self.energycat)
     gendata = False
     if compatmeta.has_key('Datatype'):
       if type(compatmeta['Datatype']) in types.StringTypes:
@@ -490,7 +491,7 @@ class ProductionJob(Job):
       else:
         self.log.error('Failed to create directory:',result['Message'])
         failed.append(path)
-      result = self.fc.setMetadata(path,meta)
+      result = self.fc.setMetadata(path.rstrip("/"),meta)
       if not result['OK']:
         self.log.error("Could not preset metadata",meta)
     if len(failed):
@@ -601,11 +602,11 @@ class ProductionJob(Job):
       path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC/"
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath]= {"EvtType":self.evttype}
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype] = {"DetectorType":application.detectortype}
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC/"] = {'Datatype':"REC"}
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
       path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST/"
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST/"] = {'Datatype':"DST"}
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
@@ -613,11 +614,13 @@ class ProductionJob(Job):
       self.finalMetaDict[path]= {"EvtType":self.evttype}      
       if hasattr(application,"detectortype"):
         if application.detectortype:
-          path += application.detectortype+"/"
+          path += application.detectortype
           self.finalMetaDict[path]= {"DetectorType":application.detectortype}
+          path+='/'
         elif self.detector:
-          path += self.detector+"/"
+          path += self.detector
           self.finalMetaDict[path]= {"DetectorType":self.detector}
+          path+='/'
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
