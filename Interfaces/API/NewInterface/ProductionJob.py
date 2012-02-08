@@ -463,12 +463,34 @@ class ProductionJob(Job):
 
     res = self._registerMetadata()
     if not res['OK']:
-      return res
+      self.log.error("Could not register the following directories :",res['Failed'])
     return S_OK()  
   #############################################################################
   
   def _registerMetadata(self):
-    
+    """ Private method
+      
+      Register path and metadata before the production actually runs. This allows for the definition of the full chain in 1 go. 
+    """
+    failed = []
+    for path,meta in self.finalMetaDict:
+      result = self.fc.createDirectory(path)
+      if result['OK']:
+        if result['Value']['Successful']:
+          if result['Value']['Successful'].has_key(path):
+            self.log.info("Successfully created directory:", path)
+        elif result['Value']['Failed']:
+          if result['Value']['Failed'].has_key(path):  
+            self.log.error('Failed to create directory:',result['Value']['Failed'][path])
+            failed.append(path)
+      else:
+        self.log.error('Failed to create directory:',result['Message'])
+        failed.append(path)
+      result = self.fc.setMetadata(path,meta)
+      if not result['OK']:
+        self.log.error("Could not preset metadata")
+    if len(failed):
+      return  { 'OK' : False, 'Failed': failed}
     return S_OK()
   
   def _setProdParameter(self,prodID,pname,pvalue):
@@ -567,21 +589,29 @@ class ProductionJob(Job):
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype]= {"EvtType":self.evttype}
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype+application.detectortype] = {"DetectorType":application.detectortype}
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
       path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+self.machine+energypath+self.evttype
+      self.finalMetaDict[path]= {"EvtType":self.evttype}      
       if hasattr(application,"detectortype"):
         if application.detectortype:
           path += application.detectortype+"/"
+          self.finalMetaDict[path]= {"DetectorType":application.detectortype}
         elif self.detector:
           path += self.detector+"/"
+          self.finalMetaDict[path]= {"DetectorType":self.detector}
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
+      self.finalMetaDict[path]= {'Datatype':application.datatype}
       self.log.info("Will store the files under %s"%path)
       extension = 'stdhep'
       if application.datatype=='SIM' or application.datatype=='REC':
