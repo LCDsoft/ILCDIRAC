@@ -158,18 +158,17 @@ class ProductionJob(Job):
   def setInputDataQuery(self,metadata):
     """ Define the input data query needed
     """
-    res = self.fc.findFilesByMetadata(metadata)
+    res = self.fc.findDirectoriesByMetadata(metadata)
     if not res['OK']:
       return res
-    lfns = res['Value']
-    if not len(lfns):
-      return S_ERROR("No files found")
+    dirs = res['Value']
+    if not len(dirs):
+      return S_ERROR("No directories found")
     """ Also get the compatible metadata such as energy, evttype, etc, populate dictionary
     Beware of energy: need to convert to gev (3tev -> 3000, 500gev -> 500)
     """
     metakeys = metadata.keys()
-    client = FileCatalogClient()
-    res = client.getMetadataFields()
+    res = self.fc.getMetadataFields()
     if not res['OK']:
       print "Could not contact File Catalog"
       self.explainInputDataQuery()
@@ -186,13 +185,13 @@ class ProductionJob(Job):
     if not   metadata.has_key("ProdID"):
       return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
     
-    res = client.findFilesByMetadata(metadata)
+    res = self.fc.findDirectoriesByMetadata(metadata)
     if not res['OK']:
-      return self._reportError("Error looking up the catalog for available files")
+      return self._reportError("Error looking up the catalog for available directories")
     elif len(res['Value']) < 1:
-      return self._reportError('Could not find any files corresponding to the query issued')
-    directory = os.path.dirname(res['Value'][0])
-    res = client.getDirectoryMetadata(directory)
+      return self._reportError('Could not find any directories corresponding to the query issued')
+    dirs = res['Value'].values()
+    res = self.fc.getDirectoryMetadata(dirs[0])
     if not res['OK']:
       return self._reportError("Error looking up the catalog for directory metadata")
     #res =   client.getCompatibleMetadata(metadata)
@@ -378,15 +377,20 @@ class ProductionJob(Job):
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
     Trans.setEventsPerTask(self.nbevts)
-    Trans.setStatus("Active")
-    Trans.setAgentType("Automatic")
     res = Trans.addTransformation()
     if not res['OK']:
       print res['Message']
       return res
     self.currtrans = Trans
+    transfid = Trans.getTransformationID()['Value']
+
     if self.inputBKSelection:
-      res = self.applyInputDataQuery()
+      res = self.applyInputDataQuery(prodid=transfid)
+    Trans.setAgentType("Automatic")  
+    Trans.setStatus("Active")
+    
+    self.basepath += "/"+str(transfid).zfill(8)
+    self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts}
     self.created = True
     return S_OK()
 
@@ -407,7 +411,7 @@ class ProductionJob(Job):
     """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
     """
     currtrans = 0
-    if self.currtrans:
+    if not prodid and self.currtrans:
       currtrans = self.currtrans.getTransformationID()['Value']
     if prodid:
       currtrans = prodid
@@ -473,7 +477,7 @@ class ProductionJob(Job):
       Register path and metadata before the production actually runs. This allows for the definition of the full chain in 1 go. 
     """
     failed = []
-    for path,meta in self.finalMetaDict:
+    for path,meta in self.finalMetaDict.items():
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
@@ -492,6 +496,13 @@ class ProductionJob(Job):
     if len(failed):
       return  { 'OK' : False, 'Failed': failed}
     return S_OK()
+  
+  def getMetadata(self):
+    metadict = {}
+    for path,meta in self.finalMetaDict.items():
+      for key,val in meta:
+        metadict[key] = val
+    return metadict
   
   def _setProdParameter(self,prodID,pname,pvalue):
     """Set a production parameter.
@@ -618,6 +629,7 @@ class ProductionJob(Job):
         extension = 'slcio'
       fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
       application.setOutputFile(fname,path)  
+      
     self.basepath = path
 
     res = self._updateProdParameters(application)
