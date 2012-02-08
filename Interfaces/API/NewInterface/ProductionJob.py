@@ -390,7 +390,7 @@ class ProductionJob(Job):
     Trans.setStatus("Active")
     
     self.basepath += "/"+str(transfid).zfill(8)
-    self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts}
+    self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts,"ProdID":transfid}
     self.created = True
     return S_OK()
 
