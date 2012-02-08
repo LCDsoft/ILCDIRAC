@@ -593,23 +593,23 @@ class ProductionJob(Job):
     if not self.machine[-1]=='/':
       self.machine += "/"
     if not self.evttype[-1]=='/':
-      self.evttype += '/'  
+      self.evttypepath = self.evttype+'/'  
     
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
-      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype]= {"EvtType":self.evttype}
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype+application.detectortype] = {"DetectorType":application.detectortype}
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/REC/"] = {'Datatype':"REC"}
+      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC/"
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath]= {"EvtType":self.evttype}
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype] = {"DetectorType":application.detectortype}
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC/"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
-      path = self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttype+application.detectortype+"/DST/"] = {'Datatype':"DST"}
+      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST/"
+      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST/"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
-      path = self.basepath+self.machine+energypath+self.evttype
+      path = self.basepath+self.machine+energypath+self.evttypepath
       self.finalMetaDict[path]= {"EvtType":self.evttype}      
       if hasattr(application,"detectortype"):
         if application.detectortype:
