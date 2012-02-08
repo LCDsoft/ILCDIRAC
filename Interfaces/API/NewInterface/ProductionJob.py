@@ -483,7 +483,7 @@ class ProductionJob(Job):
       if result['OK']:
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
-            self.log.info("Successfully created directory:", path)
+            self.log.verbose("Successfully created directory:", path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
             self.log.error('Failed to create directory:',result['Value']['Failed'][path])
