@@ -492,7 +492,7 @@ class ProductionJob(Job):
         failed.append(path)
       result = self.fc.setMetadata(path,meta)
       if not result['OK']:
-        self.log.error("Could not preset metadata")
+        self.log.error("Could not preset metadata",meta)
     if len(failed):
       return  { 'OK' : False, 'Failed': failed}
     return S_OK()
@@ -500,7 +500,7 @@ class ProductionJob(Job):
   def getMetadata(self):
     metadict = {}
     for path,meta in self.finalMetaDict.items():
-      for key,val in meta:
+      for key,val in meta.items():
         metadict[key] = val
     return metadict
   
