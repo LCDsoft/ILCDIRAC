@@ -500,8 +500,7 @@ class ProductionJob(Job):
   def getMetadata(self):
     metadict = {}
     for path,meta in self.finalMetaDict.items():
-      for key,val in meta.items():
-        metadict[key] = val
+      metadict.update(meta)
     return metadict
   
   def _setProdParameter(self,prodID,pname,pvalue):
