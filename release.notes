@@ -1,3 +1,7 @@
+[v6r5p1]
+* Workflow
+Bug fix in WhizardAnalysis: * in ventstring was causing the applciation to stall
+
 [v6r4p1]
 * Workflow
 Bug fix in FailoverRequest module: the files did not get their statuses updated
