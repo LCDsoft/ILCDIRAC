@@ -4,19 +4,26 @@ Created on Feb 8, 2012
 @author: Stephane Poss
 '''
 
-from DIRASC.Core.Base import Script
+from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard,Mokka
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard,Mokka,Marlin
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 dirac = DiracILC()
 
+###As it's a full chain, we start at generation
+##so we need to define the process and the energy
+## The rest will be set later. We could also set the process 
+##and the energy directly in the whizard def, but for clarity
+## it's better to do it before, that way we know the very 
+##essential
 process = 'stau1stau1_r'
 energy = 1400
 
 
+##Start by defining the whizard application
 
 wh = Whizard(processlist=dirac.getProcessList())
 wh.setModel("susyStagedApproach")
@@ -53,6 +60,18 @@ pdict['beam_input_2']['USER_spectrum_mode'] = -19
 
 wh.setFullParameterDict(pdict)
 
+##Simulation
+mo = Mokka()
+mo.setVersion('0706P08')
+mo.setSteeringFile("clic_ild_cdr.steer")
+
+##Reconstruction
+ma = Marlin()
+ma.setVersion('v0111Prod')
+ma.setSteeringFile("clic_ild_cdr_steering.xml")
+
+##########################################
+##Define the generation production.
 pwh = ProductionJob()
 pwh.setOutputSE("CERN-SRM")
 pwh.setProdType("MCGeneration")
@@ -74,17 +93,19 @@ if not res['OK']:
     print res['Message']
     exit(1)
 pwh.setNbOfTasks(1)
+##The production is created, one can now take care of the second step:
+#For that we will use the metadata of the previous production as input
 meta = pwh.getMetadata()
 
+####################
+##Define the second production (simulation). Notice the setInputDataQuery call
 pmo = ProductionJob()
+pmo.setProdType('MCSimulation')
 pmo.setInputDataQuery(meta)
 pmo.setOutputSE("CERN-SRM")
 pmo.setWorkflowName(process+"_"+str(energy)+"ild_sim")
 pmo.setProdGroup(process+"_"+str(energy))
-
-mo = Mokka()
-mo.setVersion('0706P08')
-mo.setSteeringFile("clic_ild_cdr.steer")
+#Add the application
 res = pmo.append(mo)
 if not res['OK']:
     print res['Message']
@@ -99,3 +120,32 @@ res = pmo.finalizeProd()
 if not res['OK']:
     print res['Message']
     exit(1)
+#As before: get the metadata for this production to input into the next
+meta = pmo.getMetadata()
+    
+#######################
+#Define the reconstruction prod    
+pma = ProductionJob()
+pma.setProdType('MCReconstruction')
+pma.setInputDataQuery(meta)
+pma.setOutputSE("CERN-SRM")
+pma.setWorkflowName(process+"_"+str(energy)+"ild_rec")
+pma.setProdGroup(process+"_"+str(energy))
+
+#Add the application
+res = pma.append(ma)
+if not res['OK']:
+    print res['Message']
+    exit(1)
+pma.addFinalization(True,True,True,True)
+pma.setDescription("CLIC_ILD_CDR, No Overlay")
+
+res = pma.createProduction()
+if not res['OK']:
+    print res['Message']
+res = pma.finalizeProd()
+if not res['OK']:
+    print res['Message']
+    exit(1)
+
+##In principle nothing else is needed.
