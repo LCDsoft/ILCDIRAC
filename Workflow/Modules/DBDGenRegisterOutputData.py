@@ -19,13 +19,19 @@ class DBDGenRegisterOutputData(ModuleBase):
     self.commandTimeOut = 10*60
     self.enable=True
     self.fc = FileCatalogClient()
+    self.nbofevents = 0
     
   def applicationSpecificInputs(self):
     if self.workflow_commons.has_key('ProductionOutputData'):
       self.prodOutputLFNs=self.workflow_commons['ProductionOutputData'].split(";")
     else:
       self.prodOutputLFNs = []
-    return S_OK("Paramters resolved")
+      
+    if self.workflow_commons.has_key('NbOfEvents'):
+      self.nbofevents = self.workflow_commons['NbOfEvents']
+    if self.workflow_commons.has_key('NbOfEvts'):
+      self.nbofevents = self.workflow_commons[ 'NbOfEvts']          
+    return S_OK("Parameters resolved")
       
   def execute(self):
     self.log.info('Initializing %s' %self.version)
@@ -38,7 +44,7 @@ class DBDGenRegisterOutputData(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
       return S_OK('No registration of output data metadata attempted')
 
-    if len(self.prodOutputLFNs)==0:
+    if not len(self.prodOutputLFNs):
       self.log.info('No production data found, so no metadata registration to be done')  
       return S_OK("No files' metadata to be registered")
     
@@ -46,9 +52,10 @@ class DBDGenRegisterOutputData(ModuleBase):
     
     for files in self.prodOutputLFNs:
       metadict = {}
+      metadict['NumberOfEvents'] = self.nbofevents
       path = files
       
-      res = self.fc.setMetadata(path,metadict)
+      res = self.fc.setMetadata(files,metadict)
       if not res['OK']:
         self.log.error("Could not register %s for %s"%(metadict,path))
         return res
