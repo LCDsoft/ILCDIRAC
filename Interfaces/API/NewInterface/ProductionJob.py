@@ -428,6 +428,15 @@ class ProductionJob(Job):
       return res
     return S_OK()
   
+  def addMetadataToFinalFiles(self,metadict):
+    """ Add additionnal non-query metadata 
+    """
+    for key in metadict.keys():
+      if key in self.finalMetaDict[self.basepath].keys():
+        self.log.error("Not allowed to overwrite existing metadata: ",key)
+    self.finalMetaDict[self.basepath].update(metadict)
+    return S_OK()
+  
   def finalizeProd(self,prodid=None,prodinfo=None):
     """ Finalize definition: submit to Transformation service and register metadata
     """
@@ -454,10 +463,14 @@ class ProductionJob(Job):
         info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']*self.prodparameters['NbInputFiles']))
     if self.prodparameters.has_key('FCInputQuery'):
       info.append('Using InputDataQuery :')
-      for n,v in self.prodparameters['FCInputQuery'].items():
-        info.append('    %s = %s' %(n,v))
+      for k,v in self.prodparameters['FCInputQuery'].items():
+        info.append('    %s = %s' %(k,v))
         
     info.append('- SW packages %s'%self.prodparameters["SWPackages"])
+
+    info.append('- Registered metadata: ')
+    for k,v in self.finalMetaDict.items():
+      info.append('    %s = %s' %(k,v))
 
     infoString = string.join(info,'\n')
     self.prodparameters['DetailedInfo']=infoString
