@@ -555,7 +555,13 @@ class Whizard(Application):
       } )
 
     self.jobindex = index
-    
+  
+  def dumpWhizardDotIn(self,fname='whizard.in'):
+    if self.addedtojob:
+      self._wo.toWhizardDotIn(fname)
+    else:
+      self._reportError("Can't dump the whizard.in as there can be further changes")
+        
   def _checkConsistency(self):
 
     self._wo = WhizardOptions(self.model)
