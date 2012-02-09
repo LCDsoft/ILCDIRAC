@@ -69,46 +69,46 @@ class SIDRegisterOutputData(ModuleBase):
     self.log.verbose("Will try to set the metadata for the following files: \n %s"%string.join(self.prodOutputLFNs,"\n"))
 
     for files in self.prodOutputLFNs:
-      elements = files.split("/")
-      metaprodid = {}
-      metaforfiles = {}
+#      elements = files.split("/")
+#      metaprodid = {}
+#      metaforfiles = {}
       meta = {}  
-      metaen={}
-      metaen['Energy']=elements[5]
-      meta.update(metaen)
-      energy = string.join(elements[0:6],"/")
-      if self.enable:
-        res = self.fc.setMetadata(energy,metaen)
-        if not res['OK']:
-          self.log.error('Could not register metadata Energy, with value %s for %s'%(elements[4],energy))
-          return res      
-      metaevt={}
-      metaevt['EvtType']=elements[6]
-      meta.update(metaevt)
-      evttype = string.join(elements[0:7],"/")
-      if self.enable:
-        res = self.fc.setMetadata(evttype,metaevt)
-        if not res['OK']:
-          self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
-          return res
-      prodid = ''
-      
-      metadat={}
-      metadat['Datatype']=elements[7]
-      datatype = string.join(elements[0:8],"/")
-      if self.enable:
-        res = self.fc.setMetadata(datatype,metadat)
-        if not res['OK']:
-          self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[7],datatype))
-          return res 
-      metaprodid['ProdID'] = elements[8]
-      prodid = string.join(elements[0:9],"/")
-      if self.enable:
-        res = self.fc.setMetadata(prodid,metaprodid)
-        if not res['OK']:
-          self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
-          return res
-        
+#      metaen={}
+#      metaen['Energy']=elements[5]
+#      meta.update(metaen)
+#      energy = string.join(elements[0:6],"/")
+#      if self.enable:
+#        res = self.fc.setMetadata(energy,metaen)
+#        if not res['OK']:
+#          self.log.error('Could not register metadata Energy, with value %s for %s'%(elements[4],energy))
+#          return res      
+#      metaevt={}
+#      metaevt['EvtType']=elements[6]
+#      meta.update(metaevt)
+#      evttype = string.join(elements[0:7],"/")
+#      if self.enable:
+#        res = self.fc.setMetadata(evttype,metaevt)
+#        if not res['OK']:
+#          self.log.error('Could not register metadata EvtType, with value %s for %s'%(elements[5],evttype))
+#          return res
+#      prodid = ''
+#      
+#      metadat={}
+#      metadat['Datatype']=elements[7]
+#      datatype = string.join(elements[0:8],"/")
+#      if self.enable:
+#        res = self.fc.setMetadata(datatype,metadat)
+#        if not res['OK']:
+#          self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[7],datatype))
+#          return res 
+#      metaprodid['ProdID'] = elements[8]
+#      prodid = string.join(elements[0:9],"/")
+#      if self.enable:
+#        res = self.fc.setMetadata(prodid,metaprodid)
+#        if not res['OK']:
+#          self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
+#          return res
+#        
       if self.nbofevents:
         nbevts = {}
         nbevts['NumberOfEvents']=self.nbofevents
@@ -125,7 +125,7 @@ class SIDRegisterOutputData(ModuleBase):
           if not res['OK']:
             self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,files))
             return res
-      meta.update(metaprodid)
+#      meta.update(metaprodid)
       meta.update(nbevts)
       meta.update(lumi)
       
