@@ -115,7 +115,7 @@ class RegisterOutputData(ModuleBase):
         meta.update(metaprodid)
         prodid = string.join(elements[0:8],"/")
         if self.enable:
-          res = self.fc.setMetadata(prodid,metaprodid)
+          #res = self.fc.setMetadata(prodid,metaprodid)
           if not res['OK']:
             self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[7],prodid))
             return res
@@ -125,7 +125,7 @@ class RegisterOutputData(ModuleBase):
         metadet['DetectorType']=elements[6]
         detectortype=string.join(elements[0:7],"/")
         if self.enable:
-          res = self.fc.setMetadata(detectortype,metadet)
+          #res = self.fc.setMetadata(detectortype,metadet)
           if not res['OK']:
             self.log.error('Could not register metadata DetectorType, with value %s for %s'%(elements[6],detectortype))
             return res
@@ -133,14 +133,14 @@ class RegisterOutputData(ModuleBase):
         metadat['Datatype']=elements[7]
         datatype = string.join(elements[0:8],"/")
         if self.enable:
-          res = self.fc.setMetadata(datatype,metadat)
+          #res = self.fc.setMetadata(datatype,metadat)
           if not res['OK']:
             self.log.error('Could not register metadata Datatype, with value %s for %s'%(elements[7],datatype))
             return res 
         metaprodid['ProdID'] = elements[8]
         prodid = string.join(elements[0:9],"/")
         if self.enable:
-          res = self.fc.setMetadata(prodid,metaprodid)
+          #res = self.fc.setMetadata(prodid,metaprodid)
           if not res['OK']:
             self.log.error('Could not register metadata ProdID, with value %s for %s'%(elements[8],prodid))
             return res
