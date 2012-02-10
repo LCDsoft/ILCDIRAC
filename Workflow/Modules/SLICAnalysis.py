@@ -202,7 +202,7 @@ class SLICAnalysis(ModuleBase):
     if len(self.SteeringFile)>0:
       self.SteeringFile = os.path.basename(self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        res =  getSteeringFileDirName(self.systemConfig,"marlin",self.applicationVersion)     
+        res =  getSteeringFileDirName(self.systemConfig,"slic",self.applicationVersion)     
         if not res['OK']:
           self.log.error("Could not find where the steering files are")
         steeringfiledirname = res['Value']
