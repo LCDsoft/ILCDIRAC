@@ -48,7 +48,7 @@ lcsimSteering1 = "clic_cdr_prePandora.lcsim"
 lcsimSteering1_ov = "clic_cdr_prePandoraOverlay.lcsim"
 lcsimSteering2 = "clic_cdr_postPandoraOverlay.lcsim"
 pandoraSettings = "PandoraSettingsSlic.xml"
-strategies = "defaultStrategies.xml"
+strategies = "defaultStrategies_%s.xml"
 
 
 for switch in switches:
@@ -60,6 +60,7 @@ for switch in switches:
     eventType = arg
   elif opt in ('m', 'model'):
     detectorName = arg
+    strategies = strategies%detectorName
   elif opt in ('g', 'group'):
     prodGroup = arg
   elif opt in ('p', 'prodid'):
