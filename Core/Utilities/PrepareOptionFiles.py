@@ -471,7 +471,8 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,rand
   output.close()
   return S_OK(True)
 
-def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None, outputFile=None,outputRECFile=None,outputDSTFile=None,debug=False):
+def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=None,cachedir = None, 
+                     outputFile=None,outputRECFile=None,outputDSTFile=None,debug=False):
   """Writes out a lcsim file for LCSIM
   
   Takes the parameters passed from LCSIMAnalysis
@@ -590,6 +591,15 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,inputslcio,jars=None,cachedir = None
         execut.append(evtmark)
         
   #drivers = tree.findall("drivers/driver")      
+
+  if trackingstrategy:
+    for driver in drivers:
+      if driver.attrib.has_key['type']:
+        if driver.attrib['type']=='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper':
+          driver.remove(driver.find('strategyFile'))
+          strategy = Element("strategyFile")
+          strategy.text = trackingstrategy
+          driver.append(strategy)
 
   mark = tree.find("drivers/driver/marker")
   if mark:
