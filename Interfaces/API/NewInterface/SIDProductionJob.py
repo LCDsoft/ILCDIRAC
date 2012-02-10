@@ -134,11 +134,7 @@ class SIDProductionJob(ProductionJob):
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
 
-    return S_OK()
-  def finalizeProd(self):
-    """ Finalize definition: submit to Transformation service
-    """
-    return S_OK()  
+    return S_OK() 
   
   def _jobSpecificParams(self,application):
     """ For production additional checks are needed: ask the user
@@ -215,26 +211,31 @@ class SIDProductionJob(ProductionJob):
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
       path = self.basepath+energypath+self.evttype+"/REC/"
+      self.finalMetaDict[self.basepath+energypath+self.evttype] = {"EvtType":self.evttype}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+"/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
       path = self.basepath+energypath+self.evttype+"/DST/"
+      self.finalMetaDict[self.basepath+energypath+self.evttype+"/DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+energypath+self.evttype
+      self.finalMetaDict[path]= {"EvtType":self.evttype}      
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
+      self.finalMetaDict[path]= {"Datatype":application.datatype}      
       self.log.info("Will store the files under %s"%path)
       fname = self.basename+"_%s"%(application.datatype.lower())+".slcio"
       application.setOutputFile(fname,path)  
+
+    self.basepath = path
     
     res = self._updateProdParameters(application)
     if not res['OK']:
-      return res
-      
-    self.basepath = path
+      return res      
+    
     self.checked = True
       
     return S_OK()
- 
