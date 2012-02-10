@@ -22,6 +22,8 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
+
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC
@@ -256,11 +258,16 @@ class MokkaAnalysis(ModuleBase):
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
+      
       self.SteeringFile = os.path.basename(self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)):
+        res =  getSteeringFileDirName(self.systemConfig,"mokka",self.applicationVersion)
+        if not res['OK']:
+          return res
+        steeringfiledirname = res['Value']
+        if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
           try:
-            shutil.copy(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile), "./"+self.SteeringFile )
+            shutil.copy(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile), "./"+self.SteeringFile )
           except Exception,x:
             result = sqlwrapper.mysqlCleanUp()
             return S_ERROR('Failed to access file %s: '%(self.SteeringFile,str(x)))  
