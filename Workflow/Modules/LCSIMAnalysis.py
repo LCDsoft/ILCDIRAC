@@ -209,7 +209,7 @@ class LCSIMAnalysis(ModuleBase):
     paths[os.path.basename(self.trackingstrategy)] = self.trackingstrategy
     for file in paths.keys():  
       if len(file):
-        file = os.path.basename(file)
+        #file = os.path.basename(file)
         if not os.path.exists(file):
           res =  getSteeringFileDirName(self.systemConfig,"lcsim",self.applicationVersion)     
           if not res['OK']:
@@ -219,8 +219,8 @@ class LCSIMAnalysis(ModuleBase):
             paths[file] = os.path.join(mySoftwareRoot,steeringfiledirname,file)
         if not os.path.exists(paths[file]):
           return S_ERROR("Could not find lcsim file %s"%paths[file])    
-    self.SteeringFile = paths[self.SteeringFile]
-    self.trackingstrategy = paths[self.trackingstrategy] 
+    self.SteeringFile = paths[os.path.basename(self.SteeringFile)]
+    self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
     
     lcsimfile = "job.lcsim"
     res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,self.trackingstrategy,runonslcio,jars,cachedir,self.OutputFile,self.outputREC,self.outputDST,self.debug)
