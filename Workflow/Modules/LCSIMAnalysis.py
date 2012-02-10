@@ -12,19 +12,18 @@ ILCDIRAC.Workflow.Modules.LCSIMAnalysis Called by Job Agent.
 __RCSID__ = "$Id: $"
 
 import os, sys, re, shutil
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-#from DIRAC.Core.DISET.RPCClient                           import RPCClient
+from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareLCSIMFile,GetNewLDLibs 
-from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
-from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
-from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import PrepareLCSIMFile,GetNewLDLibs 
+from ILCDIRAC.Core.Utilities.ResolveDependencies             import resolveDepsTar
+from ILCDIRAC.Core.Utilities.resolveIFpaths                  import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames                  import getProdFilename
+from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfevents
+from ILCDIRAC.Core.Utilities.PrepareLibs                     import removeLibc
+from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringFileDirName
 
-
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
 class LCSIMAnalysis(ModuleBase):
@@ -204,6 +203,8 @@ class LCSIMAnalysis(ModuleBase):
         if os.path.exists(os.path.join(lcsimfolder,"detectors")):
           self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
           shutil.copy(os.path.basename(self.detectorModel),os.path.join(lcsimfolder,"detectors",os.path.basename(self.detectorModel)))
+          
+    steeringfiledirname =  getSteeringFileDirName(self.systemConfig,"lcsim",self.applicationVersion)     
     paths = {}
     paths[self.SteeringFile]= self.SteeringFile
     paths[self.trackingstrategy] = self.trackingstrategy
@@ -211,8 +212,8 @@ class LCSIMAnalysis(ModuleBase):
       if len(file):
         file = os.path.basename(file)
         if not os.path.exists(file):
-          if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",file)):
-            paths[file] = os.path.join(mySoftwareRoot,"steeringfilesV1",file)
+          if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,file)):
+            paths[file] = os.path.join(mySoftwareRoot,steeringfiledirname,file)
         if not os.path.exists(paths[file]):
           return S_ERROR("Could not find lcsim file %s"%paths[file])    
     self.SteeringFile = paths[self.SteeringFile]
