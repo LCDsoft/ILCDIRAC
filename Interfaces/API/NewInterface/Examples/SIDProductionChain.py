@@ -290,7 +290,7 @@ plcsim_ov.addFinalization(True,True,True,True)
 
 plcsim_ov.setProdType("MCReconstruction_Overlay")
 plcsim_ov.setProdGroup(prodGroup)
-plcsim_ov.setWorkflowName(workflowName+'_rec_sid_cdr')
+plcsim_ov.setWorkflowName(workflowName+'_rec_sid_cdr_overlay')
 plcsim_ov.setCPUTime(cpuLimit)
 plcsim_ov.setOutputSE("CERN-SRM")
 plcsim_ov.setDescription('Reconstructing with overlay '+workflowDescription)
