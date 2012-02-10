@@ -1846,6 +1846,11 @@ class LCSIM(Application):
       self.inputSB.append(alias) 
   
   def setDetectorModel(self,model):
+    """ Detector Model to use
+    
+    @param model: name, zip file, or lfn that points to the detector model
+    @type model: string
+    """
     self._checkArgs( {
         'model' : types.StringTypes
       } )    
@@ -1854,6 +1859,11 @@ class LCSIM(Application):
       self.inputSB.append(model)
   
   def setTrackingStrategy(self,trackingstrategy):
+    """ Optional: Define the tracking strategy to use.  
+    
+    @param trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is in the steering file
+    @type trackingstrategy: string
+    """
     self._checkArgs( {
         'trackingstrategy' : types.StringTypes
       } )  
