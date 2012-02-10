@@ -13,7 +13,7 @@ Script.registerSwitch( 'D:', 'description=', 'Short description of the workflow 
 Script.registerSwitch( 'e:', 'evttype=', 'Name of the production event type (optional in addition to production ID)' )
 Script.registerSwitch( 'E:', 'energy=', 'Energy of the production events (default 3tev)' )
 Script.registerSwitch( 'm:', 'model=', 'Name of detector model to use' )
-#Script.registerSwitch( 'n', 'nocheck', 'Switches off additional check before submission' )
+Script.registerSwitch( 'n', 'nocheck', 'Switches off additional check before submission' )
 Script.registerSwitch( 'g:', 'group=', 'Name of the production group (default set by metadata)' )
 Script.registerSwitch( 'p:', 'prodid=', 'Production ID of input' )
 Script.registerSwitch( 't:', 'time=', 'CPU time limit per job in seconds (default 300000)' )
@@ -44,8 +44,9 @@ lcsimVers = '1.15-SNAPSHOT'
 pandoraVers = 'CDR0'
 
 slicMacro = 'defaultClicCrossingAngle.mac'
-lcsimSteering1 = "defaultPrePandoraLcsim.xml"
-lcsimSteering2 = "defaultPostPandoraLcsim.xml"
+lcsimSteering1 = "clic_cdr_prePandora.lcsim"
+lcsimSteering1_ov = "clic_cdr_prePandoraOverlay.lcsim"
+lcsimSteering2 = "clic_cdr_postPandoraOverlay.lcsim"
 pandoraSettings = "PandoraSettingsSlic.xml"
 strategies = "defaultStrategies.xml"
 
@@ -120,6 +121,12 @@ if not energy:
   energy = metaValues['Energy'][0]
 else:
   print '\t', 'Energy :', energy
+  
+print 'SLIC version:', slicVersion
+print 'LCSim version:', lcsimVers
+print 'SLICPandora version:', pandoraVers
+print 'CPU limit:', cpuLimit, 'sec'
+
 
 if not prodGroup:
   prodGroup = eventType+'_'+energy+'_cdr'  
@@ -134,18 +141,20 @@ if not workflowDescription:
 print 'Workflow description:', workflowDescription
 
 
+if checkMeta:
+  answer = raw_input('Submit production? (Y/N): ')
+  if not answer.lower() in ('y', 'yes'):
+    sys.exit(2)
+
 ####Define the applications
 
+## Simulation
 slic = SLIC()
 slic.setVersion(slicVersion)
 slic.setSteeringFile(slicMacro)
 slic.setDetectorModel(detectorName)
 
-overlay = OverlayInput()
-overlay.setBXOverlay(60)
-overlay.setGGToHadInt(1.3)##When running at 1.4TeV
-overlay.setDetectorType("SID")
-
+## Reco without overlay
 lcsim_prepandora = LCSIM()
 lcsim_prepandora.setVersion(lcsimVers)
 lcsim_prepandora.setSteeringFile(lcsimSteering1)
@@ -166,6 +175,33 @@ lcsim_postpandora.getInputFromApp(slicpandora)
 lcsim_postpandora.setSteeringFile(lcsimSteering2)
 lcsim_postpandora.setTrackingStrategy(strategies)
 lcsim_postpandora.setDetectorModel(detectorName)
+
+### Now with overlay
+overlay = OverlayInput()
+overlay.setBXOverlay(60)
+overlay.setGGToHadInt(1.3)##When running at 1.4TeV
+overlay.setDetectorType("SID")
+
+lcsim_prepandora_ov = LCSIM()
+lcsim_prepandora_ov.setVersion(lcsimVers)
+lcsim_prepandora_ov.setSteeringFile(lcsimSteering1_ov)
+lcsim_prepandora_ov.setTrackingStrategy(strategies)
+lcsim_prepandora_ov.setDetectorModel(detectorName)
+lcsim_prepandora_ov.setOutputFile("prePandora.slcio")
+
+slicpandora_ov = SLICPandora()
+slicpandora_ov.setVersion(pandoraVers)
+slicpandora_ov.setDetectorModel(detectorName)
+slicpandora_ov.setPandoraSettings(pandoraSettings)
+slicpandora_ov.getInputFromApp(lcsim_prepandora_ov)
+slicpandora_ov.setOutputFile('pandora.slcio')
+
+lcsim_postpandora_ov = LCSIM()
+lcsim_postpandora_ov.setVersion(lcsimVers)
+lcsim_postpandora_ov.getInputFromApp(slicpandora_ov)
+lcsim_postpandora_ov.setSteeringFile(lcsimSteering2)
+lcsim_postpandora_ov.setTrackingStrategy(strategies)
+lcsim_postpandora_ov.setDetectorModel(detectorName)
 
 ####################################################33
 ##Now define the productions
@@ -229,7 +265,7 @@ if not res['OK']:
   exit(1)
 
 
-###Now do the reconstruction with overlay, nothing changes...
+###Now do the reconstruction with overlay
 plcsim_ov = ProductionJob()
 plcsim_ov.setInputDataQuery(meta)
 
@@ -237,15 +273,15 @@ res = plcsim_ov.append(overlay)
 if not res['OK']:
   print res['Message']
   exit(1)
-res = plcsim_ov.append(lcsim_prepandora)
+res = plcsim_ov.append(lcsim_prepandora_ov)
 if not res['OK']:
   print res['Message']
   exit(1)
-res = plcsim_ov.append(slicpandora)
+res = plcsim_ov.append(slicpandora_ov)
 if not res['OK']:
   print res['Message']
   exit(1)
-res = plcsim_ov.append(lcsim_postpandora)
+res = plcsim_ov.append(lcsim_postpandora_ov)
 if not res['OK']:
   print res['Message']
   exit(1)
@@ -256,8 +292,8 @@ plcsim_ov.setProdGroup(prodGroup)
 plcsim_ov.setWorkflowName(workflowName+'_rec_sid_cdr')
 plcsim_ov.setCPUTime(cpuLimit)
 plcsim_ov.setOutputSE("CERN-SRM")
-plcsim_ov.setDescription('Reconstructing '+workflowDescription)
-res = plcsim._ovcreateProduction()
+plcsim_ov.setDescription('Reconstructing with overlay '+workflowDescription)
+res = plcsim_ov.createProduction()
 if not res['OK']:
   print res['Message']
   exit(1)
