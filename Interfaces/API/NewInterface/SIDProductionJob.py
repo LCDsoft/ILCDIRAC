@@ -198,7 +198,8 @@ class SIDProductionJob(ProductionJob):
       energypath = "%stev/"%(self.energy/Decimal("1000."))
     else:
       energypath =  "%sgev/"%(self.energy/Decimal("1000."))
-
+    self.finalMetaDict[self.basepath+energypath] = {'Energy':energypath.rstrip("/")}  
+    
     if not self.basename:
       self.basename = self.evttype
     
