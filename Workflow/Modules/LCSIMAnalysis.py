@@ -204,7 +204,6 @@ class LCSIMAnalysis(ModuleBase):
           self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
           shutil.copy(os.path.basename(self.detectorModel),os.path.join(lcsimfolder,"detectors",os.path.basename(self.detectorModel)))
           
-    steeringfiledirname =  getSteeringFileDirName(self.systemConfig,"lcsim",self.applicationVersion)     
     paths = {}
     paths[self.SteeringFile]= self.SteeringFile
     paths[self.trackingstrategy] = self.trackingstrategy
@@ -212,6 +211,10 @@ class LCSIMAnalysis(ModuleBase):
       if len(file):
         file = os.path.basename(file)
         if not os.path.exists(file):
+          res =  getSteeringFileDirName(self.systemConfig,"lcsim",self.applicationVersion)     
+          if not res['OK']:
+            return res
+          steeringfiledirname = res['Value']
           if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,file)):
             paths[file] = os.path.join(mySoftwareRoot,steeringfiledirname,file)
         if not os.path.exists(paths[file]):

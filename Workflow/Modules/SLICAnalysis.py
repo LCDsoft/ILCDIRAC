@@ -19,9 +19,10 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
-from ILCDIRAC.Core.Utilities.resolveIFpaths import resolveIFpaths
-from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
+from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -197,11 +198,16 @@ class SLICAnalysis(ModuleBase):
         self.log.error("Generator file not found")
         return res
       self.InputFile = res['Value'][0]
+    
     if len(self.SteeringFile)>0:
       self.SteeringFile = os.path.basename(self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        if os.path.exists(os.path.join(area,"steeringfilesV1",self.SteeringFile)):
-          self.SteeringFile = os.path.join(area,"steeringfilesV1",self.SteeringFile)
+        res =  getSteeringFileDirName(self.systemConfig,"marlin",self.applicationVersion)     
+        if not res['OK']:
+          self.log.error("Could not find where the steering files are")
+        steeringfiledirname = res['Value']
+        if os.path.exists(os.path.join(area,steeringfiledirname,self.SteeringFile)):
+          self.SteeringFile = os.path.join(area,steeringfiledirname,self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find mac file")    
         

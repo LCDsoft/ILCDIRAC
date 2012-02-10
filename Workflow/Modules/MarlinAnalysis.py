@@ -26,6 +26,7 @@ from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
+from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
@@ -191,11 +192,16 @@ class MarlinAnalysis(ModuleBase):
     if not os.path.exists(self.inputGEAR):
       if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)):
         self.inputGEAR = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)
-      
+        
+    
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
-      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)):
-        self.SteeringFile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)
+      res  =  getSteeringFileDirName(self.systemConfig,"marlin",self.applicationVersion)     
+      if not res['OK']:
+        self.log.error('Could not find the steering file directory')
+      steeringfiledirname = res['Value']
+      if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
+        self.SteeringFile = os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)
     if not self.SteeringFile:
       return S_ERROR("Could not find steering file")
     
