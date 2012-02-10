@@ -467,7 +467,10 @@ class ProductionJob(Job):
         info.append('    %s = %s' %(k,v))
         
     info.append('- SW packages %s'%self.prodparameters["SWPackages"])
-
+    # as this is the very last call all applications are registered, so all software packages are known
+    #add them the the metadata registration
+    self.finalMetaDict[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
+    
     info.append('- Registered metadata: ')
     for k,v in self.finalMetaDict.items():
       info.append('    %s = %s' %(k,v))
@@ -592,9 +595,7 @@ class ProductionJob(Job):
     else :
       self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
     
-    # as this is the very last call all applications are registered, so all software packages are known
-    #add them the the metadata registration
-    self.finalMetaDict[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
+
     
     res = application.setOutputSE(self.outputStorage)
     if not res['OK']:
