@@ -1,3 +1,11 @@
+[v6r6p0]
+* Core 
+Added utility to obtain the steeringfile version, therefore directory
+* Interface
+Added production scripts for SiD (CLIC) and ILD (CLIC)
+* Workflow
+Update to account for new utility to obtain version dependant steering file directory
+
 [v6r5p1]
 * Workflow
 Bug fix in WhizardAnalysis: * in ventstring was causing the applciation to stall
