@@ -205,8 +205,8 @@ class LCSIMAnalysis(ModuleBase):
           shutil.copy(os.path.basename(self.detectorModel),os.path.join(lcsimfolder,"detectors",os.path.basename(self.detectorModel)))
           
     paths = {}
-    paths[os.path.basename(self.SteeringFile)]= self.SteeringFile
-    paths[os.path.basename(self.trackingstrategy)] = self.trackingstrategy
+    paths[os.path.basename(self.SteeringFile)]= os.path.basename(self.SteeringFile)
+    paths[os.path.basename(self.trackingstrategy)] = os.path.basename(self.trackingstrategy)
     for file in paths.keys():  
       if len(file):
         #file = os.path.basename(file)
