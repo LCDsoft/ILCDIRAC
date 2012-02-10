@@ -490,9 +490,7 @@ class ProductionJob(Job):
       
       Register path and metadata before the production actually runs. This allows for the definition of the full chain in 1 go. 
     """
-    # as this is the very last call all applications are registered, so all software packages are known
-    #add them the the metadata registration
-    self.finalMetaDict[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
+    
 
     failed = []
     for path,meta in self.finalMetaDict.items():
@@ -593,6 +591,10 @@ class ProductionJob(Job):
       self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.version)
     else :
       self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
+    
+    # as this is the very last call all applications are registered, so all software packages are known
+    #add them the the metadata registration
+    self.finalMetaDict[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
     
     res = application.setOutputSE(self.outputStorage)
     if not res['OK']:
