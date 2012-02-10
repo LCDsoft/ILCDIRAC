@@ -47,6 +47,7 @@ class LCSIMAnalysis(ModuleBase):
     self.extraparams = ''
     self.OutputFile = '' #Set in ModuleBase
     self.detectorModel = ''
+    self.trackingstrategy = ''
      
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -203,17 +204,22 @@ class LCSIMAnalysis(ModuleBase):
         if os.path.exists(os.path.join(lcsimfolder,"detectors")):
           self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
           shutil.copy(os.path.basename(self.detectorModel),os.path.join(lcsimfolder,"detectors",os.path.basename(self.detectorModel)))
-      
-      
-    if len(self.SteeringFile):
-      self.SteeringFile = os.path.basename(self.SteeringFile)
-      if not os.path.exists(self.SteeringFile):
-        if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)):
-          self.SteeringFile = os.path.join(mySoftwareRoot,"steeringfilesV1",self.SteeringFile)
-      if not os.path.exists(self.SteeringFile):
-        return S_ERROR("Could not find lcsim file")    
+    paths = {}
+    paths[self.SteeringFile]= self.SteeringFile
+    paths[self.trackingstrategy] = self.trackingstrategy
+    for file in paths.keys():  
+      if len(file):
+        file = os.path.basename(file)
+        if not os.path.exists(file):
+          if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",file)):
+            paths[file] = os.path.join(mySoftwareRoot,"steeringfilesV1",file)
+        if not os.path.exists(paths[file]):
+          return S_ERROR("Could not find lcsim file %s"%paths[file])    
+    self.SteeringFile = paths[self.SteeringFile]
+    self.trackingstrategy = paths[self.trackingstrategy] 
+    
     lcsimfile = "job.lcsim"
-    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,runonslcio,jars,cachedir,self.OutputFile,self.outputREC,self.outputDST,self.debug)
+    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,self.trackingstrategy,runonslcio,jars,cachedir,self.OutputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file because %s"%res['Message'])
       return S_ERROR("Error creating lcsim file")
