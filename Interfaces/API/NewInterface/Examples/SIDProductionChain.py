@@ -155,7 +155,7 @@ slic.setVersion(slicVersion)
 slic.setSteeringFile(slicMacro)
 slic.setDetectorModel(detectorName)
 
-## Reco without overlay
+## Reco without overlay: Do not take the input from SLIC as those are ran in different prods
 lcsim_prepandora = LCSIM()
 lcsim_prepandora.setVersion(lcsimVers)
 lcsim_prepandora.setSteeringFile(lcsimSteering1)
