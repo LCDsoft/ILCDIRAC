@@ -490,6 +490,10 @@ class ProductionJob(Job):
       
       Register path and metadata before the production actually runs. This allows for the definition of the full chain in 1 go. 
     """
+    # as this is the very last call all applications are registered, so all software packages are known
+    #add them the the metadata registration
+    self.finalMetaDict[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
+
     failed = []
     for path,meta in self.finalMetaDict.items():
       result = self.fc.createDirectory(path)
