@@ -1787,6 +1787,7 @@ class LCSIM(Application):
 
     self.extraParams = ''
     self.aliasProperties = ''
+    self.trackingstrategy = ''
     Application.__init__(self,paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
@@ -1851,7 +1852,15 @@ class LCSIM(Application):
     self.detectorModel = model
     if os.path.exists(model) or model.lower().count("lfn:"):
       self.inputSB.append(model)
-    
+  
+  def setTrackingStrategy(self,trackingstrategy):
+    self._checkArgs( {
+        'trackingstrategy' : types.StringTypes
+      } )  
+    self.trackingstrategy = trackingstrategy
+    if os.path.exists(self.trackingstrategy) or self.trackingstrategy.lower().count('lfn:'):
+      self.inputSB.append(self.trackingstrategy)
+      
   def setExtraParams(self,extraparams):
     """ Optional: Define command line parameters to pass to java
     
@@ -1895,7 +1904,12 @@ class LCSIM(Application):
         res = Exists(self.steeringfile)
         if not res['OK']:
           return res  
-    
+    if self.trackingstrategy:
+      if not os.path.exists(self.trackingstrategy) and not self.trackingstrategy.lower().count("lfn:"):
+        res = Exists(self.trackingstrategy)
+        if not res['OK']:
+          return res  
+        
     if self.detectorModel:
       if not self.detectorModel.lower().count(".zip"):
         return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. Or use the alias.properties.")
@@ -1916,7 +1930,7 @@ class LCSIM(Application):
       self.prodparameters['detectorType'] = self.detectortype
       self.prodparameters['lcsim_detectorModel'] = self.detectorModel
       self.prodparameters['lcsim_steeringfile'] = self.steeringfile
-      
+      self.prodparameters['lcsim_trackingstrategy'] = self.trackingstrategy
 
       #if not slicp:
       #  self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
@@ -1931,6 +1945,7 @@ class LCSIM(Application):
     md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
     md1.addParameter(Parameter("debug",              False,   "bool", "", "", False, False, "debug mode"))
     md1.addParameter(Parameter("detectorModel",         "", "string", "", "", False, False, "detector model zip file"))
+    md1.addParameter(Parameter("trackingstrategy",      "", "string", "", "", False, False, "trackingstrategy"))
     return md1
   
   def _applicationModuleValues(self,moduleinstance):
@@ -1939,7 +1954,8 @@ class LCSIM(Application):
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
     moduleinstance.setValue("debug",              self.debug)
     moduleinstance.setValue("detectorModel",      self.detectorModel)
-    
+    moduleinstance.setValue("trackingstrategy",   self.trackingstrategy)
+
   def _resolveLinkedStepParameters(self,stepinstance):
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
