@@ -1,3 +1,7 @@
+[v6r6p1]
+* Workflow
+Bug fix in LCSIM: trying to be too clever can lead to troubles.
+
 [v6r6p0]
 * Core 
 Added utility to obtain the steeringfile version, therefore directory
