@@ -103,7 +103,7 @@ pmo = ProductionJob()
 pmo.setProdType('MCSimulation')
 pmo.setInputDataQuery(meta)
 pmo.setOutputSE("CERN-SRM")
-pmo.setWorkflowName(process+"_"+str(energy)+"ild_sim")
+pmo.setWorkflowName(process+"_"+str(energy)+"_ild_sim")
 pmo.setProdGroup(process+"_"+str(energy))
 #Add the application
 res = pmo.append(mo)
@@ -129,7 +129,7 @@ pma = ProductionJob()
 pma.setProdType('MCReconstruction')
 pma.setInputDataQuery(meta)
 pma.setOutputSE("CERN-SRM")
-pma.setWorkflowName(process+"_"+str(energy)+"ild_rec")
+pma.setWorkflowName(process+"_"+str(energy)+"_ild_rec")
 pma.setProdGroup(process+"_"+str(energy))
 
 #Add the application
