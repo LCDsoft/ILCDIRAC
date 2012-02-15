@@ -665,7 +665,7 @@ class Whizard(Application):
         return S_ERROR("The OutputFile name is a file name, not a path. Remove any / in there")
 
     if not self.outputFile and self._jobtype == 'User':
-      self.outputFile = self.globalname
+      self.outputFile = self.evttype
       if self.jobindex :
         self.outputFile += "_"+self.jobindex
       self.outputFile += "_gen.stdhep"  
