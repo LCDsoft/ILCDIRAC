@@ -654,6 +654,9 @@ class Whizard(Application):
       for process in self.genlevelcuts.keys():
         if not process in self.evttype.split():
           self.log.info("You want to cut on %s but that process is not to be generated"%process)
+      for values in self.genlevelcuts.values():
+        if not type(values) == types.ListType:
+          return S_ERROR('Type of %s is not a list, cannot proceed'%values)    
       self._genlevelcutsstr = str(self.genlevelcuts)
     
     if self.evttype:
