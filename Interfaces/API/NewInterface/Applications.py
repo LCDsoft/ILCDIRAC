@@ -517,6 +517,8 @@ class Whizard(Application):
   def setGeneratorLevelCuts(self,cutsdict):
     """ Define generator level cuts (to be put in whizard.cut1)
     
+    Refer to U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc12} for details about how to set cuts.
+    
     >>> wh.setGeneratorLevelCuts({'e1e1_o':["cut M of  3 within 10 99999","cut E of  3 within  5 99999"]})
     
     @param cutsdict: Dictionary of cuts
