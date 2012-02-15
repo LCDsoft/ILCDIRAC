@@ -1,3 +1,7 @@
+[v6r7p2]
+* WhizardAnalysis
+Bugfix: forgot items in dict
+
 [v6r7p1]
 * WhizardAnalysis
 Bugfix: forgot keyword process in whizard.cut1
