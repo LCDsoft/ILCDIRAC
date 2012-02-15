@@ -477,7 +477,7 @@ class WhizardAnalysis(ModuleBase):
 
   def makeWhizardDotCut1(self,cutdict):
     cutf = file("whizard.cut1","w")
-    for key,values in cutdict:
+    for key,values in cutdict.items():
       cutf.write("process %s:\n"%key)
       for val in values:
         cutf.write("  %s\n"%val)
