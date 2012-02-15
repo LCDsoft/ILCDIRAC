@@ -436,6 +436,7 @@ class Whizard(Application):
     self._leshouchesfiles = None
     self._generatormodels = GeneratorModels()
     self.evttype = ''
+    self.globalname = ''
     self._allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
     self._processlist = None
@@ -466,6 +467,14 @@ class Whizard(Application):
       self._log.error("Cannot modify this attribute once application has been added to Job")
       return S_ERROR("Cannot modify")
     self.evttype = evttype
+
+  def setGlobalEvtType(self,globalname):
+    """ When producing multiple process in one job, it is needed to define this for the output file name
+    """
+    self._checkArgs( {
+        'globalname' : types.StringTypes
+      } )
+    self.globalname = globalname
 
   def setLuminosity(self,lumi):
     """ Optional: Define luminosity to generate 
@@ -625,6 +634,10 @@ class Whizard(Application):
     
     if self.evttype:
       processes = self.evttype.split()
+      if len(processes)>1 and not self.globalname:
+        return S_ERROR("Global name MUST be defined when producing multiple processes in one job")
+      elif not self.globalname:
+        self.globalname = self.evttype
       for process in processes:
         if not self._processlist.existsProcess(process)['Value']:
           self._log.info("Available processes are:")
@@ -652,7 +665,7 @@ class Whizard(Application):
         return S_ERROR("The OutputFile name is a file name, not a path. Remove any / in there")
 
     if not self.outputFile and self._jobtype == 'User':
-      self.outputFile = self.evttype
+      self.outputFile = self.globalname
       if self.jobindex :
         self.outputFile += "_"+self.jobindex
       self.outputFile += "_gen.stdhep"  
