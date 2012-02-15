@@ -469,7 +469,8 @@ class Whizard(Application):
     self.evttype = evttype
 
   def setGlobalEvtType(self,globalname):
-    """ When producing multiple process in one job, it is needed to define this for the output file name
+    """ When producing multiple process in one job, it is needed to define this for the output file name.
+    It's mandatory to use the L{setFullParameterDict} method when using this.
     """
     self._checkArgs( {
         'globalname' : types.StringTypes
