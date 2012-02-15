@@ -636,8 +636,8 @@ class Whizard(Application):
       processes = self.evttype.split()
       if len(processes)>1 and not self.globalname:
         return S_ERROR("Global name MUST be defined when producing multiple processes in one job")
-      elif not self.globalname:
-        self.globalname = self.evttype
+      elif self.globalname:
+        self.evttype = self.globalname
       for process in processes:
         if not self._processlist.existsProcess(process)['Value']:
           self._log.info("Available processes are:")
