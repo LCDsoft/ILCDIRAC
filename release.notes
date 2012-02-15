@@ -1,3 +1,7 @@
+[v6r7p1]
+* WhizardAnalysis
+Bugfix: forgot keyword process in whizard.cut1
+
 [v6r7p0]
 * Interfaces
 Support for generator level cuts, GlobalEvtType to use hen generating multiple event types in one job: needed for file creation and metadata registration
