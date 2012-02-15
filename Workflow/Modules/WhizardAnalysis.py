@@ -61,6 +61,8 @@ class WhizardAnalysis(ModuleBase):
     self.options = None
     self.optionsdict = {}
     self.OptionsDictStr = ''
+    self.GenLevelCutDictStr = ''
+    self.genlevelcuts = {}
     
   def obtainProcessList(self):
     """Internal function
@@ -143,6 +145,13 @@ class WhizardAnalysis(ModuleBase):
       except:
         return S_ERROR("Could not convert string to dictionary for optionsdict")
 
+    if self.GenLevelCutDictStr:
+      self.log.info("Found generator level cuts")
+      try:
+        self.genlevelcuts = eval(self.GenLevelCutDictStr)
+      except:
+        return S_ERROR("Could not convert the generator level cuts back to dictionary")  
+    
     if not len(self.SteeringFile) and not self.optionsdict:
       self.getProcessInFile = True
  
@@ -352,8 +361,14 @@ class WhizardAnalysis(ModuleBase):
       for gridfile in list_of_gridfiles:
         script.write('cp %s/%s ./\n'%(path_to_gridfiles,gridfile))
     script.write('cp %s/whizard.prc ./\n'%mySoftDir)
-    if not os.path.exists("whizard.cut1"):
+    if not os.path.exists("whizard.cut1") and not self.genlevelcuts:
       script.write('cp %s/whizard.cut1 ./\n'%mySoftDir)
+    elif self.genlevelcuts:
+      res = self.makeWhizardDotCut1(self.genlevelcuts)
+      if not res['OK']:
+        script.close()
+        self.log.error("Could not create the cut1 file")
+        return S_ERROR("Could not create the cut1 file")
     script.write('echo =============================\n')
     script.write('echo Printing content of whizard.prc \n')
     script.write('cat whizard.prc\n')
@@ -459,4 +474,13 @@ class WhizardAnalysis(ModuleBase):
     else:
       self.setApplicationStatus(messageout)
     return S_OK({"OutputFile":self.OutputFile})
+
+  def makeWhizardDotCut1(self,cutdict):
+    cutf = file("whizard.cut1","w")
+    for key,values in cutdict:
+      cutf.write("%s:\n"%key)
+      for val in values:
+        cutf.write("  %s\n"%val)
+    cutf.close()
+    return S_OK()
     
