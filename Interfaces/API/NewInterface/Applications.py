@@ -433,6 +433,8 @@ class Whizard(Application):
     self.jobindex = ''
     self._optionsdictstr = ''
     self.optionsdict = {}
+    self.genlevelcuts = {}
+    self._genlevelcutsstr = ''
     self._leshouchesfiles = None
     self._generatormodels = GeneratorModels()
     self.evttype = ''
@@ -511,6 +513,19 @@ class Whizard(Application):
       } )
 
     self.parameterdict = paramdict
+
+  def setGeneratorLevelCuts(self,cutsdict):
+    """ Define generator level cuts (to be put in whizard.cut1)
+    
+    >>> wh.setGeneratorLevelCuts({'e1e1_o':["cut M of  3 within 10 99999","cut E of  3 within  5 99999"]})
+    
+    @param cutsdict: Dictionary of cuts
+    @type cutsdict: dict
+    """
+    self._checkArgs( {
+        'cutsdict' : types.DictType
+      } )
+    self.genlevelcuts = cutsdict
 
   def setFullParameterDict(self,dict):
     """ Parameters for Whizard steering files, better than above as much more complete (cannot be more complete)
@@ -632,6 +647,12 @@ class Whizard(Application):
       
     if not self._processlist:
       return S_ERROR("Process list was not given")
+
+    if self.genlevelcuts:
+      for process in self.genlevelcuts.keys():
+        if not process in self.evttype.split():
+          self.log.info("You want to cut on %s but that process is not to be generated"%process)
+      self._genlevelcutsstr = str(self.genlevelcuts)
     
     if self.evttype:
       processes = self.evttype.split()
@@ -678,6 +699,7 @@ class Whizard(Application):
       self.prodparameters['model'] = self.model
       self.prodparameters['Energy'] = self.energy
       self.prodparameters['whizardparams'] = self.optionsdict
+      self.prodparameters['gencuts'] = self.genlevelcuts
    
     if not self.optionsdict and  self.parameterdict:
       for key in self.parameterdict.keys():
@@ -765,6 +787,7 @@ class Whizard(Application):
       self.parameters = string.join(self.parameters, ";")
     elif self.optionsdict:
       self._optionsdictstr = str(self.optionsdict)
+    
       
     return S_OK()  
 
@@ -778,6 +801,7 @@ class Whizard(Application):
     md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
     md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, "Specific steering parameters"))
     md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, "Options dict to create full whizard.in on the fly"))
+    md1.addParameter(Parameter("GenLevelCutDictStr",  "", "string", "", "", False, False, "Generator level cuts to put in whizard.cut1"))
     md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return md1
 
@@ -792,6 +816,7 @@ class Whizard(Application):
     moduleinstance.setValue("JobIndex",     self.jobindex)
     moduleinstance.setValue("steeringparameters",   self.parameters)
     moduleinstance.setValue("OptionsDictStr", self._optionsdictstr)
+    moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):
