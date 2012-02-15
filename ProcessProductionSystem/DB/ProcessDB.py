@@ -19,7 +19,129 @@ class ProcessDB ( DB ):
     self.ProdTypes = ['MCGeneration',"MCSimulation","MCReconstruction"]
     self.SoftwareParams = ['Path','Valid','AppName','AppVersion','Platform']
     self.ProcessDataParams = ['CrossSection','NbEvts','Path','Files','Polarisation']
+    result = self.__initializeDB()
+    if not result[ 'OK' ]:
+      self.log.fatal( "Cannot initialize DB!", result[ 'Message' ] )
+  
+  def __initializeDB(self):
+    retVal = self._query( "show tables" )
+    if not retVal[ 'OK' ]:
+      return retVal
     
+    tablesInDB = [ t[0] for t in retVal[ 'Value' ] ]
+    tablesToCreate = {}
+    
+    if not 'Software' in tablesInDB:
+      tablesToCreate['Software'] = { 'Fields' :{ 'idSoftware':'INT NOT NULL AUTO_INCREMENT',
+                                                 'AppName' : 'VARCHAR(45) NOT NULL',
+                                                 'AppVersion' : 'VARCHAR(45) NOT NULL',
+                                                 'Platform' :  'VARCHAR(45) NOT NULL',
+                                                 'Valid' : 'TINYINT(1)  NOT NULL DEFAULT TRUE',
+                                                 'Comment' : 'VARCHAR(255) NULL',
+                                                 'UpdateComment' : 'VARCHAR(255) NULL',
+                                                 'Defined' : 'DATETIME',
+                                                 'LastUpdate' : 'DATETIME',
+                                                 'Path' : 'VARCHAR(512) NOT NULL'
+                                                },
+                                     'PrimaryKey': 'idSoftware',
+                                     'Indexes' : { 'Application' : ['AppName','AppVersion']
+                                                  },
+                                     'UniqueIndexes' : {'idSoftware_UNIQUE':['idSoftware']}
+                                    }
+    
+    if not 'Processes' in tablesInDB:
+      tablesToCreate['Processes'] = { 'Fields' : { 'idProcesses' : 'INT NOT NULL AUTO_INCREMENT',
+                                                  'ProcessName' : 'VARCHAR(45) NOT NULL',
+                                                  'Detail' : 'VARCHAR(45) NULL'
+                                                  },
+                                      'PrimaryKey': 'idProcesses',
+                                      'Indexes' : { 'ProcessName' : ['ProcessName']},
+                                      'UniqueIndexes' : {'idProcesses_UNIQUE':['idProcesses'],
+                                                         'ProcessName_UNIQUE':['ProcessName']}                         
+                                     }
+    
+    if not 'Processes_has_Software' in tablesInDB:
+      tablesToCreate['Processes_has_Software'] = { 'Fields' : { 'idProcesses' : 'INT NOT NULL',
+                                                                'idSoftware' : 'INT NOT NULL'
+                                                               },
+                                                    'PrimaryKey' : ['idProcesses','idSoftware'],
+                                                    'Indexes' : { 'fk_Processes_has_Software_Software1' :['idSoftware'],
+                                                                  'fk_Processes_has_Software_Processes1' : ['idProcesses'] },
+                                                    'ForeignKeys' : {'idSoftware':'Software.idSoftware',
+                                                                     'idProcesses':'Processes.idProcesses'}
+                                                  }
+    if not 'ProcessData' in tablesInDB:
+      tablesToCreate['ProcessData'] = { 'Fields' : { 'CrossSection': 'DOUBLE(10,6) NULL DEFAULT 0',
+                                                     'Path' : 'VARCHAR(255) NULL',
+                                                     'NbEvts' : 'INT NULL DEFAULT 0',
+                                                     'Files' : 'INT NULL DEFAULT 0',
+                                                     'idProcessData' : 'INT NOT NULL AUTO_INCREMENT',
+                                                     'idProcesses' : 'INT NOT NULL',
+                                                     'Polarisation' : 'VARCHAR(10) NULL'
+                                                    },
+                                        'PrimaryKey' : ['idProcessData','idProcesses'],
+                                        'Indexes' : { 'fk_ProcessData_Processes1' : ['idProcesses']},
+                                        'UniqueIndexes' : { 'idProcessData_UNIQUE' : ['idProcessData']},
+                                        'ForeignKeys' : { 'idProcesses' : 'Processes.idProcesses'}
+                                       }
+    
+    if not 'Productions' in tablesInDB:
+      tablesToCreate['Productions'] = { 'Fields' : {'idSoftware':'INT NOT NULL',
+                                                    'idProcessData':'INT NOT NULL',
+                                                    'ProdID':'INT NOT NULL',
+                                                    'ProdDetail': 'VARCHAR(255) BINARY NULL',
+                                                    'idProduction' : 'INT NOT NULL AUTO_INCREMENT',
+                                                    'Type':'VARCHAR(45) NOT NULL'
+                                                    },
+                                        'PrimaryKey': ['idProduction','idProcessData'],
+                                        'Indexes' : {'fk_Software_has_ProcessData_Software1':['idSoftware'],
+                                                     'fk_Productions_ProcessData1':['idProcessData'],
+                                                     'ProdID':['ProdID']},
+                                        'ForeignKeys': {'idSoftware':'Software.idSoftware','idProcessData':'ProcessData.idProcessData'}
+                                       }
+      
+    if not 'SteeringFiles' in tablesInDB:
+      tablesToCreate['SteeringFiles'] = { 'Fields' : {'idFile': 'INT NOT NULL AUTO_INCREMENT',
+                                                       'FileName': 'VARCHAR(45) NOT NULL'
+                                                       },
+                                          'PrimaryKey':  ['idFile','FileName'],
+                                          'UniqueIndexes' : {'FileName_UNIQUE':['FileName']}
+                                          }
+    if not 'SteeringFiles_has_ProcessData' in tablesInDB:
+      tablesToCreate['SteeringFiles_has_ProcessData'] = { 'Fields' :{ 'idFile': 'INT NOT NULL',
+                                                                      'idProcessData': 'INT NOT NULL'
+                                                                     },
+                                                          'PrimaryKey' : ['idfiles','idProcessData'],
+                                                          'Indexes' :{'fk_SteeringFiles_has_ProcessData_ProcessData1':['idProcessData'],
+                                                                      'fk_SteeringFiles_has_ProcessData_SteeringFiles1':['idFile']},
+                                                          'ForeignKeys': { 'idFile' : 'SteeringFiles.idFile',
+                                                                          'idProcessData':'ProcessData.idProcessData'}
+                                                         }
+    if not 'DependencyRelation' in tablesInDB:
+      tablesToCreate['DependencyRelation'] = { 'Fields' : { 'idSoftware' : 'INT NOT NULL',
+                                                            'idDependency' : 'INT NOT NULL',
+                                                            'idDependencyRelation' : 'INT NOT NULL AUTO_INCREMENT'
+                                                           },
+                                               'PrimaryKey' : 'idDependencyRelation',
+                                               'Indexes' : {'fk_Software_has_Software_Software2':['idDependency'],
+                                                            'fk_Software_has_Software_Software1': ['idSoftware']},
+                                               'ForeignKeys': {'idSoftware':'Software.idSoftware','idDependency':'Software.idSoftware'}             
+                                              }
+    
+    if not 'ProductionRelation' in tablesInDB:
+      tablesToCreate['ProductionRelation'] = { 'Fields' : { 'idRelation':'INT NOT NULL AUTO_INCREMENT',
+                                                            'idMotherProd' : 'INT NOT NULL',
+                                                            'idDaughterProd' : 'INT NOT NULL'
+                                                           },
+                                               'PrimaryKey': 'idRelation',
+                                               'Indexes' : {'Daughter':['idDaughterProd'],'Mother':['idMotherProd']},
+                                               'ForeignKeys': { 'idMotherProd':"Productions.idProduction", 
+                                                               "idDaughterProd":"Productions.idProduction"}
+                                              }
+       
+    if tablesToCreate:
+      return self._createTables( tablesToCreate ) 
+    return S_OK()
   ##################################################################
   ### Getter methods
   def _checkSoftware( self, AppName, AppVersion, Platform, connection = False ):
