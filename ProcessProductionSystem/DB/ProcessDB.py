@@ -19,6 +19,12 @@ class ProcessDB ( DB ):
     self.ProdTypes = ['MCGeneration',"MCSimulation","MCReconstruction"]
     self.SoftwareParams = ['Path','Valid','AppName','AppVersion','Platform']
     self.ProcessDataParams = ['CrossSection','NbEvts','Path','Files','Polarisation']
+    
+    self._jobstatuses = ['Done','Failed','Running'] 
+    self._sitestatuses = ['OK','Banned']
+    self._operations = ['Installation','Removal']
+    self._operationsstatus = ['Done','Running','Waiting','Failed']      
+    
     result = self.__initializeDB()
     if not result[ 'OK' ]:
       self.log.fatal( "Cannot initialize DB!", result[ 'Message' ] )
@@ -138,7 +144,49 @@ class ProcessDB ( DB ):
                                                'ForeignKeys': { 'idMotherProd':"Productions.idProduction", 
                                                                "idDaughterProd":"Productions.idProduction"}
                                               }
-       
+    if not 'Sites' in tablesInDB:
+      tablesToCreate['Sites'] = { 'Fields' : { 'idSite' : 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
+                                               'SiteName' : 'VARCHAR(32) NOT NULL',
+                                               'Status' : 'VARCHAR(8) NOT NULL DEFAULT "OK"'
+                                              } ,
+                                  'PrimaryKey': 'idSite',
+                                  'Indexes': { 'SiteName': ['SiteName'],
+                                               'Status': ['Status']
+                                               }
+                                  }
+      
+    if not "ApplicationStatusAtSite" in tablesInDB:
+      tablesToCreate['ApplicationStatusAtSite']  = { 'Fields' : { 'idStatus' : 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
+                                                                  'idSoftware': 'INT NOT NULL',
+                                                                  'idSite' : 'INTEGER UNSIGNED NOT NULL',
+                                                                  'Status' : 'VARCHAR(64) NOT NULL'
+                                                                 },
+                                                    'ForeignKeys': {'idSoftware':'Software.idSoftware',
+                                                                    'idSite':'Sites.idSite'},             
+                                                    'PrimaryKey' : 'idStatus',
+                                                    'Indexes': { 'Status' : ['Status'],
+                                                                'idSoftware' : ['idSoftware'],
+                                                                'idSite' : ['idSite']
+                                                                }
+                                                    }
+    if not "SoftwareOperations" in tablesInDB:
+      tablesToCreate['SoftwareOperations']  = { 'Fields' : { 'OpID': 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
+                                                     'JobID' : 'INTEGER UNSIGNED NOT NULL',
+                                                     'idSoftware' : 'INT NOT NULL',
+                                                     'SiteID' : 'INTEGER UNSIGNED NOT NULL',
+                                                     'Operation' : 'VARCHAR(64) NOT NULL',
+                                                     'Status' : 'VARCHAR(64) NOT NULL DEFAULT "Waiting"'
+                                                    },
+                                        'ForeignKeys': {'idSoftware':'Software.idSoftware',
+                                                        'idSite':'Sites.idSite'},    
+                                        'PrimaryKey' : 'OpID',
+                                        'Indexes': { 'Status' : ['Status'],
+                                                     'Operation' : ['Operation'],
+                                                     'idSite'  : ['idSite'],
+                                                     'JobID' : ['JobID'],
+                                                     'idSoftware' : ['idSoftware']
+                                                     }
+                                      }       
     if tablesToCreate:
       return self._createTables( tablesToCreate ) 
     return S_OK()
@@ -335,8 +383,9 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return S_ERROR( "Failed to parse the Comment" )
     Comment = res['Value']  
-    req = "INSERT INTO Software (AppName,AppVersion,Platform,Comment,Path,Defined) VALUES ('%s','%s','%s','%s','%s',UTC_TIMESTAMP());"%(AppName,AppVersion,Platform,Comment,Path)
-    res = self._update( req, connection )
+    #req = "INSERT INTO Software (AppName,AppVersion,Platform,Comment,Path,Defined) VALUES ('%s','%s','%s','%s','%s',UTC_TIMESTAMP());"%(AppName,AppVersion,Platform,Comment,Path)
+    #res = self._update( req, connection )
+    res = self._insert('Software',['AppName','AppVersion','Platform','Comment','Path','Defined'],[AppName,AppVersion,Platform,Comment,Path])
     if not res['OK']:
       return res
     return res
@@ -359,8 +408,9 @@ class ProcessDB ( DB ):
       else:
         return S_ERROR('Dependency %s, Version %s not defined in the database'%(DepVersion,DepName))
     depid = res['Value'][0][0]
-    req = "INSERT INTO DependencyRelation (idSoftware,idDependency) VALUES (%s,%s);"%(appid,depid)
-    res = self._update( req, connection )
+    #req = "INSERT INTO DependencyRelation (idSoftware,idDependency) VALUES (%s,%s);"%(appid,depid)
+    #res = self._update( req, connection )
+    res = self._insert('DependencyRelation',['idSoftware','idDependency'],[appid,depid])
     if not res['OK']:
       return res
     return res  
@@ -369,8 +419,9 @@ class ProcessDB ( DB ):
     """ Add a new steering file
     """
     connection = self.__getConnection( connection )
-    req = "INSERT INTO SteeringFiles (FileName) VALUES ('%s');" % FileName
-    res = self._update( req, connection )
+    #req = "INSERT INTO SteeringFiles (FileName) VALUES ('%s');" % FileName
+    #res = self._update( req, connection )
+    res = self._insert('SteeringFiles',['FileName'],[FileName])
     if not res['OK']:
       return res
     return S_OK(res['lastRowId'])
@@ -391,8 +442,9 @@ class ProcessDB ( DB ):
     res = self.getProcessInfo(ProcessName, Params, connection)
     if not res['OK']:
       ## Add process in DB
-      req = "INSERT INTO Processes (ProcessName,Detail) VALUES ('%s','%s');" % (ProcessName, ProcessDetail)
-      res = self._update( req, connection )
+      #req = "INSERT INTO Processes (ProcessName,Detail) VALUES ('%s','%s');" % (ProcessName, ProcessDetail)
+      res = self._insert('Processes',['ProcessName','Detail'],[ProcessName,ProcessDetail])
+      #res = self._update( req, connection )
       if not res['OK']:
         return res
       #Get the ProcessID: last row inserted
@@ -410,14 +462,31 @@ class ProcessDB ( DB ):
     row = res['Value'][0]
     SoftwareID = row[0]
     
-    req = "INSERT INTO Processes_has_Software (idProcesses,idSoftware,Template) VALUES ( %s, %s, '%s');"% (ProcessID,SoftwareID,Template) 
-    res = self._update( req, connection )
+    #req = "INSERT INTO Processes_has_Software (idProcesses,idSoftware,Template) VALUES ( %s, %s, '%s');"% (ProcessID,SoftwareID,Template) 
+    #res = self._update( req, connection )
+    res = self._insert('Processes_has_Software',['idProcesses','idSoftware','Template'],[ProcessID,SoftwareID,Template])
     return res
-  
-  def addCut(self,cutsdict={},connection=False):
-    """ Add a set of cut
+
+  def addSite(self, siteName, connection = False ):
+    """ Add a new site
     """
     connection = self.__getConnection( connection )
+    res = self._insert('Sites',['SiteName'],[siteName],connection)
+    if not res['OK']:
+      return res
+    return S_OK()
+
+  def changeSiteStatus(self, sitedict, connection = False ):
+    connection = self.__getConnection( connection )
+    if not sitedict.has_key('Status') or not sitedict.has_key('SiteName'):
+      return S_ERROR("Missing mandatory key Status or SiteDict")
+    if not sitedict['Status'] in self._sitestatuses:
+      return S_ERROR("Status %s is not a valid site status"%sitedict['Status'])
+    query = 'UPDATE Sites SET Status="%s" WHERE SiteName="%s";'%(sitedict['Status'],sitedict['SiteName'])
+    res = self._query(query,connection)
+    if not res['OK']:
+      return res
+    return S_OK()
 
   
   def addProductionData(self, ProdDataDict, connection = False):
@@ -456,8 +525,9 @@ class ProcessDB ( DB ):
     SoftwareID = res['Value']['idSoftware']
     
     ##Create the ProcessData
-    req = "INSERT INTO ProcessData (idProcesses,Path) VALUES (%s,'%s');" % (ProcessID,Path)
-    res = self._update( req, connection )
+    #req = "INSERT INTO ProcessData (idProcesses,Path) VALUES (%s,'%s');" % (ProcessID,Path)
+    #res = self._update( req, connection )
+    res = self._insert('ProcessData',['idProcesses','Path'],[ProcessID,Path])
     if not res['OK']:
       return S_ERROR("Could not insert ProcessData into DB")
     #Get that line's ID
@@ -468,9 +538,10 @@ class ProcessDB ( DB ):
     ProcessDataID = res['lastRowId']
     
     #Declare new production
-    req = "INSERT INTO Productions (idSoftware,idProcessData,ProdID,Type) VALUES \
-           ( %d, %d, %d, '%s');" % (SoftwareID, ProcessDataID, ProdID, ProdType)
-    res = self._update( req, connection ) 
+    #req = "INSERT INTO Productions (idSoftware,idProcessData,ProdID,Type) VALUES \
+    #       ( %d, %d, %d, '%s');" % (SoftwareID, ProcessDataID, ProdID, ProdType)
+    #res = self._update( req, connection ) 
+    res = self._insert('Productions',['idSoftware','idProcessData','ProdID','Type'],[SoftwareID, ProcessDataID, ProdID, ProdType])
     if not res['OK']:
       return res
     prod_insert_ID = res['lastRowId']
@@ -481,8 +552,9 @@ class ProcessDB ( DB ):
       if not len(res['Value']):
         res = self.addSteeringFile( SteeringFile, connection = connection)
       idSteering = res['Value'][0]
-      req = "INSERT INTO SteeringFiles_has_ProcessData (idfiles,idProcessData) VALUES ( %s, %s);"% (idSteering,ProcessDataID)
-      res = self._update( req, connection )
+      #req = "INSERT INTO SteeringFiles_has_ProcessData (idfiles,idProcessData) VALUES ( %s, %s);"% (idSteering,ProcessDataID)
+      #res = self._update( req, connection )
+      res = self._insert('SteeringFiles_has_ProcessData',['idfiles','idProcessData'],[idSteering,ProcessDataID])
     if InheritsFrom:
       req = 'INSERT INTO ProductionRelation (idMotherProd,idDaughterProd) VALUES ((SELECT idProduction FROM Productions WHERE ProdID=%s),%s)'%(InheritsFrom,prod_insert_ID)
       res = self._update( req, connection )
