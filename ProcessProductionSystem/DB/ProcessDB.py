@@ -736,6 +736,13 @@ class ProcessDB ( DB ):
     if not sitedict['Status'] in self.SiteStatuses:
       return S_ERROR("Status %s is not a valid site status"%sitedict['Status'])
     
+    res = self._getFields('Sites',['SiteName'],['SiteName'],sitedict['SiteName'], conn = connection)
+    rows = res['Value']
+    if not len(rows):
+      res = self.addSite(sitedict['SiteName'], connection)
+      if not res['OK']:
+        return res
+    
     query = 'UPDATE Sites SET Status="%s" WHERE SiteName="%s";'%(sitedict['Status'],sitedict['SiteName'])
     res = self._query(query,connection)
     if not res['OK']:
