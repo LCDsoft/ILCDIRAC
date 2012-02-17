@@ -314,7 +314,7 @@ class MokkaAnalysis(ModuleBase):
       #script.write('G4ELASTICDATA="$g4releases/share/data/G4ELASTIC1.1"\n')
       script.write('declare -x G4ABLADATA="$g4releases/sl4/g4data/g4dataABLA"\n')
       #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
-      
+      script.write('declare -x G4NEUTRONHP_NEGLECT_DOPPLER=1\n')
       #### Do something with the additional environment variables
       add_env = gConfig.getOptionsDict("/Operations/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar"%(self.systemConfig,"mokka",self.applicationVersion))
       if add_env['OK']:
