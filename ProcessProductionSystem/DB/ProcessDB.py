@@ -20,10 +20,9 @@ class ProcessDB ( DB ):
     self.SoftwareParams = ['Path','Valid','AppName','AppVersion','Platform']
     self.ProcessDataParams = ['CrossSection','NbEvts','Path','Files','Polarisation']
     
-    self._jobstatuses = ['Done','Failed','Running'] 
-    self._sitestatuses = ['OK','Banned']
-    self._operations = ['Installation','Removal']
-    self._operationsstatus = ['Done','Running','Waiting','Failed']      
+    self.SiteStatuses = ['OK','Banned']
+    self.Operations = ['Installation','Removal']
+    self.OperationsStatus = ['Done','Running','Waiting','Failed']      
     
     result = self.__initializeDB()
     if not result[ 'OK' ]:
@@ -147,7 +146,7 @@ class ProcessDB ( DB ):
     if not 'Sites' in tablesInDB:
       tablesToCreate['Sites'] = { 'Fields' : { 'idSite' : 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
                                                'SiteName' : 'VARCHAR(32) NOT NULL',
-                                               'Status' : 'VARCHAR(8) NOT NULL DEFAULT "OK"'
+                                               'Status' : 'ENUM("OK","Banned") DEFAULT "OK"'
                                               } ,
                                   'PrimaryKey': 'idSite',
                                   'Indexes': { 'SiteName': ['SiteName'],
@@ -159,7 +158,7 @@ class ProcessDB ( DB ):
       tablesToCreate['ApplicationStatusAtSite']  = { 'Fields' : { 'idStatus' : 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
                                                                   'idSoftware': 'INT NOT NULL',
                                                                   'idSite' : 'INTEGER UNSIGNED NOT NULL',
-                                                                  'Status' : 'VARCHAR(64) NOT NULL'
+                                                                  'Status' : 'ENUM("NotAvailable","Installed","Installing") DEFAULT "NotAvailable"'
                                                                  },
                                                     'ForeignKeys': {'idSoftware':'Software.idSoftware',
                                                                     'idSite':'Sites.idSite'},             
@@ -173,9 +172,9 @@ class ProcessDB ( DB ):
       tablesToCreate['SoftwareOperations']  = { 'Fields' : { 'OpID': 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
                                                      'JobID' : 'INTEGER UNSIGNED NOT NULL',
                                                      'idSoftware' : 'INT NOT NULL',
-                                                     'SiteID' : 'INTEGER UNSIGNED NOT NULL',
-                                                     'Operation' : 'VARCHAR(64) NOT NULL',
-                                                     'Status' : 'VARCHAR(64) NOT NULL DEFAULT "Waiting"'
+                                                     'idSite' : 'INTEGER UNSIGNED NOT NULL',
+                                                     'Operation' : 'ENUM("Installation","Removal")',
+                                                     'Status' : 'ENUM("Done","Waiting","Failed","Running") DEFAULT "Waiting"'
                                                     },
                                         'ForeignKeys': {'idSoftware':'Software.idSoftware',
                                                         'idSite':'Sites.idSite'},    
@@ -196,11 +195,17 @@ class ProcessDB ( DB ):
     """ Check if specified software exists
     """
     connection = self.__getConnection( connection )
-    extrareqs = ''
+    fields = ['AppName','AppVersion']
+    values = [AppName,AppVersion]
+    #extrareqs = ''
     if not Platform is 'any':
-      extrareqs = " AND Platform='%s'"%Platform
-    req = "SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s' %s;"%(AppName,AppVersion, extrareqs)
-    res = self._query( req, connection )
+      #extrareqs = " AND Platform='%s'"%Platform
+      fields.append('Platform')
+      values.append(Platform)
+      
+    #req = "SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s' %s;"%(AppName,AppVersion, extrareqs)
+    #res = self._query( req, connection )
+    res = self._getFields('Software',['idSoftware'],fields,values)
     if not res['OK']:
       return S_ERROR("Could not get software")
     if len(res['Value']):
@@ -218,12 +223,14 @@ class ProcessDB ( DB ):
     res = self._checkSoftware(AppName, AppVersion, Platform, connection)
     if not res['OK']:
       return res
-    extrareqs = ''
-    if not Platform is 'any':
-      extrareqs = " AND Platform='%s'"%Platform
+    idSoftware = res['Value'][0][0] #This is the first entry of the first tuple
+    #extrareqs = ''
+    #if not Platform is 'any':
+    #  extrareqs = " AND Platform='%s'"%Platform
     
-    req = "SELECT %s FROM Software WHERE AppName='%s' AND AppVersion='%s' %s"%(intListToString( Params ),AppName,AppVersion,extrareqs)
-    res = self._query( req, connection )
+    #req = "SELECT %s FROM Software WHERE idSoftware= %s"%(intListToString( Params ),AppName,AppVersion,extrareqs)
+    #res = self._query( req, connection )
+    res = self._getFields('Software',Params,['idSoftware'],[idSoftware], connection)
     if not res['OK']:
       return res
     reslist = []  
@@ -251,8 +258,9 @@ class ProcessDB ( DB ):
       app['Version'] = AppVersion
       app['Comment'] = Comment
       ##Check for dependency
-      req = "SELECT idDependency FROM DependencyRelation WHERE idSoftware=%s;"%(idSoftware)
-      res = self._query( req, connection )
+      #req = "SELECT idDependency FROM DependencyRelation WHERE idSoftware=%s;"%(idSoftware)
+      #res = self._query( req, connection )
+      res = self._getFields('DependencyRelation',['idDependency'],['idSoftware'],[idSoftware], connection )
       depid = 0
       if not len(res['Value']):
           depid=0
@@ -267,8 +275,9 @@ class ProcessDB ( DB ):
     """ Get the process info 
     """
     connection = self.__getConnection( connection )
-    req = "SELECT %s FROM Processes WHERE ProcessName='%s';"%(intListToString( Params ), ProcessName)
-    res =  self._query( req, connection )
+    #req = "SELECT %s FROM Processes WHERE ProcessName='%s';"%(intListToString( Params ), ProcessName)
+    #res =  self._query( req, connection )
+    res = self._getFields('Processes',Params,['ProcessName'],[ProcessName])
     if not res['OK']:
       return res
     row = res['Value'][0]
@@ -320,15 +329,17 @@ class ProcessDB ( DB ):
     for item in row:
       resdict[Params[count]]=item
       count += 1
-    req = "SELECT ProcessName,Detail FROM Processes WHERE idProcesses = %s"%(resdict['idProcesses'])
-    res = self._query( req, connection )
+    #req = "SELECT ProcessName,Detail FROM Processes WHERE idProcesses = %s"%(resdict['idProcesses'])
+    #res = self._query( req, connection )
+    res = self._getFields('Processes',['ProcessName','Detail'],['idProcesses'],[resdict['idProcesses']], connection)
     if not res['OK']:
       return res
     row = res['Value'][0]
     resdict['ProcessName'] = row[0]
     resdict['Detail'] = row[1]
-    req = "SELECT Type FROM Productions WHERE ProdID=%s"%(ProdID)
-    res = self._query( req, connection )
+    #req = "SELECT Type FROM Productions WHERE ProdID=%s"%(ProdID)
+    #res = self._query( req, connection )
+    res = self._getFields('Productions',['Type'],['ProdID'],[ProdID], connection )
     if not res['OK']:
       return res
     row = res['Value'][0]
@@ -362,12 +373,37 @@ class ProcessDB ( DB ):
       return res
     whizardID  = res['Value']['idProcesses']
     
-    req = "SELECT Template FROM Processes_has_Software WHERE idProcesses = %s \
-           AND idSoftware = %s;"% ( processID, whizardID)
-    res =  self._query( req, connection )
+    #req = "SELECT Template FROM Processes_has_Software WHERE idProcesses = %s \
+    #       AND idSoftware = %s;"% ( processID, whizardID)
+    #res =  self._query( req, connection )
+    res = self._getFields('Processes_has_Software',['Template'],['idProcesses','idSoftware'],[processID, whizardID])
     if not res['OK']:
       return res
     return S_OK(res['Value'][0])
+ 
+  def getInstallSoftwareTask(self, connection = None):
+    """ Find a task to perform: install new software.
+    """
+    connection = self.__getConnection( connection )
+    
+    #now get what is already available at each site
+    req = "SELECT idSoftware,idSite FROM ApplicationStatusAtSite WHERE idSoftware IN (SELECT idSoftware FROM Software WHERE Valid=TRUE) \
+           AND idSite IN (SELECT idSites FROM Sites WHERE Status='OK') AND ApplicationStatusAtSite.Status='NotAvailable';"
+    res =  self._query( req, connection )
+    if not res['OK']:
+      return res
+    rows = res['Value']
+    soft_dict = {}
+    for row in rows:
+      if not soft_dict.has_key(row[0]): 
+        soft_dict[row[0]] = {}
+        res  = self._getFields('Software',['AppName','AppVersion','Platform'],['idSoftware'],[row[0]], connection)
+        soft_dict[row[0]]['AppName'],soft_dict[row[0]]['AppVersion'],soft_dict[row[0]]['Platform'] = res['Value'][0]
+      if not   soft_dict[row[0]].has_key('Site'):
+        soft_dict[row[0]]['Sites'] = []
+      soft_dict[row[0]]['Sites'].append(row[1])    
+          
+    return S_OK(soft_dict)
   
   ##################################################################
   # Setter methods
@@ -385,9 +421,21 @@ class ProcessDB ( DB ):
     Comment = res['Value']  
     #req = "INSERT INTO Software (AppName,AppVersion,Platform,Comment,Path,Defined) VALUES ('%s','%s','%s','%s','%s',UTC_TIMESTAMP());"%(AppName,AppVersion,Platform,Comment,Path)
     #res = self._update( req, connection )
-    res = self._insert('Software',['AppName','AppVersion','Platform','Comment','Path','Defined'],[AppName,AppVersion,Platform,Comment,Path])
+    res = self._insert('Software',['AppName','AppVersion','Platform','Comment','Path','Defined'],[AppName,AppVersion,Platform,Comment,Path,'UTC_TIMESTAMP()'], connection)
     if not res['OK']:
       return res
+    idsoft = res['lastRowId']
+    
+    ##getSites
+    res = self._getFields("idSites","Sites")
+    if len(res['Value']):
+      return S_OK({"Message":"Could not get sites"})
+    rows = res['Value']
+    for row in rows:
+      res = self._insert("ApplicationStatusAtSite",['idSoftware','idSite'], [idsoft,row[0]],connection)
+
+    ##ApplicationStatusAtSite
+    
     return res
   
   def addDependency(self, AppName, AppVersion, DepName, DepVersion, Platform, autodeclare = False, connection = False):
@@ -410,7 +458,7 @@ class ProcessDB ( DB ):
     depid = res['Value'][0][0]
     #req = "INSERT INTO DependencyRelation (idSoftware,idDependency) VALUES (%s,%s);"%(appid,depid)
     #res = self._update( req, connection )
-    res = self._insert('DependencyRelation',['idSoftware','idDependency'],[appid,depid])
+    res = self._insert('DependencyRelation',['idSoftware','idDependency'],[appid,depid], connection)
     if not res['OK']:
       return res
     return res  
@@ -443,7 +491,7 @@ class ProcessDB ( DB ):
     if not res['OK']:
       ## Add process in DB
       #req = "INSERT INTO Processes (ProcessName,Detail) VALUES ('%s','%s');" % (ProcessName, ProcessDetail)
-      res = self._insert('Processes',['ProcessName','Detail'],[ProcessName,ProcessDetail])
+      res = self._insert('Processes',['ProcessName','Detail'],[ProcessName,ProcessDetail], connection)
       #res = self._update( req, connection )
       if not res['OK']:
         return res
@@ -455,8 +503,9 @@ class ProcessDB ( DB ):
       ProcessDetail = res['Value']['Detail']
         
     ##Get the software ID
-    req = "SELECT idSoftware FROM Software WHERE AppName='Whizard' AND AppVersion='%s';"%(WhizardVers)
-    res = self._query( req, connection )
+    #req = "SELECT idSoftware FROM Software WHERE AppName='Whizard' AND AppVersion='%s';"%(WhizardVers)
+    #res = self._query( req, connection )
+    res = self._getFields('Software',['idSoftware'],['AppName','AppVersion'],['Whizard',WhizardVers], connection )
     if not res['OK']:
       return S_ERROR('Whizard version %s not found in DB, make sure you declared it'%(WhizardVers))
     row = res['Value'][0]
@@ -464,30 +513,60 @@ class ProcessDB ( DB ):
     
     #req = "INSERT INTO Processes_has_Software (idProcesses,idSoftware,Template) VALUES ( %s, %s, '%s');"% (ProcessID,SoftwareID,Template) 
     #res = self._update( req, connection )
-    res = self._insert('Processes_has_Software',['idProcesses','idSoftware','Template'],[ProcessID,SoftwareID,Template])
+    res = self._insert('Processes_has_Software',['idProcesses','idSoftware','Template'],[ProcessID,SoftwareID,Template], connection)
     return res
 
   def addSite(self, siteName, connection = False ):
     """ Add a new site
     """
     connection = self.__getConnection( connection )
-    res = self._insert('Sites',['SiteName'],[siteName],connection)
-    if not res['OK']:
-      return res
-    return S_OK()
+    res = self._getFields('Sites',['idSites'], ['SiteName'],[siteName], connection)
+    if not len(res['Value']):
+      res = self._insert('Sites',['SiteName'],[siteName], connection)
+    return res
 
-  def changeSiteStatus(self, sitedict, connection = False ):
+  def addOrUpdateJob(self, jobdict, connection = False ):
+    """ Add a new job: operation 
+    """
     connection = self.__getConnection( connection )
-    if not sitedict.has_key('Status') or not sitedict.has_key('SiteName'):
-      return S_ERROR("Missing mandatory key Status or SiteDict")
-    if not sitedict['Status'] in self._sitestatuses:
-      return S_ERROR("Status %s is not a valid site status"%sitedict['Status'])
-    query = 'UPDATE Sites SET Status="%s" WHERE SiteName="%s";'%(sitedict['Status'],sitedict['SiteName'])
-    res = self._query(query,connection)
+    
+    jobkeys = ['Status','JobID','SiteName','AppName','AppVersion','Platform']
+    for key in jobkeys:
+      if not jobdict.has_key(key):
+        return S_ERROR("Missing mandatory parameter %s"%key)
+    
+    #Check that job is new or not
+    res = self._getFields('OpID','SoftwareOperations',['JobID'],[])
     if not res['OK']:
       return res
-    return S_OK()
-
+    if len(res['Value']):
+      opID = res['Value'][0] 
+      status = jobdict['Status']
+      if not status in self.OperationsStatus:
+        status = 'Waiting'
+      if not status=='Failed' and not status=='Done':   
+        req = "UPDATE SoftwareOperations SET Status='%s' WHERE OpID=%s;"%(status,opID)
+        res = self._update( req, connection )
+        req = 'UPDATE ApplicationStatusAtSite SET Status="Installing" WHERE OpID=%s;'%opID
+        res = self._update( req, connection )
+      elif status=='Done':
+        req = 'UPDATE ApplicationStatusAtSite SET Status="Installed" WHERE OpID=%s;'%opID
+        res = self._update( req, connection )
+        res = self._removeJob(opID, connection)
+      elif status=='Failed':
+        req = 'UPDATE ApplicationStatusAtSite SET Status="NotAvailable" WHERE OpID=%s;'%opID 
+        res = self._update( req, connection )
+        res = self._removeJob(opID, connection)        
+    
+    #when new
+    res = self._insert('SoftwareOperations',['JobID','idSoftware','idSite','Operation'],[], connection)
+    return res
+  
+  def _removeJob(self, opID, connection):
+    connection = self.__getConnection( connection )    
+    req = 'DELETE FROM SoftwareOperations WHERE OpID=%s;'%(opID)
+    res = self._update( req, connection )
+    return res
   
   def addProductionData(self, ProdDataDict, connection = False):
     """ Declare a new Production
@@ -527,7 +606,7 @@ class ProcessDB ( DB ):
     ##Create the ProcessData
     #req = "INSERT INTO ProcessData (idProcesses,Path) VALUES (%s,'%s');" % (ProcessID,Path)
     #res = self._update( req, connection )
-    res = self._insert('ProcessData',['idProcesses','Path'],[ProcessID,Path])
+    res = self._insert('ProcessData',['idProcesses','Path'],[ProcessID,Path], connection)
     if not res['OK']:
       return S_ERROR("Could not insert ProcessData into DB")
     #Get that line's ID
@@ -541,20 +620,22 @@ class ProcessDB ( DB ):
     #req = "INSERT INTO Productions (idSoftware,idProcessData,ProdID,Type) VALUES \
     #       ( %d, %d, %d, '%s');" % (SoftwareID, ProcessDataID, ProdID, ProdType)
     #res = self._update( req, connection ) 
-    res = self._insert('Productions',['idSoftware','idProcessData','ProdID','Type'],[SoftwareID, ProcessDataID, ProdID, ProdType])
+    res = self._insert('Productions',['idSoftware','idProcessData','ProdID','Type'],
+                       [SoftwareID, ProcessDataID, ProdID, ProdType], connection)
     if not res['OK']:
       return res
     prod_insert_ID = res['lastRowId']
     ##In Case there is a steering file
     if SteeringFile:
-      req = "SELECT idfiles FROM SteeringFiles WHERE FileName='%s';" % SteeringFile
-      res = self._query( req, connection )
+      #req = "SELECT idfiles FROM SteeringFiles WHERE FileName='%s';" % SteeringFile
+      #res = self._query( req, connection )
+      res = self._getFields('SteeringFiles',['idfiles'],['FileName'],[SteeringFile], connection )
       if not len(res['Value']):
         res = self.addSteeringFile( SteeringFile, connection = connection)
       idSteering = res['Value'][0]
       #req = "INSERT INTO SteeringFiles_has_ProcessData (idfiles,idProcessData) VALUES ( %s, %s);"% (idSteering,ProcessDataID)
       #res = self._update( req, connection )
-      res = self._insert('SteeringFiles_has_ProcessData',['idfiles','idProcessData'],[idSteering,ProcessDataID])
+      res = self._insert('SteeringFiles_has_ProcessData',['idfiles','idProcessData'],[idSteering,ProcessDataID], connection)
     if InheritsFrom:
       req = 'INSERT INTO ProductionRelation (idMotherProd,idDaughterProd) VALUES ((SELECT idProduction FROM Productions WHERE ProdID=%s),%s)'%(InheritsFrom,prod_insert_ID)
       res = self._update( req, connection )
@@ -633,6 +714,18 @@ class ProcessDB ( DB ):
           return res
     return res
 
+  def changeSiteStatus(self, sitedict, connection = False ):
+    connection = self.__getConnection( connection )
+    if not sitedict.has_key('Status') or not sitedict.has_key('SiteName'):
+      return S_ERROR("Missing mandatory key Status or SiteDict")
+    if not sitedict['Status'] in self.SiteStatuses:
+      return S_ERROR("Status %s is not a valid site status"%sitedict['Status'])
+    
+    query = 'UPDATE Sites SET Status="%s" WHERE SiteName="%s";'%(sitedict['Status'],sitedict['SiteName'])
+    res = self._query(query,connection)
+    if not res['OK']:
+      return res
+    return S_OK()
   #####################################################################
   # Private methods
 
