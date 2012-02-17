@@ -173,7 +173,7 @@ class ProcessDB ( DB ):
                                                      'JobID' : 'INTEGER UNSIGNED NOT NULL',
                                                      'idSoftware' : 'INT NOT NULL',
                                                      'idSite' : 'INTEGER UNSIGNED NOT NULL',
-                                                     'Operation' : 'ENUM("Installation","Removal")',
+                                                     'Operation' : 'ENUM("Installation","Removal") DEFAULT "Installation"',
                                                      'Status' : 'ENUM("Done","Waiting","Failed","Running") DEFAULT "Waiting"'
                                                     },
                                         'ForeignKeys': {'idSoftware':'Software.idSoftware',
@@ -205,7 +205,7 @@ class ProcessDB ( DB ):
       
     #req = "SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s' %s;"%(AppName,AppVersion, extrareqs)
     #res = self._query( req, connection )
-    res = self._getFields('Software',['idSoftware'],fields,values)
+    res = self._getFields('Software',['idSoftware'],fields,values, conn = connection)
     if not res['OK']:
       return S_ERROR("Could not get software")
     if len(res['Value']):
@@ -230,7 +230,7 @@ class ProcessDB ( DB ):
     
     #req = "SELECT %s FROM Software WHERE idSoftware= %s"%(intListToString( Params ),AppName,AppVersion,extrareqs)
     #res = self._query( req, connection )
-    res = self._getFields('Software',Params,['idSoftware'],[idSoftware], connection)
+    res = self._getFields('Software',Params,['idSoftware'],[idSoftware], conn = connection)
     if not res['OK']:
       return res
     reslist = []  
@@ -260,7 +260,7 @@ class ProcessDB ( DB ):
       ##Check for dependency
       #req = "SELECT idDependency FROM DependencyRelation WHERE idSoftware=%s;"%(idSoftware)
       #res = self._query( req, connection )
-      res = self._getFields('DependencyRelation',['idDependency'],['idSoftware'],[idSoftware], connection )
+      res = self._getFields('DependencyRelation',['idDependency'],['idSoftware'],[idSoftware], conn = connection )
       depid = 0
       if not len(res['Value']):
           depid=0
@@ -277,7 +277,7 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     #req = "SELECT %s FROM Processes WHERE ProcessName='%s';"%(intListToString( Params ), ProcessName)
     #res =  self._query( req, connection )
-    res = self._getFields('Processes',Params,['ProcessName'],[ProcessName])
+    res = self._getFields('Processes',Params,['ProcessName'],[ProcessName], conn = connection)
     if not res['OK']:
       return res
     row = res['Value'][0]
@@ -331,7 +331,7 @@ class ProcessDB ( DB ):
       count += 1
     #req = "SELECT ProcessName,Detail FROM Processes WHERE idProcesses = %s"%(resdict['idProcesses'])
     #res = self._query( req, connection )
-    res = self._getFields('Processes',['ProcessName','Detail'],['idProcesses'],[resdict['idProcesses']], connection)
+    res = self._getFields('Processes',['ProcessName','Detail'],['idProcesses'],[resdict['idProcesses']], conn = connection)
     if not res['OK']:
       return res
     row = res['Value'][0]
@@ -339,7 +339,7 @@ class ProcessDB ( DB ):
     resdict['Detail'] = row[1]
     #req = "SELECT Type FROM Productions WHERE ProdID=%s"%(ProdID)
     #res = self._query( req, connection )
-    res = self._getFields('Productions',['Type'],['ProdID'],[ProdID], connection )
+    res = self._getFields('Productions',['Type'],['ProdID'],[ProdID], conn = connection )
     if not res['OK']:
       return res
     row = res['Value'][0]
@@ -376,7 +376,7 @@ class ProcessDB ( DB ):
     #req = "SELECT Template FROM Processes_has_Software WHERE idProcesses = %s \
     #       AND idSoftware = %s;"% ( processID, whizardID)
     #res =  self._query( req, connection )
-    res = self._getFields('Processes_has_Software',['Template'],['idProcesses','idSoftware'],[processID, whizardID])
+    res = self._getFields('Processes_has_Software',['Template'],['idProcesses','idSoftware'],[processID, whizardID], conn = connection)
     if not res['OK']:
       return res
     return S_OK(res['Value'][0])
@@ -397,7 +397,7 @@ class ProcessDB ( DB ):
     for row in rows:
       if not soft_dict.has_key(row[0]): 
         soft_dict[row[0]] = {}
-        res  = self._getFields('Software',['AppName','AppVersion','Platform'],['idSoftware'],[row[0]], connection)
+        res  = self._getFields('Software',['AppName','AppVersion','Platform'],['idSoftware'],[row[0]], conn = connection)
         soft_dict[row[0]]['AppName'],soft_dict[row[0]]['AppVersion'],soft_dict[row[0]]['Platform'] = res['Value'][0]
       if not   soft_dict[row[0]].has_key('Site'):
         soft_dict[row[0]]['Sites'] = []
@@ -405,6 +405,14 @@ class ProcessDB ( DB ):
           
     return S_OK(soft_dict)
   
+  def getJobs(self, connection = None):
+    """ Return list of JobIDs for update
+    """
+    connection = self.__getConnection( connection )
+  
+    res = self._getFields('SoftwareOperations',['JobID'], conn = connection)
+     
+    return S_OK()
   ##################################################################
   # Setter methods
   def addSoftware( self, AppName, AppVersion, Platform, Comment, Path, connection = False ):
@@ -427,7 +435,7 @@ class ProcessDB ( DB ):
     idsoft = res['lastRowId']
     
     ##getSites
-    res = self._getFields("idSites","Sites")
+    res = self._getFields("Sites",["idSites"], conn = connection)
     if len(res['Value']):
       return S_OK({"Message":"Could not get sites"})
     rows = res['Value']
@@ -469,7 +477,7 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     #req = "INSERT INTO SteeringFiles (FileName) VALUES ('%s');" % FileName
     #res = self._update( req, connection )
-    res = self._insert('SteeringFiles',['FileName'],[FileName])
+    res = self._insert('SteeringFiles',['FileName'],[FileName], connection)
     if not res['OK']:
       return res
     return S_OK(res['lastRowId'])
@@ -505,7 +513,7 @@ class ProcessDB ( DB ):
     ##Get the software ID
     #req = "SELECT idSoftware FROM Software WHERE AppName='Whizard' AND AppVersion='%s';"%(WhizardVers)
     #res = self._query( req, connection )
-    res = self._getFields('Software',['idSoftware'],['AppName','AppVersion'],['Whizard',WhizardVers], connection )
+    res = self._getFields('Software',['idSoftware'],['AppName','AppVersion'],['Whizard',WhizardVers], conn = connection )
     if not res['OK']:
       return S_ERROR('Whizard version %s not found in DB, make sure you declared it'%(WhizardVers))
     row = res['Value'][0]
@@ -520,23 +528,27 @@ class ProcessDB ( DB ):
     """ Add a new site
     """
     connection = self.__getConnection( connection )
-    res = self._getFields('Sites',['idSites'], ['SiteName'],[siteName], connection)
+    res = self._getFields('Sites',['idSites'], ['SiteName'],[siteName], conn = connection)
     if not len(res['Value']):
       res = self._insert('Sites',['SiteName'],[siteName], connection)
-    return res
+      idSite = res['lastRowId']
+      res = self._getFields("Software",['idSoftware'], conn = connection)
+      for idsoft in [t[0] for t in res['Value']] :
+        res = self._insert('ApplicationStatusAtSite',['idSite','idSoftware'], [idsoft,idSite], connection)
+    return S_OK()
 
   def addOrUpdateJob(self, jobdict, connection = False ):
     """ Add a new job: operation 
     """
     connection = self.__getConnection( connection )
     
-    jobkeys = ['Status','JobID','SiteName','AppName','AppVersion','Platform']
+    jobkeys = ['Status','JobID','Site','AppName','AppVersion','Platform']
     for key in jobkeys:
       if not jobdict.has_key(key):
         return S_ERROR("Missing mandatory parameter %s"%key)
     
     #Check that job is new or not
-    res = self._getFields('OpID','SoftwareOperations',['JobID'],[])
+    res = self._getFields('SoftwareOperations',['OpID'],['JobID'],[jobdict['JobID']], conn = connection)
     if not res['OK']:
       return res
     if len(res['Value']):
@@ -557,9 +569,12 @@ class ProcessDB ( DB ):
         req = 'UPDATE ApplicationStatusAtSite SET Status="NotAvailable" WHERE OpID=%s;'%opID 
         res = self._update( req, connection )
         res = self._removeJob(opID, connection)        
-    
-    #when new
-    res = self._insert('SoftwareOperations',['JobID','idSoftware','idSite','Operation'],[], connection)
+    else:
+      #when new
+      if jobdict.has_key('Operation'):
+        if not jobdict['Operation'] in self.Operations:
+          return S_ERROR("Operation %s is not supported"%jobdict['Operation'])
+      res = self._insert('SoftwareOperations',['JobID','idSoftware','idSite'],[], connection)
     return res
   
   def _removeJob(self, opID, connection):
@@ -629,7 +644,7 @@ class ProcessDB ( DB ):
     if SteeringFile:
       #req = "SELECT idfiles FROM SteeringFiles WHERE FileName='%s';" % SteeringFile
       #res = self._query( req, connection )
-      res = self._getFields('SteeringFiles',['idfiles'],['FileName'],[SteeringFile], connection )
+      res = self._getFields('SteeringFiles',['idfiles'],['FileName'],[SteeringFile], conn = connection )
       if not len(res['Value']):
         res = self.addSteeringFile( SteeringFile, connection = connection)
       idSteering = res['Value'][0]

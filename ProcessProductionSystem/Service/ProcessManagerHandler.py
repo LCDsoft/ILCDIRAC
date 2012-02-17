@@ -55,6 +55,11 @@ class ProcessManagerHandler(RequestHandler):
     """
     return processDB.getSoftwareParams(AppName,AppVersion,Platform,Params)
   
+  types_getInstallSoftwareTas = []
+  def export_getInstallSoftwareTask(self):
+    """ Obtain a new task: when new software is installed. it's needed to install it everywhere.
+    """
+    return processDB.getInstallSoftwareTask()
 #######################################################################
 #              Add methods
 #######################################################################
@@ -96,7 +101,16 @@ class ProcessManagerHandler(RequestHandler):
       return S_ERROR('Incorrect dictionary structure')
     return processDB.addProductionData(ProdDataDict)
   
+  types_addsite = [StringTypes]
+  def export_addSite(self,sitename):
+    """ Add a site
+    """
+    return processDB.addSite(sitename)
   
+  def export_addOrUpdateJob(self,jobdict):
+    """ Add a job
+    """
+    return processDB.addOrUpdateJob(jobdict)
 #######################################################################
 #              Change methods
 #######################################################################
@@ -114,4 +128,7 @@ class ProcessManagerHandler(RequestHandler):
     """
     return processDB.changeSoftwareStatus(AppName, AppVersion, Platform, Comment, Status)
   
+  types_changeSiteStatus = [DictType]
+  def export_changeSiteStatus(self,sitedict):
+    return processDB.changeSiteStatus(sitedict)
 
