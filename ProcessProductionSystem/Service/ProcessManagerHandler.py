@@ -55,7 +55,7 @@ class ProcessManagerHandler(RequestHandler):
     """
     return processDB.getSoftwareParams(AppName,AppVersion,Platform,Params)
   
-  types_getInstallSoftwareTas = []
+  types_getInstallSoftwareTask = []
   def export_getInstallSoftwareTask(self):
     """ Obtain a new task: when new software is installed. it's needed to install it everywhere.
     """
@@ -107,6 +107,7 @@ class ProcessManagerHandler(RequestHandler):
     """
     return processDB.addSite(sitename)
   
+  types_addOrUpdateJob = [DictType]
   def export_addOrUpdateJob(self,jobdict):
     """ Add a job
     """
