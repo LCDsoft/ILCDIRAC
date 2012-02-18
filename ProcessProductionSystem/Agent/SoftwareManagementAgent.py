@@ -91,7 +91,7 @@ class SoftwareManagementAgent(AgentModule):
         jobdict['Site'] = site
         res = self.ppc.addOrUpdateJob(jobdict)
         if not res['OK']:
-          self.log.error('Could not add job: %s'%res['Message'])
+          self.log.error('Could not add job %s: %s'%(jobdict['JobID'],res['Message']))
     
     return S_OK()
   
