@@ -119,7 +119,7 @@ class ProcessDB ( DB ):
                                                           'PrimaryKey' : ['idFile','idProcessData'],
                                                           'Indexes' :{'fk_SteeringFiles_has_ProcessData_ProcessData1':['idProcessData'],
                                                                       'fk_SteeringFiles_has_ProcessData_SteeringFiles1':['idFile']},
-                                                          'ForeignKeys': { 'idFile' : 'SteeringFiles.idFile',
+                                                          'ForeignKeys': { #'idFile' : 'SteeringFiles.idFile',
                                                                           'idProcessData':'ProcessData.idProcessData'}
                                                          }
     if not 'DependencyRelation' in tablesInDB:
@@ -129,8 +129,8 @@ class ProcessDB ( DB ):
                                                            },
                                                'PrimaryKey' : 'idDependencyRelation',
                                                'Indexes' : {'fk_Software_has_Software_Software2':['idDependency'],
-                                                            'fk_Software_has_Software_Software1': ['idSoftware']},
-                                               'ForeignKeys': {'idSoftware':'Software.idSoftware','idDependency':'Software.idSoftware'}             
+                                                            'fk_Software_has_Software_Software1': ['idSoftware']}
+                                               #'ForeignKeys': {'idSoftware':'Software.idSoftware','idDependency':'Software.idSoftware'}             
                                               }
     
     if not 'ProductionRelation' in tablesInDB:
@@ -139,9 +139,9 @@ class ProcessDB ( DB ):
                                                             'idDaughterProd' : 'INT NOT NULL'
                                                            },
                                                'PrimaryKey': 'idRelation',
-                                               'Indexes' : {'Daughter':['idDaughterProd'],'Mother':['idMotherProd']},
-                                               'ForeignKeys': { 'idMotherProd':"Productions.idProduction", 
-                                                               "idDaughterProd":"Productions.idProduction"}
+                                               'Indexes' : {'Daughter':['idDaughterProd'],'Mother':['idMotherProd']}
+                                               #'ForeignKeys': { 'idMotherProd':"Productions.idProduction", 
+                                               #                "idDaughterProd":"Productions.idProduction"}
                                               }
     if not 'Sites' in tablesInDB:
       tablesToCreate['Sites'] = { 'Fields' : { 'idSite' : 'INTEGER UNSIGNED AUTO_INCREMENT NOT NULL',
@@ -388,7 +388,7 @@ class ProcessDB ( DB ):
     
     #now get what is already available at each site
     req = "SELECT idSoftware,idSite FROM ApplicationStatusAtSite WHERE idSoftware IN (SELECT idSoftware FROM Software WHERE Valid=TRUE) \
-           AND idSite IN (SELECT idSites FROM Sites WHERE Status='OK') AND ApplicationStatusAtSite.Status='NotAvailable';"
+           AND idSite IN (SELECT idSite FROM Sites WHERE Status='OK') AND ApplicationStatusAtSite.Status='NotAvailable';"
     res =  self._query( req, connection )
     if not res['OK']:
       return res
@@ -435,7 +435,7 @@ class ProcessDB ( DB ):
     idsoft = res['lastRowId']
     
     ##getSites
-    res = self._getFields("Sites",["idSites"], conn = connection)
+    res = self._getFields("Sites",["idSite"], conn = connection)
     if len(res['Value']):
       return S_OK({"Message":"Could not get sites"})
     rows = res['Value']
@@ -528,11 +528,11 @@ class ProcessDB ( DB ):
     """ Add a new site
     """
     connection = self.__getConnection( connection )
-    res = self._getFields('Sites',['idSites'], ['SiteName'],[siteName], conn = connection)
+    res = self._getFields('Sites',['idSite'], ['SiteName'],[siteName], conn = connection)
     if not len(res['Value']):
       res = self._insert('Sites',['SiteName'],[siteName], connection)
       idSite = res['lastRowId']
-      res = self._getFields("Software",['idSoftware'], conn = connection)
+      res = self._getFields("Software",['idSoftware'], [],[], conn = connection)
       for idsoft in [t[0] for t in res['Value']] :
         res = self._insert('ApplicationStatusAtSite',['idSite','idSoftware'], [idsoft,idSite], connection)
     return S_OK()
@@ -736,7 +736,7 @@ class ProcessDB ( DB ):
     if not sitedict['Status'] in self.SiteStatuses:
       return S_ERROR("Status %s is not a valid site status"%sitedict['Status'])
     
-    res = self._getFields('Sites',['SiteName'],['SiteName'],sitedict['SiteName'], conn = connection)
+    res = self._getFields('Sites',['SiteName'],['SiteName'],[sitedict['SiteName']], conn = connection)
     rows = res['Value']
     if not len(rows):
       res = self.addSite(sitedict['SiteName'], connection)
