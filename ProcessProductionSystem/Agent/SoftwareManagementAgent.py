@@ -78,7 +78,8 @@ class SoftwareManagementAgent(AgentModule):
         if not res['OK']:
           self.log.error(res['Message'])
           continue
-        res = self.dirac.submit(j)
+        res = j.submit(self.dirac)
+        #res = self.dirac.submit(j)
         if not res['OK']:
           self.log.error('Could not create the job')
           continue
