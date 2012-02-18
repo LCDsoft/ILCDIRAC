@@ -399,9 +399,12 @@ class ProcessDB ( DB ):
         soft_dict[row[0]] = {}
         res  = self._getFields('Software',['AppName','AppVersion','Platform'],['idSoftware'],[row[0]], conn = connection)
         soft_dict[row[0]]['AppName'],soft_dict[row[0]]['AppVersion'],soft_dict[row[0]]['Platform'] = res['Value'][0]
-      if not   soft_dict[row[0]].has_key('Site'):
+      if not   soft_dict[row[0]].has_key('Sites'):
         soft_dict[row[0]]['Sites'] = []
-      soft_dict[row[0]]['Sites'].append(row[1])    
+      res =   self._getFields('Sites',['SiteName'],['idSite'],[row[1]], conn = connection )
+      if len(res['Value']):
+        sitename = res['Value'][0][0]
+        soft_dict[row[0]]['Sites'].append(sitename)    
           
     return S_OK(soft_dict)
   
@@ -744,7 +747,7 @@ class ProcessDB ( DB ):
         return res
     
     query = 'UPDATE Sites SET Status="%s" WHERE SiteName="%s";'%(sitedict['Status'],sitedict['SiteName'])
-    res = self._query(query,connection)
+    res = self._update(query,connection)
     if not res['OK']:
       return res
     return S_OK()
