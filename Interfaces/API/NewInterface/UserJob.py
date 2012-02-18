@@ -21,6 +21,9 @@ class UserJob(Job):
     self.diracinstance = None
     
   def submit(self,diracinstance=None,mode = "wms"):
+    """ Submit call: when your job is defined, and all applications are set, you need to call this to
+    add the job to DIRAC.
+    """
     res = self._addToWorkflow()
     if not res['OK']:
       return res
