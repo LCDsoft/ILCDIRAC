@@ -4,7 +4,7 @@ Created on Feb 17, 2012
 @author: Stephane Poss
 '''
 
-from ILCDIRAC.Interfaces.NewInterface.Aopplication import Application
+from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from DIRAC import S_OK,S_ERROR
 
 class SoftwareInstall(Application):
