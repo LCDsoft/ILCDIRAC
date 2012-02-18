@@ -1,3 +1,7 @@
+[v8r0p0]
+* Interfaces
+A few internal changes, but most important is that to submit a job, one now has to run job.submit instead of dirac.submit
+
 [v7r0p0]
 * ProcessProductionSystem
 A lot of new stuff for software Management
