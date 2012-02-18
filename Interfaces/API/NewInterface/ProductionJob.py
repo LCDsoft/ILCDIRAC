@@ -33,6 +33,8 @@ class ProductionJob(Job):
     self.prodVersion = __RCSID__
     self.created = False
     self.checked = False
+    self.call_finalization = False
+    self.finalsdict = {}
     self.transfid = 0
     self.type = 'Production'
     self.csSection = '/Operations/Production/Defaults'
@@ -285,7 +287,19 @@ class ProductionJob(Job):
     @todo: Do the registration only once, instead of once for each job
 
     """
+    
+    self.call_finalization = True
+    self.finalsdict['uploadData']=uploadData
+    self.finalsdict['registerData'] = registerData
+    self.finalsdict['uploadLog'] = uploadLog
+    self.finalsdict['sendFailover'] = sendFailover
+
+  def _addRealFinalization(self):  
+    """ This is called at creation: now that the workflow is created at the last minute,
+    we need to add this also at the last minute
+    """
     self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
+    
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
     self._addParameter(dataUpload,'enable','bool',False,'EnableFlag')
@@ -313,19 +327,19 @@ class ProductionJob(Job):
     finalization = StepDefinition('Job_Finalization')
     finalization.addModule(dataUpload)
     up = finalization.createModuleInstance('UploadOutputData','dataUpload')
-    up.setValue("enable",uploadData)
+    up.setValue("enable",self.finalsdict['uploadData'])
 
     finalization.addModule(registerdata)
     ro = finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
-    ro.setValue("enable",registerData)
+    ro.setValue("enable",self.finalsdict['registerData'])
 
     finalization.addModule(logUpload)
     ul  = finalization.createModuleInstance('UploadLogFile','logUpload')
-    ul.setValue("enable",uploadLog)
+    ul.setValue("enable",self.finalsdict['uploadLog'])
 
     finalization.addModule(failoverRequest)
     fr = finalization.createModuleInstance('FailoverRequest','failoverRequest')
-    fr.setValue("enable",sendFailover)
+    fr.setValue("enable",self.finalsdict['sendFailover'])
     
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
@@ -348,6 +362,13 @@ class ProductionJob(Job):
     if self.created:
       return S_ERROR("Production already created.")
 
+    ###We need to add the applications to the workflow
+    res = self._addToWorkflow()
+    if not res['OK']:
+      return res
+    if self.call_finalization:
+      self._addRealFinalization()
+    
     workflowName = self.workflow.getName()
     fileName = '%s.xml' %workflowName
     self.log.verbose('Workflow XML file name is: %s' %fileName)

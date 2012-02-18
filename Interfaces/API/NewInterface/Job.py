@@ -7,9 +7,12 @@ New Job class, for the new interface. This job class should not be used to creat
 '''
 
 from DIRAC.Interfaces.API.Job                          import Job as DiracJob
+
 from ILCDIRAC.Interfaces.API.NewInterface.Application  import Application
 from DIRAC.Core.Workflow.Step                          import StepDefinition
 from DIRAC.Core.Workflow.Parameter                     import Parameter 
+
+
 from DIRAC import S_ERROR,S_OK,gLogger
 import string, inspect
 
@@ -65,6 +68,11 @@ class Job(DiracJob):
     """
     self.check = False
     return S_OK()
+
+  def submit(self,dirac = None):
+    """ Method to submit the job. Not doing anything by default, so that ProductionJobs cannot be submitted by mistake
+    """
+    return S_ERROR("Not available for this job class")
       
   def _askUser(self):
     """ Private function
@@ -93,7 +101,7 @@ class Job(DiracJob):
     
     """
     #Start by defining step number
-    self.stepnumber = len(self.steps) + 1
+    #self.stepnumber = len(self.steps) + 1
     
 
     res = application._analyseJob(self)
@@ -125,49 +133,107 @@ class Job(DiracJob):
 
     ##Now we can create the step and add it to the workflow
     #First we need a unique name, let's use the application name and step number
-    stepname = "%s_step_%s"%(application.appname,self.stepnumber)
-    stepdefinition = StepDefinition(stepname)
-    self.steps.append(stepdefinition)
+    #stepname = "%s_step_%s"%(application.appname,self.stepnumber)
+    #stepdefinition = StepDefinition(stepname)
+    #self.steps.append(stepdefinition)
 
     ##Set the modules needed by the application
-    res = self._jobSpecificModules(application,stepdefinition)
-    if not res['OK']:
-      self.log.error("Failed to add modules: %s"%res['Message'])
-      return S_ERROR("Failed to add modules: %s"%res['Message'])
-  
-    ### add the parameters to  the step
-    res = application._addParametersToStep(stepdefinition)
-    if not res['OK']:
-      self.log.error("Failed to add parameters: %s"%res['Message'])   
-      return S_ERROR("Failed to add parameters: %s"%res['Message'])   
-      
-    ##Now the step is defined, let's add it to the workflow
-    self.workflow.addStep(stepdefinition)
-    
-    ###Now we need to get a step instance object to set the parameters' values
-    stepInstance = self.workflow.createStepInstance(stepdefinition.getType(),stepname)
-
-    ##Set the parameters values to the step instance
-    res = application._setStepParametersValues(stepInstance)
-    if not res['OK']:
-      self.log.error("Failed to resolve parameters values: %s"%res['Message']) 
-      return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
-    
-    ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
-    res = application._resolveLinkedStepParameters(stepInstance)
-    if not res['OK']:
-      self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
-      return S_ERROR("Failed to resolve linked parameters: %s"%res['Message'])
-    #Now prevent overwriting of parameter values.
-    application._addedtojob()
-  
-    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
+#    res = self._jobSpecificModules(application,stepdefinition)
+#    if not res['OK']:
+#      self.log.error("Failed to add modules: %s"%res['Message'])
+#      return S_ERROR("Failed to add modules: %s"%res['Message'])
+#  
+#    ### add the parameters to  the step
+#    res = application._addParametersToStep(stepdefinition)
+#    if not res['OK']:
+#      self.log.error("Failed to add parameters: %s"%res['Message'])   
+#      return S_ERROR("Failed to add parameters: %s"%res['Message'])   
+#      
+#    ##Now the step is defined, let's add it to the workflow
+#    self.workflow.addStep(stepdefinition)
+#    
+#    ###Now we need to get a step instance object to set the parameters' values
+#    stepInstance = self.workflow.createStepInstance(stepdefinition.getType(),stepname)
+#
+#    ##Set the parameters values to the step instance
+#    res = application._setStepParametersValues(stepInstance)
+#    if not res['OK']:
+#      self.log.error("Failed to resolve parameters values: %s"%res['Message']) 
+#      return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
+#    
+#    ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
+#    res = application._resolveLinkedStepParameters(stepInstance)
+#    if not res['OK']:
+#      self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
+#      return S_ERROR("Failed to resolve linked parameters: %s"%res['Message'])
+#    #Now prevent overwriting of parameter values.
+#    application._addedtojob()
+#  
+#    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
     if application.nbevts:
       self._addParameter(self.workflow, 'NbOfEvts', 'int', application.nbevts, "Number of events to process")
   
     ##Finally, add the software packages if needed
     if application.appname and application.version:
       self._addSoftware(application.appname, application.version)
+      
+    return S_OK()
+  
+  def _addToWorkflow(self):
+    """ This is called just before submission. It creates the actual workflow. The linking of parameters can only be done here
+    """
+    for application in self.applicationlist:
+      #Start by defining step number
+      self.stepnumber = len(self.steps) + 1
+      
+      res = application._analyseJob(self)
+      if not res['OK']:
+        return res
+    
+      res = application._checkWorkflowConsistency()
+      if not res['OK']:
+        self.log.error("%s failed to check its consistency: %s"%(application,res['Message']))
+        return S_ERROR("%s failed to check its consistency: %s"%(application,res['Message']))
+      
+      ##Now we can create the step and add it to the workflow
+      #First we need a unique name, let's use the application name and step number
+      stepname = "%s_step_%s"%(application.appname,self.stepnumber)
+      stepdefinition = StepDefinition(stepname)
+      self.steps.append(stepdefinition)
+      
+      ##Set the modules needed by the application
+      res = self._jobSpecificModules(application,stepdefinition)
+      if not res['OK']:
+        self.log.error("Failed to add modules: %s"%res['Message'])
+        return S_ERROR("Failed to add modules: %s"%res['Message'])
+  
+      ### add the parameters to  the step
+      res = application._addParametersToStep(stepdefinition)
+      if not res['OK']:
+        self.log.error("Failed to add parameters: %s"%res['Message'])   
+        return S_ERROR("Failed to add parameters: %s"%res['Message'])   
+      
+      ##Now the step is defined, let's add it to the workflow
+      self.workflow.addStep(stepdefinition)
+    
+      ###Now we need to get a step instance object to set the parameters' values
+      stepInstance = self.workflow.createStepInstance(stepdefinition.getType(),stepname)
+
+      ##Set the parameters values to the step instance
+      res = application._setStepParametersValues(stepInstance)
+      if not res['OK']:
+        self.log.error("Failed to resolve parameters values: %s"%res['Message']) 
+        return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
+    
+      ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
+      res = application._resolveLinkedStepParameters(stepInstance)
+      if not res['OK']:
+        self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
+        return S_ERROR("Failed to resolve linked parameters: %s"%res['Message'])
+      #Now prevent overwriting of parameter values.
+      application._addedtojob()
+  
+      self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
       
     return S_OK()
   
@@ -183,7 +249,7 @@ class Job(DiracJob):
       logf = application.appname
       if application.version:
         logf += "_"+application.version
-      logf += "_Step_%s.log"%self.stepnumber  
+      logf += "_Step_%s.log"%(len(self.applicationlist)+1)
       application.setLogFile(logf)
     
     if self.energy:

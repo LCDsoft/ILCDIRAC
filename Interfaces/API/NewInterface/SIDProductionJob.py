@@ -79,15 +79,8 @@ class SIDProductionJob(ProductionJob):
     self.inputdataquery = True
     return S_OK()    
     
-  def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
-    """ Add finalization step
-
-    @param uploadData: Upload or not the data to the storage
-    @param uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
-    @param sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
-    @param registerData: Register data in the file catalog
-    @todo: Do the registration only once, instead of once for each job
-
+  def _addRealFinalization(self):
+    """ See L{ProductionJob} for definition
     """
     self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
     dataUpload = ModuleDefinition('UploadOutputData')
@@ -117,19 +110,19 @@ class SIDProductionJob(ProductionJob):
     finalization = StepDefinition('Job_Finalization')
     finalization.addModule(dataUpload)
     up = finalization.createModuleInstance('UploadOutputData','dataUpload')
-    up.setValue("enable",uploadData)
+    up.setValue("enable",self.finalsdict['uploadData'])
 
     finalization.addModule(registerdata)
     ro = finalization.createModuleInstance('SIDRegisterOutputData','SIDRegisterOutputData')
-    ro.setValue("enable",registerData)
+    ro.setValue("enable",self.finalsdict['registerData'])
 
     finalization.addModule(logUpload)
     ul  = finalization.createModuleInstance('UploadLogFile','logUpload')
-    ul.setValue("enable",uploadLog)
+    ul.setValue("enable",self.finalsdict['uploadLog'])
 
     finalization.addModule(failoverRequest)
     fr = finalization.createModuleInstance('FailoverRequest','failoverRequest')
-    fr.setValue("enable",sendFailover)
+    fr.setValue("enable",self.finalsdict['sendFailover'])
     
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')

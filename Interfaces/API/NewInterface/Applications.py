@@ -322,13 +322,18 @@ class _Root(Application):
     if not self.version:
       return S_ERROR("You need to specify the Root version")
     
-    res = self._checkRequiredApp() ##Check that job order is correct
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp() ##Check that job order is correct
+    #if not res['OK']:
+    #  return res
           
     return S_OK()
   
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
+  
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()  
@@ -970,13 +975,18 @@ class PostGenSelection(Application):
     if not self.NbEvtsToKeep :
       return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
     
-    res = self._checkRequiredApp() ##Check that job order is correct
-    if not res['OK']:
-      return res      
+    #res = self._checkRequiredApp() ##Check that job order is correct
+    #if not res['OK']:
+    #  return res      
     
     return S_OK()  
+
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
   
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()   
@@ -1072,13 +1082,18 @@ class StdhepCut(Application):
     if not self.maxevts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
     
-    res = self._checkRequiredApp() ##Check that job order is correct
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp() ##Check that job order is correct
+    #if not res['OK']:
+    #  return res
     
     return S_OK()
+
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
   
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()  
@@ -1241,9 +1256,9 @@ class Mokka(Application):
       if not res['OK']:
         return res  
     
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
@@ -1278,8 +1293,12 @@ class Mokka(Application):
     moduleinstance.setValue("ProcessID",       self.processID)
     moduleinstance.setValue("debug",           self.debug)
 
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK() 
@@ -1383,9 +1402,9 @@ class SLIC(Application):
         if not res['OK']:
           return res  
     
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
@@ -1415,8 +1434,12 @@ class SLIC(Application):
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("debug",           self.debug)
 
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()   
@@ -1772,9 +1795,9 @@ class Marlin(Application):
         if not res['OK']:
           return res  
 
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
 
     if not self.inputGearFile:
       self.inputGearFile = 'GearOutput.xml'
@@ -1806,8 +1829,12 @@ class Marlin(Application):
     moduleinstance.setValue('ProcessorListToExclude',     self.processorlisttoexclude)
     moduleinstance.setValue("debug",             self.debug)
 
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK() 
@@ -1968,9 +1995,9 @@ class LCSIM(Application):
       if not self.detectorModel.lower().count(".zip"):
         return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. Or use the alias.properties.")
         
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
     
     if not self._jobtype =='User':
       #slicp = False
@@ -2010,7 +2037,12 @@ class LCSIM(Application):
     moduleinstance.setValue("detectorModel",      self.detectorModel)
     moduleinstance.setValue("trackingstrategy",   self.trackingstrategy)
 
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
+
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
@@ -2108,9 +2140,9 @@ class SLICPandora(Application):
         if not res['OK']:
           return res  
     
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
       
     if not self.startFrom :
       self._log.info('No startFrom define for SlicPandora : start from the begining')
@@ -2138,8 +2170,12 @@ class SLICPandora(Application):
     moduleinstance.setValue("startFrom",          self.startFrom)
     moduleinstance.setValue("debug",              self.debug)
 
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
@@ -2221,6 +2257,8 @@ class CheckCollections(Application):
     return S_OK()
   
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
@@ -2280,13 +2318,18 @@ class SLCIOConcatenate(Application):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
 
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
       
     return S_OK()
   
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
+  
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
@@ -2366,13 +2409,18 @@ class Tomato(Application):
     if not self.libTomato :
       self._log.info('Tomato library not given. It will run without it')
 
-    res = self._checkRequiredApp()
-    if not res['OK']:
-      return res
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
       
     return S_OK()  
 
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
+
   def _resolveLinkedStepParameters(self,stepinstance):
+    if self._linkedidx:
+      self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
     return S_OK()
