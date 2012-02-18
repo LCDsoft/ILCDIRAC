@@ -410,7 +410,7 @@ class ProcessDB ( DB ):
     """
     connection = self.__getConnection( connection )
   
-    res = self._getFields('SoftwareOperations',['JobID'], conn = connection)
+    res = self._getFields('SoftwareOperations',['JobID'], [], [], conn = connection)
      
     return S_OK()
   ##################################################################
@@ -435,7 +435,7 @@ class ProcessDB ( DB ):
     idsoft = res['lastRowId']
     
     ##getSites
-    res = self._getFields("Sites",["idSite"], conn = connection)
+    res = self._getFields("Sites",["idSite"], [], [], conn = connection)
     if len(res['Value']):
       return S_OK({"Message":"Could not get sites"})
     rows = res['Value']
@@ -534,7 +534,7 @@ class ProcessDB ( DB ):
       idSite = res['lastRowId']
       res = self._getFields("Software",['idSoftware'], [],[], conn = connection)
       for idsoft in [t[0] for t in res['Value']] :
-        res = self._insert('ApplicationStatusAtSite',['idSite','idSoftware'], [idsoft,idSite], connection)
+        res = self._insert('ApplicationStatusAtSite',['idSite','idSoftware'], [idSite,idsoft], connection)
     return S_OK()
 
   def addOrUpdateJob(self, jobdict, connection = False ):
