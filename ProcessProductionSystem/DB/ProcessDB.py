@@ -116,7 +116,7 @@ class ProcessDB ( DB ):
       tablesToCreate['SteeringFiles_has_ProcessData'] = { 'Fields' :{ 'idFile': 'INT NOT NULL',
                                                                       'idProcessData': 'INT NOT NULL'
                                                                      },
-                                                          'PrimaryKey' : ['idfiles','idProcessData'],
+                                                          'PrimaryKey' : ['idFile','idProcessData'],
                                                           'Indexes' :{'fk_SteeringFiles_has_ProcessData_ProcessData1':['idProcessData'],
                                                                       'fk_SteeringFiles_has_ProcessData_SteeringFiles1':['idFile']},
                                                           'ForeignKeys': { 'idFile' : 'SteeringFiles.idFile',
