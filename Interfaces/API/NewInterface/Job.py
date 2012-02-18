@@ -69,7 +69,7 @@ class Job(DiracJob):
     self.check = False
     return S_OK()
 
-  def submit(self,dirac = None):
+  def submit(self,dirac = None, mode = 'wms'):
     """ Method to submit the job. Not doing anything by default, so that ProductionJobs cannot be submitted by mistake
     """
     return S_ERROR("Not available for this job class")
