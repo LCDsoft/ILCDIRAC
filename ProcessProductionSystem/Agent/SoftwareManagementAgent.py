@@ -64,6 +64,7 @@ class SoftwareManagementAgent(AgentModule):
       self.log.error('Failed to obtain task')
     task_dict = res['Value']
     for softdict in task_dict.values():
+      self.log.info('Will install %s %s at %s'%(softdict['AppName'],softdict['AppVersion'],softdict['Sites']))
       for site in softdict['Sites']:
         j = UserJob()
         j.setSystemConfig(softdict['Platform'])
