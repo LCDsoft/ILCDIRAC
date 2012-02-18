@@ -80,6 +80,7 @@ class Application(object):
     self._jobtype = ''
     #input application: will link the OutputFile of the guys in there with the InputFile of the self 
     self._inputapp = []
+    self._linkedidx = None
     #Needed to link the parameters.
     self._inputappstep = None
     
@@ -379,13 +380,18 @@ class Application(object):
   
   def _checkConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
-    Should also call L{_checkRequiredApp} when needed.
     """
     return S_OK()
   
   def _checkFinalConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
     Some info are passed from the job to the applications: this is then used to check that it makes the app valid 
+    """
+    return S_OK()
+
+  def _checkWorkflowConsistency(self):
+    """ Called from Job Class, overloaded by every class. Used to check the workflow consistency: linking between applications
+    Should also call L{_checkRequiredApp} when needed.
     """
     return S_OK()
 
@@ -397,8 +403,8 @@ class Application(object):
         if not app in self._jobapps:
           return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in question must be passed to job.append() before.")
         else:
-          idx = self._jobapps.index(app)
-          self._inputappstep = self._jobsteps[idx]
+          self._linkedidx = self._jobapps.index(app)
+          
     return S_OK()
   
   def _addBaseParameters(self,stepdefinition):

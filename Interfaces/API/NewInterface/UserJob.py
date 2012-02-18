@@ -8,6 +8,8 @@ User Job class. Used to define (guess what?) user jobs!
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
+from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+
 from DIRAC import S_OK,S_ERROR
 
 import string,types
@@ -16,6 +18,17 @@ class UserJob(Job):
   def __init__(self, script = None):
     Job.__init__(self, script)
     self.type = 'User'
+    self.diracinstance = None
+    
+  def submit(self,diracinstance=None,mode = "wms"):
+    res = self._addToWorkflow()
+    if not res['OK']:
+      return res
+    if not diracinstance:
+      self.diracinstance = DiracILC()
+    else:
+      self.diracinstance = diracinstance
+    return self.diracinstance.submit(self,mode)
     
   #############################################################################
   def setInputData( self, lfns ):
