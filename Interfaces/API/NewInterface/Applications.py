@@ -14,7 +14,7 @@ Example usage:
 >>> ga.setArguments("some arguments")
 >>> ga.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
 >>> job.append(ga)
->>> dirac.submit(job)
+>>> job.submit(dirac)
 
 It's also possible to set all the application's properties in the constructor
 
