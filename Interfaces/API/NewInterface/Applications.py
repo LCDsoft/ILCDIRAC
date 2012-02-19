@@ -332,7 +332,7 @@ class _Root(Application):
     return self._checkRequiredApp()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -985,7 +985,7 @@ class PostGenSelection(Application):
     return self._checkRequiredApp()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -1092,7 +1092,7 @@ class StdhepCut(Application):
     return self._checkRequiredApp()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -1297,7 +1297,7 @@ class Mokka(Application):
     return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -1438,7 +1438,7 @@ class SLIC(Application):
     return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -1833,7 +1833,7 @@ class Marlin(Application):
     return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -2041,7 +2041,7 @@ class LCSIM(Application):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -2174,7 +2174,7 @@ class SLICPandora(Application):
     return self._checkRequiredApp()
     
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -2257,7 +2257,7 @@ class CheckCollections(Application):
     return S_OK()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -2328,7 +2328,7 @@ class SLCIOConcatenate(Application):
     return self._checkRequiredApp()
   
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
@@ -2419,7 +2419,7 @@ class Tomato(Application):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self,stepinstance):
-    if self._linkedidx:
+    if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")

@@ -396,7 +396,7 @@ class Application(object):
     return S_OK()
 
   def _checkRequiredApp(self):
-    """ Called by L{_checkConsistency} when relevant
+    """ Called by L{_checkWorkflowConsistency} when relevant
     """
     if self._inputapp:
       for app in self._inputapp:
