@@ -413,7 +413,7 @@ class ProcessDB ( DB ):
     """
     connection = self.__getConnection( connection )
   
-    res = self._getFields('SoftwareOperations',['JobID','idSoftware'], [], [], conn = connection)
+    res = self._getFields('SoftwareOperations',['JobID','idSoftware','Site'], [], [], conn = connection)
     rows = res['Value']
 
     resjobs = []
@@ -422,6 +422,7 @@ class ProcessDB ( DB ):
       jobdict = {}
       jobdict['JobID'] = row[0]
       res = self._getFields('Software',['AppName','AppVersion','Platform'],['idSoftware'],[row[1]],conn = connection)
+      jobdict['Site'] = row[2]
       row = res['Value'][0]
       if len(row):
         jobdict['AppName'] = row[0]
