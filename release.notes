@@ -1,3 +1,7 @@
+[v8r0p1]
+* Interfaces
+Bug fix in liking of applications
+
 [v8r0p0]
 * Interfaces
 A few internal changes, but most important is that to submit a job, one now has to run job.submit instead of dirac.submit
