@@ -454,7 +454,7 @@ class ProcessDB ( DB ):
     
     ##getSites
     res = self._getFields("Sites",["idSite"], [], [], conn = connection)
-    if len(res['Value']):
+    if not len(res['Value']):
       return S_OK({"Message":"Could not get sites"})
     rows = res['Value']
     for row in rows:
