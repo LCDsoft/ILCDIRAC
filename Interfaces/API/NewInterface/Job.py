@@ -73,6 +73,16 @@ class Job(DiracJob):
     """ Method to submit the job. Not doing anything by default, so that ProductionJobs cannot be submitted by mistake
     """
     return S_ERROR("Not available for this job class")
+  
+  def checkparams(self,dirac = None):
+    """ Check job consistency instead of submitting
+    """
+    if not dirac:
+      return S_ERROR("Missing dirac instance")
+    res = self._addToWorkflow()
+    if not res['OK']:
+      return res
+    return dirac.checkparams(self)
       
   def _askUser(self):
     """ Private function
@@ -183,7 +193,7 @@ class Job(DiracJob):
     """ This is called just before submission. It creates the actual workflow. The linking of parameters can only be done here
     """
     for application in self.applicationlist:
-      #Start by defining step number
+      #Start by defining step number 
       self.stepnumber = len(self.steps) + 1
       
       res = application._analyseJob(self)
