@@ -413,9 +413,23 @@ class ProcessDB ( DB ):
     """
     connection = self.__getConnection( connection )
   
-    res = self._getFields('SoftwareOperations',['JobID'], [], [], conn = connection)
-     
-    return S_OK()
+    res = self._getFields('SoftwareOperations',['JobID','idSoftware'], [], [], conn = connection)
+    rows = res['Value']
+
+    resjobs = []
+    
+    for row in rows:
+      jobdict = {}
+      jobdict['JobID'] = row[0]
+      res = self._getFields('Software',['AppName','AppVersion','Platform'],['idSoftware'],[row[1]],conn = connection)
+      row = res['Value'][0]
+      if len(row):
+        jobdict['AppName'] = row[0]
+        jobdict['AppVersion'] = row[1]
+        jobdict['Platform'] = row[2]
+        resjobs.append(jobdict)
+        
+    return S_OK(resjobs)
   ##################################################################
   # Setter methods
   def addSoftware( self, AppName, AppVersion, Platform, Comment, Path, connection = False ):

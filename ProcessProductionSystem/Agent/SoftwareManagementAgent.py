@@ -10,9 +10,9 @@ from DIRAC.Core.Base.AgentModule                                          import
 from DIRAC.Core.DISET.RPCClient                                           import RPCClient
 from DIRAC.Core.Security.ProxyInfo                                        import getProxyInfo
 
-from DIRAC.Interfaces.API.DiracAdmin import DiracAdmin
+from DIRAC.Interfaces.API.DiracAdmin                                      import DiracAdmin
 from ILCDIRAC.ProcessProductionSystem.Client.ProcessProdClient            import ProcessProdClient
-from ILCDIRAC.ProcessProductionSystem.Utilities.SoftwareInstall import SoftwareInstall
+from ILCDIRAC.ProcessProductionSystem.Utilities.SoftwareInstall           import SoftwareInstall
 
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
@@ -94,6 +94,24 @@ class SoftwareManagementAgent(AgentModule):
         if not res['OK']:
           self.log.error('Could not add job %s: %s'%(jobdict['JobID'],res['Message']))
     
+    ##Monitor jobs
+    jobs = {}
+    res = self.ppc.getJobs()
+    if not res['OK']:
+      self.log.error('Could not retrieve jobs')
+    else:
+      jobs = res['Value']
+      for job in jobs:
+        res = self.dirac.status(job['JobID'])
+        if res['OK']:
+          jobstatuses = res['Value'] 
+          job['Status'] = jobstatuses['JobID']['Status']
+          res = self.ppc.addOrUpdateJob(job)
+          if not res['OK']:
+            self.log.error("Failed to updated job %s: %s"%(job['JobID'],res['Message']))
+        else:
+          self.log.error("Failed to update job %s status"%job['JobID'])
+          
     return S_OK()
   
   
