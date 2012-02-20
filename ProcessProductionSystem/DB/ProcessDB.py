@@ -766,6 +766,30 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return res
     return S_OK()
+  
+  def reportOK(self,jobdict, connection = False ):
+    connection = self.__getConnection( connection )
+    if not jobdict.has_key('JobID') or not jobdict.has_key('AppName') or not jobdict.has_key('AppVersion') or not jobdict.has_key('Platform'):
+      return S_ERROR("Missing key")
+    
+    res = self._checkSoftware(jobdict['AppName'],jobdict['AppVersion'],jobdict['Platform'], connection)
+    appid = None 
+    if res['OK']:
+      appid = res['Value'][0][0]
+    else:
+      return res
+    
+    
+    
+    return S_OK()
+  
+  def reportFailed(self,jobdict, connection = False ):
+    connection = self.__getConnection( connection )
+    if not jobdict.has_key('JobID') or not jobdict.has_key('AppName') or not jobdict.has_key('AppVersion') or not jobdict.has_key('Platform'):
+      return S_ERROR("Missing key")
+    
+    return S_OK()
+  
   #####################################################################
   # Private methods
 
