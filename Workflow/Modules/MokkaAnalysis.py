@@ -263,6 +263,7 @@ class MokkaAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         res =  getSteeringFileDirName(self.systemConfig,"mokka",self.applicationVersion)
         if not res['OK']:
+          result = sqlwrapper.mysqlCleanUp()
           return res
         steeringfiledirname = res['Value']
         if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
