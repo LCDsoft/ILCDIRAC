@@ -133,3 +133,11 @@ class ProcessManagerHandler(RequestHandler):
   def export_changeSiteStatus(self,sitedict):
     return processDB.changeSiteStatus(sitedict)
 
+  types_reportOK = [DictType]
+  def export_reportOK(self,jobdict):
+    return processDB.reportOK(jobdict)
+
+  types_reportFailed = [DictType]
+  def export_reportFailed(self,jobdict):
+    return processDB.reportFailed(jobdict)
+
