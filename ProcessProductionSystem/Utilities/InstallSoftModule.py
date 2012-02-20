@@ -37,27 +37,35 @@ class InstallSoftModule():
     for app in self.appsToInstall:
       if not app:
         continue
-      
+      jobdict = {}
+      jobdict['JobID'] = self.workflow_commons["JOB_ID"]
       appname = app.split(".")[0]
       appversion = app.split(".")[1]
+      jobdict['AppName'] = appname
+      jobdict['AppVersion'] = appversion
+      jobdict['Platform'] = self.systemConfig
       appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,appname,appversion),'')
       appDir = appDir.replace(".tgz","").replace(".tar.gz","")
       mySoftwareRoot = ''
       sharedArea = SharedArea()
       if os.path.exists('%s%s%s' %(sharedArea,os.sep,appDir)):
         mySoftwareRoot = sharedArea
-        self.ppc.reportOK(self.workflow_commons["JOB_ID"],appname,appversion,self.systemConfig)
+        self.ppc.reportOK(jobdict)
       else:
-        self.ppc.reportFailed(self.workflow_commons["JOB_ID"],appname,appversion,self.systemConfig)
+        self.ppc.reportFailed(jobdict)
 
     self.log.info("Will delete %s"%self.appsToRemove)
     failed = []
     for app in self.appsToRemove:
       if not app:
         continue
-      
+      jobdict = {}
+      jobdict['JobID'] = self.workflow_commons["JOB_ID"]
       appname = app.split(".")[0]
       appversion = app.split(".")[1]
+      jobdict['AppName'] = appname
+      jobdict['AppVersion'] = appversion
+      jobdict['Platform'] = self.systemConfig      
       appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,appname,appversion),'')
       appDir = appDir.replace(".tgz","").replace(".tar.gz","")
       mySoftwareRoot = ''
