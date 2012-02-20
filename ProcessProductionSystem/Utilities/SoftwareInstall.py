@@ -9,17 +9,29 @@ from DIRAC import S_OK,S_ERROR
 
 class SoftwareInstall(Application):
   def __init__(self):
+    self.appsToInstall = ''
+    self.appsToRemove = ''
     Application.__init__(self)
-    self._modulename = "DummyModule"
-    self.appname = "DummyModule"
+    self._modulename = "InstallSoftModule"
+    self.appname = "InstallSoftModule"
     self._moduledescription = 'Module to install software'
+    self._importLocation = "ILCDIRAC.ProcessProductionSystem.Utilities"
+
+  def toInstall(self,apps):
+    self.appsToInstall = ";".join(apps)
+
+  def toRemove(self,apps):
+    self.appsToRemove = ";".join(apps)
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()  
+    m1.addParameter(Parameter("appsToInstallStr",  "", "string", "", "", False, False, "Apps to install"))
+    m1.addParameter(Parameter("appsToRemoveStr",   "", "string", "", "", False, False, "Apps to remove"))
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
-    pass
+    moduleinstance.setValue("appsToInstallStr",self.appsToInstall)
+    moduleinstance.setValue("appsToRemoveStr",self.appsToRemove)
   
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
