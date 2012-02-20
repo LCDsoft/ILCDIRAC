@@ -15,4 +15,4 @@ def getSteeringFileDirName(systemConfig,application,applicationVersion):
   if not TarBall:
     return S_ERROR("Could not find tar ball for SteeringFile")
   dir = TarBall.replace(".tgz","").replace(".tar.gz","")
-  return S_OK('')
+  return S_OK(dir)
