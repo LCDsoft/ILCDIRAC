@@ -564,35 +564,41 @@ class ProcessDB ( DB ):
     for key in jobkeys:
       if not jobdict.has_key(key):
         return S_ERROR("Missing mandatory parameter %s"%key)
-    
+      
+    softid = 0  
+    res = self._checkSoftware(jobdict['AppName'], jobdict['AppVersion'], jobdict['Platform'], connection)  
+    if res['OK']:
+      if len(res['Value']):
+        softid = res['Value'][0][0]
+    siteid = 0    
+    res = self._getFields('idSite','Sites',['SiteName'],[jobdict['Site']], conn = connection)
+    if len(res['Value']):
+      siteid = res['Value'][0][0]    
+    if not siteid or not softid:
+      return S_ERROR("Could not find either site or software")  
     #Check that job is new or not
     res = self._getFields('SoftwareOperations',['OpID'],['JobID'],[jobdict['JobID']], conn = connection)
     if not res['OK']:
       return res
     if len(res['Value']):
-      opID = res['Value'][0] 
+      opID = res['Value'][0][0] 
       status = jobdict['Status']
       if not status in self.OperationsStatus:
         status = 'Waiting'
       if not status=='Failed' and not status=='Done':   
         req = "UPDATE SoftwareOperations SET Status='%s' WHERE OpID=%s;"%(status,opID)
         res = self._update( req, connection )
-        req = 'UPDATE ApplicationStatusAtSite SET Status="Installing" WHERE OpID=%s;'%opID
-        res = self._update( req, connection )
-      elif status=='Done':
-        req = 'UPDATE ApplicationStatusAtSite SET Status="Installed" WHERE OpID=%s;'%opID
-        res = self._update( req, connection )
+        if not status=='Running':
+          req = 'UPDATE ApplicationStatusAtSite SET Status="Installing" WHERE idSoftware=%s AND idSite=%s;'%(softid,siteid)
+          res = self._update( req, connection )
+      elif status=='Done' or status=='Failed':
         res = self._removeJob(opID, connection)
-      elif status=='Failed':
-        req = 'UPDATE ApplicationStatusAtSite SET Status="NotAvailable" WHERE OpID=%s;'%opID 
-        res = self._update( req, connection )
-        res = self._removeJob(opID, connection)        
     else:
       #when new
       if jobdict.has_key('Operation'):
         if not jobdict['Operation'] in self.Operations:
           return S_ERROR("Operation %s is not supported"%jobdict['Operation'])
-      res = self._insert('SoftwareOperations',['JobID','idSoftware','idSite'],[], connection)
+      res = self._insert('SoftwareOperations',['JobID','idSoftware','idSite'],[jobdict['JobID'],softid,siteid], connection)
     return res
   
   def _removeJob(self, opID, connection):
@@ -771,15 +777,13 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     if not jobdict.has_key('JobID') or not jobdict.has_key('AppName') or not jobdict.has_key('AppVersion') or not jobdict.has_key('Platform'):
       return S_ERROR("Missing key")
-    
-    res = self._checkSoftware(jobdict['AppName'],jobdict['AppVersion'],jobdict['Platform'], connection)
-    appid = None 
-    if res['OK']:
-      appid = res['Value'][0][0]
-    else:
-      return res
-    
-    
+
+    statusdict = {}
+    statusdict['Status'] = True
+    statusdict.update(jobdict)
+    res = self._updateStatus(statusdict)
+    if not res['OK']:
+      return res    
     
     return S_OK()
   
@@ -787,9 +791,37 @@ class ProcessDB ( DB ):
     connection = self.__getConnection( connection )
     if not jobdict.has_key('JobID') or not jobdict.has_key('AppName') or not jobdict.has_key('AppVersion') or not jobdict.has_key('Platform'):
       return S_ERROR("Missing key")
-    
+    statusdict = {}
+    statusdict['Status'] = False
+    statusdict.update(jobdict)
+    res = self._updateStatus(statusdict)
+    if not res['OK']:
+      return res
     return S_OK()
   
+  def _updateStatus(self,statusdict, connection = False ):
+    connection = self.__getConnection( connection )        
+    
+    softid = 0  
+    res = self._checkSoftware(statusdict['AppName'], statusdict['AppVersion'], statusdict['Platform'], connection)  
+    if res['OK']:
+      if len(res['Value']):
+        softid = res['Value'][0][0]
+            
+    siteid = 0    
+    res = self._getFields('idSite','SoftwareOperations',['JobID'],[statusdict['JobID']],conn = connection)    
+    if len(res['Value']):
+      siteid = res['Value'][0][0]    
+    if not siteid or not softid:
+      return S_ERROR("Could not find either site or software")  
+    
+    if statusdict['Status']:
+      req = 'UPDATE ApplicationStatusAtSite SET Status="Installed" WHERE idSite=%s AND idSoftware=%s;'%(siteid,softid)
+      res = self._update( req, connection )
+    else:
+      req = 'UPDATE ApplicationStatusAtSite SET Status="NotAvailable" WHERE idSite=%s AND idSoftware=%s;'%(siteid,softid)
+      res = self._update( req, connection )
+    return S_OK()
   #####################################################################
   # Private methods
 
