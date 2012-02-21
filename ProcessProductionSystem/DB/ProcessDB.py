@@ -297,7 +297,7 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return res
     processID = res['Value']['idProcesses']
-    req = "SELECT ProdID,Type FROM Production WHERE idProcessData IN (SELECT idProcessData FROM ProcessData WHERE idProcesses = %s)"%(processID)
+    req = "SELECT ProdID,Type FROM Production WHERE idProcessData IN (SELECT idProcessData FROM ProcessData WHERE idProcesses = %s);"%(processID)
     res =  self._query( req, connection )
     if not res['OK']:
       return res
@@ -318,7 +318,7 @@ class ProcessDB ( DB ):
         return S_ERROR("%s is not valid"%param)
 
     Params.append('idProcesses')  
-    req = 'SELECT %s FROM ProcessData WHERE idProcessData IN (SELECT idProcessData FROM Productions WHERE ProdID=%s)'%(intListToString( Params ), ProdID)
+    req = 'SELECT %s FROM ProcessData WHERE idProcessData IN (SELECT idProcessData FROM Productions WHERE ProdID=%s);'%(intListToString( Params ), ProdID)
     res =  self._query( req, connection )
     if not res['OK']:
       return res
@@ -345,7 +345,8 @@ class ProcessDB ( DB ):
     row = res['Value'][0]
     resdict['Type'] = row[0]
     resdict['ProdID'] = ProdID
-    req = 'SELECT FileName FROM SteeringFiles WHERE idfiles IN (SELECT idfiles FROM SteeringFiles_has_ProcessData WHERE idProcessData IN (SELECT idProcessData FROM Productions WHERE ProdID=%s))'%ProdID
+    req = 'SELECT FileName FROM SteeringFiles WHERE idfiles IN (SELECT idfiles FROM SteeringFiles_has_ProcessData \
+           WHERE idProcessData IN (SELECT idProcessData FROM Productions WHERE ProdID=%s));'%ProdID
     res = self._query( req, connection )
     if not res['OK']:
       return res
@@ -447,7 +448,8 @@ class ProcessDB ( DB ):
     Comment = res['Value']  
     #req = "INSERT INTO Software (AppName,AppVersion,Platform,Comment,Path,Defined) VALUES ('%s','%s','%s','%s','%s',UTC_TIMESTAMP());"%(AppName,AppVersion,Platform,Comment,Path)
     #res = self._update( req, connection )
-    res = self._insert('Software',['AppName','AppVersion','Platform','Comment','Path','Defined'],[AppName,AppVersion,Platform,Comment,Path,'UTC_TIMESTAMP()'], connection)
+    res = self._insert('Software',['AppName','AppVersion','Platform','Comment','Path','Defined'],
+                       [AppName,AppVersion,Platform,Comment,Path,'UTC_TIMESTAMP()'], connection)
     if not res['OK']:
       return res
     idsoft = res['lastRowId']
@@ -676,7 +678,7 @@ class ProcessDB ( DB ):
       #res = self._update( req, connection )
       res = self._insert('SteeringFiles_has_ProcessData',['idfiles','idProcessData'],[idSteering,ProcessDataID], connection)
     if InheritsFrom:
-      req = 'INSERT INTO ProductionRelation (idMotherProd,idDaughterProd) VALUES ((SELECT idProduction FROM Productions WHERE ProdID=%s),%s)'%(InheritsFrom,prod_insert_ID)
+      req = 'INSERT INTO ProductionRelation (idMotherProd,idDaughterProd) VALUES ((SELECT idProduction FROM Productions WHERE ProdID=%s),%s);'%(InheritsFrom,prod_insert_ID)
       res = self._update( req, connection )
       if not res['OK']:
         return res
