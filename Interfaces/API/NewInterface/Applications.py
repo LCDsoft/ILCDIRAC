@@ -1005,7 +1005,7 @@ class StdhepCut(Application):
   >>> cut = StdhepCut()
   >>> cut.getInputFromApp(py)
   >>> cut.setSteeringFile("mycut.cfg")
-  >>> cut setMaxNbEvts(10)
+  >>> cut.setMaxNbEvts(10)
   >>> cut.setNbEvtsPerFile(10)
   
   """
