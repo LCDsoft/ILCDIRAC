@@ -1462,7 +1462,6 @@ class OverlayInput(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.version = '1'
     self.BXOverlay = None
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
@@ -1470,6 +1469,7 @@ class OverlayInput(Application):
     self.inputenergy = ''
     self.prodid = 0
     Application.__init__(self, paramdict)
+    self.version = '1'
     self._modulename = "OverlayInput"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
