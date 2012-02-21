@@ -54,6 +54,7 @@ class ProductionJob(Job):
     self.currtrans = None
     self.description = ''
 
+    self.finalpaths = []
     self.finalMetaDict = {}
     self.finalMetaDictNonSearch = {}
 
@@ -413,9 +414,10 @@ class ProductionJob(Job):
     Trans.setAgentType("Automatic")  
     Trans.setStatus("Active")
     
-    self.basepath = self.basepath.rstrip("/")
-    self.basepath += "/"+str(self.transfid).zfill(8)
-    self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts,"ProdID":self.transfid}
+    for finalpaths in self.finalpaths:
+      finalpaths = finalpaths.rstrip("/")
+      finalpaths += "/"+str(self.transfid).zfill(8)
+      self.finalMetaDict[finalpaths] = {'NumberOfEvents':self.nbevts,"ProdID":self.transfid}
     self.created = True
     return S_OK()
 
@@ -677,10 +679,14 @@ class ProductionJob(Job):
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname,path)  
+      self.log.info("Will store the files under %s"%path)
+      self.finalpaths.append(path)
       path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST/"
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
+      self.log.info("Will store the files under %s"%path)
+      self.finalpaths.append(path)
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+self.machine+energypath+self.evttypepath
       self.finalMetaDict[path]= {"EvtType":self.evttype}      
@@ -698,6 +704,7 @@ class ProductionJob(Job):
       path += application.datatype
       self.finalMetaDict[path]= {'Datatype':application.datatype}
       self.log.info("Will store the files under %s"%path)
+      self.finalpaths.append(path)
       extension = 'stdhep'
       if application.datatype=='SIM' or application.datatype=='REC':
         extension = 'slcio'
