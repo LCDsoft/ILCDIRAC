@@ -188,20 +188,26 @@ class MarlinAnalysis(ModuleBase):
           self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
     
     finalXML = "marlinxml_"+self.STEP_NUMBER+".xml"
+
+    steeringfiledirname = ''
+    res  =  getSteeringFileDirName(self.systemConfig,"marlin",self.applicationVersion)     
+    if res['OK']:
+      steeringfiledirname = res['Value']
+    else:
+      self.log.error('Could not find the steering file directory')
+
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if not os.path.exists(self.inputGEAR):
-      if os.path.exists(os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)):
-        self.inputGEAR = os.path.join(mySoftwareRoot,"steeringfilesV1",self.inputGEAR)
+      if steeringfiledirname:
+        if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.inputGEAR)):
+          self.inputGEAR = os.path.join(mySoftwareRoot,steeringfiledirname,self.inputGEAR)
         
     
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
-      res  =  getSteeringFileDirName(self.systemConfig,"marlin",self.applicationVersion)     
-      if not res['OK']:
-        self.log.error('Could not find the steering file directory')
-      steeringfiledirname = res['Value']
-      if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
-        self.SteeringFile = os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)
+      if steeringfiledirname:
+        if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
+          self.SteeringFile = os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)
     if not self.SteeringFile:
       return S_ERROR("Could not find steering file")
     
