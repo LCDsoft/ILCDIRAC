@@ -1,3 +1,7 @@
+[v8r0p4]
+* Workflow
+Gear file lookup error: looking only in steeringV1, now uses same as steering file
+
 [v8r0p3]
 * Core
 Bug fix in steeringfiles lookup
