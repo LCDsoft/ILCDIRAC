@@ -733,20 +733,21 @@ class ProcessDB ( DB ):
     res = self._checkSoftware(AppName, AppVersion, Platform, connection)
     if not res['OK']:
       return res
+    idsoft = res['Value'][0][0]
     new_status='FALSE'
     if Status:
       new_status='TRUE'
-    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE AppName='%s' AND AppVersion='%s' AND Platform='%s';"%(new_status,Comment,AppName,AppVersion,Platform)
+    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware=%s;"%(new_status,Comment,idsoft)
     res = self._update( req, connection )
     if not res['OK']:
       return res
     ##Now update also dependent software (Only to FALSE)
     if not Status:
-      req = "SELECT idSoftware FROM DependencyRelation WHERE idDependency = (SELECT idSoftware FROM Software WHERE AppName='%s' AND AppVersion='%s' AND Platform='%s');" % (AppName,AppVersion,Platform)
+      req = "SELECT idSoftware FROM DependencyRelation WHERE idDependency = %s;" % (idsoft)
       res = self._query( req, connection )
       if not res['OK'] or not len(res['Value']):
         return S_ERROR('Could not find any dependency')
-      for id in res['Value']:
+      for id in [t[0] for t in res['Value']] :
         req = "UPDATE Software SET Valid=FALSE,UpdateComment='Dependency inheritance',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware = %s;"%id
         res = self._update( req, connection )
         if not res['OK']:
