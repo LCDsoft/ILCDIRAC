@@ -47,7 +47,8 @@ from DIRAC.Core.Workflow.Step                         import *
 from DIRAC.Core.Workflow.Module                       import *
 from DIRAC                                            import S_OK,S_ERROR, gConfig
 
-
+from math import modf
+from decimal import Decimal
 import os, types, string
 
 
@@ -1461,6 +1462,7 @@ class OverlayInput(Application):
   
   """
   def __init__(self, paramdict = None):
+    self.version = '1'
     self.BXOverlay = None
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
@@ -1471,6 +1473,7 @@ class OverlayInput(Application):
     self._modulename = "OverlayInput"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
+    self.accountInProduction = False
 
   def setProdID(self,pid):
     self._checkArgs( {'pid': types.IntType})
@@ -1632,10 +1635,13 @@ class OverlayInput(Application):
     res = gConfig.getSections("/Operations/Overlay/%s"%self.detectortype)
     if not res['OK']:
       return S_ERROR("Could not find the detector type")
-    if int(self.energy)/1000:
-      energytouse = "%stev"%(int(self.energy)/1000)
+      
+    fracappen = modf(float(self.energy)/1000.)
+    if fracappen[1]>0:
+      energytouse = "%stev"%(Decimal(str(self.energy))/Decimal("1000."))
     else:
-      energytouse = "%sgev"%(int(self.energy))
+      energytouse =  "%sgev"%(Decimal(str(self.energy))/Decimal("1000."))  
+      
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s"%energytouse)
     return S_OK()
