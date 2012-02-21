@@ -55,6 +55,7 @@ class ProductionJob(Job):
     self.description = ''
 
     self.finalMetaDict = {}
+    self.finalMetaDictNonSearch = {}
 
     self.outputStorage = ''
 
@@ -453,9 +454,9 @@ class ProductionJob(Job):
     """ Add additionnal non-query metadata 
     """
     for key in metadict.keys():
-      if key in self.finalMetaDict[self.basepath].keys():
+      if key in self.finalMetaDictNonSearch[self.basepath].keys():
         self.log.error("Not allowed to overwrite existing metadata: ",key)
-    self.finalMetaDict[self.basepath].update(metadict)
+    self.finalMetaDictNonSearch[self.basepath].update(metadict)
     return S_OK()
   
   def finalizeProd(self,prodid=None,prodinfo=None):
@@ -490,12 +491,17 @@ class ProductionJob(Job):
     info.append('- SW packages %s'%self.prodparameters["SWPackages"])
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
-    self.finalMetaDict[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
+    if not self.finalMetaDictNonSearch.has_key(self.basepath):
+      self.finalMetaDictNonSearch[self.basepath] = {}
+    self.finalMetaDictNonSearch[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
     
     info.append('- Registered metadata: ')
     for k,v in self.finalMetaDict.items():
       info.append('    %s = %s' %(k,v))
-
+    info.append('- Registered non searchable metadata: ')
+    for k,v in self.finalMetaDictNonSearch.items():
+      info.append('    %s = %s' %(k,v))
+      
     infoString = string.join(info,'\n')
     self.prodparameters['DetailedInfo']=infoString
     for n,v in self.prodparameters.items():
@@ -533,6 +539,24 @@ class ProductionJob(Job):
       result = self.fc.setMetadata(path.rstrip("/"),meta)
       if not result['OK']:
         self.log.error("Could not preset metadata",meta)
+
+    for path,meta in self.finalMetaDictNonSearch.items():
+      result = self.fc.createDirectory(path)
+      if result['OK']:
+        if result['Value']['Successful']:
+          if result['Value']['Successful'].has_key(path):
+            self.log.verbose("Successfully created directory:", path)
+        elif result['Value']['Failed']:
+          if result['Value']['Failed'].has_key(path):  
+            self.log.error('Failed to create directory:',result['Value']['Failed'][path])
+            failed.append(path)
+      else:
+        self.log.error('Failed to create directory:',result['Message'])
+        failed.append(path)
+      result = self.fc.setMetadata(path.rstrip("/"),meta)
+      if not result['OK']:
+        self.log.error("Could not preset metadata",meta)        
+
     if len(failed):
       return  { 'OK' : False, 'Failed': failed}
     return S_OK()
