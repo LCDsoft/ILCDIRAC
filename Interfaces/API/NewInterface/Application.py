@@ -65,7 +65,7 @@ class Application(object):
     
     #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
-        
+    self.accountInProduction = True    
     #Module name and description: Not to be set by the users, internal call only, used to get the Module objects
     self._modulename = ''
     self._moduledescription = ''

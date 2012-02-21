@@ -413,6 +413,7 @@ class ProductionJob(Job):
     Trans.setAgentType("Automatic")  
     Trans.setStatus("Active")
     
+    self.basepath = self.basepath.rstrip("/")
     self.basepath += "/"+str(self.transfid).zfill(8)
     self.finalMetaDict[self.basepath] = {'NumberOfEvents':self.nbevts,"ProdID":self.transfid}
     self.created = True
@@ -640,7 +641,13 @@ class ProductionJob(Job):
     else :
       self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
     
+    if not application.accountInProduction:
+      res = self._updateProdParameters(application)
+      if not res['OK']:
+        return res  
+      self.checked = True
 
+      return S_OK()
     
     res = application.setOutputSE(self.outputStorage)
     if not res['OK']:
