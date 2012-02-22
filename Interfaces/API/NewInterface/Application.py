@@ -59,6 +59,9 @@ class Application(object):
     self.detectortype = ""
     #Data type : gen, SIM, REC, DST
     self.datatype = ""
+
+    ##Needed for Generation+Stdhepcut
+    self.willBeCut = False
     
     ##Debug mode
     self.debug = False
