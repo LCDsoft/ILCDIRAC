@@ -414,10 +414,13 @@ class ProductionJob(Job):
     Trans.setAgentType("Automatic")  
     Trans.setStatus("Active")
     
+    finals = []
     for finalpaths in self.finalpaths:
       finalpaths = finalpaths.rstrip("/")
       finalpaths += "/"+str(self.transfid).zfill(8)
+      finals.append(finalpaths)
       self.finalMetaDict[finalpaths] = {'NumberOfEvents':self.nbevts,"ProdID":self.transfid}
+    self.finalpaths = finals
     self.created = True
     return S_OK()
 
@@ -494,9 +497,10 @@ class ProductionJob(Job):
     info.append('- SW packages %s'%self.prodparameters["SWPackages"])
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
-    if not self.finalMetaDictNonSearch.has_key(self.basepath):
-      self.finalMetaDictNonSearch[self.basepath] = {}
-    self.finalMetaDictNonSearch[self.basepath]["SWPackages"] = self.prodparameters["SWPackages"]
+    for finalpath in self.finalpaths:
+      if not self.finalMetaDictNonSearch.has_key(finalpath):
+        self.finalMetaDictNonSearch[finalpath] = {}
+      self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
     
     info.append('- Registered metadata: ')
     for k,v in self.finalMetaDict.items():
@@ -611,7 +615,7 @@ class ProductionJob(Job):
         return res
     
     if application.nbevts > 0 and self.nbevts > application.nbevts:
-      self.nbevts = application.nbevts
+      self.nbevts = application.nbevts 
 
     self.prodparameters['nbevts'] = self.nbevts
     
@@ -670,7 +674,7 @@ class ProductionJob(Job):
     if not self.evttype[-1]=='/':
       self.evttypepath = self.evttype+'/'  
     
-      
+    path = self.basepath  
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
       path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC/"
@@ -687,7 +691,7 @@ class ProductionJob(Job):
       application.setOutputDstFile(fname,path)  
       self.log.info("Will store the files under %s"%path)
       self.finalpaths.append(path)
-    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
+    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath+self.machine+energypath+self.evttypepath
       self.finalMetaDict[path]= {"EvtType":self.evttype}      
       if hasattr(application,"detectortype"):
@@ -706,7 +710,7 @@ class ProductionJob(Job):
       self.log.info("Will store the files under %s"%path)
       self.finalpaths.append(path)
       extension = 'stdhep'
-      if application.datatype=='SIM' or application.datatype=='REC':
+      if application.datatype in ['SIM','REC']:
         extension = 'slcio'
       fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
       application.setOutputFile(fname,path)  

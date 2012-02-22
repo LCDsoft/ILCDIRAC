@@ -447,6 +447,7 @@ class Whizard(Application):
     self.globalname = ''
     self._allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
+    
     self._processlist = None
     if processlist:
       self._processlist = processlist
@@ -576,6 +577,11 @@ class Whizard(Application):
       } )
 
     self. model = model
+  
+  def willCut(self):
+    """ You need this if you plan on cutting using L{StdhepCut} 
+    """
+    self.willBeCut = True  
     
   def setJobIndex(self,index):
     """ Optional: Define Job Index. Added in the file name between the event type and the extension.
@@ -704,7 +710,8 @@ class Whizard(Application):
       self.outputFile += "_gen.stdhep"  
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      if not self.willBeCut:
+        self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['Process'] = self.evttype
       self.prodparameters['model'] = self.model
@@ -901,7 +908,8 @@ class Pythia(Application):
       return S_ERROR("Output File not defined")
     
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      if not self.willBeCut:      
+        self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['Process'] = self.evttype
 
@@ -1012,12 +1020,14 @@ class StdhepCut(Application):
   def __init__(self, paramdict = None):
     self.maxevts = 0
     self.nbevtsperfile = 0
+    self.selectionEfficiency = 0
     Application.__init__(self,paramdict)
 
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
-
+    self.datatype = 'gen'
+    
   def setMaxNbEvts(self,nbevts):
     """ Max number of events to keep in each file
     
@@ -1040,6 +1050,17 @@ class StdhepCut(Application):
       } )
     self.nbevtsperfile = nbevts  
 
+  def setSelectionEfficiency(self,efficiency):
+    """ Selection efficiency of your cuts, needed to determine the number of files that will be created
+    
+    @param efficiency: Cut efficiency
+    @type efficiency: float
+    """
+    self._checkArgs( {
+        'efficiency' : types.FloatType
+      } )
+    self.selectionEfficiency = efficiency
+
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
@@ -1050,29 +1071,20 @@ class StdhepCut(Application):
   def _applicationModuleValues(self,moduleinstance):
     moduleinstance.setValue("MaxNbEvts",self.maxevts)
     moduleinstance.setValue("debug",    self.debug)
-
-  def _userjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
     
-    m2 = self._getUserOutputDataModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
-    return S_OK()
+  def _userjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
 
-  def _prodjobmodules(self,step):
-    m1 = self._applicationModule()
-    step.addModule(m1)
-    m1i = step.createModuleInstance(m1.getType(),step.getType())
-    self._applicationModuleValues(m1i)
-    
-    m2 = self._getComputeOutputDataListModule()
-    step.addModule(m2)
-    step.createModuleInstance(m2.getType(),step.getType())
-    return S_OK()
-
+  def _prodjobmodules(self,stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
 
   def _checkConsistency(self):
     if not self.steeringfile:
@@ -1083,12 +1095,32 @@ class StdhepCut(Application):
     if not self.maxevts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
     
+    if not self.selectionEfficiency:
+      return S_ERROR('You need to know the selection efficiency of your cuts')
+    
+    if not self._jobtype == 'User':
+      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self.prodparameters['nbevts_kept'] = self.maxevts
+      
     #res = self._checkRequiredApp() ##Check that job order is correct
     #if not res['OK']:
     #  return res
     
     return S_OK()
+  
+  def _checkFinalConsistency(self):
+    """ Final check of consistency: check that there are enough events generated
+    """
+    if not self.nbevts:
+      return S_ERROR('Please specify the number of events that will be generated in that step')
+    
+    kept = self.nbevts * self.selectionEfficiency
+    if kept < 5*self.maxevts:
+      return S_ERROR("You don't generate enough events") 
+    
+    return S_OK()
 
+  
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
