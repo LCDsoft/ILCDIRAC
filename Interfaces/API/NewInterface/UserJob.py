@@ -27,6 +27,7 @@ class UserJob(Job):
     res = self._addToWorkflow()
     if not res['OK']:
       return res
+    self.oktosubmit = True
     if not diracinstance:
       self.diracinstance = DiracILC()
     else:
