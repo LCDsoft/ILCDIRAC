@@ -59,6 +59,10 @@ class DiracILC(Dirac):
     
     @return: S_OK() or S_ERROR()
     """
+    
+    if not job.oktosubmit:
+      self.log.error('You should use job.sumit(dirac)')
+      return S_ERROR("You should use job.sumit(dirac)")
     res = self._do_check(job)
     if not res['OK']:
       return res

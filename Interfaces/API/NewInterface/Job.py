@@ -34,6 +34,7 @@ class Job(DiracJob):
     self.steps = []
     self.nbevts = 0
     self.energy = 0
+    self.oktosubmit = False
     self.setSystemConfig('x86_64-slc5-gcc43-opt')
     
   def setInputData(self, lfns):
