@@ -113,8 +113,8 @@ class StdHepCut(ModuleBase):
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
     nbevtswritten = -1
-    nbevtspassing = -1
-    nbevtsread = -1
+    nbevtspassing = 0
+    nbevtsread = 0
     logf = file(self.applicationLog)
     for line in logf:
       line = line.rstrip()
@@ -125,10 +125,16 @@ class StdHepCut(ModuleBase):
       if line.count('Events total'):
         nbevtsread = int(line.split()[-1])
     
-    if nbevtswritten and nbevtspassing and nbevtsread:
+    if nbevtswritten>0 and nbevtspassing>0 and nbevtsread>0:
       cut_eff = 1.*nbevtspassing/nbevtsread
+      self.log.info('Selection cut efficiency : %s%%'%(100*cut_eff))
       sel_eff = 1.*nbevtswritten/nbevtspassing
+      if nbevtswritten<self.MaxNbEvts:
+        self.log.error('Not enough events to fill up')
       if self.workflow_commons.has_key('Luminosity'):
         self.workflow_commons['Luminosity']  = self.workflow_commons['Luminosity']*sel_eff
-        
+      self.workflow_commons['NbOfEvents'] = nbevtswritten
+    else:
+      self.log.error('Not enough events somewhere: read: %s, pass:%s, written:%s'%(nbevtsread,nbevtspassing,nbevtswritten))
+      
     return self.finalStatusReport(status)
