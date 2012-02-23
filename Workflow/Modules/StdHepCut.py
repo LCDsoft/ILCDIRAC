@@ -112,4 +112,23 @@ class StdHepCut(ModuleBase):
     # stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
+    nbevtswritten = -1
+    nbevtspassing = -1
+    nbevtsread = -1
+    logf = file(self.applicationLog)
+    for line in logf:
+      line = line.rstrip()
+      if line.count('Events kept'):
+        nbevtswritten = int(line.split()[-1])
+      if line.count('Events passing cuts'):
+        nbevtspassing = int(line.split()[-1])
+      if line.count('Events total'):
+        nbevtsread = int(line.split()[-1])
+    
+    if nbevtswritten and nbevtspassing and nbevtsread:
+      cut_eff = 1.*nbevtspassing/nbevtsread
+      sel_eff = 1.*nbevtswritten/nbevtspassing
+      if self.workflow_commons.has_key('Luminosity'):
+        self.workflow_commons['Luminosity']  = self.workflow_commons['Luminosity']*sel_eff
+        
     return self.finalStatusReport(status)
