@@ -1,0 +1,3 @@
+"""
+   ILCDIRAC.Interfaces.scripts package
+"""
