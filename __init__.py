@@ -8,7 +8,7 @@ __path__ = extend_path(__path__, __name__)
 
 majorVersion = 8
 minorVersion = 1
-patchLevel   = 3
+patchLevel   = 4
 preVersion   = 0
     
 version      = "v%sr%s" % ( majorVersion, minorVersion )
