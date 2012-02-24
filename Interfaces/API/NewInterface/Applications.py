@@ -1090,8 +1090,10 @@ class StdhepCut(Application):
     if not self.steeringfile:
       return S_ERROR("Cut file not specified")
     elif not self.steeringfile.lower().count("lfn:") and not os.path.exists(self.steeringfile):
-      return S_ERROR("Cut file not found locally and is not an LFN")
-    
+      res = Exists(self.steeringfile)
+      if not res['OK']:
+        return res  
+          
     if not self.maxevts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
     
