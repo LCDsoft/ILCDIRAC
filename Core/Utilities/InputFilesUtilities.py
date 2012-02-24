@@ -35,10 +35,10 @@ def getNumberOfevents(inputfile):
         continue
       tags= res['Value']
       if tags.has_key("NumberOfEvents") and not found_nbevts:
-        numberofevents+=tags["NumberOfEvents"]
+        numberofevents+=int(tags["NumberOfEvents"])
         found_nbevts = True
       if tags.has_key("Luminosity") and not found_lumi:
-        luminosity+=tags["Luminosity"]  
+        luminosity += float(tags["Luminosity"])  
         found_lumi = True
       if found_nbevts: 
         continue
@@ -47,10 +47,10 @@ def getNumberOfevents(inputfile):
     if res['OK']:   
       tags= res['Value']
       if tags.has_key("NumberOfEvents") and not found_nbevts:
-        numberofevents += len(files)*tags["NumberOfEvents"]
+        numberofevents += len(files)*int(tags["NumberOfEvents"])
         found_nbevts = True
       if tags.has_key("Luminosity") and not found_lumi:
-        luminosity += len(files)*tags["Luminosity"]
+        luminosity += len(files)*float(tags["Luminosity"])
         found_lumi = True
       if tags.has_key("EvtType"):
         evttype=tags["EvtType"]
@@ -63,9 +63,9 @@ def getNumberOfevents(inputfile):
         continue
       tags= res['Value']
       if tags.has_key("NumberOfEvents"):
-        numberofevents+=tags["NumberOfEvents"]
+        numberofevents+=int(tags["NumberOfEvents"])
       if tags.has_key("Luminosity") and not found_lumi:
-        luminosity+=tags["Luminosity"]  
+        luminosity+=float(tags["Luminosity"])
         
   nbevts['nbevts'] = numberofevents
   nbevts['lumi'] = luminosity
