@@ -9,8 +9,9 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,Share
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
-import os
+import os,shutil
 
 class StdHepCut(ModuleBase):
   def __init__(self):
@@ -73,6 +74,19 @@ class StdHepCut(ModuleBase):
     new_ld_lib_path = mySoftDir+"/lib:"+new_ld_lib_path
     if os.path.exists("./lib"):
       new_ld_lib_path = "./lib:"+new_ld_lib_path
+    
+    self.SteeringFile = os.path.basename(self.SteeringFile)
+    if not os.path.exists(self.SteeringFile):
+      res =  getSteeringFileDirName(self.systemConfig,"stdhepCut",self.applicationVersion)
+      if not res['OK']:
+        return res
+      steeringfiledirname = res['Value']
+      if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
+        try:
+          shutil.copy(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile), "./"+self.SteeringFile )
+        except Exception,x:
+          return S_ERROR('Failed to access file %s: '%(self.SteeringFile,str(x)))  
+      
     scriptName = '%s_%s_Run_%s.sh' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER)
     if os.path.exists(scriptName): os.remove(scriptName)
     script = open(scriptName,'w')
@@ -87,7 +101,7 @@ class StdHepCut(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s'%self.MaxNbEvts
-    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.OutputFile,os.path.basename(self.SteeringFile))
+    comm = "stdhepCut %s -o %s -c %s  *.stdhep\n"%(extraopts,self.OutputFile,self.SteeringFile)
     self.log.info("Running %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
