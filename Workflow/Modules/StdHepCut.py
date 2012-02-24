@@ -138,7 +138,7 @@ class StdHepCut(ModuleBase):
         nbevtspassing = int(line.split()[-1])
       if line.count('Events total'):
         nbevtsread = int(line.split()[-1])
-    
+    logf.close()
     if nbevtswritten>0 and nbevtspassing>0 and nbevtsread>0:
       cut_eff = 1.*nbevtspassing/nbevtsread
       self.log.info('Selection cut efficiency : %s%%'%(100*cut_eff))
