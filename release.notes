@@ -1,3 +1,7 @@
+[v8r1p2]
+* OverlayInput
+Catch the case where none of the files are available. 
+
 [v8r1p1]
 * Workflow
 Mokka/SLIC: number of events to process is capped to number of events in input file
