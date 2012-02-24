@@ -1,3 +1,7 @@
+[v8r1p3]
+* OverlayInput
+bugfix: Catch the case where none of the files are available. 
+
 [v8r1p2]
 * OverlayInput
 Catch the case where none of the files are available. 
