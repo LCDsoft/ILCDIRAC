@@ -347,7 +347,7 @@ class OverlayInput (ModuleBase):
           continue
         filesobtained.append(self.lfns[fileindex])
       ##If no file could be obtained, need to make sure the job fails  
-      if len(usednumbers)==nbfiles:
+      if len(usednumbers)==nbfiles and not len(filesobtained):
         fail = True
         break
       
