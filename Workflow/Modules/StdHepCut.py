@@ -77,7 +77,7 @@ class StdHepCut(ModuleBase):
     
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
-      res =  getSteeringFileDirName(self.systemConfig,"stdhepCut",self.applicationVersion)
+      res =  getSteeringFileDirName(self.systemConfig,self.applicationName,self.applicationVersion)
       if not res['OK']:
         return res
       steeringfiledirname = res['Value']
