@@ -8,7 +8,7 @@ from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard,Mokka,Marlin
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard,Mokka,Marlin,OverlayInput
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 dirac = DiracILC()
@@ -67,10 +67,17 @@ mo = Mokka()
 mo.setVersion('0706P08')
 mo.setSteeringFile("clic_ild_cdr.steer")
 
+
+overlay = OverlayInput()
+overlay.setBXOverlay(60)
+overlay.setGGToHadInt(1.3)##When running at 1.4TeV
+overlay.setDetectorType("ILD")
+
 ##Reconstruction
 ma = Marlin()
 ma.setVersion('v0111Prod')
 ma.setSteeringFile("clic_ild_cdr_steering.xml")
+ma.setGearFile("clic_ild_cdr.gear")
 
 ##########################################
 ##Define the generation production.
@@ -103,7 +110,10 @@ meta = pwh.getMetadata()
 ##Define the second production (simulation). Notice the setInputDataQuery call
 pmo = ProductionJob()
 pmo.setProdType('MCSimulation')
-pmo.setInputDataQuery(meta)
+res = pmo.setInputDataQuery(meta)
+if not res['OK']:
+  print res['Message']
+  exit(1)
 pmo.setOutputSE("CERN-SRM")
 pmo.setWorkflowName(process+"_"+str(energy)+"_ild_sim")
 pmo.setProdGroup(process+"_"+str(energy))
@@ -129,10 +139,19 @@ meta = pmo.getMetadata()
 #Define the reconstruction prod    
 pma = ProductionJob()
 pma.setProdType('MCReconstruction')
-pma.setInputDataQuery(meta)
+res = pma.setInputDataQuery(meta)
+if not res['OK']:
+  print res['Message']
+  exit(1)
 pma.setOutputSE("CERN-SRM")
 pma.setWorkflowName(process+"_"+str(energy)+"_ild_rec")
 pma.setProdGroup(process+"_"+str(energy))
+
+#Add the overlay
+res = pma.append(overlay)
+if not res['OK']:
+    print res['Message']
+    exit(1)
 
 #Add the application
 res = pma.append(ma)
