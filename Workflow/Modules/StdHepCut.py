@@ -129,7 +129,7 @@ class StdHepCut(ModuleBase):
     nbevtswritten = -1
     nbevtspassing = 0
     nbevtsread = 0
-    logf = file(self.applicationLog)
+    logf = file(self.applicationLog,'r')
     for line in logf:
       line = line.rstrip()
       if line.count('Events kept'):
