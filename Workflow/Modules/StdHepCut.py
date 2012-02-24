@@ -150,5 +150,6 @@ class StdHepCut(ModuleBase):
       self.workflow_commons['NbOfEvents'] = nbevtswritten
     else:
       self.log.error('Not enough events somewhere: read: %s, pass:%s, written:%s'%(nbevtsread,nbevtspassing,nbevtswritten))
+      status = 1
       
     return self.finalStatusReport(status)
