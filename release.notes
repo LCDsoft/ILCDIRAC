@@ -1,3 +1,7 @@
+[v8r1p5]
+* InputFileUtilities
+bugfix: user metadata seem not to be stored as numbers but as strings, cast them
+
 [v8r1p4]
 * InputFileUtilities
 bugfix: user metadata seem not to be stored as numbers but as strings, cast them
