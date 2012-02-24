@@ -1,3 +1,7 @@
+[v8r0p5]
+* Workflow
+Overlay input module did not treat the energy right
+
 [v8r0p4]
 * Workflow
 Gear file lookup error: looking only in steeringV1, now uses same as steering file
