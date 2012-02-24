@@ -28,13 +28,26 @@ def getNumberOfevents(inputfile):
   for path,files in flist.items():
     found_nbevts = False
     found_lumi = False
+
+    if len(files)==1:
+      res = fc.getFileUserMetadata(files[0])
+      if not res['OK']:
+        continue
+      tags= res['Value']
+      if tags.has_key("NumberOfEvents") and not found_nbevts:
+        numberofevents+=tags["NumberOfEvents"]
+        found_nbevts = True
+      if tags.has_key("Luminosity") and not found_lumi:
+        luminosity+=tags["Luminosity"]  
+        found_lumi = True
+        
     res = fc.getDirectoryMetadata(path)
     if res['OK']:   
       tags= res['Value']
-      if tags.has_key("NumberOfEvents"):
+      if tags.has_key("NumberOfEvents") and not found_nbevts:
         numberofevents += len(files)*tags["NumberOfEvents"]
         found_nbevts = True
-      if tags.has_key("Luminosity"):
+      if tags.has_key("Luminosity") and not found_lumi:
         luminosity += len(files)*tags["Luminosity"]
         found_lumi = True
       if tags.has_key("EvtType"):
