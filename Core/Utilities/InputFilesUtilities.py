@@ -40,6 +40,8 @@ def getNumberOfevents(inputfile):
       if tags.has_key("Luminosity") and not found_lumi:
         luminosity+=tags["Luminosity"]  
         found_lumi = True
+      if found_nbevts: 
+        continue
         
     res = fc.getDirectoryMetadata(path)
     if res['OK']:   
