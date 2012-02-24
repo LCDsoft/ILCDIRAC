@@ -346,7 +346,11 @@ class OverlayInput (ModuleBase):
           fail_count += 1
           continue
         filesobtained.append(self.lfns[fileindex])
-
+      ##If no file could be obtained, need to make sure the job fails  
+      if len(usednumbers)==nbfiles:
+        fail = True
+        break
+      
     #res = self.rm.getFile(filesobtained)
     #failed = len(res['Value']['Failed'])
     #tryagain = []
