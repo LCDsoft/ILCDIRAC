@@ -19,7 +19,9 @@ from ILCDIRAC.Core.Utilities.WasteCPU                        import WasteCPUCycl
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
-from math import ceil
+from math import ceil,modf
+
+from decimal import Decimal
 
 import os,types,time,random, string, subprocess
 
@@ -63,10 +65,11 @@ class OverlayInput (ModuleBase):
       self.energytouse = self.step_commons['Energy']
 
     if self.energy:
-      if int(self.energy)/1000:
-        self.energytouse = "%stev"%(int(self.energy)/1000)
+      fracappen = modf(self.energy/1000.)
+      if fracappen[1]>0:
+        self.energytouse = "%stev"%(Decimal(str(self.energy))/Decimal("1000."))
       else:
-        self.energytouse = "%sgev"%(int(self.energy))
+        self.energytouse = "%sgev"%(Decimal(str(self.energy))/Decimal("1000."))
         
     if not self.energytouse:
       return S_ERROR("Energy not set anywhere!")
