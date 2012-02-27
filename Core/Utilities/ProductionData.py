@@ -87,6 +87,8 @@ def constructProductionLFNs(paramDict):
   for fileTuple in fileTupleList:
     #lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8))
     lfn = fileTuple[0]+"/"+str(productionID).zfill(8)+"/"+str(int(jobID)/1000).zfill(3)+"/"+fileTuple[1]
+    if lfn.count('//'):
+      lfn = lfn.replace('//','/')
     outputData.append(lfn)
     #bkLFNs.append(lfn)
     if debugRoot:
