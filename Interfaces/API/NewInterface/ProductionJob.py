@@ -677,7 +677,7 @@ class ProductionJob(Job):
     path = self.basepath  
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
-      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC/"
+      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC"
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath]= {"EvtType":self.evttype}
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype] = {"DetectorType":application.detectortype}
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC"] = {'Datatype':"REC"}
@@ -685,7 +685,7 @@ class ProductionJob(Job):
       application.setOutputRecFile(fname,path)  
       self.log.info("Will store the files under %s"%path)
       self.finalpaths.append(path)
-      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST/"
+      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST"
       self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname,path)  
