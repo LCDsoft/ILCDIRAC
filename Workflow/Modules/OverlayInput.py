@@ -453,6 +453,7 @@ fi\n"""%(basename,lfile))
     script.write('# Dynamically generated scrip #\n')
     script.write('###############################\n')
     script.write("cp %s /tmp/x509up_u%s \n"%(os.environ['X509_USER_PROXY'],os.getuid()))
+    script.write(". /afs/in2p3.fr/grid/profiles/lcg_env.sh\n")
     script.write("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s\n"%lfile.rstrip())
     #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
     #script.write("""
