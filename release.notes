@@ -1,3 +1,7 @@
+[v8r1p7]
+* OverlayInput
+Dirty hack to account for the fact that the metadata for the directories are not set right
+
 [v8r1p6]
 * OverlayInput
 Source the lcg_env at Lyon to get the xrdcp in the path.
