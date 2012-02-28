@@ -1,3 +1,7 @@
+[v8r1p6]
+* OverlayInput
+Source the lcg_env at Lyon to get the xrdcp in the path.
+
 [v8r1p5]
 * InputFileUtilities
 bugfix: user metadata seem not to be stored as numbers but as strings, cast them
