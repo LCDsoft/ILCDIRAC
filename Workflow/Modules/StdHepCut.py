@@ -25,8 +25,6 @@ class StdHepCut(ModuleBase):
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('CutFile'):
       self.SteeringFile = self.step_commons['CutFile']
-    else:
-      return S_ERROR('Cut file not defined')
   
     if self.step_commons.has_key('MaxNbEvts'):
       self.MaxNbEvts = self.step_commons['MaxNbEvts']
