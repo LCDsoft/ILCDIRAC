@@ -10,6 +10,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
+from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
 
 import os,shutil
 
@@ -37,7 +38,20 @@ class StdHepCut(ModuleBase):
           break
       if not self.OutputFile:
         return S_ERROR("Could not find suitable OutputFile name")
-    
+      
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+        #                                  int(self.workflow_commons["JOB_ID"]))
+        if self.workflow_commons.has_key('ProductionOutputData'):
+          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          for obj in outputlist:
+            if obj.lower().count("_gen_"):
+              self.OutputFile = os.path.basename(obj)
+              break
+        else:
+          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                            int(self.workflow_commons["JOB_ID"]))
     return S_OK()
 
   def execute(self):
