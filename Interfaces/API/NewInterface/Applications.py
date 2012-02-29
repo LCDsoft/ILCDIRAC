@@ -1103,6 +1103,7 @@ class StdhepCut(Application):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts_kept'] = self.maxevts
+      self.prodparameters['cut_file'] = self.steeringfile
       
     #res = self._checkRequiredApp() ##Check that job order is correct
     #if not res['OK']:
@@ -1676,7 +1677,9 @@ class OverlayInput(Application):
       if energytouse=="3.0tev":
         energytouse = "3tev"
     else:
-      energytouse =  "%sgev"%(Decimal(str(self.energy))/Decimal("1000."))  
+      energytouse =  "%sgev"%(Decimal(str(self.energy)))
+      if energytouse=='500.0gev':
+        energytouse='500gev'
       
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s"%energytouse)
