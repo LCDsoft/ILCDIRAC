@@ -663,8 +663,12 @@ class ProductionJob(Job):
     fracappen = modf(float(self.energy)/1000.)
     if fracappen[1]>0:
       energypath = "%stev/"%(self.energy/Decimal("1000."))
+      if energypath == '3.0tev/':
+        energypath = '3tev/'
     else:
       energypath =  "%sgev/"%(self.energy/Decimal("1000."))
+      if energypath == '500.0gev':
+        energypath = '500gev/'
 
     if not self.basename:
       self.basename = self.evttype
