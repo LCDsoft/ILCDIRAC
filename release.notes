@@ -1,3 +1,7 @@
+[v8r1p9]
+* OverlayInput
+Fix tr4eatement of the 500gev case
+
 [v8r1p8]
 * OverlayInput
 Dirty hack to account for the fact that the metadata for the directories are not set right (500gev)
