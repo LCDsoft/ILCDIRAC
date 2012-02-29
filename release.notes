@@ -1,3 +1,7 @@
+[v8r1p10]
+* StdhepCut
+Do not return an error if cutfile is not a step_commons object.
+
 [v8r1p9]
 * OverlayInput
 Fix tr4eatement of the 500gev case
