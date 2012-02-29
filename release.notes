@@ -1,3 +1,7 @@
+[v8r1p11]
+* StdhepCut
+Oyutputfile treatement was not suitable for production
+
 [v8r1p10]
 * StdhepCut
 Do not return an error if cutfile is not a step_commons object.
