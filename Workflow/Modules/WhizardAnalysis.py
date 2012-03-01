@@ -63,6 +63,7 @@ class WhizardAnalysis(ModuleBase):
     self.OptionsDictStr = ''
     self.GenLevelCutDictStr = ''
     self.genlevelcuts = {}
+    self.willCut = False
     
   def obtainProcessList(self):
     """Internal function
@@ -156,7 +157,7 @@ class WhizardAnalysis(ModuleBase):
       self.getProcessInFile = True
  
     if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
+      if self.workflow_commons["IS_PROD"] and not self.willCut:
         #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
         if self.workflow_commons.has_key('ProductionOutputData'):
