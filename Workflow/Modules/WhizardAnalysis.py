@@ -165,9 +165,12 @@ class WhizardAnalysis(ModuleBase):
             if obj.lower().count("_gen_"):
               self.OutputFile = os.path.basename(obj)
               break
-        #else:
-        #  self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                    int(self.workflow_commons["JOB_ID"]))
+        else:
+          #This is because most likely there is stdhepcut running after
+          self.OutputFile = "willcut.stdhep" 
+          
+          #getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          #                                  int(self.workflow_commons["JOB_ID"]))
           
     if self.workflow_commons.has_key("IS_DBD_GEN_PROD"):
       if self.workflow_commons["IS_DBD_GEN_PROD"]:
