@@ -1,3 +1,7 @@
+[v8r1p15]
+* StdhepCut
+Number of events was not updated properly
+
 [v8r1p14]
 * WhizardAnalysis
 Check if whizard will be cut after and in that case don't change the outpufile name
