@@ -820,6 +820,7 @@ class Whizard(Application):
     md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, "Specific steering parameters"))
     md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, "Options dict to create full whizard.in on the fly"))
     md1.addParameter(Parameter("GenLevelCutDictStr",  "", "string", "", "", False, False, "Generator level cuts to put in whizard.cut1"))
+    md1.addParameter(Parameter("willCut",  False,   "bool", "", "", False, False, "Will cut after"))
     md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return md1
 
@@ -835,6 +836,7 @@ class Whizard(Application):
     moduleinstance.setValue("steeringparameters",   self.parameters)
     moduleinstance.setValue("OptionsDictStr", self._optionsdictstr)
     moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
+    moduleinstance.setValue("willCut",        self.willBeCut)
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):
