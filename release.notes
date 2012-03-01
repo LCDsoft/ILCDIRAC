@@ -1,3 +1,7 @@
+[v8r1p14]
+* WhizardAnalysis
+Check if whizard will be cut after and in that case don't change the outpufile name
+
 [v8r1p13]
 * WhizardAnalysis
 Handle the case where more than 1 file is produced
