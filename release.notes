@@ -1,3 +1,7 @@
+[v8r1p12]
+* WhizardAnalysis
+OutputFile was forced in production, and when cut, this is not good as one would write in the same file as the one used to read.
+
 [v8r1p11]
 * StdhepCut
 Oyutputfile treatement was not suitable for production
