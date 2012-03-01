@@ -26,7 +26,7 @@ from ILCDIRAC.Core.Utilities.WhizardOptions                import WhizardOptions
 
 from DIRAC import gLogger,S_OK,S_ERROR, gConfig
 
-import os,re,sys, shutil
+import os,re,sys, shutil, glob
 
 class WhizardAnalysis(ModuleBase):
   """
@@ -458,7 +458,16 @@ class WhizardAnalysis(ModuleBase):
       ###Deal with output file
       if len(self.OutputFile):
         if os.path.exists(outputfilename+".001.stdhep"):
-          os.rename(outputfilename+".001.stdhep", self.OutputFile)
+          ofnames = glob.glob('*.stdhep')
+          if len(ofnames)>1:
+            basename = self.OutputFile.split(".stdhep")[0]
+            i = 0
+            for f in ofnames:
+              i += 1
+              name = basename+"_"+str(i)+".stdhep"
+              os.rename(f,name)
+          else:
+            os.rename(outputfilename+".001.stdhep", self.OutputFile)    
         else:
           self.log.error( "Whizard execution did not produce a stdhep file" )
           self.setApplicationStatus('Whizard %s Failed to produce STDHEP file' %(self.applicationVersion))
