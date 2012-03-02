@@ -48,7 +48,7 @@ class MarlinAnalysis(ModuleBase):
     self.outputDST = ''
     self.applicationName = "Marlin"
     self.NumberOfEvents = 0
-    self.eventstring = ['ProgressHandler']
+    self.eventstring = ['ProgressHandler','event']
     self.envdict = {}
     self.ProcessorListToUse = []
     self.ProcessorListToExclude = []
