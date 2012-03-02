@@ -15,7 +15,8 @@ def Exists(file):
            "clic_ild_cdr500_steering.xml","GearOutput.xml",'cuts_e1e1ff_500gev.txt',
            "cuts_e2e2ff_500gev.txt",'cuts_qq_nunu_1400.txt','cuts_e3e3nn_1400.txt',
            "cuts_e3e3_1400.txt","cuts_e1e1e3e3_o_1400.txt","cuts_aa_e3e3_o_1400.txt",
-           "cuts_aa_e3e3nn_1400.txt","cuts_aa_e2e2e3e3_o_1400.txt","cuts_aa_e1e1e3e3_o_1400.txt"]
+           "cuts_aa_e3e3nn_1400.txt","cuts_aa_e2e2e3e3_o_1400.txt","cuts_aa_e1e1e3e3_o_1400.txt",
+           "defaultStrategies_clic_sid_cdr.xml"]
   if file in files:
     return S_OK()
   else:
