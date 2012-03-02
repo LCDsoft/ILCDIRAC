@@ -1,3 +1,7 @@
+[v8r1p16]
+* OverlayInput
+Treat IN2P3 like IMPERIAL: use getFile if local access fails
+
 [v8r1p15]
 * StdhepCut
 Number of events was not updated properly
