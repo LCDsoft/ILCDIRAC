@@ -1120,7 +1120,7 @@ class StdhepCut(Application):
       return S_ERROR('Please specify the number of events that will be generated in that step')
     
     kept = self.nbevts * self.selectionEfficiency
-    if kept < 5*self.maxevts:
+    if kept < 2*self.maxevts:
       return S_ERROR("You don't generate enough events") 
     
     return S_OK()
