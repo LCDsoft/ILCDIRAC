@@ -337,7 +337,7 @@ class OverlayInput (ModuleBase):
         # Tue Jun 28 14:21:03 CEST 2011
         # Temporarily for Imperial College site until dCache is fixed
 
-        if not res['OK'] and not isDefault and self.site=='LCG.UKI-LT2-IC-HEP.uk':
+        if not res['OK'] and not isDefault and self.site in ['LCG.UKI-LT2-IC-HEP.uk','LCG.IN2P3-CC.fr']:
           res = self.rm.getFile(self.lfns[fileindex])
 
         if not res['OK']:
