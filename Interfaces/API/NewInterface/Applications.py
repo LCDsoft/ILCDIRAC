@@ -681,7 +681,7 @@ class Whizard(Application):
         if not self._processlist.existsProcess(process)['Value']:
           self._log.info("Available processes are:")
           self._processlist.printProcesses()
-          return S_ERROR('Process does no exists')
+          return S_ERROR('Process %s does no exists'%process)
         else:
           cspath = self._processlist.getCSPath(process)
           whiz_file = os.path.basename(cspath)
@@ -877,6 +877,11 @@ class Pythia(Application):
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
     self.datatype = 'gen'
+    
+  def willCut(self):
+    """ You need this if you plan on cutting using L{StdhepCut} 
+    """
+    self.willBeCut = True  
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
