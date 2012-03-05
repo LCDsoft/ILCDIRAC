@@ -42,10 +42,10 @@ class RegisterOutputData(ModuleBase):
     if self.workflow_commons.has_key('SoftwarePackages'):
       self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
 
-    if self.workflow_commons.has_key('NbOfEvents'):
-      self.nbofevents = self.workflow_commons['NbOfEvents']
     if self.workflow_commons.has_key('NbOfEvts'):
       self.nbofevents = self.workflow_commons[ 'NbOfEvts']    
+    if self.workflow_commons.has_key('NbOfEvents'):
+      self.nbofevents = self.workflow_commons['NbOfEvents']
     if self.workflow_commons.has_key('Luminosity'):
       self.luminosity = self.workflow_commons['Luminosity']
     return S_OK('Parameters resolved')
