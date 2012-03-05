@@ -159,7 +159,7 @@ class StdHepCut(ModuleBase):
         self.log.error('Not enough events to fill up')
       if self.workflow_commons.has_key('Luminosity'):
         self.workflow_commons['Luminosity']  = self.workflow_commons['Luminosity']*sel_eff
-      self.workflow_commons['NbOfEvts'] = nbevtswritten
+      self.workflow_commons['NbOfEvents'] = nbevtswritten
     else:
       self.log.error('Not enough events somewhere: read: %s, pass:%s, written:%s'%(nbevtsread,nbevtspassing,nbevtswritten))
       status = 1
