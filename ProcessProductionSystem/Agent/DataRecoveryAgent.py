@@ -143,7 +143,6 @@ class DataRecoveryAgent():
         self.log.error(result)
         self.log.error('Could not obtain WMS jobIDs for files of transformation %s' %(transformation))
         continue
-      print result
       if not result['Value']:
         self.log.info('No eligible WMS jobIDs found for %s files in list:\n%s ...' %(len(fileDict.keys()),fileDict.keys()[0]))
         continue
