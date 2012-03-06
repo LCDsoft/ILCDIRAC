@@ -1,3 +1,9 @@
+[v8r1p17]
+* ProcessProductionSystem
+Added DataRecoveryAgent based on LHCb
+* Workflow
+Use preferably the number of events specified at the job run time instead of the one at job definition
+
 [v8r1p16]
 * OverlayInput
 Treat IN2P3 like IMPERIAL: use getFile if local access fails
