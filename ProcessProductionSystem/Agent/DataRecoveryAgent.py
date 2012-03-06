@@ -188,17 +188,26 @@ class DataRecoveryAgent():
 ##       self.log.info('====> Transformation %s total jobs with problematic descendent files but no replica flags: %s' %(transformation,len(jobsWithProblematicFiles.keys())))
 ##       self.log.info('====> Transformation %s total jobs with problematic descendent files having BK replica flags: %s' %(transformation,len(jobsWithDescendentsInBK.keys())))
             
-      filesToUpdate = []
+      filesToUpdateUnused = []
       for job,fileList in jobsWithFilesOKToUpdate.items():
-        filesToUpdate+=fileList
+        filesToUpdateUnused+=fileList
       
-      if filesToUpdate:
-        result = self.updateFileStatus(transformation,filesToUpdate,updateStatus)
+      if filesToUpdateUnused:
+        result = self.updateFileStatus(transformation,filesToUpdateUnused,updateStatus)
         if not result['OK']:
           self.log.error('Recoverable files were not updated with result:\n%s' %(result))
           continue          
       else:
         self.log.info('There are no files without problematic descendents to update for production %s in this cycle' %transformation)              
+
+      
+      if jobsWithFilesProcessed:
+        result = self.updateFileStatus(transformation,jobsWithFilesProcessed,'Processed')
+        if not result['OK']:
+          self.log.error('Recoverable files were not updated with result:\n%s' %(result))
+          continue          
+      else:
+        self.log.info('There are no files processed to update for production %s in this cycle' %transformation)              
       
 ##       if problematicFiles:
 ##         if self.removalOKFlag:
