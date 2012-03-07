@@ -2028,10 +2028,10 @@ class LCSIM(Application):
   def _checkConsistency(self):
 
     if not self.energy :
-      self._log.error('Energy set to 0 !')
+      self._log.warn('Energy set to 0 !')
       
     if not self.nbevts :
-      self._log.error('Number of events set to 0 !')
+      self._log.warn('Number of events set to 0 !')
         
     if not self.version:
       return S_ERROR('No version found')   
@@ -2200,7 +2200,7 @@ class SLICPandora(Application):
     #  return res
       
     if not self.startFrom :
-      self._log.info('No startFrom define for SlicPandora : start from the begining')
+      self._log.warn('No startFrom define for SlicPandora : start from the begining')
       
     if not self._jobtype =='User':
       self.prodparameters['slicpandora_steeringfile'] = self.steeringfile
