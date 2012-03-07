@@ -1,3 +1,7 @@
+[v8r1p18]
+* PrepareOptionsFiles
+Bug fix in the treatment of strategy file
+
 [v8r1p17]
 * ProcessProductionSystem
 Added DataRecoveryAgent based on LHCb
