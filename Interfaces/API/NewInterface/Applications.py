@@ -2007,7 +2007,7 @@ class LCSIM(Application):
     self.extraParams = extraparams     
     
   def willRunSLICPandora(self):
-    """ You need this if you plan on cutting using L{StdhepCut} 
+    """ You need this if you plan on running L{SLICPandora}
     """
     self.willBeCut = True  
     
