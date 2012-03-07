@@ -594,7 +594,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=Non
 
   if trackingstrategy:
     for driver in drivers:
-      if driver.attrib.has_key['type']:
+      if driver.attrib.has_key('type'):
         if driver.attrib['type']=='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper':
           driver.remove(driver.find('strategyFile'))
           strategy = Element("strategyFile")
