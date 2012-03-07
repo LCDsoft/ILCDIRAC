@@ -2006,6 +2006,10 @@ class LCSIM(Application):
 
     self.extraParams = extraparams     
     
+  def willRunSLICPandora(self):
+    """ You need this if you plan on cutting using L{StdhepCut} 
+    """
+    self.willBeCut = True  
     
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2053,7 +2057,7 @@ class LCSIM(Application):
     
     if not self._jobtype =='User':
       #slicp = False
-      if self._inputapp and not self.outputFile:
+      if self._inputapp and not self.outputFile and not self.willBeCut:
         for app in self._inputapp:
           if app.appname == 'slicpandora':
             self._listofoutput.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":'@{OutputSE}'})
@@ -2061,7 +2065,6 @@ class LCSIM(Application):
             #slicp = True
             break
       self.prodparameters['detectorType'] = self.detectortype
-      self.prodparameters['lcsim_detectorModel'] = self.detectorModel
       self.prodparameters['lcsim_steeringfile'] = self.steeringfile
       self.prodparameters['lcsim_trackingstrategy'] = self.trackingstrategy
 
