@@ -365,9 +365,7 @@ class WhizardAnalysis(ModuleBase):
       for gridfile in list_of_gridfiles:
         script.write('cp %s/%s ./\n'%(path_to_gridfiles,gridfile))
     script.write('cp %s/whizard.prc ./\n'%mySoftDir)
-    if not os.path.exists("whizard.cut1") and not self.genlevelcuts:
-      script.write('cp %s/whizard.cut1 ./\n'%mySoftDir)
-    elif self.genlevelcuts:
+    if self.genlevelcuts:
       res = self.makeWhizardDotCut1(self.genlevelcuts)
       if not res['OK']:
         script.close()
