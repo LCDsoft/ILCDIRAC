@@ -1,3 +1,7 @@
+[v8r1p20]
+* Whizardanalysis
+Don't use default cut1 file anymore
+
 [v8r1p19]
 * SteeringFiles
 Location can be different from main software, need to check local and shared area
