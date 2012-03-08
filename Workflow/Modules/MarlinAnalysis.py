@@ -199,15 +199,15 @@ class MarlinAnalysis(ModuleBase):
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if not os.path.exists(self.inputGEAR):
       if steeringfiledirname:
-        if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.inputGEAR)):
-          self.inputGEAR = os.path.join(mySoftwareRoot,steeringfiledirname,self.inputGEAR)
+        if os.path.exists(os.path.join(steeringfiledirname,self.inputGEAR)):
+          self.inputGEAR = os.path.join(steeringfiledirname,self.inputGEAR)
         
     
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
       if steeringfiledirname:
-        if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
-          self.SteeringFile = os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)
+        if os.path.exists(os.path.join(steeringfiledirname,self.SteeringFile)):
+          self.SteeringFile = os.path.join(steeringfiledirname,self.SteeringFile)
     if not self.SteeringFile:
       return S_ERROR("Could not find steering file")
     

@@ -266,9 +266,9 @@ class MokkaAnalysis(ModuleBase):
           result = sqlwrapper.mysqlCleanUp()
           return res
         steeringfiledirname = res['Value']
-        if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile)):
+        if os.path.exists(os.path.join(steeringfiledirname,self.SteeringFile)):
           try:
-            shutil.copy(os.path.join(mySoftwareRoot,steeringfiledirname,self.SteeringFile), "./"+self.SteeringFile )
+            shutil.copy(os.path.join(steeringfiledirname,self.SteeringFile), "./"+self.SteeringFile )
           except Exception,x:
             result = sqlwrapper.mysqlCleanUp()
             return S_ERROR('Failed to access file %s: '%(self.SteeringFile,str(x)))  
