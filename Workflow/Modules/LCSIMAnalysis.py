@@ -215,8 +215,8 @@ class LCSIMAnalysis(ModuleBase):
           if not res['OK']:
             return res
           steeringfiledirname = res['Value']
-          if os.path.exists(os.path.join(mySoftwareRoot,steeringfiledirname,file)):
-            paths[file] = os.path.join(mySoftwareRoot,steeringfiledirname,file)
+          if os.path.exists(os.path.join(steeringfiledirname,file)):
+            paths[file] = os.path.join(steeringfiledirname,file)
         if not os.path.exists(paths[file]):
           return S_ERROR("Could not find file %s"%paths[file])    
     self.SteeringFile = paths[os.path.basename(self.SteeringFile)]

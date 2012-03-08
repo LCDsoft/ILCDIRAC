@@ -206,8 +206,8 @@ class SLICAnalysis(ModuleBase):
         if not res['OK']:
           self.log.error("Could not find where the steering files are")
         steeringfiledirname = res['Value']
-        if os.path.exists(os.path.join(area,steeringfiledirname,self.SteeringFile)):
-          self.SteeringFile = os.path.join(area,steeringfiledirname,self.SteeringFile)
+        if os.path.exists(os.path.join(steeringfiledirname,self.SteeringFile)):
+          self.SteeringFile = os.path.join(steeringfiledirname,self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find mac file")    
         
