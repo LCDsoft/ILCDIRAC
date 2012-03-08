@@ -1,3 +1,8 @@
+[v8r1p19]
+* SteeringFiles
+Location can be different from main software, need to check local and shared area
+
+
 [v8r1p18]
 * PrepareOptionsFiles
 Bug fix in the treatment of strategy file
