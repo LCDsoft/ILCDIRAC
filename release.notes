@@ -1,3 +1,7 @@
+[v8r2p0]
+* Core, Workflow
+As software can be located in different directories (local area or shared area), one cannot use a single definition, and resolution of every bit is needed
+
 [v8r1p20]
 * Whizardanalysis
 Don't use default cut1 file anymore
