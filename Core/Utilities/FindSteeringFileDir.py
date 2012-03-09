@@ -5,7 +5,7 @@ Created on Feb 10, 2012
 '''
 
 from DIRAC import gConfig,S_OK,S_ERROR
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 import os
 
 def getSteeringFileDirName(systemConfig,application,applicationVersion):
@@ -17,13 +17,8 @@ def getSteeringFileDirName(systemConfig,application,applicationVersion):
   if not TarBall:
     return S_ERROR("Could not find tar ball for SteeringFile")
   dir = TarBall.replace(".tgz","").replace(".tar.gz","")
-  localArea = LocalArea()
-  sharedArea = SharedArea()
-  if os.path.exists('%s%s%s' %(localArea,os.sep,dir)):
-    mySoftwareRoot = localArea
-  elif os.path.exists('%s%s%s' %(sharedArea,os.sep,dir)):
-    mySoftwareRoot = sharedArea
-  else:
-    return S_ERROR('Missing installation of Steering files!')
-  mySoftDir = os.path.join(mySoftwareRoot,dir)
+  res = getSoftwareFolder(dir)
+  if not res['OK']:
+    return res
+  mySoftDir = res['Value']
   return S_OK(mySoftDir)
