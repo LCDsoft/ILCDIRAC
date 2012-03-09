@@ -17,6 +17,8 @@ from ILCDIRAC.Core.Utilities.TARsoft import TARinstall
 from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
 from DIRAC.Core.Utilities.Subprocess                                import systemCall
 
+from DIRAC import S_OK,S_ERROR
+
 natOS = NativeMachine()
 
 class CombinedSoftwareInstallation(object):
@@ -248,5 +250,14 @@ def LocalArea():
         localArea = ''
   return localArea
 
-
-      
+def getSoftwareFolder(folder):
+  localArea = LocalArea()
+  sharedArea = SharedArea()
+  if os.path.exists('%s%s%s' %(localArea,os.sep,folder)):
+    mySoftwareRoot = localArea
+  elif os.path.exists('%s%s%s' %(sharedArea,os.sep,folder)):
+    mySoftwareRoot = sharedArea
+  else:
+    return S_ERROR('Missing installation of %s!'%folder)
+  mySoftDir = os.path.join(mySoftwareRoot,folder)
+  return S_OK(mySoftDir)    
