@@ -251,6 +251,9 @@ def LocalArea():
   return localArea
 
 def getSoftwareFolder(folder):
+  """ 
+  Discover location of a given folder, either the local or the shared area
+  """
   localArea = LocalArea()
   sharedArea = SharedArea()
   if os.path.exists('%s%s%s' %(localArea,os.sep,folder)):
