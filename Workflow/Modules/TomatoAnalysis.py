@@ -9,7 +9,7 @@ Created on Feb 24, 2011
 
 __RCSID__ = "$Id: $"
 
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareTomatoSalad,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
@@ -56,17 +56,11 @@ class TomatoAnalysis(MarlinAnalysis):
       self.log.error('Could not get Tomato tar ball name, cannot proceed')
       return S_ERROR('Problem accessing CS')
     tomatoDir = tomatoDir.replace(".tgz","").replace(".tar.gz","")
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,tomatoDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,tomatoDir)):
-      mySoftwareRoot = sharedArea
-    else:
+    res = getSoftwareFolder(tomatoDir)
+    if not res['Value']:
       self.setApplicationStatus('Tomato: Could not find neither local area not shared area install')
-      return S_ERROR('Missing installation of Tomato!')
-    myTomatoDir = os.path.join(mySoftwareRoot,tomatoDir)
+      return res
+    myTomatoDir = res['Value']
 
     res = self.prepareMARLIN_DLL(myTomatoDir)
     if not res['OK']:
@@ -80,14 +74,14 @@ class TomatoAnalysis(MarlinAnalysis):
     for dep in deps:
       if dep.lower().count('marlin'):
         marlindir = dep.replace(".tgz","").replace(".tar.gz","")
-        if not os.path.exists(os.path.join(mySoftwareRoot,marlindir)):
+        res = getSoftwareFolder(marlindir)
+        if not res['OK']:
           self.log.error('Marlin was not found in software directory')
-          return S_ERROR('Marlin not found')
+          return res
         else:
-          self.envdict['MarlinDIR'] = os.path.join(mySoftwareRoot,marlindir)
+          self.envdict['MarlinDIR'] = res['Value']
         break
 
-    #new_ldlibs = GetNewLDLibs(self.systemConfig,"tomato",self.applicationVersion,mySoftwareRoot)
     new_ldlibs = ''
     if os.environ.has_key('LD_LIBRARY_PATH'):
       new_ldlibs = os.path.join(myTomatoDir,'LDLibs')+":%s"%os.environ['LD_LIBRARY_PATH']

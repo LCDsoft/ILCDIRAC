@@ -5,7 +5,7 @@ Created on Jun 3, 2011
 '''
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
@@ -63,26 +63,25 @@ class PythiaAnalysis(ModuleBase):
 
     appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,self.applicationName,self.applicationVersion),'')
     appDir = appDir.replace(".tgz","").replace(".tar.gz","")
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,appDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,appDir)):
-      mySoftwareRoot = sharedArea
-    else:
+
+    res = getSoftwareFolder(appDir)
+    if not res['OK']:
       self.setApplicationStatus('Pythia: Could not find neither local area not shared area install')
-      return S_ERROR('Missing installation of Pythia!')
-    myappDir = os.path.join(mySoftwareRoot,appDir)
+      return res
+    myappDir = res['Value']
+
 
 
     deptar = resolveDepsTar(self.systemConfig,self.applicationName,self.applicationVersion)[0]
     depdir = deptar.replace(".tgz","").replace(".tar.gz","")
-    path = os.path.join(mySoftwareRoot,depdir)
+    res = getSoftwareFolder(depdir)
+    if not res['OK']:
+      return res
+    path = res['Value']
     if not os.path.exists(path+"/%s.ep"%depdir):
       return S_ERROR("Lumi files not found")
     
-    originpath = path+"/%s.ep"%depdir
+    originpath = os.path.join(path,"/%s.ep"%depdir)
     randomName =  '/tmp/LumiFile-' + self.GenRandString(8);
     try:
       os.mkdir(randomName)
@@ -100,7 +99,7 @@ class PythiaAnalysis(ModuleBase):
     #self.lumifile = path+"/%s.ep"%depdir
     self.lumifile = "%s/%s"%(randomName,depdir)
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion)
     new_ld_lib_path = myappDir+"/lib:"+new_ld_lib_path
 
     scriptName = '%s_%s_Run_%s.sh' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER)

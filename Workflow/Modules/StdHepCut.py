@@ -5,7 +5,7 @@ Created on May 11, 2011
 '''
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
@@ -69,20 +69,13 @@ class StdHepCut(ModuleBase):
       self.setApplicationStatus('Failed finding info from CS')
       return S_ERROR('Failed finding info from CS')
     appDir = appDir.replace(".tgz","").replace(".tar.gz","")
-
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,appDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,appDir)):
-      mySoftwareRoot = sharedArea
-    else:
+    res = getSoftwareFolder(appDir)
+    if not res['OK']:
       self.setApplicationStatus('%s: Could not find neither local area not shared area install'%self.applicationName)
-      return S_ERROR('Missing installation of %s!'%self.applicationName)
-    mySoftDir = os.path.join(mySoftwareRoot,appDir)
+      return res
+    mySoftDir = res['Value']
         
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,self.applicationName,self.applicationVersion)
     new_ld_lib_path = mySoftDir+"/lib:"+new_ld_lib_path
     if os.path.exists("./lib"):
       new_ld_lib_path = "./lib:"+new_ld_lib_path

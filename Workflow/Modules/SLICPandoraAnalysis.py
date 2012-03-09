@@ -13,13 +13,13 @@ import os, urllib, zipfile, shutil, string,sys
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
-from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs,GetNewPATH
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
 
@@ -97,25 +97,19 @@ class SLICPandoraAnalysis (ModuleBase):
     
     slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"slicpandora",self.applicationVersion),'')
     slicPandoraDir = slicPandoraDir.replace(".tgz","").replace(".tar.gz","")
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,slicPandoraDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,slicPandoraDir)):
-      mySoftwareRoot = sharedArea
-    else:
+    res = getSoftwareFolder(slicPandoraDir)
+    if not res['OK']:
       self.setApplicationStatus('SLICPandora: Could not find neither local area not shared area install')
-      return S_ERROR('Missing installation of SLICPandora!')
-    myslicPandoraDir = os.path.join(mySoftwareRoot,slicPandoraDir)
+      return res
+    myslicPandoraDir = res['Value']
 
     ##Remove libc lib
     removeLibc(myslicPandoraDir+"/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slicpandora",self.applicationVersion)
 
-    new_path = GetNewPATH(self.systemConfig,"slicpandora",self.applicationVersion,mySoftwareRoot)
+    new_path = GetNewPATH(self.systemConfig,"slicpandora",self.applicationVersion)
 
     inputfilelist = self.InputFile.split(";")    
     res = resolveIFpaths(inputfilelist)
@@ -162,9 +156,9 @@ class SLICPandoraAnalysis (ModuleBase):
       self.pandorasettings  = "PandoraSettings.xml"
       if os.path.exists("./Settings/%s"%self.pandorasettings):
         self.pandorasettings = "./Settings/%s"%self.pandorasettings
-      elif os.path.exists(os.path.join(mySoftwareRoot,slicPandoraDir,'Settings',self.pandorasettings)):
+      elif os.path.exists(os.path.join(slicPandoraDir,'Settings',self.pandorasettings)):
         try:
-          shutil.copy(os.path.join(mySoftwareRoot,slicPandoraDir,'Settings',self.pandorasettings),os.path.join(os.getcwd(),self.pandorasettings))
+          shutil.copy(os.path.join(slicPandoraDir,'Settings',self.pandorasettings),os.path.join(os.getcwd(),self.pandorasettings))
         except Exception,x:
           self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
           return S_ERROR('Could not find PandoraSettings file')

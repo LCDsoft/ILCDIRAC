@@ -13,7 +13,7 @@ __RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFile
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFileTemplate,GetNewLDLibs
@@ -222,37 +222,32 @@ class WhizardAnalysis(ModuleBase):
       self.setApplicationStatus('Failed finding info from CS')
       return S_ERROR('Failed finding info from CS')
     whizardDir = whizardDir.replace(".tgz","").replace(".tar.gz","")
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,whizardDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,whizardDir)):
-      mySoftwareRoot = sharedArea
-    else:
-      self.setApplicationStatus('Whizard: Could not find neither local area not shared area install')
-      return S_ERROR('Missing installation of Whizard!')
-    mySoftDir = os.path.join(mySoftwareRoot,whizardDir)
+    res = getSoftwareFolder(whizardDir)
+    if not res['OK']:
+      return res
+    mySoftDir = res['Value']
 
     ###Remove libc
     removeLibc(mySoftDir+"/lib")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"whizard",self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"whizard",self.applicationVersion)
     #Don't forget to prepend the application's libs
     new_ld_lib_path = mySoftDir+"/lib:"+new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
     deps = resolveDepsTar(self.systemConfig,"whizard",self.applicationVersion)
-    print deps
     path_to_beam_spectra = ""
     path_to_gridfiles = ""
     for dep in deps:
-      if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-        depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-        if depfolder.count("beam_spectra"):
-          path_to_beam_spectra=os.path.join(mySoftwareRoot,depfolder)
-        elif depfolder.count("gridfiles"):
-          path_to_gridfiles=os.path.join(mySoftwareRoot,depfolder)
+      depfolder = dep.replace(".tgz","").replace(".tar.gz","")
+      res = getSoftwareFolder(depfolder)
+      if not res['OK']:
+        return res
+      depfolder = res['Value']
+      if depfolder.count("beam_spectra"):
+          path_to_beam_spectra = depfolder
+      elif depfolder.count("gridfiles"):
+          path_to_gridfiles = depfolder
 
     ##Env variables needed to run whizard: avoids hard coded locations
     os.environ['LUMI_LINKER'] = path_to_beam_spectra+"/lumi_linker_000"

@@ -19,7 +19,7 @@ import os,sys,re,string, shutil
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
@@ -154,23 +154,18 @@ class MarlinAnalysis(ModuleBase):
     
     marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"marlin",self.applicationVersion),'')
     marlinDir = marlinDir.replace(".tgz","").replace(".tar.gz","")
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,marlinDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,marlinDir)):
-      mySoftwareRoot = sharedArea
-    else:
+    res = getSoftwareFolder(marlinDir)
+    if not res['OK']:
       self.setApplicationStatus('Marlin: Could not find neither local area not shared area install')
-      return S_ERROR('Missing installation of Marlin!')
-    myMarlinDir = os.path.join(mySoftwareRoot,marlinDir)
+      return res
+    
+    myMarlinDir = res['Value']
 
     ##Remove libc
     removeLibc(myMarlinDir+"/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"marlin",self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"marlin",self.applicationVersion)
 
     res = self.GetInputFiles()
     if not res['OK']:
@@ -181,9 +176,9 @@ class MarlinAnalysis(ModuleBase):
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'
     if not os.path.exists(pandorasettings):
-      if os.path.exists(os.path.join(mySoftwareRoot,marlinDir,'Settings',pandorasettings)):
+      if os.path.exists(os.path.join(myMarlinDir,'Settings',pandorasettings)):
         try:
-          shutil.copy(os.path.join(mySoftwareRoot,marlinDir,'Settings',pandorasettings),os.path.join(os.getcwd(),pandorasettings))
+          shutil.copy(os.path.join(myMarlinDir,'Settings',pandorasettings),os.path.join(os.getcwd(),pandorasettings))
         except Exception,x:
           self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
     

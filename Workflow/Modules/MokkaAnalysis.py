@@ -13,7 +13,7 @@ __RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea, getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareSteeringFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
@@ -197,7 +197,12 @@ class MokkaAnalysis(ModuleBase):
       else:
         self.log.error("Mokka: could not find installation directory!")
         return S_ERROR("Mokka installation could not be found")  
-      myMokkaDir = os.path.join(mySoftwareRoot,mokkaDir)
+      ##This is a duplication of what is above, but the above cannot easily be removed...
+      res = getSoftwareFolder(mokkaDir)
+      if not res['OK']:
+        self.log.error("Mokka: could not find installation directory!")
+        return res
+      myMokkaDir = res['Value']
       
       if not mySoftwareRoot:
         self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(mokkaDir,localArea,sharedArea))
@@ -223,7 +228,7 @@ class MokkaAnalysis(ModuleBase):
         return result
 
       ##Need to fetch the new LD_LIBRARY_PATH
-      new_ld_lib_path= GetNewLDLibs(self.systemConfig,"mokka",self.applicationVersion,mySoftwareRoot)
+      new_ld_lib_path= GetNewLDLibs(self.systemConfig,"mokka",self.applicationVersion)
 
       ##Remove libc
       removeLibc(myMokkaDir)
