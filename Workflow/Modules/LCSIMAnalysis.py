@@ -14,7 +14,7 @@ __RCSID__ = "$Id: $"
 import os, sys, re, shutil
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import PrepareLCSIMFile,GetNewLDLibs 
 from ILCDIRAC.Core.Utilities.ResolveDependencies             import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths                  import resolveIFpaths
@@ -145,19 +145,13 @@ class LCSIMAnalysis(ModuleBase):
       self.log.error("Could not find lcsim file name from CS")
       return S_ERROR("Could not find lcsim file name from CS")
     
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,lcsim_name)):
-      mySoftwareRoot = localArea
-    if os.path.exists('%s%s%s' %(sharedArea,os.sep,lcsim_name)):
-      mySoftwareRoot = sharedArea
-    if not mySoftwareRoot:
-      self.log.error('Application %s was not found in either the local area %s or shared area %s' %(lcsim_name,localArea,sharedArea))
-      return S_ERROR('Failed to discover software')
-
+    res = getSoftwareFolder(lcsim_name)
+    if not res['OK']:
+      self.log.error('Application %s was not found in either the local area or shared area' %(lcsim_name))
+      return res
+    lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"lcsim",self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"lcsim",self.applicationVersion)
 
     runonslcio = []
     if self.InputFile:
@@ -238,11 +232,6 @@ class LCSIMAnalysis(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    #for lib in os.path("%s/GeomConverter/target/lib"%(mySoftwareRoot)):
-    #  script.write("declare -x CLASSPATH=$CLASSPATH:%s\n"%lib)
-    #script.write("declare -x CLASSPATH=$CLASSPATH:%s/lcsim/target/lcsim-%s.jar\n"%(mySoftwareRoot,self.applicationVersion))
-    #script.write("declare -x BINPATH=%s/bin\n"%(sourcedir))
-    #script.write("declare -x SOURCEPATH=%s/src\n"%(sourcedir))
     if new_ld_lib_path:
       script.write("declare -x LD_LIBRARY_PATH=%s\n"%new_ld_lib_path)
     script.write("declare -x JAVALIBPATH=./\n")
@@ -253,7 +242,7 @@ class LCSIMAnalysis(ModuleBase):
     script.write('java -version\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')    
-    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s/%s %s %s\n"%(cachedir,mySoftwareRoot,lcsim_name,self.extraparams,lcsimfile)
+    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s %s %s\n"%(cachedir,lcsim_name,self.extraparams,lcsimfile)
     self.log.info("Will run %s"%comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')

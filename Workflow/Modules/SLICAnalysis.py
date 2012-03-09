@@ -16,7 +16,7 @@ import os,sys,re, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
@@ -148,22 +148,13 @@ class SLICAnalysis(ModuleBase):
 
     slicDir = os.environ['SLIC_DIR']
     mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    area = ''
-    if os.path.exists('%s%s%s' %(localArea,os.sep,slicDir)):
-      mySoftwareRoot = '%s%s%s' %(localArea,os.sep,slicDir)
-      area = localArea
-    if os.path.exists('%s%s%s' %(sharedArea,os.sep,slicDir)):
-      mySoftwareRoot = '%s%s%s' %(sharedArea,os.sep,slicDir)
-      area = sharedArea
-    if not mySoftwareRoot:
-      self.log.error('Directory %s was not found in either the local area %s or shared area %s' %(slicDir,localArea,sharedArea))
-      return S_ERROR('Failed to discover software')
-
-
+    res = getSoftwareFolder(slicDir)
+    if not res['OK']:
+      self.log.error('Directory %s was not found in either the local area or shared area' %(slicDir))
+      return res
+    mySoftwareRoot = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slic",self.applicationVersion,mySoftwareRoot)
+    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"slic",self.applicationVersion)
 
     #retrieve detector model from web
     detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels',[''])

@@ -12,7 +12,7 @@ __RCSID__ = "$Id: $"
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import LocalArea,SharedArea, getSoftwareFolder
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
@@ -86,18 +86,13 @@ class PostGenSelection(ModuleBase):
     if not os.environ.has_key('ROOTSYS'):
       return S_OK('Root environment is not set')
     postgenDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"postgensel",self.applicationVersion),'')
-    postgenDir = postgenDir.replace(".tgz","").replace(".tar.gz","")
-    mySoftwareRoot = ''
-    localArea = LocalArea()
-    sharedArea = SharedArea()
-    if os.path.exists('%s%s%s' %(localArea,os.sep,postgenDir)):
-      mySoftwareRoot = localArea
-    elif os.path.exists('%s%s%s' %(sharedArea,os.sep,postgenDir)):
-      mySoftwareRoot = sharedArea
-    else:
-      self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')
-      return S_ERROR('Missing installation of PostGenSel!')
-    mySoftDir = os.path.join(mySoftwareRoot,postgenDir)
+    postgenDir = postgenDir.replace(".tgz","").replace(".tar.gz","")    
+    res = getSoftwareFolder(postgenDir)
+    if not res['OK']:
+      self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')      
+      return res
+    
+    mySoftDir = res['Value']
     self.InputFile= os.path.basename(self.InputFile)
     base_file = self.InputFile.replace(".stdhep","")
     
