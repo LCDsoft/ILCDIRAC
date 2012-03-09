@@ -55,19 +55,21 @@ def GetNewLDLibs(systemConfig,application,applicationVersion):
       new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]  
   return new_ld_lib_path
 
-def GetNewPATH(systemConfig,application,applicationVersion,mySoftwareRoot):
+def GetNewPATH(systemConfig,application,applicationVersion):
   """ Same as L{GetNewLDLibs},but for the PATH
   """
   new_path = ""
   deps = resolveDepsTar(systemConfig,application,applicationVersion)
   for dep in deps:
-    if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-      depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-      if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"bin")):
-        gLogger.verbose("Found lib folder in %s"%(depfolder))
-        newpathdir = os.path.join(mySoftwareRoot,depfolder,"bin")
-        new_path = newpathdir
-        ####Remove the libc
+    depfolder = dep.replace(".tgz","").replace(".tar.gz","")
+    res = getSoftwareFolder(depfolder)
+    if not res['OK']:
+      continue
+    depfolder = res['Value']
+    if os.path.exists(os.path.join(depfolder,"bin")):
+      gLogger.verbose("Found bin folder in %s"%(depfolder))
+      newpathdir = os.path.join(depfolder,"bin")
+      new_path = newpathdir
   if os.environ.has_key("PATH"):
     if new_path:
       new_path=new_path+":%s"%os.environ["PATH"]
