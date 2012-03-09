@@ -1,3 +1,7 @@
+[v8r2p1]
+* StdHepCut
+Number of events stored in FC is not correct
+
 [v8r2p0]
 * Core, Workflow
 As software can be located in different directories (local area or shared area), one cannot use a single definition, and resolution of every bit is needed
