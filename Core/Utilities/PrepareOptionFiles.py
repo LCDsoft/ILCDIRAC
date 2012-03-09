@@ -18,33 +18,36 @@ from xml.etree.ElementTree                                import Comment
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 import string,os
 
-def GetNewLDLibs(systemConfig,application,applicationVersion,mySoftwareRoot):
+def GetNewLDLibs(systemConfig,application,applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
   @param systemConfig: System config used for the job
   @param application: name of the application considered
   @param applicationVersion: version of the application considered
-  @param mySoftwareRoot: Path to the location where the software is installed
   @return: new LD_LIBRARY_PATH
   """
   new_ld_lib_path = ""
   deps = resolveDepsTar(systemConfig,application,applicationVersion)
   for dep in deps:
-    if os.path.exists(os.path.join(mySoftwareRoot,dep.replace(".tgz","").replace(".tar.gz",""))):
-      depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-      if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"lib")):
-        gLogger.verbose("Found lib folder in %s"%(depfolder))
-        newlibdir = os.path.join(mySoftwareRoot,depfolder,"lib")
-        new_ld_lib_path = newlibdir
-        ####Remove the libc
-        removeLibc(new_ld_lib_path)
-      if os.path.exists(os.path.join(mySoftwareRoot,depfolder,"LDLibs")):
-        gLogger.verbose("Found lib folder in %s"%(depfolder))
-        newlibdir = os.path.join(mySoftwareRoot,depfolder,"LDLibs")
-        new_ld_lib_path = newlibdir
-        ####Remove the libc
-        removeLibc(new_ld_lib_path)
+    depfolder = dep.replace(".tgz","").replace(".tar.gz","")
+    res = getSoftwareFolder(depfolder)
+    if not res['OK']:
+      continue
+    basedepfolder = res['Value']
+    if os.path.exists(os.path.join(basedepfolder,"lib")):
+      gLogger.verbose("Found lib folder in %s"%(basedepfolder))
+      newlibdir = os.path.join(basedepfolder,"lib")
+      new_ld_lib_path = newlibdir
+      ####Remove the libc
+      removeLibc(new_ld_lib_path)
+    if os.path.exists(os.path.join(basedepfolder,"LDLibs")):
+      gLogger.verbose("Found lib folder in %s"%(depfolder))
+      newlibdir = os.path.join(basedepfolder,"LDLibs")
+      new_ld_lib_path = newlibdir
+      ####Remove the libc
+      removeLibc(new_ld_lib_path)
   if os.environ.has_key("LD_LIBRARY_PATH"):
     if new_ld_lib_path:
       new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
