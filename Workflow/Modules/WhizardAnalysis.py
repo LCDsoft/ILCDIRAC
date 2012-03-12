@@ -143,9 +143,12 @@ class WhizardAnalysis(ModuleBase):
           self.optionsdict['integration_input']={}
         if not self.optionsdict['integration_input'].has_key('seed'):
           self.optionsdict['integration_input']['seed']=int(self.RandomSeed)
+        if self.optionsdict.has_key('process_input'):
+          if self.optionsdict['process_input'].has_key('sqrts'):
+            self.energy = self.optionsdict['process_input']['sqrts']
       except:
         return S_ERROR("Could not convert string to dictionary for optionsdict")
-
+    
     if self.GenLevelCutDictStr:
       self.log.info("Found generator level cuts")
       try:
@@ -264,8 +267,18 @@ class WhizardAnalysis(ModuleBase):
 
     list_of_gridfiles = []
     if path_to_gridfiles:
-      list_of_gridfiles = os.listdir(path_to_gridfiles)
-      
+      tmp_list_of_gridfiles = [os.path.join(path_to_gridfiles,item) for item in os.listdir(path_to_gridfiles)]
+      gridfilesfound = False
+      for path in tmp_list_of_gridfiles:
+        if os.path.isdir(path) and path.count(str(self.energy)): #Here look for a sub directory for the energy related grid files
+          list_of_gridfiles = [os.path.join(path,item) for item in os.listdir(path)]
+          gridfilesfound = True
+          self.log.info('Found grid files for energy %s'%self.energy)
+          break
+      if not gridfilesfound:
+        self.log.info("Will use generic grid files found, hope the energy is set right")
+        list_of_gridfiles = tmp_list_of_gridfiles
+         
     template=False
     if self.SteeringFile.count("template"):
       template=True
@@ -358,7 +371,7 @@ class WhizardAnalysis(ModuleBase):
       script.write('ln -s LesHouches.msugra_1.in fort.71\n')
     if len(list_of_gridfiles):
       for gridfile in list_of_gridfiles:
-        script.write('cp %s/%s ./\n'%(path_to_gridfiles,gridfile))
+        script.write('cp %s ./\n'%(gridfile))
     script.write('cp %s/whizard.prc ./\n'%mySoftDir)
     if self.genlevelcuts:
       res = self.makeWhizardDotCut1(self.genlevelcuts)
