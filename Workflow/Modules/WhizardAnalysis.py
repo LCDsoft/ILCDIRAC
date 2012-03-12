@@ -45,7 +45,7 @@ class WhizardAnalysis(ModuleBase):
     self.applicationName = 'whizard'
     self.evttype = ""
     self.RandomSeed = 0
-    self.energy = 3000
+    self.energy = 3000.
     self.getProcessInFile = False
     self.rm = ReplicaManager()
     self.processlist = None
