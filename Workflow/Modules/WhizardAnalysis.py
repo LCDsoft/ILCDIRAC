@@ -279,7 +279,7 @@ class WhizardAnalysis(ModuleBase):
           break
       if not gridfilesfound:
         self.log.info("Will use generic grid files found, hope the energy is set right")
-        list_of_gridfiles = tmp_list_of_gridfiles
+        list_of_gridfiles = [item for item in glob.glob(os.path.join(path_to_gridfiles,"*.grb")) + glob.glob(os.path.join(path_to_gridfiles,"*.grc"))]
          
     template=False
     if self.SteeringFile.count("template"):
