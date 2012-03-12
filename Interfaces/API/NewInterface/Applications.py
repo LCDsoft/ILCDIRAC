@@ -725,6 +725,7 @@ class Whizard(Application):
       self.prodparameters['Energy'] = self.energy
       self.prodparameters['whizardparams'] = self.optionsdict
       self.prodparameters['gencuts'] = self.genlevelcuts
+      self.prodparameters['gridfiles'] = self.useGridFiles
    
     if not self.optionsdict and  self.parameterdict:
       for key in self.parameterdict.keys():
@@ -835,18 +836,18 @@ class Whizard(Application):
   
   def _applicationModuleValues(self,moduleinstance):
 
-    moduleinstance.setValue("evttype",      self.evttype)
-    moduleinstance.setValue("RandomSeed",   self.seed)
-    moduleinstance.setValue("Lumi",         self.lumi)
-    moduleinstance.setValue("Model",        self.model)
-    moduleinstance.setValue("SteeringFile", self.steeringfile)
-    moduleinstance.setValue("JobIndex",     self.jobindex)
-    moduleinstance.setValue("steeringparameters",   self.parameters)
-    moduleinstance.setValue("OptionsDictStr", self._optionsdictstr)
+    moduleinstance.setValue("evttype",            self.evttype)
+    moduleinstance.setValue("RandomSeed",         self.seed)
+    moduleinstance.setValue("Lumi",               self.lumi)
+    moduleinstance.setValue("Model",              self.model)
+    moduleinstance.setValue("SteeringFile",       self.steeringfile)
+    moduleinstance.setValue("JobIndex",           self.jobindex)
+    moduleinstance.setValue("steeringparameters", self.parameters)
+    moduleinstance.setValue("OptionsDictStr",     self._optionsdictstr)
     moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
-    moduleinstance.setValue("willCut",        self.willBeCut)
-    moduleinstance.setValue("useGridFiles",        self.useGridFiles)
-    moduleinstance.setValue("debug",        self.debug)
+    moduleinstance.setValue("willCut",            self.willBeCut)
+    moduleinstance.setValue("useGridFiles",       self.useGridFiles)
+    moduleinstance.setValue("debug",              self.debug)
     
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
