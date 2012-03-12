@@ -1,3 +1,8 @@
+[v8r2p2]
+* WhizardAnalysis
+Support for grid files for different energies for the same channel: directory structure must be gridfilesVX/1400.0/channel.grb and/or
+gridfilesVX/3000.0/channel.grb
+
 [v8r2p1]
 * StdHepCut
 Number of events stored in FC is not correct
