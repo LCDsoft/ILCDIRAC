@@ -445,9 +445,9 @@ class Whizard(Application):
     self._generatormodels = GeneratorModels()
     self.evttype = ''
     self.globalname = ''
+    self.useGridFiles = False
     self._allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
     self.parameters = []
-    
     self._processlist = None
     if processlist:
       self._processlist = processlist
@@ -582,6 +582,13 @@ class Whizard(Application):
     """ You need this if you plan on cutting using L{StdhepCut} 
     """
     self.willBeCut = True  
+    
+  def usingGridFiles(self):
+    """ Call this if you want to use the grid files that come with the Whizard version used. 
+    
+    Beware: Depends on the energy and generator cuts, use it if you know what you are doing.
+    """
+    self.useGridFiles = True  
     
   def setJobIndex(self,index):
     """ Optional: Define Job Index. Added in the file name between the event type and the extension.
@@ -821,6 +828,7 @@ class Whizard(Application):
     md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, "Options dict to create full whizard.in on the fly"))
     md1.addParameter(Parameter("GenLevelCutDictStr",  "", "string", "", "", False, False, "Generator level cuts to put in whizard.cut1"))
     md1.addParameter(Parameter("willCut",  False,   "bool", "", "", False, False, "Will cut after"))
+    md1.addParameter(Parameter("useGridFiles",  True,   "bool", "", "", False, False, "Will use grid files"))
     md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return md1
 
@@ -837,6 +845,7 @@ class Whizard(Application):
     moduleinstance.setValue("OptionsDictStr", self._optionsdictstr)
     moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
     moduleinstance.setValue("willCut",        self.willBeCut)
+    moduleinstance.setValue("useGridFiles",        self.useGridFiles)
     moduleinstance.setValue("debug",        self.debug)
     
   def _userjobmodules(self,stepdefinition):
