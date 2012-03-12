@@ -64,6 +64,8 @@ class WhizardAnalysis(ModuleBase):
     self.GenLevelCutDictStr = ''
     self.genlevelcuts = {}
     self.willCut = False
+    self.useGridFiles = False
+    
     
   def obtainProcessList(self):
     """Internal function
@@ -266,14 +268,14 @@ class WhizardAnalysis(ModuleBase):
     
 
     list_of_gridfiles = []
-    if path_to_gridfiles:
+    if path_to_gridfiles and self.useGridFiles:
       tmp_list_of_gridfiles = [os.path.join(path_to_gridfiles,item) for item in os.listdir(path_to_gridfiles)]
       gridfilesfound = False
       for path in tmp_list_of_gridfiles:
         if os.path.isdir(path) and path.count(str(self.energy)): #Here look for a sub directory for the energy related grid files
           list_of_gridfiles = [os.path.join(path,item) for item in os.listdir(path)]
           gridfilesfound = True
-          self.log.info('Found grid files for energy %s'%self.energy)
+          self.log.info('Found grid files specific for energy %s'%self.energy)
           break
       if not gridfilesfound:
         self.log.info("Will use generic grid files found, hope the energy is set right")
