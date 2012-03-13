@@ -299,7 +299,7 @@ class OverlayInput (ModuleBase):
 
     res = gConfig.getOption("/Operations/Overlay/MaxFailedAllowed",20)
     max_fail_allowed = res['Value']
-    while len(filesobtained) < totnboffilestoget:
+    while not len(filesobtained) == totnboffilestoget:
       if fail_count > max_fail_allowed:
         fail = True
         break
@@ -337,18 +337,19 @@ class OverlayInput (ModuleBase):
         # Tue Jun 28 14:21:03 CEST 2011
         # Temporarily for Imperial College site until dCache is fixed
 
-        if not res['OK'] and not isDefault and self.site in ['LCG.UKI-LT2-IC-HEP.uk','LCG.IN2P3-CC.fr']:
+        if not res['OK'] and not isDefault and self.site in ['LCG.UKI-LT2-IC-HEP.uk','LCG.IN2P3-CC.fr','LCG.CERN.ch']:
           res = self.rm.getFile(self.lfns[fileindex])
 
         if not res['OK']:
           self.log.warn('Could not obtain %s'%self.lfns[fileindex])
           fail_count += 1
           continue
-
-        if len(res['Value']['Failed']):
-          self.log.warn('Could not obtain %s'%self.lfns[fileindex])
-          fail_count += 1
-          continue
+        
+        if res['Value'].has_key('Failed'):
+          if len(res['Value']['Failed']):
+            self.log.warn('Could not obtain %s'%self.lfns[fileindex])
+            fail_count += 1
+            continue
         filesobtained.append(self.lfns[fileindex])
       ##If no file could be obtained, need to make sure the job fails  
       if len(usednumbers)==nbfiles and not len(filesobtained):
@@ -416,7 +417,7 @@ fi\n"""%(basename,lfile))
     script.close()
     os.chmod("overlayinput.sh",0755)
     comm = 'sh -c "./overlayinput.sh"'
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(600,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
     #try:
     #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
@@ -469,7 +470,7 @@ fi\n"""%(basename,lfile))
     script.close()
     os.chmod("overlayinput.sh",0755)
     comm = 'sh -c "./overlayinput.sh"'
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(600,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
 #    
 #    if os.environ.has_key('X509_USER_PROXY'):
 #      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
@@ -494,7 +495,7 @@ fi\n"""%(basename,lfile))
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn
+      return S_ERROR("Failed")
     else:
       dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
@@ -531,7 +532,7 @@ fi\n"""%(basename,lfile))
     script.close()
     os.chmod("overlayinput.sh",0755)
     comm = 'sh -c "./overlayinput.sh"'
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(600,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
 #    
     #command = "rfcp %s ./"%file
     #comm = []
@@ -558,7 +559,7 @@ fi\n"""%(basename,lfile))
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn
+      return S_ERROR("Failed")
     else:
       dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
@@ -614,7 +615,7 @@ fi\n"""%(basename,lfile))
     script.close()
     os.chmod("overlayinput.sh",0755)
     comm = 'sh -c "./overlayinput.sh"'
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(600,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
     #try:
     #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
@@ -635,7 +636,7 @@ fi\n"""%(basename,lfile))
     dict['Failed'] = []
     dict['Successful'] = []
     if status:
-      dict['Failed']=lfn
+      return S_ERROR("Failed")
     else:
       dict['Successful']=lfn
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
