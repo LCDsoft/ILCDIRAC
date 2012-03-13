@@ -226,8 +226,8 @@ class OverlayInput (ModuleBase):
     ##Limit ourself to some configuration maximum
     res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet",20)
     maxNbFilesToGet = res['Value']
-    if totnboffilestoget > maxNbFilesToGet+1:
-      totnboffilestoget = maxNbFilesToGet+1
+    if totnboffilestoget > maxNbFilesToGet:
+      totnboffilestoget = maxNbFilesToGet
 #    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
 #    self.log.verbose("Will allow only %s concurrent running"%res['Value'])
 #    max_concurrent_running = res['Value']
