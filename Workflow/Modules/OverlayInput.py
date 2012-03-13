@@ -23,7 +23,7 @@ from math import ceil,modf
 
 from decimal import Decimal
 
-import os,types,time,random, string, subprocess
+import os, time, random, string, subprocess, glob
 
 class OverlayInput (ModuleBase):
   def __init__(self):
@@ -370,6 +370,11 @@ class OverlayInput (ModuleBase):
     #  if len(res['Value']['Failed']):
     #    os.chdir(curdir)
     #    return S_ERROR("Could not obtain enough files after 2 attempts")
+    ## Remove all scripts remaining
+    scripts = glob.glob("*.sh")
+    for script in scripts:
+      os.remove(script)
+      
     ##Print the file list
     list = os.listdir(os.getcwd())
     self.log.info("List of Overlay files:")
