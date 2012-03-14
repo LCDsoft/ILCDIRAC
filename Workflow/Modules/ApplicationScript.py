@@ -22,7 +22,9 @@ class ApplicationScript(ModuleBase):
     self.log = gLogger.getSubLogger( "ScriptAnalysis" )
     self.script = None
     self.arguments = ''
- 
+    self.applicationName= 'Application script'
+    self.applicationVersion = ''
+    
   def applicationSpecificInputs(self):
     if self.workflow_commons.has_key('ParametricParameters'):
       self.arguments = self.workflow_commons['ParametricParameters']
@@ -34,8 +36,6 @@ class ApplicationScript(ModuleBase):
     self.result =self.resolveInputVariables()
     if not self.script:
       self.result = S_ERROR('Script undefined.')
-    if not self.applicationName or not self.applicationVersion:
-      self.result = S_ERROR( 'No Application defined' )
     if not self.applicationLog:
       self.applicationLog = '%s.log' %(os.path.basename(self.script))    
     if not self.result['OK']:
