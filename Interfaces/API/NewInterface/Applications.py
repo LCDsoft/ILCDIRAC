@@ -168,8 +168,8 @@ class GenericApplication(Application):
     elif not self.script.lower().count("lfn:") and not os.path.exists(self.script):
       return S_ERROR("Specified script is not an LFN and was not found on disk")
       
-    if not len(self.dependencies):
-      return S_ERROR("Dependencies not set: No application to install. If correct you should use job.setExecutable")
+    #if not len(self.dependencies):
+    #  return S_ERROR("Dependencies not set: No application to install. If correct you should use job.setExecutable")
     return S_OK()  
   
 #################################################################
