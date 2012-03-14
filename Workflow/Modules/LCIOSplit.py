@@ -34,7 +34,8 @@ class LCIOSplit(ModuleBase):
     self.prod_outputdata = []
     self.applicationName = "lcio"
     #
-
+    self.listoutput = {}
+    self.expectedOutputFile = []
     self.log.info("%s initialized" % ( self.__str__() ))
 
   def applicationSpecificInputs(self):
@@ -50,18 +51,21 @@ class LCIOSplit(ModuleBase):
           self.prod_outputdata = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in self.prod_outputdata:
             if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
-              self.OutputFile = os.path.basename(obj)
+              self.expectedOutputFile.append(os.path.basename(obj))
         else:
-          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))
+          self.expectedOutputFile.append(getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"])))
           
     if len(self.InputFile)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
           self.InputFile += files+";"
-      self.InputFile = self.InputFile.rstrip(";")      
-
+      self.InputFile = self.InputFile.rstrip(";")
+      
+    if self.step_commons.has_key('listoutput'):
+      self.listoutput = self.step_commons['listoutput'][0]
+      
     return S_OK('Parameters resolved')
 
   def execute(self):
@@ -169,21 +173,49 @@ exit $?
 
     logf = file(self.applicationLog,"r")
     baseinputfilename = os.path.basename(runonslcio).split(".slcio")[0]
+    output_file_base_name = ''
+    if self.OutputFile:
+      output_file_base_name = self.OutputFile.split('.slcio')[0]
+    if self.listoutput:
+      output_file_base_name = self.listoutput['outputFile'].split('.slcio')[0]
     numberofeventsdict = {}
     fname = ''
+    producedfiles = []
     for line in logf:
       line = line.rstrip()
       if line.count(baseinputfilename):
-        fname = os.path.basename(line).split(".slcio")[0]
+        #First, we need to rename those guys
+        current_file = os.path.basename(line).replace(".slcio","")
+        current_file_extension = current_file.replace(baseinputfilename,"")
+        newfile = output_file_base_name+current_file_extension+".slcio"
+        os.rename(line,newfile)
+        fname = newfile
         numberofeventsdict[fname] = 0
+        producedfiles.append("fname")
       elif line.count("events"):
         numberofeventsdict[fname] = int(line.split()[0])
-          
+       
+    for files in [os.path.basename(x) for x in self.expectedOutputFile]:
+      if files not in numberofeventsdict.keys():
+        self.expectedOutputFile.remove(files)
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for the registerOutputData
-
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
+    if self.listoutput:
+      outputlist = []
+      for file in numberofeventsdict.keys():
+        item = {}
+        item['outputFile'] = file
+        item['outputPath'] = self.listoutput['outputPath']
+        item['outputDataSE']= self.listoutput['outputDataSE']
+        outputlist.append(item)
+      self.step_commons['listoutput'] = outputlist
+      
+    #Not only the step_commons must be updated  
+    if self.workflow_commons.has_key('ProductionOutputData'):
+      self.workflow_commons['ProductionOutputData'] = {}  
 
+    
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
     return self.finalStatusReport(status)
