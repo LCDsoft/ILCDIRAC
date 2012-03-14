@@ -14,7 +14,7 @@ Define the Marlin analysis part of the workflow
 
 __RCSID__ = "$Id$"
 
-import os,sys,re,string, shutil
+import os,string, shutil, glob
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
@@ -255,8 +255,8 @@ class MarlinAnalysis(ModuleBase):
     userlib = ""
     if(os.path.exists("./lib")):
       if os.path.exists("./lib/marlin_dll"):
-        for d in os.listdir("lib/marlin_dll"):
-          userlib = userlib + "./lib/marlin_dll/%s"%d + ":" 
+        for d in glob.glob("./lib/marlin_dll/*.so"):
+          userlib = userlib + d + ":" 
       
     temp=marlindll.split(":")
     temp2=userlib.split(":")
@@ -333,12 +333,12 @@ class MarlinAnalysis(ModuleBase):
     script.write('echo ldd of Marlin_DLL objects is\n')
     script.write('ldd %s/MARLIN_DLL/* \n'%myMarlinDir)
     if os.path.exists('./lib/marlin_dll'):
-      script.write('ldd ./lib/marlin_dll/* \n')
+      script.write('ldd ./lib/marlin_dll/*.so \n')
     script.write('echo =============================\n')
     script.write('echo ldd of LDLIBS objects is\n')
     script.write('ldd %s/LDLibs/* \n'%myMarlinDir)  
     if os.path.exists('./lib/lddlib'):
-      script.write('ldd ./lib/lddlib/* \n')
+      script.write('ldd ./lib/lddlib/*.so \n')
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
