@@ -1,3 +1,7 @@
+[v8r2p4]
+* ApplicationScript
+Allow application to be standalone
+
 [v8r2p3]
 * OverlayInput
 Add timeout to all direct calls to files (xrdcp and rfcp), return S_ERROR in case of failure to get the file
