@@ -200,9 +200,9 @@ exit $?
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []
-      for file in numberofeventsdict.keys():
+      for f in numberofeventsdict.keys():
         item = {}
-        item['outputFile'] = file
+        item['outputFile'] = f
         item['outputPath'] = self.listoutput['outputPath']
         item['outputDataSE']= self.listoutput['outputDataSE']
         outputlist.append(item)
@@ -219,8 +219,8 @@ exit $?
         else:
           this_split_data = item
       path = os.path.dirname(this_split_data)
-      for file in numberofeventsdict.keys():
-        finalproddata.append(os.path.join(path,file))
+      for f in numberofeventsdict.keys():
+        finalproddata.append(os.path.join(path,f))
       self.workflow_commons['ProductionOutputData']= ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
