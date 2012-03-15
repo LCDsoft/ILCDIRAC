@@ -76,6 +76,10 @@ class UploadOutputData(ModuleBase):
       self.request.setJobID(self.jobID)
       self.request.setSourceComponent("Job_%s" % self.jobID)
 
+    ##This is the thing that is used to establish the list of outpufiles to treat:
+    ## Make sure that all that is in the : "listoutput" and also in the ProductionData
+    ## is treated properly. Needed as whatever is in listoutput does not contain any reference to the 
+    ## prodID and task ID. Also if for some reason a step failed, then the corresponding data will not be there
     if self.workflow_commons.has_key('outputList'):
       self.outputList = self.workflow_commons['outputList']
       if self.workflow_commons.has_key('ProductionOutputData'):
@@ -83,32 +87,48 @@ class UploadOutputData(ModuleBase):
         self.log.verbose("prod data : %s"%proddata )
         olist = []
         for obj in self.outputList:
+          fname_in_outputlist = obj['outputFile'].lower()
+          if fname_in_outputlist.count("_sim") or fname_in_outputlist.count("_rec") or fname_in_outputlist.count("_dst"):
+              extension = ".slcio"  
+          elif fname_in_outputlist.count("_gen"):
+              extension = ".stdhep"
+          fname_in_outputlist = fname_in_outputlist.replace(extension,"")
           for prodfile in proddata:
-            if (obj['outputFile'].lower().count("_gen")):# and prodfile.lower().count("_gen_")) :
+            prodfile = os.path.basename(prodfile)
+            extension = ''
+            if prodfile.count("_sim") or prodfile.count("_rec") or prodfile.count("_dst"):
+              extension = ".slcio"  
+            elif prodfile.count("_gen"):
+              extension = ".stdhep"
+            prodfile = prodfile.replace(extension,"")   
+            if (fname_in_outputlist.count("_gen")):# and prodfile.lower().count("_gen_")) :
               genf = obj['outputFile'].split("_gen")[0]
+              genf += "_gen"
               if (prodfile.count(genf)):
                 appdict = obj
-                appdict['outputFile'] = os.path.basename(prodfile)
+                appdict['outputFile'] = prodfile
                 olist.append(appdict)
-            if (obj['outputFile'].lower().count("_sim")):
+            if (fname_in_outputlist.count("_sim")):
               simf = obj['outputFile'].split("_sim")[0]
+              simf += "_sim"
               if (prodfile.count(simf)):
                 appdict = obj
-                appdict['outputFile'] = os.path.basename(prodfile)
+                appdict['outputFile'] = prodfile
                 olist.append(appdict)
-                break
-            if (obj['outputFile'].lower().count("_rec")):
+            if (fname_in_outputlist.count("_rec")):
               recf = obj['outputFile'].split("_rec")[0]
+              recf += "_rec"
               if (prodfile.count(recf)):
                 appdict = obj
-                appdict['outputFile'] = os.path.basename(prodfile)
+                appdict['outputFile'] = prodfile
                 olist.append(appdict)
                 break
-            if  (obj['outputFile'].lower().count("_dst") and prodfile.lower().count("_dst_")):
+            if  (fname_in_outputlist.count("_dst") and prodfile.lower().count("_dst_")):
               dstf = obj['outputFile'].split("_dst")[0]
+              dstf += "_dst"
               if (prodfile.count(dstf)):
                 appdict = obj
-                appdict['outputFile'] = os.path.basename(prodfile)
+                appdict['outputFile'] = prodfile
                 olist.append(appdict)
                 break
         self.outputList = olist
