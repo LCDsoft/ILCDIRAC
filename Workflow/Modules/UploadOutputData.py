@@ -105,7 +105,7 @@ class UploadOutputData(ModuleBase):
             if olist.has_key(prodfile):
               ## This has already been treated, no need to come back to it.
               continue
-
+            appdict = {}
             if (fname_in_outputlist.count("_gen")):# and prodfile.lower().count("_gen_")) :
               genf = obj['outputFile'].split("_gen")[0]
               genf += "_gen"
@@ -118,7 +118,9 @@ class UploadOutputData(ModuleBase):
               simf += "_sim"
               if (prodfile.count(simf)):
                 appdict = obj
+                self.log.verbose('appdict0 %s'%appdict)
                 appdict['outputFile'] = prodfile+extension
+                self.log.verbose('appdict1 %s'%appdict)
                 olist[prodfile] = appdict
             if (fname_in_outputlist.count("_rec")):
               recf = obj['outputFile'].split("_rec")[0]
