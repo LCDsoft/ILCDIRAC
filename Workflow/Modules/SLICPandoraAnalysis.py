@@ -159,8 +159,8 @@ class SLICPandoraAnalysis (ModuleBase):
     if not os.path.exists(self.pandorasettings):
       if os.path.exists("./Settings/%s"%self.pandorasettings):
         self.pandorasettings = "./Settings/%s"%self.pandorasettings
-      elif os.path.exists(os.path.join(slicPandoraDir,'Settings')):
-        xmllist = glob.glob(os.path.join(slicPandoraDir,'Settings',"*.xml"))
+      elif os.path.exists(os.path.join(myslicPandoraDir,'Settings')):
+        xmllist = glob.glob(os.path.join(myslicPandoraDir,'Settings',"*.xml"))
         for f in xmllist:
           try:
             shutil.copy(f,os.path.join(os.getcwd(),os.path.basename(f)))
