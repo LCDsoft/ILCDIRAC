@@ -9,7 +9,7 @@ Created on Oct 25, 2010
 
 __RCSID__ = "$Id: $"
 
-import os, urllib, zipfile, shutil, string,sys
+import os, urllib, zipfile, shutil, glob
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
@@ -157,12 +157,14 @@ class SLICPandoraAnalysis (ModuleBase):
     if not os.path.exists(os.path.basename(self.pandorasettings)):
       if os.path.exists("./Settings/%s"%self.pandorasettings):
         self.pandorasettings = "./Settings/%s"%self.pandorasettings
-      elif os.path.exists(os.path.join(slicPandoraDir,'Settings',self.pandorasettings)):
-        try:
-          shutil.copy(os.path.join(slicPandoraDir,'Settings',self.pandorasettings),os.path.join(os.getcwd(),self.pandorasettings))
-        except Exception,x:
-          self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
-          return S_ERROR('Could not find PandoraSettings file')
+      elif os.path.exists(os.path.join(slicPandoraDir,'Settings')):
+        xmllist = glob.glob(os.path.join(slicPandoraDir,'Settings',"*.xml"))
+        for f in xmllist:
+          try:
+            shutil.copy(f,os.path.join(os.getcwd(),os.path.basename(f)))
+          except Exception,x:
+            self.log.error('Could not copy %s, exception: %s'%(f,str(x)))
+            return S_ERROR('Could not copy PandoraSettings file')
     
     oldversion = False
     if self.applicationVersion in ['CLIC_CDR', 'CDR1', 'CDR2', 'CDR0', 'V2', 'V3', 'V4']:
