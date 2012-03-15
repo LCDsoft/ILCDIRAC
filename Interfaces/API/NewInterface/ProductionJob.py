@@ -66,7 +66,7 @@ class ProductionJob(Job):
     self.inputBKSelection = {}
     self.plugin = 'Standard'
 
-    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge']
+    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge', 'Split']
     self.prodparameters = {}
     self.prodparameters['NbInputFiles'] = 1
     self.prodparameters['nbevts']  = 0 
