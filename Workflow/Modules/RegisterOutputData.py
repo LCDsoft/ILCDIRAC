@@ -148,6 +148,9 @@ class RegisterOutputData(ModuleBase):
       if self.nbofevents:
         nbevts = {}
         nbevts['NumberOfEvents']=self.nbofevents
+        if self.workflow_commons.has_key('file_number_of_event_relation'):
+          if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
+            nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         if self.enable:
           res = self.fc.setMetadata(files,nbevts)
           if not res['OK']:
