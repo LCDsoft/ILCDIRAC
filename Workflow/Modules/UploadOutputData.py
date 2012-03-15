@@ -106,21 +106,21 @@ class UploadOutputData(ModuleBase):
               genf += "_gen"
               if (prodfile.count(genf)):
                 appdict = obj
-                appdict['outputFile'] = prodfile
+                appdict['outputFile'] = prodfile+extension
                 olist.append(appdict)
             if (fname_in_outputlist.count("_sim")):
               simf = obj['outputFile'].split("_sim")[0]
               simf += "_sim"
               if (prodfile.count(simf)):
                 appdict = obj
-                appdict['outputFile'] = prodfile
+                appdict['outputFile'] = prodfile+extension
                 olist.append(appdict)
             if (fname_in_outputlist.count("_rec")):
               recf = obj['outputFile'].split("_rec")[0]
               recf += "_rec"
               if (prodfile.count(recf)):
                 appdict = obj
-                appdict['outputFile'] = prodfile
+                appdict['outputFile'] = prodfile+extension
                 olist.append(appdict)
                 break
             if  (fname_in_outputlist.count("_dst") and prodfile.lower().count("_dst_")):
@@ -128,7 +128,7 @@ class UploadOutputData(ModuleBase):
               dstf += "_dst"
               if (prodfile.count(dstf)):
                 appdict = obj
-                appdict['outputFile'] = prodfile
+                appdict['outputFile'] = prodfile+extension
                 olist.append(appdict)
                 break
         self.outputList = olist
