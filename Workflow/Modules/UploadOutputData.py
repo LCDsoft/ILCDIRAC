@@ -85,7 +85,7 @@ class UploadOutputData(ModuleBase):
       if self.workflow_commons.has_key('ProductionOutputData'):
         proddata = self.workflow_commons['ProductionOutputData'].split(";")
         self.log.verbose("prod data : %s"%proddata )
-        olist = []
+        olist = {}
         for obj in self.outputList:
           fname_in_outputlist = obj['outputFile'].lower()
           if fname_in_outputlist.count("_sim") or fname_in_outputlist.count("_rec") or fname_in_outputlist.count("_dst"):
@@ -101,27 +101,31 @@ class UploadOutputData(ModuleBase):
             elif prodfile.count("_gen"):
               extension = ".stdhep"
             prodfile = prodfile.replace(extension,"")   
+            if olist.has_key(prodfile):
+              ## This has already been treated, no need to come back to it.
+              continue
+
             if (fname_in_outputlist.count("_gen")):# and prodfile.lower().count("_gen_")) :
               genf = obj['outputFile'].split("_gen")[0]
               genf += "_gen"
               if (prodfile.count(genf)):
                 appdict = obj
                 appdict['outputFile'] = prodfile+extension
-                olist.append(appdict)
+                olist[prodfile] = appdict
             if (fname_in_outputlist.count("_sim")):
               simf = obj['outputFile'].split("_sim")[0]
               simf += "_sim"
               if (prodfile.count(simf)):
                 appdict = obj
                 appdict['outputFile'] = prodfile+extension
-                olist.append(appdict)
+                olist[prodfile] = appdict
             if (fname_in_outputlist.count("_rec")):
               recf = obj['outputFile'].split("_rec")[0]
               recf += "_rec"
               if (prodfile.count(recf)):
                 appdict = obj
                 appdict['outputFile'] = prodfile+extension
-                olist.append(appdict)
+                olist[prodfile] = appdict
                 break
             if  (fname_in_outputlist.count("_dst") and prodfile.lower().count("_dst_")):
               dstf = obj['outputFile'].split("_dst")[0]
@@ -129,9 +133,9 @@ class UploadOutputData(ModuleBase):
               if (prodfile.count(dstf)):
                 appdict = obj
                 appdict['outputFile'] = prodfile+extension
-                olist.append(appdict)
+                olist[prodfile] = appdict
                 break
-        self.outputList = olist
+        self.outputList = olist.values()
       else:
         olist = []
         for obj in self.outputList:
