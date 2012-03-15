@@ -39,7 +39,9 @@ class SLICPandoraAnalysis (ModuleBase):
 
     if self.step_commons.has_key("PandoraSettings"):
       self.pandorasettings = self.step_commons["PandoraSettings"]
-
+    if not self.pandorasettings:
+      self.pandorasettings  = "PandoraSettings.xml"
+      
     if self.step_commons.has_key("DetectorXML"):
       self.detectorxml = self.step_commons["DetectorXML"]
 
@@ -153,7 +155,6 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_ERROR('Detector model xml %s was not found, exiting'%self.detectorxml)
     
     if not os.path.exists(os.path.basename(self.pandorasettings)):
-      self.pandorasettings  = "PandoraSettings.xml"
       if os.path.exists("./Settings/%s"%self.pandorasettings):
         self.pandorasettings = "./Settings/%s"%self.pandorasettings
       elif os.path.exists(os.path.join(slicPandoraDir,'Settings',self.pandorasettings)):
