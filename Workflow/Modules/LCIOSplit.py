@@ -35,7 +35,7 @@ class LCIOSplit(ModuleBase):
     self.applicationName = "lcio"
     #
     self.listoutput = {}
-    self.expectedOutputFile = []
+    self.OutputFile = []
     self.log.info("%s initialized" % ( self.__str__() ))
 
   def applicationSpecificInputs(self):
@@ -51,10 +51,10 @@ class LCIOSplit(ModuleBase):
           self.prod_outputdata = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in self.prod_outputdata:
             if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
-              self.expectedOutputFile.append(os.path.basename(obj))
+              self.OutputFile = os.path.basename(obj)
         else:
-          self.expectedOutputFile.append(getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"])))
+          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"]))
           
     if len(self.InputFile)==0 and not len(self.InputData)==0:
       inputfiles = self.InputData.split(";")
@@ -195,9 +195,6 @@ exit $?
       elif line.count("events"):
         numberofeventsdict[fname] = int(line.split()[0])
        
-    for files in [os.path.basename(x) for x in self.expectedOutputFile]:
-      if files not in numberofeventsdict.keys():
-        self.expectedOutputFile.remove(files)
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for the registerOutputData
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
@@ -213,8 +210,18 @@ exit $?
       
     #Not only the step_commons must be updated  
     if self.workflow_commons.has_key('ProductionOutputData'):
-      self.workflow_commons['ProductionOutputData'] = {}  
-
+      proddata = self.workflow_commons['ProductionOutputData'].split(";")
+      finalproddata = []
+      this_split_data = ''
+      for item in proddata:
+        if not item.count(output_file_base_name):
+          finalproddata.append(item)
+        else:
+          this_split_data = item
+      path = os.path.dirname(this_split_data)
+      for file in numberofeventsdict.keys():
+        finalproddata.append(os.path.join(path,file))
+      self.workflow_commons['ProductionOutputData']= ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
