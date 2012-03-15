@@ -176,11 +176,9 @@ exit $?
     output_file_base_name = ''
     if self.OutputFile:
       output_file_base_name = self.OutputFile.split('.slcio')[0]
-    if self.listoutput:
-      output_file_base_name = self.listoutput['outputFile'].split('.slcio')[0]
+    self.log.info("Will rename all files using '%s' as base."%output_file_base_name)
     numberofeventsdict = {}
     fname = ''
-    producedfiles = []
     for line in logf:
       line = line.rstrip()
       if line.count(baseinputfilename):
@@ -191,10 +189,10 @@ exit $?
         os.rename(line,newfile)
         fname = newfile
         numberofeventsdict[fname] = 0
-        producedfiles.append("fname")
       elif line.count("events"):
         numberofeventsdict[fname] = int(line.split()[0])
-       
+    
+    self.log.verbose("numberofeventsdict dict: %s"%numberofeventsdict)   
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for the registerOutputData
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
