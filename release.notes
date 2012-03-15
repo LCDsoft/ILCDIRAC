@@ -1,3 +1,5 @@
+[v8r2p7]
+* LCIOSplit: bugfix
 [v8r2p6]
 * RegisterOutputData: Need to use the modified number of events when splitting
 
