@@ -2205,6 +2205,9 @@ class SLICPandora(Application):
         if not res['OK']:
           return res  
     
+    if not self.pandoraSettings:
+      return S_ERROR("PandoraSettings not set, you need it")
+    
     #res = self._checkRequiredApp()
     #if not res['OK']:
     #  return res
