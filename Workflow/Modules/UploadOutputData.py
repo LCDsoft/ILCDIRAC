@@ -88,6 +88,7 @@ class UploadOutputData(ModuleBase):
         olist = {}
         for obj in self.outputList:
           fname_in_outputlist = obj['outputFile'].lower()
+          extension = ''
           if fname_in_outputlist.count("_sim") or fname_in_outputlist.count("_rec") or fname_in_outputlist.count("_dst"):
               extension = ".slcio"  
           elif fname_in_outputlist.count("_gen"):
@@ -135,6 +136,7 @@ class UploadOutputData(ModuleBase):
                 appdict['outputFile'] = prodfile+extension
                 olist[prodfile] = appdict
                 break
+        self.log.verbose('olist : %s'%olist)      
         self.outputList = olist.values()
       else:
         olist = []
