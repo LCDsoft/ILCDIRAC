@@ -127,7 +127,7 @@ exit $?
     LD_LIBRARY_PATH,
     PATH,
     runonslcio,
-    self.nbeventsperslice
+    self.nbEventsPerSlice
 )
 
     # Write script to file
