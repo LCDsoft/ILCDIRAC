@@ -29,7 +29,7 @@ class LCIOSplit(ModuleBase):
     self.log         = gLogger.getSubLogger( "LCIOSplit" )
     self.result      = S_ERROR()
     self.nbEventsPerSlice = 0
-    self.InputFile = ''
+    self.InputFile = []
     # Step parameters
     self.prod_outputdata = []
     self.applicationName = "lcio"
