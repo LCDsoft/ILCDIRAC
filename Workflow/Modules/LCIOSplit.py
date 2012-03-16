@@ -57,11 +57,10 @@ class LCIOSplit(ModuleBase):
                                               int(self.workflow_commons["JOB_ID"]))
           
     if len(self.InputFile)==0 and not len(self.InputData)==0:
-      inputfiles = self.InputData.split(";")
+      inputfiles = self.InputData.split(";") #TODO Will need to change This 
       for files in inputfiles:
         if files.lower().find(".slcio")>-1:
-          self.InputFile += files+";"
-      self.InputFile = self.InputFile.rstrip(";")
+          self.InputFile.append(files)
       
     if self.step_commons.has_key('listoutput'):
       self.listoutput = self.step_commons['listoutput'][0]
@@ -86,9 +85,8 @@ class LCIOSplit(ModuleBase):
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
-    if self.InputFile:
-      inputfilelist = self.InputFile.split(";")
-      res = resolveIFpaths(inputfilelist)
+    if len(self.InputFile):
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.setApplicationStatus('LCSIM: missing input slcio file')
         return S_ERROR('Missing slcio file!')
