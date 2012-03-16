@@ -2225,7 +2225,7 @@ class SLICPandora(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("pandorasettings",   "", "string", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("pandorasettings",   "", "string", "", "", False, False, "Pandora Settings"))
     md1.addParameter(Parameter("detectorxml",       "", "string", "", "", False, False, "Detecor model for simulation"))
     md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, "From how SlicPandora start to read the input file"))
     md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
@@ -2467,6 +2467,9 @@ class SLCIOSplit(Application):
       self.datatype = self._job.datatype
     if hasattr(self._job, "detector"):
       self.detectortype = self._job.detector
+    
+    #This is needed for metadata registration
+    self.nbevts = self.numberofeventsperfile
       
     if not self.outputFile and self._jobtype =='User' :
       self._log.info('No output file name specified.')
