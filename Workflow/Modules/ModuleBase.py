@@ -18,7 +18,7 @@ from DIRAC.Core.Utilities.Adler import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport import FileReport
 from DIRAC.Core.Utilities.File import makeGuid
 import DIRAC
-import os,string,sys,re
+import os,string,sys,re, types
 
 class ModuleBase(object):
 
@@ -38,12 +38,12 @@ class ModuleBase(object):
     self.applicationLog = ''
     self.applicationVersion=''
     self.applicationName = ''
-    self.InputData = ''
+    self.InputData = [] #Will have to become empty list
     self.SteeringFile = ''
     self.energy = 0
     self.NumberOfEvents = 0
     self.result = S_ERROR()
-    self.InputFile = ''
+    self.InputFile = []
     self.ignoremissingInput = False
     self.OutputFile = ''
     self.jobType = ''
@@ -338,19 +338,25 @@ class ModuleBase(object):
       self.workflow_commons['NbOfEvents'] = self.NumberOfEvents
 
     if self.step_commons.has_key('InputFile'):
-      self.InputFile = self.step_commons['InputFile']
+      inputf = self.step_commons['InputFile']
+      if not type(inputf) == types.ListType:
+        inputf = inputf.split(";")
+      self.InputFile = inputf
     
     if self.step_commons.has_key('ForgetInput'):
       self.ignoremissingInput = self.step_commons['ForgetInput']
             
     if self.workflow_commons.has_key('InputData'):
-      self.InputData = self.workflow_commons['InputData']
+      inputdata = self.workflow_commons['InputData']
+      if not type(inputdata) == types.ListType:
+        inputdata = inputdata.split(";")
+      self.InputData = inputdata
       
     if self.workflow_commons.has_key('ParametricInputData'):
-      self.InputData += ";"+self.workflow_commons['ParametricInputData']
-    self.InputData = self.InputData.rstrip(";")
-    if self.InputData==";":
-      self.InputData = ''
+      paramdata = self.workflow_commons['ParametricInputData']
+      if not type(paramdata) == types.ListType:
+        paramdata = paramdata.split(";")
+      self.InputData += paramdata
 
     if not self.OutputFile:
       #this is to keep compatibility with old interface, where step param is with o  
