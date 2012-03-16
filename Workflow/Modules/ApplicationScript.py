@@ -10,7 +10,7 @@ Module used to run any application provided by the user. Is used when a specific
 '''
 __RCSID__ = "$Id: $"
 
-import os,sys,re,string
+import os, re, string, types
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
@@ -28,6 +28,8 @@ class ApplicationScript(ModuleBase):
   def applicationSpecificInputs(self):
     if self.workflow_commons.has_key('ParametricParameters'):
       self.arguments = self.workflow_commons['ParametricParameters']
+      if type(self.arguments) == types.ListType:
+        self.arguments = " ".join(self.arguments)
     return S_OK()
 
   def execute(self):
@@ -50,7 +52,7 @@ class ApplicationScript(ModuleBase):
     if re.search('.py$',self.script):
       Cmd.append('python')
       Cmd.append(os.path.basename(self.script))
-      Cmd.append(self.arguments)
+      Cmd.append(self.arguments) 
     else:
       Cmd.append("./"+os.path.basename(self.script))
       Cmd.append(self.arguments)
