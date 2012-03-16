@@ -57,8 +57,7 @@ class LCIOSplit(ModuleBase):
                                               int(self.workflow_commons["JOB_ID"]))
           
     if len(self.InputFile)==0 and not len(self.InputData)==0:
-      inputfiles = self.InputData.split(";") #TODO Will need to change This 
-      for files in inputfiles:
+      for files in self.InputData:
         if files.lower().find(".slcio")>-1:
           self.InputFile.append(files)
       

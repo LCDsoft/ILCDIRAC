@@ -11,7 +11,7 @@ ILCDIRAC.Workflow.Modules.LCSIMAnalysis Called by Job Agent.
 
 __RCSID__ = "$Id: $"
 
-import os, sys, re, shutil
+import os, shutil, types
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import getSoftwareFolder
@@ -37,7 +37,7 @@ class LCSIMAnalysis(ModuleBase):
     self.result = S_ERROR()
     self.sourcedir = ''
     self.SteeringFile = ''
-    self.InputFile = ''
+    self.InputFile = []
     self.outputREC = ""
     self.outputDST = ""
     self.aliasproperties = ''
@@ -64,7 +64,11 @@ class LCSIMAnalysis(ModuleBase):
       self.outputDST = self.step_commons['outputDST']
       
     if self.step_commons.has_key("inputSlcio"):
-      self.InputFile = self.step_commons["inputSlcio"]
+      inputf = self.step_commons["inputSlcio"]
+      if not type(inputf)==types.ListType:
+        inputf = inputf.split(";")
+      self.InputFile = inputf
+      
       
     if self.step_commons.has_key('ExtraParams'):
       self.extraparams = self.step_commons['ExtraParams']    
@@ -94,25 +98,23 @@ class LCSIMAnalysis(ModuleBase):
             elif obj.lower().count("_dst_"):
               self.outputDST = os.path.basename(obj)
             elif obj.lower().count("_sim_"):
-              self.InputFile = os.path.basename(obj)
+              self.InputFile = [os.path.basename(obj)]
         else:
           self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
           self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
           if self.workflow_commons.has_key("SLICOutput"):
-            self.InputFile = getProdFilename(self.workflow_commons["SLICOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))
+            self.InputFile = [getProdFilename(self.workflow_commons["SLICOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"]))]
 
     if self.step_commons.has_key("aliasproperties"):
       self.aliasproperties = self.step_commons["aliasproperties"]
 
-    if len(self.InputFile)==0 and not len(self.InputData)==0:
-      inputfiles = self.InputData.split(";")
-      for files in inputfiles:
+    if not len(self.InputFile) and len(self.InputData):
+      for files in self.InputData:
         if files.lower().find(".slcio")>-1:
-          self.InputFile += files+";"
-      self.InputFile = self.InputFile.rstrip(";")      
+          self.InputFile.append(files)
     return S_OK('Parameters resolved')
 
   def execute(self):
@@ -154,9 +156,8 @@ class LCSIMAnalysis(ModuleBase):
     new_ld_lib_path= GetNewLDLibs(self.systemConfig,"lcsim",self.applicationVersion)
 
     runonslcio = []
-    if self.InputFile:
-      inputfilelist = self.InputFile.split(";")
-      res = resolveIFpaths(inputfilelist)
+    if len(self.InputFile):
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.setApplicationStatus('LCSIM: missing input slcio file')
         return S_ERROR('Missing slcio file!')
