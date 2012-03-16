@@ -118,9 +118,7 @@ class UploadOutputData(ModuleBase):
               simf += "_sim"
               if (prodfile.count(simf)):
                 appdict.update(obj)
-                self.log.verbose('appdict0 %s'%appdict)
                 appdict['outputFile'] = prodfile+extension
-                self.log.verbose('appdict1 %s'%appdict)
                 olist[prodfile] = appdict
                 self.log.verbose('olist %s'%olist)
             if (fname_in_outputlist.count("_rec")):
@@ -139,7 +137,6 @@ class UploadOutputData(ModuleBase):
                 appdict['outputFile'] = prodfile+extension
                 olist[prodfile] = appdict
                 break
-        self.log.verbose('olist : %s'%olist)      
         self.outputList = olist.values()
       else:
         olist = []
