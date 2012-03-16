@@ -338,6 +338,7 @@ class ModuleBase(object):
       self.workflow_commons['NbOfEvents'] = self.NumberOfEvents
 
     if self.step_commons.has_key('InputFile'):
+      ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string 
       inputf = self.step_commons['InputFile']
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
