@@ -56,7 +56,7 @@ class LCIOSplit(ModuleBase):
           self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
           
-    if len(self.InputFile)==0 and not len(self.InputData)==0:
+    if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".slcio")>-1:
           self.InputFile.append(files)
