@@ -4,12 +4,13 @@ Created on Nov 2, 2010
 @author: sposs
 '''
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-import string,os
+import types, os
 
 def getNumberOfevents(inputfile):
   """ Find from the FileCatalog the number of events in a file
   """
-  files = inputfile.split(";")
+
+  files = inputfile
   flist = {}
   for file in files:
     if not file:
