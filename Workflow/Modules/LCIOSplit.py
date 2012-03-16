@@ -87,7 +87,7 @@ class LCIOSplit(ModuleBase):
     if len(self.InputFile):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
-        self.setApplicationStatus('LCSIM: missing input slcio file')
+        self.setApplicationStatus('LCIOSplit: missing input slcio file')
         return S_ERROR('Missing slcio file!')
       runonslcio = res['Value'][0]
     else:
