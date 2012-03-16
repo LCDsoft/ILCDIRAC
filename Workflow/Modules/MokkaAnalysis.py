@@ -28,7 +28,7 @@ from DIRAC                                                import S_OK, S_ERROR, 
 
 import DIRAC
 
-import  os, shutil
+import  os, shutil, types
 
 #random string generator 
 import string
@@ -46,7 +46,7 @@ class MokkaAnalysis(ModuleBase):
         self.STEP_NUMBER = ''
         self.log = gLogger.getSubLogger( "MokkaAnalysis" )
         self.SteeringFile = ''
-        self.InputFile = ''
+        self.InputFile = []
         self.macFile = ''
         self.run_number = 0
         self.firstEventNumber = 1
@@ -75,7 +75,11 @@ class MokkaAnalysis(ModuleBase):
         self.SteeringFile = self.step_commons['steeringFile']
 
       if self.step_commons.has_key('stdhepFile'):
-        self.InputFile = self.step_commons['stdhepFile']
+        inputf = self.step_commons["stdhepFile"]
+        if not type(inputf)==types.ListType:
+          inputf = inputf.split(";")
+        self.InputFile = inputf
+        
       
       if self.step_commons.has_key('macFile'):
         self.macFile = self.step_commons['macFile']
@@ -110,15 +114,15 @@ class MokkaAnalysis(ModuleBase):
               if obj.lower().count("_sim_"):
                 self.OutputFile = os.path.basename(obj)
               elif obj.lower().count("_gen_"):
-                self.InputFile = os.path.basename(obj)
+                self.InputFile = [os.path.basename(obj)]
           else:
             self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
             #if self.workflow_commons.has_key("WhizardOutput"):
             #  self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
             #                                    int(self.workflow_commons["JOB_ID"]))
-            self.InputFile = getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-                                                int(self.workflow_commons["JOB_ID"]))
+            self.InputFile = [getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                                int(self.workflow_commons["JOB_ID"]))]
       
       if len(self.InputData):
         if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -132,11 +136,10 @@ class MokkaAnalysis(ModuleBase):
           if   res.has_key('EvtType') and not self.processID:
             self.processID = res['EvtType']
 
-      if len(self.InputFile)==0 and not len(self.InputData)==0:
-        inputfiles = self.InputData.split(";")
-        for files in inputfiles:
+      if not len(self.InputFile) and len(self.InputData):
+        for files in self.InputData:
           if files.lower().find(".stdhep")>-1 or files.lower().find(".hepevt")>-1:
-            self.InputFile = files
+            self.InputFile.append(files)
             break
         
       return S_OK('Parameters resolved')
@@ -254,12 +257,12 @@ class MokkaAnalysis(ModuleBase):
       #first, I need to take the stdhep file, find its path (possible LFN)      
       if len(self.InputFile)>0:
         #self.InputFile = os.path.basename(self.InputFile)
-        res = resolveIFpaths([self.InputFile])
+        res = resolveIFpaths(self.InputFile)
         if not res['OK']:
           self.log.error("Generator file not found")
           result = sqlwrapper.mysqlCleanUp()
           return res
-        self.InputFile = res['Value'][0]
+        self.InputFile = res['Value']
       if len(self.macFile)>0:
         self.macFile = os.path.basename(self.macFile)
       ##idem for steering file
@@ -281,7 +284,7 @@ class MokkaAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         result = sqlwrapper.mysqlCleanUp()
         return S_ERROR("Could not find steering file")
-      steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.InputFile,
+      steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.InputFile[0],
                                     self.macFile,self.NumberOfEvents,self.startFrom,self.RandomSeed,
                                     self.mcRunNumber,
                                     path_to_particle_tbl,

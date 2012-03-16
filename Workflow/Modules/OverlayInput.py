@@ -33,7 +33,6 @@ class OverlayInput (ModuleBase):
     self.log = gLogger.getSubLogger( "OverlayInput" )
     self.applicationName = 'OverlayInput'
     self.curdir = os.getcwd()
-
     self.applicationLog = ''
     self.printoutflag = ''
     self.prodid = 0

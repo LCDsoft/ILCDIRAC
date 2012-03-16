@@ -14,7 +14,7 @@ from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareTomatoSalad,GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from DIRAC                                                 import S_OK,S_ERROR,gLogger,gConfig
-import os
+import os, types
 
 class TomatoAnalysis(MarlinAnalysis):
   def __init__(self):
@@ -22,20 +22,21 @@ class TomatoAnalysis(MarlinAnalysis):
     self.applicationName = "Tomato"
     self.log = gLogger.getSubLogger( "TomatoAnalysis" )
     self.collection = ''
-    self.InputFile = ''
+    self.InputFile = []
     
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Collections'):
       self.collection = self.step_commons['Collections']
     
     if self.step_commons.has_key('InputSLCIO'):
-      self.InputFile =   self.step_commons['InputSLCIO']
+      inputf = self.step_commons["InputSLCIO"]
+      if not type(inputf)==types.ListType:
+        inputf = inputf.split(";")
+      self.InputFile = inputf
     
-      inputfiles = self.InputData.split(";")
-      for files in inputfiles:
+      for files in self.InputData:
         if files.lower().find(".slcio")>-1:
-          self.InputFile += files+";"
-      self.InputFile = self.InputFile.rstrip(";")
+          self.InputFile.append(files)
     return S_OK()  
 
   def execute(self):

@@ -27,7 +27,7 @@ class PostGenSelection(ModuleBase):
     self.enable = True 
     self.log = gLogger.getSubLogger( "PostGenSelection" )
     self.applicationName = 'PostGenSel'
-    self.InputFile = ""
+    self.InputFile = []
     self.NbEvtsKept = 0
       
   def applicationSpecificInputs(self):
@@ -46,8 +46,8 @@ class PostGenSelection(ModuleBase):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_gen_"):
-              self.InputFile = os.path.basename(obj)
-              self.OutputFile = self.InputFile
+              self.InputFile = [os.path.basename(obj)]
+              self.OutputFile = self.InputFile[0]
         else:
           if self.workflow_commons.has_key("WhizardOutput"):
             self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
@@ -61,11 +61,10 @@ class PostGenSelection(ModuleBase):
           if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
             self.workflow_commons["Luminosity"]=res["lumi"]
 
-      if len(self.InputFile)==0 and not len(self.InputData)==0:
-        inputfiles = self.InputData.split(";")
-        for files in inputfiles:
+      if not len(self.InputFile) and len(self.InputData):
+        for files in self.InputData:
           if files.lower().count(".stdhep"):
-            self.InputFile = files
+            self.InputFile.append(files)
             break
     
     return S_OK('Parameters resolved')
@@ -93,7 +92,7 @@ class PostGenSelection(ModuleBase):
       return res
     
     mySoftDir = res['Value']
-    self.InputFile= os.path.basename(self.InputFile)
+    self.InputFile= os.path.basename(self.InputFile[0])
     base_file = self.InputFile.replace(".stdhep","")
     
     scriptName = 'PostGenSel_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)

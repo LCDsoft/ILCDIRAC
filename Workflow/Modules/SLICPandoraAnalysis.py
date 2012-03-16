@@ -9,7 +9,7 @@ Created on Oct 25, 2010
 
 __RCSID__ = "$Id: $"
 
-import os, urllib, zipfile, shutil, glob
+import os, urllib, zipfile, shutil, glob, types
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
@@ -30,7 +30,7 @@ class SLICPandoraAnalysis (ModuleBase):
     self.applicationName = 'SLICPandora'
     self.pandorasettings = ""
     self.detectorxml = ""
-    self.InputFile = ""
+    self.InputFile = []
     self.NumberOfEvents = -1
     self.startFrom = 0
     self.eventstring = ['>>>>>> EVENT']
@@ -48,7 +48,10 @@ class SLICPandoraAnalysis (ModuleBase):
       self.detectorxml = self.step_commons["DetectorXML"]
 
     if self.step_commons.has_key("inputSlcio"):
-      self.InputFile = self.step_commons["inputSlcio"]         
+      inputf = self.step_commons["inputSlcio"]
+      if not type(inputf) == types.ListType:
+        inputf = inputf.split(";")
+      self.InputFile = inputf
 
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -64,12 +67,10 @@ class SLICPandoraAnalysis (ModuleBase):
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
       
-    if len(self.InputFile)==0 and not len(self.InputData)==0:
-      inputfiles = self.InputData.split(";")
-      for files in inputfiles:
+    if not len(self.InputFile)==0 and len(self.InputData):
+      for files in self.InputData:
         if files.lower().find(".slcio")>-1:
-          self.InputFile += files+";"
-      self.InputFile = self.InputFile.rstrip(";")
+          self.InputFile.append(files)
            
     return S_OK('Parameters resolved')
   
@@ -115,8 +116,7 @@ class SLICPandoraAnalysis (ModuleBase):
 
     new_path = GetNewPATH(self.systemConfig,"slicpandora",self.applicationVersion)
 
-    inputfilelist = self.InputFile.split(";")    
-    res = resolveIFpaths(inputfilelist)
+    res = resolveIFpaths(self.InputFile)
     if not res['OK']:
       self.setApplicationStatus('SLICPandora: missing slcio file')
       return S_ERROR('Missing slcio file!')

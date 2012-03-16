@@ -14,7 +14,7 @@ Define the Marlin analysis part of the workflow
 
 __RCSID__ = "$Id$"
 
-import os,string, shutil, glob
+import os,string, shutil, glob, types
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
@@ -41,7 +41,7 @@ class MarlinAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
-    self.InputFile = ''
+    self.InputFile = []
     self.SteeringFile =''
     self.inputGEAR =''
     self.outputREC = ''
@@ -59,11 +59,16 @@ class MarlinAnalysis(ModuleBase):
     """
     ##TODO: Need to keep for old interface. Move to ModuleBase
     if self.step_commons.has_key('inputSlcio'):
-      self.InputFile =self.step_commons['inputSlcio']
+      inputf = self.step_commons["inputSlcio"]
+      if not type(inputf)==types.ListType:
+        inputf = inputf.split(";")
+      self.InputFile = inputf
       
     if self.workflow_commons.has_key('ParametricInputSandbox'):
-      self.InputFile += ";" + self.workflow_commons['ParametricInputSandbox']
-    self.InputFile = self.InputFile.rstrip(";")
+      paramsb = self.workflow_commons['ParametricInputSandbox']
+      if not type(paramsb) == types.ListType:
+        paramsb = paramsb.split(";")
+      self.InputFile += paramsb
       
     if self.step_commons.has_key('inputXML'):
       self.SteeringFile=self.step_commons['inputXML']
@@ -98,7 +103,7 @@ class MarlinAnalysis(ModuleBase):
             elif obj.lower().count("_dst_"):
               self.outputDST = os.path.basename(obj)
             elif obj.lower().count("_sim_"):
-              self.InputFile = os.path.basename(obj)
+              self.InputFile = [os.path.basename(obj)]
         else:
           self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
@@ -107,8 +112,8 @@ class MarlinAnalysis(ModuleBase):
           #if self.workflow_commons.has_key("MokkaOutput"):
           #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
-          self.InputFile = getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))
+          self.InputFile = [getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+                                              int(self.workflow_commons["JOB_ID"]))]
           
     if len(self.InputData):
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -120,11 +125,9 @@ class MarlinAnalysis(ModuleBase):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
     if len(self.InputFile)==0 and not len(self.InputData)==0:
-      inputfiles = self.InputData.split(";")
-      for files in inputfiles:
+      for files in self.InputData:
         if files.lower().find(".slcio")>-1:
-          self.InputFile += files+";"
-      self.InputFile = self.InputFile.rstrip(";")
+          self.InputFile.append(files)
             
     return S_OK('Parameters resolved')
       
@@ -369,8 +372,7 @@ class MarlinAnalysis(ModuleBase):
   def GetInputFiles(self):
     if self.ignoremissingInput:
       return S_OK("")
-    inputfilelist = self.InputFile.split(";")
-    res = resolveIFpaths(inputfilelist)
+    res = resolveIFpaths(self.InputFile)
     if not res['OK']:
       self.setApplicationStatus('%s: missing slcio file'%self.applicationName)
       return S_ERROR('Missing slcio file!')
