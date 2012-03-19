@@ -513,8 +513,11 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=Non
     filesinlcsim.clear()
   else:
     baseelem = tree.find("lcsim")
-    filesinlcsim = Element("inputFiles")
-    baseelem.append(filesinlcsim)
+    if baseelem:
+      filesinlcsim = Element("inputFiles")
+      baseelem.append(filesinlcsim)
+    else:
+      return S_ERROR("Invalid lcsim file structure")
   #set = Element("fileSet")
   for slcio in inputslcio:
     newfile = Element('file')
