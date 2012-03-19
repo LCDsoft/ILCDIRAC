@@ -59,7 +59,10 @@ def install(app,config,area):
 
   if os.path.exists(folder_name):
     # and not appName =="slic":
-    DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
+    if not overwrite:
+      DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
+    else:
+      DIRAC.gLogger.info("Overwriting %s found in %s"%(folder_name,area))  
     appli_exists = True
     if overwrite:
       appli_exists = False
