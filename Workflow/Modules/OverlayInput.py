@@ -97,7 +97,7 @@ class OverlayInput (ModuleBase):
     #if self.workflow_commons.has_key('Site'):
     #  self.site = self.workflow_commons['Site']
 
-    if len(self.InputData) > 2 :
+    if len(self.InputData):
       res = getNumberOfevents(self.InputData)
       if res.has_key("nbevts"):
         self.nbsigeventsperfile = res["nbevts"]
