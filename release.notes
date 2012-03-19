@@ -1,3 +1,7 @@
+[v8r2p20]
+* Workflow
+BUGFIX: if the parameters are not filed, return empty list
+
 [v8r2p19]
 * Core 
 Catch potential errors in xml treatement
