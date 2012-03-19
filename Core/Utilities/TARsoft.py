@@ -99,21 +99,20 @@ def install(app,config,area):
 
   if not appli_exists:
     if overwrite:
-      dirname = app_tar_base.replace(".tgz","").replace(".tar.gz","")
-      DIRAC.gLogger.info("First we delete existing version %s"%dirname)
-      if os.path.exists(dirname):
-        if os.path.isdir(dirname):
+      DIRAC.gLogger.info("First we delete existing version %s"%folder_name)
+      if os.path.exists(folder_name):
+        if os.path.isdir(folder_name):
           try:
-            shutil.rmtree(dirname)
+            shutil.rmtree(folder_name)
           except Exception,x:
-            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(dirname,Exception,str(x)))
+            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(folder_name,Exception,str(x)))
         else:
           try:
-            os.remove(dirname)
+            os.remove(folder_name)
           except Exception,x:
-            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(dirname,Exception,str(x)))
-      if os.path.exists(dirname):
-        DIRAC.gLogger.error("Oh Oh, something was not right, the directory %s is still here"%dirname)      
+            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(folder_name,Exception,str(x)))
+      if os.path.exists(folder_name):
+        DIRAC.gLogger.error("Oh Oh, something was not right, the directory %s is still here"%folder_name)      
     if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
       app_tar_to_untar = tarfile.open(app_tar_base)
       try:
