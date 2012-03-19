@@ -38,6 +38,7 @@ class LCSIMAnalysis(ModuleBase):
     self.sourcedir = ''
     self.SteeringFile = ''
     self.InputFile = []
+    self.InputData = []
     self.outputREC = ""
     self.outputDST = ""
     self.aliasproperties = ''
@@ -115,6 +116,7 @@ class LCSIMAnalysis(ModuleBase):
       for files in self.InputData:
         if files.lower().find(".slcio")>-1:
           self.InputFile.append(files)
+    self.log.info("Input files to treat %s"%self.InputFile)      
     return S_OK('Parameters resolved')
 
   def execute(self):
