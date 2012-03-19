@@ -124,7 +124,7 @@ class MarlinAnalysis(ModuleBase):
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
         
-    if len(self.InputFile)==0 and not len(self.InputData)==0:
+    if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".slcio")>-1:
           self.InputFile.append(files)
