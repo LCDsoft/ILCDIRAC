@@ -67,7 +67,7 @@ class SLICPandoraAnalysis (ModuleBase):
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
       
-    if not len(self.InputFile)==0 and len(self.InputData):
+    if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".slcio")>-1:
           self.InputFile.append(files)
