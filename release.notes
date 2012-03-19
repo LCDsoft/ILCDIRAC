@@ -1,3 +1,10 @@
+[v8r2p17]
+* Core
+InputFilesUtilities takes into account the fact that the InputFile and InputData are now Lists
+TarSoft: Remove existing directory when overwrite
+* Workflow
+InputFile and InputData are now cast to lists
+
 [v8r2p16]
 * UploadOutputData
 Bug Fix
