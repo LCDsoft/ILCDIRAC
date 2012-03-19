@@ -11,7 +11,7 @@ import DIRAC
 from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-import os, urllib, tarfile, subprocess
+import os, urllib, tarfile, subprocess, shutil
 
 def TARinstall(app,config,area):
   """ For the specified app, install all dependencies
@@ -98,6 +98,20 @@ def install(app,config,area):
     return DIRAC.S_ERROR('Failed to download software')
 
   if not appli_exists:
+    if overwrite:
+      DIRAC.gLogger.info("First we delete existing version")
+      dirname = app_tar_base.replace(".tgz","").replace(".tar.gz","")
+      if os.path.exists(dirname):
+        if os.path.isdir(dirname):
+          try:
+            shutil.rmtree(dirname)
+          except Exception,x:
+            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(dirname,Exception,str(x)))
+        else:
+          try:
+            os.remove(dirname)
+          except Exception,x:
+            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(dirname,Exception,str(x)))
     if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
       app_tar_to_untar = tarfile.open(app_tar_base)
       try:
