@@ -507,12 +507,14 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=Non
   except Exception,x:
     print "Found Exception %s %s"%(Exception,x)
     return S_ERROR("Found Exception %s %s"%(Exception,x))
+  if not len(inputslcio):
+    return S_ERROR("Empty input file list")
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
-  if filesinlcsim and len(inputslcio):
+  if filesinlcsim:
     filesinlcsim.clear()
   else:
-    baseelem = tree.find("lcsim")
+    baseelem = tree.getroot()
     if baseelem:
       filesinlcsim = Element("inputFiles")
       baseelem.append(filesinlcsim)
