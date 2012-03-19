@@ -103,7 +103,7 @@ class OverlayInput (ModuleBase):
         self.nbsigeventsperfile = res["nbevts"]
       else:
         return S_ERROR("Could not find number of signal events per input file")
-      self.nbinputsigfile = len(self.InputData.split(";"))
+      self.nbinputsigfile = len(self.InputData)
     if not self.NbSigEvtsPerJob and not self.nbsigeventsperfile:
       return S_ERROR("Could not determine the number of signal events per input file")
     return S_OK("Input variables resolved")
