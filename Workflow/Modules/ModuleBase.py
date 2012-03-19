@@ -341,7 +341,10 @@ class ModuleBase(object):
       ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string 
       inputf = self.step_commons['InputFile']
       if not type(inputf) == types.ListType:
-        inputf = inputf.split(";")
+        if len(inputf):
+          inputf = inputf.split(";")
+        else:
+          inputf = []
       self.InputFile = inputf
     
     if self.step_commons.has_key('ForgetInput'):
@@ -350,13 +353,19 @@ class ModuleBase(object):
     if self.workflow_commons.has_key('InputData'):
       inputdata = self.workflow_commons['InputData']
       if not type(inputdata) == types.ListType:
-        inputdata = inputdata.split(";")
+        if len(inputdata):
+          inputdata = inputdata.split(";")
+        else:
+          inputdata = [] 
       self.InputData = inputdata
       
     if self.workflow_commons.has_key('ParametricInputData'):
       paramdata = self.workflow_commons['ParametricInputData']
       if not type(paramdata) == types.ListType:
-        paramdata = paramdata.split(";")
+        if len(paramdata):
+          paramdata = paramdata.split(";")
+        else:
+          paramdata = []
       self.InputData += paramdata
 
     if not self.OutputFile:
