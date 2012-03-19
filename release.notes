@@ -1,3 +1,9 @@
+[v8r2p19]
+* Core 
+Catch potential errors in xml treatement
+* LCSIMAnalysis
+Print content of InputFile to check what the hell is happening
+
 [v8r2p18]
 * Core
 TarSoft: remove folder_name when overwriting and print message if folder is still there
