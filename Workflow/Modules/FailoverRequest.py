@@ -33,7 +33,6 @@ class FailoverRequest(ModuleBase):
     self.jobReport  = None
     self.fileReport = None
     self.request = None
-    self.inputData = []
 
   #############################################################################
   def applicationSpecificInputs(self):
