@@ -170,9 +170,8 @@ class RegisterOutputData(ModuleBase):
       
       ###Now, set the ancestors
       if self.InputData:
-        inputdata = self.InputData.split(";")
         if self.enable:
-          res = self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
+          res = self.fc.addFileAncestors({files:{'Ancestors':self.InputData}})
           if not res['OK']:
             self.log.error('Registration of Ancestors for %s failed'%files)
             return res
