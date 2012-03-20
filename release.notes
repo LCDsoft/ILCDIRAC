@@ -1,3 +1,7 @@
+[v8r2p23]
+* TarSoft
+BUGFIX: When overwriting, the removal should be done before download.
+
 [v8r2p22]
 * Workflow
 BUGFIX: treatment of inputfiles in SLICPandora as not right.
