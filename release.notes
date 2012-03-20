@@ -1,6 +1,10 @@
-[v8r2p21]
+[v8r2p22]
 * Workflow
 BUGFIX: treatment of inputfiles in SLICPandora as not right.
+
+[v8r2p21]
+* Workflow
+BUGFIX: Ancestor registration was buggy because of list
 
 [v8r2p20]
 * Workflow
