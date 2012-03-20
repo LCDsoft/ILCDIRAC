@@ -67,7 +67,11 @@ class MarlinAnalysis(ModuleBase):
     if self.workflow_commons.has_key('ParametricInputSandbox'):
       paramsb = self.workflow_commons['ParametricInputSandbox']
       if not type(paramsb) == types.ListType:
-        paramsb = paramsb.split(";")
+        if len(paramsb):
+          paramsb = paramsb.split(";")
+        else:
+          paramsb = []
+        
       self.InputFile += paramsb
       
     if self.step_commons.has_key('inputXML'):
