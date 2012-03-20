@@ -1,3 +1,7 @@
+[v8r2p24]
+* MarlinAnalysis:
+Still bug with respect to InoputFile treatment.
+
 [v8r2p23]
 * TarSoft
 BUGFIX: When overwriting, the removal should be done before download.
