@@ -61,7 +61,10 @@ class MarlinAnalysis(ModuleBase):
     if self.step_commons.has_key('inputSlcio'):
       inputf = self.step_commons["inputSlcio"]
       if not type(inputf)==types.ListType:
-        inputf = inputf.split(";")
+        if len(inputf):
+          inputf = inputf.split(";")
+        else:
+          inputf = [] 
       self.InputFile = inputf
       
     if self.workflow_commons.has_key('ParametricInputSandbox'):
