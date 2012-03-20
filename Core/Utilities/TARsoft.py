@@ -62,7 +62,21 @@ def install(app,config,area):
     if not overwrite:
       DIRAC.gLogger.info("Folder or file %s found in %s, skipping install !"%(folder_name,area))
     else:
-      DIRAC.gLogger.info("Overwriting %s found in %s"%(folder_name,area))  
+      DIRAC.gLogger.info("Overwriting %s found in %s"%(folder_name,area))
+      DIRAC.gLogger.info("First we delete existing version %s"%folder_name)
+      if os.path.exists(folder_name):
+        if os.path.isdir(folder_name):
+          try:
+            shutil.rmtree(folder_name)
+          except Exception,x:
+            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(folder_name,Exception,str(x)))
+        else:
+          try:
+            os.remove(folder_name)
+          except Exception,x:
+            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(folder_name,Exception,str(x)))
+      if os.path.exists(folder_name):
+        DIRAC.gLogger.error("Oh Oh, something was not right, the directory %s is still here"%folder_name)  
     appli_exists = True
     if overwrite:
       appli_exists = False
@@ -97,22 +111,7 @@ def install(app,config,area):
     os.chdir(curdir)
     return DIRAC.S_ERROR('Failed to download software')
 
-  if not appli_exists:
-    if overwrite:
-      DIRAC.gLogger.info("First we delete existing version %s"%folder_name)
-      if os.path.exists(folder_name):
-        if os.path.isdir(folder_name):
-          try:
-            shutil.rmtree(folder_name)
-          except Exception,x:
-            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(folder_name,Exception,str(x)))
-        else:
-          try:
-            os.remove(folder_name)
-          except Exception,x:
-            DIRAC.gLogger.error("Failed deleting %s because %s,%s"%(folder_name,Exception,str(x)))
-      if os.path.exists(folder_name):
-        DIRAC.gLogger.error("Oh Oh, something was not right, the directory %s is still here"%folder_name)      
+  if not appli_exists:    
     if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
       app_tar_to_untar = tarfile.open(app_tar_base)
       try:
