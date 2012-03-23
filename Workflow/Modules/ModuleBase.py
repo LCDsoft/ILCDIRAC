@@ -363,10 +363,9 @@ class ModuleBase(object):
       paramdata = self.workflow_commons['ParametricInputData']
       if not type(paramdata) == types.ListType:
         if len(paramdata):
-          paramdata = paramdata.split(";")
+          self.InputData = paramdata.split(";")
         else:
           paramdata = []
-      self.InputData += paramdata
 
     if not self.OutputFile:
       #this is to keep compatibility with old interface, where step param is with o  
