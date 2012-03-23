@@ -175,17 +175,12 @@ exit $?
       return S_ERROR("Failed reading the log file")
 
     logf = file(self.applicationLog,"r")
-    baseinputfilename = os.path.basename(runonstdhep).split(".stdhep")[0]
     numberofeventsdict = {}
     fname = ''
     for line in logf:
       line = line.rstrip()
-      if line.count(baseinputfilename):
-        #First, we need to rename those guys
-        current_file = os.path.basename(line).replace(".stdhep","")
-        current_file_extension = current_file.replace(baseinputfilename,"")
-        newfile = prefix+current_file_extension+".stdhep"
-        fname = newfile
+      if line.count(prefix):
+        fname = line.split()[-1]
         numberofeventsdict[fname] = 0
       elif line.count("Record"):
         numberofeventsdict[fname] = int(line.split("=")[1])
