@@ -97,6 +97,8 @@ class StdHepSplit(ModuleBase):
     prefix = ''
     if self.OutputFile:
       prefix = self.OutputFile.split('.stdhep')[0]
+    else:
+      prefix = "this_split"
     self.log.info("Will rename all files using '%s' as base."%prefix)
 
     # Setting up script
