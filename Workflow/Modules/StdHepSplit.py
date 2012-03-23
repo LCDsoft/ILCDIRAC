@@ -110,7 +110,8 @@ class StdHepSplit(ModuleBase):
       return res
     
     mysplitDir = res['Value']
-    LD_LIBRARY_PATH = GetNewLDLibs(self.systemConfig,"stdhepsplit",self.applicationVersion)
+    new_ld_lib = GetNewLDLibs(self.systemConfig,"stdhepsplit",self.applicationVersion)
+    LD_LIBRARY_PATH = os.path.join(mysplitDir,"lib")+":"+new_ld_lib
 
     
 
