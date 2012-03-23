@@ -13,10 +13,12 @@ from DIRAC                                                import S_OK, S_ERROR, 
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 
-import DIRAC
+from DIRAC import gConfig, S_OK, S_ERROR
+
 import os
-import sys
 
 class StdHepSplit(ModuleBase):
   """ StdHep split module
@@ -32,7 +34,6 @@ class StdHepSplit(ModuleBase):
     self.InputFile = []
     # Step parameters
     self.prod_outputdata = []
-    self.applicationName = "lcio"
     #
     self.listoutput = {}
     self.OutputFile = []
@@ -86,7 +87,7 @@ class StdHepSplit(ModuleBase):
       if not res['OK']:
         self.setApplicationStatus('StdHepSplit: missing input stdhep file')
         return S_ERROR('Missing stdhep file!')
-      runonslcio = res['Value'][0]
+      runonstdhep = res['Value'][0]
     else:
       return S_OK("No files found to process")
     # removeLibc
@@ -99,9 +100,16 @@ class StdHepSplit(ModuleBase):
     self.log.info("Will rename all files using '%s' as base."%prefix)
 
     # Setting up script
+    splitDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"stdhepsplit",self.applicationVersion),'')
+    splitDir = splitDir.replace(".tgz","").replace(".tar.gz","")
+    res = getSoftwareFolder(splitDir)
+    if not res['OK']:
+      self.setApplicationStatus('StdHepSplit: Could not find neither local area not shared area install')
+      return res
+    
+    mysplitDir = res['Value']
+    LD_LIBRARY_PATH = GetNewLDLibs(self.systemConfig,"stdhepsplit",self.applicationVersion)
 
-    PATH = ''
-    LD_LIBRARY_PATH = ''
     
 
     scriptContent = """
@@ -112,16 +120,15 @@ class StdHepSplit(ModuleBase):
 ################################################################################
 
 declare -x LD_LIBRARY_PATH=%s
-declare -x PATH=%s
 
-hepsplit --infile %s --nw_per_file %s --outpref %s
+%s/hepsplit --infile %s --nw_per_file %s --outpref %s
 
 exit $?
 
 """ %(
     LD_LIBRARY_PATH,
-    PATH,
-    runonslcio,
+    mysplitDir,
+    runonstdhep,
     self.nbEventsPerSlice,
     prefix
 )
@@ -168,20 +175,20 @@ exit $?
       return S_ERROR("Failed reading the log file")
 
     logf = file(self.applicationLog,"r")
-    baseinputfilename = os.path.basename(runonslcio).split(".slcio")[0]
+    baseinputfilename = os.path.basename(runonstdhep).split(".stdhep")[0]
     numberofeventsdict = {}
     fname = ''
     for line in logf:
       line = line.rstrip()
       if line.count(baseinputfilename):
         #First, we need to rename those guys
-        current_file = os.path.basename(line).replace(".slcio","")
+        current_file = os.path.basename(line).replace(".stdhep","")
         current_file_extension = current_file.replace(baseinputfilename,"")
         newfile = prefix+current_file_extension+".stdhep"
         fname = newfile
         numberofeventsdict[fname] = 0
-      elif line.count("events"):
-        numberofeventsdict[fname] = int(line.split()[0])
+      elif line.count("Record"):
+        numberofeventsdict[fname] = int(line.split("=")[1])
     
     self.log.verbose("numberofeventsdict dict: %s"%numberofeventsdict)   
 
@@ -203,7 +210,7 @@ exit $?
       finalproddata = []
       this_split_data = ''
       for item in proddata:
-        if not item.count(output_file_base_name):
+        if not item.count(prefix):
           finalproddata.append(item)
         else:
           this_split_data = item
