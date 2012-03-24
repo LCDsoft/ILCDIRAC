@@ -203,7 +203,9 @@ class SLICAnalysis(ModuleBase):
           self.SteeringFile = os.path.join(steeringfiledirname,self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
         return S_ERROR("Could not find mac file")    
-        
+    ##Same as for mokka: using ParticleGun does not imply InputFile
+    if not len(self.InputFile):
+      self.InputFile = ['']    
     macok = PrepareMacFile(self.SteeringFile,slicmac,self.InputFile[0],self.NumberOfEvents,self.startFrom,self.detectorModel,self.randomseed,self.OutputFile,self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
