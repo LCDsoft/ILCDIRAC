@@ -284,6 +284,10 @@ class MokkaAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         result = sqlwrapper.mysqlCleanUp()
         return S_ERROR("Could not find steering file")
+    
+      ### The following is because if someone uses particle gun, there is no InputFile
+      if not len(self.InputFile):
+          self.InputFile = ['']
       steerok = PrepareSteeringFile(self.SteeringFile,mokkasteer,self.detectorModel,self.InputFile[0],
                                     self.macFile,self.NumberOfEvents,self.startFrom,self.RandomSeed,
                                     self.mcRunNumber,
