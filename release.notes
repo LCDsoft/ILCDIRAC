@@ -1,3 +1,7 @@
+[v8r2p25]
+* Worklow
+Bug fix in MokkaAnalysis and SLICAnalysis: when using Particle Gun, there is no InputFile
+
 [v8r2p24]
 * MarlinAnalysis:
 Still bug with respect to InoputFile treatment.
