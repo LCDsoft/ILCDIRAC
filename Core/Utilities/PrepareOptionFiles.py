@@ -476,7 +476,7 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,rand
   output.close()
   return S_OK(True)
 
-def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=None,cachedir = None, 
+def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inputslcio,jars=None,cachedir = None, 
                      outputFile=None,outputRECFile=None,outputDSTFile=None,debug=False):
   """Writes out a lcsim file for LCSIM
   
@@ -486,6 +486,8 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=Non
   @type inputlcsim: string
   @param outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in L{LCSIMAnalysis}
   @type outputlcsim: string
+  @param numberofevents: Number of events to process
+  @type numberofevents: int 
   @param inputslcio: list of slcio files on which LCSIM should run
   @type inputslcio: list of string
   @param jars: list of jar files that should be added in the classpath definition
@@ -540,7 +542,16 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,trackingstrategy,inputslcio,jars=Non
         newjar = Element("jar")
         newjar.text = jar
         classpath.append(newjar)
-        
+  #handle number of events
+  if numberofevents:
+    nbevts = tree.find("numberOfEvents")     
+    if nbevts:
+      nbevts.text = numberofevents
+    else:
+      control = tree.find('control')
+      nbevtselm = Element("numberOfEvents")
+      nbevtselm.text = numberofevents
+      control.append(nbevtselm)
   #handle verbosity
   if debug:
     debugline = tree.find("verbose")
