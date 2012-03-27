@@ -1735,8 +1735,6 @@ class Marlin(Application):
     self.appname = 'marlin'    
     self.datatype = 'REC'
     self.detectortype = 'ILD'
-    if not self.nbevts:
-      self.nbevts = -1
      
     
   def setGearFile(self,GearFile):
@@ -1836,9 +1834,6 @@ class Marlin(Application):
     return S_OK()
   
   def _checkConsistency(self):
-
-    if not self.nbevts :
-      self._log.error('Number of events set to 0 !')
         
     if not self.version:
       return S_ERROR('Version not set!')   
