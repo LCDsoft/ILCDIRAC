@@ -44,7 +44,9 @@ class UploadOutputData(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
+    self.log.verbose("Workflow commons:")
     self.log.verbose(self.workflow_commons)
+    self.log.verbose("Step commons:")
     self.log.verbose(self.step_commons)
 
     if self.step_commons.has_key('Enable'):
