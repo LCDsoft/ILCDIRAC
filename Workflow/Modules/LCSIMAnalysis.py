@@ -48,6 +48,7 @@ class LCSIMAnalysis(ModuleBase):
     self.OutputFile = '' #Set in ModuleBase
     self.detectorModel = ''
     self.trackingstrategy = ''
+    self.NumberOfEvents = -1
      
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -78,7 +79,8 @@ class LCSIMAnalysis(ModuleBase):
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
         res = getNumberOfevents(self.InputData)
         if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
-          self.workflow_commons["NbOfEvents"]=res["nbevts"]
+          self.workflow_commons["NbOfEvents"] = res["nbevts"]
+          self.NumberOfEvents = res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"]=res["lumi"]
 
@@ -220,7 +222,8 @@ class LCSIMAnalysis(ModuleBase):
     self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
     
     lcsimfile = "job.lcsim"
-    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,self.trackingstrategy,runonslcio,jars,cachedir,self.OutputFile,self.outputREC,self.outputDST,self.debug)
+    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,self.NumberOfEvents,self.trackingstrategy,runonslcio,jars,cachedir,
+                           self.OutputFile,self.outputREC,self.outputDST,self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file because %s"%res['Message'])
       return S_ERROR("Error creating lcsim file")

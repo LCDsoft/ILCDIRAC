@@ -334,8 +334,9 @@ class ModuleBase(object):
       self.energy = self.workflow_commons['Energy']
 
     if self.workflow_commons.has_key('NbOfEvts'):
-      self.NumberOfEvents = self.workflow_commons['NbOfEvts']
-      self.workflow_commons['NbOfEvents'] = self.NumberOfEvents
+      if self.workflow_commons['NbOfEvts']>0:
+        self.NumberOfEvents = self.workflow_commons['NbOfEvts']
+        self.workflow_commons['NbOfEvents'] = self.NumberOfEvents
 
     if self.step_commons.has_key('InputFile'):
       ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string 
