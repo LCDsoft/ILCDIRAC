@@ -1,3 +1,13 @@
+[v9r0p0]
+* All
+Same as previous, but new major version as there is a change of the interface
+
+[v8r2p26]
+* Core
+Add verbose message in InputFileUtilities, and allow change of number of events in LCSIM file
+* Workflow
+Add support for number of evetns in LCSIMAnalysis. Play with NbEvts of workflow_commons only if positive defined.
+
 [v8r2p25]
 * Worklow
 Bug fix in MokkaAnalysis and SLICAnalysis: when using Particle Gun, there is no InputFile
