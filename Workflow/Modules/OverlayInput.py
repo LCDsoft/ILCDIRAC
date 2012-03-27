@@ -218,7 +218,7 @@ class OverlayInput (ModuleBase):
       self.NbSigEvtsPerJob = self.nbinputsigfile*self.nbsigeventsperfile
     if not self.NbSigEvtsPerJob:
       return S_ERROR('Could not determine the number of signal events per job')
-
+    self.log.verbose("There are %s signal event"%self.NbSigEvtsPerJob)
     ##Now determine how many files are needed to cover all signal events
     totnboffilestoget = int(ceil(self.NbSigEvtsPerJob*numberofeventstoget/self.nbofeventsperfile))
 
