@@ -12,7 +12,7 @@ __RCSID__ = "$Id: $"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfevents
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 
 class DummyModule(ModuleBase):
   """ Dummy module used to check Workflow Parameters (Parametric jobs check)
