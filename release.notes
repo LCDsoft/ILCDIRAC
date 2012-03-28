@@ -1,3 +1,7 @@
+[v9r0p2]
+* PrepareLCSIMFile
+Forgot to cast the number of events to str
+
 [v9r0p1]
 * Workflow
 Also update in Mokka, SLIC, and SLICPandora the number of events in the Workflow_commons
