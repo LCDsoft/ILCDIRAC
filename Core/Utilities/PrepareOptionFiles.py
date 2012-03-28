@@ -544,7 +544,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
         classpath.append(newjar)
   #handle number of events
   if numberofevents:
-    nbevts = tree.find("numberOfEvents")     
+    nbevts = tree.find("control/numberOfEvents")     
     if nbevts:
       nbevts.text = str(numberofevents)
     else:
