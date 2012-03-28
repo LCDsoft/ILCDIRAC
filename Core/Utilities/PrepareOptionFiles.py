@@ -517,7 +517,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
     filesinlcsim.clear()
   else:
     baseelem = tree.getroot()
-    if baseelem:
+    if not baseelem is None:
       filesinlcsim = Element("inputFiles")
       baseelem.append(filesinlcsim)
     else:
@@ -532,7 +532,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   if jars:
     if len(jars)>0:
       classpath = tree.find("classpath")
-      if classpath:
+      if not classpath is None:
         classpath.clear()
       else:
         baseelem = tree.getroot()
@@ -545,7 +545,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   #handle number of events
   if numberofevents:
     nbevts = tree.find("control/numberOfEvents")     
-    if nbevts:
+    if not nbevts is None:
       nbevts.text = str(numberofevents)
     else:
       control = tree.find('control')
@@ -555,7 +555,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   #handle verbosity
   if debug:
     debugline = tree.find("control/verbose")
-    if debugline :
+    if not debugline is None:
       debugline.text = 'true'
     else:
       control = tree.find('control')
@@ -565,7 +565,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
 
   if cachedir:
     cachedirline= tree.find("control/cacheDirectory")
-    if cachedirline:
+    if not cachedirline is None:
       cachedirline.text = cachedir
     else:
       control = tree.find('control')
@@ -581,7 +581,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
     LcsimPrintEveryEvent = res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
-  if eventInterval:
+  if not eventInterval is None:
     evtint = eventInterval.text
     if int(evtint)<10:    
       eventInterval.text = "%s"%LcsimPrintEveryEvent
@@ -623,7 +623,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
           driver.append(strategy)
 
   mark = tree.find("drivers/driver/marker")
-  if mark:
+  if not mark is None:
     printtext = mark.text
   else:
     for driver in drivers:
