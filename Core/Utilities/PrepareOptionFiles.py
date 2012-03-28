@@ -554,7 +554,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
       control.append(nbevtselm)
   #handle verbosity
   if debug:
-    debugline = tree.find("verbose")
+    debugline = tree.find("control/verbose")
     if debugline :
       debugline.text = 'true'
     else:
