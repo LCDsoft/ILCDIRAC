@@ -546,11 +546,11 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   if numberofevents:
     nbevts = tree.find("numberOfEvents")     
     if nbevts:
-      nbevts.text = numberofevents
+      nbevts.text = str(numberofevents)
     else:
       control = tree.find('control')
       nbevtselm = Element("numberOfEvents")
-      nbevtselm.text = numberofevents
+      nbevtselm.text = str(numberofevents)
       control.append(nbevtselm)
   #handle verbosity
   if debug:
