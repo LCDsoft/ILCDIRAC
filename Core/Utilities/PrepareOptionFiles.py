@@ -535,7 +535,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
       if classpath:
         classpath.clear()
       else:
-        baseelem = tree.find("lcsim")
+        baseelem = tree.getroot()
         classpath = Element("classpath")    
         baseelem.append(classpath)
       for jar in jars:
@@ -564,7 +564,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
       control.append(debugelem)        
 
   if cachedir:
-    cachedirline= tree.find("cacheDirectory")
+    cachedirline= tree.find("control/cacheDirectory")
     if cachedirline:
       cachedirline.text = cachedir
     else:
