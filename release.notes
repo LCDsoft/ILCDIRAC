@@ -1,3 +1,7 @@
+[v9r0p3]
+* PrepareLCSIMFile
+Bug fix: NumberOfEvents was set twice
+
 [v9r0p2]
 * PrepareLCSIMFile
 Forgot to cast the number of events to str
