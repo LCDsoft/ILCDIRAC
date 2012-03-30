@@ -14,10 +14,11 @@ setup=ILC-Production
 csserver=dips://volcd01.cern.ch:9135/Configuration/Server
 
 scripts/dirac-configure -V $vo -S $setup -C $csserver -d --SkipCAChecks
-
-echo "you might want to run "
+echo ""
+echo "You might want to run :"
 echo "./dirac-install -l ILCDIRAC -r $version -i 26 -g 2011-06-06"
-echo "to get the grid UI, if available for your platform"
+echo "$version=v9r0p4 for e.g."
+echo "to get the grid UI (-g option), if available for your platform"
 echo ""
 echo "To get the proper environment, run source bashrc"
 echo ""
