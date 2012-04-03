@@ -259,12 +259,12 @@ class Application(object):
     return S_OK()  
 
   def setDebug(self,debug = True):
-    """ Set the applciation to debug mode
+    """ Set the application to debug mode
     
     >>> app = Application()
     >>> app.setDebug()
     
-    @param debug: Set the applciation to debug mode. Default is True when called. If not, then it's false.
+    @param debug: Set the application to debug mode. Default is True when called. If not, then it's false.
     @type debug: bool
     """
     self._checkArgs({ "debug": types.BooleanType} )
