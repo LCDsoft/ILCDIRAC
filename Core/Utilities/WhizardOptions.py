@@ -658,12 +658,13 @@ class WhizardOptions(object):
     return S_OK(self.whizardxml)
   
   def getAsDict(self):
+    """ Get the content as dict, like the one used for settign the options
+    """
     whiz_opt = {}
-    root = self.whizardxml.getroot()
-    for element in root.getchildren():
+    for element in self.whizardxml.getchildren():
       whiz_opt[element.tag] = {}
       for item in element.getchildren():
-        whiz_opt[element.tag][item.tag] = item.text
+        whiz_opt[element.tag][item.tag] = item.attrib['value'].rstrip()
     return S_OK(whiz_opt)
   
   def checkFields(self,paramdict):
