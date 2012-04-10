@@ -467,7 +467,9 @@ class WhizardAnalysis(ModuleBase):
       inf = open("whizard.out","r")
       for line in inf:
         line = line.rstrip()
-        for process in processes:  
+        for process in processes:
+          if not process:
+            continue
           if line.count("   %s            "%process):
             info['xsection'][process]={}
             line = line.lstrip()
