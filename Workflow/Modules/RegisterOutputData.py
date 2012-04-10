@@ -50,6 +50,7 @@ class RegisterOutputData(ModuleBase):
     if self.workflow_commons.has_key('Luminosity'):
       self.luminosity = self.workflow_commons['Luminosity']
     
+    ##Additional info: cross section only for the time being
     if self.workflow_commons.has_key('Info'):
       self.add_info = str(self.workflow_commons['Info'])
     
@@ -172,7 +173,7 @@ class RegisterOutputData(ModuleBase):
             return res
       if self.add_info:
         info = {}
-        info['AdditionnalInfo'] = self.add_info
+        info['AdditionalInfo'] = self.add_info
         if self.enable:
           res = self.fc.setMetadata(files,info)
           if not res['OK']:
