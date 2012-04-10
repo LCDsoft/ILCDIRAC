@@ -334,7 +334,8 @@ class WhizardAnalysis(ModuleBase):
     outputfilename = self.evttype
     if self.jobindex:
       outputfilename = "%s_%s"%(outputfilename,self.jobindex)
-      
+    
+          
     if self.optionsdict:
       self.log.info("Using: %s"%self.optionsdict)
       self.options = WhizardOptions(self.Model)
@@ -453,6 +454,39 @@ class WhizardAnalysis(ModuleBase):
       self.workflow_commons['Luminosity']=float(lumi)
     else:
       status = 1  
+    
+    ##Now care for the cross sections
+    info = {}
+    res = self.options.getAsDict()
+    if res['OK']:
+      full_opts_dict = res['Value']
+      last_calls =  full_opts_dict['integration_input']['calls'].split()[-1]
+      line_to_look = '   12    %s  '%last_calls
+      processes = full_opts_dict['process_input']['process_id'].split()
+      info = {}
+      info['xsection'] = {}
+      for process in processes:
+        if not os.path.exists("whizard.%s.out"%process):
+          continue
+        inf = open("whizard.%s.out"%process,"r")
+        for line in inf:
+          line = line.rstrip()
+          if line.count("process %s:"%process):
+            info['xsection'][process]={}
+            continue
+          if line.count(line_to_look):
+            line = line.lstrip()
+            crosssection = line.split()[2]
+            err_crosssection = line.split()[3]
+            info['xsection'][process]['xsection'] = float(crosssection)
+            info['xsection'][process]['err_xsection'] = float(err_crosssection)
+        inf.close()
+    if info:
+      if 'Info' not in self.workflow_commons:
+        self.workflow_commons['Info'] = info
+      else:
+        self.workflow_commons['Info'].update(info)
+
     #stdOutput = resultTuple[1]
     #stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )

@@ -25,6 +25,7 @@ class RegisterOutputData(ModuleBase):
     self.swpackages = []
     self.nbofevents = 0
     self.luminosity = 0
+    self.add_info = ''
     self.fc = FileCatalogClient()
 
   def applicationSpecificInputs(self):
@@ -48,6 +49,11 @@ class RegisterOutputData(ModuleBase):
       self.nbofevents = self.workflow_commons['NbOfEvents']
     if self.workflow_commons.has_key('Luminosity'):
       self.luminosity = self.workflow_commons['Luminosity']
+    
+    if self.workflow_commons.has_key('Info'):
+      self.add_info = str(self.workflow_commons['Info'])
+    
+      
     return S_OK('Parameters resolved')
   
   def execute(self):
@@ -163,6 +169,14 @@ class RegisterOutputData(ModuleBase):
           res = self.fc.setMetadata(files,lumi)
           if not res['OK']:
             self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,files))
+            return res
+      if self.add_info:
+        info = {}
+        info['AdditionnalInfo'] = self.add_info
+        if self.enable:
+          res = self.fc.setMetadata(files,info)
+          if not res['OK']:
+            self.log.error('Could not register metadata Info, with value %s for %s'%(self.add_info,files))
             return res
       meta.update(metaprodid)
       meta.update(metafiles)
