@@ -475,7 +475,7 @@ class WhizardAnalysis(ModuleBase):
             line = line.lstrip()
             crosssection = line.split()[1]
             err_crosssection = line.split()[2]
-            frac = line.split()[3]
+            frac = line.split()[4]
             info['xsection'][process]['xsection'] = float(crosssection)
             info['xsection'][process]['err_xsection'] = float(err_crosssection)
             info['xsection'][process]['fraction'] = float(frac)
