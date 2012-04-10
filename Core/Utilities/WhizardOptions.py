@@ -657,6 +657,15 @@ class WhizardOptions(object):
         subelement.attrib['value'] = val[subkey]
     return S_OK(self.whizardxml)
   
+  def getAsDict(self):
+    whiz_opt = {}
+    root = self.whizardxml.getroot()
+    for element in root.getchildren():
+      whiz_opt[element.tag] = {}
+      for item in element.getchildren():
+        whiz_opt[element.tag][item.tag] = item.text
+    return S_OK(whiz_opt)
+  
   def checkFields(self,paramdict):
     for key,val in paramdict.items():
       element = self.whizardxml.find(key)
