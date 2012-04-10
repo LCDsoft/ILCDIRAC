@@ -458,29 +458,27 @@ class WhizardAnalysis(ModuleBase):
     ##Now care for the cross sections
     info = {}
     res = self.options.getAsDict()
-    if res['OK']:
+    if os.path.exists("whizard.out") and res['OK']:
       full_opts_dict = res['Value']
-      last_calls =  full_opts_dict['integration_input']['calls'].split()[-1]
-      line_to_look = '   12    %s  '%last_calls
       processes = full_opts_dict['process_input']['process_id'].split()
       info = {}
       info['xsection'] = {}
-      for process in processes:
-        if not os.path.exists("whizard.%s.out"%process):
-          continue
-        inf = open("whizard.%s.out"%process,"r")
-        for line in inf:
-          line = line.rstrip()
-          if line.count("process %s:"%process):
+      processes.append('sum')
+      inf = open("whizard.out","r")
+      for line in inf:
+        line = line.rstrip()
+        for process in processes:  
+          if line.count("   %s            "%process):
             info['xsection'][process]={}
-            continue
-          if line.count(line_to_look):
             line = line.lstrip()
-            crosssection = line.split()[2]
-            err_crosssection = line.split()[3]
+            crosssection = line.split()[1]
+            err_crosssection = line.split()[2]
+            frac = line.split()[3]
             info['xsection'][process]['xsection'] = float(crosssection)
             info['xsection'][process]['err_xsection'] = float(err_crosssection)
-        inf.close()
+            info['xsection'][process]['fraction'] = float(frac)
+
+      inf.close()
     if info:
       if 'Info' not in self.workflow_commons:
         self.workflow_commons['Info'] = info
