@@ -667,7 +667,7 @@ class ProductionJob(Job):
         energypath = '3tev/'
     else:
       energypath =  "%sgev/"%(self.energy)
-      if energypath == '500.0gev':
+      if energypath == '500.0gev/':
         energypath = '500gev/'
 
     if not self.basename:
