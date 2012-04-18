@@ -45,8 +45,8 @@ class LesHouchesFileHandler(RequestHandler):
   '''
   classdocs
   '''
-  types_getTemplate = [StringTypes]
-  def export_getTemplate(self,ModelName):
+  types_getLesHouchesFile = [StringTypes]
+  def export_getLesHouchesFile(self,ModelName):
     if not ModelName in ModelsDict:
       return S_ERROR("Unavailable template")
     
