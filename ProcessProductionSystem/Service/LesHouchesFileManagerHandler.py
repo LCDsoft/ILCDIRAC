@@ -15,9 +15,11 @@ def initializeLesHouchesFileManagerHandler( serviceInfo ):
   if not res['OK']:
     return res
   templates = res['Value']
-  
-  location = gConfig.getValue('/Operations/Models/Path','')
+  cfgPath = serviceInfo['serviceSectionPath']
+  location = ''
+  location = gConfig.getValue( "%s/BasePath" % cfgPath, location  )
   if not location:
+    gLogger.error( 'Path to LesHouches files not defined' )
     return S_ERROR("Path to LesHouches files not defined in CS")
   missing = False
   global ModelsDict
