@@ -8,7 +8,7 @@ from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 from types import *
 import os
 
-templatesDict = {}
+ModelsDict = {}
 
 def initializeLesHouchesFileHandler( serviceInfo ):
   res = gConfig.getOptionsDict("/Operations/Models")
@@ -20,17 +20,20 @@ def initializeLesHouchesFileHandler( serviceInfo ):
   if not location:
     return S_ERROR("Path to LesHouches files not defined in CS")
   missing = False
-  global templatesDict
+  global ModelsDict
   for template,file in templates.items():
-    templatesDict[template] = {}
-    templatesDict[template]['file']= file
+    ModelsDict[template] = {}
+    ModelsDict[template]['file']= file
+    if not file:
+      ModelsDict[template]['content'] = ['']
+      continue
     file_path = os.path.join([location,file])
     if not os.path.exists(file_path):
       gLogger.error("Missing %s"%file_path)
       missing = True
       break
     LesHouchesFile = open(file_path,"r")
-    templatesDict[template]['content'] = LesHouchesFile.readlines()
+    ModelsDict[template]['content'] = LesHouchesFile.readlines()
     LesHouchesFile.close()
     
   if missing:
@@ -43,9 +46,9 @@ class LesHouchesFileHandler(RequestHandler):
   classdocs
   '''
   types_getTemplate = [StringTypes]
-  def export_getTemplate(self,templateName):
-    if not templateName in templatesDict:
+  def export_getTemplate(self,ModelName):
+    if not ModelName in ModelsDict:
       return S_ERROR("Unavailable template")
     
-    return S_OK(templatesDict[templateName]['content'])
+    return S_OK(ModelsDict[ModelName]['content'])
   
