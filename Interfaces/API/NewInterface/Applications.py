@@ -1691,13 +1691,10 @@ class OverlayInput(Application):
     fracappen = modf(float(self.energy)/1000.)
     if fracappen[1]>0:
       energytouse = "%stev"%(Decimal(str(self.energy))/Decimal("1000."))
-      if energytouse=="3.0tev":
-        energytouse = "3tev"
     else:
       energytouse =  "%sgev"%(Decimal(str(self.energy)))
-      if energytouse=='500.0gev':
-        energytouse='500gev'
-      
+    if energytouse.count(".0"):
+      energytouse = energytouse.replace(".0","")
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s"%energytouse)
     return S_OK()
