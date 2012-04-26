@@ -73,6 +73,8 @@ class OverlayInput (ModuleBase):
         self.energytouse = "%sgev"%(Decimal(str(self.energy)))
         if self.energytouse=="500.0gev":
           self.energytouse = "500gev"
+        elif self.energytouse=="350.0gev":
+          self.energytouse = "350gev"  
           
     if not self.energytouse:
       return S_ERROR("Energy not set anywhere!")
