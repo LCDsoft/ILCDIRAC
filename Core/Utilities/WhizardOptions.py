@@ -664,7 +664,10 @@ class WhizardOptions(object):
     for element in self.whizardxml.getchildren():
       whiz_opt[element.tag] = {}
       for item in element.getchildren():
-        whiz_opt[element.tag][item.tag] = item.attrib['value'].rstrip()
+        val = item.attrib['value']
+        if type(val) == type(""):
+          val = val.rstrip()
+        whiz_opt[element.tag][item.tag] = val
     return S_OK(whiz_opt)
   
   def checkFields(self,paramdict):
