@@ -669,6 +669,8 @@ class ProductionJob(Job):
       energypath =  "%sgev/"%(self.energy)
       if energypath == '500.0gev/':
         energypath = '500gev/'
+      elif energypath == '350.0gev/':
+        energypath = '350gev/'  
 
     if not self.basename:
       self.basename = self.evttype
