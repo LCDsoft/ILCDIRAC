@@ -1,3 +1,17 @@
+[v10r0p0]
+* OverlayInput
+Bug fix: Handle the 350GeV case.
+* WhizardOptions
+NEW: add method to get the options as python dict
+* ProductionJob
+BUGFIX: Handling of 350GeV
+* WhizardAnalysis
+NEW: Store the cross section and its error for every job and every process in WhizardAnalysis, stored in workflow_commons['Info']
+* RegisterOutputData
+CHANGE: Add registration of additional info (workflow_commons['Info']) for every file
+* ProcessProductionSystem
+NEW: LesHouchesFileManager: service that provides the content of the LesHouches files on request, does not require them to be installed on the grid. Not working yet
+
 [v9r0p4]
 * PrepareLCSIMFile
 Bug fix: Checking existance of an element was not correct.
