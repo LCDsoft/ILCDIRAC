@@ -67,15 +67,11 @@ class OverlayInput (ModuleBase):
       fracappen = modf(self.energy/1000.)
       if fracappen[1]>0:
         self.energytouse = "%stev"%(Decimal(str(self.energy))/Decimal("1000."))
-        if self.energytouse=="3.0tev":
-          self.energytouse = "3tev"
       else:
         self.energytouse = "%sgev"%(Decimal(str(self.energy)))
-        if self.energytouse=="500.0gev":
-          self.energytouse = "500gev"
-        elif self.energytouse=="350.0gev":
-          self.energytouse = "350gev"  
-          
+      if self.energytouse.count(".0"):
+        self.energytouse = self.energytouse.replace(".0","")
+            
     if not self.energytouse:
       return S_ERROR("Energy not set anywhere!")
 
