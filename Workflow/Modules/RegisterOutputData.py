@@ -8,9 +8,9 @@ Created on Sep 8, 2010
 '''
 __RCSID__ = "$Id$"
 
-from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-
+from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
+from DIRAC.Resources.Catalog.FileCatalogClient    import FileCatalogClient
+from DIRAC.Core.Utilitities.DEncode               import DEncode
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import string,os
 
@@ -52,7 +52,7 @@ class RegisterOutputData(ModuleBase):
     
     ##Additional info: cross section only for the time being
     if self.workflow_commons.has_key('Info'):
-      self.add_info = str(self.workflow_commons['Info'])
+      self.add_info = DEncode.encode(self.workflow_commons['Info'])
     
       
     return S_OK('Parameters resolved')
