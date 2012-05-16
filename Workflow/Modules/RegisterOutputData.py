@@ -10,7 +10,7 @@ __RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
 from DIRAC.Resources.Catalog.FileCatalogClient    import FileCatalogClient
-from DIRAC.Core.Utilitities.DEncode               import DEncode
+from DIRAC.Core.Utilitities                       import DEncode
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import string,os
 
