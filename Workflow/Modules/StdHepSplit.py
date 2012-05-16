@@ -186,7 +186,8 @@ exit $?
         fname = line.split()[-1]
         numberofeventsdict[fname] = 0
       elif line.count("Record"):
-        numberofeventsdict[fname] = int(line.split("=")[1])
+        val = line.split("=")[1].rstrip().lstrip()
+        numberofeventsdict[fname] = int(val)
     
     self.log.verbose("numberofeventsdict dict: %s"%numberofeventsdict)   
 
