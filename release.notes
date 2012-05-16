@@ -1,3 +1,6 @@
+[v10r0p4]
+* RegisterOutpuitData
+Bug fix import
 [v10r0p3]
 * DownloadInputData
 Exception fixed
