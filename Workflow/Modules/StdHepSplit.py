@@ -220,6 +220,8 @@ exit $?
       self.workflow_commons['ProductionOutputData']= ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
-
+    if status==2:
+      self.log.info("Reached end of input file")
+      status = 0
     return self.finalStatusReport(status)
 
