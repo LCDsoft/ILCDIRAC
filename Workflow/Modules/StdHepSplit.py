@@ -186,6 +186,7 @@ exit $?
         fname = line.split()[-1]
         numberofeventsdict[fname] = 0
       elif line.count("Record"):
+        print line
         val = line.split("=")[1].rstrip().lstrip()
         numberofeventsdict[fname] = int(val)
     
