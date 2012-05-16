@@ -182,7 +182,7 @@ exit $?
     fname = ''
     for line in logf:
       line = line.rstrip()
-      if line.count(prefix):
+      if line.count(prefix) and not line.count('Output File prefix'):
         fname = line.split()[-1].rstrip().rstrip("\0")
         numberofeventsdict[fname] = 0
       elif line.count("Record") and not line.count('Output Begin Run') :
