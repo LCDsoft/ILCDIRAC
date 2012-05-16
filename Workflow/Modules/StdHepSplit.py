@@ -185,7 +185,7 @@ exit $?
       if line.count(prefix):
         fname = line.split()[-1]
         numberofeventsdict[fname] = 0
-      elif line.count("Record"):
+      elif line.count("Record") and not line.count('Output Begin Run') :
         print line
         val = line.split("=")[1].rstrip().lstrip()
         numberofeventsdict[fname] = int(val)
