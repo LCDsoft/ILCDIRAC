@@ -183,10 +183,10 @@ exit $?
     for line in logf:
       line = line.rstrip()
       if line.count(prefix):
-        fname = line.split()[-1]
+        fname = line.split()[-1].rstrip().rstrip("\0")
         numberofeventsdict[fname] = 0
       elif line.count("Record") and not line.count('Output Begin Run') :
-        print line
+        #print line
         val = line.split("=")[1].rstrip().lstrip()
         numberofeventsdict[fname] = int(val)
     
