@@ -1,3 +1,6 @@
+[v10r0p6]
+* StdhepSplit
+Fix parsing for number of event per file
 [v10r0p5]
 * RegisterOutpuitData
 Bug fix import
