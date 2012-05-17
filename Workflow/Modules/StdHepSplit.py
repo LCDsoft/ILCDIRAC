@@ -182,13 +182,14 @@ exit $?
     fname = ''
     for line in logf:
       line = line.rstrip()
-      if line.count(prefix) and not line.count('Output File prefix'):
+      if line.count('Open output file'):
         fname = line.split()[-1].rstrip().rstrip("\0")
         numberofeventsdict[fname] = 0
       elif line.count("Record") and not line.count('Output Begin Run') :
         #print line
         val = line.split("=")[1].rstrip().lstrip()
-        numberofeventsdict[fname] = int(val)
+        if val != '0':
+          numberofeventsdict[fname] = int(val)
     
     self.log.verbose("numberofeventsdict dict: %s"%numberofeventsdict)   
 
