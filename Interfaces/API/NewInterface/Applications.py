@@ -2503,7 +2503,7 @@ class StdHepSplit(Application):
     self.numberofeventsperfile = 0
     Application.__init__(self, paramdict)
     if not self.version:
-      self.version = 'V1'
+      self.version = 'V2'
     self._modulename = "StdHepSplit"
     self.appname = 'stdhepsplit'
     self._moduledescription = 'Helper call to split Stdhep files'
