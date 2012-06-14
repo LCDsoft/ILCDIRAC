@@ -25,6 +25,14 @@ from decimal import Decimal
 
 import os, time, random, string, subprocess, glob
 
+def allowedBkg(bkg):
+  """ Check is supplied bkg is allowed
+  """
+  bkg_allowed= ['gghad','pairs']
+  if not bkg in bkg_allowed:
+    return S_ERROR("Bkg not allowed")
+  return S_OK()
+
 class OverlayInput (ModuleBase):
   def __init__(self):
     ModuleBase.__init__(self)
@@ -91,7 +99,11 @@ class OverlayInput (ModuleBase):
 
     if self.step_commons.has_key('BkgEvtType'):
       self.BkgEvtType = self.step_commons['BkgEvtType']
-
+      
+    res =  allowedBkg(self.BkgEvtType) 
+    if not res['OK']:
+      return res
+    
     #if self.workflow_commons.has_key('Site'):
     #  self.site = self.workflow_commons['Site']
 
@@ -113,7 +125,7 @@ class OverlayInput (ModuleBase):
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
 
-    res= gConfig.getOption("/Operations/Overlay/%s/%s/ProdID"%(self.detector,self.energytouse),0)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/%s/ProdID"%(self.detector,self.energytouse,self.BkgEvtType),0)
     meta['ProdID']= res['Value']
     if self.prodid:
       meta['ProdID'] = self.prodid
@@ -131,7 +143,7 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events
-    res= gConfig.getOption("/Operations/Overlay/%s/%s/NbEvts"%(self.detector,self.energytouse),100)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/%s/NbEvts"%(self.detector,self.energytouse,self.BkgEvtType),100)
     self.nbofeventsperfile = res['Value']
 
     #res = self.fc.getCompatibleMetadata(meta)
