@@ -1502,6 +1502,7 @@ class SLIC(Application):
 #            OverlayInput : Helper call to define 
 #              Overlay processor/driver inputs
 #################################################################  
+from ILCDIRAC.Workflow.Modules.OverlayInput import allowedBkg
 class OverlayInput(Application):
   """ Helper call to define Overlay processor/driver inputs. 
   
@@ -1665,7 +1666,10 @@ class OverlayInput(Application):
     if not self.BkgEvtType :
       self.BkgEvtType = 'gghad'
       self._log.info("Background event type is gg -> had by default")
-      
+    res = allowedBkg(self.BkgEvtType)  
+    if not res['OK']:
+      return res
+    
     if not self.detectortype in ['ILD','SID'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
 
