@@ -19,6 +19,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
+from ILCDIRAC.Workflow.Modules.OverlayInput import allowedBkg
 import string,os
 
 def GetNewLDLibs(systemConfig,application,applicationVersion):
@@ -639,8 +640,15 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
     if driver.attrib.has_key("type"):
       if driver.attrib['type']=="org.lcsim.util.OverlayDriver":
         #if driver.attrib['name']=="eventOverlay":
+        ov_name = driver.find("overlayName")
+        bkg_Type = "gghad"
+        if not ov_name is None:
+          bkg_Type = ov_name.text.lower()
+          res = allowedBkg(bkg_Type)
+          if not res['OK']:
+            return res
         driver.remove(driver.find('overlayFiles'))
-        files = getOverlayFiles()
+        files = getOverlayFiles(bkg_Type)
         if not len(files):
           return S_ERROR('Could not find any overlay files')
         overlay = Element('overlayFiles')
