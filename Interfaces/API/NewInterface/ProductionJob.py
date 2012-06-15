@@ -28,6 +28,8 @@ from decimal import *
 
 
 class ProductionJob(Job):
+  """ Production job class. Suitable for CLIC studies. Need to sub class and overload for other clients.
+  """
   def __init__(self, script = None):
     Job.__init__(self , script)
     self.prodVersion = __RCSID__
@@ -40,7 +42,7 @@ class ProductionJob(Job):
     self.csSection = '/Operations/Production/Defaults'
     self.fc = FileCatalogClient()
     self.trc = TransformationClient()
-    self.systemConfig = gConfig.getValue('%s/SystemConfig' %(self.csSection), 'x86_64-slc5-gcc43-opt')
+    self.systemConfig = gConfig.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.jobFileGroupSize = 1
@@ -66,7 +68,8 @@ class ProductionJob(Job):
     self.inputBKSelection = {}
     self.plugin = 'Standard'
 
-    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge', 'Split']
+    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 
+                      'MCReconstruction_Overlay', 'Merge', 'Split']
     self.prodparameters = {}
     self.prodparameters['NbInputFiles'] = 1
     self.prodparameters['nbevts']  = 0 
@@ -104,18 +107,18 @@ class ProductionJob(Job):
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
       
   #############################################################################
-  def setProdGroup(self,group):
+  def setProdGroup(self, group):
     """ Sets a user defined tag for the production as appears on the monitoring page
     """
     self.prodGroup = group
   #############################################################################
-  def setProdPlugin(self,plugin):
+  def setProdPlugin(self, plugin):
     """ Sets the plugin to be used to creating the production jobs
     """
     self.plugin = plugin
     
   #############################################################################
-  def setJobFileGroupSize(self,files):
+  def setJobFileGroupSize(self, files):
     """ Sets the number of files to be input to each job created.
     """
     if self.checked:
@@ -124,21 +127,21 @@ class ProductionJob(Job):
     self.prodparameters['NbInputFiles'] = files
     
   #############################################################################
-  def setProdType(self,prodType):
+  def setProdType(self, prodType):
     """Set prod type.
     """
     if not prodType in self.prodTypes:
-      raise TypeError,'Prod must be one of %s' %(string.join(self.prodTypes,', '))
+      raise TypeError,'Prod must be one of %s' % (string.join(self.prodTypes,', '))
     self.setType(prodType)
   #############################################################################
-  def setWorkflowName(self,name):
+  def setWorkflowName(self, name):
     """Set workflow name.
     """
     self.workflow.setName(name)
     self.name = name
 
   #############################################################################
-  def setWorkflowDescription(self,desc):
+  def setWorkflowDescription(self, desc):
     """Set workflow name.
     """
     self.workflow.setDescription(desc)
@@ -149,18 +152,18 @@ class ProductionJob(Job):
     """
     name = '%s.xml' % self.name
     if os.path.exists(name):
-      shutil.move(name,'%s.backup' %name)
+      shutil.move(name,'%s.backup' % name)
     self.workflow.toXMLFile(name)
     
   #############################################################################
-  def setOutputSE(self,outputse):
+  def setOutputSE(self, outputse):
     """ Define where the output file(s) will go. 
     """
     self.outputStorage = outputse
     return S_OK()
   
   #############################################################################
-  def setInputDataQuery(self,metadata):
+  def setInputDataQuery(self, metadata):
     """ Define the input data query needed
     """
     res = self.fc.findDirectoriesByMetadata(metadata)
@@ -176,8 +179,7 @@ class ProductionJob(Job):
     res = self.fc.getMetadataFields()
     if not res['OK']:
       print "Could not contact File Catalog"
-      self.explainInputDataQuery()
-      return S_ERROR()
+      return S_ERROR("Could not contact File Catalog")
     metaFCkeys = res['Value'].keys()
     for key in metakeys:
       for meta in metaFCkeys:
@@ -196,8 +198,8 @@ class ProductionJob(Job):
     elif len(res['Value']) < 1:
       return self._reportError('Could not find any directories corresponding to the query issued')
     dirs = res['Value'].values()
-    for dir in dirs:
-      res = self.fc.getDirectoryMetadata(dir)
+    for mdir in dirs:
+      res = self.fc.getDirectoryMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
     #res =   client.getCompatibleMetadata(metadata)
@@ -225,9 +227,9 @@ class ProductionJob(Job):
     self.basepath = "/ilc/prod/"
     if compatmeta.has_key("Machine"):
       if type(compatmeta["Machine"]) in types.StringTypes:
-        self.machine = compatmeta["Machine"]+"/"
+        self.machine = compatmeta["Machine"] + "/"
       if type(compatmeta["Machine"]) == type([]):
-        self.machine = compatmeta["Machine"][0]+"/"
+        self.machine = compatmeta["Machine"][0] + "/"
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
@@ -235,11 +237,11 @@ class ProductionJob(Job):
         self.energycat = compatmeta["Energy"][0]
         
     if self.energycat.count("tev"):
-      self.energy = Decimal("1000.")*Decimal(self.energycat.split("tev")[0])
+      self.energy = Decimal("1000.") * Decimal(self.energycat.split("tev")[0])
     elif self.energycat.count("gev"):
-      self.energy = Decimal("1.")*Decimal(self.energycat.split("gev")[0])
+      self.energy = Decimal("1.") * Decimal(self.energycat.split("gev")[0])
     else:
-      self.energy = Decimal("1.")*Decimal(self.energycat)
+      self.energy = Decimal("1.") * Decimal(self.energycat)
     gendata = False
     if compatmeta.has_key('Datatype'):
       if type(compatmeta['Datatype']) in types.StringTypes:
@@ -263,10 +265,12 @@ class ProductionJob(Job):
 
     return S_OK()
 
-  def setMachine(self,machine):
+  def setMachine(self, machine):
+    """ Define the machine type: clic or ilc
+    """
     self.machine = machine
 
-  def setDescription(self,desc):
+  def setDescription(self, desc):
     """ Set the production's description
     
     @param desc: Description
@@ -279,7 +283,7 @@ class ProductionJob(Job):
     """
     return self.basepath
   
-  def addFinalization(self, uploadData=False, registerData=False, uploadLog = False, sendFailover=False):
+  def addFinalization(self, uploadData = False, registerData = False, uploadLog = False, sendFailover=False):
     """ Add finalization step
 
     @param uploadData: Upload or not the data to the storage
@@ -291,7 +295,7 @@ class ProductionJob(Job):
     """
     
     self.call_finalization = True
-    self.finalsdict['uploadData']=uploadData
+    self.finalsdict['uploadData'] = uploadData
     self.finalsdict['registerData'] = registerData
     self.finalsdict['uploadLog'] = uploadLog
     self.finalsdict['sendFailover'] = sendFailover
@@ -304,51 +308,51 @@ class ProductionJob(Job):
     
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
-    self._addParameter(dataUpload,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
+    self._addParameter(dataUpload, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(self.importLine, '<MODULE>', 'UploadOutputData')
     dataUpload.setBody(body)
 
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
-    self._addParameter(failoverRequest,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','FailoverRequest')
+    self._addParameter(failoverRequest, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(self.importLine, '<MODULE>', 'FailoverRequest')
     failoverRequest.setBody(body)
 
     registerdata = ModuleDefinition('RegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
-    self._addParameter(registerdata,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','RegisterOutputData')
+    self._addParameter(registerdata, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(self.importLine, '<MODULE>', 'RegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
-    self._addParameter(logUpload,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
+    self._addParameter(logUpload, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(self.importLine, '<MODULE>', 'UploadLogFile')
     logUpload.setBody(body)
 
     finalization = StepDefinition('Job_Finalization')
     finalization.addModule(dataUpload)
-    up = finalization.createModuleInstance('UploadOutputData','dataUpload')
-    up.setValue("enable",self.finalsdict['uploadData'])
+    up = finalization.createModuleInstance('UploadOutputData', 'dataUpload')
+    up.setValue("enable", self.finalsdict['uploadData'])
 
     finalization.addModule(registerdata)
-    ro = finalization.createModuleInstance('RegisterOutputData','RegisterOutputData')
-    ro.setValue("enable",self.finalsdict['registerData'])
+    ro = finalization.createModuleInstance('RegisterOutputData', 'RegisterOutputData')
+    ro.setValue("enable", self.finalsdict['registerData'])
 
     finalization.addModule(logUpload)
-    ul  = finalization.createModuleInstance('UploadLogFile','logUpload')
-    ul.setValue("enable",self.finalsdict['uploadLog'])
+    ul  = finalization.createModuleInstance('UploadLogFile', 'logUpload')
+    ul.setValue("enable", self.finalsdict['uploadLog'])
 
     finalization.addModule(failoverRequest)
-    fr = finalization.createModuleInstance('FailoverRequest','failoverRequest')
-    fr.setValue("enable",self.finalsdict['sendFailover'])
+    fr = finalization.createModuleInstance('FailoverRequest', 'failoverRequest')
+    fr.setValue("enable", self.finalsdict['sendFailover'])
     
     self.workflow.addStep(finalization)
     finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
 
     return S_OK()
   
-  def createProduction(self,name = None):
+  def createProduction(self, name = None):
     """ Create production.
     """
     
@@ -356,7 +360,7 @@ class ProductionJob(Job):
       return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
     if self.proxyinfo['Value'].has_key('group'):
       group = self.proxyinfo['Value']['group']
-      if not group=="ilc_prod":
+      if not group == "ilc_prod":
         return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
     else:
       return S_ERROR("Could not determine group, you do not have the right proxy.")
@@ -372,14 +376,14 @@ class ProductionJob(Job):
       self._addRealFinalization()
     
     workflowName = self.workflow.getName()
-    fileName = '%s.xml' %workflowName
-    self.log.verbose('Workflow XML file name is: %s' %fileName)
+    fileName = '%s.xml' % workflowName
+    self.log.verbose('Workflow XML file name is: %s' % fileName)
     try:
       self.createWorkflow()
-    except Exception,x:
+    except Exception, x:
       self.log.error(x)
       return S_ERROR('Could not create workflow')
-    oFile = open(fileName,'r')
+    oFile = open(fileName, 'r')
     workflowXML = oFile.read()
     oFile.close()
     if not name:
@@ -387,7 +391,7 @@ class ProductionJob(Job):
 
     res = self.trc.getTransformationStats(name)
     if res['OK']:
-      return self._reportError("Transformation with name %s already exists! Cannot proceed."%name)
+      return self._reportError("Transformation with name %s already exists! Cannot proceed." % name)
     
     ###Create Tranformation
     Trans = Transformation()
@@ -395,7 +399,7 @@ class ProductionJob(Job):
     Trans.setDescription(self.description)
     Trans.setLongDescription(self.description)
     Trans.setType(self.type)
-    self.prodparameters['JobType']=self.type
+    self.prodparameters['JobType'] = self.type
     Trans.setPlugin(self.plugin)
     if self.inputdataquery:
       Trans.setGroupSize(self.jobFileGroupSize)
@@ -419,12 +423,12 @@ class ProductionJob(Job):
       finalpaths = finalpaths.rstrip("/")
       finalpaths += "/"+str(self.transfid).zfill(8)
       finals.append(finalpaths)
-      self.finalMetaDict[finalpaths] = {'NumberOfEvents':self.nbevts,"ProdID":self.transfid}
+      self.finalMetaDict[finalpaths] = {'NumberOfEvents' : self.nbevts, "ProdID" : self.transfid}
     self.finalpaths = finals
     self.created = True
     return S_OK()
 
-  def setNbOfTasks(self,nbtasks):
+  def setNbOfTasks(self, nbtasks):
     """ Define the number of tasks you want. Useful for generation jobs.
     """
     if not self.currtrans:
@@ -437,7 +441,7 @@ class ProductionJob(Job):
     self.currtrans.setMaxNumberOfTasks(self.nbtasks)
     return S_OK()
 
-  def applyInputDataQuery(self,metadata=None,prodid=None):
+  def applyInputDataQuery(self, metadata = None, prodid = None):
     """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
     """
     if not self.transfid and self.currtrans:
@@ -448,24 +452,24 @@ class ProductionJob(Job):
       print "Not transformation defined earlier"
       return S_ERROR("No transformation defined")
     if metadata:
-      self.inputBKSelection=metadata
+      self.inputBKSelection = metadata
 
     client = TransformationClient()
-    res = client.createTransformationInputDataQuery(self.transfid,self.inputBKSelection)
+    res = client.createTransformationInputDataQuery(self.transfid, self.inputBKSelection)
     if not res['OK']:
       return res
     return S_OK()
   
-  def addMetadataToFinalFiles(self,metadict):
+  def addMetadataToFinalFiles(self, metadict):
     """ Add additionnal non-query metadata 
     """
     for key in metadict.keys():
       if key in self.finalMetaDictNonSearch[self.basepath].keys():
-        self.log.error("Not allowed to overwrite existing metadata: ",key)
+        self.log.error("Not allowed to overwrite existing metadata: ", key)
     self.finalMetaDictNonSearch[self.basepath].update(metadict)
     return S_OK()
   
-  def finalizeProd(self,prodid=None,prodinfo=None):
+  def finalizeProd(self, prodid = None, prodinfo = None):
     """ Finalize definition: submit to Transformation service and register metadata
     """
     currtrans = 0
@@ -480,21 +484,21 @@ class ProductionJob(Job):
       self.prodparameters = prodinfo
       
     info = []
-    info.append('%s Production %s has following parameters:\n' %(self.prodparameters['JobType'],currtrans))
+    info.append('%s Production %s has following parameters:\n' % (self.prodparameters['JobType'], currtrans))
     if self.prodparameters.has_key("Process"):
-      info.append('- Process %s'%self.prodparameters['Process'])
+      info.append('- Process %s' % self.prodparameters['Process'])
     if self.prodparameters.has_key("Energy"):
-      info.append('- Energy %s GeV'%self.prodparameters["Energy"])
-    info.append("- %s events per job"%(self.prodparameters['nbevts']*self.prodparameters['NbInputFiles']))
+      info.append('- Energy %s GeV' % self.prodparameters["Energy"])
+    info.append("- %s events per job" % (self.prodparameters['nbevts'] * self.prodparameters['NbInputFiles']))
     if self.prodparameters.has_key('lumi'):
       if self.prodparameters['lumi']:
-        info.append('    corresponding to a luminosity %s fb'%(self.prodparameters['lumi']*self.prodparameters['NbInputFiles']))
+        info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * self.prodparameters['NbInputFiles']))
     if self.prodparameters.has_key('FCInputQuery'):
       info.append('Using InputDataQuery :')
-      for k,v in self.prodparameters['FCInputQuery'].items():
-        info.append('    %s = %s' %(k,v))
+      for k, v in self.prodparameters['FCInputQuery'].items():
+        info.append('    %s = %s' % (k, v))
         
-    info.append('- SW packages %s'%self.prodparameters["SWPackages"])
+    info.append('- SW packages %s' % self.prodparameters["SWPackages"])
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
     for finalpath in self.finalpaths:
@@ -503,22 +507,22 @@ class ProductionJob(Job):
       self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
     
     info.append('- Registered metadata: ')
-    for k,v in self.finalMetaDict.items():
-      info.append('    %s = %s' %(k,v))
+    for k, v in self.finalMetaDict.items():
+      info.append('    %s = %s' % (k, v))
     info.append('- Registered non searchable metadata: ')
-    for k,v in self.finalMetaDictNonSearch.items():
-      info.append('    %s = %s' %(k,v))
+    for k, v in self.finalMetaDictNonSearch.items():
+      info.append('    %s = %s' % (k, v))
       
     infoString = string.join(info,'\n')
-    self.prodparameters['DetailedInfo']=infoString
-    for n,v in self.prodparameters.items():
-      result = self._setProdParameter(currtrans,n,v)
+    self.prodparameters['DetailedInfo'] = infoString
+    for n, v in self.prodparameters.items():
+      result = self._setProdParameter(currtrans, n, v)
       if not result['OK']:
         self.log.error(result['Message'])
 
     res = self._registerMetadata()
     if not res['OK']:
-      self.log.error("Could not register the following directories :",res['Failed'])
+      self.log.error("Could not register the following directories :", res['Failed'])
     return S_OK()  
   #############################################################################
   
@@ -530,7 +534,7 @@ class ProductionJob(Job):
     
 
     failed = []
-    for path,meta in self.finalMetaDict.items():
+    for path, meta in self.finalMetaDict.items():
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
@@ -538,16 +542,16 @@ class ProductionJob(Job):
             self.log.verbose("Successfully created directory:", path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
-            self.log.error('Failed to create directory:',result['Value']['Failed'][path])
+            self.log.error('Failed to create directory:', result['Value']['Failed'][path])
             failed.append(path)
       else:
-        self.log.error('Failed to create directory:',result['Message'])
+        self.log.error('Failed to create directory:', result['Message'])
         failed.append(path)
-      result = self.fc.setMetadata(path.rstrip("/"),meta)
+      result = self.fc.setMetadata(path.rstrip("/"), meta)
       if not result['OK']:
-        self.log.error("Could not preset metadata",meta)
+        self.log.error("Could not preset metadata", meta)
 
-    for path,meta in self.finalMetaDictNonSearch.items():
+    for path, meta in self.finalMetaDictNonSearch.items():
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
@@ -555,40 +559,42 @@ class ProductionJob(Job):
             self.log.verbose("Successfully created directory:", path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
-            self.log.error('Failed to create directory:',result['Value']['Failed'][path])
+            self.log.error('Failed to create directory:', result['Value']['Failed'][path])
             failed.append(path)
       else:
-        self.log.error('Failed to create directory:',result['Message'])
+        self.log.error('Failed to create directory:', result['Message'])
         failed.append(path)
-      result = self.fc.setMetadata(path.rstrip("/"),meta)
+      result = self.fc.setMetadata(path.rstrip("/"), meta)
       if not result['OK']:
-        self.log.error("Could not preset metadata",meta)        
+        self.log.error("Could not preset metadata", meta)        
 
     if len(failed):
       return  { 'OK' : False, 'Failed': failed}
     return S_OK()
   
   def getMetadata(self):
+    """ Return the corresponding metadata of the last step
+    """
     metadict = {}
-    for path,meta in self.finalMetaDict.items():
+    for path, meta in self.finalMetaDict.items():
       metadict.update(meta)
     return metadict
   
-  def _setProdParameter(self,prodID,pname,pvalue):
-    """Set a production parameter.
+  def _setProdParameter(self, prodID, pname, pvalue):
+    """ Set a production parameter.
     """
-    if type(pvalue)==type([]):
-      pvalue=string.join(pvalue,'\n')
+    if type(pvalue) == type([]):
+      pvalue = string.join(pvalue, '\n')
 
-    prodClient = RPCClient('Transformation/TransformationManager',timeout=120)
-    if type(pvalue)==type(2):
+    prodClient = RPCClient('Transformation/TransformationManager', timeout=120)
+    if type(pvalue) == type(2):
       pvalue = str(pvalue)
-    result = prodClient.setTransformationParameter(int(prodID),str(pname),str(pvalue))
+    result = prodClient.setTransformationParameter(int(prodID), str(pname), str(pvalue))
     if not result['OK']:
-      self.log.error('Problem setting parameter %s for production %s and value:\n%s' %(prodID,pname,pvalue))
+      self.log.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     return result
   
-  def _jobSpecificParams(self,application):
+  def _jobSpecificParams(self, application):
     """ For production additional checks are needed: ask the user
     """
 
@@ -596,7 +602,7 @@ class ProductionJob(Job):
       return S_ERROR("The production was created, you cannot add new applications to the job.")
 
     if not application.logfile:
-      logf = application.appname+"_"+application.version+"_@{STEP_ID}.log"
+      logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
@@ -609,7 +615,7 @@ class ProductionJob(Job):
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
     elif not application.nbevts:
-      self.nbevts = self.jobFileGroupSize*self.nbevts
+      self.nbevts = self.jobFileGroupSize * self.nbevts
       res = application.setNbEvts(self.nbevts)
       if not res['OK']:
         return res
@@ -633,7 +639,7 @@ class ProductionJob(Job):
       self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
-      if hasattr(application,'evttype'):
+      if hasattr(application, 'evttype'):
         self.evttype = application.evttype
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
@@ -643,9 +649,9 @@ class ProductionJob(Job):
       return S_ERROR("You need to specify the Output storage element")
     
     if self.prodparameters["SWPackages"]:
-      self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.version)
+      self.prodparameters["SWPackages"] += ";%s.%s" % (application.appname, application.version)
     else :
-      self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
+      self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
     
     if not application.accountInProduction:
       res = self._updateProdParameters(application)
@@ -661,12 +667,12 @@ class ProductionJob(Job):
     
     energypath = ''
     fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1]>0:
-      energypath = "%stev/"%(self.energy/Decimal("1000."))
+    if fracappen[1] > 0:
+      energypath = "%stev/" % (self.energy/Decimal("1000."))
       if energypath == '3.0tev/':
         energypath = '3tev/'
     else:
-      energypath =  "%sgev/"%(self.energy)
+      energypath =  "%sgev/" % (self.energy)
       if energypath == '500.0gev/':
         energypath = '500gev/'
       elif energypath == '350.0gev/':
@@ -675,51 +681,51 @@ class ProductionJob(Job):
     if not self.basename:
       self.basename = self.evttype
     
-    if not self.machine[-1]=='/':
+    if not self.machine[-1] == '/':
       self.machine += "/"
-    if not self.evttype[-1]=='/':
-      self.evttypepath = self.evttype+'/'  
+    if not self.evttype[-1] == '/':
+      self.evttypepath = self.evttype + '/'  
     
     path = self.basepath  
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile") and not application.willBeCut:
-      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC"
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath]= {"EvtType":self.evttype}
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype] = {"DetectorType":application.detectortype}
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/REC"] = {'Datatype':"REC"}
+      path = self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/REC"
+      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath] = {"EvtType":self.evttype}
+      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
+      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
-      application.setOutputRecFile(fname,path)  
-      self.log.info("Will store the files under %s"%path)
+      application.setOutputRecFile(fname, path)  
+      self.log.info("Will store the files under %s" % path)
       self.finalpaths.append(path)
-      path = self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST"
-      self.finalMetaDict[self.basepath+self.machine+energypath+self.evttypepath+application.detectortype+"/DST"] = {'Datatype':"DST"}
-      fname = self.basename+"_dst.slcio"
-      application.setOutputDstFile(fname,path)  
-      self.log.info("Will store the files under %s"%path)
+      path = self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/DST"
+      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
+      fname = self.basename + "_dst.slcio"
+      application.setOutputDstFile(fname, path)  
+      self.log.info("Will store the files under %s" % path)
       self.finalpaths.append(path)
-    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile and not application.willBeCut:
-      path = self.basepath+self.machine+energypath+self.evttypepath
-      self.finalMetaDict[path]= {"EvtType":self.evttype}      
-      if hasattr(application,"detectortype"):
+    elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
+      path = self.basepath + self.machine + energypath + self.evttypepath
+      self.finalMetaDict[path] = {"EvtType" : self.evttype}      
+      if hasattr(application, "detectortype"):
         if application.detectortype:
           path += application.detectortype
-          self.finalMetaDict[path]= {"DetectorType":application.detectortype}
-          path+='/'
+          self.finalMetaDict[path] = {"DetectorType" : application.detectortype}
+          path += '/'
         elif self.detector:
           path += self.detector
-          self.finalMetaDict[path]= {"DetectorType":self.detector}
-          path+='/'
+          self.finalMetaDict[path] = {"DetectorType" : self.detector}
+          path += '/'
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
-      self.finalMetaDict[path]= {'Datatype':application.datatype}
-      self.log.info("Will store the files under %s"%path)
+      self.finalMetaDict[path] = {'Datatype' : application.datatype}
+      self.log.info("Will store the files under %s" % path)
       self.finalpaths.append(path)
       extension = 'stdhep'
-      if application.datatype in ['SIM','REC']:
+      if application.datatype in ['SIM', 'REC']:
         extension = 'slcio'
-      fname = self.basename+"_%s"%(application.datatype.lower())+"."+extension
-      application.setOutputFile(fname,path)  
+      fname = self.basename + "_%s" % (application.datatype.lower()) + "." + extension
+      application.setOutputFile(fname, path)  
       
     self.basepath = path
 
@@ -731,13 +737,15 @@ class ProductionJob(Job):
       
     return S_OK()
 
-  def _updateProdParameters(self,application):
+  def _updateProdParameters(self, application):
+    """ Update the prod parameters stored in the production parameters visible from the web
+    """
     try:
       self.prodparameters.update(application.prodparameters)
-    except Exception,x:
-      return S_ERROR("%s: %s"%(Exception,str(x)))
+    except Exception, x:
+      return S_ERROR("%s: %s" % (Exception, str(x)))
     return S_OK()
 
-  def _jobSpecificModules(self,application,step):
+  def _jobSpecificModules(self, application, step):
     return application._prodjobmodules(step)
   

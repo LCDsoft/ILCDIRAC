@@ -186,6 +186,7 @@ class GetSRMFile(Application):
   
   """
   def __init__(self, paramdict = None):
+    self.filedict = {}
     Application.__init__(self, paramdict)
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
@@ -259,15 +260,20 @@ class _Root(Application):
   
   def __init__(self, paramdict = None):
     self.arguments = ''
+    self.script = None
     Application.__init__(self, paramdict)
     
     
   def setScript(self, script):
+    """ Base method, overloaded in L{RootScript}
+    """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
   
   
   def setMacro(self, macro):
+    """ Base method, overloaded in L{RootMacro}
+    """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
@@ -448,6 +454,7 @@ class Whizard(Application):
     self.useGridFiles = False
     self._allowedparams = ['PNAME1', 'PNAME2', 'POLAB1', 'POLAB2', 'USERB1', 'USERB2',
                            'ISRB1', 'ISRB2', 'EPAB1', 'EPAB2', 'RECOIL', 'INITIALS', 'USERSPECTRUM']
+    self._wo = None
     self.parameters = []
     self._processlist = None
     if processlist:
@@ -537,7 +544,7 @@ class Whizard(Application):
       } )
     self.genlevelcuts = cutsdict
 
-  def setFullParameterDict(self, dict):
+  def setFullParameterDict(self, pdict):
     """ Parameters for Whizard steering files, better than above as much more complete (cannot be more complete)
     
     >>> pdict = {}
@@ -561,10 +568,10 @@ class Whizard(Application):
     @type dict: dict
     """
     self._checkArgs( {
-        'dict' : types.DictType
+        'pdict' : types.DictType
       } )
 
-    self.optionsdict = dict
+    self.optionsdict = pdict
     #self._wo.changeAndReturn(dict)
   
   def setModel(self, model):
@@ -1529,6 +1536,8 @@ class OverlayInput(Application):
     self.accountInProduction = False
 
   def setProdID(self, pid):
+    """ Define the prodID to use as input, experts only
+    """
     self._checkArgs( {'pid': types.IntType})
     self.prodid = pid
     return S_OK()
@@ -1685,7 +1694,7 @@ class OverlayInput(Application):
     """
     if not self.energy:
       return  S_ERROR("Energy MUST be spcified for the overlay")
-    res = gConfig.getSections("/Operations/Overlay/%s"%self.detectortype)
+    res = gConfig.getSections("/Operations/Overlay/%s" % self.detectortype)
     if not res['OK']:
       return S_ERROR("Could not find the detector type")
       
@@ -2165,7 +2174,7 @@ class SLICPandora(Application):
     self._checkArgs( {
         'startfrom' : types.IntType
       } )
-    self.startfrom = startfrom     
+    self.startFrom = startfrom     
     
   def setPandoraSettings(self, pandoraSettings):
     """ Optional: Define the path where pandora settings are

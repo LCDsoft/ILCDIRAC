@@ -8,7 +8,7 @@ Base application class. All applications inherit this class.
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
 
-from DIRAC import S_OK,S_ERROR, gLogger
+from DIRAC import S_OK, S_ERROR, gLogger
 import inspect, sys, string, types, os
 
 
@@ -78,6 +78,7 @@ class Application(object):
     self._systemconfig = ''
     
     #Internal member: hold the list of the job's application set before self: used when using getInputFromApp
+    self._job = None
     self._jobapps = []
     self._jobsteps = []
     self._jobtype = ''
@@ -97,25 +98,27 @@ class Application(object):
     self._setparams(paramdict)
   
   def __repr__(self):
-    str  = "%s"%self.appname
+    classstr  = "%s" % self.appname
     if self.version:
-      str += " %s"%self.version
-    return str
+      classstr += " %s" % self.version
+    return classstr
   
-  def _setparams(self,params):
+  def _setparams(self, params):
+    """ Call the setter that was passed in the input dictionary
+    """
     if not params:
       return S_OK()
-    for param,value in params.items():
+    for param, value in params.items():
       if type(value) in types.StringTypes:
-        value = "'%s'"%value
+        value = "'%s'" % value
       try:
-        exec "self.set%s(%s)"%(param,str(value))
+        exec "self.set%s(%s)" % (param, str(value))
       except:
-        self._log.error("The %s class does not have a set%s method."%(self.__class__.__name__,param))
+        self._log.error("The %s class does not have a set%s method." % (self.__class__.__name__, param))
     return S_OK()  
     
     
-  def setName(self,name):
+  def setName(self, name):
     """ Define name of application
     
     @param name: Name of the application. Normally, every application defines its own, so no need to call that one
@@ -125,7 +128,7 @@ class Application(object):
     self.appname = name
     return S_OK()  
     
-  def setVersion(self,version):
+  def setVersion(self, version):
     """ Define version to use
     
     @param version: Version of the application to use
@@ -135,7 +138,7 @@ class Application(object):
     self.version = version
     return S_OK()  
     
-  def setSteeringFile(self,steeringfile):
+  def setSteeringFile(self, steeringfile):
     """ Set the steering file, and add it to sandbox
     
     @param steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
@@ -147,7 +150,7 @@ class Application(object):
       self.inputSB.append(steeringfile) 
     return S_OK()  
     
-  def setLogFile(self,logfile):
+  def setLogFile(self, logfile):
     """ Define application log file
     
     @param logfile: Log file to use. Set by default if not set.
@@ -157,7 +160,7 @@ class Application(object):
     self.logfile = logfile
     return S_OK()  
   
-  def setNbEvts(self,nbevts):
+  def setNbEvts(self, nbevts):
     """ Set the number of events to process
     
     @param nbevts: Number of events to process (or generate)
@@ -167,24 +170,24 @@ class Application(object):
     self.nbevts = nbevts  
     return S_OK()  
 
-  def setNumberOfEvents(self,nbevts):
+  def setNumberOfEvents(self, nbevts):
     """ Set the number of events to process, alias to setNbEvts
     """
     return self.setNbEvts(nbevts)
     
-  def setEnergy(self,energy):
+  def setEnergy(self, energy):
     """ Set the energy to use
     
     @param energy: Energy used in GeV
     @type energy: float
     """
-    if not type(energy)==type(1.1):
+    if not type(energy) == type(1.1):
       energy = float(energy)
     self._checkArgs({ 'energy' : types.FloatType })
     self.energy = energy
     return S_OK()  
     
-  def setOutputFile(self,ofile, path = None):
+  def setOutputFile(self, ofile, path = None):
     """ Set the output file
     
     @param ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using L{getInputFromApp})
@@ -195,11 +198,11 @@ class Application(object):
     self._checkArgs({ 'ofile' : types.StringTypes } )
     
     self.outputFile = ofile
-    self.prodparameters[ofile]={}
+    self.prodparameters[ofile] = {}
     if self.detectortype:
       self.prodparameters[ofile]['detectortype'] = self.detectortype
     if self.datatype:
-      self.prodparameters[ofile]['datatype']= self.datatype
+      self.prodparameters[ofile]['datatype'] = self.datatype
     
     if path:
       self._checkArgs({ 'path' : types.StringTypes } )
@@ -207,7 +210,7 @@ class Application(object):
       
     return S_OK()  
   
-  def setOutputSE(self,se):
+  def setOutputSE(self, se):
     """ Set the output storage element for all files produced by this application.
     
     @param se: Storage element name. Example CERN-SRM, IN2P3-SRM, RAL-SRM, IMPERIAL-SRM
@@ -218,22 +221,22 @@ class Application(object):
     self.outputSE = se
     return S_OK()
   
-  def setInputFile(self,inputfile):
+  def setInputFile(self, inputfile):
     """ Set the input file to use: stdhep, slcio, root, whatever
     
     @param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
     @type inputfile: string or list
     """
-    kwargs = {"inputfile":inputfile}
-    if not type(inputfile) in types.StringTypes and not type(inputfile)==type([]):
-      return self._reportError("InputFile must be string or list of strings",__name__,**kwargs)
-    if not type(inputfile)==type([]):
+    kwargs = { "inputfile" : inputfile}
+    if not type(inputfile) in types.StringTypes and not type(inputfile) == type([]):
+      return self._reportError("InputFile must be string or list of strings", __name__, **kwargs)
+    if not type(inputfile) == type([]):
       inputfile = [inputfile]
-    for f in inputfile:
-      if os.path.exists(f) or f.lower().count("lfn:"):
-        self.inputSB.append(f)
+    for inf in inputfile:
+      if os.path.exists(inf) or inf.lower().count("lfn:"):
+        self.inputSB.append(inf)
         
-    self.inputfile = string.join(inputfile,";")
+    self.inputfile = string.join(inputfile, ";")
 
     return S_OK()
   
@@ -245,7 +248,7 @@ class Application(object):
     
     return S_OK()
   
-  def getInputFromApp(self,application):
+  def getInputFromApp(self, application):
     """ Called to link applications
     
     >>> mokka = Mokka()
@@ -258,7 +261,7 @@ class Application(object):
     self._inputapp.append(application)
     return S_OK()  
 
-  def setDebug(self,debug = True):
+  def setDebug(self, debug = True):
     """ Set the application to debug mode
     
     >>> app = Application()
@@ -275,11 +278,11 @@ class Application(object):
     """ Method to list attributes for users. Doesn't list any private or semi-private attributes
     """
     print 'Attribute list :'
-    for key,val in self.__dict__.items():
-      if not key[0]=="_":
+    for key, val in self.__dict__.items():
+      if not key[0] == "_":
         if not val:
           val = "Not defined"
-        print "  ",key,":",val
+        print "  ", key, ":", val
 
 
 ########################################################################################
@@ -303,22 +306,22 @@ class Application(object):
 #                                                                  /.-~
 ########################################################################################
 
-  def _setApplicationModuleAndParameters(self,stepdefinition) :
+  def _setApplicationModuleAndParameters(self, stepdefinition) :
     """Create Application Module, add it to a Step and set values to Module. Called in every applications 
     """
     m1 = self._applicationModule()
     stepdefinition.addModule(m1)
-    m1i = stepdefinition.createModuleInstance(m1.getType(),stepdefinition.getType())
+    m1i = stepdefinition.createModuleInstance(m1.getType(), stepdefinition.getType())
     self._applicationModuleValues(m1i)
     return S_OK()
   
-  def _setUserJobFinalization(self,stepdefinition) :
+  def _setUserJobFinalization(self, stepdefinition) :
     """ Create UserOutputDataModule and add it to Step. 
     Called after the private method setApplicationModuleAndParameters in some user job applications
     """
     m2 = self._getUserOutputDataModule()
     stepdefinition.addModule(m2)
-    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
+    stepdefinition.createModuleInstance(m2.getType(), stepdefinition.getType())
     return S_OK()
   
   def _setOutputComputeDataList(self, stepdefinition) :
@@ -327,7 +330,7 @@ class Application(object):
     """
     m2 = self._getComputeOutputDataListModule()
     stepdefinition.addModule(m2)
-    stepdefinition.createModuleInstance(m2.getType(),stepdefinition.getType())
+    stepdefinition.createModuleInstance(m2.getType(), stepdefinition.getType())
     return S_OK()
     
   def _createModuleDefinition(self):
@@ -364,18 +367,18 @@ class Application(object):
     """
     return None
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     """ Set the values for the modules parameters. Needs to be overloaded for each application.
     """
     pass
 
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs (userJobFinalization for instance)
     """
     self._log.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     """ Same as above, but the other way around.
     """
     self._log.error("This application does not implement the modules, you get an empty list")
@@ -410,33 +413,33 @@ class Application(object):
           
     return S_OK()
   
-  def _addBaseParameters(self,stepdefinition):
+  def _addBaseParameters(self, stepdefinition):
     """ Add to step the default parameters: appname, version, steeringfile, (nbevts, Energy), LogFile, InputFile, OutputFile, OutputPath
     """
-    stepdefinition.addParameter(Parameter("applicationName",   "", "string", "", "", False, False, "Application Name"))
-    stepdefinition.addParameter(Parameter("applicationVersion","", "string", "", "", False, False, "Application Version"))
-    stepdefinition.addParameter(Parameter("SteeringFile",      "", "string", "", "", False, False, "Steering File"))
-    stepdefinition.addParameter(Parameter("applicationLog",    "", "string", "", "", False, False, "Log File"))
-    stepdefinition.addParameter(Parameter("InputFile",         "", "string", "", "",  True, False, "Input File"))
-    stepdefinition.addParameter(Parameter("ForgetInput",    False,"boolean", "", "", False, False, "Do not overwrite input steering"))
+    stepdefinition.addParameter(Parameter("applicationName",    "", "string", "", "", False, False, "Application Name"))
+    stepdefinition.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, "Application Version"))
+    stepdefinition.addParameter(Parameter("SteeringFile",       "", "string", "", "", False, False, "Steering File"))
+    stepdefinition.addParameter(Parameter("applicationLog",     "", "string", "", "", False, False, "Log File"))
+    stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
+    stepdefinition.addParameter(Parameter("ForgetInput",     False, "boolean", "", "", False, False, "Do not overwrite input steering"))
     if len(self.outputFile):
-      stepdefinition.addParameter(Parameter("OutputFile",      "", "string", "", "", False,  False, "Output File"))
+      stepdefinition.addParameter(Parameter("OutputFile",       "", "string", "", "", False,  False, "Output File"))
     if len(self.outputDstFile):
-      stepdefinition.addParameter(Parameter("outputDST",       "", "string", "", "", False,  False, "Output DST File"))
+      stepdefinition.addParameter(Parameter("outputDST",        "", "string", "", "", False,  False, "Output DST File"))
     if len(self.outputRecFile):
-      stepdefinition.addParameter(Parameter("outputREC",      "", "string", "", "",  False,  False, "Output REC File"))
+      stepdefinition.addParameter(Parameter("outputREC",       "", "string", "", "",  False,  False, "Output REC File"))
       
-    stepdefinition.addParameter(Parameter("OutputPath",        "", "string", "", "",  True, False, "Output File path on the grid"))
-    stepdefinition.addParameter(Parameter("outputPathREC",     "", "string", "", "",  True, False, "Output REC File path on the grid"))
-    stepdefinition.addParameter(Parameter("outputPathDST",     "", "string", "", "",  True, False, "Output DST File path on the grid"))
-    stepdefinition.addParameter(Parameter("OutputSE",          "", "string", "", "",  True, False, "Output File storage element"))
-    stepdefinition.addParameter(Parameter('listoutput',        [],   "list", "", "", False, False, "list of output file name"))
+    stepdefinition.addParameter(Parameter("OutputPath",         "", "string", "", "",  True, False, "Output File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathREC",      "", "string", "", "",  True, False, "Output REC File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathDST",      "", "string", "", "",  True, False, "Output DST File path on the grid"))
+    stepdefinition.addParameter(Parameter("OutputSE",           "", "string", "", "",  True, False, "Output File storage element"))
+    stepdefinition.addParameter(Parameter('listoutput',         [],   "list", "", "", False, False, "list of output file name"))
     #Following should be workflow parameters
     #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
     #stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     return S_OK()
   
-  def _setBaseStepParametersValues(self,stepinstance):
+  def _setBaseStepParametersValues(self, stepinstance):
     """ Set the values for the basic step parameters
     """
         
@@ -461,25 +464,25 @@ class Application(object):
     return S_OK()
       
       
-  def _addParametersToStep(self,stepdefinition):
+  def _addParametersToStep(self, stepdefinition):
     """ Method to be overloaded by every application. Add the parameters to the given step. Should call L{_addBaseParameters}.
     Called from Job
     """
     return self._addBaseParameters(stepdefinition)
   
-  def _setStepParametersValues(self,stepinstance):
+  def _setStepParametersValues(self, stepinstance):
     """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
     Called from Job
     """
     return self._setBaseStepParametersValues(stepinstance)
 
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile). See L{StdhepCut} for example.
     Called from Job.
     """
     return S_OK()
 
-  def _analyseJob(self,job):
+  def _analyseJob(self, job):
     """ Called from Job, only gives the application the knowledge of the Job (application, step, system config)
     """
     self._job = job
@@ -543,7 +546,7 @@ class Application(object):
     #
 
     args = inspect.getargvalues( inspect.stack()[ level ][ 0 ] )
-    dict = {}
+    adict = {}
 
     for arg in args[0]:
 
@@ -552,9 +555,9 @@ class Application(object):
 
       # args[3] contains the 'local' variables
 
-      dict[arg] = args[3][arg]
+      adict[arg] = args[3][arg]
 
-    return dict
+    return adict
 
   #############################################################################
   def _reportError( self, message, name = '', **kwargs ):

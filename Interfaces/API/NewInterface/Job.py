@@ -13,7 +13,7 @@ from DIRAC.Core.Workflow.Step                          import StepDefinition
 from DIRAC.Core.Workflow.Parameter                     import Parameter 
 
 
-from DIRAC import S_ERROR,S_OK,gLogger
+from DIRAC import S_ERROR, S_OK, gLogger
 import string, inspect
 
 
@@ -40,7 +40,7 @@ class Job(DiracJob):
   def setInputData(self, lfns):
     """ Overload method to cancel it
     """
-    return self._reportError('%s does not implement setInputData'%self.__name__)
+    return self._reportError('%s does not implement setInputData' % self.__class__.__name__)
   def setInputSandbox(self, files):
     """ Overload method to cancel it
     """
@@ -70,12 +70,12 @@ class Job(DiracJob):
     self.check = False
     return S_OK()
 
-  def submit(self,dirac = None, mode = 'wms'):
+  def submit(self, dirac = None, mode = 'wms'):
     """ Method to submit the job. Not doing anything by default, so that ProductionJobs cannot be submitted by mistake
     """
     return S_ERROR("Not available for this job class")
   
-  def checkparams(self,dirac = None):
+  def checkparams(self, dirac = None):
     """ Check job consistency instead of submitting
     """
     if not dirac:
@@ -104,7 +104,7 @@ class Job(DiracJob):
       self.check = False
     return S_OK()
   
-  def append(self,application):
+  def append(self, application):
     """ Helper function
     
     This is the main part: call for every application
@@ -121,18 +121,18 @@ class Job(DiracJob):
     
     res = application._checkConsistency()
     if not res['OK']:
-      self.log.error("%s failed to check its consistency: %s"%(application,res['Message']))
-      return S_ERROR("%s failed to check its consistency: %s"%(application,res['Message']))
+      self.log.error("%s failed to check its consistency: %s" % (application, res['Message']))
+      return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
     
     res = self._jobSpecificParams(application)
     if not res['OK']:
-      self.log.error("%s failed job specific checks: %s"%(application,res['Message']))
-      return S_ERROR("%s failed job specific checks: %s"%(application,res['Message']))
+      self.log.error("%s failed job specific checks: %s" % (application, res['Message']))
+      return S_ERROR("%s failed job specific checks: %s" % (application, res['Message']))
 
     res = application._checkFinalConsistency()
     if not res['OK']:
-      self.log.error("%s failed to check its consistency: %s"%(application,res['Message']))
-      return S_ERROR("%s failed to check its consistency: %s"%(application,res['Message']))
+      self.log.error("%s failed to check its consistency: %s" % (application, res['Message']))
+      return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
     self.applicationlist.append(application)
@@ -203,32 +203,32 @@ class Job(DiracJob):
     
       res = application._checkWorkflowConsistency()
       if not res['OK']:
-        self.log.error("%s failed to check its consistency: %s"%(application,res['Message']))
-        return S_ERROR("%s failed to check its consistency: %s"%(application,res['Message']))
+        self.log.error("%s failed to check its consistency: %s" % (application, res['Message']))
+        return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
       
       ##Now we can create the step and add it to the workflow
       #First we need a unique name, let's use the application name and step number
-      stepname = "%s_step_%s"%(application.appname,self.stepnumber)
+      stepname = "%s_step_%s" % (application.appname, self.stepnumber)
       stepdefinition = StepDefinition(stepname)
       self.steps.append(stepdefinition)
       
       ##Set the modules needed by the application
-      res = self._jobSpecificModules(application,stepdefinition)
+      res = self._jobSpecificModules(application, stepdefinition)
       if not res['OK']:
-        self.log.error("Failed to add modules: %s"%res['Message'])
-        return S_ERROR("Failed to add modules: %s"%res['Message'])
+        self.log.error("Failed to add modules: %s" % res['Message'])
+        return S_ERROR("Failed to add modules: %s" % res['Message'])
   
       ### add the parameters to  the step
       res = application._addParametersToStep(stepdefinition)
       if not res['OK']:
-        self.log.error("Failed to add parameters: %s"%res['Message'])   
-        return S_ERROR("Failed to add parameters: %s"%res['Message'])   
+        self.log.error("Failed to add parameters: %s" % res['Message'])   
+        return S_ERROR("Failed to add parameters: %s" % res['Message'])   
       
       ##Now the step is defined, let's add it to the workflow
       self.workflow.addStep(stepdefinition)
     
       ###Now we need to get a step instance object to set the parameters' values
-      stepInstance = self.workflow.createStepInstance(stepdefinition.getType(),stepname)
+      stepInstance = self.workflow.createStepInstance(stepdefinition.getType(), stepname)
 
       ##Set the parameters values to the step instance
       res = application._setStepParametersValues(stepInstance)
@@ -248,19 +248,19 @@ class Job(DiracJob):
       
     return S_OK()
   
-  def _jobSpecificModules(self,application,step):
+  def _jobSpecificModules(self, application, step):
     """ Returns the list of the job specific modules for the passed application. Is overloaded in ProductionJob class. UserJob uses the default.
     """
     return application._userjobmodules(step)
 
-  def _jobSpecificParams(self,application):
+  def _jobSpecificParams(self, application):
     """ Every type of job has to reimplement this method. By default, just set the log file if not provided and the energy.
     """
     if not application.logfile:      
       logf = application.appname
       if application.version:
-        logf += "_"+application.version
-      logf += "_Step_%s.log"%(len(self.applicationlist)+1)
+        logf += "_" + application.version
+      logf += "_Step_%s.log" % (len(self.applicationlist)+1)
       application.setLogFile(logf)
     
     if self.energy:
@@ -339,7 +339,7 @@ class Job(DiracJob):
     #
 
     args = inspect.getargvalues( inspect.stack()[ level ][ 0 ] )
-    dict = {}
+    adict = {}
 
     for arg in args[0]:
 
@@ -348,6 +348,6 @@ class Job(DiracJob):
 
       # args[3] contains the 'local' variables
 
-      dict[arg] = args[3][arg]
+      adict[arg] = args[3][arg]
 
-    return dict
+    return adict
