@@ -1670,8 +1670,8 @@ class OverlayInput(Application):
     if not res['OK']:
       return res
     
-    if not self.detectortype in ['ILD','SID'] :
-      return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD or SID.')
+    if not self.detectortype in ['ILD','SID','SID_DBD'] :
+      return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD, SID, SID_DBD.')
 
     if self._jobtype == 'User' :
       if not self.NbSigEvtsPerJob :
