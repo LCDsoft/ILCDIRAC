@@ -10,17 +10,19 @@ User Job class. Used to define (guess what?) user jobs!
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
-from DIRAC import S_OK,S_ERROR
+from DIRAC import S_OK
 
-import string,types
+import string, types
 
 class UserJob(Job):
+  """ User job class. To be used by users, not for production.
+  """
   def __init__(self, script = None):
     Job.__init__(self, script)
     self.type = 'User'
     self.diracinstance = None
     
-  def submit(self,diracinstance=None,mode = "wms"):
+  def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
     add the job to DIRAC.
     """
@@ -32,7 +34,7 @@ class UserJob(Job):
       self.diracinstance = DiracILC()
     else:
       self.diracinstance = diracinstance
-    return self.diracinstance.submit(self,mode)
+    return self.diracinstance.submit(self, mode)
     
   #############################################################################
   def setInputData( self, lfns ):
@@ -64,18 +66,18 @@ class UserJob(Job):
 
     return S_OK()
    
-  def setInputSandbox(self,flist):
+  def setInputSandbox(self, flist):
     """ Mostly inherited from DIRAC.Job
     """
-    if type(flist)==type(""):
+    if type(flist) == type(""):
       flist = [flist]
-    if not type(flist)==type([]) :
+    if not type(flist) == type([]) :
       return self._reportError("File passed must be either single file or list of files.") 
     self.inputsandbox.extend(flist)
     return S_OK()
 
   #############################################################################
-  def setOutputData(self, lfns, OutputPath='', OutputSE=[]):
+  def setOutputData(self, lfns, OutputPath = '', OutputSE = ['']):
     """Helper function, used in preference to Job.setOutputData() for ILC.
 
        For specifying output data to be registered in Grid storage.  If a list
@@ -95,7 +97,7 @@ class UserJob(Job):
        @type OutputSE: string or list
        @type OutputPath: string
     """    
-    kwargs = {'lfns':lfns, 'OutputSE':OutputSE, 'OutputPath':OutputPath}
+    kwargs = {'lfns' : lfns, 'OutputSE' : OutputSE, 'OutputPath' : OutputPath}
     if type(lfns) == list and len(lfns):
       outputDataStr = string.join(lfns, ';')
       description = 'List of output data files'
@@ -153,7 +155,7 @@ class UserJob(Job):
       description = 'Output sandbox file'
       self._addParameter( self.workflow, 'OutputSandbox', 'JDL', files, description )
     else:
-      kwargs = {'files':files}
+      kwargs = {'files' : files}
       return self._reportError( 'Expected file string or list of files for output sandbox contents', **kwargs )
 
     return S_OK()
