@@ -18,7 +18,7 @@ Example usage:
 
 It's also possible to set all the application's properties in the constructor
 
->>> ga = GenericApplication({"Script":"myscript.py","Arguments":"some arguments","Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
+>>> ga = GenericApplication({"Script":"myscript.py", "Arguments":"some arguments", "Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
 
 but this is more an expert's functionality. 
 
@@ -45,7 +45,7 @@ from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, get
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC.Core.Workflow.Step                         import *
 from DIRAC.Core.Workflow.Module                       import *
-from DIRAC                                            import S_OK,S_ERROR, gConfig
+from DIRAC                                            import S_OK, S_ERROR, gConfig
 
 from math import modf
 from decimal import Decimal
@@ -78,7 +78,7 @@ class GenericApplication(Application):
     self.appname = self._modulename
     self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
       
-  def setScript(self,script):
+  def setScript(self, script):
     """ Define script to use
     
     @param script: Script to run on. Can be shell or python. Can be local file or LFN.
@@ -92,7 +92,7 @@ class GenericApplication(Application):
     self.script = script
     return S_OK()
     
-  def setArguments(self,args):
+  def setArguments(self, args):
     """ Optional: Define the arguments of the script
     
     @param args: Arguments to pass to the command line call
@@ -105,7 +105,7 @@ class GenericApplication(Application):
     self.arguments = args
     return S_OK()
       
-  def setDependency(self,appdict):
+  def setDependency(self, appdict):
     """ Define list of application you need
     
     >>> app.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
@@ -129,26 +129,26 @@ class GenericApplication(Application):
     m1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
-  def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("script",self.script)
-    moduleinstance.setValue('arguments',self.arguments)
-    moduleinstance.setValue('debug',self.debug)
+  def _applicationModuleValues(self, moduleinstance):
+    moduleinstance.setValue("script",    self.script)
+    moduleinstance.setValue('arguments', self.arguments)
+    moduleinstance.setValue('debug',     self.debug)
   
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('prodjobmodules failed')
     return S_OK()    
 
-  def _addParametersToStep(self,stepdefinition):
+  def _addParametersToStep(self, stepdefinition):
     res = self._addBaseParameters(stepdefinition)
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")
@@ -156,8 +156,8 @@ class GenericApplication(Application):
   
   def _setStepParametersValues(self, instance):
     self._setBaseStepParametersValues(instance)
-    for depn,depv in self.dependencies.items():
-      self._job._addSoftware(depn,depv)
+    for depn, depv in self.dependencies.items():
+      self._job._addSoftware(depn, depv)
     return S_OK()
       
   def _checkConsistency(self):
@@ -191,7 +191,7 @@ class GetSRMFile(Application):
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
 
-  def setFiles(self,fdict):
+  def setFiles(self, fdict):
     """ Specify the files you need
     
     @param fdict: file dictionary: {file:site}, can be also [{},{}] etc.
@@ -209,17 +209,17 @@ class GetSRMFile(Application):
     m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
     return m1
 
-  def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("srmfiles",self.filedict)  
-    moduleinstance.setValue("debug",self.debug)  
+  def _applicationModuleValues(self, moduleinstance):
+    moduleinstance.setValue("srmfiles", self.filedict)  
+    moduleinstance.setValue("debug",    self.debug)  
   
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     if not res1["OK"]  :
       return S_ERROR("userjobmodules method failed")
     return S_OK() 
 
-  def _prodjobmodules(self,step):
+  def _prodjobmodules(self, step):
     self._log.error("This application is not meant to be used in Production context")
     return S_ERROR('Should not use in Production')
 
@@ -243,7 +243,7 @@ class GetSRMFile(Application):
         
     return S_OK()
 
-  def _addParametersToStep(self,step):
+  def _addParametersToStep(self, step):
     res = self._addBaseParameters(step)
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")
@@ -262,17 +262,17 @@ class _Root(Application):
     Application.__init__(self, paramdict)
     
     
-  def setScript(self,script):
+  def setScript(self, script):
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
   
   
-  def setMacro(self,macro):
+  def setMacro(self, macro):
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
      
-  def setArguments(self,args):
+  def setArguments(self, args):
     """ Optional: Define the arguments of the script
     
     @param args: Arguments to pass to the command line call
@@ -294,13 +294,13 @@ class _Root(Application):
     return m1
   
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('arguments',   self.arguments)
     moduleinstance.setValue("script",      self.script)
     moduleinstance.setValue('debug',       self.debug)
     
   
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -308,7 +308,7 @@ class _Root(Application):
     return S_OK() 
 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -332,11 +332,11 @@ class _Root(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()  
 
 #################################################################
@@ -361,7 +361,7 @@ class RootScript(_Root):
     self._moduledescription = 'Root application script'
       
       
-  def setScript(self,executable):
+  def setScript(self, executable):
     """ Define executable to use
     
     @param executable: Script to run on. Can be shell or root executable. Must be a local file.
@@ -399,7 +399,7 @@ class RootMacro(_Root):
     self._moduledescription = 'Root macro execution'
       
       
-  def setMacro(self,macro):
+  def setMacro(self, macro):
     """ Define macro to use
     
     @param macro: Macro to run on. Must be a local C file.
@@ -446,7 +446,8 @@ class Whizard(Application):
     self.evttype = ''
     self.globalname = ''
     self.useGridFiles = False
-    self._allowedparams = ['PNAME1','PNAME2','POLAB1','POLAB2','USERB1','USERB2','ISRB1','ISRB2','EPAB1','EPAB2','RECOIL','INITIALS','USERSPECTRUM']
+    self._allowedparams = ['PNAME1', 'PNAME2', 'POLAB1', 'POLAB2', 'USERB1', 'USERB2',
+                           'ISRB1', 'ISRB2', 'EPAB1', 'EPAB2', 'RECOIL', 'INITIALS', 'USERSPECTRUM']
     self.parameters = []
     self._processlist = None
     if processlist:
@@ -463,7 +464,7 @@ class Whizard(Application):
     """
     return getDict()
     
-  def setEvtType(self,evttype):
+  def setEvtType(self, evttype):
     """ Define process. If the process given is not found, when calling job.append a full list is printed.
     
     @param evttype: Process to generate
@@ -477,7 +478,7 @@ class Whizard(Application):
       return S_ERROR("Cannot modify")
     self.evttype = evttype
 
-  def setGlobalEvtType(self,globalname):
+  def setGlobalEvtType(self, globalname):
     """ When producing multiple process in one job, it is needed to define this for the output file name.
     It's mandatory to use the L{setFullParameterDict} method when using this.
     """
@@ -486,7 +487,7 @@ class Whizard(Application):
       } )
     self.globalname = globalname
 
-  def setLuminosity(self,lumi):
+  def setLuminosity(self, lumi):
     """ Optional: Define luminosity to generate 
     
     @param lumi: Luminosity to generate. Not available if cross section is not known a priori. Use with care.
@@ -497,7 +498,7 @@ class Whizard(Application):
       } )    
     self.lumi = lumi
 
-  def setRandomSeed(self,seed):
+  def setRandomSeed(self, seed):
     """ Optional: Define random seed to use. Default is Job ID.
     
     @param seed: Seed to use during integration and generation. 
@@ -509,7 +510,7 @@ class Whizard(Application):
 
     self.seed = seed
   
-  def setParameterDict(self,paramdict):
+  def setParameterDict(self, paramdict):
     """ Parameters for Whizard steering files
     
     @param paramdict: Dictionary of parameters for the whizard templates. Most parameters are set on the fly.
@@ -521,7 +522,7 @@ class Whizard(Application):
 
     self.parameterdict = paramdict
 
-  def setGeneratorLevelCuts(self,cutsdict):
+  def setGeneratorLevelCuts(self, cutsdict):
     """ Define generator level cuts (to be put in whizard.cut1)
     
     Refer to U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc12} for details about how to set cuts.
@@ -536,7 +537,7 @@ class Whizard(Application):
       } )
     self.genlevelcuts = cutsdict
 
-  def setFullParameterDict(self,dict):
+  def setFullParameterDict(self, dict):
     """ Parameters for Whizard steering files, better than above as much more complete (cannot be more complete)
     
     >>> pdict = {}
@@ -566,7 +567,7 @@ class Whizard(Application):
     self.optionsdict = dict
     #self._wo.changeAndReturn(dict)
   
-  def setModel(self,model):
+  def setModel(self, model):
     """ Optional: Define Model
     
     @param model: Model to use for generation. Predefined list available in GeneratorModels class.
@@ -590,7 +591,7 @@ class Whizard(Application):
     """
     self.useGridFiles = True  
     
-  def setJobIndex(self,index):
+  def setJobIndex(self, index):
     """ Optional: Define Job Index. Added in the file name between the event type and the extension.
     
     @param index: Index to use for generation
@@ -602,7 +603,7 @@ class Whizard(Application):
 
     self.jobindex = index
   
-  def dumpWhizardDotIn(self,fname='whizard.in'):
+  def dumpWhizardDotIn(self, fname='whizard.in'):
     if self.addedtojob:
       self._wo.toWhizardDotIn(fname)
     else:
@@ -631,7 +632,7 @@ class Whizard(Application):
         if self.evttype:
           if not self.optionsdict.has_key('process_input'):
             self.optionsdict['process_input'] = {}
-          self.optionsdict['process_input']['process_id']=self.evttype
+          self.optionsdict['process_input']['process_id'] = self.evttype
         else:
           return S_ERROR("Event type not specified")
       self.evttype = res['Value']
@@ -645,7 +646,7 @@ class Whizard(Application):
         if self.energy:
           if not self.optionsdict.has_key('process_input'):
             self.optionsdict['process_input'] = {}
-          self.optionsdict['process_input']['sqrts']=self.energy
+          self.optionsdict['process_input']['sqrts'] = self.energy
           energy = self.energy
         else:
           return S_ERROR("Energy set to 0")
@@ -660,7 +661,7 @@ class Whizard(Application):
         if self.nbevts:
           if not self.optionsdict.has_key('simulation_input'):
             self.optionsdict['simulation_input'] = {}
-          self.optionsdict['simulation_input']['n_events']=self.nbevts
+          self.optionsdict['simulation_input']['n_events'] = self.nbevts
           nbevts = self.nbevts
         else:
           return S_ERROR("Number of events set to 0")
@@ -697,7 +698,7 @@ class Whizard(Application):
             if self.version != version:
               return S_ERROR("All processes to consider are not available in the same WHIZARD version")
           self.version = version
-          self._log.info("Found the process %s in whizard %s"%(process,self.version))
+          self._log.info("Found the process %s in whizard %s"%(process, self.version))
         
     if not self.version:
       return S_ERROR('No version found')
@@ -718,7 +719,7 @@ class Whizard(Application):
 
     if not self._jobtype == 'User':
       if not self.willBeCut:
-        self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['Process'] = self.evttype
       self.prodparameters['model'] = self.model
@@ -819,12 +820,12 @@ class Whizard(Application):
 
   def _applicationModule(self):
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("evttype",     "", "string", "", "", False, False, "Process to generate"))
-    md1.addParameter(Parameter("RandomSeed",   0,    "int", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("Lumi",         0,  "float", "", "", False, False, "Luminosity of beam"))
-    md1.addParameter(Parameter("Model",       "", "string", "", "", False, False, "Model for generation"))
-    md1.addParameter(Parameter("SteeringFile","", "string", "", "", False, False, "Steering file"))
-    md1.addParameter(Parameter("JobIndex",    "", "string", "", "", False, False, "Job Index"))
+    md1.addParameter(Parameter("evttype",      "", "string", "", "", False, False, "Process to generate"))
+    md1.addParameter(Parameter("RandomSeed",    0,    "int", "", "", False, False, "Random seed for the generator"))
+    md1.addParameter(Parameter("Lumi",          0,  "float", "", "", False, False, "Luminosity of beam"))
+    md1.addParameter(Parameter("Model",        "", "string", "", "", False, False, "Model for generation"))
+    md1.addParameter(Parameter("SteeringFile", "", "string", "", "", False, False, "Steering file"))
+    md1.addParameter(Parameter("JobIndex",     "", "string", "", "", False, False, "Job Index"))
     md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, "Specific steering parameters"))
     md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, "Options dict to create full whizard.in on the fly"))
     md1.addParameter(Parameter("GenLevelCutDictStr",  "", "string", "", "", False, False, "Generator level cuts to put in whizard.cut1"))
@@ -834,8 +835,7 @@ class Whizard(Application):
     return md1
 
   
-  def _applicationModuleValues(self,moduleinstance):
-
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("evttype",            self.evttype)
     moduleinstance.setValue("RandomSeed",         self.seed)
     moduleinstance.setValue("Lumi",               self.lumi)
@@ -849,14 +849,14 @@ class Whizard(Application):
     moduleinstance.setValue("useGridFiles",       self.useGridFiles)
     moduleinstance.setValue("debug",              self.debug)
     
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -880,9 +880,9 @@ class Pythia(Application):
   >>> py.setOutputFile("myfile.stdhep")
 
   """
-  def __init__(self,paramdict = None):
+  def __init__(self, paramdict = None):
     self.evttype = ''
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
@@ -897,14 +897,14 @@ class Pythia(Application):
     m1 = self._createModuleDefinition()
     return m1  
 
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -926,7 +926,7 @@ class Pythia(Application):
     
     if not self._jobtype == 'User':
       if not self.willBeCut:      
-        self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['Process'] = self.evttype
 
@@ -954,7 +954,7 @@ class PostGenSelection(Application):
     self.appname = 'postgensel'
     self._moduledescription = 'Helper to filter generator selection'
       
-  def setNbEvtsToKeep(self,NbEvtsToKeep):
+  def setNbEvtsToKeep(self, NbEvtsToKeep):
     """ Set the number of events to keep in the input file
     
     @param NbEvtsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
@@ -976,18 +976,18 @@ class PostGenSelection(Application):
     return m1
   
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKeep)
     moduleinstance.setValue('debug',                       self.debug)
    
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -1010,11 +1010,11 @@ class PostGenSelection(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()   
   
 ##########################################################################
@@ -1038,14 +1038,14 @@ class StdhepCut(Application):
     self.maxevts = 0
     self.nbevtsperfile = 0
     self.selectionEfficiency = 0
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
 
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA)'
     self.datatype = 'gen'
     
-  def setMaxNbEvts(self,nbevts):
+  def setMaxNbEvts(self, nbevts):
     """ Max number of events to keep in each file
     
     @param nbevts: Maximum number of events to read from input file
@@ -1056,7 +1056,7 @@ class StdhepCut(Application):
       } )
     self.maxevts = nbevts
     
-  def setNbEvtsPerFile(self,nbevts):
+  def setNbEvtsPerFile(self, nbevts):
     """ Number of events per file
     
     @param nbevts: Number of evetns to keep in each file.
@@ -1067,7 +1067,7 @@ class StdhepCut(Application):
       } )
     self.nbevtsperfile = nbevts  
 
-  def setSelectionEfficiency(self,efficiency):
+  def setSelectionEfficiency(self, efficiency):
     """ Selection efficiency of your cuts, needed to determine the number of files that will be created
     
     @param efficiency: Cut efficiency
@@ -1085,18 +1085,18 @@ class StdhepCut(Application):
 
     return m1
 
-  def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("MaxNbEvts",self.maxevts)
-    moduleinstance.setValue("debug",    self.debug)
+  def _applicationModuleValues(self, moduleinstance):
+    moduleinstance.setValue("MaxNbEvts", self.maxevts)
+    moduleinstance.setValue("debug",     self.debug)
     
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -1118,7 +1118,7 @@ class StdhepCut(Application):
       return S_ERROR('You need to know the selection efficiency of your cuts')
     
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts_kept'] = self.maxevts
       self.prodparameters['cut_file'] = self.steeringfile
       
@@ -1144,11 +1144,11 @@ class StdhepCut(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()  
     
     
@@ -1180,7 +1180,7 @@ class Mokka(Application):
     self.dbSlice = ''
     self.detectorModel = ''
     self.processID = ''
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
     self._moduledescription = 'Module to run MOKKA'
@@ -1188,7 +1188,7 @@ class Mokka(Application):
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
      
-  def setRandomSeed(self,seed):
+  def setRandomSeed(self, seed):
     """ Optional: Define random seed to use. Default is JobID. 
     
     Also used as mcRunNumber.
@@ -1202,7 +1202,7 @@ class Mokka(Application):
 
     self.seed = seed    
     
-  def setmcRunNumber(self,runnumber):
+  def setmcRunNumber(self, runnumber):
     """ Optional: Define mcRunNumber to use. Default is 0. In Production jobs, is equal to RandomSeed
         
     @param runnumber: mcRunNumber parameter of Mokka
@@ -1214,7 +1214,7 @@ class Mokka(Application):
 
     self.runnumber = runnumber    
     
-  def setDetectorModel(self,detectorModel):
+  def setDetectorModel(self, detectorModel):
     """ Define detector to use for Mokka simulation 
     
     @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
@@ -1226,7 +1226,7 @@ class Mokka(Application):
 
     self.detectorModel = detectorModel    
     
-  def setMacFile(self,macfile):
+  def setMacFile(self, macfile):
     """ Optional: Define Mac File. Useful if using particle gun.
     
     @param macfile: Mac file for Mokka
@@ -1242,7 +1242,7 @@ class Mokka(Application):
       self._log.info("Mac file not found locally and is not an lfn, I hope you know what you are doing...")  
     
     
-  def setStartFrom(self,startfrom):
+  def setStartFrom(self, startfrom):
     """ Optional: Define from where mokka starts to read in the generator file
     
     @param startfrom: from how mokka start to read the input file
@@ -1254,7 +1254,7 @@ class Mokka(Application):
     self.startFrom = startfrom  
     
     
-  def setProcessID(self,processID):
+  def setProcessID(self, processID):
     """ Optional: Define the processID. This is added to the event header.
     
     @param processID: ID's process
@@ -1266,7 +1266,7 @@ class Mokka(Application):
     self.processID = processID
     
     
-  def setDbSlice(self,dbSlice):
+  def setDbSlice(self, dbSlice):
     """ Optional: Define the data base that will use mokka
     
     @param dbSlice: data base used by mokka
@@ -1282,14 +1282,14 @@ class Mokka(Application):
       self._log.info("DB slice not found locally and is not an lfn, I hope you know what you are doing...")  
       
     
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -1314,7 +1314,7 @@ class Mokka(Application):
     #  return res
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['mokka_steeringfile'] = self.steeringfile
       if self.detectorModel:
         self.prodparameters['mokka_detectormodel'] = self.detectorModel
@@ -1335,7 +1335,7 @@ class Mokka(Application):
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("RandomSeed",      self.seed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
@@ -1349,11 +1349,11 @@ class Mokka(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
     
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK() 
   
 
@@ -1378,7 +1378,7 @@ class SLIC(Application):
     self.startFrom = 0
     self.seed = 0
     self.detectorModel = ''
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICAnalysis'
     self._moduledescription = 'Module to run SLIC'
@@ -1386,7 +1386,7 @@ class SLIC(Application):
     self.datatype = 'SIM'
     self.detectortype = 'SID'
      
-  def setRandomSeed(self,seed):
+  def setRandomSeed(self, seed):
     """ Optional: Define random seed to use. Default is Job ID.
     
     @param seed: Seed to use during simulation. 
@@ -1398,7 +1398,7 @@ class SLIC(Application):
 
     self.seed = seed    
     
-  def setDetectorModel(self,detectorModel):
+  def setDetectorModel(self, detectorModel):
     """ Define detector to use for Slic simulation 
     
     @param detectorModel: Detector Model to use for Slic simulation. Default is ??????
@@ -1419,7 +1419,7 @@ class SLIC(Application):
     self.detectorModel = os.path.basename(detectorModel).replace(".zip","")
     
     
-  def setStartFrom(self,startfrom):
+  def setStartFrom(self, startfrom):
     """ Optional: Define from how slic start to read in the input file
     
     @param startfrom: from how slic start to read the input file
@@ -1431,14 +1431,14 @@ class SLIC(Application):
     self.startFrom = startfrom  
     
     
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -1460,7 +1460,7 @@ class SLIC(Application):
     #  return res
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['slic_steeringfile'] = self.steeringfile
       self.prodparameters['detectorType'] = self.detectortype
       if self.detectorModel:
@@ -1480,7 +1480,7 @@ class SLIC(Application):
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("RandomSeed",      self.seed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
@@ -1490,11 +1490,11 @@ class SLIC(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
     
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()   
   
   
@@ -1528,12 +1528,12 @@ class OverlayInput(Application):
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
     self.accountInProduction = False
 
-  def setProdID(self,pid):
+  def setProdID(self, pid):
     self._checkArgs( {'pid': types.IntType})
     self.prodid = pid
     return S_OK()
       
-  def setBXOverlay(self,bxoverlay):
+  def setBXOverlay(self, bxoverlay):
     """ Define bunch crossings to overlay
     
     @param bxoverlay: Bunch crossings to overlay.
@@ -1545,7 +1545,7 @@ class OverlayInput(Application):
     self.BXOverlay = bxoverlay
     return S_OK()
     
-  def setGGToHadInt(self,ggtohadint):
+  def setGGToHadInt(self, ggtohadint):
     """ Define the optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2
     
     @param ggtohadint: optional number of gamma gamma -> hadrons interactions per bunch crossing
@@ -1558,7 +1558,7 @@ class OverlayInput(Application):
     self.ggtohadint = ggtohadint
     return S_OK()
       
-  def setNbSigEvtsPerJob(self,nbsigevtsperjob):
+  def setNbSigEvtsPerJob(self, nbsigevtsperjob):
     """ Set the number of signal events per job
     
     @param nbsigevtsperjob: Number of signal events per job
@@ -1573,7 +1573,7 @@ class OverlayInput(Application):
     return S_OK()
 
 
-  def setDetectorType(self,detectortype):
+  def setDetectorType(self, detectortype):
     """ Set the detector type. Must be 'ILD' or 'SID'
     
     @param detectortype: Detector type. Must be 'ILD' or 'SID'
@@ -1588,7 +1588,7 @@ class OverlayInput(Application):
     return S_OK()
 
 
-  def setBkgEvtType(self,BkgEvtType):
+  def setBkgEvtType(self, BkgEvtType):
     """ Optional: Define the background type. Default is gg -> had. For the moment only gghad is used.
     
     @param BkgEvtType: Background type. Default is gg -> had 
@@ -1624,7 +1624,7 @@ class OverlayInput(Application):
     return m1
   
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("BXOverlay",         self.BXOverlay)
     moduleinstance.setValue('ggtohadint',        self.ggtohadint)
     moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
@@ -1633,19 +1633,19 @@ class OverlayInput(Application):
     moduleinstance.setValue('detector',          self.detectortype)
     moduleinstance.setValue('debug',             self.debug)
   
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     if not res1["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     if not res1["OK"] :
       return S_ERROR('prodjobmodules failed')
     return S_OK()    
 
-  def _addParametersToStep(self,stepdefinition):
+  def _addParametersToStep(self, stepdefinition):
     res = self._addBaseParameters(stepdefinition)
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")
@@ -1667,7 +1667,7 @@ class OverlayInput(Application):
       self.BkgEvtType = 'gghad'
       self._log.info("Background event type is gg -> had by default")
     
-    if not self.detectortype in ['ILD','SID','SID_DBD'] :
+    if not self.detectortype in ['ILD', 'SID', 'SID_DBD'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD, SID, SID_DBD.')
 
     if self._jobtype == 'User' :
@@ -1690,14 +1690,14 @@ class OverlayInput(Application):
       return S_ERROR("Could not find the detector type")
       
     fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1]>0:
-      energytouse = "%stev"%(Decimal(str(self.energy))/Decimal("1000."))
+    if fracappen[1] > 0: 
+      energytouse = "%stev" % (Decimal(str(self.energy))/Decimal("1000."))
     else:
-      energytouse =  "%sgev"%(Decimal(str(self.energy)))
+      energytouse =  "%sgev" % (Decimal(str(self.energy)))
     if energytouse.count(".0"):
-      energytouse = energytouse.replace(".0","")
+      energytouse = energytouse.replace(".0", "")
     if not energytouse in res['Value']:
-      return S_ERROR("No overlay files corresponding to %s"%energytouse)
+      return S_ERROR("No overlay files corresponding to %s" % energytouse)
     res = allowedBkg(self.BkgEvtType, energytouse, self.detectortype)  
     if not res['OK']:
       return res
@@ -1730,7 +1730,7 @@ class Marlin(Application):
     self.inputGearFile = ''
     self.processorlisttouse = []
     self.processorlisttoexclude = []
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'MarlinAnalysis'
     self._moduledescription = 'Module to run MARLIN'
@@ -1739,7 +1739,7 @@ class Marlin(Application):
     self.detectortype = 'ILD'
      
     
-  def setGearFile(self,GearFile):
+  def setGearFile(self, GearFile):
     """ Define input gear file for Marlin
     
     @param GearFile: input gear file for Marlin reconstrcutor
@@ -1753,7 +1753,7 @@ class Marlin(Application):
     if os.path.exists(GearFile) or GearFile.lower().count("lfn:"):
       self.inputSB.append(GearFile) 
     
-  def setOutputRecFile(self,outputRecFile, path = None):
+  def setOutputRecFile(self, outputRecFile, path = None):
     """ Optional: Define output rec file for Marlin
     
     @param outputRecFile: output rec file for Marlin
@@ -1766,11 +1766,11 @@ class Marlin(Application):
       } )
     self.outputRecFile = outputRecFile
     self.prodparameters[self.outputRecFile] = {}
-    self.prodparameters[self.outputRecFile]['datatype']= 'REC'
+    self.prodparameters[self.outputRecFile]['datatype'] = 'REC'
     if path:
       self.outputRecPath = path      
     
-  def setOutputDstFile(self,outputDstFile, path = None):
+  def setOutputDstFile(self, outputDstFile, path = None):
     """ Optional: Define output dst file for Marlin
     
     @param outputDstFile: output dst file for Marlin
@@ -1783,25 +1783,26 @@ class Marlin(Application):
       } )
     self.outputDstFile = outputDstFile
     self.prodparameters[self.outputDstFile] = {}
-    self.prodparameters[self.outputDstFile]['datatype']= 'DST'
+    self.prodparameters[self.outputDstFile]['datatype'] = 'DST'
     if path:
       self.outputDstPath = path    
   
-  def setProcessorsToUse(self,list):
+  def setProcessorsToUse(self, processorlist):
     """ Define processor list to use
     
     Overwrite the default list (full reco). Useful for users willing to do dedicated analysis (TPC, Vertex digi, etc.)
     
     >>> ma.setProcessorsToUse(['libMarlinTPC.so','libMarlinReco.so','libOverlay.so','libMarlinTrkProcessors.so'])
     
-    @param list: list of processors to use
-    @type list: list
+    @param processorlist: list of processors to use
+    @type processorlist: list
     """
     self._checkArgs( {
-        'list' : types.ListType
+        'processorlist' : types.ListType
       } )
-    self.processorlisttouse= list
-  def setProcessorsToExclude(self,list):
+    self.processorlisttouse = processorlist
+    
+  def setProcessorsToExclude(self, processorlist):
     """ Define processor list to exclude
     
     Overwrite the default list (full reco). Useful for users willing to do dedicated analysis (TPC, Vertex digi, etc.)
@@ -1812,22 +1813,22 @@ class Marlin(Application):
     @type list: list
     """
     self._checkArgs( {
-        'list' : types.ListType
+        'processorlist' : types.ListType
       } )
-    self.processorlisttoexclude = list
+    self.processorlisttoexclude = processorlist
       
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     
     ## Here one needs to take care of listoutput
     if self.outputPath:
-      self._listofoutput.append({'OutputFile':'@{OutputFile}',"outputPath":"@{OutputPath}","outputDataSE":self.outputSE})
+      self._listofoutput.append({'OutputFile':'@{OutputFile}', "outputPath":"@{OutputPath}", "outputDataSE":self.outputSE})
     
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
@@ -1863,8 +1864,10 @@ class Marlin(Application):
 
     if not self._jobtype == 'User' :
       if not self.outputFile:
-        self._listofoutput.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":'@{OutputSE}'})
-        self._listofoutput.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", 
+                                   "outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}", 
+                                   "outputDataSE":'@{OutputSE}'})
       self.prodparameters['detectorType'] = self.detectortype
       self.prodparameters['marlin_gearfile'] = self.inputGearFile
       self.prodparameters['marlin_steeringfile'] = self.steeringfile
@@ -1881,7 +1884,7 @@ class Marlin(Application):
     md1.addParameter(Parameter("debug",               False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("inputGEAR",         self.inputGearFile)
     moduleinstance.setValue('ProcessorListToUse',     self.processorlisttouse)
@@ -1891,11 +1894,11 @@ class Marlin(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
     
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK() 
   
 ##########################################################################
@@ -1918,7 +1921,7 @@ class LCSIM(Application):
     self.extraParams = ''
     self.aliasProperties = ''
     self.trackingstrategy = ''
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
     self._moduledescription = 'Module to run LCSIM'
@@ -1927,7 +1930,7 @@ class LCSIM(Application):
     self.detectortype = 'SID'
     self.detectorModel = ''
      
-  def setOutputRecFile(self,outputRecFile, path = None):
+  def setOutputRecFile(self, outputRecFile, path = None):
     """ Optional: Define output rec file for LCSIM
     
     @param outputRecFile: output rec file for LCSIM
@@ -1940,11 +1943,11 @@ class LCSIM(Application):
                        } )
     self.outputRecFile = outputRecFile
     self.prodparameters[self.outputRecFile] = {}
-    self.prodparameters[self.outputRecFile]['datatype']= 'REC'
+    self.prodparameters[self.outputRecFile]['datatype'] = 'REC'
     if path:
       self.outputRecPath = path
     
-  def setOutputDstFile(self,outputDstFile, path = None):
+  def setOutputDstFile(self, outputDstFile, path = None):
     """ Optional: Define output dst file for LCSIM
     
     @param outputDstFile: output dst file for LCSIM
@@ -1957,11 +1960,11 @@ class LCSIM(Application):
       } )
     self.outputDstFile = outputDstFile 
     self.prodparameters[self.outputDstFile] = {}
-    self.prodparameters[self.outputDstFile]['datatype']= 'DST'
+    self.prodparameters[self.outputDstFile]['datatype'] = 'DST'
     if path:
       self.outputDstPath = path            
     
-  def setAliasProperties(self,alias):
+  def setAliasProperties(self, alias):
     """ Optional: Define the path to the alias.properties file name that will be used 
     
     @param alias: Path to the alias.properties file name that will be used
@@ -1975,7 +1978,7 @@ class LCSIM(Application):
     if os.path.exists(alias) or alias.lower().count("lfn:"):
       self.inputSB.append(alias) 
   
-  def setDetectorModel(self,model):
+  def setDetectorModel(self, model):
     """ Detector Model to use
     
     @param model: name, zip file, or lfn that points to the detector model
@@ -1988,7 +1991,7 @@ class LCSIM(Application):
     if os.path.exists(model) or model.lower().count("lfn:"):
       self.inputSB.append(model)
   
-  def setTrackingStrategy(self,trackingstrategy):
+  def setTrackingStrategy(self, trackingstrategy):
     """ Optional: Define the tracking strategy to use.  
     
     @param trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is in the steering file
@@ -2001,7 +2004,7 @@ class LCSIM(Application):
     if os.path.exists(self.trackingstrategy) or self.trackingstrategy.lower().count('lfn:'):
       self.inputSB.append(self.trackingstrategy)
       
-  def setExtraParams(self,extraparams):
+  def setExtraParams(self, extraparams):
     """ Optional: Define command line parameters to pass to java
     
     @param extraparams: Command line parameters to pass to java
@@ -2018,14 +2021,14 @@ class LCSIM(Application):
     """
     self.willBeCut = True  
     
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2062,13 +2065,13 @@ class LCSIM(Application):
     #if not res['OK']:
     #  return res
     
-    if not self._jobtype =='User':
+    if not self._jobtype == 'User':
       #slicp = False
       if self._inputapp and not self.outputFile and not self.willBeCut:
         for app in self._inputapp:
           if app.appname == 'slicpandora':
-            self._listofoutput.append({"outputFile":"@{outputREC}","outputPath":"@{outputPathREC}","outputDataSE":'@{OutputSE}'})
-            self._listofoutput.append({"outputFile":"@{outputDST}","outputPath":"@{outputPathDST}","outputDataSE":'@{OutputSE}'})
+            self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", "outputDataSE":'@{OutputSE}'})
+            self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}", "outputDataSE":'@{OutputSE}'})
             #slicp = True
             break
       self.prodparameters['detectorType'] = self.detectortype
@@ -2091,7 +2094,7 @@ class LCSIM(Application):
     md1.addParameter(Parameter("trackingstrategy",      "", "string", "", "", False, False, "trackingstrategy"))
     return md1
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("extraparams",        self.extraParams)
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
@@ -2102,11 +2105,11 @@ class LCSIM(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
 
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
   
 ##########################################################################
@@ -2130,7 +2133,7 @@ class SLICPandora(Application):
     self.startFrom = 0
     self.pandoraSettings = ''
     self.detectorModel = ''
-    Application.__init__(self,paramdict)
+    Application.__init__(self, paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICPandoraAnalysis'
     self._moduledescription = 'Module to run SLICPANDORA'
@@ -2139,7 +2142,7 @@ class SLICPandora(Application):
     self.detectortype = 'SID'
         
     
-  def setDetectorModel(self,detectorModel):
+  def setDetectorModel(self, detectorModel):
     """ Define detector to use for SlicPandora simulation 
     
     @param detectorModel: Detector Model to use for SlicPandora simulation. Default is ??????
@@ -2153,7 +2156,7 @@ class SLICPandora(Application):
     if os.path.exists(detectorModel) or detectorModel.lower().count("lfn:"):
       self.inputSB.append(detectorModel)   
     
-  def setStartFrom(self,startfrom):
+  def setStartFrom(self, startfrom):
     """ Optional: Define from where slicpandora start to read in the input file
     
     @param startfrom: from how slicpandora start to read the input file
@@ -2164,7 +2167,7 @@ class SLICPandora(Application):
       } )
     self.startfrom = startfrom     
     
-  def setPandoraSettings(self,pandoraSettings):
+  def setPandoraSettings(self, pandoraSettings):
     """ Optional: Define the path where pandora settings are
     
     @param pandoraSettings: path where pandora settings are
@@ -2177,14 +2180,14 @@ class SLICPandora(Application):
     if os.path.exists(pandoraSettings) or pandoraSettings.lower().count("lfn:"):
       self.inputSB.append(pandoraSettings)    
     
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2212,7 +2215,7 @@ class SLICPandora(Application):
     if not self.startFrom :
       self._log.warn('No startFrom define for SlicPandora : start from the begining')
       
-    if not self._jobtype =='User':
+    if not self._jobtype == 'User':
       self.prodparameters['slicpandora_steeringfile'] = self.steeringfile
       self.prodparameters['slicpandora_detectorModel'] = self.detectorModel
       
@@ -2228,7 +2231,7 @@ class SLICPandora(Application):
     md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("pandorasettings",    self.pandoraSettings)
     moduleinstance.setValue("detectorxml",        self.detectorModel)
@@ -2238,11 +2241,11 @@ class SLICPandora(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
     
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
 
 
@@ -2268,7 +2271,7 @@ class CheckCollections(Application):
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
 
-  def setCollections(self,CollectionList):
+  def setCollections(self, CollectionList):
     """ Set collections. Must be a list
     
     @param CollectionList: Collections. Must be a list
@@ -2290,18 +2293,18 @@ class CheckCollections(Application):
     return m1
   
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('collections',             self.collections)
     moduleinstance.setValue('debug',                   self.debug)
   
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2321,11 +2324,11 @@ class CheckCollections(Application):
       
     return S_OK()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
   
 #################################################################
@@ -2355,17 +2358,17 @@ class SLCIOConcatenate(Application):
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
     return m1
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('debug',                       self.debug)
    
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2381,7 +2384,7 @@ class SLCIOConcatenate(Application):
       self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
 
     #res = self._checkRequiredApp()
     #if not res['OK']:
@@ -2392,11 +2395,11 @@ class SLCIOConcatenate(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
   
 #################################################################
@@ -2421,7 +2424,7 @@ class SLCIOSplit(Application):
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to split SLCIO files'
 
-  def setNumberOfEventsPerFile(self,numberofevents):
+  def setNumberOfEventsPerFile(self, numberofevents):
     """ Number of events to have in each file
     """
     self._checkArgs( {
@@ -2437,18 +2440,18 @@ class SLCIOSplit(Application):
     m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False, "Number of events per output file"))
     return m1
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('debug',            self.debug)
     moduleinstance.setValue('nbEventsPerSlice', self.numberofeventsperfile)
 
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2472,7 +2475,7 @@ class SLCIOSplit(Application):
       self._log.info('No output file name specified.')
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nb_events_per_file'] = self.numberofeventsperfile
 
       
@@ -2481,11 +2484,11 @@ class SLCIOSplit(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
 
 #################################################################
@@ -2513,7 +2516,7 @@ class StdHepSplit(Application):
     self.appname = 'stdhepsplit'
     self._moduledescription = 'Helper call to split Stdhep files'
 
-  def setNumberOfEventsPerFile(self,numberofevents):
+  def setNumberOfEventsPerFile(self, numberofevents):
     """ Number of events to have in each file
     """
     self._checkArgs( {
@@ -2529,18 +2532,18 @@ class StdHepSplit(Application):
     m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False, "Number of events per output file"))
     return m1
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('debug',            self.debug)
     moduleinstance.setValue('nbEventsPerSlice', self.numberofeventsperfile)
 
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2562,7 +2565,7 @@ class StdHepSplit(Application):
       self._log.info('No output file name specified.')
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nb_events_per_file'] = self.numberofeventsperfile
 
       
@@ -2571,11 +2574,11 @@ class StdHepSplit(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
   
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
     
     
@@ -2604,7 +2607,7 @@ class Tomato(Application):
     self.appname = 'tomato'
     self._moduledescription = 'Helper Application over Marlin reconstruction'
       
-  def setLibTomato(self,libTomato):
+  def setLibTomato(self, libTomato):
     """ Optional: Set the the optional Tomato library with the user version
     
     @param libTomato: Tomato library
@@ -2626,18 +2629,18 @@ class Tomato(Application):
     return m1
   
 
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('libTomato',     self.libTomato)
     moduleinstance.setValue('debug',         self.debug)
    
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setUserJobFinalization(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('userjobmodules failed')
     return S_OK() 
 
-  def _prodjobmodules(self,stepdefinition):
+  def _prodjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
     if not res1["OK"] or not res2["OK"] :
@@ -2663,10 +2666,11 @@ class Tomato(Application):
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
 
-  def _resolveLinkedStepParameters(self,stepinstance):
+  def _resolveLinkedStepParameters(self, stepinstance):
+    
     if type(self._linkedidx) == types.IntType:
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
-      stepinstance.setLink("InputFile",self._inputappstep.getType(),"OutputFile")
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
   
