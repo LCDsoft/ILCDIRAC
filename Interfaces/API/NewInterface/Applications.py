@@ -1666,9 +1666,6 @@ class OverlayInput(Application):
     if not self.BkgEvtType :
       self.BkgEvtType = 'gghad'
       self._log.info("Background event type is gg -> had by default")
-    res = allowedBkg(self.BkgEvtType)  
-    if not res['OK']:
-      return res
     
     if not self.detectortype in ['ILD','SID','SID_DBD'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD, SID, SID_DBD.')
@@ -1701,6 +1698,10 @@ class OverlayInput(Application):
       energytouse = energytouse.replace(".0","")
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s"%energytouse)
+    res = allowedBkg(self.BkgEvtType, energytouse, self.detectortype)  
+    if not res['OK']:
+      return res
+
     return S_OK()
   
   
