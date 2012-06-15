@@ -25,12 +25,16 @@ from decimal import Decimal
 
 import os, time, random, string, subprocess, glob
 
-def allowedBkg(bkg):
+def allowedBkg( bkg, energy = None, detectortype = None ):
   """ Check is supplied bkg is allowed
   """
-  bkg_allowed= ['gghad','pairs']
+  bkg_allowed= [ 'gghad', 'pairs' ]
   if not bkg in bkg_allowed:
-    return S_ERROR("Bkg not allowed")
+    return S_ERROR( "Bkg not allowed" )
+  if energy and detectortype:
+    res = gConfig.getOption( "/Operations/Overlay/%s/%s/%s/ProdID"%(detectortype, energy, bkg), 0 )
+    if not res['Value']:
+      return S_ERROR( "No background to overlay" )  
   return S_OK()
 
 class OverlayInput (ModuleBase):
@@ -100,7 +104,7 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.BkgEvtType = self.step_commons['BkgEvtType']
       
-    res =  allowedBkg(self.BkgEvtType) 
+    res =  allowedBkg(self.BkgEvtType, self.energytouse, self.detector) 
     if not res['OK']:
       return res
     
@@ -125,7 +129,7 @@ class OverlayInput (ModuleBase):
     meta['Datatype']='SIM'
     meta['DetectorType']=self.detector
 
-    res= gConfig.getOption("/Operations/Overlay/%s/%s/%s/ProdID"%(self.detector,self.energytouse,self.BkgEvtType),0)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/%s/ProdID"%(self.detector, self.energytouse, self.BkgEvtType),0)
     meta['ProdID']= res['Value']
     if self.prodid:
       meta['ProdID'] = self.prodid
@@ -143,7 +147,7 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events
-    res= gConfig.getOption("/Operations/Overlay/%s/%s/%s/NbEvts"%(self.detector,self.energytouse,self.BkgEvtType),100)
+    res= gConfig.getOption("/Operations/Overlay/%s/%s/%s/NbEvts"%(self.detector, self.energytouse, self.BkgEvtType),100)
     self.nbofeventsperfile = res['Value']
 
     #res = self.fc.getCompatibleMetadata(meta)
@@ -164,16 +168,16 @@ class OverlayInput (ModuleBase):
     else:
       return self.fc.findFilesByMetadata(meta)
 
-  def __getFilesFromLyon(self,meta):
+  def __getFilesFromLyon(self, meta):
     list = []
     ProdID= meta['ProdID']
     prod = str(ProdID).zfill(8)
     energy = meta['Energy']
     bkg = meta["EvtType"]
     detector = meta["DetectorType"]
-    path ="/ilc/prod/clic/%s/%s/%s/SIM/%s/"%(energy,bkg,detector,prod)
+    path ="/ilc/prod/clic/%s/%s/%s/SIM/%s/"%(energy, bkg, detector, prod)
     comm = ["nsls","%s"%path]
-    res = subprocess.Popen(comm,stdout=subprocess.PIPE).communicate()
+    res = subprocess.Popen(comm, stdout=subprocess.PIPE).communicate()
     dirlist = res[0].rstrip().split("\n")
     list = []
     for dir in dirlist:
@@ -181,7 +185,7 @@ class OverlayInput (ModuleBase):
         continue
       curdir = path+dir
       comm2 = ["nsls",curdir]
-      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
+      res = subprocess.Popen(comm2, stdout=subprocess.PIPE).communicate()
       for f in res[0].rstrip().split("\n"):
         if f.count("dirac_directory"):
           continue
@@ -398,7 +402,7 @@ class OverlayInput (ModuleBase):
     self.log.info('Got all files needed.')
     return S_OK()
 
-  def getCASTORFile(self,lfn):
+  def getCASTORFile(self, lfn):
     prependpath = "/castor/cern.ch/grid"
     if not lfn.count("castor/cern.ch"):
       lfile = prependpath+lfn
@@ -515,7 +519,7 @@ fi\n"""%(basename,lfile))
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK(dict)
 
-  def getImperialFile(self,lfn):
+  def getImperialFile(self, lfn):
     prependpath = '/pnfs/hep.ph.ic.ac.uk/data'
     if not lfn.count('hep.ph.ic.ac.uk/data'):
       lfile = prependpath+lfn
@@ -579,7 +583,7 @@ fi\n"""%(basename,lfile))
       #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
     return S_OK(dict)
 
-  def getRALFile(self,lfn):
+  def getRALFile(self, lfn):
     prependpath = '/castor/ads.rl.ac.uk/prod'
     if not lfn.count('ads.rl.ac.uk/prod'):
       lfile = prependpath+lfn
@@ -629,7 +633,7 @@ fi\n"""%(basename,lfile))
     script.close()
     os.chmod("overlayinput.sh",0755)
     comm = 'sh -c "./overlayinput.sh"'
-    self.result = shellCall(600,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(600, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
     #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
     #try:
     #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
@@ -663,10 +667,10 @@ fi\n"""%(basename,lfile))
 
     if not self.applicationLog:
       self.applicationLog = 'Overlay_input.log'
-    self.applicationLog = os.path.join(os.getcwd(),self.applicationLog)
+    self.applicationLog = os.path.join(os.getcwd(), self.applicationLog)
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('OverlayInput should not proceed as previous step did not end properly')
     self.setApplicationStatus('Starting up Overlay')
     res = self.__getFilesFromFC()
