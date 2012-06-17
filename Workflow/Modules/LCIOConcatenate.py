@@ -12,13 +12,10 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
-
-import DIRAC
 import os
-import sys
 
 class LCIOConcatenate(ModuleBase):
-  """ LCIO cdoncatenate module
+  """ LCIO concatenate module
   """
   def __init__(self):
 
@@ -51,7 +48,7 @@ class LCIOConcatenate(ModuleBase):
             if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
               self.OutputFile = os.path.basename(obj)
         else:
-          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
 
     return S_OK('Parameters resolved')
@@ -102,7 +99,7 @@ lcio concat -f *.slcio -o %s
 
 exit $?
 
-""" %(
+""" % (
     LD_LIBRARY_PATH,
     PATH,
     self.OutputFile
@@ -110,7 +107,7 @@ exit $?
 
     # Write script to file
 
-    scriptPath = 'LCIOConcatenate_%s_Run_%s.tcl' %( self.applicationVersion, self.STEP_NUMBER )
+    scriptPath = 'LCIOConcatenate_%s_Run_%s.tcl' % ( self.applicationVersion, self.STEP_NUMBER )
 
     if os.path.exists(scriptPath):
       os.remove(scriptPath)
@@ -128,9 +125,9 @@ exit $?
 
     os.chmod( scriptPath, 0755 )
 
-    command = '"./%s"' %( scriptPath )
+    command = '"./%s"' % ( scriptPath )
 
-    self.setApplicationStatus( 'LCIOConcatenate %s step %s' %( self.applicationVersion, self.STEP_NUMBER ) )
+    self.setApplicationStatus( 'LCIOConcatenate %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
     self.result = shellCall(

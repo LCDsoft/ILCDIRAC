@@ -10,7 +10,6 @@ __RCSID__ = "$Id: LCIOConcatenate.py 48402 2012-03-09 09:33:09Z sposs $"
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
@@ -21,7 +20,7 @@ from DIRAC import gConfig, S_OK, S_ERROR
 import os
 
 class StdHepSplit(ModuleBase):
-  """ StdHep split module
+  """ StdHep split module, split StdHep files using A. Miyamoto's HepSplit utility
   """
   def __init__(self):
 
@@ -54,12 +53,13 @@ class StdHepSplit(ModuleBase):
             if obj.lower().count("_gen_"):
               self.OutputFile = os.path.basename(obj)
         else:
-          self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))
+          self.OutputFile = getProdFilename(self.OutputFile,
+                                            int(self.workflow_commons["PRODUCTION_ID"]),
+                                            int(self.workflow_commons["JOB_ID"]))
           
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
-        if files.lower().find(".stdhep")>-1:
+        if files.lower().find(".stdhep") > -1:
           self.InputFile.append(files)
       
     if self.step_commons.has_key('listoutput'):
@@ -99,19 +99,19 @@ class StdHepSplit(ModuleBase):
       prefix = self.OutputFile.split('.stdhep')[0]
     else:
       prefix = "this_split"
-    self.log.info("Will rename all files using '%s' as base."%prefix)
+    self.log.info("Will rename all files using '%s' as base." % prefix)
 
     # Setting up script
-    splitDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"stdhepsplit",self.applicationVersion),'')
-    splitDir = splitDir.replace(".tgz","").replace(".tar.gz","")
+    splitDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "stdhepsplit", self.applicationVersion), '')
+    splitDir = splitDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(splitDir)
     if not res['OK']:
       self.setApplicationStatus('StdHepSplit: Could not find neither local area not shared area install')
       return res
     
     mysplitDir = res['Value']
-    new_ld_lib = GetNewLDLibs(self.systemConfig,"stdhepsplit",self.applicationVersion)
-    LD_LIBRARY_PATH = os.path.join(mysplitDir,"lib")+":"+new_ld_lib
+    new_ld_lib = GetNewLDLibs(self.systemConfig, "stdhepsplit", self.applicationVersion)
+    LD_LIBRARY_PATH = os.path.join(mysplitDir, "lib") + ":" + new_ld_lib
 
     
 
@@ -128,7 +128,7 @@ declare -x LD_LIBRARY_PATH=%s
 
 exit $?
 
-""" %(
+""" % (
     LD_LIBRARY_PATH,
     mysplitDir,
     runonstdhep,
@@ -138,7 +138,7 @@ exit $?
 
     # Write script to file
 
-    scriptPath = 'StdHepSplit_%s_Run_%s.tcl' %( self.applicationVersion, self.STEP_NUMBER )
+    scriptPath = 'StdHepSplit_%s_Run_%s.tcl' % ( self.applicationVersion, self.STEP_NUMBER )
 
     if os.path.exists(scriptPath):
       os.remove(scriptPath)
@@ -156,9 +156,9 @@ exit $?
 
     os.chmod( scriptPath, 0755 )
 
-    command = '"./%s"' %( scriptPath )
+    command = '"./%s"' % ( scriptPath )
 
-    self.setApplicationStatus( 'StdHepSplit %s step %s' %( self.applicationVersion, self.STEP_NUMBER ) )
+    self.setApplicationStatus( 'StdHepSplit %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
     self.result = shellCall(
@@ -191,7 +191,7 @@ exit $?
         if val != '0':
           numberofeventsdict[fname] = int(val)
     
-    self.log.verbose("numberofeventsdict dict: %s"%numberofeventsdict)   
+    self.log.verbose("numberofeventsdict dict: %s" % numberofeventsdict)   
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for the registerOutputData
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
@@ -201,7 +201,7 @@ exit $?
         item = {}
         item['outputFile'] = f
         item['outputPath'] = self.listoutput['outputPath']
-        item['outputDataSE']= self.listoutput['outputDataSE']
+        item['outputDataSE'] = self.listoutput['outputDataSE']
         outputlist.append(item)
       self.step_commons['listoutput'] = outputlist
       
@@ -217,11 +217,11 @@ exit $?
           this_split_data = item
       path = os.path.dirname(this_split_data)
       for f in numberofeventsdict.keys():
-        finalproddata.append(os.path.join(path,f))
-      self.workflow_commons['ProductionOutputData']= ";".join(finalproddata)  
+        finalproddata.append(os.path.join(path, f))
+      self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
-    if status==2:
+    if status == 2:
       self.log.info("Reached end of input file")
       status = 0
     return self.finalStatusReport(status)

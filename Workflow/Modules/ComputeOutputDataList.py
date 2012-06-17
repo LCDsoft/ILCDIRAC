@@ -16,6 +16,10 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC import gLogger, S_OK
 
 class ComputeOutputDataList(ModuleBase):
+  """ In case the previous module executed properly, add the output to the listoutput. 
+  This is used in the prduction context to ensure only the files coming from successful applications
+  are added to the output list. Otherwise, there is a risk to register corrupted files.
+  """
   def __init__(self):
     """Module initialization.
     """
@@ -38,6 +42,8 @@ class ComputeOutputDataList(ModuleBase):
     return S_OK()
   
   def execute(self):
+    """ Not much to do...
+    """
     res = self.resolveInputVariables()
     if not res['OK']:
       return res

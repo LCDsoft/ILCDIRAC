@@ -15,8 +15,7 @@ import os, shutil, types
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import getSoftwareFolder
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import PrepareLCSIMFile,GetNewLDLibs 
-from ILCDIRAC.Core.Utilities.ResolveDependencies             import resolveDepsTar
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import PrepareLCSIMFile, GetNewLDLibs 
 from ILCDIRAC.Core.Utilities.resolveIFpaths                  import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames                  import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfevents
@@ -24,7 +23,6 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                     import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringFileDirName
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
-import DIRAC
 
 class LCSIMAnalysis(ModuleBase):
   """Define the LCSIM analysis part of the workflow
@@ -67,7 +65,7 @@ class LCSIMAnalysis(ModuleBase):
       
     if self.step_commons.has_key("inputSlcio"):
       inputf = self.step_commons["inputSlcio"]
-      if not type(inputf)==types.ListType:
+      if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
       self.InputFile = inputf
       
@@ -83,7 +81,7 @@ class LCSIMAnalysis(ModuleBase):
           self.workflow_commons["NbOfEvts"] = res["nbevts"]
           self.NumberOfEvents = res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"]=res["lumi"]
+          self.workflow_commons["Luminosity"] = res["lumi"]
 
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
@@ -104,12 +102,12 @@ class LCSIMAnalysis(ModuleBase):
             elif obj.lower().count("_sim_"):
               self.InputFile = [os.path.basename(obj)]
         else:
-          self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.outputREC = getProdFilename(self.outputREC, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
-          self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
           if self.workflow_commons.has_key("SLICOutput"):
-            self.InputFile = [getProdFilename(self.workflow_commons["SLICOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+            self.InputFile = [getProdFilename(self.workflow_commons["SLICOutput"], int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))]
 
     if self.step_commons.has_key("aliasproperties"):
@@ -117,9 +115,9 @@ class LCSIMAnalysis(ModuleBase):
 
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
-        if files.lower().find(".slcio")>-1:
+        if files.lower().find(".slcio") > -1:
           self.InputFile.append(files)
-    self.log.info("Input files to treat %s"%self.InputFile)      
+    self.log.info("Input files to treat %s" % self.InputFile)      
     return S_OK('Parameters resolved')
 
   def execute(self):
@@ -134,7 +132,7 @@ class LCSIMAnalysis(ModuleBase):
       - run java and catch the exit code
     @return: S_OK(), S_ERROR()
     """
-    self.result =self.resolveInputVariables()
+    self.result = self.resolveInputVariables()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
@@ -143,22 +141,22 @@ class LCSIMAnalysis(ModuleBase):
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('LCSIM should not proceed as previous step did not end properly')
     
     #look for lcsim filename
-    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"lcsim",self.applicationVersion),'')
+    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "lcsim", self.applicationVersion), '')
     if not lcsim_name:
       self.log.error("Could not find lcsim file name from CS")
       return S_ERROR("Could not find lcsim file name from CS")
     
     res = getSoftwareFolder(lcsim_name)
     if not res['OK']:
-      self.log.error('Application %s was not found in either the local area or shared area' %(lcsim_name))
+      self.log.error('Application %s was not found in either the local area or shared area' % (lcsim_name))
       return res
     lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"lcsim",self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "lcsim", self.applicationVersion)
 
     runonslcio = []
     if len(self.InputFile):
@@ -176,9 +174,9 @@ class LCSIMAnalysis(ModuleBase):
     jars = []
     if os.path.exists("lib"):
       for libs in os.listdir("lib"):
-        if os.path.basename(libs).find(".jar")>0:
-          jars.append(os.path.abspath(os.path.join("lib",libs)))
-      new_ld_lib_path= "./lib:%s"%new_ld_lib_path
+        if os.path.basename(libs).find(".jar") > 0:
+          jars.append(os.path.abspath(os.path.join("lib", libs)))
+      new_ld_lib_path = "./lib:%s" % new_ld_lib_path
       #Remove any libc remaining in .lib
       removeLibc("./lib")
     
@@ -187,60 +185,62 @@ class LCSIMAnalysis(ModuleBase):
     aliasproperties = os.path.basename(self.aliasproperties)
     cachedir = os.getcwd()
     try:
-      os.mkdir(os.path.join(cachedir,".lcsim"))
+      os.mkdir(os.path.join(cachedir, ".lcsim"))
     except:
       self.log.error("Could not create .lcsim folder !")
-    if os.path.exists(os.path.join(cachedir,".lcsim")):
-      lcsimfolder = os.path.join(cachedir,".lcsim")
+    if os.path.exists(os.path.join(cachedir, ".lcsim")):
+      lcsimfolder = os.path.join(cachedir, ".lcsim")
       if os.path.exists(aliasproperties):
-        self.log.verbose("Copy alias.properties file in %s"%(lcsimfolder))
-        shutil.copy(aliasproperties,os.path.join(lcsimfolder,aliasproperties))
+        self.log.verbose("Copy alias.properties file in %s" % (lcsimfolder))
+        shutil.copy(aliasproperties, os.path.join(lcsimfolder, aliasproperties))
       if os.path.exists(os.path.basename(self.detectorModel)):
         try:
-          os.mkdir(os.path.join(lcsimfolder,"detectors"))
+          os.mkdir(os.path.join(lcsimfolder, "detectors"))
         except:
           self.log.error("Could not create detectors folder !")
-        if os.path.exists(os.path.join(lcsimfolder,"detectors")):
+        if os.path.exists(os.path.join(lcsimfolder, "detectors")):
           self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
-          shutil.copy(os.path.basename(self.detectorModel),os.path.join(lcsimfolder,"detectors",os.path.basename(self.detectorModel)))
+          shutil.copy(os.path.basename(self.detectorModel), os.path.join(lcsimfolder, "detectors", os.path.basename(self.detectorModel)))
           
     paths = {}
-    paths[os.path.basename(self.SteeringFile)]= os.path.basename(self.SteeringFile)
+    paths[os.path.basename(self.SteeringFile)] = os.path.basename(self.SteeringFile)
     paths[os.path.basename(self.trackingstrategy)] = os.path.basename(self.trackingstrategy)
-    for file in paths.keys():  
-      if len(file):
+    for myfile in paths.keys():  
+      if len(myfile):
         #file = os.path.basename(file)
-        if not os.path.exists(file):
-          res =  getSteeringFileDirName(self.systemConfig,"lcsim",self.applicationVersion)     
+        if not os.path.exists(myfile):
+          res =  getSteeringFileDirName(self.systemConfig, "lcsim", self.applicationVersion)     
           if not res['OK']:
             return res
           steeringfiledirname = res['Value']
-          if os.path.exists(os.path.join(steeringfiledirname,file)):
-            paths[file] = os.path.join(steeringfiledirname,file)
-        if not os.path.exists(paths[file]):
-          return S_ERROR("Could not find file %s"%paths[file])    
+          if os.path.exists(os.path.join(steeringfiledirname, myfile)):
+            paths[myfile] = os.path.join(steeringfiledirname, myfile)
+        if not os.path.exists(paths[myfile]):
+          return S_ERROR("Could not find file %s" % paths[myfile])    
     self.SteeringFile = paths[os.path.basename(self.SteeringFile)]
     self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
     
     lcsimfile = "job.lcsim"
-    res = PrepareLCSIMFile(self.SteeringFile,lcsimfile,self.NumberOfEvents,self.trackingstrategy,runonslcio,jars,cachedir,
-                           self.OutputFile,self.outputREC,self.outputDST,self.debug)
+    res = PrepareLCSIMFile(self.SteeringFile, lcsimfile, self.NumberOfEvents, 
+                           self.trackingstrategy, runonslcio, jars, cachedir,
+                           self.OutputFile, self.outputREC, self.outputDST, self.debug)
     if not res['OK']:
-      self.log.error("Could not treat input lcsim file because %s"%res['Message'])
+      self.log.error("Could not treat input lcsim file because %s" % res['Message'])
       return S_ERROR("Error creating lcsim file")
     else:
       self.log.verbose("File job.lcsim created properly")
     self.eventstring = [res['Value']]
     
-    scriptName = 'LCSIM_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
-    if os.path.exists(scriptName): os.remove(scriptName)
-    script = open(scriptName,'w')
+    scriptName = 'LCSIM_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
+    if os.path.exists(scriptName): 
+      os.remove(scriptName)
+    script = open(scriptName, 'w')
     script.write('#!/bin/sh \n')
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     if new_ld_lib_path:
-      script.write("declare -x LD_LIBRARY_PATH=%s\n"%new_ld_lib_path)
+      script.write("declare -x LD_LIBRARY_PATH=%s\n" % new_ld_lib_path)
     script.write("declare -x JAVALIBPATH=./\n")
     if os.path.exists("lib"):
       script.write("declare -x JAVALIBPATH=./lib\n")
@@ -249,25 +249,26 @@ class LCSIMAnalysis(ModuleBase):
     script.write('java -version\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')    
-    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s %s %s\n"%(cachedir,lcsim_name,self.extraparams,lcsimfile)
-    self.log.info("Will run %s"%comm)
+    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -Dorg.lcsim.cacheDir=%s -jar %s %s %s\n" % (cachedir, lcsim_name, self.extraparams, lcsimfile)
+    self.log.info("Will run %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')    
     script.close()
-    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
+    if os.path.exists(self.applicationLog): 
+      os.remove(self.applicationLog)
 
-    os.chmod(scriptName,0755)
-    comm = 'sh -c "./%s"' %scriptName
-    self.setApplicationStatus('LCSIM %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
+    os.chmod(scriptName, 0755)
+    comm = 'sh -c "./%s"' % scriptName
+    self.setApplicationStatus('LCSIM %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
-      self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
-      return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+      self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
+      return S_ERROR('%s did not produce the expected log' % (self.applicationName))
 
     status = resultTuple[0]
     # stdOutput = resultTuple[1]

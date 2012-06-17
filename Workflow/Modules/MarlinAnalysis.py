@@ -14,13 +14,13 @@ Define the Marlin analysis part of the workflow
 
 __RCSID__ = "$Id$"
 
-import os,string, shutil, glob, types
+import os, string, shutil, glob, types
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile,GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile, GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
@@ -42,8 +42,8 @@ class MarlinAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.InputFile = []
-    self.SteeringFile =''
-    self.inputGEAR =''
+    self.SteeringFile = ''
+    self.inputGEAR = ''
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
@@ -60,7 +60,7 @@ class MarlinAnalysis(ModuleBase):
     ##TODO: Need to keep for old interface. Move to ModuleBase
     if self.step_commons.has_key('inputSlcio'):
       inputf = self.step_commons["inputSlcio"]
-      if not type(inputf)==types.ListType:
+      if not type(inputf) == types.ListType:
         if len(inputf):
           inputf = inputf.split(";")
         else:
@@ -78,10 +78,10 @@ class MarlinAnalysis(ModuleBase):
       self.InputFile += paramsb
       
     if self.step_commons.has_key('inputXML'):
-      self.SteeringFile=self.step_commons['inputXML']
+      self.SteeringFile = self.step_commons['inputXML']
       
     if self.step_commons.has_key('inputGEAR'):
-      self.inputGEAR=self.step_commons['inputGEAR']
+      self.inputGEAR = self.step_commons['inputGEAR']
       
     if self.step_commons.has_key('EvtsToProcess'):
       self.NumberOfEvents = self.step_commons['EvtsToProcess']
@@ -112,14 +112,14 @@ class MarlinAnalysis(ModuleBase):
             elif obj.lower().count("_sim_"):
               self.InputFile = [os.path.basename(obj)]
         else:
-          self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.outputREC = getProdFilename(self.outputREC, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
-          self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
           #if self.workflow_commons.has_key("MokkaOutput"):
           #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
-          self.InputFile = [getProdFilename(self.InputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+          self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))]
           
     if self.InputData:
@@ -130,11 +130,11 @@ class MarlinAnalysis(ModuleBase):
           self.workflow_commons["NbOfEvts"] = res["nbevts"]
           self.NumberOfEvents = res["nbevts"]
         if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"]=res["lumi"]
+          self.workflow_commons["Luminosity"] = res["lumi"]
         
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
-        if files.lower().find(".slcio")>-1:
+        if files.lower().find(".slcio") > -1:
           self.InputFile.append(files)
             
     return S_OK('Parameters resolved')
@@ -150,7 +150,7 @@ class MarlinAnalysis(ModuleBase):
       - run Marlin and catch the exit code
     @return: S_OK(), S_ERROR()
     """
-    self.result =self.resolveInputVariables()
+    self.result = self.resolveInputVariables()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
@@ -159,12 +159,12 @@ class MarlinAnalysis(ModuleBase):
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
-      return S_OK('%s should not proceed as previous step did not end properly'%self.applicationName)
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     
-    marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,"marlin",self.applicationVersion),'')
-    marlinDir = marlinDir.replace(".tgz","").replace(".tar.gz","")
+    marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "marlin", self.applicationVersion), '')
+    marlinDir = marlinDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(marlinDir)
     if not res['OK']:
       self.setApplicationStatus('Marlin: Could not find neither local area not shared area install')
@@ -173,10 +173,10 @@ class MarlinAnalysis(ModuleBase):
     myMarlinDir = res['Value']
 
     ##Remove libc
-    removeLibc(myMarlinDir+"/LDLibs")
+    removeLibc(myMarlinDir + "/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path= GetNewLDLibs(self.systemConfig,"marlin",self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "marlin", self.applicationVersion)
 
     res = self.GetInputFiles()
     if not res['OK']:
@@ -187,16 +187,16 @@ class MarlinAnalysis(ModuleBase):
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'
     if not os.path.exists(pandorasettings):
-      if os.path.exists(os.path.join(myMarlinDir,'Settings',pandorasettings)):
+      if os.path.exists(os.path.join(myMarlinDir, 'Settings', pandorasettings)):
         try:
-          shutil.copy(os.path.join(myMarlinDir,'Settings',pandorasettings),os.path.join(os.getcwd(),pandorasettings))
-        except Exception,x:
-          self.log.error('Could not copy PandoraSettings.xml, exception: %s'%x)
+          shutil.copy(os.path.join(myMarlinDir, 'Settings', pandorasettings), os.path.join(os.getcwd(), pandorasettings))
+        except Exception, x:
+          self.log.error('Could not copy PandoraSettings.xml, exception: %s' % x)
     
-    finalXML = "marlinxml_"+self.STEP_NUMBER+".xml"
+    finalXML = "marlinxml_" + self.STEP_NUMBER + ".xml"
 
     steeringfiledirname = ''
-    res  =  getSteeringFileDirName(self.systemConfig,"marlin",self.applicationVersion)     
+    res = getSteeringFileDirName(self.systemConfig, "marlin", self.applicationVersion)     
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
@@ -205,27 +205,28 @@ class MarlinAnalysis(ModuleBase):
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if not os.path.exists(self.inputGEAR):
       if steeringfiledirname:
-        if os.path.exists(os.path.join(steeringfiledirname,self.inputGEAR)):
-          self.inputGEAR = os.path.join(steeringfiledirname,self.inputGEAR)
+        if os.path.exists(os.path.join(steeringfiledirname, self.inputGEAR)):
+          self.inputGEAR = os.path.join(steeringfiledirname, self.inputGEAR)
         
     
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
       if steeringfiledirname:
-        if os.path.exists(os.path.join(steeringfiledirname,self.SteeringFile)):
-          self.SteeringFile = os.path.join(steeringfiledirname,self.SteeringFile)
+        if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
+          self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
     if not self.SteeringFile:
       return S_ERROR("Could not find steering file")
     
-    res = PrepareXMLFile(finalXML,self.SteeringFile,self.inputGEAR,listofslcio,self.NumberOfEvents,self.outputREC,self.outputDST,self.debug)
+    res = PrepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio, 
+                         self.NumberOfEvents, self.outputREC, self.outputDST, self.debug)
     if not res['OK']:
-      self.log.error('Something went wrong with XML generation because %s'%res['Message'])
+      self.log.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
       return res
 
     res = self.prepareMARLIN_DLL(myMarlinDir)
     if not res['OK']:
-      self.log.error('Failed building MARLIN_DLL: %s'%res['Message'])
+      self.log.error('Failed building MARLIN_DLL: %s' % res['Message'])
       self.setApplicationStatus('Failed to setup MARLIN_DLL')
       return S_ERROR('Something wrong with software installation')
     
@@ -234,17 +235,17 @@ class MarlinAnalysis(ModuleBase):
     self.envdict['LD_LIB_PATH'] = new_ld_lib_path
     self.result = self.runMarlin(finalXML, self.envdict)
     if not self.result['OK']:
-      self.log.error('Something wrong during running: %s'%self.result['Message'])
-      self.setApplicationStatus('Error during running %s'%self.applicationName)
-      return S_ERROR('Failed to run %s'%self.applicationName)
+      self.log.error('Something wrong during running: %s' % self.result['Message'])
+      self.setApplicationStatus('Error during running %s' % self.applicationName)
+      return S_ERROR('Failed to run %s' % self.applicationName)
 
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
-      self.setApplicationStatus('%s failed terribly, you are doomed!' %(self.applicationName))
+      self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
-        return S_ERROR('%s did not produce the expected log' %(self.applicationName))
+        return S_ERROR('%s did not produce the expected log' % (self.applicationName))
 
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
@@ -253,15 +254,17 @@ class MarlinAnalysis(ModuleBase):
 
     return self.finalStatusReport(status) 
 
-  def prepareMARLIN_DLL(self,marlinDir):
+  def prepareMARLIN_DLL(self, marlinDir):
+    """ Prepare the run time environment: MARLIN_DLL in particular.
+    """
     marlindll = ""
-    if(os.path.exists("%s/MARLIN_DLL"%marlinDir)):
-      for d in os.listdir("%s/MARLIN_DLL"%marlinDir):
-        marlindll = marlindll + "%s/MARLIN_DLL/%s"%(marlinDir,d) + ":" 
-      marlindll="%s"%(marlindll)
+    if(os.path.exists("%s/MARLIN_DLL" % marlinDir)):
+      for d in os.listdir("%s/MARLIN_DLL" % marlinDir):
+        marlindll = marlindll + "%s/MARLIN_DLL/%s" % (marlinDir, d) + ":" 
+      marlindll = "%s" % (marlindll)
     else:
       self.log.error('MARLIN_DLL folder not found, cannot proceed')
-      return S_ERROR('MARLIN_DLL folder not found in %s'%marlinDir)
+      return S_ERROR('MARLIN_DLL folder not found in %s' % marlinDir)
     #user libs
     userlib = ""
     if(os.path.exists("./lib")):
@@ -269,18 +272,18 @@ class MarlinAnalysis(ModuleBase):
         for d in glob.glob("./lib/marlin_dll/*.so"):
           userlib = userlib + d + ":" 
       
-    temp=marlindll.split(":")
-    temp2=userlib.split(":")
+    temp = marlindll.split(":")
+    temp2 = userlib.split(":")
     for x in temp2:
-      doublelib = "%s/MARLIN_DLL/"%(marlinDir)+os.path.basename(x)
+      doublelib = "%s/MARLIN_DLL/" % (marlinDir) + os.path.basename(x)
       if doublelib in temp:
-        self.log.verbose("Duplicated lib found, removing %s"%doublelib)
+        self.log.verbose("Duplicated lib found, removing %s" % doublelib)
         try:
           temp.remove(doublelib)
         except:
           pass
       
-    marlindll = "%s%s"%(string.join(temp,":"),userlib)
+    marlindll = "%s%s" % (string.join(temp, ":"), userlib)
     finallist = []
     items = marlindll.split(":")
     #Care for user defined list of processors, useful when someone does not want to run the full reco
@@ -300,30 +303,33 @@ class MarlinAnalysis(ModuleBase):
             finallist.remove(item)
     else:
       finallist = items
-    marlindll = string.join(finallist,":")
+    marlindll = string.join(finallist, ":")
     
     return S_OK(marlindll)
 
-  def runMarlin(self,inputxml,envdict):
-    scriptName = '%s_%s_Run_%s.sh' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER)
-    if os.path.exists(scriptName): os.remove(scriptName)
+  def runMarlin(self, inputxml, envdict):
+    """ Actual bit of code running Marlin. Tomato calls this function.
+    """
+    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
+    if os.path.exists(scriptName): 
+      os.remove(scriptName)
     script = open(scriptName,'w')
     script.write('#!/bin/sh \n')
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    myMarlinDir=envdict['MarlinDIR']
+    myMarlinDir = envdict['MarlinDIR']
 
     if envdict.has_key('MARLIN_DLL'):
-      script.write('declare -x MARLIN_DLL=%s\n'%envdict['MARLIN_DLL'])
+      script.write('declare -x MARLIN_DLL=%s\n' % envdict['MARLIN_DLL'])
     else:
       return S_ERROR('MARLIN_DLL not found.')  
           
-    script.write('declare -x ROOTSYS=%s/ROOT\n'%(myMarlinDir))
+    script.write('declare -x ROOTSYS=%s/ROOT\n' % (myMarlinDir))
     if envdict.has_key('LD_LIB_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n'%(myMarlinDir,envdict['LD_LIB_PATH']))
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n' % (myMarlinDir, envdict['LD_LIB_PATH']))
     else:
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n'%(myMarlinDir))
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n' % (myMarlinDir))
     if os.path.exists("./lib/lddlib"):
       script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n')
       
@@ -339,27 +345,27 @@ class MarlinAnalysis(ModuleBase):
     script.write('echo $MARLIN_DLL | tr ":" "\n"\n')
     script.write('echo =============================\n')
     script.write('echo ldd of executable is\n')
-    script.write('ldd %s/Executable/* \n'%myMarlinDir)
+    script.write('ldd %s/Executable/* \n' % myMarlinDir)
     script.write('echo =============================\n')
     script.write('echo ldd of Marlin_DLL objects is\n')
-    script.write('ldd %s/MARLIN_DLL/* \n'%myMarlinDir)
+    script.write('ldd %s/MARLIN_DLL/* \n' % myMarlinDir)
     if os.path.exists('./lib/marlin_dll'):
       script.write('ldd ./lib/marlin_dll/*.so \n')
     script.write('echo =============================\n')
     script.write('echo ldd of LDLIBS objects is\n')
-    script.write('ldd %s/LDLibs/* \n'%myMarlinDir)  
+    script.write('ldd %s/LDLibs/* \n' % myMarlinDir)  
     if os.path.exists('./lib/lddlib'):
       script.write('ldd ./lib/lddlib/*.so \n')
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
 
-    if (os.path.exists("%s/Executable/Marlin"%myMarlinDir)):
+    if (os.path.exists("%s/Executable/Marlin" % myMarlinDir)):
       if (os.path.exists(inputxml)):
         #check
-        script.write('%s/Executable/Marlin -c %s\n'%(myMarlinDir,inputxml))
+        script.write('%s/Executable/Marlin -c %s\n' % (myMarlinDir, inputxml))
         #real run
-        script.write('%s/Executable/Marlin %s\n'%(myMarlinDir,inputxml))
+        script.write('%s/Executable/Marlin %s\n' % (myMarlinDir, inputxml))
     else:
       script.close()
       self.log.error("Marlin executable is missing, something is wrong with the installation!")
@@ -368,25 +374,29 @@ class MarlinAnalysis(ModuleBase):
     script.write('exit $appstatus\n')
 
     script.close()
-    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
+    if os.path.exists(self.applicationLog): 
+      os.remove(self.applicationLog)
 
-    os.chmod(scriptName,0755)
-    comm = 'sh -c "./%s"' %(scriptName)
-    self.setApplicationStatus('%s %s step %s' %(self.applicationName,self.applicationVersion,self.STEP_NUMBER))
+    os.chmod(scriptName, 0755)
+    comm = 'sh -c "./%s"' % (scriptName)
+    self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
-    res = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)    
+    res = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)    
     return res
   
   def GetInputFiles(self):
+    """ Resolve the input files. But not if in the application definition it was decided
+    that it should forget about the input.
+    """
     if self.ignoremissingInput:
       return S_OK("")
     res = resolveIFpaths(self.InputFile)
     if not res['OK']:
-      self.setApplicationStatus('%s: missing slcio file'%self.applicationName)
+      self.setApplicationStatus('%s: missing slcio file' % self.applicationName)
       return S_ERROR('Missing slcio file!')
     runonslcio = res['Value']
 
-    listofslcio = string.join(runonslcio," ")
+    listofslcio = string.join(runonslcio, " ")
     
     return S_OK(listofslcio)
   
