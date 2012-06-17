@@ -25,7 +25,8 @@ try:
   pythonpath = os.getenv( 'PYTHONPATH', '' ).split( ':' )
   newpythonpath = []
   for p in pythonpath:
-    if p == '': continue
+    if p == '': 
+      continue
     try:
       if os.path.normpath( p ) in sys.path:
         # In case a given directory is twice in PYTHONPATH it has to removed only once
@@ -43,7 +44,8 @@ except Exception, x:
   raise x
 
 class CliParams:
-
+  """ Command line parameters
+  """
   MAX_CYCLES = 100
 
   def __init__( self ):
@@ -129,7 +131,7 @@ if os.environ.has_key('OSG_WN_TMP'):
     installScript = os.path.join( path, installScriptName )
     if os.path.isfile( installScript ):
       try:
-        shutil.copy(installScript, os.path.join(os.environ['OSG_WN_TMP'],installScriptName))
+        shutil.copy(installScript, os.path.join(os.environ['OSG_WN_TMP'], installScriptName))
       except Exception, x:
         print sys.executable
         print sys.version

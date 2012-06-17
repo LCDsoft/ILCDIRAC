@@ -11,18 +11,17 @@ Created on Feb 1, 2010
 @author: Przemyslaw Majewski and Stephane Poss
 '''
 
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig, List
-from DIRAC.Core.Utilities.Subprocess import shellCall, systemCall, Subprocess
+from DIRAC import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.Subprocess import shellCall, Subprocess
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 
-import DIRAC
-import os,sys,re, tempfile, threading, time, shutil
+import os, sys, tempfile, threading, time, shutil
 
 EXECUTION_RESULT = {}
 
 class SQLWrapper:
-  def __init__(self,softwareDir='./',mokkaDBroot=''):
+  def __init__(self, softwareDir = './', mokkaDBroot = ''):
     """Set initial variables
     
     @param softwareDir: path to the location of the software installation
@@ -34,15 +33,15 @@ class SQLWrapper:
     self.MokkaDumpFile = ""
       
     self.MokkaTMPDir = ''
-    self.applicationLog = '%s/mysqllog'%(os.getcwd())
+    self.applicationLog = '%s/mysqllog' % (os.getcwd())
          
-    self.stdError = '%s/mysql_errlog'%(os.getcwd())
+    self.stdError = '%s/mysql_errlog' % (os.getcwd())
  
     self.softDir = softwareDir
     self.rootpass = "rootpass"
     self.mokkaDBroot = mokkaDBroot
     
-    self.initialDir= os.getcwd()
+    self.initialDir = os.getcwd()
     self.log = gLogger.getSubLogger( "SQL-wrapper" )
     
     self.mysqlInstalDir = ''  
@@ -51,20 +50,20 @@ class SQLWrapper:
     self.bufferLimit = 10485760   
     self.maxPeekLines = 20
     
-  def setDBpath(self,dbpath,dumpfile=''):
+  def setDBpath(self, dbpath, dumpfile = ''):
     """ Look for the DB to use.
     """
-    if(len(dumpfile)<1):
-      dumpfile= 'CLICMokkaDB.sql'
-      path = "%s/%s"%(dbpath,dumpfile)
+    if(len(dumpfile) < 1):
+      dumpfile = 'CLICMokkaDB.sql'
+      path = "%s/%s" % (dbpath, dumpfile)
       self.MokkaDumpFile = path
     else:
-      self.MokkaDumpFile = "%s/%s"%(os.getcwd(),os.path.basename(dumpfile))
+      self.MokkaDumpFile = "%s/%s" % (os.getcwd(), os.path.basename(dumpfile))
       
     if not os.path.exists(self.MokkaDumpFile):
-        return S_ERROR("Default DB was not found")
+      return S_ERROR("Default DB was not found")
     if not os.environ.has_key('MOKKA_DUMP_FILE'):
-      os.environ['MOKKA_DUMP_FILE']=self.MokkaDumpFile
+      os.environ['MOKKA_DUMP_FILE'] = self.MokkaDumpFile
     return S_OK()  
       
   def makedirs(self):
@@ -77,19 +76,19 @@ class SQLWrapper:
       try :
         os.makedirs(self.mokkaDBroot)
       except Exception, x:
-        self.log.error("Could not create mokkaDBroot, exception %s."%(x))
-        return S_ERROR("Could not create mokkaDBroot, exception %s."%(x))
+        self.log.error("Could not create mokkaDBroot, exception %s." % (x))
+        return S_ERROR("Could not create mokkaDBroot, exception %s." % (x))
     try:
-      self.MokkaTMPDir = tempfile.mkdtemp('','TMP',self.mokkaDBroot)
+      self.MokkaTMPDir = tempfile.mkdtemp('', 'TMP', self.mokkaDBroot)
     except Exception, x:
-      self.log.error("Exception error: %s"%(x))
-      return S_ERROR("Exception error: %s"%(x))
-    self.MokkaDataDir = os.path.join(self.initialDir,"data")
+      self.log.error("Exception error: %s" % (x))
+      return S_ERROR("Exception error: %s" % (x))
+    self.MokkaDataDir = os.path.join(self.initialDir, "data")
     try:
       os.mkdir(self.MokkaDataDir)
     except Exception, x:
-      self.log.error("Could not create data dir, exception %s"%(x))
-      return S_ERROR("Could not create data dir, exception %s"%(x))  
+      self.log.error("Could not create data dir, exception %s" % (x))
+      return S_ERROR("Could not create data dir, exception %s" % (x))  
     return S_OK()
 
     #os.chdir(self.initialDir)
@@ -111,11 +110,11 @@ class SQLWrapper:
     ##Because it's possibly installed in the shared area, where one regular user cannot write, it's needed to get it back to the LocalArea
     if self.softDir == SharedArea():
       localarea = LocalArea()
-      if not os.path.isdir(os.path.join(localarea,"mysql4grid")):
+      if not os.path.isdir(os.path.join(localarea, "mysql4grid")):
         try:
-          shutil.copytree(os.path.join(self.softDir,"mysql4grid"),os.path.join(localarea,"mysql4grid"), False)
-        except Exception,x :
-          return S_ERROR("Could not copy back to LocalArea the mysql install dir: %s"%(str(x)))
+          shutil.copytree(os.path.join(self.softDir, "mysql4grid"), os.path.join(localarea, "mysql4grid"), False)
+        except Exception, x :
+          return S_ERROR("Could not copy back to LocalArea the mysql install dir: %s" % (str(x)))
       self.softDir = localarea
 
     ### So here lies the dragon: Beware of what you do!
@@ -139,19 +138,26 @@ class SQLWrapper:
     ######
     #### Hell is the maintenance of the crap below!  
     os.chdir(self.softDir)
-    DIRAC.gLogger.verbose('setup local mokka database')
-    removeLibc(self.softDir+"/mysql4grid/lib64/mysql")
+    self.log.verbose('setup local mokka database')
+    removeLibc(self.softDir + "/mysql4grid/lib64/mysql")
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s'%(self.softDir,self.softDir,os.environ['LD_LIBRARY_PATH'])
+      os.environ['LD_LIBRARY_PATH'] = '%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64:%s' % (self.softDir,
+                                                                                            self.softDir,
+                                                                                            os.environ['LD_LIBRARY_PATH'])
     else:
-      os.environ['LD_LIBRARY_PATH']='%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64'%(self.softDir,self.softDir)
-    os.environ['PATH']='%s/mysql4grid/bin:%s'%(self.softDir,os.environ['PATH'])
+      os.environ['LD_LIBRARY_PATH'] = '%s/mysql4grid/lib64/mysql:%s/mysql4grid/lib64' % (self.softDir, self.softDir)
+    os.environ['PATH'] = '%s/mysql4grid/bin:%s' % (self.softDir, os.environ['PATH'])
     self.exeEnv = dict( os.environ )
     
-    safe_options =  "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s"%(self.MokkaTMPDir,self.MokkaDataDir,self.softDir,self.MokkaTMPDir,self.stdError,self.applicationLog)
-    comm = "mysql_install_db %s"%(safe_options) 
-    self.log.verbose("Running %s"%comm)
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    safe_options = "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s" % (self.MokkaTMPDir, 
+                                                                                                                                                                     self.MokkaDataDir, 
+                                                                                                                                                                     self.softDir,
+                                                                                                                                                                     self.MokkaTMPDir,
+                                                                                                                                                                     self.stdError,
+                                                                                                                                                                     self.applicationLog)
+    comm = "mysql_install_db %s" % (safe_options) 
+    self.log.verbose("Running %s" % comm)
+    self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
         
     resultTuple = self.result['Value']
 
@@ -167,16 +173,16 @@ class SQLWrapper:
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      self.log.error('SQLwrapper Exited With Status %s' %(status))
+      self.log.error('SQLwrapper Exited With Status %s' % (status))
  
     ###Now run mysqld in thread
-    os.chdir("%s/mysql4grid"%(self.softDir))
+    os.chdir("%s/mysql4grid" % (self.softDir))
     
     
-    self.log.verbose("Running mysqld_safe %s"%safe_options)
+    self.log.verbose("Running mysqld_safe %s" % safe_options)
 
     spObject = Subprocess( timeout = False, bufferLimit = int( self.bufferLimit ) )
-    command = '%s/mysql4grid/bin/mysqld_safe %s'%(self.softDir,safe_options)
+    command = '%s/mysql4grid/bin/mysqld_safe %s' % (self.softDir, safe_options)
     self.log.verbose( 'Execution command: %s' % ( command ) )
         
     exeThread = ExecutionThread( spObject, command, self.maxPeekLines, self.applicationLog, self.stdError, self.exeEnv )
@@ -187,7 +193,7 @@ class SQLWrapper:
     #if not self.mysqldPID:
         #return S_ERROR( 'MySQLd process could not start after 5 seconds' )
     
-    self.log.verbose("MySQLd run with pid: %s"%self.mysqldPID)
+    self.log.verbose("MySQLd run with pid: %s" % self.mysqldPID)
 
 
     ####Have to sleep for a while to let time for the socket to wake up
@@ -197,30 +203,31 @@ while [ -z "$socket_grep" ] ; do
     echo -n .
     sleep 1
 done 
-"""%(self.MokkaTMPDir)
-    self.result = shellCall(0,sleepComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+""" % (self.MokkaTMPDir)
+    self.result = shellCall(0, sleepComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     ###changing root pass
-    mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'"%(self.MokkaTMPDir,self.rootpass)
-    self.log.verbose("Running %s"%mysqladmincomm)
-    self.result = shellCall(0,mysqladmincomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    mysqladmincomm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot password '%s'" % (self.MokkaTMPDir,
+                                                                                                           self.rootpass)
+    self.log.verbose("Running %s" % mysqladmincomm)
+    self.result = shellCall(0, mysqladmincomm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
     self.log.info( "Status after the mysqladmin execution is %s" % str( status ) )
     
     ###taken from https://svnsrv.desy.de/viewvc/ilctools/gridtools/trunk/MokkaGridScripts/runjob.sh?revision=268&view=markup
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' "%(self.MokkaTMPDir,self.rootpass)
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' "%(self.MokkaTMPDir,self.rootpass)
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' " % (self.MokkaTMPDir, self.rootpass)
+    self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' " % (self.MokkaTMPDir, self.rootpass)
+    self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+    comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' " % (self.MokkaTMPDir, self.rootpass)
+    self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     #comm = "mysql --no-defaults -uroot -hlocalhost --socket=%s/mysql.sock -p%s <<< 'DELETE FROM mysql.user WHERE Host != \"%\"; FLUSH PRIVILEGES;' "%(self.MokkaTMPDir,self.rootpass)
     #self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     ###calling mysql
-    mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s"%(self.MokkaTMPDir,self.rootpass,self.MokkaDumpFile)
-    self.log.verbose("running %s"%mysqlcomm)
-    self.result = shellCall(0,mysqlcomm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s" % (self.MokkaTMPDir, self.rootpass, self.MokkaDumpFile)
+    self.log.verbose("running %s" % mysqlcomm)
+    self.result = shellCall(0, mysqlcomm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     resultTuple = self.result['Value']
     status = resultTuple[0]
     self.log.info( "Status after the mysql execution is %s" % str( status ) )
@@ -240,9 +247,9 @@ done
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      self.log.error('MySQL setup Exited With Status %s' %(status))
+      self.log.error('MySQL setup Exited With Status %s' % (status))
       os.chdir(self.initialDir)
-      return S_ERROR('MySQL setup Exited With Status %s' %(status))
+      return S_ERROR('MySQL setup Exited With Status %s' % (status))
     # Still have to set the application status e.g. user job case.
     #self.setApplicationStatus('mysql client %s Successful' %(self.applicationVersion))
     os.chdir(self.initialDir)
@@ -256,11 +263,11 @@ done
     Called at the end of Mokka execution, whatever the status is.
     """
     currentdir = os.getcwd()
-    os.chdir(os.path.join(self.softDir,"mysql4grid"))
-    DIRAC.gLogger.verbose('clean up db')
-    MySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown"%(self.MokkaTMPDir,self.rootpass)
+    os.chdir(os.path.join(self.softDir, "mysql4grid"))
+    self.log.verbose('clean up db')
+    MySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown" % (self.MokkaTMPDir, self.rootpass)
             
-    self.result = shellCall(0,MySQLcleanUpComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0, MySQLcleanUpComm, callbackFunction = self.redirectLogOutput, bufferLimit=20971520)
     
     resultTuple = self.result['Value']
 
@@ -280,8 +287,8 @@ while [ -n "$socket_grep" ] ; do
     echo -n .
     sleep 1
 done 
-"""%(self.MokkaTMPDir)
-    self.result = shellCall(0,sleepComm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+""" % (self.MokkaTMPDir)
+    self.result = shellCall(0, sleepComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
     os.chdir(currentdir)
 
@@ -297,19 +304,19 @@ done
     #cleanup script also removes tmp
     if (os.path.exists(self.MokkaTMPDir)):
       try:
-        DIRAC.gLogger.verbose('Removing tmp dir')
-        shutil.rmtree(self.mokkaDBroot,True)
+        self.log.verbose('Removing tmp dir')
+        shutil.rmtree(self.mokkaDBroot, True)
         #shutil.rmtree(self.MokkaTMPDir,True)
         #shutil.rmtree(self.MokkaDataDir,True)
-      except OSError, (errno,strerror):
-        DIRAC.gLogger.error("I/O error(%s): %s"%(errno, strerror))
+      except OSError, (errno, strerror):
+        self.log.error("I/O error(%s): %s" % (errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
 
     if failed:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
-      self.log.error('MySQL-cleanup Exited With Status %s' %(status))
-      return S_ERROR('MySQL-cleanup Exited With Status %s' %(status))
+      self.log.error('MySQL-cleanup Exited With Status %s' % (status))
+      return S_ERROR('MySQL-cleanup Exited With Status %s' % (status))
 
     return S_OK('OK')
     #############################################################################
@@ -322,8 +329,8 @@ done
     """
     sys.stdout.flush()
     if self.applicationLog:
-      log = open(self.applicationLog,'a')
-      log.write(message+'\n')
+      log = open(self.applicationLog, 'a')
+      log.write(message + '\n')
       log.close()
     else:
       self.log.error("Application Log file not defined")

@@ -16,17 +16,14 @@
 
 __RCSID__ = "$Id: JobPathResolution.py  2010-06-28 12:53:50Z sposs $"
 
-from DIRAC.Core.Utilities.ClassAd.ClassAdLight             import ClassAd
-from DIRAC                                                 import S_OK, S_ERROR, gConfig, gLogger
+from DIRAC                                                 import S_OK, S_ERROR, gLogger
 
-import string,re
-
-COMPONENT_NAME='ILCJobPathResolution'
+COMPONENT_NAME = 'ILCJobPathResolution'
 
 class JobPathResolution:
 
   #############################################################################
-  def __init__(self,argumentsDict):
+  def __init__(self, argumentsDict):
     """ Standard constructor
     """
     self.arguments = argumentsDict
@@ -48,7 +45,7 @@ class JobPathResolution:
     job = self.arguments['JobID']
     classadJob = self.arguments['ClassAd']
 
-    inputData = classadJob.get_expression('InputData').replace('"','').replace('Unknown','')
+    inputData = classadJob.get_expression('InputData').replace('"', '').replace('Unknown', '')
     if inputData:
       self.log.info('Job %s has input data requirement' % (job))
       ilcPath += 'InputData'

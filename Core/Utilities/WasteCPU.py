@@ -14,13 +14,13 @@ def WasteCPUCycles(timecut):
   """
   a = 1e31
   first = time.clock()
-  while time.clock()-first<timecut:
+  while time.clock()-first < timecut:
     try:
       a = log(a)
     except Exception, x:
-      return S_ERROR("Failed to waste %s CPU seconds:%s"%(timecut,str(x)))  
+      return S_ERROR("Failed to waste %s CPU seconds:%s" % (timecut, str(x)))  
     if a < 0:
       a = -a
     if a == 0:
       a = 4  
-  return S_OK("Successfully wasted %s seconds"%timecut)    
+  return S_OK("Successfully wasted %s seconds" % timecut)    

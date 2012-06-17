@@ -21,9 +21,9 @@ def removeLibc(path):
     if (lib.count("libc.so") or lib.count("libc-2.5") or lib.count("libm.so") 
         or lib.count("libpthread.so") or lib.count("libdl.so")):
       try:
-        os.remove(os.getcwd()+os.sep+lib)
+        os.remove(os.getcwd() + os.sep + lib)
       except:
-        print "Could not remove %s"%lib
+        print "Could not remove %s" % lib
         os.chdir(curdir)
         return False
   os.chdir(curdir)

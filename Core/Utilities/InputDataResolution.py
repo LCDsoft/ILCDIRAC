@@ -21,14 +21,14 @@ from DIRAC.Core.Utilities.ModuleFactory                             import Modul
 from DIRAC                                                          import S_OK, S_ERROR, gConfig, gLogger
 import DIRAC
 
-import os,sys,re,string,types
+import string, types
 
-COMPONENT_NAME='ILCInputDataResolution'
+COMPONENT_NAME = 'ILCInputDataResolution'
 
 class InputDataResolution:
 
   #############################################################################
-  def __init__(self,argumentsDict):
+  def __init__(self, argumentsDict):
     """ Standard constructor
     """
     self.arguments = argumentsDict
@@ -42,7 +42,7 @@ class InputDataResolution:
     """
     result = self.__resolveInputData()
     if not result['OK']:
-      self.log.error('InputData resolution failed with result:\n%s' %(result))
+      self.log.error('InputData resolution failed with result:\n%s' % (result))
 
     #For local running of this module we can expose an option to ignore missing files
     ignoreMissing = False
@@ -54,7 +54,7 @@ class InputDataResolution:
     if result.has_key('Failed'):
       failedReplicas = result['Failed']
       if failedReplicas and not ignoreMissing:
-        self.log.error('Failed to obtain access to the following files:\n%s' %(string.join(failedReplicas,'\n')))
+        self.log.error('Failed to obtain access to the following files:\n%s' % (string.join(failedReplicas, '\n')))
         return S_ERROR('Failed to access all of requested input data')
 
     if not result.has_key('Successful'):
@@ -77,16 +77,16 @@ class InputDataResolution:
 
     policy = []
     if not self.arguments.has_key('Job'):
-      self.arguments['Job']={}
+      self.arguments['Job'] = {}
 
     if self.arguments['Job'].has_key('InputDataPolicy'):
       policy = self.arguments['Job']['InputDataPolicy']
       #In principle this can be a list of modules with the first taking precedence
       if type(policy) in types.StringTypes:
         policy = [policy]
-      self.log.info('Job has a specific policy setting: %s' %(string.join(policy,', ')))
+      self.log.info('Job has a specific policy setting: %s' % (string.join(policy, ', ')))
     else:
-      self.log.verbose('Attempting to resolve input data policy for site %s' %site)
+      self.log.verbose('Attempting to resolve input data policy for site %s' % site)
       inputDataPolicy = gConfig.getOptionsDict('/Operations/InputDataPolicy')
       if not inputDataPolicy:
         return S_ERROR('Could not resolve InputDataPolicy from /Operations/InputDataPolicy')
@@ -94,51 +94,51 @@ class InputDataResolution:
       options = inputDataPolicy['Value']
       if options.has_key(site):
         policy = options[site]
-        policy = [x.strip() for x in string.split(policy,',')]
-        self.log.info('Found specific input data policy for site %s:\n%s' %(site,string.join(policy,',\n')))
+        policy = [x.strip() for x in string.split(policy, ',')]
+        self.log.info('Found specific input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
       elif options.has_key('Default'):
         policy = options['Default']
-        policy = [x.strip() for x in string.split(policy,',')]
-        self.log.info('Applying default input data policy for site %s:\n%s' %(site,string.join(policy,',\n')))
+        policy = [x.strip() for x in string.split(policy, ',')]
+        self.log.info('Applying default input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
 
     dataToResolve = None #if none, all supplied input data is resolved
     allDataResolved = False
     successful = {}
-    failedReplicas=[]
+    failedReplicas = []
     for modulePath in policy:
       if not allDataResolved:
-        result = self.__runModule(modulePath,dataToResolve)
+        result = self.__runModule(modulePath, dataToResolve)
         if not result['OK']:
-          self.log.warn('Problem during %s execution' %modulePath)
+          self.log.warn('Problem during %s execution' % modulePath)
           return result
 
         if result.has_key('Failed'):
-          failedReplicas=result['Failed']
+          failedReplicas = result['Failed']
 
         if failedReplicas:
-          self.log.info('%s failed for the following files:\n%s' %(modulePath,string.join(failedReplicas,'\n')))
+          self.log.info('%s failed for the following files:\n%s' % (modulePath, string.join(failedReplicas, '\n')))
           dataToResolve = failedReplicas
         else:
-          self.log.info('All replicas resolved after %s execution' %(modulePath))
-          allDataResolved=True
+          self.log.info('All replicas resolved after %s execution' % (modulePath))
+          allDataResolved = True
 
         successful.update(result['Successful'])
         self.log.verbose(successful)
 
     result = S_OK()
-    result['Successful']=successful
-    result['Failed']=failedReplicas
+    result['Successful'] = successful
+    result['Failed'] = failedReplicas
     return result
 
   #############################################################################
-  def __runModule(self,modulePath,remainingReplicas):
+  def __runModule(self, modulePath, remainingReplicas):
     """This method provides a way to run the modules specified by the VO that
        govern the input data access policy for the current site.  For LHCb the
        standard WMS modules are applied in a different order depending on the site.
     """
-    self.log.info('Attempting to run %s' %(modulePath))
+    self.log.info('Attempting to run %s' % (modulePath))
     moduleFactory = ModuleFactory()
-    moduleInstance = moduleFactory.getModule(modulePath,self.arguments)
+    moduleInstance = moduleFactory.getModule(modulePath, self.arguments)
     if not moduleInstance['OK']:
       return moduleInstance
 

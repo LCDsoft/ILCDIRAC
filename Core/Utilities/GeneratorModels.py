@@ -6,7 +6,7 @@
 """
 __RCSID__ = " $Id: $ "
 
-from DIRAC import gConfig,S_OK,S_ERROR
+from DIRAC import gConfig, S_OK, S_ERROR
 
 class GeneratorModels():
   """ Contains the list of known models
@@ -17,23 +17,29 @@ class GeneratorModels():
     if res['OK']:
       self.models = res['Value']
 
-  def hasModel(self,model):
+  def hasModel(self, model):
+    """ Check that specified model exists
+    """
     if self.models.has_key(model):
       return S_OK()
     else:
-      return S_ERROR("Model %s is not defined, use any of %s"%(model, self.models.keys()))
+      return S_ERROR("Model %s is not defined, use any of %s" % (model, self.models.keys()))
 
-  def getFile(self,model):
+  def getFile(self, model):
+    """ Return the proper model file (usually LesHouches)
+    """
     res = self.hasModel(model)
     if not res['OK']:
       return res
     if not self.models[model]:
-      return S_ERROR("No file attached to model %s"%model)
+      return S_ERROR("No file attached to model %s" % model)
     return S_OK(self.models[model])
   
-  def getParamsForWhizard(self,model):
+  def getParamsForWhizard(self, model):
+    """ When creating the final file, this is needed to get the parameters for the SM
+    """
     params = ''
-    if model=='sm':
+    if model == 'sm':
       params = """<GF type="float" value="1.16639E-5">
 <!-- Fermi constant -->
 </GF>
