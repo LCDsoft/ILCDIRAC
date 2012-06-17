@@ -12,17 +12,19 @@ New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD 
 import os, string
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC 
-from ILCDIRAC.Core.Utilities.TARsoft import TARinstall
+from ILCDIRAC.Core.Utilities.TARsoft   import TARinstall
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall 
-from ILCDIRAC.Core.Utilities.DetectOS import NativeMachine
-from DIRAC.Core.Utilities.Subprocess                                import systemCall
+from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
+from DIRAC.Core.Utilities.Subprocess   import systemCall
 
-from DIRAC import S_OK,S_ERROR
+from DIRAC                             import S_OK, S_ERROR
 
 natOS = NativeMachine()
 
 class CombinedSoftwareInstallation(object):
-  def __init__(self,argumentsDict):
+  """ Combined means that it will try to install in the Shared area and in the LocalArea, depending on the user's rights 
+  """
+  def __init__(self, argumentsDict):
     """ Standard constructor
     
     Defines, from dictionary of job parameters passed, a set of members to hold e.g. the applications and the system config
@@ -50,9 +52,9 @@ class CombinedSoftwareInstallation(object):
     for app in apps:
       DIRAC.gLogger.verbose( 'Requested Package %s' % app )
       app = tuple(app.split('.'))
-      if len(app)>2:
+      if len(app) > 2:
         tempapp = app
-        app=[]
+        app = []
         app.append(tempapp[0])
         app.append(string.join(tempapp[1:], "."))
       self.apps.append(app)
@@ -73,9 +75,9 @@ class CombinedSoftwareInstallation(object):
     self.ceConfigs = natOS.CMTSupportedConfig()
 
     self.sharedArea = SharedArea()
-    DIRAC.gLogger.info("SharedArea is %s"%self.sharedArea)
+    DIRAC.gLogger.info("SharedArea is %s" % self.sharedArea)
     self.localArea  = LocalArea()
-    DIRAC.gLogger.info("LocalArea is %s"%self.localArea)
+    DIRAC.gLogger.info("LocalArea is %s" % self.localArea)
     
   def execute(self):
     """ Main method of the class executed by DIRAC jobAgent
@@ -95,7 +97,7 @@ class CombinedSoftwareInstallation(object):
 
     found_config = False
         
-    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s"%(string.join(self.ceConfigs,","),self.jobConfig))
+    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (string.join(self.ceConfigs, ","), self.jobConfig))
     res = DIRAC.gConfig.getSections('/Operations/AvailableTarBalls')
     if not res['OK']:
       return res
@@ -106,7 +108,7 @@ class CombinedSoftwareInstallation(object):
         for supp_systems in supported_systems:
           if ceConfig == supp_systems:
             self.jobConfig = ceConfig
-            found_config=True
+            found_config = True
             break
           
     areas = []
@@ -131,14 +133,14 @@ class CombinedSoftwareInstallation(object):
     for app in self.apps:
       failed = False    
       for area in areas:
-        DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' %(app[0],app[1],self.jobConfig,area))
-        res = TARinstall(app,self.jobConfig,area)
+        DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' % (app[0], app[1], self.jobConfig, area))
+        res = TARinstall(app, self.jobConfig, area)
         if not res['OK']:
-          DIRAC.gLogger.error('Failed to install software in %s: %s'%(area,res['Message']),'%s_%s' %(app[0],app[1]))
+          DIRAC.gLogger.error('Failed to install software in %s: %s' % (area, res['Message']), '%s_%s' %(app[0], app[1]))
           failed = True
           continue
         else:
-          DIRAC.gLogger.info('%s was successfully installed for %s in %s' %(app,self.jobConfig,area))
+          DIRAC.gLogger.info('%s was successfully installed for %s in %s' % (app, self.jobConfig, area))
           failed = False
           break
       if failed:
@@ -147,7 +149,7 @@ class CombinedSoftwareInstallation(object):
     if self.sharedArea:  
       #List content  
       DIRAC.gLogger.info("Listing content of shared area :")
-      res = systemCall( 5, ['ls', '-al',self.sharedArea] )
+      res = systemCall( 5, ['ls', '-al', self.sharedArea] )
       if not res['OK']:
         DIRAC.gLogger.error( 'Failed to list the shared area directory', res['Message'] )
       elif res['Value'][0]:
@@ -159,6 +161,8 @@ class CombinedSoftwareInstallation(object):
     return DIRAC.S_OK()
   
 def log( n, line ):
+  """ print line
+  """
   DIRAC.gLogger.info( line )
 
 def SharedArea():
@@ -217,8 +221,8 @@ def CreateSharedArea():
     os.remove( sharedArea )
     os.mkdir( sharedArea )
     return True
-  except Exception,x:
-    DIRAC.gLogger.error('Problem trying to create shared area',str(x))
+  except Exception, x:
+    DIRAC.gLogger.error('Problem trying to create shared area', str(x))
     return False
 
 def LocalArea():
@@ -228,7 +232,7 @@ def LocalArea():
    in the Shared Area.
    Currently is always the location used as the software is not in the shared area.
   """
-  if DIRAC.gConfig.getValue('/LocalSite/LocalArea',''):
+  if DIRAC.gConfig.getValue('/LocalSite/LocalArea', ''):
     localArea = DIRAC.gConfig.getValue('/LocalSite/LocalArea')
   else:
     localArea = os.path.join( DIRAC.rootPath, 'LocalArea' )
@@ -256,11 +260,11 @@ def getSoftwareFolder(folder):
   """
   localArea = LocalArea()
   sharedArea = SharedArea()
-  if os.path.exists('%s%s%s' %(localArea,os.sep,folder)):
+  if os.path.exists('%s%s%s' % (localArea, os.sep, folder)):
     mySoftwareRoot = localArea
-  elif os.path.exists('%s%s%s' %(sharedArea,os.sep,folder)):
+  elif os.path.exists('%s%s%s' % (sharedArea, os.sep, folder)):
     mySoftwareRoot = sharedArea
   else:
-    return S_ERROR('Missing installation of %s!'%folder)
-  mySoftDir = os.path.join(mySoftwareRoot,folder)
+    return S_ERROR('Missing installation of %s!' % folder)
+  mySoftDir = os.path.join(mySoftwareRoot, folder)
   return S_OK(mySoftDir)    

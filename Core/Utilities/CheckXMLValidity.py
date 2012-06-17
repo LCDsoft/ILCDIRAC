@@ -13,7 +13,7 @@ def CheckXMLValidity(xmlfile):
   tree = ElementTree()
   try:
     tree.parse(xmlfile)
-  except Exception,x:
-    return S_ERROR("Found problem in file %s: %s %s"%(xmlfile,Exception,x))
+  except Exception, x:
+    return S_ERROR("Found problem in file %s: %s %s"%(xmlfile, Exception, x))
   
   return S_OK()

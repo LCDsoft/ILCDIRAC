@@ -9,126 +9,126 @@ import re, logging
 # CMTCONFIG extraction
 
 def isNewStyleBinary(cmtconfig):
-    """ check if the CMTCONFIG value is new styled """
-    newstyle = False
-    if len(cmtconfig.split("-")) > 1 :
-        newstyle = True
-    return newstyle
+  """ check if the CMTCONFIG value is new styled """
+  newstyle = False
+  if len(cmtconfig.split("-")) > 1 :
+    newstyle = True
+  return newstyle
   
 def isOldStyleBinary(cmtconfig):
-    """ check if the CMTCONFIG value is new styled """
-    return not isNewStyleBinary(cmtconfig)
+  """ check if the CMTCONFIG value is new styled """
+  return not isNewStyleBinary(cmtconfig)
 
 def isBinaryDbg(cmtconfig):
-    """ check if the CMTCONFIG value is a debug one """
-    bindbg = True
-    if isNewStyleBinary(cmtconfig) :
-        if not cmtconfig.endswith("-dbg") :
-            bindbg = False
-    else :
-        if not cmtconfig.endswith("_dbg") :
-            bindbg = False
-    return bindbg
+  """ check if the CMTCONFIG value is a debug one """
+  bindbg = True
+  if isNewStyleBinary(cmtconfig) :
+    if not cmtconfig.endswith("-dbg") :
+      bindbg = False
+  else :
+    if not cmtconfig.endswith("_dbg") :
+      bindbg = False
+  return bindbg
 
 def isBinaryOpt(cmtconfig):
-    """ check if the CMTCONFIG value is an optimized one """
-    binopt = True
-    if isBinaryDbg(cmtconfig) :
-        binopt = False
-    return binopt
+  """ check if the CMTCONFIG value is an optimized one """
+  binopt = True
+  if isBinaryDbg(cmtconfig) :
+    binopt = False
+  return binopt
 
 
 def getBinaryDbg(cmtconfig):
-    """ convert CMTCONFIG to debug """
-    cmtdbg = cmtconfig
-    if not isBinaryDbg(cmtconfig) :
-        if isNewStyleBinary(cmtconfig) :
-            if cmtconfig.endswith("-opt") :
-                cmtdbg = "-".join(cmtconfig.split("-")[:-1]) + "-dbg"
-            else :
-                cmtdbg += "-dbg"
-        else :
-            cmtdbg += "_dbg"
-    return cmtdbg
+  """ convert CMTCONFIG to debug """
+  cmtdbg = cmtconfig
+  if not isBinaryDbg(cmtconfig) :
+    if isNewStyleBinary(cmtconfig) :
+      if cmtconfig.endswith("-opt") :
+        cmtdbg = "-".join(cmtconfig.split("-")[:-1]) + "-dbg"
+      else :
+        cmtdbg += "-dbg"
+    else :
+      cmtdbg += "_dbg"
+  return cmtdbg
 
 def getBinaryOpt(cmtconfig):
-    """ convert CMTCONFIG to optimized """
-    cmtopt = cmtconfig
-    if isBinaryDbg(cmtconfig) :
-        if isNewStyleBinary(cmtconfig) :
-            cmtopt = "-".join(cmtconfig.split("-")[:-1]) + "-opt"
-        else :
-            cmtopt = "_".join(cmtconfig.split("_")[:-1])
-    return cmtopt
+  """ convert CMTCONFIG to optimized """
+  cmtopt = cmtconfig
+  if isBinaryDbg(cmtconfig) :
+    if isNewStyleBinary(cmtconfig) :
+      cmtopt = "-".join(cmtconfig.split("-")[:-1]) + "-opt"
+    else :
+      cmtopt = "_".join(cmtconfig.split("_")[:-1])
+  return cmtopt
 
 def getCompiler(cmtconfig):
-    """ extract compiler from CMTCONFIG """
-    compdef = None
-    if isNewStyleBinary(cmtconfig) :
-        compdef = cmtconfig.split("-")[2]
+  """ extract compiler from CMTCONFIG """
+  compdef = None
+  if isNewStyleBinary(cmtconfig) :
+    compdef = cmtconfig.split("-")[2]
+  else :
+    if not cmtconfig.startswith("win") :
+      compdef = cmtconfig.split("_")[2]
     else :
-        if not cmtconfig.startswith("win") :
-            compdef = cmtconfig.split("_")[2]
-        else :
-            compdef = cmtconfig.split("_")[1]
-    return compdef
+      compdef = cmtconfig.split("_")[1]
+  return compdef
 
 def getPlatformType(cmtconfig):
-    """ extract platform type (slc5, slc4, etc) from CMTCONFIG """
-    platformtype = None
-    if isNewStyleBinary(cmtconfig) :
-        platformtype = cmtconfig.split("-")[1]
-    else :
-        platformtype = cmtconfig.split("_")[0]
-    if platformtype == "sl5" :
-        platformtype = "slc5"
-    if platformtype == "sl4" :
-        platformtype = "slc4"
-    if platformtype == "sl3" :
-        platformtype = "slc3"
-    return platformtype
+  """ extract platform type (slc5, slc4, etc) from CMTCONFIG """
+  platformtype = None
+  if isNewStyleBinary(cmtconfig) :
+    platformtype = cmtconfig.split("-")[1]
+  else :
+    platformtype = cmtconfig.split("_")[0]
+  if platformtype == "sl5" :
+    platformtype = "slc5"
+  if platformtype == "sl4" :
+    platformtype = "slc4"
+  if platformtype == "sl3" :
+    platformtype = "slc3"
+  return platformtype
 
 
 def getArchitecture(cmtconfig):
-    """ extract architecture from CMTCONFIG """
-    architecture = None
-    if isNewStyleBinary(cmtconfig) :
-        architecture = cmtconfig.split("-")[0]
-        if architecture == "ia32" :
-            architecture = "i686"
-        if architecture == "amd64" :
-            architecture = "x86_64"
-    else :
-        archlist = cmtconfig.split("_")
-        if not archlist[0].startswith("win") :
-            architecture = archlist[1]
-            if architecture == "i686" :
-                architecture = "ia32"
-            if architecture == "x86_64" :
-                architecture = "i686"
-    return architecture
+  """ extract architecture from CMTCONFIG """
+  architecture = None
+  if isNewStyleBinary(cmtconfig) :
+    architecture = cmtconfig.split("-")[0]
+    if architecture == "ia32" :
+      architecture = "i686"
+    if architecture == "amd64" :
+      architecture = "x86_64"
+  else :
+    archlist = cmtconfig.split("_")
+    if not archlist[0].startswith("win") :
+      architecture = archlist[1]
+      if architecture == "i686" :
+        architecture = "ia32"
+      if architecture == "x86_64" :
+        architecture = "i686"
+  return architecture
 
 def getConfig(architecture, platformtype, compiler, debug=False):
-    cmtconfig = None
-    if platformtype.startswith("win") :
-        cmtconfig = "_".join([platformtype, compiler])
-    else :
-        if architecture == "ia32" :
-            architecture = "i686"
-        elif architecture == "amd64" :
-            architecture = "x86_64"
-        cmtconfig = "-".join([architecture, platformtype, compiler, "opt"])
-        if platformtype == "slc4" or platformtype == "slc3" or platformtype == "osx105":
-            if architecture in arch_runtime_compatiblity["ia32"] :
-                architecture = "ia32"
-            elif architecture == "x86_64" :
-                architecture = "amd64"
-            cmtconfig = "_".join([platformtype, architecture, compiler])
+  cmtconfig = None
+  if platformtype.startswith("win") :
+    cmtconfig = "_".join([platformtype, compiler])
+  else :
+    if architecture == "ia32" :
+      architecture = "i686"
+    elif architecture == "amd64" :
+      architecture = "x86_64"
+    cmtconfig = "-".join([architecture, platformtype, compiler, "opt"])
+    if platformtype == "slc4" or platformtype == "slc3" or platformtype == "osx105":
+      if architecture in arch_runtime_compatiblity["ia32"] :
+        architecture = "ia32"
+      elif architecture == "x86_64" :
+        architecture = "amd64"
+      cmtconfig = "_".join([platformtype, architecture, compiler])
                 
-    if debug :
-        cmtconfig = getBinaryDbg(cmtconfig)
+  if debug :
+    cmtconfig = getBinaryDbg(cmtconfig)
 
-    return cmtconfig
+  return cmtconfig
 
 # officially supported binaries
 binary_opt_list = ["x86_64-slc5-gcc43-opt"]#,"slc4_ia32_gcc34"]
@@ -136,48 +136,48 @@ binary_opt_list = ["x86_64-slc5-gcc43-opt"]#,"slc4_ia32_gcc34"]
 extra_binary_opt_list = ["x86_64-slc5-gcc34-opt"]
 
 def pathBinaryMatch(path, cmtconfig):
-    """ returns True if the path belong to the cmtconfig distribution
-    @param path: file/path to be tested
-    @param cmtconfig: target cmtconfig
-    """
-    selected = False
-    log = logging.getLogger()
-    if cmtconfig not in binary_list :
-        log.error("the value of CMTCONFIG %s is not supported" % cmtconfig)
-    else :
-        match_str = "%s" % cmtconfig
-        if isOldStyleBinary(cmtconfig) and isBinaryOpt(cmtconfig):
-            match_str = "%s(?!_dbg)" % cmtconfig
-        cfg_match = re.compile(match_str)
-        if cfg_match.search(path) :
-            selected = True
-    return selected
+  """ returns True if the path belong to the cmtconfig distribution
+  @param path: file/path to be tested
+  @param cmtconfig: target cmtconfig
+  """
+  selected = False
+  log = logging.getLogger()
+  if cmtconfig not in binary_list :
+    log.error("the value of CMTCONFIG %s is not supported" % cmtconfig)
+  else :
+    match_str = "%s" % cmtconfig
+    if isOldStyleBinary(cmtconfig) and isBinaryOpt(cmtconfig):
+      match_str = "%s(?!_dbg)" % cmtconfig
+    cfg_match = re.compile(match_str)
+    if cfg_match.search(path) :
+      selected = True
+  return selected
 
 def pathSharedMatch(path, cmtconfig=None):
-    """ select path with are not part of a binary distribution
-    @param path: file/dir path to be tested
-    @param cmtconfig: optional parameter to exclude specific files for a given cmtconfig
-    """
-    selected = True
-    for b in binary_list :
-        if pathBinaryMatch(path, b) :
-            selected = False
-            break
-    return selected
+  """ select path with are not part of a binary distribution
+  @param path: file/dir path to be tested
+  @param cmtconfig: optional parameter to exclude specific files for a given cmtconfig
+  """
+  selected = True
+  for b in binary_list :
+    if pathBinaryMatch(path, b) :
+      selected = False
+      break
+  return selected
 
 def pathMatch(path, cmtconfig, shared=False):
-    """
-    return True if the path belong to the CMTCONFIG.
-    """
-    selected = False
-    if not shared :
-        selected = pathBinaryMatch(path, cmtconfig)
-    else :
-        selected = pathSharedMatch(path, cmtconfig)
-    return selected
+  """
+  return True if the path belong to the CMTCONFIG.
+  """
+  selected = False
+  if not shared :
+    selected = pathBinaryMatch(path, cmtconfig)
+  else :
+    selected = pathSharedMatch(path, cmtconfig)
+  return selected
 
 def pathFilter(pathlist, cmtconfig, shared=False):
-    return [ p for p in pathlist if pathMatch(p, cmtconfig, shared) ]
+  return [ p for p in pathlist if pathMatch(p, cmtconfig, shared) ]
 
 binary_dbg_list = [ getBinaryDbg(x) for x in binary_opt_list ]
 extra_binary_dbg_list = [ getBinaryDbg(x) for x in extra_binary_opt_list ]
@@ -410,9 +410,9 @@ class NativeMachine(object):
                 cvers = [int(c) for c in self.nativeCompilerVersion(position=2).split(".")]
                 self._compiler = "gcc%d%d" % (cvers[0], cvers[1])
                 if cvers[0] == 3 and cvers[1] < 4 :
-                    self._compiler = "gcc%s" %self.nativeCompilerVersion(position=3).replace(".","") 
+                    self._compiler = "gcc%s" % self.nativeCompilerVersion(position=3).replace(".","") 
                 if self._ostype == "Darwin" and self.OSVersion(position=2) == "10.5" :
-                    self._compiler = "gcc%s" %self.nativeCompilerVersion(position=3).replace(".","")                     
+                    self._compiler = "gcc%s" % self.nativeCompilerVersion(position=3).replace(".","")                     
         return self._compiler
     # CMT derived informations
     def CMTArchitecture(self):

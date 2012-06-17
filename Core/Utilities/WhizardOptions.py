@@ -8,19 +8,20 @@ for SUSY speacil treatment of the pythia parameters have to be thought of: if th
 @author: Stephane Poss
 '''
 
-from xml.etree.ElementTree                                import ElementTree,fromstring
-from xml.etree.ElementTree                                import Element
+from xml.etree.ElementTree                                import ElementTree, fromstring
 from ILCDIRAC.Core.Utilities.GeneratorModels              import GeneratorModels
 
 import types
 
-from DIRAC import S_OK,S_ERROR
+from DIRAC import S_OK, S_ERROR
 
 def getDict():
+  """ Get list of available fields in the whizard options.
+  """
   pdict = {}
   pdict['process_input'] = {}
   pdict['integration_input'] = {}
-  pdict['simulation_input']= {}
+  pdict['simulation_input'] = {}
   pdict['diagnostics_input'] = {}
   pdict['beam_input_1'] = {}
   pdict['beam_input_2'] = {}
@@ -28,7 +29,9 @@ def getDict():
   return S_OK(pdict)
 
 class WhizardOptions(object):
-  def __init__(self,model="sm"):
+  """ Class that provides an interface to the xml representation of the whizard options.
+  """
+  def __init__(self, model = "sm"):
     self.genmodel = GeneratorModels()
     self.paramdict = {}
     modelparams = self.modelParams(model)
@@ -596,7 +599,9 @@ class WhizardOptions(object):
 """%modelparams)
     self.getInputFiles(model)
   
-  def getInputFiles(self,model):
+  def getInputFiles(self, model):
+    """ Get the proper input parameter file, usually LesHouches
+    """
     if not self.paramdict.has_key('process_input'):
       self.paramdict['process_input'] = {}
     if not self.paramdict['process_input'].has_key('input_file'):
@@ -609,7 +614,9 @@ class WhizardOptions(object):
         self.paramdict['process_input']['input_slha_format'] = 'T'
     
     
-  def modelParams(self,model):
+  def modelParams(self, model):
+    """ Get the model parameters
+    """
     modelparams = []
     res = self.genmodel.getParamsForWhizard(model)
     if not res['OK']:
@@ -622,38 +629,48 @@ class WhizardOptions(object):
     
     return "\n".join(modelparams)
     
-  def toXML(self,fname='whizard.xml'):
+  def toXML(self, fname = 'whizard.xml'):
+    """ Write to XML
+    """
     tree = ElementTree(self.whizardxml)
     tree.write(fname)
     return S_OK()
   
   def getMainFields(self):
+    """ Get teh main fields
+    """
     listoffields = []
     for elem in self.whizardxml.getchildren():
       listoffields.append(elem.tag)
     return S_OK(listoffields)
   
-  def getOptionsForField(self,field):
+  def getOptionsForField(self, field):
+    """ Get the options of a given field
+    """
     options = []
     element = self.whizardxml.find(field)
     if element == None:
-      return S_ERROR("Field %s does not exist"%field)
+      return S_ERROR("Field %s does not exist" % field)
     for subelements in element.getchildren():
       options.append(subelements.tag)
     return S_OK(options)
   
-  def getValue(self,field):
+  def getValue(self, field):
+    """ Get the value for a given field/option
+    """
     element = self.whizardxml.find(field)
     return S_OK(element.attrib['value'])  
 
-  def changeAndReturn(self,paramdict):
+  def changeAndReturn(self, paramdict):
+    """ Update the options, and returns the modified XML object
+    """
     self.paramdict.update(paramdict)
     res = self.checkFields(self.paramdict)
     if not res['OK']:
       return res
-    for key,val in self.paramdict.items():
+    for key, val in self.paramdict.items():
       for subkey in val.keys():
-        subelement = self.whizardxml.find(key+"/"+subkey)
+        subelement = self.whizardxml.find(key + "/" + subkey)
         subelement.attrib['value'] = val[subkey]
     return S_OK(self.whizardxml)
   
@@ -670,62 +687,66 @@ class WhizardOptions(object):
         whiz_opt[element.tag][item.tag] = val
     return S_OK(whiz_opt)
   
-  def checkFields(self,paramdict):
-    for key,val in paramdict.items():
+  def checkFields(self, paramdict):
+    """ Make sure all supplied fields are exisiting somewhere
+    """
+    for key, val in paramdict.items():
       element = self.whizardxml.find(key)
-      if element==None:
-        return S_ERROR("Element %s is not in the allowed parameters"%key)
-      for subkey,value in val.items():
-        subelement = self.whizardxml.find(key+"/"+subkey)
-        if subelement==None:
-          return S_ERROR("Key %s/%s is not in the allowed parameters"%(key,subkey))
+      if element == None:
+        return S_ERROR("Element %s is not in the allowed parameters" % key)
+      for subkey, value in val.items():
+        subelement = self.whizardxml.find(key + "/" + subkey)
+        if subelement == None:
+          return S_ERROR("Key %s/%s is not in the allowed parameters" % (key, subkey))
         etype = subelement.attrib['type']
-        if etype=='float':
-          if not type(value)==types.FloatType and not type(value)==types.IntType:
-            return S_ERROR("%s should be a float"%(key+"/"+subkey))
-        elif etype =='T/F':
+        if etype == 'float':
+          if not type(value) == types.FloatType and not type(value) == types.IntType:
+            return S_ERROR("%s should be a float" % (key + "/" + subkey))
+        elif etype == 'T/F':
           if value != 'T' and value != 'F':
-            return S_ERROR("%s should be either 'T' or 'F'"%(key+"/"+subkey))
+            return S_ERROR("%s should be either 'T' or 'F'" % (key + "/" + subkey))
         elif etype == 'integer' or type == '0/1/2/3':
-          if not type(value)==types.IntType:
-            return S_ERROR("%s should be an integer"%(key+"/"+subkey))
+          if not type(value) == types.IntType:
+            return S_ERROR("%s should be an integer" % (key + "/" + subkey))
         elif etype == 'string':
           if not type(value) in types.StringTypes:
-            return S_ERROR("%s should be a string"%(key+"/"+subkey))
+            return S_ERROR("%s should be a string" % (key + "/" + subkey))
         elif etype == 'floatarray':
           error = False
           if not type(value) in types.StringTypes:
             error = True
           else:
             valelem = value.split()
-            if len(valelem)<2:
+            if len(valelem) < 2:
               error = True
           if error: 
-            return S_ERROR("%s should be a string with spaces, e.g. '0 1 2 3'"%(key+"/"+subkey))
+            return S_ERROR("%s should be a string with spaces, e.g. '0 1 2 3'" % (key + "/" + subkey))
     return S_OK()
   
-  def toWhizardDotIn(self,fname):
+  def toWhizardDotIn(self, fname):
+    """ Write the options to the whizard.in
+    """
     lines = []
     for elem in self.whizardxml.getchildren():
       tag = elem.tag
       if tag.count("beam_input"):
         tag = "beam_input"
-      lines.append("&%s"%tag)
+      lines.append("&%s" % tag)
       for subelem in elem.getchildren():
         val = subelem.get('value')
         if val == 'sqrts':
           continue
-        if subelem.get('type')=='string' :
-          val = '"%s"'%val
-        if val=='000':
+        if subelem.get('type') == 'string' :
+          val = '"%s"' % val
+        if val == '000':
           val = '0 0 0'
-        if val=='0.0.0':
+        if val == '0.0.0':
           val = '0.0 0.0'
-        if val=='0..0..0':
+        if val == '0..0..0':
           val = '\n 1 20000\n 10 20000\n 1 20000'
-        lines.append(' %s = %s'%(subelem.tag,val))
+        lines.append(' %s = %s' % (subelem.tag, val))
       lines.append('/')
-    of = file(fname,"w")
+    of = file(fname, "w")
     of.write("\n".join(lines))
     of.write("\n")
     return S_OK(True)

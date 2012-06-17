@@ -10,7 +10,7 @@ Created on Jan 29, 2010
 @author: Stephane Poss
 '''
 
-from DIRAC import S_OK,gLogger,S_ERROR,gConfig
+from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
 from xml.etree.ElementTree                                import Element
@@ -18,11 +18,11 @@ from xml.etree.ElementTree                                import Comment
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
-from ILCDIRAC.Workflow.Modules.OverlayInput import allowedBkg
-import string,os
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
+import string, os
 
-def GetNewLDLibs(systemConfig,application,applicationVersion):
+def GetNewLDLibs(systemConfig, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
   @param systemConfig: System config used for the job
   @param application: name of the application considered
@@ -30,55 +30,55 @@ def GetNewLDLibs(systemConfig,application,applicationVersion):
   @return: new LD_LIBRARY_PATH
   """
   new_ld_lib_path = ""
-  deps = resolveDepsTar(systemConfig,application,applicationVersion)
+  deps = resolveDepsTar(systemConfig, application, applicationVersion)
   for dep in deps:
     depfolder = dep.replace(".tgz","").replace(".tar.gz","")
     res = getSoftwareFolder(depfolder)
     if not res['OK']:
       continue
     basedepfolder = res['Value']
-    if os.path.exists(os.path.join(basedepfolder,"lib")):
-      gLogger.verbose("Found lib folder in %s"%(basedepfolder))
-      newlibdir = os.path.join(basedepfolder,"lib")
+    if os.path.exists(os.path.join(basedepfolder, "lib")):
+      gLogger.verbose("Found lib folder in %s" % (basedepfolder))
+      newlibdir = os.path.join(basedepfolder, "lib")
       new_ld_lib_path = newlibdir
       ####Remove the libc
       removeLibc(new_ld_lib_path)
-    if os.path.exists(os.path.join(basedepfolder,"LDLibs")):
-      gLogger.verbose("Found lib folder in %s"%(depfolder))
-      newlibdir = os.path.join(basedepfolder,"LDLibs")
+    if os.path.exists(os.path.join(basedepfolder, "LDLibs")):
+      gLogger.verbose("Found lib folder in %s" % (depfolder))
+      newlibdir = os.path.join(basedepfolder, "LDLibs")
       new_ld_lib_path = newlibdir
       ####Remove the libc
       removeLibc(new_ld_lib_path)
   if os.environ.has_key("LD_LIBRARY_PATH"):
     if new_ld_lib_path:
-      new_ld_lib_path=new_ld_lib_path+":%s"%os.environ["LD_LIBRARY_PATH"]
+      new_ld_lib_path = new_ld_lib_path + ":%s" % os.environ["LD_LIBRARY_PATH"]
     else:
-      new_ld_lib_path=os.environ["LD_LIBRARY_PATH"]  
+      new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]  
   return new_ld_lib_path
 
-def GetNewPATH(systemConfig,application,applicationVersion):
+def GetNewPATH(systemConfig, application, applicationVersion):
   """ Same as L{GetNewLDLibs},but for the PATH
   """
   new_path = ""
-  deps = resolveDepsTar(systemConfig,application,applicationVersion)
+  deps = resolveDepsTar(systemConfig, application, applicationVersion)
   for dep in deps:
-    depfolder = dep.replace(".tgz","").replace(".tar.gz","")
+    depfolder = dep.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(depfolder)
     if not res['OK']:
       continue
     depfolder = res['Value']
-    if os.path.exists(os.path.join(depfolder,"bin")):
-      gLogger.verbose("Found bin folder in %s"%(depfolder))
-      newpathdir = os.path.join(depfolder,"bin")
+    if os.path.exists(os.path.join(depfolder, "bin")):
+      gLogger.verbose("Found bin folder in %s" % (depfolder))
+      newpathdir = os.path.join(depfolder, "bin")
       new_path = newpathdir
   if os.environ.has_key("PATH"):
     if new_path:
-      new_path=new_path+":%s"%os.environ["PATH"]
+      new_path = new_path + ":%s" % os.environ["PATH"]
     else:
-      new_path=os.environ["PATH"]  
+      new_path = os.environ["PATH"]  
   return new_path
 
-def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
+def PrepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, output_in):
   """Prepares the whizard.in file to run
   
   Using specified parameters in the job definition passed from L{WhizardAnalysis}
@@ -97,20 +97,20 @@ def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
   @type output_in: string
   @return: S_OK()
   """
-  inputfile = file(input_in,"r")  
-  outputfile = file(output_in,"w")
+  inputfile = file(input_in, "r")  
+  outputfile = file(output_in, "w")
   foundprocessid = False
   for line in inputfile:
     if line.count("seed"):
-      outputfile.write(" seed = %s\n"%randomseed)
+      outputfile.write(" seed = %s\n" % randomseed)
     elif line.count("sqrts"):
-      outputfile.write(" sqrts = %s\n"%energy)
+      outputfile.write(" sqrts = %s\n" % energy)
     elif line.count("n_events") and not lumi:
-      outputfile.write(" n_events = %s\n"%nevts)
+      outputfile.write(" n_events = %s\n" % nevts)
     elif lumi and line.count("luminosity"):
-      outputfile.write(" luminosity = %s\n"%lumi)
+      outputfile.write(" luminosity = %s\n" % lumi)
     elif line.count("write_events_file") and len(evttype):
-      outputfile.write(" write_events_file = \"%s\" \n"%evttype)
+      outputfile.write(" write_events_file = \"%s\" \n" % evttype)
     elif line.count("process_id"):
       outputfile.write(line)
       if len(line.split("\"")[1]):
@@ -123,7 +123,7 @@ def PrepareWhizardFile(input_in,evttype,energy,randomseed,nevts,lumi,output_in):
 
   return S_OK(foundprocessid)
 
-def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
+def PrepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   """Prepares the whizard.in file to run
   
   Using specified parameters in the job definition passed from L{WhizardAnalysis}
@@ -138,48 +138,48 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
   @type output_in: string
   @return: S_OK()
   """
-  inputfile = file(input_in,"r")  
-  outputfile = file(output_in,"w")
+  inputfile = file(input_in, "r")  
+  outputfile = file(output_in, "w")
   foundprocessid = False
   for line in inputfile:
     if line.count("SEEDSEED"):
-      outputfile.write(" seed = %s\n"%parameters['SEED'])
+      outputfile.write(" seed = %s\n" % parameters['SEED'])
     elif line.count('ENERGYENERGY'):
-      outputfile.write(" sqrts = %s\n"%(parameters['ENERGY']))
+      outputfile.write(" sqrts = %s\n" % (parameters['ENERGY']))
     elif line.count('RECOILRECOIL'):
-      outputfile.write(" beam_recoil = %s\n"%(parameters['RECOIL']))
+      outputfile.write(" beam_recoil = %s\n" % (parameters['RECOIL']))
     elif line.count('NBEVTSNBEVTS'):
-      outputfile.write(" n_events = %s\n"%parameters['NBEVTS'])
+      outputfile.write(" n_events = %s\n" % parameters['NBEVTS'])
     elif line.count('LUMILUMI') and parameters['LUMI']:
-      outputfile.write(' luminosity=%s\n'%parameters['LUMI'])
+      outputfile.write(' luminosity=%s\n' % parameters['LUMI'])
     elif line.count('INITIALSINITIALS'):
-      outputfile.write(' keep_initials = %s\n'%parameters['INITIALS'])
+      outputfile.write(' keep_initials = %s\n' % parameters['INITIALS'])
     elif line.count('PNAME1PNAME1'):
-      outputfile.write(' particle_name = \'%s\'\n'%parameters['PNAME1'])
+      outputfile.write(' particle_name = \'%s\'\n' % parameters['PNAME1'])
     elif line.count('PNAME2PNAME2'):
-      outputfile.write(' particle_name = \'%s\'\n'%parameters['PNAME2'])
+      outputfile.write(' particle_name = \'%s\'\n' % parameters['PNAME2'])
     elif line.count('POLAB1POLAB1'):
-      outputfile.write(' polarization = %s\n'%parameters['POLAB1'])
+      outputfile.write(' polarization = %s\n' % parameters['POLAB1'])
     elif line.count('POLAB2POLAB2'):
-      outputfile.write(' polarization = %s\n'%parameters['POLAB2'])
+      outputfile.write(' polarization = %s\n' % parameters['POLAB2'])
     elif line.count('USERB1USERB1'):
-      outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERB1'])
+      outputfile.write(' USER_spectrum_on = %s\n' % parameters['USERB1'])
     elif line.count('USERB2USERB2'):
-      outputfile.write(' USER_spectrum_on = %s\n'%parameters['USERB2'])
+      outputfile.write(' USER_spectrum_on = %s\n' % parameters['USERB2'])
     elif line.count('USERSPECTRUMB1'):
-      outputfile.write(' USER_spectrum_mode = %s\n'%parameters['USERSPECTRUM'])
+      outputfile.write(' USER_spectrum_mode = %s\n' % parameters['USERSPECTRUM'])
     elif line.count('USERSPECTRUMB2'):
-      outputfile.write(' USER_spectrum_mode = -%s\n'%parameters['USERSPECTRUM'])
+      outputfile.write(' USER_spectrum_mode = -%s\n' % parameters['USERSPECTRUM'])
     elif line.count('ISRB1ISRB1'):
-      outputfile.write(' ISR_on = %s\n'%parameters['ISRB1'])
+      outputfile.write(' ISR_on = %s\n' % parameters['ISRB1'])
     elif line.count('ISRB2ISRB2'):
-      outputfile.write(' ISR_on = %s\n'%parameters['ISRB2'])
+      outputfile.write(' ISR_on = %s\n' % parameters['ISRB2'])
     elif line.count('EPAB1EPAB1'):
-      outputfile.write(' EPA_on = %s\n'%(parameters['EPAB1']))
+      outputfile.write(' EPA_on = %s\n' % (parameters['EPAB1']))
     elif line.count('EPAB2EPAB2'):
-      outputfile.write(' EPA_on = %s\n'%(parameters['EPAB2']))
+      outputfile.write(' EPA_on = %s\n' % (parameters['EPAB2']))
     elif line.count("write_events_file") and len(evttype):
-      outputfile.write(" write_events_file = \"%s\" \n"%evttype)
+      outputfile.write(" write_events_file = \"%s\" \n" % evttype)
     elif line.count("process_id"):
       outputfile.write(line)
       if len(line.split("\"")[1]):
@@ -189,9 +189,10 @@ def PrepareWhizardFileTemplate(input_in,evttype,parameters,output_in):
 
   return S_OK(foundprocessid)
 
-def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,mac,nbOfRuns,startFrom,randomseed,mcrunnumber,
-                        particle_tbl,
-                        processID='',debug=False,outputlcio=None):
+def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
+                        stdhepFile, mac, nbOfRuns, startFrom,
+                        randomseed, mcrunnumber, particle_tbl,
+                        processID='', debug = False, outputlcio = None):
   """Writes out a steering file for Mokka
   
   Using specified parameters in the job definition passed from L{MokkaAnalysis}
@@ -220,17 +221,17 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   
   """
   macname = "mokkamac.mac"
-  if len(mac)<1:
-    macfile = file(macname,"w")
-    if len(stdhepFile)>0:
-      macfile.write("/generator/generator %s\n"%stdhepFile)
-    macfile.write("/run/beamOn %s\n"%nbOfRuns)
+  if len(mac) < 1:
+    macfile = file(macname, "w")
+    if len(stdhepFile) > 0:
+      macfile.write("/generator/generator %s\n" % stdhepFile)
+    macfile.write("/run/beamOn %s\n" % nbOfRuns)
     macfile.close()
   else:
     macname = mac
     
-  input = file(inputSteering,"r")
-  output = file(str(outputSteering),"w")
+  input = file(inputSteering, "r")
+  output = file(str(outputSteering), "w")
   for line in input:
     if not line.count("/Mokka/init/initialMacroFile"):
       if not line.count("/Mokka/init/BatchMode"):
@@ -238,24 +239,22 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
           if not line.count("/Mokka/init/randomSeed"):
             if outputlcio:
               if not line.count("lcioFilename"):
-                #if line.find("#")>1:
-                  if detectormodel:
-                    if not line.count("/Mokka/init/detectorModel"):
-                      output.write(line)
-                    else:
-                      output.write(line)
-                  else:
-                    output.write(line)
-            else:
-              #if line.find("#")==1:
                 if detectormodel:
                   if not line.count("/Mokka/init/detectorModel"):
                     output.write(line)
+                  else:
+                    output.write(line)
                 else:
                   output.write(line)
+            else:
+              if detectormodel:
+                if not line.count("/Mokka/init/detectorModel"):
+                  output.write(line)
+              else:
+                output.write(line)
   if detectormodel:
     output.write("#Set detector model to value specified\n")
-    output.write("/Mokka/init/detectorModel %s\n"%detectormodel)
+    output.write("/Mokka/init/detectorModel %s\n" % detectormodel)
   
   if not debug:
     output.write("#Set debug level to 1\n")
@@ -264,26 +263,27 @@ def PrepareSteeringFile(inputSteering,outputSteering,detectormodel,stdhepFile,ma
   output.write("/Mokka/init/BatchMode true\n")
   if particle_tbl:
     output.write("#Set path to particle.tbl\n")
-    output.write('/Mokka/init/PDGFile %s\n'%particle_tbl)
+    output.write('/Mokka/init/PDGFile %s\n' % particle_tbl)
   output.write("#Set mac file to the one created on the site\n")
-  output.write("/Mokka/init/initialMacroFile %s\n"%macname)
+  output.write("/Mokka/init/initialMacroFile %s\n" % macname)
   output.write("#Setting random seed\n")
-  output.write("/Mokka/init/randomSeed %s\n"%(randomseed))
+  output.write("/Mokka/init/randomSeed %s\n" % (randomseed))
   output.write("#Setting run number, same as seed\n")
-  output.write("/Mokka/init/mcRunNumber %s\n"%(mcrunnumber))
+  output.write("/Mokka/init/mcRunNumber %s\n" % (mcrunnumber))
   if outputlcio:
     output.write("#Set outputfile name to job specified\n")
-    output.write("/Mokka/init/lcioFilename %s\n"%outputlcio)
+    output.write("/Mokka/init/lcioFilename %s\n" % outputlcio)
   if processID:
     output.write("#Set processID as event parameter\n")
-    output.write("/Mokka/init/lcioEventParameter string processID %s\n"%processID)
+    output.write("/Mokka/init/lcioEventParameter string processID %s\n" % processID)
       
   output.write("#Set event start number to value given as job parameter\n")  
-  output.write("/Mokka/init/startEventNumber %d\n"%startFrom)
+  output.write("/Mokka/init/startEventNumber %d\n" % startFrom)
   output.close()
   return S_OK(True)
 
-def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC,outputDST,debug):
+def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
+                   numberofevts, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
@@ -308,19 +308,19 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   tree = ElementTree()
   try:
     tree.parse(inputXML)
-  except Exception,x:
-    print "Found Exception %s %s"%(Exception,x)
-    return S_ERROR("Found Exception %s %s"%(Exception,x))
+  except Exception, x:
+    print "Found Exception %s %s" % (Exception, x)
+    return S_ERROR("Found Exception %s %s" % (Exception, x))
 
   ##Get all processors:
-  overlay=False
+  overlay = False
   #recoutput=False
   #dstoutput=False
   processors = tree.findall('execute/processor')
   for processor in processors:
     if processor.attrib.has_key('name'):
       if processor.attrib['name'].lower().count('overlaytiming'):
-        overlay=True
+        overlay = True
       #if processor.attrib['name'].lower().count('lciooutputprocessor'):
       #  recoutput=True
       #if processor.attrib['name'].lower().count('dstoutput'):
@@ -330,36 +330,36 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   lciolistfound = False
   for param in params:
     if param.attrib.has_key('name'):
-      if param.attrib['name']=='LCIOInputFiles' and inputSLCIO:
+      if param.attrib['name'] == 'LCIOInputFiles' and inputSLCIO:
         lciolistfound = True
         com = Comment("input file list changed")
-        glob.insert(0,com)
+        glob.insert(0, com)
         param.text = inputSLCIO
-      if numberofevts >0:
-        if param.attrib['name']=='MaxRecordNumber':
+      if numberofevts > 0:
+        if param.attrib['name'] == 'MaxRecordNumber':
           if param.attrib.has_key('value'):
             param.attrib['value'] = str(numberofevts)
             com = Comment("MaxRecordNumber changed")
-            glob.insert(0,com)
+            glob.insert(0, com)
             
-      if param.attrib['name']=="GearXMLFile":
+      if param.attrib['name'] == "GearXMLFile":
         if param.attrib.has_key('value'):
           param.attrib['value'] = inputGEAR
           com = Comment("input gear changed")
-          glob.insert(0,com)
+          glob.insert(0, com)
         else:
           param.text = inputGEAR
           com = Comment("input gear changed")
-          glob.insert(0,com)
+          glob.insert(0, com)
       if not debug:
-        if param.attrib['name']=='Verbosity':
+        if param.attrib['name'] == 'Verbosity':
           param.text = "SILENT"
           com = Comment("verbosity changed")
-          glob.insert(0,com)
+          glob.insert(0, com)
   if not lciolistfound and inputSLCIO:
     name = {}
-    name["name"]="LCIOInputFiles"
-    lciolist = Element("parameter",name)
+    name["name"] = "LCIOInputFiles"
+    lciolist = Element("parameter", name)
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
     globparams.append(lciolist)
@@ -367,49 +367,51 @@ def PrepareXMLFile(finalxml,inputXML,inputGEAR,inputSLCIO,numberofevts,outputREC
   params = tree.findall('processor')
   for param in params:
     if param.attrib.has_key('name'):
-      if len(outputREC)>0:
-        if param.attrib['name']=='MyLCIOOutputProcessor':
+      if len(outputREC) > 0:
+        if param.attrib['name'] == 'MyLCIOOutputProcessor':
           subparams = param.findall('parameter')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
-              if subparam.attrib['name']=='LCIOOutputFile':
+              if subparam.attrib['name'] == 'LCIOOutputFile':
                 subparam.text = outputREC
                 com = Comment("REC file changed")
-                param.insert(0,com)
-      if len(outputDST)>0:
-        if param.attrib['name']=='DSTOutput':
+                param.insert(0, com)
+      if len(outputDST) > 0:
+        if param.attrib['name'] == 'DSTOutput':
           subparams = param.findall('parameter')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
-              if subparam.attrib['name']=='LCIOOutputFile':
+              if subparam.attrib['name'] == 'LCIOOutputFile':
                 subparam.text = outputDST
                 com = Comment("DST file changed")
-                param.insert(0,com)
+                param.insert(0, com)
       if param.attrib['name'].lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:
           if subparam.attrib.has_key('name'):
-            if subparam.attrib['name']=='NumberBackground':
-              if subparam.attrib['value']=='0.0':
-                overlay=False
-            if subparam.attrib['name']=='NBunchtrain':
-              if subparam.attrib['value']=='0':
-                overlay=False  
+            if subparam.attrib['name'] == 'NumberBackground':
+              if subparam.attrib['value'] == '0.0':
+                overlay = False
+            if subparam.attrib['name'] == 'NBunchtrain':
+              if subparam.attrib['value'] == '0':
+                overlay = False  
         if overlay: 
           files = getOverlayFiles()
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
-              if subparam.attrib['name']=="BackgroundFileNames":
+              if subparam.attrib['name'] == "BackgroundFileNames":
                 subparam.text = string.join(files,"\n")
                 com = Comment("Overlay files changed")
-                param.insert(0,com)
+                param.insert(0, com)
   tree.write(finalxml)
   return S_OK(True)
 
 
-def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,randomseed=0,outputlcio=None,debug = False):
+def PrepareMacFile(inputmac, outputmac, stdhep, nbevts,
+                   startfrom, detector = None, randomseed = 0,
+                   outputlcio = None, debug = False):
   """Writes out a mac file for SLIC
   
   Takes the parameters passed from L{SLICAnalysis} to define a new mac file if none was provided
@@ -431,8 +433,8 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,rand
 
   @return: S_OK()
   """
-  inputmacfile = file(inputmac,'r')
-  output = file(outputmac,'w')
+  inputmacfile = file(inputmac, 'r')
+  output = file(outputmac, 'w')
   listtext = []
   for line in inputmacfile:
     if not line.count("/generator/filename"):
@@ -459,26 +461,29 @@ def PrepareMacFile(inputmac,outputmac,stdhep,nbevts,startfrom,detector=None,rand
                   #output.write(line)
                   listtext.append(line)
 
-  finaltext = string.join(listtext,"\n")
+  finaltext = string.join(listtext, "\n")
   finaltext += "\n"
   if detector:
-    output.write("/lcdd/url %s.lcdd\n"%detector)
+    output.write("/lcdd/url %s.lcdd\n" % detector)
   #output.write("/run/initialize\n")
   if outputlcio:
-    output.write("/lcio/filename %s\n"%outputlcio)
-  output.write("/lcio/runNumber %s\n"%randomseed)
+    output.write("/lcio/filename %s\n" % outputlcio)
+  output.write("/lcio/runNumber %s\n" % randomseed)
   output.write(finaltext)
-  if len(stdhep)>0:
-    output.write("/generator/filename %s\n"%stdhep)
-  output.write("/generator/skipEvents %s\n"%startfrom)
-  output.write("/random/seed %s\n"%(randomseed))
-  output.write("/run/beamOn %s\n"%nbevts)
+  if len(stdhep) > 0:
+    output.write("/generator/filename %s\n" % stdhep)
+  output.write("/generator/skipEvents %s\n" % startfrom)
+  output.write("/random/seed %s\n" % (randomseed))
+  output.write("/run/beamOn %s\n" % nbevts)
   inputmacfile.close()
   output.close()
   return S_OK(True)
 
-def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inputslcio,jars=None,cachedir = None, 
-                     outputFile=None,outputRECFile=None,outputDSTFile=None,debug=False):
+def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
+                     trackingstrategy, inputslcio, jars = None,
+                     cachedir = None, outputFile = None,
+                     outputRECFile = None,outputDSTFile = None,
+                     debug = False):
   """Writes out a lcsim file for LCSIM
   
   Takes the parameters passed from LCSIMAnalysis
@@ -507,9 +512,9 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   tree = ElementTree()
   try:
     tree.parse(inputlcsim)
-  except Exception,x:
-    print "Found Exception %s %s"%(Exception,x)
-    return S_ERROR("Found Exception %s %s"%(Exception,x))
+  except Exception, x:
+    print "Found Exception %s %s" % (Exception, x)
+    return S_ERROR("Found Exception %s %s" % (Exception, x))
   if not len(inputslcio):
     return S_ERROR("Empty input file list")
   ##handle the input slcio file list
@@ -531,7 +536,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   #filesinlcsim.append(set)
 
   if jars:
-    if len(jars)>0:
+    if len(jars) > 0:
       classpath = tree.find("classpath")
       if not classpath is None:
         classpath.clear()
@@ -565,7 +570,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
       control.append(debugelem)        
 
   if cachedir:
-    cachedirline= tree.find("control/cacheDirectory")
+    cachedirline = tree.find("control/cacheDirectory")
     if not cachedirline is None:
       cachedirline.text = cachedir
     else:
@@ -575,41 +580,41 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
       control.append(cachedirelem)
       
   LcsimPrintEveryEvent = 1
-  res = gConfig.getOption("/LocalSite/LcsimPrintEveryEvent",1)
+  res = gConfig.getOption("/LocalSite/LcsimPrintEveryEvent", 1)
   if not res['OK']:
-    LcsimPrintEveryEvent=1
+    LcsimPrintEveryEvent = 1
   else:
     LcsimPrintEveryEvent = res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
   if not eventInterval is None:
     evtint = eventInterval.text
-    if int(evtint)<10:    
-      eventInterval.text = "%s"%LcsimPrintEveryEvent
+    if int(evtint) < 10:    
+      eventInterval.text = "%s" % LcsimPrintEveryEvent
   else:
     notdriver = True
     for driver in drivers:
       if driver.attrib.has_key("type"):
-        if driver.attrib["type"]=="org.lcsim.job.EventMarkerDriver" :
+        if driver.attrib["type"] == "org.lcsim.job.EventMarkerDriver" :
           eventInterval = Element("eventInterval")
-          eventInterval.text = "%s"%LcsimPrintEveryEvent
+          eventInterval.text = "%s" % LcsimPrintEveryEvent
           driver.append(eventInterval)
           notdriver = False
     if notdriver:
       drivers = tree.find("drivers")
       propdict = {}
-      propdict['name']='evtMarker'
-      propdict['type']='org.lcsim.job.EventMarkerDriver'
-      eventmarker = Element("driver",propdict)
+      propdict['name'] = 'evtMarker'
+      propdict['type'] = 'org.lcsim.job.EventMarkerDriver'
+      eventmarker = Element("driver", propdict)
       eventInterval = Element("eventInterval")
-      eventInterval.text = "%s"%LcsimPrintEveryEvent
+      eventInterval.text = "%s" % LcsimPrintEveryEvent
       eventmarker.append(eventInterval)
       drivers.append(eventmarker)
       execut = tree.find("execute")
       if(execut):
         evtmarkattrib = {}
-        evtmarkattrib['name']="evtMarker"
-        evtmark= Element("driver",evtmarkattrib)
+        evtmarkattrib['name'] = "evtMarker"
+        evtmark = Element("driver", evtmarkattrib)
         execut.append(evtmark)
         
   #drivers = tree.findall("drivers/driver")      
@@ -617,7 +622,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   if trackingstrategy:
     for driver in drivers:
       if driver.attrib.has_key('type'):
-        if driver.attrib['type']=='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper':
+        if driver.attrib['type'] == 'org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper':
           driver.remove(driver.find('strategyFile'))
           strategy = Element("strategyFile")
           strategy.text = trackingstrategy
@@ -629,7 +634,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   else:
     for driver in drivers:
       if driver.attrib.has_key("type"):
-        if driver.attrib["type"]=="org.lcsim.job.EventMarkerDriver" :
+        if driver.attrib["type"] == "org.lcsim.job.EventMarkerDriver" :
           marker = Element("marker")
           marker.text = "LCSIM"
           driver.append(marker)
@@ -638,7 +643,7 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   ##Take care of overlay
   for driver in drivers:
     if driver.attrib.has_key("type"):
-      if driver.attrib['type']=="org.lcsim.util.OverlayDriver":
+      if driver.attrib['type'] == "org.lcsim.util.OverlayDriver":
         #if driver.attrib['name']=="eventOverlay":
         ov_name = driver.find("overlayName")
         bkg_Type = "gghad"
@@ -660,8 +665,8 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   dstwriterfound = False
   for driver in drivers:
     if driver.attrib.has_key("type"):
-      if driver.attrib['type']=="org.lcsim.util.loop.LCIODriver":
-        if driver.attrib['name']=="Writer":
+      if driver.attrib['type'] == "org.lcsim.util.loop.LCIODriver":
+        if driver.attrib['name'] == "Writer":
           if outputFile:
             driver.remove(driver.find('outputFilePath'))
             outputelem = Element("outputFilePath")
@@ -669,14 +674,14 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
             driver.append(outputelem)
           writerfound = True
           continue
-        if driver.attrib['name']=="RECWriter" and outputRECFile:
+        if driver.attrib['name'] == "RECWriter" and outputRECFile:
           driver.remove(driver.find('outputFilePath'))
           outputelem = Element("outputFilePath")
           outputelem.text = outputRECFile
           driver.append(outputelem)
           recwriterfound = True
           continue
-        if driver.attrib['name']=="DSTWriter" and outputDSTFile:
+        if driver.attrib['name'] == "DSTWriter" and outputDSTFile:
           driver.remove(driver.find('outputFilePath'))
           outputelem = Element("outputFilePath")
           outputelem.text = outputDSTFile
@@ -686,60 +691,60 @@ def PrepareLCSIMFile(inputlcsim,outputlcsim,numberofevents,trackingstrategy,inpu
   if not writerfound and outputFile:
     drivers = tree.find("drivers")
     propdict = {}
-    propdict['name']='Writer'
-    propdict['type']='org.lcsim.util.loop.LCIODriver'
-    output = Element("driver",propdict)
+    propdict['name'] = 'Writer'
+    propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
+    output = Element("driver", propdict)
     outputelem = Element("outputFilePath")
-    outputelem.text =  outputFile
+    outputelem.text = outputFile
     output.append(outputelem)
     drivers.append(output)
     execut = tree.find("execute")
     if(execut):
       outputattrib = {}
-      outputattrib['name']="Writer"
-      outputmark= Element("driver",outputattrib)
+      outputattrib['name'] = "Writer"
+      outputmark = Element("driver", outputattrib)
       execut.append(outputmark)
   if not recwriterfound and outputRECFile:
     drivers = tree.find("drivers")
     propdict = {}
-    propdict['name']='RECWriter'
-    propdict['type']='org.lcsim.util.loop.LCIODriver'
-    output = Element("driver",propdict)
+    propdict['name'] = 'RECWriter'
+    propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
+    output = Element("driver", propdict)
     outputelem = Element("outputFilePath")
-    outputelem.text =  outputRECFile
+    outputelem.text = outputRECFile
     output.append(outputelem)
     drivers.append(output)
     execut = tree.find("execute")
     if(execut):
       outputattrib = {}
-      outputattrib['name']="RECWriter"
-      outputmark= Element("driver",outputattrib)
+      outputattrib['name'] = "RECWriter"
+      outputmark = Element("driver", outputattrib)
       execut.append(outputmark)
   if not dstwriterfound and outputDSTFile:
     drivers = tree.find("drivers")
     propdict = {}
-    propdict['name']='DSTWriter'
-    propdict['type']='org.lcsim.util.loop.LCIODriver'
-    output = Element("driver",propdict)
+    propdict['name'] = 'DSTWriter'
+    propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
+    output = Element("driver", propdict)
     outputelem = Element("outputFilePath")
-    outputelem.text =  outputDSTFile
+    outputelem.text = outputDSTFile
     output.append(outputelem)
     drivers.append(output)
     execut = tree.find("execute")
     if(execut):
       outputattrib = {}
-      outputattrib['name']="DSTWriter"
-      outputmark= Element("driver",outputattrib)
+      outputattrib['name'] = "DSTWriter"
+      outputmark = Element("driver", outputattrib)
       execut.append(outputmark)
 
   tree.write(outputlcsim)
   return S_OK(printtext)
 
-def PrepareTomatoSalad(inputxml,outputxml,inputSLCIO,outputFile,collection):
+def PrepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   """ Prepare the proper steering file for Tomato
   """
   if not inputxml:
-    inputxml = file('default.xml')
+    inputxml = file('default.xml',"w")
     inputxml.write("""
 <?xml version="1.0" encoding="us-ascii"?>
 <!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
@@ -771,23 +776,23 @@ def PrepareTomatoSalad(inputxml,outputxml,inputSLCIO,outputFile,collection):
   tree = ElementTree()
   try:
     tree.parse(inputxml)
-  except Exception,x:
-    print "Found Exception %s %s"%(Exception,x)
-    return S_ERROR("Found Exception %s %s"%(Exception,x))
+  except Exception, x:
+    print "Found Exception %s %s" % (Exception, x)
+    return S_ERROR("Found Exception %s %s" % (Exception, x))
   params = tree.findall('global/parameter')
   glob = tree.find('global')
   lciolistfound = False
   for param in params:
     if param.attrib.has_key('name'):
-      if param.attrib['name']=='LCIOInputFiles':
+      if param.attrib['name'] == 'LCIOInputFiles':
         lciolistfound = True
         com = Comment("input file list changed")
-        glob.insert(0,com)
+        glob.insert(0, com)
         param.text = inputSLCIO
   if not lciolistfound:
     name = {}
-    name["name"]="LCIOInputFiles"
-    lciolist = Element("parameter",name)
+    name["name"] = "LCIOInputFiles"
+    lciolist = Element("parameter", name)
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
     globparams.append(lciolist)
@@ -795,20 +800,20 @@ def PrepareTomatoSalad(inputxml,outputxml,inputSLCIO,outputFile,collection):
   params = tree.findall('processor')
   for param in params:
     if param.attrib.has_key('type'):
-      if param.attrib['type']=='TomatoProcessor':
+      if param.attrib['type'] == 'TomatoProcessor':
         subparams = param.findall('parameter')
         for subparam in subparams:
           if subparam.attrib.has_key('name'):
             if outputFile:
-              if subparam.attrib['name']=='OutputFile':
+              if subparam.attrib['name'] == 'OutputFile':
                 com = Comment('Outputfile changed')
-                param.insert(0,com)
-                subparam.text=outputFile
+                param.insert(0, com)
+                subparam.text = outputFile
             if collection:
-              if subparam.attrib['name']=='MCCollectionName':
+              if subparam.attrib['name'] == 'MCCollectionName':
                 com = Comment('Collections to analyse changed')
-                param.insert(0,com)
-                subparam.text=collection
+                param.insert(0, com)
+                subparam.text = collection
          
   tree.write(outputxml)              
   return S_OK()
