@@ -10,19 +10,19 @@ Created on Sep 8, 2010
 __RCSID__ = "$Id: RegisterOutputData.py 44185 2011-10-24 08:17:07Z sposs $"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+from DIRAC.Resources.Catalog.FileCatalogClient             import FileCatalogClient
 
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig
-import string,os
+from DIRAC import S_OK, gLogger
+import string
 
 class SIDRegisterOutputData(ModuleBase):
   def __init__(self):
     ModuleBase.__init__(self)
     self.version = "SIDRegisterOutputData v1"
     self.log = gLogger.getSubLogger( "SIDRegisterOutputData" )
-    self.commandTimeOut = 10*60
-    self.enable=True
-    self.prodOutputLFNs =[]
+    self.commandTimeOut = 10 * 60
+    self.enable = True
+    self.prodOutputLFNs = []
     self.swpackages = []
     self.nbofevents = 0
     self.luminosity = 0
@@ -30,13 +30,13 @@ class SIDRegisterOutputData(ModuleBase):
 
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
-      self.enable=self.step_commons['Enable']
-      if not type(self.enable)==type(True):
-        self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
-        self.enable=False
+      self.enable = self.step_commons['Enable']
+      if not type(self.enable) == type(True):
+        self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
+        self.enable = False
         
     if self.workflow_commons.has_key('ProductionOutputData'):
-      self.prodOutputLFNs=self.workflow_commons['ProductionOutputData'].split(";")
+      self.prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
     else:
       self.prodOutputLFNs = []
       
@@ -52,21 +52,21 @@ class SIDRegisterOutputData(ModuleBase):
     return S_OK('Parameters resolved')
   
   def execute(self):
-    self.log.info('Initializing %s' %self.version)
+    self.log.info('Initializing %s' % self.version)
     result = self.resolveInputVariables()
     if not result['OK']:
       self.log.error(result['Message'])
       return result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('No registration of output data metadata attempted')
 
-    if len(self.prodOutputLFNs)==0:
+    if len(self.prodOutputLFNs) == 0:
       self.log.info('No production data found, so no metadata registration to be done')  
       return S_OK("No files' metadata to be registered")
     
-    self.log.verbose("Will try to set the metadata for the following files: \n %s"%string.join(self.prodOutputLFNs,"\n"))
+    self.log.verbose("Will try to set the metadata for the following files: \n %s"% string.join(self.prodOutputLFNs, "\n"))
 
     for files in self.prodOutputLFNs:
 #      elements = files.split("/")
@@ -111,33 +111,33 @@ class SIDRegisterOutputData(ModuleBase):
 #        
       if self.nbofevents:
         nbevts = {}
-        nbevts['NumberOfEvents']=self.nbofevents
+        nbevts['NumberOfEvents'] = self.nbofevents
         if self.enable:
-          res = self.fc.setMetadata(files,nbevts)
+          res = self.fc.setMetadata(files, nbevts)
           if not res['OK']:
-            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s'%(self.nbofevents,files))
+            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s' % (self.nbofevents, files))
             return res
       if self.luminosity:
         lumi = {}
-        lumi['Luminosity']=self.luminosity
+        lumi['Luminosity'] = self.luminosity
         if self.enable:
-          res = self.fc.setMetadata(files,lumi)
+          res = self.fc.setMetadata(files, lumi)
           if not res['OK']:
-            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity,files))
+            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity, files))
             return res
 #      meta.update(metaprodid)
       meta.update(nbevts)
       meta.update(lumi)
       
-      self.log.info("Registered %s with tags %s"%(files,meta))
+      self.log.info("Registered %s with tags %s"%(files, meta))
       
       ###Now, set the ancestors
       if self.InputData:
         inputdata = self.InputData.split(";")
         if self.enable:
-          res = self.fc.addFileAncestors({files:{'Ancestors':inputdata}})
+          res = self.fc.addFileAncestors({files : {'Ancestors' : inputdata}})
           if not res['OK']:
-            self.log.error('Registration of Ancestors for %s failed'%files)
+            self.log.error('Registration of Ancestors for %s failed' % files)
             return res
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
       #res = self.fc.setMetadata(os.path.dirname(files),meta)

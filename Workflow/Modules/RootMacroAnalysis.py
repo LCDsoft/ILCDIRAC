@@ -12,15 +12,13 @@ Module to run root macros
 '''
 __RCSID__ = "$Id: $"
 
-import os,sys
+import os
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
-import DIRAC
 class RootMacroAnalysis(ModuleBase):
   """Run Root macro
-  
   """
   def __init__(self):
     ModuleBase.__init__(self)
@@ -52,7 +50,7 @@ class RootMacroAnalysis(ModuleBase):
       - check for presence of ROOTSYS variable
       
     """
-    self.result =self.resolveInputVariables()
+    self.result = self.resolveInputVariables()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
@@ -61,7 +59,7 @@ class RootMacroAnalysis(ModuleBase):
       return self.result
     
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'],self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('ROOT should not proceed as previous step did not end properly')
 
     if not os.environ.has_key("ROOTSYS"):
@@ -76,14 +74,15 @@ class RootMacroAnalysis(ModuleBase):
     #  mySoftwareRoot = localArea
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
-    if len(self.macro)<1:
+    if len(self.macro) < 1:
       return S_ERROR("Macro file not defined")
      
     self.macro = os.path.basename(self.macro)
 
     
-    scriptName = 'Root_%s_Run_%s.sh' %(self.applicationVersion,self.STEP_NUMBER)
-    if os.path.exists(scriptName): os.remove(scriptName)
+    scriptName = 'Root_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
+    if os.path.exists(scriptName): 
+      os.remove(scriptName)
     script = open(scriptName,'w')
     script.write('#!/bin/sh \n')
     script.write('#####################################################################\n')
@@ -91,13 +90,13 @@ class RootMacroAnalysis(ModuleBase):
     script.write('#####################################################################\n')
 
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s\n'%(os.environ['LD_LIBRARY_PATH']))
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
     else:
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
       
     if(os.path.exists("./lib")):
       if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n'%(os.environ['LD_LIBRARY_PATH']))
+        script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
       else:
         script.write('declare -x LD_LIBRARY_PATH=./lib\n')
         
@@ -111,8 +110,8 @@ class RootMacroAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    comm = "root -b -q %s\(%s\) \n"%(self.macro,self.args)
-    self.log.info("Will run %s"%(comm))
+    comm = "root -b -q %s\(%s\) \n" % (self.macro, self.args)
+    self.log.info("Will run %s" % (comm))
     script.write(comm)
     
     script.write('declare -x appstatus=$?\n')
@@ -122,13 +121,14 @@ class RootMacroAnalysis(ModuleBase):
     script.write('exit $appstatus\n')
 
     script.close()
-    if os.path.exists(self.applicationLog): os.remove(self.applicationLog)
+    if os.path.exists(self.applicationLog): 
+      os.remove(self.applicationLog)
 
-    os.chmod(scriptName,0755)
-    comm = 'sh -c "./%s"' %(scriptName)
-    self.setApplicationStatus('ROOT %s step %s' %(self.applicationVersion,self.STEP_NUMBER))
+    os.chmod(scriptName, 0755)
+    comm = 'sh -c "./%s"' % (scriptName)
+    self.setApplicationStatus('ROOT %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
-    self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
+    self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
