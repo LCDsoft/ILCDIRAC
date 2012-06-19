@@ -72,7 +72,7 @@ class RemoveSoft(object):
         try:
           os.remove(myappDir)
         except Exception, x:
-          self.log.error("Could not delete %s" % (myappDir, str(x)))
+          self.log.error("Could not delete %s: %s" % (myappDir, str(x)))
         
     if len(failed):
       return S_ERROR("Failed deleting applications %s" % failed)
