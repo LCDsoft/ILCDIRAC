@@ -24,7 +24,7 @@ class OverlayDB ( DB ):
                                            }
                         }
                       )
-    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
+    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning", 200)
     self.limits = {}
     self.limits["default"] = res['Value']
     res = gConfig.getSections("/Operations/Overlay/Sites/")
@@ -32,11 +32,11 @@ class OverlayDB ( DB ):
     if res['OK']:
       sites = res['Value']
     for tempsite in sites:
-      res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%tempsite,200)
+      res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning" % tempsite, 200)
       self.limits[tempsite] = res['Value']
-    self.logger.info("Using the following restrictions : %s"%self.limits)
+    self.logger.info("Using the following restrictions : %s" % self.limits)
 
- #####################################################################
+  #####################################################################
   # Private methods
 
   def __getConnection( self, connection ):
@@ -48,10 +48,12 @@ class OverlayDB ( DB ):
     gLogger.warn( "Failed to get MySQL connection", res['Message'] )
     return connection
   
-  def _checkSite(self,site, connection = False ):
+  def _checkSite(self, site, connection = False ):
+    """ Check the number of jos running at a given site.
+    """
     connection = self.__getConnection( connection )
     
-    req = "SELECT NumberOfJobs FROM OverlayData WHERE Site='%s';"%(site)
+    req = "SELECT NumberOfJobs FROM OverlayData WHERE Site='%s';" % (site)
     res = self._query( req, connection )
     if not res['OK']:
       return S_ERROR("Could not get site")
@@ -60,15 +62,19 @@ class OverlayDB ( DB ):
     else:
       return S_ERROR("Could not find any site %s"%(site))
     
-  def _addSite(self,site, connection = False ):
+  def _addSite(self, site, connection = False ):
+    """ Add a new site to the DB
+    """ 
     connection = self.__getConnection( connection )
-    req = "INSERT INTO OverlayData (Site,NumberOfJobs) VALUES ('%s',1);"%site
+    req = "INSERT INTO OverlayData (Site,NumberOfJobs) VALUES ('%s',1);" % site
     res = self._update( req, connection )
     if not res['OK']:
       return res
     return res
 
-  def _limitForSite(self,site):
+  def _limitForSite(self, site):
+    """ Get the current limit of jobs for a given site.
+    """
     if site in self.limits.keys():
       return self.limits[site]   
     return self.limits['default']
@@ -78,12 +84,14 @@ class OverlayDB ( DB ):
     """
     connection = self.__getConnection( connection )
     nbjobs += 1  
-    req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(nbjobs,site)
+    req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';" % (nbjobs, site)
     res = self._update( req, connection )
     return S_OK()
 
 ### Methods to fix the site
   def getSites(self, connection = False):
+    """ Return the list of sites known to the service
+    """
     connection = self.__getConnection( connection )
     req = 'SELECT Site From OverlayData;'
     res = self._query( req, connection )
@@ -95,17 +103,19 @@ class OverlayDB ( DB ):
     return S_OK(sites)
 
   def setJobsAtSites(self, sitedict, connection = False):
+    """ As name suggests: set the number of jobs running at the site.
+    """
     connection = self.__getConnection( connection )
-    for site,nbjobs in sitedict.items():
-      req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(int(nbjobs),site)
+    for site, nbjobs in sitedict.items():
+      req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';" % (int(nbjobs), site)
       res = self._update( req, connection )
       if not res['OK']:
-        return S_ERROR("Could not set nb of jobs at site %s"%site)
+        return S_ERROR("Could not set nb of jobs at site %s" % site)
       
     return S_OK()
 ### Useful methods for the users
   
-  def getJobsAtSite(self,site, connection = False ):
+  def getJobsAtSite(self, site, connection = False ):
     """ Get the number of jobs currently run
     """
     connection = self.__getConnection( connection )   
@@ -118,7 +128,7 @@ class OverlayDB ( DB ):
 
 ### Important methods
   
-  def canRun(self,site, connection = False ):
+  def canRun(self, site, connection = False ):
     """ Can the job run at that site?
     """
     connection = self.__getConnection( connection )
@@ -130,14 +140,14 @@ class OverlayDB ( DB ):
     else:
       nbjobs = res['Value'][0][0]
     if nbjobs < self._limitForSite(site):
-      res = self._addNewJob(site,nbjobs, connection)
+      res = self._addNewJob(site, nbjobs, connection)
       if not res['OK']:
         return res
       return S_OK(True)
     else:
       return S_OK(False)
   
-  def jobDone(self,site, connection = False ):
+  def jobDone(self, site, connection = False ):
     """ Remove a job from the DB, should not remove a job from the DB 
         if the Site does not exist, but this should never happen
     """
@@ -149,7 +159,7 @@ class OverlayDB ( DB ):
     if nbjobs == 1:
       return S_OK()
     nbjobs -= 1
-    req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';"%(nbjobs,site)
+    req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';" % (nbjobs, site)
     res = self._update( req, connection )
     if not res['OK']:
       return res   
