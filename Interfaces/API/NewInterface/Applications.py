@@ -52,7 +52,7 @@ from decimal import Decimal
 import os, types, string
 
 
-#################################################################
+#################################################################  
 #            Generic Application: use a script in an 
 #                 application framework
 #################################################################  
@@ -680,7 +680,7 @@ class Whizard(Application):
     if self.genlevelcuts:
       for process in self.genlevelcuts.keys():
         if not process in self.evttype.split():
-          self.log.info("You want to cut on %s but that process is not to be generated"%process)
+          self._log.info("You want to cut on %s but that process is not to be generated"%process)
       for values in self.genlevelcuts.values():
         if not type(values) == types.ListType:
           return S_ERROR('Type of %s is not a list, cannot proceed'%values)    
@@ -688,7 +688,7 @@ class Whizard(Application):
     
     if self.evttype:
       processes = self.evttype.split()
-      if len(processes)>1 and not self.globalname:
+      if len(processes) > 1 and not self.globalname:
         return S_ERROR("Global name MUST be defined when producing multiple processes in one job")
       elif self.globalname:
         self.evttype = self.globalname
