@@ -6,9 +6,9 @@ Created on Feb 17, 2012
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from DIRAC.Core.Workflow.Parameter import Parameter
-from DIRAC import S_OK,S_ERROR
+from DIRAC import S_OK, S_ERROR
 
-class SoftwareInstall(Application):
+class SoftwareInstall( Application ):
   def __init__(self):
     self.appsToInstall = ''
     self.appsToRemove = ''
@@ -31,8 +31,8 @@ class SoftwareInstall(Application):
     return m1
   
   def _applicationModuleValues(self,moduleinstance):
-    moduleinstance.setValue("appsToInstallStr",self.appsToInstall)
-    moduleinstance.setValue("appsToRemoveStr",self.appsToRemove)
+    moduleinstance.setValue("appsToInstallStr", self.appsToInstall)
+    moduleinstance.setValue("appsToRemoveStr", self.appsToRemove)
   
   def _userjobmodules(self,stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -40,7 +40,7 @@ class SoftwareInstall(Application):
       return S_ERROR('userjobmodules failed')
     return S_OK()
   
-  def _addParametersToStep(self,stepdefinition):
+  def _addParametersToStep(self, stepdefinition):
     res = self._addBaseParameters(stepdefinition)
     if not res["OK"]:
       return S_ERROR("Failed to set base parameters")

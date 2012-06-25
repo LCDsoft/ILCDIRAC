@@ -31,29 +31,29 @@ class ProcessManagerHandler(RequestHandler):
     """
     return processDB.getSoftwares()
   
-  types_getProcessInfo = [StringTypes,[ListType,TupleType]]
+  types_getProcessInfo = [StringTypes, [ListType, TupleType]]
   def export_getProcessInfo(self, ProcessName, Params ):
     """Get info for a given process
     """
     return processDB.getProcessInfo(ProcessName, Params )
   
-  types_getProductionDetails = [[LongType,IntType],[ListType,TupleType]]
-  def export_getProductionDetails(self,ProdID,Params):
+  types_getProductionDetails = [[LongType, IntType], [ListType, TupleType]]
+  def export_getProductionDetails(self, ProdID, Params):
     """ Get the details of a given production
     """
-    return processDB.getProductionResults(ProdID,Params)
+    return processDB.getProductionResults(ProdID, Params)
   
-  types_getTemplate = [StringTypes,StringTypes]
+  types_getTemplate = [StringTypes, StringTypes]
   def export_getTemplate(self, ProcessName, WhizVersion):
     """ Get the proper template
     """
     return processDB.getTemplate(ProcessName, WhizVersion)
 
-  types_getSoftwareParams = [StringTypes,StringTypes,StringTypes,[ListType,TupleType]]
-  def export_getSoftwareParams(self,AppName,AppVersion,Platform,Params):
+  types_getSoftwareParams = [StringTypes, StringTypes, StringTypes, [ListType, TupleType]]
+  def export_getSoftwareParams(self, AppName, AppVersion, Platform, Params):
     """ Get the given software status
     """
-    return processDB.getSoftwareParams(AppName,AppVersion,Platform,Params)
+    return processDB.getSoftwareParams(AppName, AppVersion, Platform, Params)
   
   types_getInstallSoftwareTask = []
   def export_getInstallSoftwareTask(self):
@@ -69,20 +69,20 @@ class ProcessManagerHandler(RequestHandler):
     """
     return processDB.addSoftware(AppName, AppVersion, Platform, Comment, Path)
     
-  types_addDependency = [StringTypes,StringTypes,StringTypes,StringTypes,StringTypes]
+  types_addDependency = [StringTypes, StringTypes, StringTypes, StringTypes, StringTypes]
   def export_addDependency(self, AppName, AppVersion, DepName, DepVersion, Platform):
     """ Add a dependency between softwares
     """
     return processDB.addDependency(AppName, AppVersion, DepName, DepVersion, Platform)
 
   types_addProcess = [StringTypes, StringTypes, StringTypes, StringTypes]
-  def export_addProcess(self,ProcessName, ProcessDetail, WhizardVers, Template):
+  def export_addProcess(self, ProcessName, ProcessDetail, WhizardVers, Template):
     """ Add a new process
     """
     return processDB.addProcess(ProcessName, ProcessDetail, WhizardVers, Template)
  
   types_addSteeringFile = [StringTypes, StringTypes]
-  def export_addSteeringFile(self,FileName, Path=''):
+  def export_addSteeringFile(self, FileName, Path=''):
     """ Declare a steering file
     """
     return processDB.addSteeringFile(FileName, Path)
@@ -102,13 +102,13 @@ class ProcessManagerHandler(RequestHandler):
     return processDB.addProductionData(ProdDataDict)
   
   types_addsite = [StringTypes]
-  def export_addSite(self,sitename):
+  def export_addSite(self, sitename):
     """ Add a site
     """
     return processDB.addSite(sitename)
   
   types_addOrUpdateJob = [DictType]
-  def export_addOrUpdateJob(self,jobdict):
+  def export_addOrUpdateJob(self, jobdict):
     """ Add a job
     """
     return processDB.addOrUpdateJob(jobdict)
@@ -124,20 +124,20 @@ class ProcessManagerHandler(RequestHandler):
     return processDB.updateCrossSection(ProcessDict)
     
   types_changeSoftwareStatus = [StringTypes, StringTypes, StringTypes, StringTypes, BooleanType]
-  def export_changeSoftwareStatus(self,AppName, AppVersion, Platform, Comment, Status = False):
+  def export_changeSoftwareStatus(self, AppName, AppVersion, Platform, Comment, Status = False):
     """ Change the status of a software, by feault to False
     """
     return processDB.changeSoftwareStatus(AppName, AppVersion, Platform, Comment, Status)
   
   types_changeSiteStatus = [DictType]
-  def export_changeSiteStatus(self,sitedict):
+  def export_changeSiteStatus(self, sitedict):
     return processDB.changeSiteStatus(sitedict)
 
   types_reportOK = [DictType]
-  def export_reportOK(self,jobdict):
+  def export_reportOK(self, jobdict):
     return processDB.reportOK(jobdict)
 
   types_reportFailed = [DictType]
-  def export_reportFailed(self,jobdict):
+  def export_reportFailed(self, jobdict):
     return processDB.reportFailed(jobdict)
 
