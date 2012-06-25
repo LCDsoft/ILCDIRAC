@@ -414,7 +414,6 @@ class WhizardAnalysis(ModuleBase):
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     if not self.result['OK']:
       self.log.error("Failed with error %s" % self.result['Message'])
-    resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
@@ -491,8 +490,6 @@ class WhizardAnalysis(ModuleBase):
       else:
         self.workflow_commons['Info'].update(info)
 
-    #stdOutput = resultTuple[1]
-    #stdError = resultTuple[2]
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
     messageout = 'Whizard %s Successful' % (self.applicationVersion)

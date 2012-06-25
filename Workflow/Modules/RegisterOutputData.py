@@ -14,7 +14,7 @@ from DIRAC.Core.Utilities                         import DEncode
 from DIRAC import S_OK, gLogger
 import string, os
 
-class RegisterOutputData(ModuleBase):
+class RegisterOutputData( ModuleBase ):
   """ At the end of a production Job, we need to register meta data info for the files. 
   """
   def __init__(self):

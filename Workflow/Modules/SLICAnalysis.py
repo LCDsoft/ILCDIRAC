@@ -151,7 +151,6 @@ class SLICAnalysis(ModuleBase):
 
 
     slicDir = os.environ['SLIC_DIR']
-    mySoftwareRoot = ''
     res = getSoftwareFolder(slicDir)
     if not res['OK']:
       self.log.error('Directory %s was not found in either the local area or shared area' % (slicDir))

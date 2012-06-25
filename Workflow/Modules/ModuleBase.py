@@ -9,14 +9,10 @@ Stolen by S. Poss from LHCbSystem.Workflow.Modules
 __RCSID__ = "$Id$"
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-from DIRAC.DataManagementSystem.Client.ReplicaManager     import ReplicaManager
-from DIRAC.Core.DISET.RPCClient                           import RPCClient
-from DIRAC.RequestManagementSystem.Client.DISETSubRequest import DISETSubRequest
 from DIRAC.Core.Security.ProxyInfo                        import getProxyInfoAsString
 from DIRAC.Core.Utilities.Adler                           import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.Core.Utilities.File                            import makeGuid
-import DIRAC
 import os, string, sys, re, types
 from random import choice
 

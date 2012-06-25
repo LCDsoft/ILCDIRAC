@@ -18,7 +18,7 @@ from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                import S_OK, S_ERROR, gLogger
 
 class HandleProdOutputData(ModuleBase):
   def __init__(self):
