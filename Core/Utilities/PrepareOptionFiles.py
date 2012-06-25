@@ -230,9 +230,9 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
   else:
     macname = mac
     
-  input = file(inputSteering, "r")
+  inputsteer = file(inputSteering, "r")
   output = file(str(outputSteering), "w")
-  for line in input:
+  for line in inputsteer:
     if not line.count("/Mokka/init/initialMacroFile"):
       if not line.count("/Mokka/init/BatchMode"):
         if not line.count('/Mokka/init/PDGFile'):
