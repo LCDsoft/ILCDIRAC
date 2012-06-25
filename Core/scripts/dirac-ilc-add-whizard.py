@@ -13,7 +13,7 @@ whizard_location = "%s" % args[0]
 platform = "%s" % args[1]
 whizard_version = "%s" % args[2]
 appVersion = whizard_version
-beam_spectra_version= "%s" % args[3]
+beam_spectra_version = "%s" % args[3]
 
 from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
 from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
@@ -22,9 +22,9 @@ from DIRAC.RequestManagementSystem.Client.RequestContainer   import RequestConta
 from DIRAC.RequestManagementSystem.Client.RequestClient      import RequestClient
 from ILCDIRAC.Core.Utilities.ProcessList                     import ProcessList
 
-from DIRAC import gConfig, S_ERROR,S_OK
+from DIRAC import gConfig, S_ERROR, S_OK
 
-import os,tarfile, shutil, sys, string
+import os, tarfile, shutil, sys, string
 
 
 diracAdmin = DiracAdmin()
@@ -37,7 +37,9 @@ def usage():
   print 'Usage: %s <directory_where_whizard_is> <platform> <whizard_version> <beam_spectra_version>' % (Script.scriptName)
   DIRAC.exit(2)
 
-def upload(path,appTar):
+def upload(path, appTar):
+  """ Upload to storage
+  """
   global appVersion
   if not os.path.exists(appTar):
     print "File %s does not exists, cannot continue." % appTar
@@ -45,7 +47,7 @@ def upload(path,appTar):
   if path.find("http://www.cern.ch/lcd-data") > -1:
     final_path = "/afs/cern.ch/eng/clic/data/software/"
     try:
-      shutil.copy(appTar,"%s%s" % (final_path, appTar))
+      shutil.copy(appTar, "%s%s" % (final_path, appTar))
     except Exception, x:
       print "Could not copy because %s" % x
       return S_ERROR()
@@ -76,6 +78,8 @@ def upload(path,appTar):
   return S_OK()
 
 def redirectLogOutput(fd, message):
+  """ Needed to catch the log output of the shellCall below
+  """
   sys.stdout.flush()
   print message
   
@@ -207,7 +211,7 @@ for f in folderlist:
         inputlist[currprocess]["Restrictions"] = ""
         for process in process_id.split():
           print "Looking for detail of process %s" % (process)
-          process_detail = getDetailsFromPRC("whizard.prc",process)  
+          process_detail = getDetailsFromPRC("whizard.prc", process)  
           inputlist[currprocess]["Model"] = process_detail["Model"]
           inputlist[currprocess]["Generator"] = process_detail["Generator"]
           if len(inputlist[currprocess]["Restrictions"]):
@@ -260,7 +264,7 @@ mkdir $whizarddir
 cp -r *.cut1 *.in cross_sections_* whizard whizard.prc whizard.mdl lib/ $whizarddir
 """ % ("whizard" + whizard_version))
 script.close()
-os.chmod(scriptName,0755)
+os.chmod(scriptName, 0755)
 comm = 'source %s' % (scriptName)
 result = shellCall(0, comm, callbackFunction = redirectLogOutput, bufferLimit = 20971520)
 os.remove("ldd.sh")
@@ -324,7 +328,7 @@ else:
     if len(tarballurl['Value']) > 0:
       res = upload(tarballurl['Value'], appTar)
       if not res['OK']:
-        print "Upload to %s failed"%tarballurl
+        print "Upload to %s failed" % tarballurl
         DIRAC.exit(255)
   result = diracAdmin.csSetOption("%s/%s/%s/%s/Dependencies/beam_spectra/version" % (softwareSection,
                                                                                      platform,
