@@ -16,8 +16,6 @@ def getDestinationSEList(outputSE, site, outputmode='Any'):
   """ Evaluate the output SE list from a workflow and return the concrete list
       of SEs to upload output data.
   """
-  #Assume output SE is a single string
-  SEs = []
   # Add output SE defined in the job description
   gLogger.info('Resolving workflow output SE description: %s' % outputSE)
 
