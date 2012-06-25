@@ -6,7 +6,6 @@ DiracILC is the API to use to submit jobs in the ILC VO
 @author: Stephane Poss
 """
 from DIRAC.Interfaces.API.Dirac                     import Dirac
-from DIRAC.Interfaces.API.Job                       import Job
 from DIRAC.Core.Utilities.List                      import sortList
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
