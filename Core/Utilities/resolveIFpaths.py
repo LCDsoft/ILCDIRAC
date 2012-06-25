@@ -25,20 +25,20 @@ def resolveIFpaths(inputfiles):
     if os.path.isdir(mydir):
       listofdirs.append(mydir)
   filesnotfound = []
-  for f in listoffiles:
+  for infile in listoffiles:
     filefound = False
-    if os.path.exists(f):
-      listofpaths.append(os.getcwd() + os.sep + f)
+    if os.path.exists(infile):
+      listofpaths.append(os.getcwd() + os.sep + infile)
       filefound = True
     else:
       for mydir in listofdirs:
-        if os.path.exists(os.getcwd() + os.sep + mydir + os.sep + f):
-          listofpaths.append(os.getcwd() + os.sep + mydir + os.sep + f)
+        if os.path.exists(os.getcwd() + os.sep + mydir + os.sep + infile):
+          listofpaths.append(os.getcwd() + os.sep + mydir + os.sep + infile)
           listofdirs.remove(mydir)
           filefound = True
           break
     if not filefound:
-      filesnotfound.append(f)
+      filesnotfound.append(infile)
   if len(filesnotfound):
     return S_ERROR("resolveIFPath: Input file(s) '%s' not found locally" % (", ".join(filesnotfound)))
   return S_OK(listofpaths)
