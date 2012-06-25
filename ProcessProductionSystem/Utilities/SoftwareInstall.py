@@ -30,11 +30,11 @@ class SoftwareInstall( Application ):
     m1.addParameter(Parameter("appsToRemoveStr",   "", "string", "", "", False, False, "Apps to remove"))
     return m1
   
-  def _applicationModuleValues(self,moduleinstance):
+  def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("appsToInstallStr", self.appsToInstall)
     moduleinstance.setValue("appsToRemoveStr", self.appsToRemove)
   
-  def _userjobmodules(self,stepdefinition):
+  def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     if not res1["OK"]:
       return S_ERROR('userjobmodules failed')

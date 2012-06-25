@@ -1,6 +1,6 @@
 """ 
 """
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 
 from ILCDIRAC.ProcessProductionSystem.Client.ProcessProdClient import ProcessProdClient
 
@@ -17,7 +17,10 @@ class InstallSoftModule():
     self.systemConfig = ''
 
     self.ppc = ProcessProdClient()
-
+    #Those too are supposed to be set from the Workflow
+    self.step_commons = {}
+    self.workflow_commons = {}
+    
   def execute(self):
     """ Look in folders (Shared Area and Local Area) and try ot remove the applications specified.
     """
@@ -100,7 +103,7 @@ class InstallSoftModule():
         try:
           os.remove(myappDir)
         except Exception, x:
-          self.log.error("Could not delete %s" % (myappDir, str(x)))
+          self.log.error("Could not delete %s: %s" % (myappDir, str(x)))
         
     if len(failed):
       return S_ERROR("Failed deleting applications %s" % failed)
