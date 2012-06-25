@@ -102,7 +102,8 @@ class ProductionJob(Job):
     """
     if gConfig.getValue('%s/%s' % (self.csSection, name), ''):
       self.log.debug('Setting %s from CS defaults = %s' % (name, gConfig.getValue('%s/%s' % (self.csSection, name))))
-      self._addParameter(self.workflow, name, parameterType, gConfig.getValue('%s/%s' % (self.csSection, name), 'default'), description)
+      self._addParameter(self.workflow, name, parameterType, gConfig.getValue('%s/%s' % (self.csSection, name), 
+                                                                              'default'), description)
     else:
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
@@ -123,7 +124,8 @@ class ProductionJob(Job):
     """ Sets the number of files to be input to each job created.
     """
     if self.checked:
-      return self._reportError("This input is needed at the beginning of the production definition: it's needed for total number of evts.")
+      return self._reportError("This input is needed at the beginning of the production definition: it's \
+      needed for total number of evts.")
     self.jobFileGroupSize = files
     self.prodparameters['NbInputFiles'] = files
     
@@ -441,7 +443,8 @@ class ProductionJob(Job):
     return S_OK()
 
   def applyInputDataQuery(self, metadata = None, prodid = None):
-    """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files are added corresponding to same query.
+    """ Tell the production to update itself using the metadata query specified, i.e. submit new jobs if new files 
+    are added corresponding to same query.
     """
     if not self.transfid and self.currtrans:
       self.transfid = self.currtrans.getTransformationID()['Value']
@@ -491,7 +494,8 @@ class ProductionJob(Job):
     info.append("- %s events per job" % (self.prodparameters['nbevts'] * self.prodparameters['NbInputFiles']))
     if self.prodparameters.has_key('lumi'):
       if self.prodparameters['lumi']:
-        info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * self.prodparameters['NbInputFiles']))
+        info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * \
+                                                                 self.prodparameters['NbInputFiles']))
     if self.prodparameters.has_key('FCInputQuery'):
       info.append('Using InputDataQuery :')
       for k, v in self.prodparameters['FCInputQuery'].items():
@@ -528,7 +532,8 @@ class ProductionJob(Job):
   def _registerMetadata(self):
     """ Private method
       
-      Register path and metadata before the production actually runs. This allows for the definition of the full chain in 1 go. 
+      Register path and metadata before the production actually runs. This allows for the definition of the full 
+      chain in 1 go. 
     """
     
 
