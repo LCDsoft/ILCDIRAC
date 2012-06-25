@@ -423,8 +423,10 @@ class Application(object):
     """ Add to step the default parameters: appname, version, steeringfile, (nbevts, Energy), LogFile, InputFile, 
     OutputFile, OutputPath
     """
-    stepdefinition.addParameter(Parameter("applicationName",    "", "string", "", "", False, False, "Application Name"))
-    stepdefinition.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, "Application Version"))
+    stepdefinition.addParameter(Parameter("applicationName",    "", "string", "", "", False, False, 
+                                          "Application Name"))
+    stepdefinition.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, 
+                                          "Application Version"))
     stepdefinition.addParameter(Parameter("SteeringFile",       "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",     "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
@@ -433,9 +435,11 @@ class Application(object):
     if len(self.outputFile):
       stepdefinition.addParameter(Parameter("OutputFile",       "", "string", "", "", False,  False, "Output File"))
     if len(self.outputDstFile):
-      stepdefinition.addParameter(Parameter("outputDST",        "", "string", "", "", False,  False, "Output DST File"))
+      stepdefinition.addParameter(Parameter("outputDST",        "", "string", "", "", False,  False, 
+                                            "Output DST File"))
     if len(self.outputRecFile):
-      stepdefinition.addParameter(Parameter("outputREC",       "", "string", "", "",  False,  False, "Output REC File"))
+      stepdefinition.addParameter(Parameter("outputREC",       "", "string", "", "",  False,  False, 
+                                            "Output REC File"))
       
     stepdefinition.addParameter(Parameter("OutputPath",         "", "string", "", "",  True, False, 
                                           "Output File path on the grid"))
@@ -448,7 +452,8 @@ class Application(object):
     stepdefinition.addParameter(Parameter('listoutput',         [],   "list", "", "", False, False, 
                                           "list of output file name"))
     #Following should be workflow parameters
-    #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
+    #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, 
+    #                                      "Number of events to process"))
     #stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
     return S_OK()
   
@@ -478,19 +483,22 @@ class Application(object):
       
       
   def _addParametersToStep(self, stepdefinition):
-    """ Method to be overloaded by every application. Add the parameters to the given step. Should call L{_addBaseParameters}.
+    """ Method to be overloaded by every application. Add the parameters to the given step. 
+    Should call L{_addBaseParameters}.
     Called from Job
     """
     return self._addBaseParameters(stepdefinition)
   
   def _setStepParametersValues(self, stepinstance):
-    """ Method to be overloaded by every application. For all parameters that are not to be linked, set the values in the step instance
+    """ Method to be overloaded by every application. For all parameters that are not to be linked, 
+    set the values in the step instance
     Called from Job
     """
     return self._setBaseStepParametersValues(stepinstance)
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. OuputFile and InputFile). See L{StdhepCut} for example.
+    """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. 
+    OuputFile and InputFile). See L{StdhepCut} for example.
     Called from Job.
     """
     return S_OK()
@@ -587,7 +595,9 @@ class Application(object):
     for key in kwargs:
       if kwargs[key]:
         arguments.append( '%s = %s ( %s )' % ( key, kwargs[key], type( kwargs[key] ) ) )
-    finalReport = 'Problem with %s.%s() call:\nArguments: %s\nMessage: %s\n' % ( className, methodName, string.join( arguments, ', ' ), message )
+    finalReport = 'Problem with %s.%s() call:\nArguments: %s\nMessage: %s\n' % ( className, methodName, 
+                                                                                 string.join( arguments, ', ' ), 
+                                                                                 message )
     if self._errorDict.has_key( methodName ):
       tmp = self._errorDict[methodName]
       tmp.append( finalReport )

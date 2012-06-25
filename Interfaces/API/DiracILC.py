@@ -36,8 +36,8 @@ class DiracILC(Dirac):
     """   
     processlistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
     if not processlistpath['Value']:
-      gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to your dirac.cfg \
-                   the entry /LocalSite/ProcessListPath pointing to the file')
+      gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to \
+      your dirac.cfg the entry /LocalSite/ProcessListPath pointing to the file')
       pathtofile = gConfig.getOption("/Operations/ProcessList/Location", "")
       if not pathtofile['Value']:
         gLogger.error("Could not get path to process list")
@@ -117,7 +117,8 @@ class DiracILC(Dirac):
     for jobID in sortList( jobs.keys() ):
       jobDict = jobs[jobID]
       if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
-        if ( jobDict.has_key( 'UserOutputData' ) and ( not int( jobDict['UserOutputData'] ) ) ) or ( not jobDict.has_key( 'UserOutputData' ) ):
+        if ( jobDict.has_key( 'UserOutputData' ) and ( not int( jobDict['UserOutputData'] ) ) ) or \
+        ( not jobDict.has_key( 'UserOutputData' ) ):
           params = self.parameters(int(jobID))
           if params['OK']:
             if params['Value'].has_key('UploadedOutputData'):
