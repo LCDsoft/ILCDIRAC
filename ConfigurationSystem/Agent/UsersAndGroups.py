@@ -8,11 +8,9 @@ __RCSID__ = "$Id$"
 import os
 from DIRAC.Core.Base.AgentModule                     import AgentModule
 from DIRAC.ConfigurationSystem.Client.CSAPI          import CSAPI
-from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.Core.Security.VOMSService                 import VOMSService
-from DIRAC.Core.Security                             import Locations, X509Chain
-from DIRAC.Core.Utilities                            import List, Subprocess
-from DIRAC                                           import S_OK, S_ERROR, gConfig
+from DIRAC.Core.Utilities                            import List
+from DIRAC                                           import S_OK, gConfig
 
 class UsersAndGroups( AgentModule ):
 
