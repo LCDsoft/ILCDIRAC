@@ -94,7 +94,7 @@ class StdHepCut(ModuleBase):
         try:
           shutil.copy(os.path.join(steeringfiledirname, self.SteeringFile), "./" + self.SteeringFile )
         except Exception, x:
-          return S_ERROR('Failed to access file %s: ' % (self.SteeringFile, str(x)))  
+          return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(x)))  
       
     scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName): 
