@@ -82,13 +82,13 @@ class ProcessManagerHandler(RequestHandler):
     return processDB.addProcess(ProcessName, ProcessDetail, WhizardVers, Template)
  
   types_addSteeringFile = [StringTypes, StringTypes]
-  def export_addSteeringFile(self, FileName, Path=''):
+  def export_addSteeringFile(self, FileName, Path = ''):
     """ Declare a steering file
     """
     return processDB.addSteeringFile(FileName, Path)
   
   types_addProductionData = [DictType]
-  def export_addProductionData(self,ProdDataDict):
+  def export_addProductionData(self, ProdDataDict):
     """ Add a new Production data object
     """
     if (not ProdDataDict.has_key("ProdID") 

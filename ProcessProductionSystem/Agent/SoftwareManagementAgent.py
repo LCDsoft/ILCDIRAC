@@ -23,7 +23,7 @@ class SoftwareManagementAgent( AgentModule ):
   """ Agent to run software management things
   """
   def initialize(self):
-    self.pollingTime = self.am_getOption('PollingTime',86400)
+    self.pollingTime = self.am_getOption('PollingTime', 86400)
     gMonitor.registerActivity("Iteration", "Agent Loops", AGENT_NAME, "Loops/min", gMonitor.OP_SUM)
     self.ppc = ProcessProdClient()
     self.dirac = DiracILC()
@@ -55,7 +55,7 @@ class SoftwareManagementAgent( AgentModule ):
     for banned_site in banned_sites:
       self.ppc.changeSiteStatus( {'SiteName' : banned_site, 'Status' : 'Banned'} )
       if not res['OK']:
-        self.log.error('Cannot mark as banned site %s' % site)    
+        self.log.error('Cannot mark as banned site %s' % banned_site)
         
     ##Then we need to get new installation tasks
     res = self.ppc.getInstallSoftwareTask()
