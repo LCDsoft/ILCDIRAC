@@ -5,7 +5,9 @@ Created on Jan 26, 2012
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from DIRAC                                                  import S_OK, S_ERROR, gConfig
+from DIRAC                                              import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Module                         import ModuleDefinition
+from DIRAC.Core.Workflow.Step                           import StepDefinition
 
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
@@ -152,7 +154,7 @@ class DBDGeneration(ProductionJob):
     fr.setValue("enable",sendFailover)
     
     self.workflow.addStep(finalization)
-    finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
+    self.workflow.createStepInstance('Job_Finalization', 'finalization')
 
     return S_OK()
     

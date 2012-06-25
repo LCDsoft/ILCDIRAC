@@ -24,7 +24,7 @@ from math                                                   import modf
 from DIRAC                                                  import S_OK, S_ERROR, gConfig
 
 import string, os, shutil, types
-from decimal import *
+from decimal import Decimal
 
 
 class ProductionJob(Job):
@@ -346,7 +346,7 @@ class ProductionJob(Job):
     fr.setValue("enable", self.finalsdict['sendFailover'])
     
     self.workflow.addStep(finalization)
-    finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
+    self.workflow.createStepInstance('Job_Finalization', 'finalization')
 
     return S_OK()
   
@@ -746,4 +746,5 @@ class ProductionJob(Job):
 
   def _jobSpecificModules(self, application, step):
     return application._prodjobmodules(step)
+
   
