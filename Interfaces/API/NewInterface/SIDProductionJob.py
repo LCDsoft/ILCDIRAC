@@ -1,6 +1,8 @@
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-from DIRAC import S_OK,S_ERROR
+from DIRAC.Core.Workflow.Module import ModuleDefinition
+from DIRAC.Core.Workflow.Step import StepDefinition
+from DIRAC import S_OK, S_ERROR
 
 import os,types,string
 from math import modf
@@ -13,7 +15,7 @@ class SIDProductionJob(ProductionJob):
     self.machine = 'ilc'
     self.basepath = '/ilc/prod/ilc/mc-dbd/sid'
     
-  def setInputDataQuery(self,metadata):
+  def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
     """
     metakeys = metadata.keys()
@@ -21,7 +23,6 @@ class SIDProductionJob(ProductionJob):
     res = client.getMetadataFields()
     if not res['OK']:
       print "Could not contact File Catalog"
-      self.explainInputDataQuery()
       return S_ERROR()
     metaFCkeys = res['Value'].keys()
     for key in metakeys:
@@ -82,54 +83,54 @@ class SIDProductionJob(ProductionJob):
   def _addRealFinalization(self):
     """ See L{ProductionJob} for definition
     """
-    self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
+    importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
-    self._addParameter(dataUpload,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
+    self._addParameter(dataUpload, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(importLine, '<MODULE>', 'UploadOutputData')
     dataUpload.setBody(body)
 
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
-    self._addParameter(failoverRequest,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','FailoverRequest')
+    self._addParameter(failoverRequest, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(importLine, '<MODULE>', 'FailoverRequest')
     failoverRequest.setBody(body)
 
     registerdata = ModuleDefinition('SIDRegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
-    self._addParameter(registerdata,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','SIDRegisterOutputData')
+    self._addParameter(registerdata, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(importLine, '<MODULE>', 'SIDRegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
-    self._addParameter(logUpload,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
+    self._addParameter(logUpload, 'enable', 'bool', False, 'EnableFlag')
+    body = string.replace(importLine, '<MODULE>', 'UploadLogFile')
     logUpload.setBody(body)
 
     finalization = StepDefinition('Job_Finalization')
     finalization.addModule(dataUpload)
-    up = finalization.createModuleInstance('UploadOutputData','dataUpload')
+    up = finalization.createModuleInstance('UploadOutputData', 'dataUpload')
     up.setValue("enable",self.finalsdict['uploadData'])
 
     finalization.addModule(registerdata)
-    ro = finalization.createModuleInstance('SIDRegisterOutputData','SIDRegisterOutputData')
+    ro = finalization.createModuleInstance('SIDRegisterOutputData', 'SIDRegisterOutputData')
     ro.setValue("enable",self.finalsdict['registerData'])
 
     finalization.addModule(logUpload)
-    ul  = finalization.createModuleInstance('UploadLogFile','logUpload')
+    ul  = finalization.createModuleInstance('UploadLogFile', 'logUpload')
     ul.setValue("enable",self.finalsdict['uploadLog'])
 
     finalization.addModule(failoverRequest)
-    fr = finalization.createModuleInstance('FailoverRequest','failoverRequest')
+    fr = finalization.createModuleInstance('FailoverRequest', 'failoverRequest')
     fr.setValue("enable",self.finalsdict['sendFailover'])
     
     self.workflow.addStep(finalization)
-    finalizeStep = self.workflow.createStepInstance('Job_Finalization', 'finalization')
+    self.workflow.createStepInstance('Job_Finalization', 'finalization')
 
     return S_OK() 
   
-  def _jobSpecificParams(self,application):
+  def _jobSpecificParams(self, application):
     """ For production additional checks are needed: ask the user
     """
 
@@ -187,40 +188,40 @@ class SIDProductionJob(ProductionJob):
     ###Below modify according to SID conventions
     energypath = ''
     fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1]>0:
-      energypath = "%stev/"%(self.energy/Decimal("1000."))
+    if fracappen[1] > 0:
+      energypath = "%stev/" % (self.energy/Decimal("1000."))
     else:
-      energypath =  "%sgev/"%(self.energy/Decimal("1000."))
-    self.finalMetaDict[self.basepath+energypath] = {'Energy':energypath.rstrip("/")}  
+      energypath =  "%sgev/" % (self.energy/Decimal("1000."))
+    self.finalMetaDict[self.basepath+energypath] = {'Energy' : energypath.rstrip("/")}  
     
     if not self.basename:
       self.basename = self.evttype
     
-    if not self.machine[-1]=='/':
+    if not self.machine[-1] == '/':
       self.machine += "/"
-    if not self.evttype[-1]=='/':
+    if not self.evttype[-1] == '/':
       self.evttype += '/'  
     
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
       path = self.basepath+energypath+self.evttype+"/REC/"
-      self.finalMetaDict[self.basepath+energypath+self.evttype] = {"EvtType":self.evttype}
-      self.finalMetaDict[self.basepath+energypath+self.evttype+"/REC"] = {'Datatype':"REC"}
+      self.finalMetaDict[self.basepath+energypath+self.evttype] = {"EvtType" : self.evttype}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+"/REC"] = {'Datatype' : "REC"}
       fname = self.basename+"_rec.slcio"
-      application.setOutputRecFile(fname,path)  
+      application.setOutputRecFile(fname, path)  
       path = self.basepath+energypath+self.evttype+"/DST/"
       self.finalMetaDict[self.basepath+energypath+self.evttype+"/DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
-      application.setOutputDstFile(fname,path)  
+      application.setOutputDstFile(fname, path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+energypath+self.evttype
-      self.finalMetaDict[path]= {"EvtType":self.evttype}      
+      self.finalMetaDict[path]= {"EvtType" : self.evttype}      
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
-      self.finalMetaDict[path]= {"Datatype":application.datatype}      
-      self.log.info("Will store the files under %s"%path)
+      self.finalMetaDict[path] = {"Datatype":application.datatype}      
+      self.log.info("Will store the files under %s" % path)
       fname = self.basename+"_%s"%(application.datatype.lower())+".slcio"
       application.setOutputFile(fname,path)  
 

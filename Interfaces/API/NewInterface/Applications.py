@@ -18,7 +18,8 @@ Example usage:
 
 It's also possible to set all the application's properties in the constructor
 
->>> ga = GenericApplication({"Script":"myscript.py", "Arguments":"some arguments", "Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
+>>> ga = GenericApplication({"Script":"myscript.py", "Arguments":"some arguments", \
+         "Dependency":{"mokka":"v0706P08","marlin":"v0111Prod"}})
 
 but this is more an expert's functionality. 
 
@@ -28,28 +29,22 @@ Running:
 
 prints out all the available methods.
 
-Warning: Once an application has been added to a job, it is not possible to change the parameters. This is unfortunate, and will be fixed eventually. 
-It should be possible to change the parameters up to the point the job is actually submitted.
-
 @author: Stephane Poss
 @author: Remi Ete
 @author: Ching Bon Lam
 """
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
-from ILCDIRAC.Core.Utilities.ProcessList              import *
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
 from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, getDict
 
 from DIRAC.Core.Workflow.Parameter                    import Parameter
-from DIRAC.Core.Workflow.Step                         import *
-from DIRAC.Core.Workflow.Module                       import *
 from DIRAC                                            import S_OK, S_ERROR, gConfig
 
 from math import modf
 from decimal import Decimal
-import os, types, string
+import string, types, os
 
 
 #################################################################  
@@ -76,7 +71,8 @@ class GenericApplication(Application):
     #Those have to come last as the defaults from Application are not right
     self._modulename = "ApplicationScript"
     self.appname = self._modulename
-    self._moduledescription = 'An Application script module that can execute any provided script in the given project name and version environment'
+    self._moduledescription = 'An Application script module that can execute any provided script in the given \
+    project name and version environment'
       
   def setScript(self, script):
     """ Define script to use
@@ -181,7 +177,7 @@ class GetSRMFile(Application):
   Usage:
   
   >>> gf = GetSRMFile()
-  >>> fdict = {"file":"srm://srm-public.cern.ch/castor/cern.ch/grid/ilc/prod/clic/1tev/Z_uds/gen/0/nobeam_nobrem_0-200.stdhep","site":"CERN-SRM"}
+  >>> fdict = {"file" : "srm://srm-public.cern.ch/castor/cern.ch/grid/ilc/prod/clic/1tev/Z_uds/gen/0/nobeam_nobrem_0-200.stdhep","site":"CERN-SRM"}
   >>> gf.setFiles(fdict)
   
   """
@@ -549,7 +545,8 @@ class Whizard(Application):
     
     >>> pdict = {}
     >>> pdict['process_input'] = {}
-    >>> pdict['process_input']['process_id']='h_n1n1'#processes here are not those of the templates, but those of the whizard.prc
+    >>> #processes below are not those of the templates, but those of the whizard.prc
+    >>> pdict['process_input']['process_id']='h_n1n1'
     >>> pdict['process_input']['sqrts'] = 3000.
     >>> pdict['simulation_input'] = {}
     >>> pdict['simulation_input']['n_events'] = 100
@@ -562,7 +559,8 @@ class Whizard(Application):
     >>> wh.setFullParameterDict(pdict)
     
     The first key corresponds to the sections of the whizard.in, while the second corresponds to the possible parameters.
-    All keys/values can be found in the WHIZARD documentation: U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc11}
+    All keys/values can be found in the WHIZARD documentation: 
+    U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc11}
     
     @param dict: Dictionnary of parameters
     @type dict: dict
@@ -610,14 +608,17 @@ class Whizard(Application):
 
     self.jobindex = index
   
-  def dumpWhizardDotIn(self, fname='whizard.in'):
+  def dumpWhizardDotIn(self, fname = 'whizard.in'):
+    """ Dump the content of the whizard.in file requested for this application
+    """
     if self.addedtojob:
       self._wo.toWhizardDotIn(fname)
     else:
       self._reportError("Can't dump the whizard.in as there can be further changes")
         
   def _checkConsistency(self):
-
+    """ Check the consistency, called from Application
+    """
     self._wo = WhizardOptions(self.model)
 
     if not self.optionsdict:
@@ -726,7 +727,8 @@ class Whizard(Application):
 
     if not self._jobtype == 'User':
       if not self.willBeCut:
-        self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                   "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['Process'] = self.evttype
       self.prodparameters['model'] = self.model
@@ -833,9 +835,12 @@ class Whizard(Application):
     md1.addParameter(Parameter("Model",        "", "string", "", "", False, False, "Model for generation"))
     md1.addParameter(Parameter("SteeringFile", "", "string", "", "", False, False, "Steering file"))
     md1.addParameter(Parameter("JobIndex",     "", "string", "", "", False, False, "Job Index"))
-    md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, "Specific steering parameters"))
-    md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, "Options dict to create full whizard.in on the fly"))
-    md1.addParameter(Parameter("GenLevelCutDictStr",  "", "string", "", "", False, False, "Generator level cuts to put in whizard.cut1"))
+    md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False, 
+                               "Specific steering parameters"))
+    md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False, 
+                               "Options dict to create full whizard.in on the fly"))
+    md1.addParameter(Parameter("GenLevelCutDictStr",  "", "string", "", "", False, False, 
+                               "Generator level cuts to put in whizard.cut1"))
     md1.addParameter(Parameter("willCut",  False,   "bool", "", "", False, False, "Will cut after"))
     md1.addParameter(Parameter("useGridFiles",  True,   "bool", "", "", False, False, "Will use grid files"))
     md1.addParameter(Parameter("debug",    False,   "bool", "", "", False, False, "debug mode"))
@@ -933,7 +938,8 @@ class Pythia(Application):
     
     if not self._jobtype == 'User':
       if not self.willBeCut:      
-        self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                   "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.nbevts
       self.prodparameters['Process'] = self.evttype
 
@@ -1125,7 +1131,8 @@ class StdhepCut(Application):
       return S_ERROR('You need to know the selection efficiency of your cuts')
     
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                 "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts_kept'] = self.maxevts
       self.prodparameters['cut_file'] = self.steeringfile
       
@@ -1332,11 +1339,15 @@ class Mokka(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("mcRunNumber",          0,    "int", "", "", False, False, "mcRunNumber parameter for Mokka"))
-    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
+    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, 
+                               "Random seed for the generator"))
+    md1.addParameter(Parameter("mcRunNumber",          0,    "int", "", "", False, False, 
+                               "mcRunNumber parameter for Mokka"))
+    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, 
+                               "Detecor model for simulation"))
     md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
-    md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, "From where Mokka start to read the input file"))
+    md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, 
+                               "From where Mokka start to read the input file"))
     md1.addParameter(Parameter("dbSlice",             "", "string", "", "", False, False, "Data base used"))
     md1.addParameter(Parameter("ProcessID",           "", "string", "", "", False, False, "Process ID"))
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
@@ -1467,7 +1478,8 @@ class SLIC(Application):
     #  return res
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                 "outputDataSE":'@{OutputSE}'})
       self.prodparameters['slic_steeringfile'] = self.steeringfile
       self.prodparameters['detectorType'] = self.detectortype
       if self.detectorModel:
@@ -1481,9 +1493,12 @@ class SLIC(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, "Random seed for the generator"))
-    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, "From how Slic start to read the input file"))
+    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False, 
+                               "Random seed for the generator"))
+    md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, 
+                               "Detecor model for simulation"))
+    md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, 
+                               "From how Slic start to read the input file"))
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     return md1
   
@@ -1623,13 +1638,19 @@ class OverlayInput(Application):
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("BXOverlay",            0,  "float", "", "", False, False, "Bunch crossings to overlay"))
-    m1.addParameter(Parameter("ggtohadint",           0,  "float", "", "", False, False, "Optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2"))
-    m1.addParameter(Parameter("NbSigEvtsPerJob",      0,    "int", "", "", False, False, "Number of signal events per job"))
-    m1.addParameter(Parameter("prodid",               0,    "int", "", "", False, False, "ProdID to use"))
-    m1.addParameter(Parameter("BkgEvtType",          "", "string", "", "", False, False, "Background type. Default is gg -> had"))
-    m1.addParameter(Parameter("detector",            "", "string", "", "", False, False, "Detector model. Must be ILD or SID"))
-    m1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
+    m1.addParameter(Parameter("BXOverlay",       0,  "float", "", "", False, False, 
+                              "Bunch crossings to overlay"))
+    m1.addParameter(Parameter("ggtohadint",      0,  "float", "", "", False, False, 
+                              "Optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2"))
+    m1.addParameter(Parameter("NbSigEvtsPerJob", 0,    "int", "", "", False, False, 
+                              "Number of signal events per job"))
+    m1.addParameter(Parameter("prodid",          0,    "int", "", "", False, False, 
+                              "ProdID to use"))
+    m1.addParameter(Parameter("BkgEvtType",     "", "string", "", "", False, False, 
+                              "Background type. Default is gg -> had"))
+    m1.addParameter(Parameter("detector",       "", "string", "", "", False, False, 
+                              "Detector model. Must be ILD or SID"))
+    m1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
 
@@ -1767,7 +1788,8 @@ class Marlin(Application):
     
     @param outputRecFile: output rec file for Marlin
     @type outputRecFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if 
+    you want to keep the file on the grid.
     @type path: string
     """
     self._checkArgs( {
@@ -1784,7 +1806,8 @@ class Marlin(Application):
     
     @param outputDstFile: output dst file for Marlin
     @type outputDstFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if 
+    you want to keep the file on the grid.
     @type path: string
     """
     self._checkArgs( {
@@ -1837,7 +1860,8 @@ class Marlin(Application):
     
     ## Here one needs to take care of listoutput
     if self.outputPath:
-      self._listofoutput.append({'OutputFile':'@{OutputFile}', "outputPath":"@{OutputPath}", "outputDataSE":self.outputSE})
+      self._listofoutput.append({'OutputFile' : '@{OutputFile}', "outputPath" : "@{OutputPath}", 
+                                 "outputDataSE" : self.outputSE})
     
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
@@ -1887,18 +1911,22 @@ class Marlin(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("inputGEAR",              '', "string", "", "", False, False, "Input GEAR file"))
-    md1.addParameter(Parameter("ProcessorListToUse",     [], "list", "", "", False, False, "List of processors to use"))
-    md1.addParameter(Parameter("ProcessorListToExclude", [], "list", "", "", False, False, "List of processors to exclude"))
-    md1.addParameter(Parameter("debug",               False,   "bool", "", "", False, False, "debug mode"))
+    md1.addParameter(Parameter("inputGEAR",              '', "string", "", "", False, False, 
+                               "Input GEAR file"))
+    md1.addParameter(Parameter("ProcessorListToUse",     [],   "list", "", "", False, False, 
+                               "List of processors to use"))
+    md1.addParameter(Parameter("ProcessorListToExclude", [],   "list", "", "", False, False, 
+                               "List of processors to exclude"))
+    md1.addParameter(Parameter("debug",               False,   "bool", "", "", False, False, 
+                               "debug mode"))
     return md1
   
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("inputGEAR",         self.inputGearFile)
+    moduleinstance.setValue("inputGEAR",              self.inputGearFile)
     moduleinstance.setValue('ProcessorListToUse',     self.processorlisttouse)
-    moduleinstance.setValue('ProcessorListToExclude',     self.processorlisttoexclude)
-    moduleinstance.setValue("debug",             self.debug)
+    moduleinstance.setValue('ProcessorListToExclude', self.processorlisttoexclude)
+    moduleinstance.setValue("debug",                  self.debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
@@ -1944,7 +1972,8 @@ class LCSIM(Application):
     
     @param outputRecFile: output rec file for LCSIM
     @type outputRecFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if 
+    you want to keep the file on the grid.
     @type path: string
     """
     self._checkArgs( {
@@ -1961,7 +1990,8 @@ class LCSIM(Application):
     
     @param outputDstFile: output dst file for LCSIM
     @type outputDstFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want to keep the file on the grid.
+    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want 
+    to keep the file on the grid.
     @type path: string
     """
     self._checkArgs( {
@@ -2003,7 +2033,8 @@ class LCSIM(Application):
   def setTrackingStrategy(self, trackingstrategy):
     """ Optional: Define the tracking strategy to use.  
     
-    @param trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is in the steering file
+    @param trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is 
+    in the steering file
     @type trackingstrategy: string
     """
     self._checkArgs( {
@@ -2068,7 +2099,8 @@ class LCSIM(Application):
         
     if self.detectorModel:
       if not self.detectorModel.lower().count(".zip"):
-        return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. Or use the alias.properties.")
+        return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. \
+        Or use the alias.properties.")
         
     #res = self._checkRequiredApp()
     #if not res['OK']:
@@ -2079,8 +2111,10 @@ class LCSIM(Application):
       if self._inputapp and not self.outputFile and not self.willBeCut:
         for app in self._inputapp:
           if app.appname == 'slicpandora':
-            self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", "outputDataSE":'@{OutputSE}'})
-            self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}", "outputDataSE":'@{OutputSE}'})
+            self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", 
+                                       "outputDataSE":'@{OutputSE}'})
+            self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}", 
+                                       "outputDataSE":'@{OutputSE}'})
             #slicp = True
             break
       self.prodparameters['detectorType'] = self.detectortype
@@ -2096,11 +2130,16 @@ class LCSIM(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("extraparams",           "", "string", "", "", False, False, "Command line parameters to pass to java"))
-    md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, "Path to the alias.properties file name that will be used"))
-    md1.addParameter(Parameter("debug",              False,   "bool", "", "", False, False, "debug mode"))
-    md1.addParameter(Parameter("detectorModel",         "", "string", "", "", False, False, "detector model zip file"))
-    md1.addParameter(Parameter("trackingstrategy",      "", "string", "", "", False, False, "trackingstrategy"))
+    md1.addParameter(Parameter("extraparams",           "", "string", "", "", False, False, 
+                               "Command line parameters to pass to java"))
+    md1.addParameter(Parameter("aliasproperties",       "", "string", "", "", False, False, 
+                               "Path to the alias.properties file name that will be used"))
+    md1.addParameter(Parameter("debug",              False,   "bool", "", "", False, False, 
+                               "debug mode"))
+    md1.addParameter(Parameter("detectorModel",         "", "string", "", "", False, False, 
+                               "detector model zip file"))
+    md1.addParameter(Parameter("trackingstrategy",      "", "string", "", "", False, False, 
+                               "trackingstrategy"))
     return md1
   
   def _applicationModuleValues(self, moduleinstance):
@@ -2154,7 +2193,7 @@ class SLICPandora(Application):
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for SlicPandora simulation 
     
-    @param detectorModel: Detector Model to use for SlicPandora simulation. Default is ??????
+    @param detectorModel: Detector Model to use for SlicPandora simulation. 
     @type detectorModel: string
     """
     self._checkArgs( {
@@ -2234,10 +2273,14 @@ class SLICPandora(Application):
   def _applicationModule(self):
     
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("pandorasettings",   "", "string", "", "", False, False, "Pandora Settings"))
-    md1.addParameter(Parameter("detectorxml",       "", "string", "", "", False, False, "Detecor model for simulation"))
-    md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, "From how SlicPandora start to read the input file"))
-    md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
+    md1.addParameter(Parameter("pandorasettings",   "", "string", "", "", False, False, 
+                               "Pandora Settings"))
+    md1.addParameter(Parameter("detectorxml",       "", "string", "", "", False, False, 
+                               "Detector model for simulation"))
+    md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False, 
+                               "From how SlicPandora start to read the input file"))
+    md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, 
+                               "debug mode"))
     return md1
   
   def _applicationModuleValues(self, moduleinstance):
@@ -2393,7 +2436,8 @@ class SLCIOConcatenate(Application):
       self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                 "outputDataSE":'@{OutputSE}'})
 
     #res = self._checkRequiredApp()
     #if not res['OK']:
@@ -2446,7 +2490,8 @@ class SLCIOSplit(Application):
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
-    m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False, "Number of events per output file"))
+    m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False, 
+                                "Number of events per output file"))
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
@@ -2484,7 +2529,8 @@ class SLCIOSplit(Application):
       self._log.info('No output file name specified.')
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                 "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nb_events_per_file'] = self.numberofeventsperfile
 
       
@@ -2538,7 +2584,8 @@ class StdHepSplit(Application):
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
-    m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False, "Number of events per output file"))
+    m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False, 
+                                "Number of events per output file"))
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
@@ -2574,7 +2621,8 @@ class StdHepSplit(Application):
       self._log.info('No output file name specified.')
 
     if not self._jobtype == 'User':
-      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
+      self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
+                                 "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nb_events_per_file'] = self.numberofeventsperfile
 
       
