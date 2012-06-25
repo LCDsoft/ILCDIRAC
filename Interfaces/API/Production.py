@@ -15,8 +15,8 @@ from DIRAC.TransformationSystem.Client.Transformation import Transformation
 from DIRAC.Resources.Catalog.FileCatalogClient        import FileCatalogClient
 
 from ILCDIRAC.Interfaces.API.ILCJob                   import ILCJob
-from DIRAC                                            import gConfig, gLogger, S_OK, S_ERROR
-import string, shutil,os,types
+from DIRAC                                            import gConfig
+import string, shutil
 
 from random import randrange
 
@@ -1137,10 +1137,10 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
     """
     return
 
-  def setInputDataDirectoryMask(self,dir):
+  def setInputDataDirectoryMask(self,mydir):
     """ More or less same feature as above, but useful for user's directory that don't have metadata info specified
     """
-    self.currtrans.setFileMask(dir)
+    self.currtrans.setFileMask(mydir)
     return S_OK()
 
   def setInputDataLFNs(self,lfns):
