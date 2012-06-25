@@ -1,4 +1,7 @@
 '''
+this service was intended to provide the dowload of the LesHouches files. But in fact, we 
+should use the DIRAC StorageElement
+
 Created on Apr 18, 2012
 
 @author: Stephane Poss
@@ -11,6 +14,8 @@ import os
 ModelsDict = {}
 
 def initializeLesHouchesFileManagerHandler( serviceInfo ):
+  """ Initialize the service
+  """
   res = gConfig.getOptionsDict("/Operations/Models")
   if not res['OK']:
     return res
@@ -23,18 +28,18 @@ def initializeLesHouchesFileManagerHandler( serviceInfo ):
     return S_ERROR("Path to LesHouches files not defined in CS")
   missing = False
   global ModelsDict
-  for template,tfile in templates.items():
+  for template, tfile in templates.items():
     ModelsDict[template] = {}
     ModelsDict[template]['file'] = tfile
     if not tfile:
       ModelsDict[template]['content'] = ['']
       continue
-    file_path = os.path.join([location,tfile])
+    file_path = os.path.join([location, tfile])
     if not os.path.exists(file_path):
       gLogger.error("Missing %s" % file_path)
       missing = True
       break
-    LesHouchesFile = open(file_path,"r")
+    LesHouchesFile = open(file_path, "r")
     ModelsDict[template]['content'] = LesHouchesFile.readlines()
     LesHouchesFile.close()
     
@@ -45,10 +50,10 @@ def initializeLesHouchesFileManagerHandler( serviceInfo ):
 
 class LesHouchesFileManagerHandler(RequestHandler):
   '''
-  classdocs
+  provide the methods
   '''
   types_getLesHouchesFile = [StringTypes]
-  def export_getLesHouchesFile(self,ModelName):
+  def export_getLesHouchesFile(self, ModelName):
     if not ModelName in ModelsDict:
       return S_ERROR("Unavailable template")
     

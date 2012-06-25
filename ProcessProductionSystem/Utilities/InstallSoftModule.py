@@ -4,8 +4,8 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea,Shar
 
 from ILCDIRAC.ProcessProductionSystem.Client.ProcessProdClient import ProcessProdClient
 
-from DIRAC import S_OK,S_ERROR, gConfig, gLogger
-import os,shutil
+from DIRAC import S_OK, S_ERROR, gConfig, gLogger
+import os, shutil
 
 class InstallSoftModule():
   def __init__(self):
@@ -33,7 +33,7 @@ class InstallSoftModule():
       return S_ERROR('System Config not defined')
     
 
-    self.log.info("Will check Installed %s"%self.appsToInstall)
+    self.log.info("Will check Installed %s" % self.appsToInstall)
     for app in self.appsToInstall:
       if not app:
         continue
@@ -44,17 +44,18 @@ class InstallSoftModule():
       jobdict['AppName'] = appname
       jobdict['AppVersion'] = appversion
       jobdict['Platform'] = self.systemConfig
-      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,appname,appversion),'')
+      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, 
+                                                                                    appversion), '')
       appDir = appDir.replace(".tgz","").replace(".tar.gz","")
       mySoftwareRoot = ''
       sharedArea = SharedArea()
-      if os.path.exists('%s%s%s' %(sharedArea,os.sep,appDir)):
+      if os.path.exists('%s%s%s' % (sharedArea, os.sep, appDir)):
         mySoftwareRoot = sharedArea
         self.ppc.reportOK(jobdict)
       else:
         self.ppc.reportFailed(jobdict)
 
-    self.log.info("Will delete %s"%self.appsToRemove)
+    self.log.info("Will delete %s" % self.appsToRemove)
     failed = []
     for app in self.appsToRemove:
       if not app:
@@ -66,41 +67,42 @@ class InstallSoftModule():
       jobdict['AppName'] = appname
       jobdict['AppVersion'] = appversion
       jobdict['Platform'] = self.systemConfig      
-      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig,appname,appversion),'')
-      appDir = appDir.replace(".tgz","").replace(".tar.gz","")
+      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+                                                                                    appname, appversion), '')
+      appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''
       localArea = LocalArea()
       sharedArea = SharedArea()
-      if os.path.exists('%s%s%s' %(localArea,os.sep,appDir)):
+      if os.path.exists('%s%s%s' % (localArea, os.sep, appDir)):
         mySoftwareRoot = localArea
-      elif os.path.exists('%s%s%s' %(sharedArea,os.sep,appDir)):
+      elif os.path.exists('%s%s%s' % (sharedArea, os.sep, appDir)):
         mySoftwareRoot = sharedArea
       else:
-        self.log.error('%s: Could not find neither local area not shared area install'%app)
+        self.log.error('%s: Could not find neither local area not shared area install' % app)
         continue
-      myappDir = os.path.join(mySoftwareRoot,appDir)
+      myappDir = os.path.join(mySoftwareRoot, appDir)
       
       #### Hacky hack needed when the DB was in parallel to the Mokka version
-      if appname.lower()=='mokka':
-        dbloc = os.path.join(mySoftwareRoot,"CLICMokkaDB.sql")
+      if appname.lower() == 'mokka':
+        dbloc = os.path.join(mySoftwareRoot, "CLICMokkaDB.sql")
         if os.path.exists(dbloc):
           try:
             os.remove(dbloc)
           except Exception, x:
-            self.log.error("Could not delete SQL DB file : %s"%(str(x)))  
+            self.log.error("Could not delete SQL DB file : %s" % (str(x)))  
       if os.path.isdir(myappDir):
         try:
           shutil.rmtree(myappDir)
         except Exception, x:
-          self.log.error("Could not delete %s : %s"%(app,str(x)))  
+          self.log.error("Could not delete %s : %s" % (app, str(x)))  
           failed.append(app)
       else:
         try:
           os.remove(myappDir)
         except Exception, x:
-          self.log.error("Could not delete %s"%(myappDir,str(x)))
+          self.log.error("Could not delete %s" % (myappDir, str(x)))
         
     if len(failed):
-      return S_ERROR("Failed deleting applications %s"%failed)
-    self.log.info("Successfully deleted %s"%self.appsToRemove)
+      return S_ERROR("Failed deleting applications %s" % failed)
+    self.log.info("Successfully deleted %s" % self.appsToRemove)
     return S_OK()
