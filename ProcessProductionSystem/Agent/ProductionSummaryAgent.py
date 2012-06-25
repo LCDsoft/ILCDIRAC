@@ -10,7 +10,7 @@ Created on Apr 8, 2011
 '''
 __RCSID__ = "$ Id: $"
 
-from DIRAC                                                                import S_OK, S_ERROR, gConfig, gLogger, gMonitor
+from DIRAC                                                                import S_OK, gMonitor
 from DIRAC.Core.Base.AgentModule                                          import AgentModule
 from DIRAC.TransformationSystem.Client.TransformationClient               import TransformationClient
 from DIRAC.Resources.Catalog.FileCatalogClient                            import FileCatalogClient

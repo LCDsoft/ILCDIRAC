@@ -5,9 +5,8 @@ Created on Feb 17, 2012
 '''
 __RCSID__ = "$ Id: $"
 
-from DIRAC                                                                import S_OK, S_ERROR, gConfig, gLogger, gMonitor
+from DIRAC                                                                import S_OK, gMonitor
 from DIRAC.Core.Base.AgentModule                                          import AgentModule
-from DIRAC.Core.DISET.RPCClient                                           import RPCClient
 from DIRAC.Core.Security.ProxyInfo                                        import getProxyInfo
 
 from DIRAC.Interfaces.API.DiracAdmin                                      import DiracAdmin
