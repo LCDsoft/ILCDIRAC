@@ -43,7 +43,8 @@ class UploadLogFile(ModuleBase):
     self.logSizeLimit = gConfig.getValue('/Operations/LogFiles/SizeLimit', 20 * 1024 * 1024)
     self.logExtensions = gConfig.getValue('/Operations/LogFiles/Extensions', [])
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
-    self.diracLogo = gConfig.getValue('/Operations/SAM/LogoURL', 'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
+    self.diracLogo = gConfig.getValue('/Operations/SAM/LogoURL', 
+                                      'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
     self.rm = ReplicaManager()
 
     self.enable = True
@@ -137,7 +138,8 @@ class UploadLogFile(ModuleBase):
       self.log.error('Completely failed to select relevant log files.', res['Message'])
       return S_OK()#because if the logs are lost, it's not the end of the world.
     selectedFiles = res['Value']
-    self.log.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles), string.join(selectedFiles, '\n')))
+    self.log.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles), 
+                                                                             string.join(selectedFiles, '\n')))
 
     #########################################
     # Create a temporary directory containing these files
@@ -172,7 +174,8 @@ class UploadLogFile(ModuleBase):
     res = S_ERROR()
     if not self.failoverTest:
       self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE))
-      res = self.rm.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) }, self.logSE, singleDirectory = True)
+      res = self.rm.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) }, 
+                                        self.logSE, singleDirectory = True)
       self.log.verbose(res)
       if res['OK']:
         self.log.info('Successfully upload log directory to %s' % self.logSE)
@@ -187,7 +190,8 @@ class UploadLogFile(ModuleBase):
 
     #########################################
     # Recover the logs to a failover storage element
-    self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE, res['Message'])
+    self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE, 
+                   res['Message'])
 
     tarFileDir = os.path.dirname(self.logdir)
     self.logLFNPath = '%s.gz' % self.logLFNPath
@@ -222,7 +226,8 @@ class UploadLogFile(ModuleBase):
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self.request)
     random.shuffle(self.failoverSEs)
-    self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, string.join(self.failoverSEs, ', ')))
+    self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, 
+                                                                               string.join(self.failoverSEs, ', ')))
     result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath, 
                                                       self.failoverSEs, fileGUID=None, 
                                                       fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
@@ -367,7 +372,8 @@ class UploadLogFile(ModuleBase):
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>\n""")
-    fopen.write("<title>Logs for Job %s of Production %s (DIRAC WMS ID %s)</title>\n" % (prodJobID, productionID, wmsJobID))
+    fopen.write("<title>Logs for Job %s of Production %s (DIRAC WMS ID %s)</title>\n" % (prodJobID, productionID, 
+                                                                                         wmsJobID))
     fopen.write( """</head>
 <body text="#000000" bgcolor="#33ffff" link="#000099" vlink="#990099"
  alink="#000099"> \n

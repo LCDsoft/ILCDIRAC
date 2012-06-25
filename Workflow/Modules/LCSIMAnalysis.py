@@ -107,7 +107,8 @@ class LCSIMAnalysis(ModuleBase):
           self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
           if self.workflow_commons.has_key("SLICOutput"):
-            self.InputFile = [getProdFilename(self.workflow_commons["SLICOutput"], int(self.workflow_commons["PRODUCTION_ID"]),
+            self.InputFile = [getProdFilename(self.workflow_commons["SLICOutput"], 
+                                              int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))]
 
     if self.step_commons.has_key("aliasproperties"):
@@ -145,7 +146,9 @@ class LCSIMAnalysis(ModuleBase):
       return S_OK('LCSIM should not proceed as previous step did not end properly')
     
     #look for lcsim filename
-    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "lcsim", self.applicationVersion), '')
+    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, 
+                                                                                    "lcsim", 
+                                                                                    self.applicationVersion), '')
     if not lcsim_name:
       self.log.error("Could not find lcsim file name from CS")
       return S_ERROR("Could not find lcsim file name from CS")
@@ -200,7 +203,8 @@ class LCSIMAnalysis(ModuleBase):
           self.log.error("Could not create detectors folder !")
         if os.path.exists(os.path.join(lcsimfolder, "detectors")):
           self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
-          shutil.copy(os.path.basename(self.detectorModel), os.path.join(lcsimfolder, "detectors", os.path.basename(self.detectorModel)))
+          shutil.copy(os.path.basename(self.detectorModel), 
+                      os.path.join(lcsimfolder, "detectors", os.path.basename(self.detectorModel)))
           
     paths = {}
     paths[os.path.basename(self.SteeringFile)] = os.path.basename(self.SteeringFile)

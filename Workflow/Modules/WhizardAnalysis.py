@@ -220,7 +220,8 @@ class WhizardAnalysis(ModuleBase):
     #if self.debug:
     #  self.excludeAllButEventString = False
 
-    whizardDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "whizard", self.applicationVersion), '')
+    whizardDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "whizard", 
+                                                                                    self.applicationVersion), '')
     if not whizardDir:
       self.log.error('Could not get info from CS')
       self.setApplicationStatus('Failed finding info from CS')
@@ -397,7 +398,9 @@ class WhizardAnalysis(ModuleBase):
     if foundproceesinwhizardin:
       comm = 'whizard --simulation_input \'write_events_file = \"%s\"\' %s\n' % (outputfilename, extracmd)
     else:
-      comm = 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' %s\n' % (self.evttype, outputfilename, extracmd)
+      comm = 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' %s\n' % (self.evttype, 
+                                                                                                                        outputfilename, 
+                                                                                                                        extracmd)
     self.log.info("Will run %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    

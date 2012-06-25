@@ -28,7 +28,7 @@ class RegisterOutputData( ModuleBase ):
     self.nbofevents = 0
     self.luminosity = 0
     self.add_info = ''
-    self.fc = FileCatalogClient()
+    self.filecatalog = FileCatalogClient()
 
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
@@ -76,7 +76,8 @@ class RegisterOutputData( ModuleBase ):
       self.log.info('No production data found, so no metadata registration to be done')  
       return S_OK("No files' metadata to be registered")
     
-    self.log.verbose("Will try to set the metadata for the following files: \n %s" % string.join(self.prodOutputLFNs, "\n"))
+    self.log.verbose("Will try to set the metadata for the following files: \n %s" % string.join(self.prodOutputLFNs, 
+                                                                                                 "\n"))
 
     for files in self.prodOutputLFNs:
       elements = files.split("/")
@@ -89,7 +90,7 @@ class RegisterOutputData( ModuleBase ):
       machine = string.join(elements[0:4], "/")
       res = S_OK()
       if self.enable:
-        #res = self.fc.setMetadata(machine,metamach)
+        #res = self.filecatalog.setMetadata(machine,metamach)
         if not res['OK']:
           self.log.error('Could not register metadata Machine, with value %s for %s' % (elements[3], machine))
           return res
@@ -98,7 +99,7 @@ class RegisterOutputData( ModuleBase ):
       meta.update(metaen)
       energy = string.join(elements[0:5], "/")
       if self.enable:
-        #res = self.fc.setMetadata(energy,metaen)
+        #res = self.filecatalog.setMetadata(energy,metaen)
         if not res['OK']:
           self.log.error('Could not register metadata Energy, with value %s for %s' % (elements[4], energy))
           return res      
@@ -107,7 +108,7 @@ class RegisterOutputData( ModuleBase ):
       meta.update(metaevt)
       evttype = string.join(elements[0:6], "/")
       if self.enable:
-        #res = self.fc.setMetadata(evttype,metaevt)
+        #res = self.filecatalog.setMetadata(evttype,metaevt)
         if not res['OK']:
           self.log.error('Could not register metadata EvtType, with value %s for %s' % (elements[5], evttype))
           return res
@@ -118,7 +119,7 @@ class RegisterOutputData( ModuleBase ):
         meta.update(metadat)
         datatype = string.join(elements[0:7], "/")
         if self.enable:
-          #res = self.fc.setMetadata(datatype,metadat)
+          #res = self.filecatalog.setMetadata(datatype,metadat)
           if not res['OK']:
             self.log.error('Could not register metadata Datatype, with value %s for %s' % (elements[6], datatype))
             return res
@@ -126,7 +127,7 @@ class RegisterOutputData( ModuleBase ):
         meta.update(metaprodid)
         prodid = string.join(elements[0:8], "/")
         if self.enable:
-          #res = self.fc.setMetadata(prodid,metaprodid)
+          #res = self.filecatalog.setMetadata(prodid,metaprodid)
           if not res['OK']:
             self.log.error('Could not register metadata ProdID, with value %s for %s' % (elements[7], prodid))
             return res
@@ -136,22 +137,23 @@ class RegisterOutputData( ModuleBase ):
         metadet['DetectorType'] = elements[6]
         detectortype = string.join(elements[0:7], "/")
         if self.enable:
-          #res = self.fc.setMetadata(detectortype,metadet)
+          #res = self.filecatalog.setMetadata(detectortype,metadet)
           if not res['OK']:
-            self.log.error('Could not register metadata DetectorType, with value %s for %s' % (elements[6], detectortype))
+            self.log.error('Could not register metadata DetectorType, with value %s for %s' % (elements[6], 
+                                                                                               detectortype))
             return res
         metadat = {}
         metadat['Datatype'] = elements[7]
         datatype = string.join(elements[0:8], "/")
         if self.enable:
-          #res = self.fc.setMetadata(datatype,metadat)
+          #res = self.filecatalog.setMetadata(datatype,metadat)
           if not res['OK']:
             self.log.error('Could not register metadata Datatype, with value %s for %s' % (elements[7], datatype))
             return res 
         metaprodid['ProdID'] = elements[8]
         prodid = string.join(elements[0:9], "/")
         if self.enable:
-          #res = self.fc.setMetadata(prodid,metaprodid)
+          #res = self.filecatalog.setMetadata(prodid,metaprodid)
           if not res['OK']:
             self.log.error('Could not register metadata ProdID, with value %s for %s' % (elements[8], prodid))
             return res
@@ -163,23 +165,25 @@ class RegisterOutputData( ModuleBase ):
           if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         if self.enable:
-          res = self.fc.setMetadata(files, nbevts)
+          res = self.filecatalog.setMetadata(files, nbevts)
           if not res['OK']:
-            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s' % (self.nbofevents, files))
+            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s' % (self.nbofevents, 
+                                                                                                 files))
             return res
       if self.luminosity:
         lumi = {}
         lumi['Luminosity'] = self.luminosity
         if self.enable:
-          res = self.fc.setMetadata(files, lumi)
+          res = self.filecatalog.setMetadata(files, lumi)
           if not res['OK']:
-            self.log.error('Could not register metadata Luminosity, with value %s for %s' % (self.luminosity, files))
+            self.log.error('Could not register metadata Luminosity, with value %s for %s' % (self.luminosity, 
+                                                                                             files))
             return res
       if self.add_info:
         info = {}
         info['AdditionalInfo'] = self.add_info
         if self.enable:
-          res = self.fc.setMetadata(files, info)
+          res = self.filecatalog.setMetadata(files, info)
           if not res['OK']:
             self.log.error('Could not register metadata Info, with value %s for %s' % (self.add_info, files))
             return res
@@ -190,12 +194,12 @@ class RegisterOutputData( ModuleBase ):
       ###Now, set the ancestors
       if self.InputData:
         if self.enable:
-          res = self.fc.addFileAncestors({ files : {'Ancestors' : self.InputData } })
+          res = self.filecatalog.addFileAncestors({ files : {'Ancestors' : self.InputData } })
           if not res['OK']:
             self.log.error('Registration of Ancestors for %s failed' % files)
             return res
       # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
-      #res = self.fc.setMetadata(os.path.dirname(files),meta)
+      #res = self.filecatalog.setMetadata(os.path.dirname(files),meta)
       #if not res['OK']:
       #  self.log.error('Could not register metadata %s for %s'%(meta, files))
       #  return res

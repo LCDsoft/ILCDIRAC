@@ -168,7 +168,8 @@ class SLICAnalysis(ModuleBase):
     if not os.path.exists(self.detectorModel + ".zip"):
       for detector_url in detector_urls:
         try:
-          detmodel, headers = urllib.urlretrieve("%s%s" % (detector_url, self.detectorModel + ".zip"), self.detectorModel + ".zip")
+          detmodel, headers = urllib.urlretrieve("%s%s" % (detector_url, self.detectorModel + ".zip"), 
+                                                 self.detectorModel + ".zip")
         except:
           self.log.error("Download of detector model failed")
           continue
@@ -223,7 +224,8 @@ class SLICAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     if os.environ.has_key('XERCES_VERSION'):
-      script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n' % (mySoftwareRoot, os.environ['XERCES_VERSION']))
+      script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n' % (mySoftwareRoot, 
+                                                                              os.environ['XERCES_VERSION']))
       if new_ld_lib_path:
         script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n' % new_ld_lib_path)
       else:
@@ -235,14 +237,17 @@ class SLICAnalysis(ModuleBase):
     script.write('declare -x G4LEDATA=$(ls -d $GEANT4_DATA_ROOT/G4EMLOW*)\n')
     script.write('declare -x G4NEUTRONHPDATA=$(ls -d $GEANT4_DATA_ROOT/G4NDL*)\n')
     script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/%s\n' % (mySoftwareRoot, os.environ['LCDD_VERSION']))
-    script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n' % (mySoftwareRoot, os.environ['SLIC_VERSION']))
+    script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n' % (mySoftwareRoot, 
+                                                                                      os.environ['SLIC_VERSION']))
     script.write('declare -x MALLOC_CHECK_=0\n')
     if os.path.exists("%s/lib" % (mySoftwareRoot)):
       script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH' % (mySoftwareRoot))
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
-    comm = '%s/packages/slic/%s/bin/Linux-g++/slic -P $PARTICLE_TBL -m %s\n' % (mySoftwareRoot, os.environ['SLIC_VERSION'], slicmac)
+    comm = '%s/packages/slic/%s/bin/Linux-g++/slic -P $PARTICLE_TBL -m %s\n' % (mySoftwareRoot, 
+                                                                                os.environ['SLIC_VERSION'], 
+                                                                                slicmac)
     print comm
     script.write(comm)
     script.write('declare -x appstatus=$?\n')

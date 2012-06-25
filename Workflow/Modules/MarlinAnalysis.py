@@ -162,7 +162,9 @@ class MarlinAnalysis(ModuleBase):
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     
-    marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "marlin", self.applicationVersion), '')
+    marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+                                                                                     "marlin", 
+                                                                                     self.applicationVersion), '')
     marlinDir = marlinDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(marlinDir)
     if not res['OK']:
@@ -188,7 +190,8 @@ class MarlinAnalysis(ModuleBase):
     if not os.path.exists(pandorasettings):
       if os.path.exists(os.path.join(myMarlinDir, 'Settings', pandorasettings)):
         try:
-          shutil.copy(os.path.join(myMarlinDir, 'Settings', pandorasettings), os.path.join(os.getcwd(), pandorasettings))
+          shutil.copy(os.path.join(myMarlinDir, 'Settings', pandorasettings), 
+                      os.path.join(os.getcwd(), pandorasettings))
         except Exception, x:
           self.log.error('Could not copy PandoraSettings.xml, exception: %s' % x)
     
