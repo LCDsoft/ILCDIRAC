@@ -17,12 +17,12 @@ from DIRAC.Resources.Catalog.FileCatalogClient                            import
 
 AGENT_NAME = 'Transformation/ProductionSummaryAgent'
 
-class ProductionSummaryAgent(AgentModule):
+class ProductionSummaryAgent( AgentModule ):
   """ Agent to produce the summary table that should be available in the twiki
   """
   def initialize(self):
     self.pollingTime = self.am_getOption('PollingTime',86400)
-    gMonitor.registerActivity("Iteration","Agent Loops",AGENT_NAME,"Loops/min",gMonitor.OP_SUM)
+    gMonitor.registerActivity("Iteration", "Agent Loops", AGENT_NAME, "Loops/min", gMonitor.OP_SUM)
     self.transClient = TransformationClient('TransformationDB')
     self.fc = FileCatalogClient()
     return S_OK()

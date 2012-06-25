@@ -12,5 +12,5 @@ from DIRAC.Core.Base.Client                         import Client
 #from DIRAC                                          import S_OK, S_ERROR
 
 class ProcessProdClient(Client):
-  def __init__(self,name='ProcessProdClient'):
+  def __init__(self, name = 'ProcessProdClient'):
     self.setServer('ProcessProduction/ProcessManager')
