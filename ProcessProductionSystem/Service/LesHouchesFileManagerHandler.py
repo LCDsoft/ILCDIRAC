@@ -5,7 +5,7 @@ Created on Apr 18, 2012
 '''
 from DIRAC                                              import gLogger, gConfig, S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
-from types import *
+from types import StringTypes
 import os
 
 ModelsDict = {}
@@ -23,15 +23,15 @@ def initializeLesHouchesFileManagerHandler( serviceInfo ):
     return S_ERROR("Path to LesHouches files not defined in CS")
   missing = False
   global ModelsDict
-  for template,file in templates.items():
+  for template,tfile in templates.items():
     ModelsDict[template] = {}
-    ModelsDict[template]['file']= file
-    if not file:
+    ModelsDict[template]['file'] = tfile
+    if not tfile:
       ModelsDict[template]['content'] = ['']
       continue
-    file_path = os.path.join([location,file])
+    file_path = os.path.join([location,tfile])
     if not os.path.exists(file_path):
-      gLogger.error("Missing %s"%file_path)
+      gLogger.error("Missing %s" % file_path)
       missing = True
       break
     LesHouchesFile = open(file_path,"r")
