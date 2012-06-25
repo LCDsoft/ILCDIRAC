@@ -85,7 +85,7 @@ class OverlayDB ( DB ):
     connection = self.__getConnection( connection )
     nbjobs += 1  
     req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';" % (nbjobs, site)
-    res = self._update( req, connection )
+    self._update( req, connection )
     return S_OK()
 
 ### Methods to fix the site
