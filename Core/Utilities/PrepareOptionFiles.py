@@ -744,8 +744,8 @@ def PrepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   """ Prepare the proper steering file for Tomato
   """
   if not inputxml:
-    inputxml = file('default.xml',"w")
-    inputxml.write("""
+    inputxmlf = file('default.xml',"w")
+    inputxmlf.write("""
 <?xml version="1.0" encoding="us-ascii"?>
 <!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
 <!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
@@ -772,7 +772,8 @@ def PrepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
 
 </marlin>      
     """)
-    inputxml.close()
+    inputxmlf.close()
+    inputxml = 'default.xml'
   tree = ElementTree()
   try:
     tree.parse(inputxml)
