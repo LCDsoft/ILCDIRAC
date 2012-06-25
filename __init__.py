@@ -1,6 +1,8 @@
 # $HeadURL$
 # $Id$
-
+"""
+ILCDIRAC package, implements ILC/CLIC production and application specific stuff
+"""
 from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
@@ -8,7 +10,7 @@ __path__ = extend_path(__path__, __name__)
 
 majorVersion = 10
 minorVersion = 1
-patchLevel   = 0
+patchLevel   = 1
 preVersion   = 0
     
 version      = "v%sr%s" % ( majorVersion, minorVersion )
