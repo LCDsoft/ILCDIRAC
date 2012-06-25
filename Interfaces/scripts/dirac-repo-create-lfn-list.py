@@ -7,7 +7,7 @@ Created on Apr 22, 2010
 import DIRAC
 from DIRAC.Core.Base import Script
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-import os,sys
+import sys
 
 Script.parseCommandLine( ignoreErrors = False )
 args = sys.argv
@@ -19,7 +19,7 @@ if len(args) < 2:
   usage()
 
 repoLocation = args[1]
-dirac=DiracILC(True, repoLocation)
+dirac = DiracILC(True, repoLocation)
 
 exitCode = 0
 dirac.monitorRepository(False)
@@ -27,6 +27,6 @@ lfns = []
 lfns = dirac.retrieveRepositoryOutputDataLFNs()
 print "lfnlist=["
 for lfn in lfns :
-  print '"LFN:%s",'%lfn
+  print '"LFN:%s",' % lfn
 print "]"
 DIRAC.exit(exitCode)
