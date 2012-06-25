@@ -52,6 +52,7 @@ class ProductionJob(Job):
     self.evttype = ''
     self.datatype = ''
     self.machine = 'clic'
+    self.energycat = ''
     self.detector = ''
     self.currtrans = None
     self.description = ''
@@ -302,30 +303,30 @@ class ProductionJob(Job):
     """ This is called at creation: now that the workflow is created at the last minute,
     we need to add this also at the last minute
     """
-    self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
+    importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
     
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
     self._addParameter(dataUpload, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(self.importLine, '<MODULE>', 'UploadOutputData')
+    body = string.replace(importLine, '<MODULE>', 'UploadOutputData')
     dataUpload.setBody(body)
 
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
     self._addParameter(failoverRequest, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(self.importLine, '<MODULE>', 'FailoverRequest')
+    body = string.replace(importLine, '<MODULE>', 'FailoverRequest')
     failoverRequest.setBody(body)
 
     registerdata = ModuleDefinition('RegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
     self._addParameter(registerdata, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(self.importLine, '<MODULE>', 'RegisterOutputData')
+    body = string.replace(importLine, '<MODULE>', 'RegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
     self._addParameter(logUpload, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(self.importLine, '<MODULE>', 'UploadLogFile')
+    body = string.replace(importLine, '<MODULE>', 'UploadLogFile')
     logUpload.setBody(body)
 
     finalization = StepDefinition('Job_Finalization')

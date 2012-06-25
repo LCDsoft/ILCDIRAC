@@ -343,7 +343,8 @@ class Application(object):
     return moduledefinition
   
   def _getUserOutputDataModule(self):
-    """ This is separated as not all applications require user specific output data (i.e. GetSRMFile and Overlay). Only used in UserJobs.
+    """ This is separated as not all applications require user specific output data (i.e. GetSRMFile and Overlay). 
+    Only used in UserJobs.
     
     The UserJobFinalization only runs last. It's called every step, but is running only if last.
     """
@@ -373,7 +374,8 @@ class Application(object):
     pass
 
   def _userjobmodules(self, stepdefinition):
-    """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs (userJobFinalization for instance)
+    """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs 
+    (userJobFinalization for instance)
     """
     self._log.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
@@ -385,18 +387,21 @@ class Application(object):
     return S_ERROR('Not implemented')
   
   def _checkConsistency(self):
-    """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
+    """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular 
+    that all required parameters are defined.
     """
     return S_OK()
   
   def _checkFinalConsistency(self):
-    """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that all required parameters are defined.
+    """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular that 
+    all required parameters are defined.
     Some info are passed from the job to the applications: this is then used to check that it makes the app valid 
     """
     return S_OK()
 
   def _checkWorkflowConsistency(self):
-    """ Called from Job Class, overloaded by every class. Used to check the workflow consistency: linking between applications
+    """ Called from Job Class, overloaded by every class. Used to check the workflow consistency: linking between 
+    applications
     Should also call L{_checkRequiredApp} when needed.
     """
     return S_OK()
@@ -407,21 +412,24 @@ class Application(object):
     if self._inputapp:
       for app in self._inputapp:
         if not app in self._jobapps:
-          return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in question must be passed to job.append() before.")
+          return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in \
+          question must be passed to job.append() before.")
         else:
           self._linkedidx = self._jobapps.index(app)
           
     return S_OK()
   
   def _addBaseParameters(self, stepdefinition):
-    """ Add to step the default parameters: appname, version, steeringfile, (nbevts, Energy), LogFile, InputFile, OutputFile, OutputPath
+    """ Add to step the default parameters: appname, version, steeringfile, (nbevts, Energy), LogFile, InputFile, 
+    OutputFile, OutputPath
     """
     stepdefinition.addParameter(Parameter("applicationName",    "", "string", "", "", False, False, "Application Name"))
     stepdefinition.addParameter(Parameter("applicationVersion", "", "string", "", "", False, False, "Application Version"))
     stepdefinition.addParameter(Parameter("SteeringFile",       "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",     "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
-    stepdefinition.addParameter(Parameter("ForgetInput",     False, "boolean", "", "", False, False, "Do not overwrite input steering"))
+    stepdefinition.addParameter(Parameter("ForgetInput",     False, "boolean", "", "", False, False, 
+                                          "Do not overwrite input steering"))
     if len(self.outputFile):
       stepdefinition.addParameter(Parameter("OutputFile",       "", "string", "", "", False,  False, "Output File"))
     if len(self.outputDstFile):
@@ -429,11 +437,16 @@ class Application(object):
     if len(self.outputRecFile):
       stepdefinition.addParameter(Parameter("outputREC",       "", "string", "", "",  False,  False, "Output REC File"))
       
-    stepdefinition.addParameter(Parameter("OutputPath",         "", "string", "", "",  True, False, "Output File path on the grid"))
-    stepdefinition.addParameter(Parameter("outputPathREC",      "", "string", "", "",  True, False, "Output REC File path on the grid"))
-    stepdefinition.addParameter(Parameter("outputPathDST",      "", "string", "", "",  True, False, "Output DST File path on the grid"))
-    stepdefinition.addParameter(Parameter("OutputSE",           "", "string", "", "",  True, False, "Output File storage element"))
-    stepdefinition.addParameter(Parameter('listoutput',         [],   "list", "", "", False, False, "list of output file name"))
+    stepdefinition.addParameter(Parameter("OutputPath",         "", "string", "", "",  True, False, 
+                                          "Output File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathREC",      "", "string", "", "",  True, False, 
+                                          "Output REC File path on the grid"))
+    stepdefinition.addParameter(Parameter("outputPathDST",      "", "string", "", "",  True, False, 
+                                          "Output DST File path on the grid"))
+    stepdefinition.addParameter(Parameter("OutputSE",           "", "string", "", "",  True, False, 
+                                          "Output File storage element"))
+    stepdefinition.addParameter(Parameter('listoutput',         [],   "list", "", "", False, False, 
+                                          "list of output file name"))
     #Following should be workflow parameters
     #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, "Number of events to process"))
     #stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))

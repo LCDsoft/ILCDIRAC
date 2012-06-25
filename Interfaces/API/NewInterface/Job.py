@@ -1,5 +1,6 @@
 '''
-New Job class, for the new interface. This job class should not be used to create jobs. Use L{UserJob} or L{ProductionJob}.
+New Job class, for the new interface. This job class should not be used to create jobs. 
+Use L{UserJob} or L{ProductionJob}.
 
 @author: Stephane Poss
 @author: Remi Ete
@@ -8,10 +9,7 @@ New Job class, for the new interface. This job class should not be used to creat
 
 from DIRAC.Interfaces.API.Job                          import Job as DiracJob
 
-from ILCDIRAC.Interfaces.API.NewInterface.Application  import Application
 from DIRAC.Core.Workflow.Step                          import StepDefinition
-from DIRAC.Core.Workflow.Parameter                     import Parameter 
-
 
 from DIRAC import S_ERROR, S_OK, gLogger
 import string, inspect
@@ -71,7 +69,8 @@ class Job(DiracJob):
     return S_OK()
 
   def submit(self, dirac = None, mode = 'wms'):
-    """ Method to submit the job. Not doing anything by default, so that ProductionJobs cannot be submitted by mistake
+    """ Method to submit the job. Not doing anything by default, so that ProductionJobs 
+    cannot be submitted by mistake
     """
     return S_ERROR("Not available for this job class")
   
@@ -172,7 +171,6 @@ class Job(DiracJob):
 #      self.log.error("Failed to resolve parameters values: %s"%res['Message']) 
 #      return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
 #    
-#    ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
 #    res = application._resolveLinkedStepParameters(stepInstance)
 #    if not res['OK']:
 #      self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
@@ -191,7 +189,8 @@ class Job(DiracJob):
     return S_OK()
   
   def _addToWorkflow(self):
-    """ This is called just before submission. It creates the actual workflow. The linking of parameters can only be done here
+    """ This is called just before submission. It creates the actual workflow. 
+    The linking of parameters can only be done here
     """
     for application in self.applicationlist:
       #Start by defining step number 
@@ -236,7 +235,6 @@ class Job(DiracJob):
         self.log.error("Failed to resolve parameters values: %s"%res['Message']) 
         return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
     
-      ##stepInstance.setLink("InputFile",here lies the step name of the linked step, maybe get it from the application,"OutputFile")
       res = application._resolveLinkedStepParameters(stepInstance)
       if not res['OK']:
         self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
@@ -249,12 +247,14 @@ class Job(DiracJob):
     return S_OK()
   
   def _jobSpecificModules(self, application, step):
-    """ Returns the list of the job specific modules for the passed application. Is overloaded in ProductionJob class. UserJob uses the default.
+    """ Returns the list of the job specific modules for the passed application. Is overloaded in 
+    ProductionJob class. UserJob uses the default.
     """
     return application._userjobmodules(step)
 
   def _jobSpecificParams(self, application):
-    """ Every type of job has to reimplement this method. By default, just set the log file if not provided and the energy.
+    """ Every type of job has to reimplement this method. By default, just set the log file if not 
+    provided and the energy.
     """
     if not application.logfile:      
       logf = application.appname
