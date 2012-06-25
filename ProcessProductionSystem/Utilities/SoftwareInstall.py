@@ -5,6 +5,7 @@ Created on Feb 17, 2012
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
+from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC import S_OK,S_ERROR
 
 class SoftwareInstall(Application):
