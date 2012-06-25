@@ -18,10 +18,14 @@ class SoftwareInstall( Application ):
     self._moduledescription = 'Module to install software'
     self._importLocation = "ILCDIRAC.ProcessProductionSystem.Utilities"
 
-  def toInstall(self,apps):
+  def toInstall(self, apps):
+    """ Software to install
+    """
     self.appsToInstall = ";".join(apps)
 
-  def toRemove(self,apps):
+  def toRemove(self, apps):
+    """ Software to remove
+    """
     self.appsToRemove = ";".join(apps)
 
   def _applicationModule(self):

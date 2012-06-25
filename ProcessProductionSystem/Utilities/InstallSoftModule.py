@@ -1,4 +1,7 @@
 """ 
+Created by S Poss 
+
+May 2011
 """
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 
@@ -8,6 +11,8 @@ from DIRAC import S_OK, S_ERROR, gConfig, gLogger
 import os, shutil
 
 class InstallSoftModule():
+  """ Module to install software, not used yet
+  """
   def __init__(self):
     self.appsToRemoveStr = ''
     self.appsToInstallStr = ''
