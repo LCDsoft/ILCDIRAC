@@ -225,7 +225,9 @@ done
     #self.result = shellCall(0,comm,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
     
     ###calling mysql
-    mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s" % (self.MokkaTMPDir, self.rootpass, self.MokkaDumpFile)
+    mysqlcomm = "mysql  --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s < %s" % (self.MokkaTMPDir, 
+                                                                                              self.rootpass, 
+                                                                                              self.MokkaDumpFile)
     self.log.verbose("running %s" % mysqlcomm)
     self.result = shellCall(0, mysqlcomm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     resultTuple = self.result['Value']
@@ -267,7 +269,7 @@ done
     self.log.verbose('clean up db')
     MySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown" % (self.MokkaTMPDir, self.rootpass)
             
-    self.result = shellCall(0, MySQLcleanUpComm, callbackFunction = self.redirectLogOutput, bufferLimit=20971520)
+    self.result = shellCall(0, MySQLcleanUpComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     
     resultTuple = self.result['Value']
 
