@@ -780,7 +780,7 @@ from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>
       if self.basename:
         outputfile = self.basename+"_sim.slcio"
       else:
-        return self._reporError("Output file name not specified",__name__,**kwargs)
+        return self._reportError("Output file name not specified",__name__,**kwargs)
     if not outputpath:
       if self.basepath:
         outputpath = self.basepath+"SID/SIM"
