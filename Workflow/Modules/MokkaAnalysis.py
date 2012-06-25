@@ -81,7 +81,6 @@ class MokkaAnalysis(ModuleBase):
         
     if self.step_commons.has_key('ProcessID'):
       self.processID = self.step_commons['ProcessID']
-
       
     if not self.RandomSeed:
       if self.step_commons.has_key("RandomSeed"):
@@ -91,7 +90,6 @@ class MokkaAnalysis(ModuleBase):
     if self.workflow_commons.has_key("IS_PROD"):  
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
       
-        
     if self.step_commons.has_key('dbSlice'):
       self.dbSlice = self.step_commons['dbSlice']
       
@@ -111,7 +109,8 @@ class MokkaAnalysis(ModuleBase):
           self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))
           #if self.workflow_commons.has_key("WhizardOutput"):
-          #  self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
+          #  self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],
+          #                                    int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
           self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))]
@@ -177,7 +176,8 @@ class MokkaAnalysis(ModuleBase):
     self.log.info("Platform for job is %s" % ( self.systemConfig ) )
     self.log.info("Root directory for job is %s" % ( root ) )
 
-    mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "mokka", self.applicationVersion), '')
+    mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "mokka", 
+                                                                                    self.applicationVersion), '')
     if not mokkaDir:
       self.log.error('Could not get Tar ball name')
       return S_ERROR('Failed finding software directory')
@@ -201,7 +201,8 @@ class MokkaAnalysis(ModuleBase):
     myMokkaDir = res['Value']
       
     if not mySoftwareRoot:
-      self.log.error('Directory %s was not found in either the local area %s or shared area %s' % (mokkaDir, localArea, sharedArea))
+      self.log.error('Directory %s was not found in either the local area %s or shared area %s' % (mokkaDir, localArea, 
+                                                                                                   sharedArea))
       return S_ERROR('Failed to discover software')
 
 
@@ -294,8 +295,8 @@ class MokkaAnalysis(ModuleBase):
 
     ###Extra option depending on mokka version
     mokkaextraoption = ""
-    if self.applicationVersion not in ["v07-02", "v07-02fw", "v07-02fwhp", "MokkaRevision42", "MokkaRevision43", "MokkaRevision44",
-                                         "Revision45"]:
+    if self.applicationVersion not in ["v07-02", "v07-02fw", "v07-02fwhp", "MokkaRevision42", "MokkaRevision43", 
+                                       "MokkaRevision44", "Revision45"]:
       mokkaextraoption = "-U"
 
     scriptName = 'Mokka_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
@@ -323,7 +324,9 @@ class MokkaAnalysis(ModuleBase):
     #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
     script.write('declare -x G4NEUTRONHP_NEGLECT_DOPPLER=1\n')
     #### Do something with the additional environment variables
-    add_env = gConfig.getOptionsDict("/Operations/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (self.systemConfig, "mokka", self.applicationVersion))
+    add_env = gConfig.getOptionsDict("/Operations/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (self.systemConfig, 
+                                                                                                  "mokka", 
+                                                                                                  self.applicationVersion))
     if add_env['OK']:
       for key in add_env['Value'].keys():
         script.write('declare -x %s=%s/%s\n' % (key, mySoftwareRoot, add_env['Value'][key]))
@@ -359,7 +362,8 @@ class MokkaAnalysis(ModuleBase):
     script.write('echo =============================\n')
       
     ##Tear appart this mokka-wrapper
-    comm = '%s/Mokka %s -hlocalhost:%s/mysql.sock %s\n' % (myMokkaDir, mokkaextraoption, sqlwrapper.getMokkaTMPDIR(), mokkasteer)
+    comm = '%s/Mokka %s -hlocalhost:%s/mysql.sock %s\n' % (myMokkaDir, mokkaextraoption, sqlwrapper.getMokkaTMPDIR(), 
+                                                           mokkasteer)
     print "Command : %s" % (comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')

@@ -188,7 +188,8 @@ exit $?
     
     self.log.verbose("numberofeventsdict dict: %s" % numberofeventsdict)   
 
-    ##Now update the workflow_commons dict with the relation between filename and number of events: needed for the registerOutputData
+    ##Now update the workflow_commons dict with the relation between filename and number of events: needed for 
+    #the registerOutputData
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []

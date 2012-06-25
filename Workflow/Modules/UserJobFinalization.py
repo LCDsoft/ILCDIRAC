@@ -98,7 +98,8 @@ class UserJobFinalization(ModuleBase):
       if not type(specifiedSE) == type([]):
         self.userOutputSE = [i.strip() for i in specifiedSE.split(';')]
     else:
-      self.log.verbose('No UserOutputSE specified, using default value: %s' % (string.join(self.defaultOutputSE, ', ')))
+      self.log.verbose('No UserOutputSE specified, using default value: %s' % (string.join(self.defaultOutputSE, 
+                                                                                           ', ')))
       self.userOutputSE = self.defaultOutputSE
 
     if self.workflow_commons.has_key('UserOutputPath'):
@@ -118,7 +119,8 @@ class UserJobFinalization(ModuleBase):
     if currentStep == totalSteps:
       self.lastStep = True
     else:
-      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only at the last workflow step.' % (currentStep, totalSteps))            
+      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
+      at the last workflow step.' % (currentStep, totalSteps))            
         
     if not self.lastStep:
       return S_OK()    
@@ -130,7 +132,8 @@ class UserJobFinalization(ModuleBase):
 
     self.log.info('Initializing %s' % self.version)
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], 
+                                                                   self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
     
     if not self.userOutputData:
@@ -228,7 +231,8 @@ class UserJobFinalization(ModuleBase):
 
     #At this point can exit and see exactly what the module will upload
     if not self.enable:
-      self.log.info('Module is disabled by control flag, would have attempted to upload the following files %s' % string.join(final.keys(), ', '))
+      self.log.info('Module is disabled by control flag, would have attempted \
+      to upload the following files %s' % string.join(final.keys(), ', '))
       for fileName, metadata in final.items():
         self.log.info('--------%s--------' % fileName)
         for n, v in metadata.items():
@@ -245,7 +249,9 @@ class UserJobFinalization(ModuleBase):
     uploaded = []
     if not self.failoverTest:
       for fileName, metadata in final.items():
-        self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, string.join(metadata['resolvedSE'], ', ')))
+        self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
+                                                                                   string.join(metadata['resolvedSE'], 
+                                                                                               ', ')))
         result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], metadata['lfn'],
                                                           metadata['resolvedSE'], fileGUID = metadata['guid'], 
                                                           fileCatalog = self.userFileCatalog)
@@ -278,7 +284,8 @@ class UserJobFinalization(ModuleBase):
       metadata['resolvedSE'] = self.failoverSEs
       result = failoverTransfer.transferAndRegisterFileFailover(fileName, metadata['localpath'], metadata['lfn'],
                                                                 targetSE, metadata['resolvedSE'], 
-                                                                fileGUID = metadata['guid'], fileCatalog = self.userFileCatalog)
+                                                                fileGUID = metadata['guid'], 
+                                                                fileCatalog = self.userFileCatalog)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
@@ -314,7 +321,8 @@ class UserJobFinalization(ModuleBase):
     for lfn, repSE in replication.items():
       result = rm.replicateAndRegister(lfn, repSE, catalog = self.userFileCatalog)
       if not result['OK']:
-        self.log.info('Replication failed with below error but file already exists in Grid storage with at least one replica:\n%s' % (result))
+        self.log.info('Replication failed with below error but file already exists in Grid storage with \
+        at least one replica:\n%s' % (result))
 
     self.workflow_commons['Request'] = self.request
     

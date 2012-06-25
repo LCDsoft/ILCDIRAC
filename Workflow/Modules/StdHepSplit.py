@@ -102,7 +102,8 @@ class StdHepSplit(ModuleBase):
     self.log.info("Will rename all files using '%s' as base." % prefix)
 
     # Setting up script
-    splitDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "stdhepsplit", self.applicationVersion), '')
+    splitDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "stdhepsplit", 
+                                                                                    self.applicationVersion), '')
     splitDir = splitDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(splitDir)
     if not res['OK']:
@@ -193,7 +194,8 @@ exit $?
     
     self.log.verbose("numberofeventsdict dict: %s" % numberofeventsdict)   
 
-    ##Now update the workflow_commons dict with the relation between filename and number of events: needed for the registerOutputData
+    ##Now update the workflow_commons dict with the relation between filename and number of events: 
+    #needed for the registerOutputData
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []

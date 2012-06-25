@@ -64,7 +64,9 @@ class PythiaAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, self.applicationName, self.applicationVersion), '')
+    appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, 
+                                                                                 self.applicationName, 
+                                                                                 self.applicationVersion), '')
     appDir = appDir.replace(".tgz","").replace(".tar.gz","")
 
     res = getSoftwareFolder(appDir)

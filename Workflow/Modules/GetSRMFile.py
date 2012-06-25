@@ -26,7 +26,7 @@ class GetSRMFile(ModuleBase):
     ModuleBase.__init__(self)
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('GetSRMFile')
-    self.rm = ReplicaManager()
+    self.repman = ReplicaManager()
     self.srmfiles = []
     self.files = []
     self.counter = 1
@@ -85,9 +85,9 @@ class GetSRMFile(ModuleBase):
       downloadDir = tempfile.mkdtemp(prefix = 'InputData_%s' % (self.counter), dir = start)
       os.chdir(downloadDir)
 
-      result = self.rm.getStorageFile(filed['file'], filed['site'], singleFile = True)
+      result = self.repman.getStorageFile(filed['file'], filed['site'], singleFile = True)
       if not result['OK']:
-        result = self.rm.getStorageFile(filed['file'], filed['site'], singleFile = True)
+        result = self.repman.getStorageFile(filed['file'], filed['site'], singleFile = True)
       os.chdir(start)
       if not result['OK']:
         return result

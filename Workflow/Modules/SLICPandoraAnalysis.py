@@ -78,7 +78,7 @@ class SLICPandoraAnalysis (ModuleBase):
           self.workflow_commons["Luminosity"] = res["lumi"]
         
     if self.step_commons.has_key('EvtsToProcess'):
-        self.NumberOfEvents = self.step_commons['EvtsToProcess']
+      self.NumberOfEvents = self.step_commons['EvtsToProcess']
           
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
@@ -108,7 +108,9 @@ class SLICPandoraAnalysis (ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
     
-    slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "slicpandora", self.applicationVersion), '')
+    slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+                                                                                          "slicpandora", 
+                                                                                          self.applicationVersion), '')
     slicPandoraDir = slicPandoraDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(slicPandoraDir)
     if not res['OK']:
