@@ -19,12 +19,12 @@ from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 AGENT_NAME = 'ProcessProduction/SoftwareManagementAgent'
 
-class SoftwareManagementAgent(AgentModule):
+class SoftwareManagementAgent( AgentModule ):
   """ Agent to run software management things
   """
   def initialize(self):
     self.pollingTime = self.am_getOption('PollingTime',86400)
-    gMonitor.registerActivity("Iteration","Agent Loops",AGENT_NAME,"Loops/min",gMonitor.OP_SUM)
+    gMonitor.registerActivity("Iteration", "Agent Loops", AGENT_NAME, "Loops/min", gMonitor.OP_SUM)
     self.ppc = ProcessProdClient()
     self.dirac = DiracILC()
     self.diracadmin = DiracAdmin()
@@ -36,26 +36,26 @@ class SoftwareManagementAgent(AgentModule):
   def execute(self):
     """  First we update the site list and banned site
     """
-    res = getProxyInfo(False,False)
+    res = getProxyInfo(False, False)
     if not res['OK']:
-      self.log.error("submitTasks: Failed to determine credentials for submission",res['Message'])
+      self.log.error("submitTasks: Failed to determine credentials for submission", res['Message'])
       return res
     proxyInfo = res['Value']
     owner = proxyInfo['username']
     ownerGroup = proxyInfo['group']
-    self.log.info("submitTasks: Jobs will be submitted with the credentials %s:%s" % (owner,ownerGroup))    
+    self.log.info("submitTasks: Jobs will be submitted with the credentials %s:%s" % (owner, ownerGroup))    
     
-    sites= self.diracadmin.getSiteMask()['Value']
+    sites = self.diracadmin.getSiteMask()['Value']
     for site in sites:
-      res =self.ppc.changeSiteStatus({'SiteName':site,'Status':'OK'})
+      res = self.ppc.changeSiteStatus( {'SiteName' : site, 'Status' : 'OK'} )
       if not res['OK']:
-        self.log.error('Cannot add or update site %s'%site)
+        self.log.error('Cannot add or update site %s' % site)
         
     banned_sites = self.diracadmin.getBannedSites()['Value']
     for banned_site in banned_sites:
-      self.ppc.changeSiteStatus({'SiteName':banned_site,'Status':'Banned'})
+      self.ppc.changeSiteStatus( {'SiteName' : banned_site, 'Status' : 'Banned'} )
       if not res['OK']:
-        self.log.error('Cannot mark as banned site %s'%site)    
+        self.log.error('Cannot mark as banned site %s' % site)    
         
     ##Then we need to get new installation tasks
     res = self.ppc.getInstallSoftwareTask()
@@ -63,15 +63,15 @@ class SoftwareManagementAgent(AgentModule):
       self.log.error('Failed to obtain task')
     task_dict = res['Value']
     for softdict in task_dict.values():
-      self.log.info('Will install %s %s at %s'%(softdict['AppName'],softdict['AppVersion'],softdict['Sites']))
+      self.log.info('Will install %s %s at %s' % (softdict['AppName'], softdict['AppVersion'], softdict['Sites']))
       for site in softdict['Sites']:
         j = UserJob()
         j.setSystemConfig(softdict['Platform'])
         j.dontPromptMe()
         j.setDestination(site)
         j.setJobGroup("Installation")
-        j.setName('install_%s'%site)
-        j._addSoftware(softdict['AppName'],softdict['AppVersion'])
+        j.setName('install_%s' % site)
+        j._addSoftware(softdict['AppName'], softdict['AppVersion'])
         #Add the application here somehow.
         res  = j.append(SoftwareInstall())
         if not res['OK']:
@@ -91,7 +91,7 @@ class SoftwareManagementAgent(AgentModule):
         jobdict['Site'] = site
         res = self.ppc.addOrUpdateJob(jobdict)
         if not res['OK']:
-          self.log.error('Could not add job %s: %s'%(jobdict['JobID'],res['Message']))
+          self.log.error('Could not add job %s: %s' % (jobdict['JobID'], res['Message']))
     
     ##Monitor jobs
     jobs = {}
@@ -107,9 +107,9 @@ class SoftwareManagementAgent(AgentModule):
           job['Status'] = jobstatuses['JobID']['Status']
           res = self.ppc.addOrUpdateJob(job)
           if not res['OK']:
-            self.log.error("Failed to updated job %s: %s"%(job['JobID'],res['Message']))
+            self.log.error("Failed to updated job %s: %s" % (job['JobID'], res['Message']))
         else:
-          self.log.error("Failed to update job %s status"%job['JobID'])
+          self.log.error("Failed to update job %s status" % job['JobID'])
           
     return S_OK()
   

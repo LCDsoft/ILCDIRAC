@@ -68,12 +68,12 @@ class DataRecoveryAgent( AgentModule ):
     #Configuration settings
     self.enableFlag = True
 #    self.enableFlag = self.am_getOption('EnableFlag',False)
-    self.log.info('Enable flag is %s' %self.enableFlag)  
+    self.log.info('Enable flag is %s' % self.enableFlag)  
     self.removalOKFlag = True
     
-    transformationTypes = ['MCReconstruction','MCSimulation','MCReconstruction_Overlay','Merge']
-    transformationStatus = ['Active','Completing']
-    fileSelectionStatus = ['Assigned','MaxReset']
+    transformationTypes = ['MCReconstruction', 'MCSimulation', 'MCReconstruction_Overlay', 'Merge']
+    transformationStatus = ['Active', 'Completing']
+    fileSelectionStatus = ['Assigned', 'MaxReset']
     updateStatus = 'Unused'
     wmsStatusList = ['Failed']
         
@@ -82,19 +82,19 @@ class DataRecoveryAgent( AgentModule ):
 
     transformationDict = {}
     for transStatus in transformationStatus:
-      result = self.getEligibleTransformations(transStatus,transformationTypes)
+      result = self.getEligibleTransformations(transStatus, transformationTypes)
       if not result['OK']:
         self.log.error(result)
-        return S_ERROR('Could not obtain eligible transformations for status "%s"' %(transStatus))
+        return S_ERROR('Could not obtain eligible transformations for status "%s"' % (transStatus))
       
       if not result['Value']:
-        self.log.info('No "%s" transformations of types %s to process.' %(transStatus,string.join(transformationTypes,', ')))
+        self.log.info('No "%s" transformations of types %s to process.' % (transStatus, string.join(transformationTypes, ', ')))
         continue
 
       transformationDict.update(result['Value'])
 
-    self.log.info('Selected %s transformations of types %s' %(len(transformationDict.keys()),string.join(transformationTypes,', ')))
-    self.log.verbose('The following transformations were selected out of %s:\n%s' %(string.join(transformationTypes,', '),string.join(transformationDict.keys(),', ')))
+    self.log.info('Selected %s transformations of types %s' % (len(transformationDict.keys()), string.join(transformationTypes, ', ')))
+    self.log.verbose('The following transformations were selected out of %s:\n%s' % (string.join(transformationTypes, ', '), string.join(transformationDict.keys(), ', ')))
 
     trans = []
     #initially this was useful for restricting the considered list
@@ -112,38 +112,38 @@ class DataRecoveryAgent( AgentModule ):
     ########## Uncomment for debugging      
     
     if trans:
-      self.log.info('Skipping all transformations except %s' %(string.join(trans,', ')))
+      self.log.info('Skipping all transformations except %s' % (string.join(trans, ', ')))
           
-    for transformation,typeName in transformationDict.items():
+    for transformation, typeName in transformationDict.items():
       if trans:
         if not transformation in trans:
           continue
       if ignoreLessThan:
-        if int(ignoreLessThan)>int(transformation):
-          self.log.verbose('Ignoring transformation %s ( is less than specified limit %s )' %(transformation,ignoreLessThan))
+        if int(ignoreLessThan) > int(transformation):
+          self.log.verbose('Ignoring transformation %s ( is less than specified limit %s )' % (transformation, ignoreLessThan))
           continue
 
-      self.log.info('='*len('Looking at transformation %s type %s:' %(transformation,typeName)))
-      self.log.info('Looking at transformation %s:' %(transformation))
+      self.log.info('='*len('Looking at transformation %s type %s:' % (transformation, typeName)))
+      self.log.info('Looking at transformation %s:' % (transformation))
 
-      result = self.selectTransformationFiles(transformation,fileSelectionStatus)
+      result = self.selectTransformationFiles(transformation, fileSelectionStatus)
       if not result['OK']:
         self.log.error(result)
-        self.log.error('Could not select files for transformation %s' %transformation)
+        self.log.error('Could not select files for transformation %s' % transformation)
         continue
   
       if not result['Value']:
-        self.log.info('No files in status %s selected for transformation %s' %(string.join(fileSelectionStatus,', '),transformation))
+        self.log.info('No files in status %s selected for transformation %s' % (string.join(fileSelectionStatus, ', '), transformation))
         continue
     
       fileDict = result['Value']      
-      result = self.obtainWMSJobIDs(transformation,fileDict,selectDelay,wmsStatusList)
+      result = self.obtainWMSJobIDs(transformation, fileDict, selectDelay, wmsStatusList)
       if not result['OK']:
         self.log.error(result)
-        self.log.error('Could not obtain WMS jobIDs for files of transformation %s' %(transformation))
+        self.log.error('Could not obtain WMS jobIDs for files of transformation %s' % (transformation))
         continue
       if not result['Value']:
-        self.log.info('No eligible WMS jobIDs found for %s files in list:\n%s ...' %(len(fileDict.keys()),fileDict.keys()[0]))
+        self.log.info('No eligible WMS jobIDs found for %s files in list:\n%s ...' % (len(fileDict.keys()), fileDict.keys()[0]))
         continue
     
       jobFileDict = result['Value']
@@ -152,10 +152,10 @@ class DataRecoveryAgent( AgentModule ):
         fileCount += len(lfnList)
       
       if not fileCount:
-        self.log.info('No files were selected for transformation %s after examining WMS jobs.' %transformation)
+        self.log.info('No files were selected for transformation %s after examining WMS jobs.' % transformation)
         continue
       
-      self.log.info('%s files are selected after examining related WMS jobs' %(fileCount))   
+      self.log.info('%s files are selected after examining related WMS jobs' % (fileCount))   
       result = self.checkOutstandingRequests(jobFileDict)
       if not result['OK']:
         self.log.error(result)
@@ -170,8 +170,8 @@ class DataRecoveryAgent( AgentModule ):
       for lfnList in jobFileNoRequestsDict.values():
         fileCount += len(lfnList)
       
-      self.log.info('%s files are selected after removing any relating to jobs with pending requests' %(fileCount))
-      result = self.checkDescendents(transformation,fileDict,jobFileNoRequestsDict)
+      self.log.info('%s files are selected after removing any relating to jobs with pending requests' % (fileCount))
+      result = self.checkDescendents(transformation, fileDict, jobFileNoRequestsDict)
       if not result['OK']:
         self.log.error(result)
         continue
@@ -183,7 +183,7 @@ class DataRecoveryAgent( AgentModule ):
       jobsWithFilesProcessed = result['Value']['filesprocessed']
 ##       jobsWithProblematicFiles = result['Value']['jobfiledictproblematic']
 ##       jobsWithDescendentsInBK = result['Value']['replicaflagproblematic']
-      self.log.info('====> Transformation %s total jobs that can be updated now: %s' %(transformation,len(jobsWithFilesOKToUpdate.keys())))
+      self.log.info('====> Transformation %s total jobs that can be updated now: %s' % (transformation, len(jobsWithFilesOKToUpdate.keys())))
 ##       self.log.info('====> Transformation %s total jobs with problematic descendent files but no replica flags: %s' %(transformation,len(jobsWithProblematicFiles.keys())))
 ##       self.log.info('====> Transformation %s total jobs with problematic descendent files having BK replica flags: %s' %(transformation,len(jobsWithDescendentsInBK.keys())))
             
@@ -192,21 +192,21 @@ class DataRecoveryAgent( AgentModule ):
         filesToUpdateUnused += fileList
       
       if filesToUpdateUnused:
-        result = self.updateFileStatus(transformation,filesToUpdateUnused,updateStatus)
+        result = self.updateFileStatus(transformation, filesToUpdateUnused, updateStatus)
         if not result['OK']:
-          self.log.error('Recoverable files were not updated with result:\n%s' %(result))
+          self.log.error('Recoverable files were not updated with result:\n%s' % (result))
           continue          
       else:
-        self.log.info('There are no files without problematic descendents to update for production %s in this cycle' %transformation)              
+        self.log.info('There are no files without problematic descendents to update for production %s in this cycle' % transformation)              
 
       
       if jobsWithFilesProcessed:
-        result = self.updateFileStatus(transformation,jobsWithFilesProcessed,'Processed')
+        result = self.updateFileStatus(transformation, jobsWithFilesProcessed, 'Processed')
         if not result['OK']:
-          self.log.error('Recoverable files were not updated with result:\n%s' %(result))
+          self.log.error('Recoverable files were not updated with result:\n%s' % (result))
           continue          
       else:
-        self.log.info('There are no files processed to update for production %s in this cycle' %transformation)              
+        self.log.info('There are no files processed to update for production %s in this cycle' % transformation)              
       
 ##       if problematicFiles:
 ##         if self.removalOKFlag:
@@ -242,49 +242,49 @@ class DataRecoveryAgent( AgentModule ):
 ##           self.log.info('Job %s, Files %s' %(n,v))
 
     if not self.enableFlag:
-      self.log.info('%s is disabled by configuration option EnableFlag\ntherefore no "one-way" operations such as ProductionDB updates are performed.' %(AGENT_NAME))
+      self.log.info('%s is disabled by configuration option EnableFlag\ntherefore no "one-way" operations such as ProductionDB updates are performed.' % (AGENT_NAME))
 
     return S_OK()
 
   #############################################################################
-  def getEligibleTransformations(self,status,typeList):
+  def getEligibleTransformations(self, status, typeList):
     """ Select transformations of given status and type.
     """
-    res = self.prodDB.getTransformations(condDict = {'Status':status,'Type':typeList})
+    res = self.prodDB.getTransformations(condDict = {'Status' : status, 'Type' : typeList})
     self.log.debug(res)
     if not res['OK']:
       return res
     transformations = {}
     for prod in res['Value']:
       prodID = prod['TransformationID']
-      transformations[str(prodID)]=prod['Type']
+      transformations[str(prodID)] = prod['Type']
     return S_OK(transformations)
   
   #############################################################################
-  def selectTransformationFiles(self,transformation,statusList):
+  def selectTransformationFiles(self, transformation, statusList):
     """ Select files, production jobIDs in specified file status for a given transformation.
     """
     #Until a query for files with timestamp can be obtained must rely on the
     #WMS job last update
-    res = self.prodDB.getTransformationFiles(condDict={'TransformationID':transformation,'Status':statusList})
+    res = self.prodDB.getTransformationFiles(condDict = {'TransformationID' : transformation, 'Status' : statusList})
     self.log.debug(res)
     if not res['OK']:
       return res
     resDict = {}
     for fileDict in res['Value']:
       if not fileDict.has_key('LFN') or not fileDict.has_key(self.taskIDName) or not fileDict.has_key('LastUpdate'):
-        self.log.info('LFN, %s and LastUpdate are mandatory, >=1 are missing for:\n%s' %(self.taskIDName,fileDict))
+        self.log.info('LFN, %s and LastUpdate are mandatory, >=1 are missing for:\n%s' % (self.taskIDName, fileDict))
         continue
       lfn = fileDict['LFN']
       jobID = fileDict[self.taskIDName]
       #lastUpdate = fileDict['LastUpdate']
       resDict[lfn] = jobID
     if resDict:
-      self.log.info('Selected %s files overall for transformation %s' %(len(resDict.keys()),transformation))
+      self.log.info('Selected %s files overall for transformation %s' % (len(resDict.keys()), transformation))
     return S_OK(resDict)
   
   #############################################################################
-  def obtainWMSJobIDs(self,transformation,fileDict,selectDelay,wmsStatusList):
+  def obtainWMSJobIDs(self, transformation, fileDict, selectDelay, wmsStatusList):
     """ Group files by the corresponding WMS jobIDs, check the corresponding
         jobs have not been updated for the delay time.  Can't get into any 
         mess because we start from files only in MaxReset / Assigned and check
@@ -293,26 +293,27 @@ class DataRecoveryAgent( AgentModule ):
         for example) that will not be touched.
     """
     prodJobIDs = uniqueElements(fileDict.values())
-    self.log.info('The following %s production jobIDs apply to the selected files:\n%s' %(len(prodJobIDs),prodJobIDs))
+    self.log.info('The following %s production jobIDs apply to the selected files:\n%s' % (len(prodJobIDs), prodJobIDs))
 
     jobFileDict = {}
-    condDict = {'TransformationID':transformation,self.taskIDName:prodJobIDs}
+    condDict = {'TransformationID' : transformation, self.taskIDName : prodJobIDs}
     delta = datetime.timedelta( hours = selectDelay )
     now = dateTime()
     olderThan = now-delta
 
-    res = self.prodDB.getTransformationTasks(condDict=condDict,older=olderThan,timeStamp='LastUpdateTime',inputVector=True)
+    res = self.prodDB.getTransformationTasks(condDict = condDict, older = olderThan,
+                                             timeStamp = 'LastUpdateTime', inputVector = True)
     self.log.debug(res)
     if not res['OK']:
       self.log.error('getTransformationTasks returned an error:\n%s')
       return res
     
     for jobDict in res['Value']:
-      missingKey=False
-      for key in [self.taskIDName,self.externalID,'LastUpdateTime',self.externalStatus,'InputVector']:
+      missingKey = False
+      for key in [self.taskIDName, self.externalID, 'LastUpdateTime', self.externalStatus, 'InputVector']:
         if not jobDict.has_key(key):
-          self.log.info('Missing key %s for job dictionary, the following is available:\n%s' %(key,jobDict))
-          missingKey=True
+          self.log.info('Missing key %s for job dictionary, the following is available:\n%s' % (key, jobDict))
+          missingKey = True
           continue
       
       if missingKey:
@@ -326,28 +327,28 @@ class DataRecoveryAgent( AgentModule ):
       jobInputData = [lfn.replace('LFN:','') for lfn in jobInputData.split(';')]
       
       if not int(wmsID):
-        self.log.info('Prod job %s status is %s (ID = %s) so will not recheck with WMS' %(job,wmsStatus,wmsID))
+        self.log.info('Prod job %s status is %s (ID = %s) so will not recheck with WMS' %(job, wmsStatus, wmsID))
         continue
       
-      self.log.info('Job %s, prod job %s last update %s, production management system status %s' %(wmsID,job,lastUpdate,wmsStatus))
+      self.log.info('Job %s, prod job %s last update %s, production management system status %s' % (wmsID, job, lastUpdate, wmsStatus))
       #Exclude jobs not having appropriate WMS status - have to trust that production management status is correct        
       if not wmsStatus in wmsStatusList:
-        self.log.info('Job %s is in status %s, not %s so will be ignored' %(wmsID,wmsStatus,string.join(wmsStatusList,', ')))
+        self.log.info('Job %s is in status %s, not %s so will be ignored' % (wmsID, wmsStatus, string.join(wmsStatusList, ', ')))
         continue
         
       finalJobData = []
       #Must map unique files -> jobs in expected state
       for lfn,prodID in fileDict.items():
-        if int(prodID)==int(job):
+        if int(prodID) == int(job):
           finalJobData.append(lfn)
       
-      self.log.info('Found %s files for job %s' %(len(finalJobData),job))    
-      jobFileDict[wmsID]=finalJobData
+      self.log.info('Found %s files for job %s' % (len(finalJobData), job))    
+      jobFileDict[wmsID] = finalJobData
  
     return S_OK(jobFileDict)
   
   #############################################################################
-  def checkOutstandingRequests(self,jobFileDict):
+  def checkOutstandingRequests(self, jobFileDict):
     """ Before doing anything check that no outstanding requests are pending
         for the set of WMS jobIDs.
     """
@@ -362,7 +363,7 @@ class DataRecoveryAgent( AgentModule ):
     
     for jobID in result['Value'].keys():
       del jobFileDict[str(jobID)]  
-      self.log.info('Removing jobID %s from consideration until requests are completed' %(jobID))
+      self.log.info('Removing jobID %s from consideration until requests are completed' % (jobID))
     
     return S_OK(jobFileDict)
   
@@ -449,13 +450,13 @@ class DataRecoveryAgent( AgentModule ):
 ##     return S_OK(result)
 
   ############################################################################
-  def checkDescendents(self,transformation,filedict,jobFileDict):
+  def checkDescendents(self, transformation, filedict, jobFileDict):
     """ look that all jobs produced, or not output
     """
-    res = self.prodDB.getTransformationParameters(transformation,['Body'])
+    res = self.prodDB.getTransformationParameters(transformation, ['Body'])
     if not res['OK']:
-        self.log.error('Could not get Body from TransformationDB')
-        return res
+      self.log.error('Could not get Body from TransformationDB')
+      return res
     body = res['Value']
     workflow = fromXMLString(body)
     workflow.resolveGlobalVars()
@@ -463,49 +464,49 @@ class DataRecoveryAgent( AgentModule ):
     olist = []
     jtype = workflow.findParameter('JobType')
     if not jtype:
-        self.log.error('Type for transformation %d was not defined'%transformation)
-        return S_ERROR('Type for transformation %d was not defined'%transformation)
+      self.log.error('Type for transformation %d was not defined' % transformation)
+      return S_ERROR('Type for transformation %d was not defined' % transformation)
     for step in workflow.step_instances:
-        param = step.findParameter('listoutput')
-        if not param:
-            continue
-        olist.extend(param.value)
+      param = step.findParameter('listoutput')
+      if not param:
+        continue
+      olist.extend(param.value)
     expectedlfns = []
     contactfailed = []
     fileprocessed = []
-    for filep,task in filedict.items():
-        commons = {}
-        commons['outputList'] = olist
-        commons['PRODUCTION_ID'] = transformation
-        commons['JOB_ID'] = task
-        commons['JobType'] = jtype
-        out = constructProductionLFNs(commons)
-        expectedlfns = out['Value']['ProductionOutputData']
-        res = self.replicaManager.getCatalogFileMetadata(expectedlfns)
-        if not res['OK']:
-          self.log.error('Getting metadata failed')
-          contactfailed.append(filep)
-          continue
-        success = res['Value']['Successful'].keys()
-        failed = res['Value']['Failed'].keys()
-        if len(success) and not len(failed):
-          fileprocessed.append(filep)
+    for filep, task in filedict.items():
+      commons = {}
+      commons['outputList'] = olist
+      commons['PRODUCTION_ID'] = transformation
+      commons['JOB_ID'] = task
+      commons['JobType'] = jtype
+      out = constructProductionLFNs(commons)
+      expectedlfns = out['Value']['ProductionOutputData']
+      res = self.replicaManager.getCatalogFileMetadata(expectedlfns)
+      if not res['OK']:
+        self.log.error('Getting metadata failed')
+        contactfailed.append(filep)
+        continue
+      success = res['Value']['Successful'].keys()
+      failed = res['Value']['Failed'].keys()
+      if len(success) and not len(failed):
+        fileprocessed.append(filep)
 
     for filep in fileprocessed:
       if jobFileDict.has_key(filep):
         del jobFileDict[filep]
-    result={'filesprocessed':fileprocessed,'jobfiledictok':jobFileDict}    
+    result = {'filesprocessed' : fileprocessed, 'jobfiledictok' : jobFileDict}    
     return S_OK(result)
 
   ############################################################################
-  def removeOutputs(self,problematicFiles):
+  def removeOutputs(self, problematicFiles):
     """ Remove outputs from any catalog / storages.
     """
     if not self.enableFlag:
-      self.log.info('Enable flag False, would attempt to remove %s file(s)' %(len(problematicFiles)))
+      self.log.info('Enable flag False, would attempt to remove %s file(s)' % (len(problematicFiles)))
       return S_OK()
     
-    self.log.info('Attempting to remove %s problematic files' %(len(problematicFiles)))
+    self.log.info('Attempting to remove %s problematic files' % (len(problematicFiles)))
     result = self.replicaManager.removeFile(problematicFiles) #this does take a list ;)
     if not result['OK']:
       self.log.error(result)
@@ -515,19 +516,19 @@ class DataRecoveryAgent( AgentModule ):
       self.log.error(result)
       return S_ERROR(result['Value']['Failed'])
         
-    self.log.info('The following problematic files were successfully removed:\n%s' %(string.join(problematicFiles,'\n')))
+    self.log.info('The following problematic files were successfully removed:\n%s' % (string.join(problematicFiles, '\n')))
     return S_OK()
 
   #############################################################################
-  def updateFileStatus(self,transformation,fileList,fileStatus):
+  def updateFileStatus(self, transformation, fileList, fileStatus):
     """ Update file list to specified status.
     """
     if not self.enableFlag:
-      self.log.info('Enable flag is False, would update  %s files to "%s" status for %s' %(len(fileList),fileStatus,transformation))
+      self.log.info('Enable flag is False, would update  %s files to "%s" status for %s' % (len(fileList), fileStatus, transformation))
       return S_OK()
 
-    self.log.info('Updating %s files to "%s" status for %s' %(len(fileList),fileStatus,transformation))
-    result = self.prodDB.setFileStatusForTransformation(int(transformation),fileStatus,fileList,force=True)
+    self.log.info('Updating %s files to "%s" status for %s' % (len(fileList), fileStatus, transformation))
+    result = self.prodDB.setFileStatusForTransformation(int(transformation), fileStatus, fileList, force = True)
     self.log.debug(result)
     if not result['OK']:
       self.log.error(result)
@@ -537,7 +538,7 @@ class DataRecoveryAgent( AgentModule ):
       return result
     
     msg = result['Value']['Successful']
-    for lfn,message in msg.items():
-      self.log.info('%s => %s' %(lfn,message))
+    for lfn, message in msg.items():
+      self.log.info('%s => %s' % (lfn, message))
     
     return S_OK()
