@@ -6,9 +6,9 @@
 """
 __RCSID__ = " $Id: $ "
 
-from DIRAC                                              import gLogger, gConfig, S_OK, S_ERROR
+from DIRAC                                              import S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
-from types import *
+from types import StringTypes, ListType, TupleType, LongType, IntType, DictType, BooleanType
 
 from ILCDIRAC.ProcessProductionSystem.DB.ProcessDB import ProcessDB
 
@@ -116,14 +116,14 @@ class ProcessManagerHandler(RequestHandler):
 #              Change methods
 #######################################################################
   types_updateCrossSection = [DictType]
-  def export_updateCrossSection(self,ProcessDict):
+  def export_updateCrossSection(self, ProcessDict):
     """ Update the cross section for the given process and software version
     """
     if not (ProcessDict.has_key('ProdID') and ProcessDict.has_key('AppName') and ProcessDict.has_key('CrossSection')):
       return S_ERROR("Missing essential dictionary info")
     return processDB.updateCrossSection(ProcessDict)
     
-  types_changeSoftwareStatus = [StringTypes,StringTypes,StringTypes,StringTypes,BooleanType]
+  types_changeSoftwareStatus = [StringTypes, StringTypes, StringTypes, StringTypes, BooleanType]
   def export_changeSoftwareStatus(self,AppName, AppVersion, Platform, Comment, Status = False):
     """ Change the status of a software, by feault to False
     """

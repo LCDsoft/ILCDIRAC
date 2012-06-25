@@ -6,9 +6,9 @@
 """
 __RCSID__ = " $Id: $ "
 
-from DIRAC                                                             import gConfig, gLogger, S_OK, S_ERROR
+from DIRAC                                                             import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.DB                                                import DB
-from DIRAC.Core.Utilities.List                                         import stringListToString, intListToString, sortList
+from DIRAC.Core.Utilities.List                                         import intListToString
 
 class ProcessDB ( DB ):
   def __init__( self, maxQueueSize = 10 ):
@@ -706,7 +706,7 @@ class ProcessDB ( DB ):
     
     req = "SELECT idProcessData,CrossSection,Files FROM ProcessData WHERE \
            idProcessData IN (SELECT idProcessData FROM Productions \
-           WHERE ProdID=%s AND idSoftware = %d);"%( ProdID, SoftwareID)
+           WHERE ProdID=%s AND idSoftware = %d);" % ( ProdID, SoftwareID)
     res = self._query( req, connection )
     if not res['OK']:
       return S_ERROR("Could not find matching ProcessData for Production %s" % ProdID)
@@ -739,7 +739,7 @@ class ProcessDB ( DB ):
     new_status='FALSE'
     if Status:
       new_status='TRUE'
-    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware=%s;"%(new_status,Comment,idsoft)
+    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware=%s;" % (new_status, Comment, idsoft)
     res = self._update( req, connection )
     if not res['OK']:
       return res
@@ -749,8 +749,8 @@ class ProcessDB ( DB ):
       res = self._query( req, connection )
       if not res['OK'] or not len(res['Value']):
         return S_ERROR('Could not find any dependency')
-      for id in [t[0] for t in res['Value']] :
-        req = "UPDATE Software SET Valid=FALSE,UpdateComment='Dependency inheritance',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware = %s;"%id
+      for sid in [t[0] for t in res['Value']] :
+        req = "UPDATE Software SET Valid=FALSE,UpdateComment='Dependency inheritance',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware = %s;" % sid
         res = self._update( req, connection )
         if not res['OK']:
           return res
@@ -761,7 +761,7 @@ class ProcessDB ( DB ):
     if not sitedict.has_key('Status') or not sitedict.has_key('SiteName'):
       return S_ERROR("Missing mandatory key Status or SiteDict")
     if not sitedict['Status'] in self.SiteStatuses:
-      return S_ERROR("Status %s is not a valid site status"%sitedict['Status'])
+      return S_ERROR("Status %s is not a valid site status" % sitedict['Status'])
     
     res = self._getFields('Sites',['SiteName'],['SiteName'],[sitedict['SiteName']], conn = connection)
     rows = res['Value']
