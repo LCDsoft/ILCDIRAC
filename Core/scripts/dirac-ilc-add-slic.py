@@ -2,9 +2,10 @@
 Upload SLIC version and publish
 """
 from DIRAC.Core.Base import Script
-import os
+import os, sys, shutil
 version = ''
 tarballloc = ''
+comment = ''
 
 Script.registerSwitch("V:", "version=", "version")
 Script.registerSwitch("T:", "tarball=", "path to local tar ball")
@@ -16,20 +17,22 @@ switches = Script.getUnprocessedSwitches()
 for switch in switches:
   opt = switch[0]
   arg = switch[1]
-  if opt in ('v', 'version'):
+  if opt in ('V', 'version'):
     version  = arg
-  if opt in ('t', 'tarball'):
+  if opt in ('T', 'tarball'):
     tarballloc = arg
+  if opt in ('C', 'comment'):
+    comment = arg
 
 if not tarballloc and not version:
   Script.showHelp()
   sys.exit(2)
 
 if not os.path.exists(tarballloc):
-  print "Cannot find the tar ball %s" % tarballoc
+  print "Cannot find the tar ball %s" % tarballloc
   sys.exit(2)
 
-from DIRAC.DataMAnagementSystem.Client.ReplicaManager import ReplicaManager
+from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.FrameworkSystem.Client.NotificationClient  import NotificationClient
 from DIRAC.Interfaces.API.DiracAdmin                  import DiracAdmin
 from DIRAC.Core.Security.Misc                         import getProxyInfo
@@ -72,8 +75,6 @@ def upload(path, appTar):
     return S_OK('Application uploaded')
   return S_OK()
 
-
-
 diracAdmin = DiracAdmin()
 
 email = getProxyInfo()
@@ -91,15 +92,15 @@ appVersion = tarballname.slit("_")[0].split("-")[1]
 subject = 'slic %s added to DIRAC CS' % (appVersion)
 msg = 'New application slic %s declared into Configuration service\n %s' % (appVersion, comment)
 
-result = diracAdmin.csSetOption("%s/%s/TarBall" % (softwareSection, appVersion), appTar)
+result = diracAdmin.csSetOption("%s/%s/TarBall" % (softwareSection, appVersion), tarballname)
 if result['OK']:
   modifiedCS = True
   tarballurl = gConfig.getOption("%s/TarBallURL" % (softwareSection),"")
   if len(tarballurl['Value']) > 0:
-    res = upload(tarballurl['Value'], appTar)
+    res = upload(tarballurl['Value'], tarballname)
     if not res['OK']:
-        print "Upload to %s failed" % tarballurl
-        DIRAC.exit(255)
+      print "Upload to %s failed" % tarballurl
+      DIRAC.exit(255)
   result = diracAdmin.csSetOptionComment("%s/%s/TarBall" % (softwareSection, appVersion), comment)
   if not result['OK']:
     print "Error setting comment in CS"
@@ -114,9 +115,9 @@ if modifiedCS:
     print 'Successfully committed changes to CS'
     notifyClient = NotificationClient()
     print 'Sending mail for software installation %s' % (mailadress)
-    res = notifyClient.sendMail(mailadress, subject,msg, 'stephane.poss@cern.ch', localAttempt = False)
+    res = notifyClient.sendMail(mailadress, subject, msg, 'stephane.poss@cern.ch', localAttempt = False)
     if not res[ 'OK' ]:
-        print 'The mail could not be sent'
+      print 'The mail could not be sent'
 else:
   print 'No modifications to CS required'
 

@@ -31,7 +31,7 @@ for switch in switches:
     appName = arg
   if opt in ('V','version'):
     appVersion = arg
-  if   opt in ('C','comment'):
+  if opt in ('C','comment'):
     comment = arg
 if (not platform) or (not appName) or not appVersion or not comment:
   Script.showHelp()
@@ -57,7 +57,9 @@ request.setSourceComponent('ReplicateILCSoft')
 modifiedCS = False
 mailadress = 'ilc-dirac@cern.ch'
 
-def upload(path,appTar):
+def upload(path, appTar):
+  """ Upload to storage
+  """
   if not os.path.exists(appTar):
     print "Tar ball %s does not exists, cannot continue." % appTar
     return S_ERROR()
@@ -168,7 +170,7 @@ if modifiedCS:
     print 'Sending mail for software installation %s' % (mailadress)
     res = notifyClient.sendMail(mailadress, subject, msg, 'stephane.poss@cern.ch', localAttempt = False)
     if not res[ 'OK' ]:
-        print 'The mail could not be sent'
+      print 'The mail could not be sent'
 else:
   print 'No modifications to CS required'
 
