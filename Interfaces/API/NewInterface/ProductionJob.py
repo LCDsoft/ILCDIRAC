@@ -172,9 +172,7 @@ class ProductionJob(Job):
     dirs = res['Value']
     if not len(dirs):
       return S_ERROR("No directories found")
-    """ Also get the compatible metadata such as energy, evttype, etc, populate dictionary
-    Beware of energy: need to convert to gev (3tev -> 3000, 500gev -> 500)
-    """
+
     metakeys = metadata.keys()
     res = self.fc.getMetadataFields()
     if not res['OK']:
@@ -576,7 +574,7 @@ class ProductionJob(Job):
     """ Return the corresponding metadata of the last step
     """
     metadict = {}
-    for path, meta in self.finalMetaDict.items():
+    for meta in self.finalMetaDict.values():
       metadict.update(meta)
     return metadict
   
@@ -688,7 +686,7 @@ class ProductionJob(Job):
     
     path = self.basepath  
     ###Need to resolve file names and paths
-    if hasattr(application,"setOutputRecFile") and not application.willBeCut:
+    if hasattr(application, "setOutputRecFile") and not application.willBeCut:
       path = self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/REC"
       self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath] = {"EvtType":self.evttype}
       self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
