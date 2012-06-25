@@ -6,6 +6,8 @@ Created on Jul 25, 2011
 from DIRAC.Core.Base.Client                               import Client
 
 class OverlaySystemClient (Client):
+  """ Client of the OverlaySystemHandler. Used from the ResetCounter Agent
+  """
   def __init__(self):
     self.setServer("Overlay/Overlay")
     
