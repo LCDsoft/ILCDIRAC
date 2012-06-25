@@ -6,7 +6,7 @@ Created on Mar 24, 2010
 import DIRAC
 from DIRAC.Core.Base import Script
 from DIRAC.Interfaces.API.Dirac import Dirac
-import os,sys
+import sys
 
 Script.parseCommandLine( ignoreErrors = False )
 args = sys.argv
@@ -18,7 +18,7 @@ if len(args) < 2:
   usage()
 
 repoLocation = args[1]
-dirac=Dirac(True, repoLocation)
+dirac = Dirac(True, repoLocation)
 
 exitCode = 0
 dirac.monitorRepository(False)

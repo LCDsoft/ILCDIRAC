@@ -108,7 +108,7 @@ def prepareFile( fileNameTemplate, fileNameOut, replacements ):
   f = open(fileNameTemplate)
   txt = f.read()
   counter = []
-  for repkey,reprep in replacements:
+  for repkey, reprep in replacements:
     counter.append( ( repkey, reprep, txt.count(repkey) ) )
     txt = txt.replace( repkey, reprep )
   fOut = open( fileNameOut, "w" )
@@ -125,7 +125,7 @@ inputSandbox.append( 'LFN:/ilc/prod/software/lcsim/trackingStrategies/'+detector
 
 # JNI bindings for root writer
 inputSandbox.append( 'lib' )
-
+bannedSites = []
 # read file with list of banned sites
 if banlistFile:
   f = open( banlistFile, 'r')
@@ -137,11 +137,11 @@ repositoryFile = 'repositoryFiles/'+detector+'.'+jobTitle+'.'
 
 # read file with list of input files
 if inputFileList:
-  repositoryFile += inputFileList.split('/')[-1].replace('.py','.cfg')
+  repositoryFile += inputFileList.split('/')[-1].replace('.py', '.cfg')
   f = open( inputFileList, 'r')
   exec(f.read())
 else:
-  repositoryFile += macroFile.split('/')[-1].replace('.mac','.cfg')
+  repositoryFile += macroFile.split('/')[-1].replace('.mac', '.cfg')
 if not lfnlist:
   lfnlist = [ '' ]
 
@@ -166,7 +166,7 @@ for inputFile in lfnlist:
         if not process:
           process = splitPath[-3]
     else:
-      outputFile = jobTitle+'_'+macroFile.split('/')[-1].replace('.mac','_%s'%(nEvts))
+      outputFile = jobTitle+'_'+macroFile.split('/')[-1].replace('.mac', '_%s' % (nEvts))
       if not process:
         print 'ERROR: no process defined. Use -p <processName> to define the storage path.'
         sys.exit(2)
@@ -175,9 +175,9 @@ for inputFile in lfnlist:
       outputFile += '_%s'%(job)
     
     if slicPandoraVer:
-      lcsimOutput='prePandora.slcio'
+      lcsimOutput = 'prePandora.slcio'
     else:
-      lcsimOutput=outputFile+'.slcio'
+      lcsimOutput = outputFile+'.slcio'
     
     storagePath = detector+'/'+process+'/'+jobTitle
 
@@ -195,7 +195,7 @@ for inputFile in lfnlist:
       counter = prepareFile( lcsimTemplate, xmlFile, replacements )
       for key, rep, count in counter:
         if key.count('output') and count:
-          outputData.append( rep )    # add to list of output files if key denotes some output and is present in template
+          outputData.append( rep )# add to list of output files if key denotes some output and is present in template
     else:
       outputData.append( outputFile+'.slcio' )    # default reco only creates one output file
     
@@ -219,7 +219,7 @@ for inputFile in lfnlist:
       print '\tOutput data:', outputData
       print '\tBanned sites:', bannedSites
     
-    startEvt = job*nEvts
+    startEvt = job * nEvts
     
     job = ILCJob ( )
     
@@ -227,13 +227,13 @@ for inputFile in lfnlist:
       if nEvts < 0:
         print 'ERROR: need to set number of events for SLIC. Use -n <nEvts> to set number of events.'
         sys.exit(2)
-      res = job.setSLIC ( appVersion=slicVer ,
-        detectorModel=detector ,
-        macFile=macroFile ,
-        inputGenfile=inputFile ,
-        nbOfEvents=nEvts ,
-        startFrom=startEvt ,
-        outputFile="slic.slcio"
+      res = job.setSLIC ( appVersion = slicVer ,
+        detectorModel = detector ,
+        macFile = macroFile ,
+        inputGenfile = inputFile ,
+        nbOfEvents = nEvts ,
+        startFrom = startEvt ,
+        outputFile = "slic.slcio"
         )
       if not res['OK']:
         print res['Message']
@@ -241,11 +241,11 @@ for inputFile in lfnlist:
   
     if lcsimVer:
       res = job.setLCSIM ( lcsimVer ,
-        xmlfile=xmlFile ,
-        aliasproperties=aliasFile ,
-        evtstoprocess=nEvts,
-        inputslcio=inputSlcio,
-        outputFile=lcsimOutput
+        xmlfile = xmlFile ,
+        aliasproperties = aliasFile ,
+        evtstoprocess = nEvts,
+        inputslcio = inputSlcio,
+        outputFile = lcsimOutput
         )
       inputSlcio = '' # no inputSlcio for slicPandora so it picks up its input from lcsim output
       if not res['OK']:
@@ -253,18 +253,18 @@ for inputFile in lfnlist:
         sys.exit(2)
     
     if slicPandoraVer:
-      res = job.setSLICPandora ( appVersion=slicPandoraVer ,
-        detectorgeo=detector ,
-        inputslcio=inputSlcio ,
-        pandorasettings=settingsFile ,
-        nbevts=nEvts ,
-        outputFile=outputFile+'.slcio'
+      res = job.setSLICPandora ( appVersion = slicPandoraVer ,
+        detectorgeo = detector ,
+        inputslcio = inputSlcio ,
+        pandorasettings = settingsFile ,
+        nbevts = nEvts ,
+        outputFile = outputFile+'.slcio'
         )
       if not res['OK']:
         print res['Message']
         sys.exit(2)
     
-    job.setOutputSandbox ( [ "*.log", "*.xml","*.slcio" ] )
+    job.setOutputSandbox ( [ "*.log", "*.xml", "*.slcio" ] )
     job.setInputSandbox ( inputSandbox )
     #job.setOutputData ( outputData, storageElement, storagePath )  
     job.setCPUTime( cpuLimit )
@@ -282,5 +282,5 @@ for inputFile in lfnlist:
     if not agentMode:
       dirac.submit ( job )
     else:
-      dirac.submit ( job, mode="Agent" )
+      dirac.submit ( job, mode = "Agent" )
 
