@@ -11,6 +11,8 @@ from DIRAC.Core.Base.DB                                                import DB
 from DIRAC.Core.Utilities.List                                         import intListToString
 
 class ProcessDB ( DB ):
+  """ DB for the ProcessProductionSystem
+  """
   def __init__( self, maxQueueSize = 10 ):
     """ 
     """
@@ -263,7 +265,7 @@ class ProcessDB ( DB ):
       res = self._getFields('DependencyRelation', ['idDependency'], ['idSoftware'], [idSoftware], conn = connection )
       depid = 0
       if not len(res['Value']):
-          depid = 0
+        depid = 0
       else:
         depid = res['Value'][0]
       app['Dependency'] = depid
@@ -515,7 +517,7 @@ class ProcessDB ( DB ):
     
     ##Will need the row where the Process is, and create it is needed.
     ProcessID = None
-    Params = ['idProcesses','ProcessName','Detail']
+    Params = ['idProcesses', 'ProcessName', 'Detail']
     res = self.getProcessInfo(ProcessName, Params, connection)
     if not res['OK']:
       ## Add process in DB
@@ -702,7 +704,7 @@ class ProcessDB ( DB ):
     res = self.getSoftwareParams(AppName, AppVersion, Platform, Params, connection)
     if not res['OK']:
       return res    
-    SoftwareID= res['Value']['idSoftware']
+    SoftwareID = res['Value']['idSoftware']
 
     CrossSection = ProcessDict['CrossSection']
     
@@ -738,10 +740,12 @@ class ProcessDB ( DB ):
     if not res['OK']:
       return res
     idsoft = res['Value'][0][0]
-    new_status='FALSE'
+    new_status = 'FALSE'
     if Status:
-      new_status='TRUE'
-    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware=%s;" % (new_status, Comment, idsoft)
+      new_status = 'TRUE'
+    req = "UPDATE Software SET Valid=%s,UpdateComment='%s',LastUpdate=UTC_TIMESTAMP() WHERE idSoftware=%s;" % (new_status, 
+                                                                                                               Comment, 
+                                                                                                               idsoft)
     res = self._update( req, connection )
     if not res['OK']:
       return res
@@ -775,7 +779,7 @@ class ProcessDB ( DB ):
         return res
     
     query = 'UPDATE Sites SET Status="%s" WHERE SiteName="%s";' % (sitedict['Status'], sitedict['SiteName'])
-    res = self._update(query,connection)
+    res = self._update(query, connection)
     if not res['OK']:
       return res
     return S_OK()
