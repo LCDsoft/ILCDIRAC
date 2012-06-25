@@ -15,7 +15,7 @@ from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 
-from DIRAC import gConfig, S_OK, S_ERROR
+from DIRAC import gConfig
 
 import os
 

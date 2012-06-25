@@ -21,7 +21,6 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile, GetNewLDLibs
-from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
