@@ -22,14 +22,13 @@
 __RCSID__   = "$Id: DataRecovery.py 18182 2009-11-11 14:45:10Z paterson $"
 __VERSION__ = "$Revision: 1.9 $"
 
-from DIRAC                                                     import S_OK, S_ERROR, gConfig, gLogger, rootPath
+from DIRAC                                                     import gLogger
 from DIRAC.Core.Base.AgentModule                               import AgentModule
 from DIRAC.DataManagementSystem.Client.ReplicaManager          import ReplicaManager
 from DIRAC.RequestManagementSystem.Client.RequestClient        import RequestClient
 from DIRAC.Core.Utilities.List                                 import uniqueElements
-from DIRAC.Core.Utilities.Time                                 import timeInterval,dateTime
-from DIRAC.Core.Utilities.Shifter                              import setupShifterProxyInEnv
-from DIRAC.Core.DISET.RPCClient                                import RPCClient
+from DIRAC.Core.Utilities.Time                                 import dateTime
+
 
 #from LHCbDIRAC.BookkeepingSystem.Client.BookkeepingClient      import BookkeepingClient
 from DIRAC.TransformationSystem.Client.TransformationClient      import TransformationClient  
@@ -37,14 +36,14 @@ from ILCDIRAC.Core.Utilities.ProductionData import constructProductionLFNs
 from DIRAC.Core.Workflow.Workflow                   import *
 
 
-import string,re,datetime
+import string,datetime
 
 AGENT_NAME = 'ProductionManagement/DataRecoveryAgent'
 
-class DataRecoveryAgent():
+class DataRecoveryAgent( AgentModule ):
   def __init__(self):
     self.name = 'toto'
-    self.log=gLogger
+    self.log = gLogger
   #############################################################################
   def initialize(self):
     """Sets defaults
@@ -149,8 +148,8 @@ class DataRecoveryAgent():
     
       jobFileDict = result['Value']
       fileCount = 0
-      for job,lfnList in jobFileDict.items():
-        fileCount+=len(lfnList)
+      for lfnList in jobFileDict.values():
+        fileCount += len(lfnList)
       
       if not fileCount:
         self.log.info('No files were selected for transformation %s after examining WMS jobs.' %transformation)
@@ -168,8 +167,8 @@ class DataRecoveryAgent():
       
       jobFileNoRequestsDict = result['Value']
       fileCount = 0
-      for job,lfnList in jobFileNoRequestsDict.items():
-        fileCount+=len(lfnList)
+      for lfnList in jobFileNoRequestsDict.values():
+        fileCount += len(lfnList)
       
       self.log.info('%s files are selected after removing any relating to jobs with pending requests' %(fileCount))
       result = self.checkDescendents(transformation,fileDict,jobFileNoRequestsDict)
@@ -189,8 +188,8 @@ class DataRecoveryAgent():
 ##       self.log.info('====> Transformation %s total jobs with problematic descendent files having BK replica flags: %s' %(transformation,len(jobsWithDescendentsInBK.keys())))
             
       filesToUpdateUnused = []
-      for job,fileList in jobsWithFilesOKToUpdate.items():
-        filesToUpdateUnused+=fileList
+      for fileList in jobsWithFilesOKToUpdate.values():
+        filesToUpdateUnused += fileList
       
       if filesToUpdateUnused:
         result = self.updateFileStatus(transformation,filesToUpdateUnused,updateStatus)
@@ -278,7 +277,7 @@ class DataRecoveryAgent():
         continue
       lfn = fileDict['LFN']
       jobID = fileDict[self.taskIDName]
-      lastUpdate = fileDict['LastUpdate']
+      #lastUpdate = fileDict['LastUpdate']
       resDict[lfn] = jobID
     if resDict:
       self.log.info('Selected %s files overall for transformation %s' %(len(resDict.keys()),transformation))
@@ -361,7 +360,7 @@ class DataRecoveryAgent():
       self.log.info('None of the jobs have pending requests')
       return S_OK(jobFileDict)
     
-    for jobID,requestName in result['Value'].items():
+    for jobID in result['Value'].keys():
       del jobFileDict[str(jobID)]  
       self.log.info('Removing jobID %s from consideration until requests are completed' %(jobID))
     
@@ -461,40 +460,40 @@ class DataRecoveryAgent():
     workflow = fromXMLString(body)
     workflow.resolveGlobalVars()
 
-    list = []
-    type = workflow.findParameter('JobType')
-    if not type:
+    olist = []
+    jtype = workflow.findParameter('JobType')
+    if not jtype:
         self.log.error('Type for transformation %d was not defined'%transformation)
         return S_ERROR('Type for transformation %d was not defined'%transformation)
     for step in workflow.step_instances:
-        param= step.findParameter('listoutput')
+        param = step.findParameter('listoutput')
         if not param:
             continue
-        list.extend(param.value)
+        olist.extend(param.value)
     expectedlfns = []
     contactfailed = []
     fileprocessed = []
-    for file,task in filedict.items():
+    for filep,task in filedict.items():
         commons = {}
-        commons['outputList'] = list
-        commons['PRODUCTION_ID']= transformation
-        commons['JOB_ID']=task
-        commons['JobType']=type
+        commons['outputList'] = olist
+        commons['PRODUCTION_ID'] = transformation
+        commons['JOB_ID'] = task
+        commons['JobType'] = jtype
         out = constructProductionLFNs(commons)
         expectedlfns = out['Value']['ProductionOutputData']
         res = self.replicaManager.getCatalogFileMetadata(expectedlfns)
         if not res['OK']:
           self.log.error('Getting metadata failed')
-          contactfailed.append(file)
+          contactfailed.append(filep)
           continue
         success = res['Value']['Successful'].keys()
         failed = res['Value']['Failed'].keys()
         if len(success) and not len(failed):
-          fileprocessed.append(file)
+          fileprocessed.append(filep)
 
-    for file in fileprocessed:
-      if jobFileDict.has_key(file):
-        del jobFileDict[file]
+    for filep in fileprocessed:
+      if jobFileDict.has_key(filep):
+        del jobFileDict[filep]
     result={'filesprocessed':fileprocessed,'jobfiledictok':jobFileDict}    
     return S_OK(result)
 
