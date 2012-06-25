@@ -26,7 +26,8 @@ import string, types
 COMPONENT_NAME = 'ILCInputDataResolution'
 
 class InputDataResolution:
-
+  """ ILC specific input data resolution, imported from DIRAC
+  """
   #############################################################################
   def __init__(self, argumentsDict):
     """ Standard constructor

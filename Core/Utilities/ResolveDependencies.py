@@ -24,11 +24,13 @@ def resolveDeps(sysconfig, appli, appversion):
   
   @return: array of dictionaries
   """
-  deps = gConfig.getSections('/Operations/AvailableTarBalls/%s/%s/%s/Dependencies' % (sysconfig, appli, appversion), '')
+  deps = gConfig.getSections('/Operations/AvailableTarBalls/%s/%s/%s/Dependencies' % (sysconfig, appli, 
+                                                                                      appversion), '')
   depsarray = []
   if deps['OK']:
     for dep in deps['Value']:
-      vers = gConfig.getOption('/Operations/AvailableTarBalls/%s/%s/%s/Dependencies/%s/version' % (sysconfig, appli, appversion, dep), '')
+      vers = gConfig.getOption('/Operations/AvailableTarBalls/%s/%s/%s/Dependencies/%s/version' % (sysconfig, appli, 
+                                                                                                   appversion, dep), '')
       depvers = ''
       if vers['OK']:
         depvers = vers['Value']
@@ -56,7 +58,8 @@ def resolveDepsTar(sysconfig, appli, appversion):
   deparray = resolveDeps(sysconfig, appli, appversion)
   depsarray = []
   for dep in deparray:
-    dep_tar = gConfig.getOption('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (sysconfig, dep["app"], dep["version"]), '')
+    dep_tar = gConfig.getOption('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (sysconfig, dep["app"], 
+                                                                                    dep["version"]), '')
     if dep_tar['OK']:
       depsarray.append(dep_tar["Value"])
     else:

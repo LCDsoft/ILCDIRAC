@@ -22,12 +22,14 @@ from DIRAC                             import S_OK, S_ERROR
 natOS = NativeMachine()
 
 class CombinedSoftwareInstallation(object):
-  """ Combined means that it will try to install in the Shared area and in the LocalArea, depending on the user's rights 
+  """ Combined means that it will try to install in the Shared area and in the LocalArea, 
+  depending on the user's rights 
   """
   def __init__(self, argumentsDict):
     """ Standard constructor
     
-    Defines, from dictionary of job parameters passed, a set of members to hold e.g. the applications and the system config
+    Defines, from dictionary of job parameters passed, a set of members to hold e.g. the 
+    applications and the system config.
     
     Also determines the SharedArea and LocalArea.
     """
@@ -97,7 +99,8 @@ class CombinedSoftwareInstallation(object):
 
     found_config = False
         
-    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (string.join(self.ceConfigs, ","), self.jobConfig))
+    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (string.join(self.ceConfigs, ","), 
+                                                                                self.jobConfig))
     res = DIRAC.gConfig.getSections('/Operations/AvailableTarBalls')
     if not res['OK']:
       return res
@@ -136,7 +139,8 @@ class CombinedSoftwareInstallation(object):
         DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' % (app[0], app[1], self.jobConfig, area))
         res = TARinstall(app, self.jobConfig, area)
         if not res['OK']:
-          DIRAC.gLogger.error('Failed to install software in %s: %s' % (area, res['Message']), '%s_%s' %(app[0], app[1]))
+          DIRAC.gLogger.error('Failed to install software in %s: %s' % (area, res['Message']), 
+                              '%s_%s' % (app[0], app[1]))
           failed = True
           continue
         else:
