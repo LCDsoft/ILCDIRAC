@@ -1,3 +1,6 @@
+[v10r2p0]
+* MokkaAnalysis
+Change env variable G4LEDATA to use data provided in new Mokka
 [v10r1p1]
 * all
 Review to make pylint compliant: score  8.56/10
