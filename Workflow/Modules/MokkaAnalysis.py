@@ -314,7 +314,7 @@ class MokkaAnalysis(ModuleBase):
     script.write("declare -x G4SYSTEM=Linux-g++\n")
     script.write("declare -x G4INSTALL=$g4releases/share/$g4version\n")
     #script.write("export G4SYSTEM G4INSTALL G4LIB CLHEP_BASE_DIR\n")
-    script.write('declare -x G4LEDATA="$g4releases/sl4/g4data/g4dataEMLOW"\n')
+    script.write('declare -x G4LEDATA="$g4releases/G4LEDATA"\n')
     script.write('declare -x G4NEUTRONHPDATA="$g4releases/sl4/g4data/g4dataNDL"\n')
     script.write('declare -x G4LEVELGAMMADATA="$g4releases/sl4/g4data/g4dataPhotonEvap"\n')
     script.write('declare -x G4RADIOACTIVEDATA="$g4releases/sl4/g4data/g4dataRadiativeDecay"\n')
