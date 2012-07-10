@@ -5,7 +5,6 @@ from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
 
 import os,types,string
-from math import modf
 from decimal import Decimal
 
 
@@ -13,7 +12,10 @@ class SIDProductionJob(ProductionJob):
   def __init__(self):
     ProductionJob.__init__(self)
     self.machine = 'ilc'
-    self.basepath = '/ilc/prod/ilc/mc-dbd/sid'
+    self.basepath = '/ilc/prod/ilc/sid'
+    self.polarization = ""
+    self.machineparams = ''
+    self.detector = ''
     
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
@@ -32,8 +34,8 @@ class SIDProductionJob(ProductionJob):
             return self._reportError("Key syntax error %s, should be %s" % (key, meta))
       if not metaFCkeys.count(key):
         return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
-    if not   metadata.has_key("ProdID"):
-      return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
+    #if not metadata.has_key("ProdID"):
+    #  return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
     
     res = client.findFilesByMetadata(metadata)
     if not res['OK']:
@@ -41,6 +43,7 @@ class SIDProductionJob(ProductionJob):
     elif len(res['Value']) < 1:
       return self._reportError('Could not find any files corresponding to the query issued')
     directory = os.path.dirname(res['Value'][0])
+    
     res = client.getDirectoryMetadata(directory)
     if not res['OK']:
       return self._reportError("Error looking up the catalog for directory metadata")
@@ -60,21 +63,37 @@ class SIDProductionJob(ProductionJob):
       else:
         self.nbevts = int(compatmeta['NumberOfEvents'])
 
-
-    self.basename = "" #TO BE DEFINED
+    lfn = os.path.basename(res['Value'][0])
+    if not lfn.count("_sim") and not lfn.count("_rec") and not lfn.count("_dst"):
+      self.basename = lfn.split("_")[0:-1]#use everything up to the file index
+    else:
+      self.basename = lfn.split("_sim")[0].split("_rec")[0].split("_dst")[0]
     
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
         self.energycat = compatmeta["Energy"][0]
+
+    if compatmeta.has_key("Polarisation"):
+      if type(compatmeta["Polarisation"]) in types.StringTypes:
+        self.polarization = compatmeta["Polarisation"]
+      if type(compatmeta["Polarisation"]) == type([]):
+        self.polarization = compatmeta["Polarisation"][0]
+
+    if compatmeta.has_key("MachineParams"):
+      if type(compatmeta["MachineParams"]) in types.StringTypes:
+        self.machineTuning = compatmeta["MachineParams"]
+      if type(compatmeta["MachineParams"]) == type([]):
+        self.machineparams = compatmeta["MachineParams"][0]
+
+    if compatmeta.has_key("DetectorModel"):
+      if type(compatmeta["DetectorModel"]) in types.StringTypes:
+        self.detector = compatmeta["DetectorModel"]
+      if type(compatmeta["DetectorModel"]) == type([]):
+        self.detector = compatmeta["DetectorModel"][0]
         
-    if self.energycat.count("tev"):
-      self.energy = 1000.*Decimal(self.energycat.split("tev")[0])
-    elif self.energycat.count("gev"):
-      self.energy = 1.*Decimal(self.energycat.split("gev")[0])
-    else:
-      self.energy = 1.*Decimal(self.energycat)  
+    self.energy = 1.*Decimal(self.energycat)  
     
     self.inputBKSelection = metadata
     self.inputdataquery = True
@@ -184,15 +203,20 @@ class SIDProductionJob(ProductionJob):
     if not res['OK']:
       return res
     
+    if not self.detector:
+      if hasattr(application,"detectorModel"):
+        self.detector = application.detectorModel
+        if not self.detector:
+          return S_ERROR("Application does not know which model to use, so the production does not either.")
+      else:
+        return S_ERROR("Application does not know which model to use, so the production does not either.")
+    
     
     ###Below modify according to SID conventions
-    energypath = ''
-    fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1] > 0:
-      energypath = "%stev/" % (self.energy/Decimal("1000."))
-    else:
-      energypath =  "%sgev/" % (self.energy/Decimal("1000."))
-    self.finalMetaDict[self.basepath+energypath] = {'Energy' : energypath.rstrip("/")}  
+    energypath =  "%s_%s/" % (self.energy,self.polarization)# 1000_p80m20
+    #self.finalMetaDict[self.basepath+energypath] = {'Energy' : str(self.energy), 
+    #                                                "Polarisation" : self.polarization,
+    #                                                "MachineParams" : self.machineparams}  
     
     if not self.basename:
       self.basename = self.evttype
@@ -202,21 +226,27 @@ class SIDProductionJob(ProductionJob):
     if not self.evttype[-1] == '/':
       self.evttype += '/'  
     
+    if not self.detector[-1] == "/":
+      self.detector += "/"
       
     ###Need to resolve file names and paths
     if hasattr(application,"setOutputRecFile"):
-      path = self.basepath+energypath+self.evttype+"/REC/"
+      path = self.basepath+energypath+self.evttype+self.detector+"/REC/"
       self.finalMetaDict[self.basepath+energypath+self.evttype] = {"EvtType" : self.evttype}
-      self.finalMetaDict[self.basepath+energypath+self.evttype+"/REC"] = {'Datatype' : "REC"}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector] = {"DetectorModel" : self.detector}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"/REC"] = {'Datatype' : "REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
-      path = self.basepath+energypath+self.evttype+"/DST/"
-      self.finalMetaDict[self.basepath+energypath+self.evttype+"/DST"] = {'Datatype':"DST"}
+      path = self.basepath+energypath+self.evttype+self.detector+"/DST/"
+      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector] = {"DetectorModel" : self.detector}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"/DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
       path = self.basepath+energypath+self.evttype
       self.finalMetaDict[path]= {"EvtType" : self.evttype}      
+      path += self.detector
+      self.finalMetaDict[path] = {"DetectorModel" : self.detector}
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
