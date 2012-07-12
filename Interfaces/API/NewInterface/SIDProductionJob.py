@@ -36,25 +36,19 @@ class SIDProductionJob(ProductionJob):
         return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
     #if not metadata.has_key("ProdID"):
     #  return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
-    print metadata
-    res = client.findFilesByMetadata(metadata)
+    res = client.findDirectoriesByMetadata(metadata)
     if not res['OK']:
-      return self._reportError("Error looking up the catalog for available files")
+      return self._reportError("Error looking up the catalog for available directories")
     elif len(res['Value']) < 1:
-      return self._reportError('Could not find any files corresponding to the query issued')
-    directory = os.path.dirname(res['Value'][0])
-    lfn = os.path.basename(res['Value'][0])
-    if not lfn.count("_sim") and not lfn.count("_rec") and not lfn.count("_dst"):
-      self.basename = "".join(lfn.split("_")[0:-1])#use everything up to the file index
-    else:
-      self.basename = lfn.split("_sim")[0].split("_rec")[0].split("_dst")[0]
-    
-    res = client.getDirectoryMetadata(directory)
-    if not res['OK']:
-      return self._reportError("Error looking up the catalog for directory metadata")
-    
-    compatmeta = res['Value']
-    compatmeta.update(metadata)
+      return self._reportError('Could not find any directory corresponding to the query issued')
+    dirs = res['Value'].values()
+    for mdir in dirs:
+      res = self.fc.getDirectoryMetadata(mdir)
+      if not res['OK']:
+        return self._reportError("Error looking up the catalog for directory metadata")
+      compatmeta = res['Value']
+      compatmeta.update(metadata)
+      
     if compatmeta.has_key('EvtType'):
       if type(compatmeta['EvtType']) in types.StringTypes:
         self.evttype  = compatmeta['EvtType']
@@ -92,6 +86,8 @@ class SIDProductionJob(ProductionJob):
         self.detector = compatmeta["DetectorModel"]
       if type(compatmeta["DetectorModel"]) == type([]):
         self.detector = compatmeta["DetectorModel"][0]
+
+    self.basename = self.evttype+"_"+self.polarization
         
     self.energy = Decimal(self.energycat)  
     
@@ -235,20 +231,21 @@ class SIDProductionJob(ProductionJob):
     else:
       detectormeta = self.detector.rstrip("/")
       
+    path = self.basepath    
     ###Need to resolve file names and paths
-    if hasattr(application,"setOutputRecFile"):
-      path = self.basepath+energypath+self.evttype+self.detector+"/REC/"
+    if hasattr(application,"setOutputRecFile") and not application.willBeCut:
+      path = self.basepath+energypath+self.evttype+self.detector+"REC/"
       self.finalMetaDict[self.basepath+energypath+self.evttype] = {"EvtType" : evttypemeta}
       self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"/REC"] = {'Datatype' : "REC"}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"REC"] = {'Datatype' : "REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
-      path = self.basepath+energypath+self.evttype+self.detector+"/DST/"
+      path = self.basepath+energypath+self.evttype+self.detector+"DST/"
       self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"/DST"] = {'Datatype':"DST"}
+      self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
-    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile:
+    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath+energypath+self.evttype
       self.finalMetaDict[path]= {"EvtType" : evttypemeta}      
       path += self.detector
@@ -256,7 +253,7 @@ class SIDProductionJob(ProductionJob):
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
-      self.finalMetaDict[path] = {"Datatype":application.datatype}      
+      self.finalMetaDict[path] = {"Datatype" : application.datatype}      
       self.log.info("Will store the files under %s" % path)
       fname = self.basename+"_%s"%(application.datatype.lower())+".slcio"
       application.setOutputFile(fname,path)  
