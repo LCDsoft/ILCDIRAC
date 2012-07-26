@@ -37,7 +37,7 @@ class DiracILC(Dirac):
     """ Get the process list needed by Whizard.
     """   
     processlistpath = gConfig.getValue("/LocalSite/ProcessListPath", "")
-    if not processlistpath['Value']:
+    if not processlistpath:
       gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to \
       your dirac.cfg the entry /LocalSite/ProcessListPath pointing to the file')
       pathtofile = self.ops.getValue("/ProcessList/Location", "")
@@ -49,7 +49,7 @@ class DiracILC(Dirac):
         rm.getFile(pathtofile)
         processlist = os.path.basename(pathtofile)   
     else:
-      processlist = processlistpath['Value']
+      processlist = processlistpath
     self.pl = ProcessList(processlist)
     return self.pl
     
