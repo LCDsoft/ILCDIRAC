@@ -25,17 +25,17 @@ def resolveDeps(sysconfig, appli, appversion):
   
   @return: array of dictionaries
   """
-  ops = Operations(setup='Defaults')
+  ops = Operations()
   deps = ops.getSections('/AvailableTarBalls/%s/%s/%s/Dependencies' % (sysconfig, appli, 
                                                                        appversion), '')
   depsarray = []
   if deps['OK']:
     for dep in deps['Value']:
-      vers = ops.getOption('/AvailableTarBalls/%s/%s/%s/Dependencies/%s/version' % (sysconfig, appli, 
+      vers = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/%s/version' % (sysconfig, appli, 
                                                                                     appversion, dep), '')
       depvers = ''
-      if vers['OK']:
-        depvers = vers['Value']
+      if vers:
+        depvers = vers
       else:
         gLogger.error("Retrieving dependency version for %s failed, skipping to next !" % (dep))
         continue
@@ -57,14 +57,14 @@ def resolveDepsTar(sysconfig, appli, appversion):
   Uses same parameters as L{resolveDeps}.
   @return: array of strings
   """
-  ops = Operations(setup='Defaults')
+  ops = Operations()
   deparray = resolveDeps(sysconfig, appli, appversion)
   depsarray = []
   for dep in deparray:
-    dep_tar = ops.getOption('/AvailableTarBalls/%s/%s/%s/TarBall' % (sysconfig, dep["app"], 
-                                                                     dep["version"]), '')
-    if dep_tar['OK']:
-      depsarray.append(dep_tar["Value"])
+    dep_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (sysconfig, dep["app"], 
+                                                                    dep["version"]), '')
+    if dep_tar:
+      depsarray.append(dep_tar)
     else:
       gLogger.error("Dependency %s version %s is not defined in CS, please check !" % (dep["app"], dep["version"]))         
   return depsarray

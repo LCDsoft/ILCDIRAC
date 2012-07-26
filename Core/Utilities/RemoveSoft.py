@@ -19,7 +19,7 @@ class RemoveSoft(object):
     self.systemConfig = ''
     self.step_commons = {}
     self.workflow_commons = {}
-    self.ops = Operations(setup='Defaults')
+    self.ops = Operations()
   def execute(self):
     """ Look in folders (Shared Area and Local Area) and try ot remove the applications specified.
     """

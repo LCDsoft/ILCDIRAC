@@ -37,7 +37,7 @@ def install(app, config, area):
   """ Actually install the applications. Set the environment for some of them.
   """
   curdir = os.getcwd()
-  ops = Operations(setup='Defaults')
+  ops = Operations()
   appName    = app[0]
   appVersion = app[1]
   appName = appName.lower()

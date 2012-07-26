@@ -12,7 +12,7 @@ class GeneratorModels():
   """ Contains the list of known models
   """
   def __init__(self):
-    self.ops = Operations(setup='Defaults')
+    self.ops = Operations()
     self.models = {}
     res = self.ops.getOptionsDict("/Models")
     if res['OK']:
