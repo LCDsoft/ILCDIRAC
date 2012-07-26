@@ -34,8 +34,8 @@ def allowedBkg( bkg, energy = None, detectortype = None ):
   if not bkg in bkg_allowed:
     return S_ERROR( "Bkg not allowed" )
   if energy and detectortype:
-    res = ops.getOption( "/Overlay/%s/%s/%s/ProdID" % (detectortype, energy, bkg), 0 )
-    if not res['Value']:
+    res = ops.getValue( "/Overlay/%s/%s/%s/ProdID" % (detectortype, energy, bkg), 0 )
+    if not res:
       return S_ERROR( "No background to overlay" )  
   return S_OK()
 
@@ -135,8 +135,8 @@ class OverlayInput (ModuleBase):
     meta['Datatype'] = 'SIM'
     meta['DetectorType'] = self.detector
 
-    res = self.ops.getOption("/Overlay/%s/%s/%s/ProdID" % (self.detector, self.energytouse, self.BkgEvtType), 0)
-    meta['ProdID'] = res['Value']
+    res = self.ops.getValue("/Overlay/%s/%s/%s/ProdID" % (self.detector, self.energytouse, self.BkgEvtType), 0)
+    meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
     #res = self.fc.getCompatibleMetadata(meta)
@@ -153,8 +153,10 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events
-    res = self.ops.getOption("/Overlay/%s/%s/%s/NbEvts" % (self.detector, self.energytouse, self.BkgEvtType), 100)
-    self.nbofeventsperfile = res['Value']
+    self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/NbEvts" % (self.detector, 
+                                                                             self.energytouse, 
+                                                                             self.BkgEvtType), 
+                                               100)
 
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
@@ -247,8 +249,7 @@ class OverlayInput (ModuleBase):
     totnboffilestoget = int(ceil(self.NbSigEvtsPerJob * numberofeventstoget / self.nbofeventsperfile))
 
     ##Limit ourself to some configuration maximum
-    res = self.ops.getOption("/Overlay/MaxNbFilesToGet", 20)
-    maxNbFilesToGet = res['Value']
+    maxNbFilesToGet = self.ops.getValue("/Overlay/MaxNbFilesToGet", 20)
     if totnboffilestoget > maxNbFilesToGet:
       totnboffilestoget = maxNbFilesToGet
 #    res = self.ops.getOption("/Overlay/MaxConcurrentRunning",200)
@@ -320,8 +321,7 @@ class OverlayInput (ModuleBase):
     fail = False
     fail_count = 0
 
-    res = self.ops.getOption("/Overlay/MaxFailedAllowed", 20)
-    max_fail_allowed = res['Value']
+    max_fail_allowed = self.ops.getValue("/Overlay/MaxFailedAllowed", 20)
     while not len(filesobtained) == totnboffilestoget:
       if fail_count > max_fail_allowed:
         fail = True
