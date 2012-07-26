@@ -11,7 +11,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 def getSteeringFileDirName(systemConfig, application, applicationVersion):
   """ Locate the path of the steering file directory assigned to the specified appliciation
   """
-  ops = Operations(setup='Defaults')
+  ops = Operations()
   version = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (systemConfig, 
                                                                                             application,
                                                                                             applicationVersion), '')

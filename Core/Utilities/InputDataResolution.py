@@ -37,7 +37,7 @@ class InputDataResolution:
     self.arguments = argumentsDict
     self.name = COMPONENT_NAME
     self.log = gLogger.getSubLogger(self.name)
-    self.ops = Operations(setup='Default')
+    self.ops = Operations()
   #############################################################################
   def execute(self):
     """Given the arguments from the Job Wrapper, this function calls existing

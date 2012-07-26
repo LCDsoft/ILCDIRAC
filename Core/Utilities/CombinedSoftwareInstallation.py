@@ -34,7 +34,7 @@ class CombinedSoftwareInstallation(object):
     Also determines the SharedArea and LocalArea.
     """
     
-    self.ops = Operations(setup = "Defaults")
+    self.ops = Operations()
     
     self.job = {}
     if argumentsDict.has_key('Job'):
