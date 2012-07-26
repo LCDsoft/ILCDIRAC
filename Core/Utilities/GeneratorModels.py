@@ -6,14 +6,15 @@
 """
 __RCSID__ = " $Id: $ "
 
-from DIRAC import gConfig, S_OK, S_ERROR
-
+from DIRAC import S_OK, S_ERROR
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 class GeneratorModels():
   """ Contains the list of known models
   """
   def __init__(self):
+    self.ops = Operations(setup='Defaults')
     self.models = {}
-    res = gConfig.getOptionsDict("/Operations/Models")
+    res = self.ops.getOptionsDict("/Models")
     if res['OK']:
       self.models = res['Value']
 

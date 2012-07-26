@@ -55,7 +55,7 @@ class GetSRMFile(ModuleBase):
       return S_ERROR('Files where not found correctly: %s' % self.files)
 
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
-    res = gConfig.getOption('/Operations/GetSRM/MaxConcurrentRunning', 100)
+    res = self.ops.getOption('/GetSRM/MaxConcurrentRunning', 100)
     max_concurrent_running = res['Value']
     error_count = 0
     while 1:

@@ -102,7 +102,7 @@ class StdHepSplit(ModuleBase):
     self.log.info("Will rename all files using '%s' as base." % prefix)
 
     # Setting up script
-    splitDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "stdhepsplit", 
+    splitDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "stdhepsplit", 
                                                                                     self.applicationVersion), '')
     splitDir = splitDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(splitDir)

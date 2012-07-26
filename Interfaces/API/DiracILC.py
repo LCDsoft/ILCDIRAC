@@ -9,6 +9,7 @@ from DIRAC.Interfaces.API.Dirac                     import Dirac
 from DIRAC.Core.Utilities.List                      import sortList
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
 import string, os
@@ -30,6 +31,7 @@ class DiracILC(Dirac):
     self.software_versions = {}
     self.checked = False
     self.pl = None
+    self.ops = Operations()
     
   def getProcessList(self): 
     """ Get the process list needed by Whizard.
@@ -38,7 +40,7 @@ class DiracILC(Dirac):
     if not processlistpath['Value']:
       gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to \
       your dirac.cfg the entry /LocalSite/ProcessListPath pointing to the file')
-      pathtofile = gConfig.getOption("/Operations/ProcessList/Location", "")
+      pathtofile = self.ops.getOption("/ProcessList/Location", "")
       if not pathtofile['Value']:
         gLogger.error("Could not get path to process list")
         processlist = ""
@@ -170,7 +172,7 @@ class DiracILC(Dirac):
   def _checkapp(self, config, appName, appVersion):
     """ Check availability of application in CS
     """
-    app_version = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion),'')
+    app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion),'')
     if not app_version:
       self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, config))
       return S_ERROR("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, config))

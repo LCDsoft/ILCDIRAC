@@ -160,7 +160,7 @@ class SLICAnalysis(ModuleBase):
     new_ld_lib_path = GetNewLDLibs(self.systemConfig, "slic", self.applicationVersion)
 
     #retrieve detector model from web
-    detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels', [''])
+    detector_urls = self.ops.getValue('/SLICweb/SLICDetectorModels', [''])
     if len(detector_urls[0]) < 1:
       self.log.error('Could not find in CS the URL for detector model')
       return S_ERROR('Could not find in CS the URL for detector model')

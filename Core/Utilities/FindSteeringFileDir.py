@@ -6,16 +6,18 @@ Created on Feb 10, 2012
 
 from DIRAC import gConfig, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 def getSteeringFileDirName(systemConfig, application, applicationVersion):
-  """ Locate the path of the steering file directory assigned to the specified applciation
+  """ Locate the path of the steering file directory assigned to the specified appliciation
   """
-  version = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (systemConfig, 
-                                                                                                            application,
-                                                                                                            applicationVersion), '')
-  if not version:
+  ops = Operations(setup='Defaults')
+  version = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (systemConfig, 
+                                                                                            application,
+                                                                                            applicationVersion), '')
+  if not version: 
     return S_ERROR("Could not find attached SteeringFile version")
-  TarBall = gConfig.getValue('/Operations/AvailableTarBalls/%s/steeringfiles/%s/TarBall' % (systemConfig, version), '')
+  TarBall = ops.getValue('/AvailableTarBalls/%s/steeringfiles/%s/TarBall' % (systemConfig, version), '')
   if not TarBall:
     return S_ERROR("Could not find tar ball for SteeringFile")
   mydir = TarBall.replace(".tgz", "").replace(".tar.gz", "")

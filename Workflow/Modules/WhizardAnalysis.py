@@ -74,7 +74,7 @@ class WhizardAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     
-    res = gConfig.getOption("/Operations/ProcessList/Location", "")
+    res = self.ops.getOption("/ProcessList/Location", "")
     if not res['OK']:
       return res
     processlistloc = res['Value']
@@ -220,8 +220,8 @@ class WhizardAnalysis(ModuleBase):
     #if self.debug:
     #  self.excludeAllButEventString = False
 
-    whizardDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "whizard", 
-                                                                                    self.applicationVersion), '')
+    whizardDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "whizard", 
+                                                                          self.applicationVersion), '')
     if not whizardDir:
       self.log.error('Could not get info from CS')
       self.setApplicationStatus('Failed finding info from CS')

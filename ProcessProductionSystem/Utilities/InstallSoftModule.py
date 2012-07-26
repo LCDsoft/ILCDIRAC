@@ -6,14 +6,16 @@ May 2011
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 
 from ILCDIRAC.ProcessProductionSystem.Client.ProcessProdClient import ProcessProdClient
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
-from DIRAC import S_OK, S_ERROR, gConfig, gLogger
+from DIRAC import S_OK, S_ERROR, gLogger
 import os, shutil
 
 class InstallSoftModule():
   """ Module to install software, not used yet
   """
   def __init__(self):
+    self.ops = Operations()
     self.appsToRemoveStr = ''
     self.appsToInstallStr = ''
     self.appsToRemove = []
@@ -52,8 +54,8 @@ class InstallSoftModule():
       jobdict['AppName'] = appname
       jobdict['AppVersion'] = appversion
       jobdict['Platform'] = self.systemConfig
-      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, 
-                                                                                    appversion), '')
+      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, 
+                                                                          appversion), '')
       appDir = appDir.replace(".tgz","").replace(".tar.gz","")
       mySoftwareRoot = ''
       sharedArea = SharedArea()
@@ -75,8 +77,8 @@ class InstallSoftModule():
       jobdict['AppName'] = appname
       jobdict['AppVersion'] = appversion
       jobdict['Platform'] = self.systemConfig      
-      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
-                                                                                    appname, appversion), '')
+      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+                                                                          appname, appversion), '')
       appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''
       localArea = LocalArea()

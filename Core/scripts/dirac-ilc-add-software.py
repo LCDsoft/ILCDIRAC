@@ -97,7 +97,7 @@ def upload(path, appTar):
   return S_OK()
 
 
-softwareSection = "/Operations/AvailableTarBalls"
+softwareSection = "/Operations/Defaults/AvailableTarBalls"
 
 appTar = "%s%s.tgz" % (appName, appVersion)
 subject = '%s %s added to DIRAC CS' % (appName, appVersion)

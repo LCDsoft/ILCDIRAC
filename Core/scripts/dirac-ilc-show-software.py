@@ -9,7 +9,7 @@ Script.parseCommandLine()
 from DIRAC import gConfig
 
 import string
-base = '/Operations/AvailableTarBalls'
+base = '/Operations/Defaults/AvailableTarBalls'
 
 platforms = gConfig.getSections(base)
 

@@ -162,9 +162,9 @@ class MarlinAnalysis(ModuleBase):
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     
-    marlinDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
-                                                                                     "marlin", 
-                                                                                     self.applicationVersion), '')
+    marlinDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+                                                                           "marlin", 
+                                                                           self.applicationVersion), '')
     marlinDir = marlinDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(marlinDir)
     if not res['OK']:

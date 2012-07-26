@@ -31,13 +31,13 @@ if not tarballloc and not version:
 if not os.path.exists(tarballloc):
   print "Cannot find the tar ball %s" % tarballloc
   sys.exit(2)
-
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.FrameworkSystem.Client.NotificationClient  import NotificationClient
 from DIRAC.Interfaces.API.DiracAdmin                  import DiracAdmin
 from DIRAC.Core.Security.Misc                         import getProxyInfo
 from DIRAC                                            import gConfig, S_OK, S_ERROR
 import DIRAC
+
 
 rm = ReplicaManager()
 
@@ -84,7 +84,7 @@ modifiedCS = False
 mailadress = 'ilc-dirac@cern.ch'
 
 
-softwareSection = "/Operations/AvailableTarBalls/x86_64-slc5-gcc43/slic"
+softwareSection = "/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43/slic"
 
 tarballname = os.path.basename(tarballloc)
 appVersion = tarballname.slit("_")[0].split("-")[1]

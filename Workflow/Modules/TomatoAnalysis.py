@@ -58,8 +58,8 @@ class TomatoAnalysis(MarlinAnalysis):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    tomatoDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "tomato", 
-                                                                                     self.applicationVersion), '')
+    tomatoDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "tomato", 
+                                                                           self.applicationVersion), '')
     if not tomatoDir:
       self.log.error('Could not get Tomato tar ball name, cannot proceed')
       return S_ERROR('Problem accessing CS')

@@ -13,6 +13,8 @@ from DIRAC.Core.Security.ProxyInfo                        import getProxyInfoAsS
 from DIRAC.Core.Utilities.Adler                           import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.Core.Utilities.File                            import makeGuid
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+
 import os, string, sys, re, types
 from random import choice
 
@@ -37,6 +39,8 @@ class ModuleBase(object):
       self.log.error('Could not obtain proxy information in module environment with message:\n', result['Message'])
     else:
       self.log.info('Payload proxy information:\n', result['Value'])
+
+    self.ops = Operations()
 
     self.systemConfig = ''
     self.applicationLog = ''

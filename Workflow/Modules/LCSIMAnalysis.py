@@ -146,9 +146,9 @@ class LCSIMAnalysis(ModuleBase):
       return S_OK('LCSIM should not proceed as previous step did not end properly')
     
     #look for lcsim filename
-    lcsim_name = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, 
-                                                                                    "lcsim", 
-                                                                                    self.applicationVersion), '')
+    lcsim_name = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, 
+                                                                          "lcsim", 
+                                                                          self.applicationVersion), '')
     if not lcsim_name:
       self.log.error("Could not find lcsim file name from CS")
       return S_ERROR("Could not find lcsim file name from CS")

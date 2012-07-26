@@ -67,8 +67,8 @@ class StdHepCut(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('StdHepCut should not proceed as previous step did not end properly')
 
-    appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, "stdhepcut", 
-                                                                                 self.applicationVersion), '')
+    appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, "stdhepcut", 
+                                                                       self.applicationVersion), '')
     if not appDir:
       self.log.error('Could not get info from CS')
       self.setApplicationStatus('Failed finding info from CS')

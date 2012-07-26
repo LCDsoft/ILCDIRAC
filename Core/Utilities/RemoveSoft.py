@@ -4,6 +4,7 @@ Created on Jul 14, 2011
 @author: Stephane Poss
 '''
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 from DIRAC import S_OK, S_ERROR, gConfig, gLogger
 import os, shutil
@@ -18,6 +19,7 @@ class RemoveSoft(object):
     self.systemConfig = ''
     self.step_commons = {}
     self.workflow_commons = {}
+    self.ops = Operations(setup='Defaults')
   def execute(self):
     """ Look in folders (Shared Area and Local Area) and try ot remove the applications specified.
     """
@@ -40,7 +42,7 @@ class RemoveSoft(object):
       
       appname = app.split(".")[0]
       appversion = app.split(".")[1]
-      appDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, appversion), '')
+      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, appversion), '')
       appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''
       localArea = LocalArea()

@@ -108,9 +108,9 @@ class SLICPandoraAnalysis (ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
     
-    slicPandoraDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
-                                                                                          "slicpandora", 
-                                                                                          self.applicationVersion), '')
+    slicPandoraDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+                                                                                "slicpandora", 
+                                                                                self.applicationVersion), '')
     slicPandoraDir = slicPandoraDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(slicPandoraDir)
     if not res['OK']:
@@ -141,7 +141,7 @@ class SLICPandoraAnalysis (ModuleBase):
           os.unlink(detmodel + ".zip") 
       if not os.path.exists(detmodel + ".zip"):  
         #retrieve detector model from web
-        detector_urls = gConfig.getValue('/Operations/SLICweb/SLICDetectorModels', [''])
+        detector_urls = self.ops.getValue('/SLICweb/SLICDetectorModels', [''])
         if len(detector_urls[0]) < 1:
           self.log.error('Could not find in CS the URL for detector model')
           return S_ERROR('Could not find in CS the URL for detector model')
