@@ -1,3 +1,6 @@
+[v11r0p0]
+* all
+To go with new DIRAC
 [v10r2p0]
 * MokkaAnalysis
 Change env variable G4LEDATA to use data provided in new Mokka
