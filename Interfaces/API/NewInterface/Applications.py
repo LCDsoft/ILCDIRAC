@@ -40,7 +40,7 @@ from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
 from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, getDict
 
 from DIRAC.Core.Workflow.Parameter                    import Parameter
-from DIRAC                                            import S_OK, S_ERROR, gConfig
+from DIRAC                                            import S_OK, S_ERROR
 
 from math import modf
 from decimal import Decimal
