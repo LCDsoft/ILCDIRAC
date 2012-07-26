@@ -18,6 +18,8 @@
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.ModuleFactory                             import ModuleFactory
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
+
 from DIRAC                                                          import S_OK, S_ERROR, gConfig, gLogger
 import DIRAC
 
@@ -35,7 +37,7 @@ class InputDataResolution:
     self.arguments = argumentsDict
     self.name = COMPONENT_NAME
     self.log = gLogger.getSubLogger(self.name)
-
+    self.ops = Operations(setup='Default')
   #############################################################################
   def execute(self):
     """Given the arguments from the Job Wrapper, this function calls existing
@@ -88,9 +90,9 @@ class InputDataResolution:
       self.log.info('Job has a specific policy setting: %s' % (string.join(policy, ', ')))
     else:
       self.log.verbose('Attempting to resolve input data policy for site %s' % site)
-      inputDataPolicy = gConfig.getOptionsDict('/Operations/InputDataPolicy')
+      inputDataPolicy = self.ops.getOptionsDict('/InputDataPolicy')
       if not inputDataPolicy:
-        return S_ERROR('Could not resolve InputDataPolicy from /Operations/InputDataPolicy')
+        return S_ERROR('Could not resolve InputDataPolicy from /InputDataPolicy')
 
       options = inputDataPolicy['Value']
       if options.has_key(site):

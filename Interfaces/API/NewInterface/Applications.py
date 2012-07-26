@@ -1525,6 +1525,8 @@ class SLIC(Application):
 #              Overlay processor/driver inputs
 #################################################################  
 from ILCDIRAC.Workflow.Modules.OverlayInput import allowedBkg
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
+
 class OverlayInput(Application):
   """ Helper call to define Overlay processor/driver inputs. 
   
@@ -1537,6 +1539,7 @@ class OverlayInput(Application):
   
   """
   def __init__(self, paramdict = None):
+    self.ops = Operations(setup = 'Defaults')
     self.BXOverlay = None
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
@@ -1715,7 +1718,7 @@ class OverlayInput(Application):
     """
     if not self.energy:
       return  S_ERROR("Energy MUST be spcified for the overlay")
-    res = gConfig.getSections("/Operations/Overlay/%s" % self.detectortype)
+    res = self.ops.getSections("/Overlay/%s" % self.detectortype)
     if not res['OK']:
       return S_ERROR("Could not find the detector type")
       

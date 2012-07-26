@@ -176,8 +176,8 @@ class MokkaAnalysis(ModuleBase):
     self.log.info("Platform for job is %s" % ( self.systemConfig ) )
     self.log.info("Root directory for job is %s" % ( root ) )
 
-    mokkaDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "mokka", 
-                                                                                    self.applicationVersion), '')
+    mokkaDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "mokka", 
+                                                                          self.applicationVersion), '')
     if not mokkaDir:
       self.log.error('Could not get Tar ball name')
       return S_ERROR('Failed finding software directory')
@@ -324,9 +324,9 @@ class MokkaAnalysis(ModuleBase):
     #script.write("export G4LEDATA G4NEUTRONHPDATA G4LEVELGAMMADATA G4RADIOACTIVEDATA G4ABLADATA\n")
     script.write('declare -x G4NEUTRONHP_NEGLECT_DOPPLER=1\n')
     #### Do something with the additional environment variables
-    add_env = gConfig.getOptionsDict("/Operations/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (self.systemConfig, 
-                                                                                                  "mokka", 
-                                                                                                  self.applicationVersion))
+    add_env = self.ops.getOptionsDict("/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (self.systemConfig, 
+                                                                                        "mokka", 
+                                                                                        self.applicationVersion))
     if add_env['OK']:
       for key in add_env['Value'].keys():
         script.write('declare -x %s=%s/%s\n' % (key, mySoftwareRoot, add_env['Value'][key]))

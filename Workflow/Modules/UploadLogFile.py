@@ -38,12 +38,12 @@ class UploadLogFile(ModuleBase):
     self.logLFNPath = ""
     self.logdir = ''
     self.setup = gConfig.getValue('/DIRAC/Setup')
-    self.logSE = gConfig.getValue('/Operations/LogStorage/%s/LogSE' % (self.setup), 'LogSE')
+    self.logSE = self.ops.getValue('/LogStorage/%s/LogSE' % (self.setup), 'LogSE')
     self.root = gConfig.getValue('/LocalSite/Root', os.getcwd())
-    self.logSizeLimit = gConfig.getValue('/Operations/LogFiles/SizeLimit', 20 * 1024 * 1024)
-    self.logExtensions = gConfig.getValue('/Operations/LogFiles/Extensions', [])
+    self.logSizeLimit = self.ops.getValue('/LogFiles/SizeLimit', 20 * 1024 * 1024)
+    self.logExtensions = self.ops.getValue('/LogFiles/Extensions', [])
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
-    self.diracLogo = gConfig.getValue('/Operations/SAM/LogoURL', 
+    self.diracLogo = self.ops.getValue('/SAM/LogoURL', 
                                       'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
     self.rm = ReplicaManager()
 
@@ -338,7 +338,7 @@ class UploadLogFile(ModuleBase):
     fileDict = {}
     fileDict['Status'] = 'Waiting'
     fileDict['LFN'] = logFileLFN
-    result = self.request.setSubRequestFiles(index, 'logupload', [fileDict])
+    self.request.setSubRequestFiles(index, 'logupload', [fileDict])
     return S_OK()
 
   #############################################################################

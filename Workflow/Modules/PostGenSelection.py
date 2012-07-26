@@ -89,9 +89,9 @@ class PostGenSelection(ModuleBase):
 
     if not os.environ.has_key('ROOTSYS'):
       return S_OK('Root environment is not set')
-    postgenDir = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, 
-                                                                                     "postgensel", 
-                                                                                     self.applicationVersion), '')
+    postgenDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, 
+                                                                           "postgensel", 
+                                                                           self.applicationVersion), '')
     postgenDir = postgenDir.replace(".tgz", "").replace(".tar.gz", "")    
     res = getSoftwareFolder(postgenDir)
     if not res['OK']:

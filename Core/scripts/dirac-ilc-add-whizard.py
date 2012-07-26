@@ -144,8 +144,8 @@ if len(args) < 3:
   usage()
 
 
-softwareSection = "/Operations/AvailableTarBalls"
-processlistLocation = "/Operations/ProcessList/Location"
+softwareSection = "/Operations/Defaults/AvailableTarBalls"
+processlistLocation = "/Operations/Defaults/ProcessList/Location"
 
 appName = "whizard"
 

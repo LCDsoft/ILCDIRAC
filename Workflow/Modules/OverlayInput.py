@@ -16,6 +16,7 @@ from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfe
 from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Core.Utilities.WasteCPU                        import WasteCPUCycles
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -28,11 +29,12 @@ import os, time, random, string, subprocess, glob
 def allowedBkg( bkg, energy = None, detectortype = None ):
   """ Check is supplied bkg is allowed
   """
+  ops = Operations()
   bkg_allowed = [ 'gghad', 'pairs' ]
   if not bkg in bkg_allowed:
     return S_ERROR( "Bkg not allowed" )
   if energy and detectortype:
-    res = gConfig.getOption( "/Operations/Overlay/%s/%s/%s/ProdID" % (detectortype, energy, bkg), 0 )
+    res = ops.getOption( "/Overlay/%s/%s/%s/ProdID" % (detectortype, energy, bkg), 0 )
     if not res['Value']:
       return S_ERROR( "No background to overlay" )  
   return S_OK()
@@ -133,7 +135,7 @@ class OverlayInput (ModuleBase):
     meta['Datatype'] = 'SIM'
     meta['DetectorType'] = self.detector
 
-    res = gConfig.getOption("/Operations/Overlay/%s/%s/%s/ProdID" % (self.detector, self.energytouse, self.BkgEvtType), 0)
+    res = self.ops.getOption("/Overlay/%s/%s/%s/ProdID" % (self.detector, self.energytouse, self.BkgEvtType), 0)
     meta['ProdID'] = res['Value']
     if self.prodid:
       meta['ProdID'] = self.prodid
@@ -151,7 +153,7 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events
-    res = gConfig.getOption("/Operations/Overlay/%s/%s/%s/NbEvts" % (self.detector, self.energytouse, self.BkgEvtType), 100)
+    res = self.ops.getOption("/Overlay/%s/%s/%s/NbEvts" % (self.detector, self.energytouse, self.BkgEvtType), 100)
     self.nbofeventsperfile = res['Value']
 
     #res = self.fc.getCompatibleMetadata(meta)
@@ -245,23 +247,23 @@ class OverlayInput (ModuleBase):
     totnboffilestoget = int(ceil(self.NbSigEvtsPerJob * numberofeventstoget / self.nbofeventsperfile))
 
     ##Limit ourself to some configuration maximum
-    res = gConfig.getOption("/Operations/Overlay/MaxNbFilesToGet", 20)
+    res = self.ops.getOption("/Overlay/MaxNbFilesToGet", 20)
     maxNbFilesToGet = res['Value']
     if totnboffilestoget > maxNbFilesToGet:
       totnboffilestoget = maxNbFilesToGet
-#    res = gConfig.getOption("/Operations/Overlay/MaxConcurrentRunning",200)
+#    res = self.ops.getOption("/Overlay/MaxConcurrentRunning",200)
 #    self.log.verbose("Will allow only %s concurrent running"%res['Value'])
 #    max_concurrent_running = res['Value']
 #
 #    jobpropdict = {}
 #    jobpropdict['ApplicationStatus'] = 'Getting overlay files'
-#    res = gConfig.getSections("/Operations/Overlay/Sites/")
+#    res = self.ops.getSections("/Overlay/Sites/")
 #    sites = []
 #    if res['OK']:
 #      sites = res['Value']
 #      self.log.verbose("Found the following sites to restrain: %s"%sites)
 #    if self.site in sites:
-#      res = gConfig.getOption("/Operations/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
+#      res = self.ops.getOption("/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
 #      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
 #      jobpropdict['Site']=self.site
 #      max_concurrent_running = res['Value']
@@ -318,7 +320,7 @@ class OverlayInput (ModuleBase):
     fail = False
     fail_count = 0
 
-    res = gConfig.getOption("/Operations/Overlay/MaxFailedAllowed", 20)
+    res = self.ops.getOption("/Overlay/MaxFailedAllowed", 20)
     max_fail_allowed = res['Value']
     while not len(filesobtained) == totnboffilestoget:
       if fail_count > max_fail_allowed:

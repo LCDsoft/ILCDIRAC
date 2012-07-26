@@ -14,7 +14,6 @@ from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 
 gLogger = gLogger.getSubLogger('ProductionData')
-
 #############################################################################
 def constructProductionLFNs(paramDict):
   """ Used for local testing of a workflow, a temporary measure until

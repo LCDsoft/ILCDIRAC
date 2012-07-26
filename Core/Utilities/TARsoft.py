@@ -11,6 +11,8 @@ from DIRAC import gConfig, gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies      import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs              import removeLibc
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
+
 import os, urllib, tarfile, subprocess, shutil
 
 def TARinstall(app, config, area):
@@ -35,17 +37,17 @@ def install(app, config, area):
   """ Actually install the applications. Set the environment for some of them.
   """
   curdir = os.getcwd()
-
+  ops = Operations(setup='Defaults')
   appName    = app[0]
   appVersion = app[1]
   appName = appName.lower()
-  app_tar = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/TarBall' % (config, appName, appVersion), '')
-  overwrite = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/%s/Overwrite' % (config, appName, appVersion), False)
+  app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (config, appName, appVersion), '')
+  overwrite = ops.getValue('/AvailableTarBalls/%s/%s/%s/Overwrite' % (config, appName, appVersion), False)
 
   if not app_tar:
     gLogger.error('Could not find tar ball for %s %s'%(appName, appVersion))
     return S_ERROR('Could not find tar ball for %s %s'%(appName, appVersion))
-  TarBallURL = gConfig.getValue('/Operations/AvailableTarBalls/%s/%s/TarBallURL' % (config, appName), '')
+  TarBallURL = ops.getValue('/AvailableTarBalls/%s/%s/TarBallURL' % (config, appName), '')
   if not TarBallURL:
     gLogger.error('Could not find TarBallURL in CS for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find TarBallURL in CS')

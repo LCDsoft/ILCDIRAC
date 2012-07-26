@@ -16,7 +16,7 @@ from ILCDIRAC.Core.Utilities.TARsoft   import TARinstall
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall 
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from DIRAC.Core.Utilities.Subprocess   import systemCall
-
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC                             import S_OK, S_ERROR
 
 natOS = NativeMachine()
@@ -33,6 +33,9 @@ class CombinedSoftwareInstallation(object):
     
     Also determines the SharedArea and LocalArea.
     """
+    
+    self.ops = Operations(setup = "Defaults")
+    
     self.job = {}
     if argumentsDict.has_key('Job'):
       self.job = argumentsDict['Job']
@@ -101,7 +104,7 @@ class CombinedSoftwareInstallation(object):
         
     DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (string.join(self.ceConfigs, ","), 
                                                                                 self.jobConfig))
-    res = DIRAC.gConfig.getSections('/Operations/AvailableTarBalls')
+    res = self.ops.getSections('/AvailableTarBalls')
     if not res['OK']:
       return res
     else:

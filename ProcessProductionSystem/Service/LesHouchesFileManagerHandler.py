@@ -9,20 +9,22 @@ Created on Apr 18, 2012
 from DIRAC                                              import gLogger, gConfig, S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 from types import StringTypes
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
+
 import os
 
 ModelsDict = {}
-
 def initializeLesHouchesFileManagerHandler( serviceInfo ):
   """ Initialize the service
   """
-  res = gConfig.getOptionsDict("/Operations/Models")
+  ops = Operations()
+  res = ops.getOptionsDict("/Models")
   if not res['OK']:
     return res
   templates = res['Value']
   cfgPath = serviceInfo['serviceSectionPath']
   location = ''
-  location = gConfig.getValue( "%s/BasePath" % cfgPath, location  )
+  location = ops.getValue( "%s/BasePath" % cfgPath, location  )
   if not location:
     gLogger.error( 'Path to LesHouches files not defined' )
     return S_ERROR("Path to LesHouches files not defined in CS")

@@ -18,10 +18,11 @@ from DIRAC.Core.DISET.RPCClient                             import RPCClient
 
 from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogClient
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 from math                                                   import modf
 
-from DIRAC                                                  import S_OK, S_ERROR, gConfig
+from DIRAC                                                  import S_OK, S_ERROR
 
 import string, os, shutil, types
 from decimal import Decimal
@@ -39,10 +40,11 @@ class ProductionJob(Job):
     self.finalsdict = {}
     self.transfid = 0
     self.type = 'Production'
-    self.csSection = '/Operations/Production/Defaults'
+    self.csSection = '/Production/Defaults'
+    self.ops = Operations()
     self.fc = FileCatalogClient()
     self.trc = TransformationClient()
-    self.systemConfig = gConfig.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt')
+    self.systemConfig = self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.jobFileGroupSize = 1
@@ -100,9 +102,9 @@ class ProductionJob(Job):
   def _setParameter(self, name, parameterType, parameterValue, description):
     """Set parameters checking in CS in case some defaults need to be changed.
     """
-    if gConfig.getValue('%s/%s' % (self.csSection, name), ''):
-      self.log.debug('Setting %s from CS defaults = %s' % (name, gConfig.getValue('%s/%s' % (self.csSection, name))))
-      self._addParameter(self.workflow, name, parameterType, gConfig.getValue('%s/%s' % (self.csSection, name), 
+    if self.ops.getValue('%s/%s' % (self.csSection, name), ''):
+      self.log.debug('Setting %s from CS defaults = %s' % (name, self.ops.getValue('%s/%s' % (self.csSection, name))))
+      self._addParameter(self.workflow, name, parameterType, self.ops.getValue('%s/%s' % (self.csSection, name), 
                                                                               'default'), description)
     else:
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
