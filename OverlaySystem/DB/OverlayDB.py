@@ -6,7 +6,7 @@
 """
 __RCSID__ = " $Id: $ "
 
-from DIRAC                                                             import gConfig, gLogger, S_OK, S_ERROR
+from DIRAC                                                             import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.DB                                                import DB
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
@@ -26,16 +26,16 @@ class OverlayDB ( DB ):
                                            }
                         }
                       )
-    res = self.ops.getOption("/Overlay/MaxConcurrentRunning", 200)
+    limits = self.ops.getValue("/Overlay/MaxConcurrentRunning", 200)
     self.limits = {}
-    self.limits["default"] = res['Value']
+    self.limits["default"] = limits
     res = self.ops.getSections("/Overlay/Sites/")
     sites = []
     if res['OK']:
       sites = res['Value']
     for tempsite in sites:
-      res = self.ops.getOption("/Overlay/Sites/%s/MaxConcurrentRunning" % tempsite, 200)
-      self.limits[tempsite] = res['Value']
+      res = self.ops.getValue("/Overlay/Sites/%s/MaxConcurrentRunning" % tempsite, 200)
+      self.limits[tempsite] = res
     self.logger.info("Using the following restrictions : %s" % self.limits)
 
   #####################################################################
