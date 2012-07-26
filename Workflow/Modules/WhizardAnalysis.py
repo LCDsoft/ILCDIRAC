@@ -74,10 +74,10 @@ class WhizardAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     
-    res = self.ops.getOption("/ProcessList/Location", "")
-    if not res['OK']:
-      return res
-    processlistloc = res['Value']
+    res = self.ops.getValue("/ProcessList/Location", "")
+    if not res:
+      return S_ERROR("No process list found")
+    processlistloc = res
     if not os.path.exists(os.path.basename(processlistloc)):
       res = self.rm.getFile(processlistloc)
       if not res['OK']:
