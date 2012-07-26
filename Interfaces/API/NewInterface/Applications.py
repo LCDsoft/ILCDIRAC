@@ -1539,7 +1539,7 @@ class OverlayInput(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.ops = Operations(setup = 'Defaults')
+    self.ops = Operations()
     self.BXOverlay = None
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
