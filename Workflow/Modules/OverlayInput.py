@@ -18,7 +18,7 @@ from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Core.Utilities.WasteCPU                        import WasteCPUCycles
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 
-from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                   import S_OK, S_ERROR, gLogger
 import DIRAC
 from math import ceil, modf
 
@@ -26,17 +26,22 @@ from decimal import Decimal
 
 import os, time, random, string, subprocess, glob
 
-def allowedBkg( bkg, energy = None, detectortype = None ):
+def allowedBkg( bkg, energy = None, detector = None, detectormodel = None, machine = 'clic_cdr' ):
   """ Check is supplied bkg is allowed
   """
   ops = Operations()
   bkg_allowed = [ 'gghad', 'pairs' ]
   if not bkg in bkg_allowed:
     return S_ERROR( "Bkg not allowed" )
-  if energy and detectortype:
-    res = ops.getValue( "/Overlay/%s/%s/%s/ProdID" % (detectortype, energy, bkg), 0 )
-    if not res:
-      return S_ERROR( "No background to overlay" )  
+  if energy:
+    if detectormodel:
+      res = ops.getValue( "/Overlay/%s/%s/%s/%s/ProdID" % (machine, energy, detectormodel, bkg), 0 )
+      if not res:
+        return S_ERROR( "No background to overlay" )  
+    if detector:##needed for backward compatibility
+      res = ops.getValue( "/Overlay/%s/%s/%s/%s/ProdID" % (machine, detector, energy, bkg), 0 )
+      if not res:
+        return S_ERROR( "No background to overlay" )  
   return S_OK()
 
 class OverlayInput (ModuleBase):
@@ -52,7 +57,8 @@ class OverlayInput (ModuleBase):
     self.applicationLog = ''
     self.printoutflag = ''
     self.prodid = 0
-    self.detector = ""
+    self.detector = '' ##needed for backward compatibility
+    self.detectormodel = ""
     self.energytouse = ''
     self.energy = 0
     self.nbofeventsperfile = 100
@@ -68,12 +74,13 @@ class OverlayInput (ModuleBase):
     self.fc = FileCatalogClient()
     self.site = DIRAC.siteName()
 
+    self.machine = 'clic_cdr'
 
   def applicationSpecificInputs(self):
 
     if self.step_commons.has_key('Detector'):
-      self.detector = self.step_commons['Detector']
-    if not self.detector:
+      self.detectormodel = self.step_commons['Detector']
+    if not self.detectormodel and not self.detector:
       return S_ERROR('Detector model not defined')
 
     if self.step_commons.has_key('Energy'):
@@ -108,7 +115,8 @@ class OverlayInput (ModuleBase):
     if self.step_commons.has_key('BkgEvtType'):
       self.BkgEvtType = self.step_commons['BkgEvtType']
       
-    res =  allowedBkg(self.BkgEvtType, self.energytouse, self.detector) 
+    res =  allowedBkg(self.BkgEvtType, self.energytouse, detector = self.detector, 
+                      detectormodel = self.detectormodel, machine = self.machine) 
     if not res['OK']:
       return res
     
@@ -130,12 +138,27 @@ class OverlayInput (ModuleBase):
     """ Get the list of files from the FileCatalog.
     """
     meta = {}
-    meta['Energy'] = self.energytouse
+    #meta['Energy'] = self.energytouse
     meta['EvtType'] = self.BkgEvtType
     meta['Datatype'] = 'SIM'
-    meta['DetectorType'] = self.detector
+    meta['DetectorModel'] = self.detectormodel
+    meta['Machine'] = self.machine
+    res = None
+    if self.detector:
+      res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, self.detector, 
+                                                               self.energytouse, self.BkgEvtType), 0)
+      self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/%s/NbEvts" % (self.machine, self.detector, 
+                                                                                  self.energytouse, 
+                                                                                  self.BkgEvtType), 
+                                                 100)
 
-    res = self.ops.getValue("/Overlay/%s/%s/%s/ProdID" % (self.detector, self.energytouse, self.BkgEvtType), 0)
+    else:
+      res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, self.energytouse, 
+                                                               self.detectormodel, self.BkgEvtType), 0)
+      self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/%s/NbEvts" % (self.machine, self.detector, 
+                                                                                  self.energytouse, 
+                                                                                  self.BkgEvtType), 
+                                                 100)
     meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
@@ -153,10 +176,6 @@ class OverlayInput (ModuleBase):
     #    return S_ERROR("Could not determine ProdID from compatible metadata")
     #meta['ProdID']=self.prodid
     #refetch the compat metadata to get nb of events
-    self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/NbEvts" % (self.detector, 
-                                                                             self.energytouse, 
-                                                                             self.BkgEvtType), 
-                                               100)
 
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
@@ -169,12 +188,14 @@ class OverlayInput (ModuleBase):
     #    self.nbofeventsperfile = compatmeta['NumberOfEvents']
     #else:
     #  return S_ERROR("Number of events could not be determined, cannot proceed.")
-    if self.site == "LCG.CERN.ch":
-      return self.__getFilesFromCastor(meta)
-#    elif   self.site == "LCG.IN2P3-CC.fr":
-#      return self.__getFilesFromLyon(meta)
-    else:
-      return self.fc.findFilesByMetadata(meta)
+    
+    ##Below might still be needed
+    #if self.site == "LCG.CERN.ch":
+    #  return self.__getFilesFromCastor(meta)
+#    elif   self.site == "LCG.IN2P3-CC.fr": ##but not this
+#      return self.__getFilesFromLyon(meta) ## nor this
+    #else:
+    return self.fc.findFilesByMetadata(meta)
 
   def __getFilesFromLyon(self, meta):
     """ List the files present at Lyon, not used.
