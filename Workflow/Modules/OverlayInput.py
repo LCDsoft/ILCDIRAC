@@ -142,7 +142,10 @@ class OverlayInput (ModuleBase):
     meta['EvtType'] = self.BkgEvtType
     meta['Datatype'] = 'SIM'
     meta['DetectorModel'] = self.detectormodel
-    meta['Machine'] = self.machine
+    if self.machine == 'ilc_dbd':
+      meta['Machine'] = 'ilc'
+    if self.machine == 'clic_cdr':
+      meta['Machine'] = 'clic'
     res = None
     if self.detector:
       res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, self.detector, 
@@ -162,6 +165,7 @@ class OverlayInput (ModuleBase):
     meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
+    self.log.info("Using %s as metadata" % (meta))
     #res = self.fc.getCompatibleMetadata(meta)
     #if not res['OK']:
     #  return res
