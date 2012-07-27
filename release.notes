@@ -1,3 +1,8 @@
+[v11r1p0]
+* all 
+Move central services to DIRAC
+* OverlayInput
+Adapt to new CS schema, needed for DBD productions
 [v11r0p2]
 * all 
 Make sure the getOption is replaced by getValue
