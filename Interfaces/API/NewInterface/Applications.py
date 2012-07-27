@@ -1546,12 +1546,21 @@ class OverlayInput(Application):
     self.BkgEvtType = ''
     self.inputenergy = ''
     self.prodid = 0
+    self.machine = 'clic_cdr'
     Application.__init__(self, paramdict)
     self.version = '1'
     self._modulename = "OverlayInput"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
     self.accountInProduction = False
+    
+  def setMachine(self, machine):
+    """ Define the machine to use, clic_cdr or ilc_dbd
+    """
+    self._checkArgs( {
+        'machine' : types.StringTypes
+      } )
+    self.machine = machine
 
   def setProdID(self, pid):
     """ Define the prodID to use as input, experts only
@@ -1600,10 +1609,10 @@ class OverlayInput(Application):
     return S_OK()
 
 
-  def setDetectorType(self, detectortype):
-    """ Set the detector type. Must be 'ILD' or 'SID'
+  def setDetectorModel(self, detectormodel):
+    """ Set the detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
     
-    @param detectortype: Detector type. Must be 'ILD' or 'SID'
+    @param detectortype: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
     @type detectortype: string
     
     """  
@@ -1611,7 +1620,7 @@ class OverlayInput(Application):
         'detectortype' : types.StringTypes
       } )
     
-    self.detectortype = detectortype
+    self.detectortype = detectormodel
     return S_OK()
 
 
@@ -1651,8 +1660,10 @@ class OverlayInput(Application):
                               "ProdID to use"))
     m1.addParameter(Parameter("BkgEvtType",     "", "string", "", "", False, False, 
                               "Background type. Default is gg -> had"))
-    m1.addParameter(Parameter("detector",       "", "string", "", "", False, False, 
-                              "Detector model. Must be ILD or SID"))
+    m1.addParameter(Parameter("detectormodel",       "", "string", "", "", False, False, 
+                              "Detector model."))
+    m1.addParameter(Parameter("machine",       "", "string", "", "", False, False, 
+                              "machine: clic_cdr or ilc_dbd"))
     m1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
@@ -1663,8 +1674,9 @@ class OverlayInput(Application):
     moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
     moduleinstance.setValue('prodid',            self.prodid)
     moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
-    moduleinstance.setValue('detector',          self.detectortype)
+    moduleinstance.setValue('detectormodel',     self.detectortype)
     moduleinstance.setValue('debug',             self.debug)
+    moduleinstance.setValue('machine',           self.machine  )
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1690,8 +1702,7 @@ class OverlayInput(Application):
     if not self.BXOverlay :
       self.BXOverlay = 60
       self._log.info("Using default number of BX to overlay: 60")
-      
-      
+          
     if not self.ggtohadint :
       self.ggtohadint = 3.2
       self._log.info("Number of GG -> had is set to 3.2 by default")  
@@ -1699,6 +1710,7 @@ class OverlayInput(Application):
     if not self.BkgEvtType :
       self.BkgEvtType = 'gghad'
       self._log.info("Background event type is gg -> had by default")
+    
     
     if not self.detectortype in ['ILD', 'SID', 'SID_DBD'] :
       return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD, SID, SID_DBD.')
@@ -1717,11 +1729,15 @@ class OverlayInput(Application):
     """ Final check of consistency: the overlay files for the specifed energy must exist
     """
     if not self.energy:
-      return  S_ERROR("Energy MUST be spcified for the overlay")
-    res = self.ops.getSections("/Overlay/%s" % self.detectortype)
+      return  S_ERROR("Energy MUST be specified for the overlay")
+
+    res = self.ops.getSections('/Overlay')
     if not res['OK']:
-      return S_ERROR("Could not find the detector type")
-      
+      return S_ERROR("Could not resolve the CS path to the overlay specifications")
+    sections = res['Value']
+    if not self.machine in sections:
+      return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.machine, sections))  
+    
     fracappen = modf(float(self.energy)/1000.)
     if fracappen[1] > 0: 
       energytouse = "%stev" % (Decimal(str(self.energy))/Decimal("1000."))
@@ -1729,9 +1745,19 @@ class OverlayInput(Application):
       energytouse =  "%sgev" % (Decimal(str(self.energy)))
     if energytouse.count(".0"):
       energytouse = energytouse.replace(".0", "")
+    res = self.ops.getSections("/Overlay/%s" % self.machine)
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s" % energytouse)
-    res = allowedBkg(self.BkgEvtType, energytouse, self.detectortype)  
+    
+    res = self.ops.getSections("/Overlay/%s/%s" % (self.machine, energytouse))
+    if not res['OK']:
+      return S_ERROR("Could not find the detector models")
+    
+    if not self.detectortype in res['Value']:
+      return S_ERROR("Detector model specified has no overlay data with that energy and machine")
+      
+    
+    res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.detectortype, machine = self.machine)  
     if not res['OK']:
       return res
 
