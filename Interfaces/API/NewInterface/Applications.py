@@ -1617,7 +1617,7 @@ class OverlayInput(Application):
     
     """  
     self._checkArgs( {
-        'detectortype' : types.StringTypes
+        'detectormodel' : types.StringTypes
       } )
     
     self.detectortype = detectormodel
@@ -1712,9 +1712,6 @@ class OverlayInput(Application):
       self._log.info("Background event type is gg -> had by default")
     
     
-    if not self.detectortype in ['ILD', 'SID', 'SID_DBD'] :
-      return S_ERROR('Detector type not set or wrong detector type. Allowed are ILD, SID, SID_DBD.')
-
     if self._jobtype == 'User' :
       if not self.NbSigEvtsPerJob :
         return S_ERROR("Number of signal event per job is not defined")
