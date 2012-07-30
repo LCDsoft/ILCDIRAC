@@ -1,3 +1,6 @@
+[v12r0p0]
+* all
+Needed to play with DIRAC v6r4p18
 [v11r1p2]
 * OverlayInput
 Do a nasty hack to handle the machine meta data.
