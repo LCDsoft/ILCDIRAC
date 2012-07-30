@@ -25,7 +25,15 @@ def Exists(myfile):
            "cuts_e3e3_1400.txt", "cuts_e1e1e3e3_o_1400.txt", 
            "cuts_aa_e3e3_o_1400.txt",
            "cuts_aa_e3e3nn_1400.txt", "cuts_aa_e2e2e3e3_o_1400.txt", 
-           "cuts_aa_e1e1e3e3_o_1400.txt", "defaultStrategies_clic_sid_cdr.xml"]
+           "cuts_aa_e1e1e3e3_o_1400.txt", "defaultStrategies_clic_sid_cdr.xml",
+           "defaultIlcCrossingAngle.mac",
+           "defaultIlcCrossingAngleZSmearing.mac",
+           "sid_dbd_pandoraSettings.xml",
+           "sid_dbd_postPandora.xml",
+           "sid_dbd_prePandora.xml",
+           "sid_dbd_vertexing.xml",
+           "sidloi3.gear",
+           "sidloi3_trackingStrategies.xml"]
   if myfile in files:
     return S_OK()
   else:
