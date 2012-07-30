@@ -6,7 +6,7 @@ Created on Jul 14, 2011
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
-from DIRAC import S_OK, S_ERROR, gConfig, gLogger
+from DIRAC import S_OK, S_ERROR, gLogger
 import os, shutil
 
 class RemoveSoft(object):
