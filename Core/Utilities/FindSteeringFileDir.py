@@ -4,7 +4,7 @@ Created on Feb 10, 2012
 @author: Stephane Poss
 '''
 
-from DIRAC import gConfig, S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
