@@ -5,9 +5,9 @@ This object is the interface to the processlist.cfg that contains all the proces
 
 @author: sposs
 '''
-from DIRAC import S_OK, S_ERROR, gLogger
+from DIRAC                    import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.CFG import CFG
-from pprint import pprint
+from pprint                   import pprint
 import os, tempfile, shutil
 
 class ProcessList(object):

@@ -7,7 +7,7 @@ Also installs all dependencies for the applications
 
 @author: Stephane Poss
 '''
-from DIRAC import gConfig, gLogger, S_OK, S_ERROR
+from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies      import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs              import removeLibc
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager

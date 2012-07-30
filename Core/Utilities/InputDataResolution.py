@@ -20,7 +20,7 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.ModuleFactory                             import ModuleFactory
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
-from DIRAC                                                          import S_OK, S_ERROR, gConfig, gLogger
+from DIRAC                                                          import S_OK, S_ERROR, gLogger
 import DIRAC
 
 import string, types

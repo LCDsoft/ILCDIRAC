@@ -10,7 +10,7 @@ Works recursively
 @author: Stephane Poss
 '''
 
-from DIRAC import gConfig, gLogger
+from DIRAC import gLogger
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 def resolveDeps(sysconfig, appli, appversion):
