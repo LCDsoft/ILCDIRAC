@@ -4,7 +4,7 @@ from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
 
-import os,types,string
+import types,string
 from decimal import Decimal
 
 
