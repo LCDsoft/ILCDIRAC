@@ -120,7 +120,8 @@ class OverlayInput (ModuleBase):
                       detectormodel = self.detectormodel, machine = self.machine) 
     if not res['OK']:
       return res
-    
+    if res['Value'] < 0:
+      return S_ERROR("No suitable ProdID") 
     #if self.workflow_commons.has_key('Site'):
     #  self.site = self.workflow_commons['Site']
 
