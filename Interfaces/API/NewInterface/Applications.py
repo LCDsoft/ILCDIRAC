@@ -1716,7 +1716,7 @@ class OverlayInput(Application):
       if not self.NbSigEvtsPerJob :
         return S_ERROR("Number of signal event per job is not defined")
     else:
-      self.prodparameters['detectorType'] = self.detectortype
+      self.prodparameters['detectorModel'] = self.detectortype
       self.prodparameters['BXOverlay']  = self.BXOverlay
       self.prodparameters['GGtoHadInt'] = self.ggtohadint
     
