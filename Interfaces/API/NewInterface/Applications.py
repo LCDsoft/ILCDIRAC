@@ -1757,7 +1757,8 @@ class OverlayInput(Application):
     res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.detectortype, machine = self.machine)  
     if not res['OK']:
       return res
-
+    if res['Value'] < 0:
+      return S_ERROR("No proper production ID found") 
     return S_OK()
   
   
