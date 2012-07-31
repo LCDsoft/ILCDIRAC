@@ -158,10 +158,14 @@ class OverlayInput (ModuleBase):
                                                  100)
 
     else:
-      res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, self.energytouse, 
-                                                               self.detectormodel, self.BkgEvtType), 0)
-      self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/%s/NbEvts" % (self.machine, self.detector, 
-                                                                                  self.energytouse, 
+      res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, 
+                                                               self.energytouse, 
+                                                               self.detectormodel, 
+                                                               self.BkgEvtType), 
+                              0)
+      self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/%s/NbEvts" % (self.machine, 
+                                                                                  self.energytouse,
+                                                                                  self.detectormodel,
                                                                                   self.BkgEvtType), 
                                                  100)
     meta['ProdID'] = res
