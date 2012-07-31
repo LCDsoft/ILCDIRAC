@@ -26,7 +26,7 @@ class SIDProductionJob(ProductionJob):
     if not res['OK']:
       print "Could not contact File Catalog"
       return S_ERROR()
-    metaFCkeys = res['Value'].keys()
+    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
     for key in metakeys:
       for meta in metaFCkeys:
         if meta != key:
