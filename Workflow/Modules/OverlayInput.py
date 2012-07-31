@@ -33,16 +33,17 @@ def allowedBkg( bkg, energy = None, detector = None, detectormodel = None, machi
   bkg_allowed = [ 'gghad', 'pairs' ]
   if not bkg in bkg_allowed:
     return S_ERROR( "Bkg not allowed" )
+  res = -1
   if energy:
     if detectormodel:
-      res = ops.getValue( "/Overlay/%s/%s/%s/%s/ProdID" % (machine, energy, detectormodel, bkg), 0 )
-      if not res:
+      res = ops.getValue( "/Overlay/%s/%s/%s/%s/ProdID" % (machine, energy, detectormodel, bkg), -1 )
+      if res < 0:
         return S_ERROR( "No background to overlay" )  
     if detector:##needed for backward compatibility
-      res = ops.getValue( "/Overlay/%s/%s/%s/%s/ProdID" % (machine, detector, energy, bkg), 0 )
-      if not res:
+      res = ops.getValue( "/Overlay/%s/%s/%s/%s/ProdID" % (machine, detector, energy, bkg), -1 )
+      if res < 0 :
         return S_ERROR( "No background to overlay" )  
-  return S_OK()
+  return S_OK(res)
 
 class OverlayInput (ModuleBase):
   """ Download the files for overlay.
