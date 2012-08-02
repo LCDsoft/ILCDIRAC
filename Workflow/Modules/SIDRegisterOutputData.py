@@ -121,6 +121,7 @@ class SIDRegisterOutputData(ModuleBase):
             self.log.error('Could not register metadata NumberOfEvents, with value %s for %s' % (self.nbofevents, 
                                                                                                  files))
             return res
+        meta.update(nbevts)
       if self.luminosity:
         lumi = {}
         lumi['Luminosity'] = self.luminosity
@@ -129,9 +130,10 @@ class SIDRegisterOutputData(ModuleBase):
           if not res['OK']:
             self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity, files))
             return res
+        meta.update(lumi)
 #      meta.update(metaprodid)
-      meta.update(nbevts)
-      meta.update(lumi)
+      
+      
       
       self.log.info("Registered %s with tags %s"%(files, meta))
       
