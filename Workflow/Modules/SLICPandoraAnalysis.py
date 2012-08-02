@@ -20,7 +20,7 @@ from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfeven
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs, GetNewPATH
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                import S_OK, S_ERROR, gLogger
 
 def unzip_file_into_dir(myfile, mydir):
   """Used to unzip the downloaded detector model
@@ -71,10 +71,10 @@ class SLICPandoraAnalysis (ModuleBase):
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
         res = getNumberOfevents(self.InputData)
-        if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
+        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
           self.workflow_commons["NbOfEvents"] = res["nbevts"]
           self.workflow_commons["NbOfEvts"] = res["nbevts"]
-        if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
+        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"] = res["lumi"]
         
     if self.step_commons.has_key('EvtsToProcess'):
