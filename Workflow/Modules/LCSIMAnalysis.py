@@ -76,11 +76,11 @@ class LCSIMAnalysis(ModuleBase):
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
         res = getNumberOfevents(self.InputData)
-        if res.has_key("nbevts") and not self.workflow_commons.has_key("Luminosity") :
+        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
           self.workflow_commons["NbOfEvents"] = res["nbevts"]
           self.workflow_commons["NbOfEvts"] = res["nbevts"]
           self.NumberOfEvents = res["nbevts"]
-        if res.has_key("lumi") and not self.workflow_commons.has_key("NbOfEvents"):
+        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
           self.workflow_commons["Luminosity"] = res["lumi"]
 
     if self.workflow_commons.has_key("IS_PROD"):
