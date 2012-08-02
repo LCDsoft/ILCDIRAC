@@ -1486,7 +1486,7 @@ class SLIC(Application):
         self.prodparameters['slic_detectormodel'] = self.detectorModel
    
     if not self.startFrom :
-      self._log.warn('No startFrom define for Slic : start from the begining')
+      self._log.info('No startFrom define for Slic : start from the begining')
     
     return S_OK()  
   
