@@ -7,11 +7,9 @@ Created on Feb 8, 2012
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
-from DIRAC.TransformationSystem.Client.TransformationClient import *
-
 from ILCDIRAC.Interfaces.API.NewInterface.SIDProductionJob import SIDProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC, LCSIM, SLICPandora, SLCIOSplit, StdHepSplit
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC, LCSIM, SLICPandora, SLCIOSplit, StdHepSplit, Marlin
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 dirac = DiracILC()

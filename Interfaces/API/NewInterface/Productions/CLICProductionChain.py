@@ -7,8 +7,6 @@ Created on Feb 8, 2012
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
-from DIRAC.TransformationSystem.Client.TransformationClient import *
-
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard, Mokka, Marlin, OverlayInput, StdhepCut
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC, LCSIM, SLICPandora, SLCIOSplit, StdHepSplit
