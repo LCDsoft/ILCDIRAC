@@ -243,7 +243,7 @@ class OverlayInput (ModuleBase):
     energy = meta['Energy']
     bkg = meta["EvtType"]
     detector = meta["DetectorType"]
-    path = "/castor/cern.ch/grid/ilc/prod/clic/%s/%s/%s/SIM/%s/" % (energy, bkg, detector, prod)
+    path = "/castor/cern.ch/grid/ilc/prod/%s/%s/%s/%s/SIM/%s/" % (self.machine, energy, bkg, detector, prod)
     comm = ["nsls", "%s" % path]
     res = subprocess.Popen(comm, stdout = subprocess.PIPE).communicate()
     dirlist = res[0].rstrip().split("\n")
