@@ -29,11 +29,11 @@ import os, time, random, string, subprocess, glob
 def allowedBkg( bkg, energy = None, detector = None, detectormodel = None, machine = 'clic_cdr' ):
   """ Check is supplied bkg is allowed
   """
-  gLogger.info("Those are the arguments: %s, %s, %s, %s, %s" % (bkg, energy, detector, detectormodel, machine) )
+  #gLogger.info("Those are the arguments: %s, %s, %s, %s, %s" % (bkg, energy, detector, detectormodel, machine) )
   ops = Operations()
-  bkg_allowed = [ 'gghad', 'pairs' ]
-  if not bkg in bkg_allowed:
-    return S_ERROR( "Bkg not allowed" )
+  #bkg_allowed = [ 'gghad', 'pairs' ]
+  #if not bkg in bkg_allowed:
+  #  return S_ERROR( "Bkg not allowed" )
   res = -1
   if energy:
     if detectormodel:
