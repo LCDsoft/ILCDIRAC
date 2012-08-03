@@ -1,3 +1,8 @@
+[v12r0p7]
+* Applications
+Handle the overlay better
+* Workflow
+Bug fix in SIDRegisterOutputData, plus drop the known background in OverlayInput
 [v12r0p6]
 * Workflow
 Fix wrong overwriting of number of events: reset to 0 if not found in the FC instead of using default value.
