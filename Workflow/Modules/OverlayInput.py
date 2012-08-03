@@ -144,7 +144,7 @@ class OverlayInput (ModuleBase):
     #meta['Energy'] = self.energytouse
     meta['EvtType'] = self.BkgEvtType
     meta['Datatype'] = 'SIM'
-    if not self.detector:
+    if self.detectormodel:
       meta['DetectorModel'] = self.detectormodel
     if self.machine == 'ilc_dbd':
       meta['Machine'] = 'ilc'
