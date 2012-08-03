@@ -41,6 +41,7 @@ from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, get
 
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC                                            import S_OK, S_ERROR
+from ILCDIRAC.Core.Utilities.CheckXMLValidity         import CheckXMLValidity
 
 from math import modf
 from decimal import Decimal
@@ -1906,6 +1907,10 @@ class Marlin(Application):
         res = Exists(self.steeringfile)
         if not res['OK']:
           return res  
+      if os.path.exists(self.steeringfile):
+        res = CheckXMLValidity(self.steeringfile)
+        if not res['OK']:
+          return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
     
     if not self.inputGearFile :
       self._log.warn('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
@@ -2118,6 +2123,10 @@ class LCSIM(Application):
         res = Exists(self.steeringfile)
         if not res['OK']:
           return res  
+      if os.path.exists(self.steeringfile):
+        res = CheckXMLValidity(self.steeringfile)
+        if not res['OK']:
+          return S_ERROR("Supplied steering file cannot be read by XML parser: %s" % ( res['Message'] ) )
     if self.trackingstrategy:
       if not os.path.exists(self.trackingstrategy) and not self.trackingstrategy.lower().count("lfn:"):
         res = Exists(self.trackingstrategy)
