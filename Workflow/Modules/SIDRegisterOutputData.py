@@ -139,7 +139,7 @@ class SIDRegisterOutputData(ModuleBase):
       
       ###Now, set the ancestors
       if self.InputData:
-        inputdata = self.InputData.split(";")
+        inputdata = self.InputData
         if self.enable:
           res = self.filecatalog.addFileAncestors({files : {'Ancestors' : inputdata}})
           if not res['OK']:
