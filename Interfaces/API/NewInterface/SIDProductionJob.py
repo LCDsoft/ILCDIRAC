@@ -80,8 +80,18 @@ class SIDProductionJob(ProductionJob):
         self.machineTuning = compatmeta["MachineParams"]
       if type(compatmeta["MachineParams"]) == type([]):
         self.machineparams = compatmeta["MachineParams"][0]
+    gendata = False    
+    if compatmeta.has_key('Datatype'):
+      if type(compatmeta['Datatype']) in types.StringTypes:
+        self.datatype = compatmeta['Datatype']
+        if compatmeta['Datatype'] == 'GEN':
+          gendata = True
+      if type(compatmeta['Datatype']) == type([]):
+        self.datatype = compatmeta['Datatype'][0]
+        if compatmeta['Datatype'][0] == 'GEN':
+          gendata = True
 
-    if compatmeta.has_key("DetectorModel"):
+    if compatmeta.has_key("DetectorModel") and not gendata:
       if type(compatmeta["DetectorModel"]) in types.StringTypes:
         self.detector = compatmeta["DetectorModel"]
       if type(compatmeta["DetectorModel"]) == type([]):
@@ -204,8 +214,8 @@ class SIDProductionJob(ProductionJob):
         self.detector = application.detectorModel
         if not self.detector:
           return S_ERROR("Application does not know which model to use, so the production does not either.")
-      else:
-        return S_ERROR("Application does not know which model to use, so the production does not either.")
+      #else:
+      #  return S_ERROR("Application does not know which model to use, so the production does not either.")
     
     
     ###Below modify according to SID conventions
@@ -224,12 +234,13 @@ class SIDProductionJob(ProductionJob):
       self.evttype += '/'  
     else:
       evttypemeta = self.evttype.rstrip("/")
-    
-    if not self.detector[-1] == "/":
-      detectormeta = self.detector
-      self.detector += "/"
-    else:
-      detectormeta = self.detector.rstrip("/")
+
+    if self.detector:
+      if not self.detector[-1] == "/":
+        detectormeta = self.detector
+        self.detector += "/"
+      else:
+        detectormeta = self.detector.rstrip("/")
       
     path = self.basepath    
     ###Need to resolve file names and paths
@@ -248,14 +259,24 @@ class SIDProductionJob(ProductionJob):
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath+energypath+self.evttype
       self.finalMetaDict[path]= {"EvtType" : evttypemeta}      
-      path += self.detector
-      self.finalMetaDict[path] = {"DetectorModel" : detectormeta}
+      if hasattr(application, "detectorModel"):
+        if application.detectorModel:
+          path += application.detectorModel
+          self.finalMetaDict[path] = {"DetectorModel" : application.detectorModel}
+          path += '/'
+        elif self.detector:
+          path += self.detector
+          self.finalMetaDict[path] = {"DetectorModel" : self.detector}
+          path += '/'
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
       self.finalMetaDict[path] = {"Datatype" : application.datatype}      
       self.log.info("Will store the files under %s" % path)
-      fname = self.basename+"_%s"%(application.datatype.lower())+".slcio"
+      extension = 'stdhep'
+      if application.datatype in ['SIM', 'REC']:
+        extension = 'slcio'
+      fname = self.basename+"_%s"%(application.datatype.lower())+ "." + extension
       application.setOutputFile(fname,path)  
 
     self.basepath = path
