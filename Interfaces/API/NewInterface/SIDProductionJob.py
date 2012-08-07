@@ -102,6 +102,9 @@ class SIDProductionJob(ProductionJob):
     self.energy = Decimal(self.energycat)  
     
     self.inputBKSelection = metadata
+    self.prodparameters['nbevts'] = self.nbevts 
+    self.prodparameters["FCInputQuery"] = self.inputBKSelection
+
     self.inputdataquery = True
     return S_OK()    
     
@@ -200,7 +203,8 @@ class SIDProductionJob(ProductionJob):
       if not res['OK']:
         return res
     if self.energy:
-      self._setParameter( "Energy", "float", float(self.energy), "Energy used")      
+      self._setParameter( "Energy", "float", float(self.energy), "Energy used")
+      self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
       if hasattr(application,'evttype'):
