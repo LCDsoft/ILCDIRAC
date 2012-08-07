@@ -183,7 +183,13 @@ class SIDProductionJob(ProductionJob):
       
     if application.nbevts > 0 and self.nbevts > application.nbevts:
       self.nbevts = application.nbevts
+    self.prodparameters['nbevts'] = self.nbevts
     
+    if self.prodparameters["SWPackages"]:
+      self.prodparameters["SWPackages"] += ";%s.%s" % (application.appname, application.version)
+    else :
+      self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
+
     if not self.energy:
       if application.energy:
         self.energy = Decimal(str(application.energy))
@@ -251,11 +257,13 @@ class SIDProductionJob(ProductionJob):
       self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"REC"] = {'Datatype' : "REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
+      self.finalpaths.append(path)
       path = self.basepath+energypath+self.evttype+self.detector+"DST/"
       self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
       self.finalMetaDict[self.basepath+energypath+self.evttype+self.detector+"DST"] = {'Datatype':"DST"}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
+      self.finalpaths.append(path)
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath+energypath+self.evttype
       self.finalMetaDict[path]= {"EvtType" : evttypemeta}      
@@ -271,8 +279,11 @@ class SIDProductionJob(ProductionJob):
       if not application.datatype and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
+
       self.finalMetaDict[path] = {"Datatype" : application.datatype}      
       self.log.info("Will store the files under %s" % path)
+      self.finalpaths.append(path)
+
       extension = 'stdhep'
       if application.datatype in ['SIM', 'REC']:
         extension = 'slcio'
