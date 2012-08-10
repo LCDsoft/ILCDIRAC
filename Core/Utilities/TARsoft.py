@@ -183,11 +183,11 @@ def install(app, config, area):
     os.environ['PATH'] = os.environ['ROOTSYS'] + "/bin:" + os.environ['PATH']
     os.environ['PYTHONPATH'] = os.environ['ROOTSYS'] + "/lib:" + os.environ["PYTHONPATH"]
   elif appName == 'java':
-    os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/Executable:" + os.environ['PATH']
+    os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/bin:" + os.environ['PATH']
     if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/LDLibs:" + os.environ['LD_LIBRARY_PATH']
+      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib:" + os.environ['LD_LIBRARY_PATH']
     else:
-      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/LDLibs"
+      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib"
   elif appName == "lcio":
     os.environ['LCIO'] = os.path.join(os.getcwd(), basefolder)
     os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/bin:" + os.environ['PATH']
