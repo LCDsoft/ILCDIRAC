@@ -50,10 +50,10 @@ import string, os, shutil
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
+request.setCreationTime()
 requestClient = RequestClient()
 request.setRequestName('default_request.xml')
 request.setSourceComponent('ReplicateILCSoft')
-
 modifiedCS = False
 mailadress = 'ilc-dirac@cern.ch'
 
@@ -79,14 +79,12 @@ def upload(path, appTar):
     if not res['OK']:
       return res
     res = request.addSubRequest({'Attributes':{'Operation' : 'replicateAndRegister',
-                                               'TargetSE' : 'IN2P3-SRM', 'ExecutionOrder' : 0}},
+                                               'TargetSE' : 'IN2P3-SRM'},
+                                 'Files':[{'LFN':lfnpath}]},
                                  'transfer')
     #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
     if not res['OK']:
       return res
-    index = result['Value']
-    fileDict = {'LFN' : lfnpath, 'Status' : 'Waiting'}
-    request.setSubRequestFiles(index, 'transfer', [fileDict])
     requestName = appTar.replace('.tgz', '')
     request.setRequestAttributes({'RequestName' : requestName})
     requestxml = request.toXML()['Value']
