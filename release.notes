@@ -2,6 +2,10 @@
 * all
 Move to v6r4p20
 
+[v12r0p10]
+* Interfaces
+Fix Production script for SID
+
 [v12r0p9]
 * TarSoft
 Adapt to new JAVA tar ball
