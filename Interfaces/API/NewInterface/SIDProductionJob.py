@@ -31,7 +31,7 @@ class SIDProductionJob(ProductionJob):
       for meta in metaFCkeys:
         if meta != key:
           if meta.lower() == key.lower():
-            return self._reportError("Key syntax error %s, should be %s" % (key, meta))
+            return self._reportError("Key syntax error %s, should be %s" % (key, meta), name = 'SIDProduction')
       if not metaFCkeys.count(key):
         return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
     #if not metadata.has_key("ProdID"):
