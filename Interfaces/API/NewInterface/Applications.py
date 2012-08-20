@@ -563,8 +563,8 @@ class Whizard(Application):
     All keys/values can be found in the WHIZARD documentation: 
     U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc11}
     
-    @param dict: Dictionnary of parameters
-    @type dict: dict
+    @param pdict: Dictionnary of parameters
+    @type pdict: dict
     """
     self._checkArgs( {
         'pdict' : types.DictType
@@ -1613,8 +1613,8 @@ class OverlayInput(Application):
   def setDetectorModel(self, detectormodel):
     """ Set the detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
     
-    @param detectortype: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
-    @type detectortype: string
+    @param detectormodel: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
+    @type detectormodel: string
     
     """  
     self._checkArgs( {
