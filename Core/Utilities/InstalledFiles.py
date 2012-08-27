@@ -27,7 +27,7 @@ def Exists(myfile):
            "cuts_aa_e3e3nn_1400.txt", "cuts_aa_e2e2e3e3_o_1400.txt", 
            "cuts_aa_e1e1e3e3_o_1400.txt", "defaultStrategies_clic_sid_cdr.xml",
            "defaultIlcCrossingAngle.mac",
-           "defaultIlcCrossingAngleZSmearing.mac",
+           "defaultIlcCrossingAngleZSmearing320.mac","defaultIlcCrossingAngleZSmearing225.mac",
            "sid_dbd_pandoraSettings.xml",
            "sid_dbd_postPandora.xml",
            "sid_dbd_prePandora.xml",
