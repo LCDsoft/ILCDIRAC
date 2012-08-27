@@ -270,7 +270,7 @@ class OverlayInput (ModuleBase):
     nbfiles = len(self.lfns)
     availableevents = nbfiles * self.nbofeventsperfile
     if availableevents < numberofeventstoget:
-      return S_ERROR("Number of gg->had events available is less than requested")
+      return S_ERROR("Number of %s events available is less than requested" % ( self.BkgEvtType ))
 
     if not self.NbSigEvtsPerJob:
       ##Compute Nsignal events
