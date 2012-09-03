@@ -13,7 +13,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFol
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareTomatoSalad
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
-from DIRAC                                                 import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                 import S_OK, S_ERROR, gLogger
 import os, types
 
 class TomatoAnalysis(MarlinAnalysis):
