@@ -283,7 +283,7 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
   return S_OK(True)
 
 def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
-                   numberofevts, outputREC, outputDST, debug):
+                   numberofevts, outputFile, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
@@ -367,24 +367,34 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   params = tree.findall('processor')
   for param in params:
     if param.attrib.has_key('name'):
-      if len(outputREC) > 0:
+      if len(outputFile) > 0:
         if param.attrib['name'] == 'MyLCIOOutputProcessor':
           subparams = param.findall('parameter')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
               if subparam.attrib['name'] == 'LCIOOutputFile':
-                subparam.text = outputREC
-                com = Comment("REC file changed")
+                subparam.text = outputFile
+                com = Comment("output file changed")
                 param.insert(0, com)
-      if len(outputDST) > 0:
-        if param.attrib['name'] == 'DSTOutput':
-          subparams = param.findall('parameter')
-          for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == 'LCIOOutputFile':
-                subparam.text = outputDST
-                com = Comment("DST file changed")
-                param.insert(0, com)
+      else:
+        if len(outputREC) > 0:
+          if param.attrib['name'] == 'MyLCIOOutputProcessor':
+            subparams = param.findall('parameter')
+            for subparam in subparams:
+              if subparam.attrib.has_key('name'):
+                if subparam.attrib['name'] == 'LCIOOutputFile':
+                  subparam.text = outputREC
+                  com = Comment("REC file changed")
+                  param.insert(0, com)
+        if len(outputDST) > 0:
+          if param.attrib['name'] == 'DSTOutput':
+            subparams = param.findall('parameter')
+            for subparam in subparams:
+              if subparam.attrib.has_key('name'):
+                if subparam.attrib['name'] == 'LCIOOutputFile':
+                  subparam.text = outputDST
+                  com = Comment("DST file changed")
+                  param.insert(0, com)
       if param.attrib['name'].lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:

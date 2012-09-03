@@ -93,7 +93,7 @@ class MarlinAnalysis(ModuleBase):
       self.outputDST = self.step_commons['outputDST']
       
     if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
+      if self.workflow_commons["IS_PROD"] and len(self.OutputFile)==0:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
         #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
@@ -119,7 +119,7 @@ class MarlinAnalysis(ModuleBase):
           #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
           self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))]
+                                            int(self.workflow_commons["JOB_ID"]))]
           
     if self.InputData:
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -220,7 +220,8 @@ class MarlinAnalysis(ModuleBase):
       return S_ERROR("Could not find steering file")
     
     res = PrepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio, 
-                         self.NumberOfEvents, self.outputREC, self.outputDST, self.debug)
+                         self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
+                         self.debug)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
