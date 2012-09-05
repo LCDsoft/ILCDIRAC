@@ -1,3 +1,7 @@
+[v13r1p1]
+*SIDProduction
+Fix the stupid bug that made the overlay being accounted for in the production
+
 [v13r1p0]
 * PrepareOptionsFile and MarlinAnalysis
 Handle the case where Marlin must run as intermediate step, with OutputFile set
