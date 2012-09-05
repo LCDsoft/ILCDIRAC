@@ -34,6 +34,7 @@ def Exists(myfile):
            "sid_dbd_vertexing.xml",
            "sidloi3.gear",
            "sidloi3_trackingStrategies.xml",
+           "sidloi3_trackingStrategies_default.xml",
            "ild_00.gear",
            "ild_00_steering.xml",
            "ild_00.steer"]
