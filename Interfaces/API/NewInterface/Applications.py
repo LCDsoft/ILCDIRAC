@@ -1913,7 +1913,7 @@ class Marlin(Application):
           return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
     
     if not self.inputGearFile :
-      self._log.warn('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
+      self._log.info('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
     if self.inputGearFile:
       if not os.path.exists(self.inputGearFile) and not self.inputGearFile.lower().count("lfn:"):
         res = Exists(self.inputGearFile)
@@ -2110,10 +2110,10 @@ class LCSIM(Application):
   def _checkConsistency(self):
 
     if not self.energy :
-      self._log.warn('Energy set to 0 !')
+      self._log.info('Energy set to 0 !')
       
     if not self.nbevts :
-      self._log.warn('Number of events set to 0 !')
+      self._log.info('Number of events set to 0 !')
         
     if not self.version:
       return S_ERROR('No version found')   
@@ -2297,7 +2297,7 @@ class SLICPandora(Application):
     #  return res
       
     if not self.startFrom :
-      self._log.warn('No startFrom define for SlicPandora : start from the begining')
+      self._log.info('No startFrom define for SlicPandora : start from the begining')
       
     if not self._jobtype == 'User':
       self.prodparameters['slicpandora_steeringfile'] = self.steeringfile
