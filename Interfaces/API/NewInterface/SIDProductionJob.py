@@ -212,6 +212,15 @@ class SIDProductionJob(ProductionJob):
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
       
+    if not application.accountInProduction:
+      #needed for the stupid overlay
+      res = self._updateProdParameters(application)
+      if not res['OK']:
+        return res  
+      self.checked = True
+
+      return S_OK()  
+    
     if not self.outputStorage:
       return S_ERROR("You need to specify the Output storage element")
     
@@ -268,9 +277,9 @@ class SIDProductionJob(ProductionJob):
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.finalpaths.append(path)
-    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and not application.outputFile and not application.willBeCut:
-      path = self.basepath+energypath+self.evttype
-      self.finalMetaDict[path]= {"EvtType" : evttypemeta}      
+    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and (not application.outputFile) and (not application.willBeCut):
+      path = self.basepath + energypath + self.evttype
+      self.finalMetaDict[path] = {"EvtType" : evttypemeta}      
       if hasattr(application, "detectorModel"):
         if application.detectorModel:
           path += application.detectorModel
@@ -280,7 +289,7 @@ class SIDProductionJob(ProductionJob):
           path += self.detector
           self.finalMetaDict[path] = {"DetectorModel" : self.detector}
           path += '/'
-      if not application.datatype and self.datatype:
+      if (not application.datatype) and self.datatype:
         application.datatype = self.datatype
       path += application.datatype
 
