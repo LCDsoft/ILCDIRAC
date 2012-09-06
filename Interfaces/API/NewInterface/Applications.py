@@ -2146,7 +2146,7 @@ class LCSIM(Application):
       #slicp = False
       if self._inputapp and not self.outputFile and not self.willBeCut:
         for app in self._inputapp:
-          if app.appname == 'slicpandora':
+          if app.appname in ['slicpandora', 'marlin']:
             self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", 
                                        "outputDataSE":'@{OutputSE}'})
             self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}", 
