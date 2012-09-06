@@ -408,7 +408,7 @@ class ProductionJob(Job):
       Trans.setGroupSize(self.jobFileGroupSize)
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
-    Trans.setEventsPerTask(self.nbevts)
+    Trans.setEventsPerTask(self.jobFileGroupSize * self.nbevts)
     res = Trans.addTransformation()
     if not res['OK']:
       print res['Message']
@@ -426,7 +426,7 @@ class ProductionJob(Job):
       finalpaths = finalpaths.rstrip("/")
       finalpaths += "/"+str(self.transfid).zfill(8)
       finals.append(finalpaths)
-      self.finalMetaDict[finalpaths] = {'NumberOfEvents' : self.nbevts, "ProdID" : self.transfid}
+      self.finalMetaDict[finalpaths] = {'NumberOfEvents' : self.jobFileGroupSize * self.nbevts, "ProdID" : self.transfid}
     self.finalpaths = finals
     self.created = True
     return S_OK()
@@ -493,7 +493,10 @@ class ProductionJob(Job):
       info.append('- Process %s' % self.prodparameters['Process'])
     if self.prodparameters.has_key("Energy"):
       info.append('- Energy %s GeV' % self.prodparameters["Energy"])
-    info.append("- %s events per job" % (self.prodparameters['nbevts'] * self.prodparameters['NbInputFiles']))
+
+    self.prodparameters['nbevts'] = self.jobFileGroupSize * self.nbevts
+
+    info.append("- %s events per job" % (self.prodparameters['nbevts']))
     if self.prodparameters.has_key('lumi'):
       if self.prodparameters['lumi']:
         info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * \
@@ -621,15 +624,13 @@ class ProductionJob(Job):
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
     elif not application.nbevts:
-      self.nbevts = self.jobFileGroupSize * self.nbevts
-      res = application.setNbEvts(self.nbevts)
+      res = application.setNbEvts(self.jobFileGroupSize * self.nbevts)
       if not res['OK']:
         return res
     
-    if application.nbevts > 0 and self.nbevts > application.nbevts:
+    if application.nbevts > 0 and self.jobFileGroupSize * self.nbevts > application.nbevts:
       self.nbevts = application.nbevts 
 
-    self.prodparameters['nbevts'] = self.nbevts
     
     if not self.energy:
       if application.energy:
@@ -654,10 +655,12 @@ class ProductionJob(Job):
     if not self.outputStorage:
       return S_ERROR("You need to specify the Output storage element")
     
-    if self.prodparameters["SWPackages"]:
-      self.prodparameters["SWPackages"] += ";%s.%s" % (application.appname, application.version)
+    curpackage = "%s.%s" % (application.appname, application.version)
+    if self.prodparameters["SWPackages"]:      
+      if not self.prodparameters["SWPackages"].count(curpackage):
+        self.prodparameters["SWPackages"] += ";%s" % ( curpackage )    
     else :
-      self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
+      self.prodparameters["SWPackages"] = "%s" % (curpackage)
     
     if not application.accountInProduction:
       res = self._updateProdParameters(application)

@@ -179,17 +179,17 @@ class SIDProductionJob(ProductionJob):
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
     elif not application.nbevts:
-      self.nbevts = self.jobFileGroupSize*self.nbevts
-      res = application.setNbEvts(self.nbevts)
+      res = application.setNbEvts(self.jobFileGroupSize*self.nbevts)
       if not res['OK']:
         return res
       
-    if application.nbevts > 0 and self.nbevts > application.nbevts:
+    if application.nbevts > 0 and self.jobFileGroupSize*self.nbevts > application.nbevts:
       self.nbevts = application.nbevts
-    self.prodparameters['nbevts'] = self.nbevts
     
     if self.prodparameters["SWPackages"]:
-      self.prodparameters["SWPackages"] += ";%s.%s" % (application.appname, application.version)
+      curpackage = "%s.%s" % (application.appname, application.version)
+      if not self.prodparameters["SWPackages"].count(curpackage):
+        self.prodparameters["SWPackages"] += ";%s" % ( curpackage )
     else :
       self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
 
