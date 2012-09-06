@@ -1,3 +1,9 @@
+[v13r1p2]
+*SIDProduction, Production
+Fix handling of number of events when files are grouped in a production
+*LCSIM
+Fix case when lcsim is to run after marlin in the production context
+
 [v13r1p1]
 *SIDProduction
 Fix the stupid bug that made the overlay being accounted for in the production
