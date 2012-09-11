@@ -1,3 +1,11 @@
+[v13r1p3]
+* dirac-architecture
+Addd support for gcc44
+* Interfaces
+Fix Marlin before LCSIM for SID DBD production
+* Workflow
+Fix Marlin's GearFile that was not set right is not specified by the users.
+
 [v13r1p2]
 *SIDProduction, Production
 Fix handling of number of events when files are grouped in a production
