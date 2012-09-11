@@ -232,18 +232,18 @@ def CanWrite(area):
   return True
     
 
-def checkJava(dir):
+def checkJava(curdir):
   """ Check if JAVA is availalbe locally.
   """
   args = ['java', "-version"]
   try:
     p = subprocess.check_call(args)
     if p:
-      os.chdir(dir)
+      os.chdir(curdir)
       return S_ERROR("Something is wrong with Java")
   except:
     gLogger.error("Java was not found on this machine, cannot proceed")
-    os.chdir(dir)
+    os.chdir(curdir)
     return S_ERROR("Java was not found on this machine, cannot proceed")
 
   return S_OK()
