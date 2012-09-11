@@ -183,12 +183,20 @@ def SharedArea():
     sharedArea = os.path.join(os.environ['VO_ILC_SW_DIR'],'clic')
     DIRAC.gLogger.debug( 'Using VO_ILC_SW_DIR at "%s"' % sharedArea )
     if os.environ['VO_ILC_SW_DIR'] == '.':
-      if not os.path.isdir( 'clic' ):
-        os.mkdir( 'clic' )
+      if not os.path.isdir( sharedArea ):
+        os.makedirs( sharedArea )
+          
+  elif os.environ.has_key('OSG_APP'):
+    sharedArea = os.path.join(os.environ['OSG_APP'],'clic')
+    DIRAC.gLogger.debug( 'Using OSG_APP_DIR at "%s"' % sharedArea )
+    if os.environ['OSG_APP'] == '.':
+      if not os.path.isdir( sharedArea ):
+        os.makedirs( sharedArea )
+        
   elif DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
     sharedArea = DIRAC.gConfig.getValue('/LocalSite/SharedArea')
     DIRAC.gLogger.debug( 'Using CE SharedArea at "%s"' % sharedArea )
-
+    
   if len(sharedArea):
     # if defined, check that it really exists
     if not os.path.isdir( sharedArea ):
@@ -214,19 +222,19 @@ def CreateSharedArea():
     DIRAC.gLogger.info( 'VO_ILC_SW_DIR or OSG_APP points to "."' )
     return False
 
-  if not os.path.isdir( sharedArea ):
-    DIRAC.gLogger.error( 'VO_ILC_SW_DIR="%s" is not a directory' % sharedArea )
-    return False
+  #if not os.path.isdir( sharedArea ):
+  #  DIRAC.gLogger.error( 'VO_ILC_SW_DIR="%s" is not a directory' % sharedArea )
+  #  return False
 
   sharedArea = os.path.join( sharedArea, 'clic' )
   try:
     if os.path.isdir( sharedArea ) and not os.path.islink( sharedArea ) :
       return True
     if not os.path.exists( sharedArea ):
-      os.mkdir( sharedArea )
+      os.makedirs( sharedArea )
       return True
     os.remove( sharedArea )
-    os.mkdir( sharedArea )
+    os.makedirs( sharedArea )
     return True
   except Exception, x:
     DIRAC.gLogger.error('Problem trying to create shared area', str(x))
