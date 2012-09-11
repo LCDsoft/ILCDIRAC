@@ -44,6 +44,8 @@ def checkGcc() :
     if ( string.find(compString, "g++ (GCC) 3.3") != -1 ) : comp = "gcc33"
     if ( string.find(compString, "g++ (Ubuntu 4.4.1-4ubuntu8) 4.4") != -1 ) : comp = "gcc44"
 
+    if ( string.find(compString, "g++ (GCC) 4.4") != -1 ) : comp = "gcc44"
+
     if ( not comp and string.find(compString, "(GCC) 4.0.1") != -1 ) : comp = "gcc40"
 
     if not comp :
