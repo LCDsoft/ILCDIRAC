@@ -1,3 +1,7 @@
+[v13r1p5]
+* dirac-architecture
+Add support for slc6
+
 [v13r1p4]
 * CombinedSoftwareInstallation
 Try to create the directory
