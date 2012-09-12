@@ -124,71 +124,74 @@ def guessPlatform() :
 
         if not opSys:
             if ( string.find(lines, "CentOS") != -1 and
-                 string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
+                 string.find(lines, " 4") != -1 ) : 
+              opSys = "slc4_" + guessHWArch()
             elif ( string.find(lines, "CentOS") != -1 and
-                 string.find(lines, " 5") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc5-"
-                    newSchema = True
+                   string.find(lines, " 5") != -1 ) :
+              opSys = os.uname()[-1] + "-slc5-"
+              newSchema = True
             elif ( string.find(lines, "Red Hat Enterprise") != -1 and
-                 string.find(lines, " 5") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc5-"
-                    newSchema = True
+                   string.find(lines, " 5") != -1 ) :
+              opSys = os.uname()[-1] + "-slc5-"
+              newSchema = True
             elif ( string.find(lines, "Red Hat Enterprise") != -1 and
-                 string.find(lines, " 6") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc6-"
-                    newSchema = True        
+                   string.find(lines, " 6") != -1 ) :
+              opSys = os.uname()[-1] + "-slc6-"
+              newSchema = True        
             elif ( string.find(lines, "Redhat Enterprise") != -1 and
-                 string.find(lines, " 5") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc5-"
-                    newSchema = True
+                   string.find(lines, " 5") != -1 ) :
+              opSys = os.uname()[-1] + "-slc5-"
+              newSchema = True
             elif ( string.find(lines, "Redhat Enterprise") != -1 and
-                 string.find(lines, " 6") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc6-"
-                    newSchema = True        
+                   string.find(lines, " 6") != -1 ) :
+              opSys = os.uname()[-1] + "-slc6-"
+              newSchema = True        
             elif ( string.find(lines, "Red Hat Enterprise") != -1 and
-                 string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
+                   string.find(lines, " 4") != -1 ) : 
+              opSys = "slc4_" + guessHWArch()
             elif ( string.find(lines, "Scientific Linux") != -1 and
-                 string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
+                   string.find(lines, " 4") != -1 ) : 
+              opSys = "slc4_" + guessHWArch()
             elif ( string.find(lines, "Scientific Linux") != -1 and
-                 string.find(lines, " 5") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc5-"
-                    newSchema = True
+                   string.find(lines, " 5") != -1 ) :
+              opSys = os.uname()[-1] + "-slc5-"
+              newSchema = True
             elif ( string.find(lines, "Scientific Linux") != -1 and
-                 string.find(lines, " 6") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc6-"
-                    newSchema = True        
+                   string.find(lines, " 6") != -1 ) :
+              opSys = os.uname()[-1] + "-slc6-"
+              newSchema = True        
             elif ( string.find(lines, "Ubuntu" ) != -1 and
-                 string.find(lines, "9.") != -1 ) :
-                    opSys = os.uname()[-1] + "-slc5-"
-                    newSchema = True
+                   string.find(lines, "9.") != -1 ) :
+              opSys = os.uname()[-1] + "-slc5-"
+              newSchema = True
             elif ( string.find(lines, "Debian") != -1 and
-                 string.find(lines, " 4") != -1 ) : opSys = "slc4_"  + guessHWArch()
+                   string.find(lines, " 4") != -1 ) : opSys = "slc4_"  + guessHWArch()
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "8.0") != -1 ) : opSys = "rh73"
+                   string.find(lines, "8.0") != -1 ) : opSys = "rh73"
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "8.1") != -1 ) : opSys = "rh73"
+                   string.find(lines, "8.1") != -1 ) : opSys = "rh73"
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "8.2") != -1 ) : opSys = "rh73"
+                   string.find(lines, "8.2") != -1 ) : opSys = "rh73"
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "8.2") != -1 ) : opSys = "rh73"
+                   string.find(lines, "8.2") != -1 ) : opSys = "rh73"
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "9.0") != -1 ) : opSys = "slc3_" + guessHWArch()    # guess !
+                   string.find(lines, "9.0") != -1 ) : opSys = "slc3_" + guessHWArch()    # guess !
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "9.1") != -1 ) : opSys = "suse91"  # not compatible
+                   string.find(lines, "9.1") != -1 ) : opSys = "suse91"  # not compatible
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "9.2") != -1 ) : opSys = "suse92"  # not compatible
+                   string.find(lines, "9.2") != -1 ) : opSys = "suse92"  # not compatible
             elif ( string.find(lines, "SuSE") != -1 and
-                 string.find(lines, "9.3") != -1 ) : opSys = "suse93"  # not compatible
+                   string.find(lines, "9.3") != -1 ) : opSys = "suse93"  # not compatible
             elif ( string.find(lines, "SUSE") != -1 and
-                 string.find(lines, "10.0") != -1 ) : opSys = "slc3_" + guessHWArch()
+                   string.find(lines, "10.0") != -1 ) : opSys = "slc3_" + guessHWArch()
             elif ( string.find(lines, "SUSE") != -1 and
-                 string.find(lines, "10.1") != -1 ) : opSys = "suse101"  # not compatible
+                   string.find(lines, "10.1") != -1 ) : opSys = "suse101"  # not compatible
             elif ( string.find(lines, "SUSE") != -1 and
-                 string.find(lines, "10.2") != -1 ) : opSys = "suse102"  # not compatible
+                   string.find(lines, "10.2") != -1 ) : opSys = "suse102"  # not compatible
             elif ( string.find(lines, "SUSE") != -1 and
-                 string.find(lines, "11.") != -1 ) : opSys = "suse11"  # not compatible
+                   string.find(lines, "11.") != -1 ) : opSys = "suse11"  # not compatible
             elif ( string.find(lines, "Mandriva Linux") != -1 and
-                 string.find(lines, "2007.0") != -1 ) : opSys = "slc3"  # not compatible
+                   string.find(lines, "2007.0") != -1 ) : opSys = "slc3"  # not compatible
 
         if not opSys :
             # errLog = open(".guessPlatf-os.err",'w')
