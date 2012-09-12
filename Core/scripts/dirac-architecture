@@ -116,7 +116,7 @@ def guessPlatform() :
         osRe = re.compile('.*Scientific Linux CERN SLC release (\d)\.(\d) .*')
         osMat = osRe.match(lines)
         if osMat:
-            if osMat.group(1) != '5':
+            if osMat.group(1) != '5' and osMat.group(1) != '6':
                opSys = "slc"+osMat.group(1)+"_" + guessHWArch()
             else:
                newSchema = True
@@ -133,10 +133,18 @@ def guessPlatform() :
                  string.find(lines, " 5") != -1 ) :
                     opSys = os.uname()[-1] + "-slc5-"
                     newSchema = True
+            elif ( string.find(lines, "Red Hat Enterprise") != -1 and
+                 string.find(lines, " 6") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc6-"
+                    newSchema = True        
             elif ( string.find(lines, "Redhat Enterprise") != -1 and
                  string.find(lines, " 5") != -1 ) :
                     opSys = os.uname()[-1] + "-slc5-"
                     newSchema = True
+            elif ( string.find(lines, "Redhat Enterprise") != -1 and
+                 string.find(lines, " 6") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc6-"
+                    newSchema = True        
             elif ( string.find(lines, "Red Hat Enterprise") != -1 and
                  string.find(lines, " 4") != -1 ) : opSys = "slc4_" + guessHWArch()
             elif ( string.find(lines, "Scientific Linux") != -1 and
@@ -145,6 +153,10 @@ def guessPlatform() :
                  string.find(lines, " 5") != -1 ) :
                     opSys = os.uname()[-1] + "-slc5-"
                     newSchema = True
+            elif ( string.find(lines, "Scientific Linux") != -1 and
+                 string.find(lines, " 6") != -1 ) :
+                    opSys = os.uname()[-1] + "-slc6-"
+                    newSchema = True        
             elif ( string.find(lines, "Ubuntu" ) != -1 and
                  string.find(lines, "9.") != -1 ) :
                     opSys = os.uname()[-1] + "-slc5-"
