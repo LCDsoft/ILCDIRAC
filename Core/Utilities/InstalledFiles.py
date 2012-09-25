@@ -40,7 +40,8 @@ def Exists(myfile):
            "sidloi3_trackingStrategies_default.xml",
            "ild_00.gear",
            "ild_00_steering.xml",
-           "ild_00.steer"]
+           "ild_00.steer",
+           "cuts_quarks_1400.txt","cuts_taus_1400.txt"]
   if myfile in files:
     return S_OK()
   else:
