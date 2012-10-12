@@ -321,6 +321,8 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     if processor.attrib.has_key('name'):
       if processor.attrib['name'].lower().count('overlaytiming'):
         overlay = True
+      if processor.attrib['name'].lower().count('bgoverlay'):
+        overlay = True  
       #if processor.attrib['name'].lower().count('lciooutputprocessor'):
       #  recoutput=True
       #if processor.attrib['name'].lower().count('dstoutput'):
@@ -404,7 +406,7 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 overlay = False
             if subparam.attrib['name'] == 'NBunchtrain':
               if subparam.attrib['value'] == '0':
-                overlay = False  
+                overlay = False          
         if overlay: 
           files = getOverlayFiles()
           if not len(files):
@@ -412,6 +414,27 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
               if subparam.attrib['name'] == "BackgroundFileNames":
+                subparam.text = string.join(files,"\n")
+                com = Comment("Overlay files changed")
+                param.insert(0, com)
+      if param.attrib['name'].lower().count('bgoverlay'):
+        bkg_Type = 'aa_lowpt' #specific to ILD_DBD
+        subparams = param.findall('parameter')
+        for subparam in subparams:
+          if subparam.attrib.has_key('name'):
+            if subparam.attrib['name'] == 'expBG':
+              if subparam.attrib['value'] == '0':
+                overlay = False
+            if subparam.attrib['name'] == 'NBunchtrain':
+              if subparam.attrib['value'] == '0':
+                overlay = False          
+        if overlay: 
+          files = getOverlayFiles(bkg_Type)
+          if not len(files):
+            return S_ERROR('Could not find any overlay files')
+          for subparam in subparams:
+            if subparam.attrib.has_key('name'):
+              if subparam.attrib['name'] == "InputFileNames":
                 subparam.text = string.join(files,"\n")
                 com = Comment("Overlay files changed")
                 param.insert(0, com)
