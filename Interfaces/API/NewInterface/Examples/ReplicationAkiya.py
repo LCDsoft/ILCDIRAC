@@ -1,18 +1,25 @@
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
-name_of_replication = 'some_name'
-description = "describe what this replication is going to do"
-evttype = 'tth_XXX'#or any other event type
-detectormodel = "ILD_o1_V2"#or 
-energy = 1000
-machineparams= 'b1s_ws'
-detectortype='ILD'
-machine='ilc'
-fmask = ""#this need to be adated to select only the sofrware and the file type wanted
+name_of_replication = 'Replicate_higgs_desy'
+description = "Replicate higgs at 250GeV from KEK to DESY"
+#below are meta data tags
+evttype = 'higgs'#or any other event type
+detectormodel = None #"ILD_o1_V2"#or any other
+energy = "250"
+machineparams= 'TDR_ws'
+datatype='gen' #this is either gen or REC
 
-source = 'DESY-SRM'
-destination = 'KEK-SRM'
+detectortype=None # or 'ILD'
+
+softwaretag = None # or 'v01-16' or any other value
+#fmask = ".+(/v01-16)+.+(DST)+."#this need to be adapted to select only the software and the file type wanted
+#it matches anything that contains /v01-15-03 and DST
+
+machine='ilc' #This is alway ilc
+
+source = 'KEK-SRM' #source of the files
+destination = 'DESY-SRM' # destination of the files
 
 ##below should not change
 
@@ -39,16 +46,27 @@ else:
 fc = FileCatalogClient()
 
 meta = {}
-meta['EvtType']=evttype
-meta['Energy']=energy
+if evttype:
+  meta['EvtType']=evttype
+if energy:  
+  meta['Energy']=energy
+
 meta['Machine']=machine
-meta['DetectorType']=detectortype
-meta['DetectorModel']=detectormodel
-meta['MachineParams']=machineparams
+
+if detectortype:
+  meta['DetectorType']=detectortype
+
+meta['Datatype']=datatype
+if softwaretag:
+  meta['SoftwareTag'] = softwaretag
+if detectormodel:
+  meta['DetectorModel']=detectormodel
+if machineparams:
+  meta['MachineParams']=machineparams
 
 res = fc.findFilesByMetadata(meta)
 if not res['OK']:
-  print "something went wrong when finding the files: %s" % res['Message']
+  print "Something went wrong when finding the files: %s" % res['Message']
   exit(1)
 
 lfns = res['Value']
@@ -56,10 +74,18 @@ if not len(lfns):
   print "No files found with this meta data query:%s" % meta
   exit(1)
 
+print "Example file: %s" % lfns[0]
+
+answer = raw_input('Proceed and submit replication? (Y/N): ')
+if not answer.lower() in ('y', 'yes'):
+  print "Canceled"
+  exit(1)
+
 trc = TransformationClient()
 res = trc.getTransformationStats(name_of_replication)
 if res['OK']:
   print "Replication with name %s already exists! Cannot proceed." % name_of_replication
+  exit(1)
   
 Trans = Transformation()
 Trans.setTransformationName(name_of_replication)
@@ -67,12 +93,12 @@ Trans.setDescription(description)
 Trans.setLongDescription(description)
 Trans.setType('Replication')
 Trans.setPlugin('Broadcast')
-Trans.setFileMask(fmask)
+#Trans.setFileMask(fmask)
 Trans.setSourceSE(source)
 Trans.setTargetSE(destination)
 res = Trans.addTransformation()
 if not res['OK']:
-  print "failed to add Replication: %s" % res['Message']
+  print "Failed to add Replication: %s" % res['Message']
   exit(1)
 Trans.setStatus("Active")
 Trans.setAgentType("Automatic")
