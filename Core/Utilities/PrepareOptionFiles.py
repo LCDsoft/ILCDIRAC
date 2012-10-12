@@ -423,10 +423,10 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
         for subparam in subparams:
           if subparam.attrib.has_key('name'):
             if subparam.attrib['name'] == 'expBG':
-              if subparam.attrib['value'] == '0':
+              if subparam.text == '0' or subparam.text == '0.0' :
                 overlay = False
             if subparam.attrib['name'] == 'NBunchtrain':
-              if subparam.attrib['value'] == '0':
+              if subparam.text == '0':
                 overlay = False          
         if overlay: 
           files = getOverlayFiles(bkg_Type)
