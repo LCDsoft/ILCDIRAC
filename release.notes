@@ -1,3 +1,7 @@
+[v13r1p7]
+* Core
+BUGFIX: overlay in ILD_DBD
+
 [v13r1p6]
 * Core
 Add support for overlay in ILD_DBD
