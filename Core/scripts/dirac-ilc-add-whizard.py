@@ -246,7 +246,7 @@ appTar = os.path.join(os.getcwd(), "whizard" + whizard_version + ".tgz")
 
 if os.path.exists('lib'):
   shutil.rmtree('lib')
-scriptName = 'ldd.sh'
+scriptName = './ldd.sh'
 script = file(scriptName, "w")
 script.write('#!/bin/bash \n')
 script.write("""string1=$(ldd whizard | grep '=>' | sed 's/.*=>//g' | sed 's/(.*)//g')
