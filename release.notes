@@ -1,6 +1,12 @@
 [v14r0p0]
 Move to Dirac v6r4p28 for webFC
 
+[v13r1p8]
+* Core
+CHANGE: Remove REC and DST creation in the LCSIM steering file if not present in the input
+* Workflow
+CHANGE: Create the .lcsim folder only if not already present, and rename the job.lcsim using the step_number
+
 [v13r1p7]
 * Core
 BUGFIX: overlay in ILD_DBD
