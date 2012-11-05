@@ -187,10 +187,11 @@ class LCSIMAnalysis(ModuleBase):
     ###Define cache directory as local folder
     aliasproperties = os.path.basename(self.aliasproperties)
     cachedir = os.getcwd()
-    try:
-      os.mkdir(os.path.join(cachedir, ".lcsim"))
-    except:
-      self.log.error("Could not create .lcsim folder !")
+    if not os.path.isdir(os.path.join(cachedir, ".lcsim")):
+      try:
+        os.mkdir(os.path.join(cachedir, ".lcsim"))
+      except:
+        self.log.error("Could not create .lcsim folder !")
     if os.path.exists(os.path.join(cachedir, ".lcsim")):
       lcsimfolder = os.path.join(cachedir, ".lcsim")
       if os.path.exists(aliasproperties):
@@ -224,7 +225,7 @@ class LCSIMAnalysis(ModuleBase):
     self.SteeringFile = paths[os.path.basename(self.SteeringFile)]
     self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
     
-    lcsimfile = "job.lcsim"
+    lcsimfile = "job_%s.lcsim" % self.STEP_NUMBER
     res = PrepareLCSIMFile(self.SteeringFile, lcsimfile, self.NumberOfEvents, 
                            self.trackingstrategy, runonslcio, jars, cachedir,
                            self.OutputFile, self.outputREC, self.outputDST, self.debug)
