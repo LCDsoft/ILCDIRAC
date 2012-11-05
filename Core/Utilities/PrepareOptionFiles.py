@@ -738,38 +738,39 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       outputmark = Element("driver", outputattrib)
       execut.append(outputmark)
   if not recwriterfound and outputRECFile:
-    drivers = tree.find("drivers")
-    propdict = {}
-    propdict['name'] = 'RECWriter'
-    propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
-    output = Element("driver", propdict)
-    outputelem = Element("outputFilePath")
-    outputelem.text = outputRECFile
-    output.append(outputelem)
-    drivers.append(output)
-    execut = tree.find("execute")
-    if(execut):
-      outputattrib = {}
-      outputattrib['name'] = "RECWriter"
-      outputmark = Element("driver", outputattrib)
-      execut.append(outputmark)
+    #drivers = tree.find("drivers")
+    #propdict = {}
+    #propdict['name'] = 'RECWriter'
+    #propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
+    #output = Element("driver", propdict)
+    #outputelem = Element("outputFilePath")
+    #outputelem.text = outputRECFile
+    #output.append(outputelem)
+    #drivers.append(output)
+    #execut = tree.find("execute")
+    #if(execut):
+    #  outputattrib = {}
+    #  outputattrib['name'] = "RECWriter"
+    #  outputmark = Element("driver", outputattrib)
+    #  execut.append(outputmark)
+    pass
   if not dstwriterfound and outputDSTFile:
-    drivers = tree.find("drivers")
-    propdict = {}
-    propdict['name'] = 'DSTWriter'
-    propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
-    output = Element("driver", propdict)
-    outputelem = Element("outputFilePath")
-    outputelem.text = outputDSTFile
-    output.append(outputelem)
-    drivers.append(output)
-    execut = tree.find("execute")
-    if(execut):
-      outputattrib = {}
-      outputattrib['name'] = "DSTWriter"
-      outputmark = Element("driver", outputattrib)
-      execut.append(outputmark)
-
+    #drivers = tree.find("drivers")
+    #propdict = {}
+    #propdict['name'] = 'DSTWriter'
+    #propdict['type'] = 'org.lcsim.util.loop.LCIODriver'
+    #output = Element("driver", propdict)
+    #outputelem = Element("outputFilePath")
+    #outputelem.text = outputDSTFile
+    #output.append(outputelem)
+    #drivers.append(output)
+    #execut = tree.find("execute")
+    #if(execut):
+    #  outputattrib = {}
+    #  outputattrib['name'] = "DSTWriter"
+    #  outputmark = Element("driver", outputattrib)
+    #  execut.append(outputmark)
+    pass
   tree.write(outputlcsim)
   return S_OK(printtext)
 
