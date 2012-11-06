@@ -1,6 +1,10 @@
 [v14r0p0]
 Move to Dirac v6r4p28 for webFC
 
+[v13r2p0]
+* Core
+CHANGE: Refactoring of the TARInstall module to have a lock mechanism
+
 [v13r1p8]
 * Core
 CHANGE: Remove REC and DST creation in the LCSIM steering file if not present in the input
