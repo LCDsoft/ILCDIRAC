@@ -1,6 +1,10 @@
 [v14r0p0]
 Move to Dirac v6r4p28 for webFC
 
+[v13r2p2]
+* Core
+BUGFIX: return value of install was bad
+
 [v13r2p0]
 * Core
 CHANGE: Added listing of any directory
