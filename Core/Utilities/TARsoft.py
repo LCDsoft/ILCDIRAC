@@ -22,8 +22,8 @@ def createLock(lockname):
     lock = file(lockname,"w")
     lock.write("Locking this directory\n")
     lock.close()
-  except:
-    return S_ERROR("Not allowed to write here")
+  except Exception, x :
+    return S_ERROR("Not allowed to write here: %s %s" % (Exception, str(x)))
   return S_OK()
 
 def checkLockAge(lockname):
@@ -138,6 +138,7 @@ def install(app, config, area):
   folder_name = app_tar.replace(".tgz", "").replace(".tar.gz", "")
   if appName == "slic":
     folder_name = "%s%s" % (appName, appVersion)
+    
   appli_exists = False
   
   ###########################################
@@ -151,35 +152,39 @@ def install(app, config, area):
   res = checkLockAge(lockname)
   if not res['OK']:
     gLogger.error("Something uncool happened with the lock, will try to proceed anyway")
-  #Now lock the area
-  res = createLock(lockname)##This will fail if not allowed to write here
-  if not res['OK']:
-    gLogger.error(res['Message'])
-    ##must not return an error as otherwise the configure will not continue
-
+  
+  #Check if the application is here and not to be overwritten
   if os.path.exists(folder_name): #This should include a checksum verification of some sort
     # and not appName =="slic":
     appli_exists = True #this basically makes that all the following ifs are not true
     if not overwrite:
       gLogger.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
-    else:
-      gLogger.info("Overwriting %s found in %s" % (folder_name, area))
-      appli_exists = False
-      if CanWrite(area):
-        gLogger.info("First we delete existing version %s" % folder_name)
-        if os.path.exists(folder_name):
-          if os.path.isdir(folder_name):
-            try:
-              shutil.rmtree(folder_name)
-            except Exception, x:
-              gLogger.error("Failed deleting %s because %s,%s" % (folder_name, Exception, str(x)))
-          else:
-            try:
-              os.remove(folder_name)
-            except Exception, x:
-              gLogger.error("Failed deleting %s because %s,%s"%(folder_name, Exception, str(x)))
-        if os.path.exists(folder_name):
-          gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name)  
+      return S_OK()
+    
+  #Now lock the area
+  res = createLock(lockname)##This will fail if not allowed to write here
+  if not res['OK']:
+    gLogger.error(res['Message'])
+    return res
+  
+  if appli_exists and overwrite:
+    gLogger.info("Overwriting %s found in %s" % (folder_name, area))
+    appli_exists = False
+    if CanWrite(area):
+      gLogger.info("First we delete existing version %s" % folder_name)
+      if os.path.exists(folder_name):
+        if os.path.isdir(folder_name):
+          try:
+            shutil.rmtree(folder_name)
+          except Exception, x:
+            gLogger.error("Failed deleting %s because %s,%s" % (folder_name, Exception, str(x)))
+        else:
+          try:
+            os.remove(folder_name)
+          except Exception, x:
+            gLogger.error("Failed deleting %s because %s,%s"%(folder_name, Exception, str(x)))
+      if os.path.exists(folder_name):
+        gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name)  
 
   if not appli_exists:
     if not CanWrite(area):
