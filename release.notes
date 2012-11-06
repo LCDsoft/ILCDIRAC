@@ -3,6 +3,12 @@ Move to Dirac v6r4p28 for webFC
 
 [v13r2p0]
 * Core
+CHANGE: Added listing of any directory
+* PPRS
+CHANGE: Added listing of both local and shared areas
+
+[v13r2p0]
+* Core
 CHANGE: Refactoring of the TARInstall module to have a lock mechanism
 
 [v13r1p8]
