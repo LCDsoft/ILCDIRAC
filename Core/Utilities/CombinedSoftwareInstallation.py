@@ -155,17 +155,20 @@ class CombinedSoftwareInstallation(object):
       
     if self.sharedArea:  
       #List content  
-      DIRAC.gLogger.info("Listing content of shared area :")
-      res = systemCall( 5, ['ls', '-al', self.sharedArea] )
-      if not res['OK']:
-        DIRAC.gLogger.error( 'Failed to list the shared area directory', res['Message'] )
-      elif res['Value'][0]:
-        DIRAC.gLogger.error( 'Failed to list the shared area directory', res['Value'][2] )
-      else:
-        # no timeout and exit code is 0
-        DIRAC.gLogger.info( res['Value'][1] )
+      listAreaDirectory(self.sharedArea)
       
     return DIRAC.S_OK()
+
+def listAreaDirectory(area):
+  DIRAC.gLogger.info("Listing content of area %s :" % (area))
+  res = systemCall( 5, ['ls', '-al', area] )
+  if not res['OK']:
+    DIRAC.gLogger.error( 'Failed to list the area directory', res['Message'] )
+  elif res['Value'][0]:
+    DIRAC.gLogger.error( 'Failed to list the area directory', res['Value'][2] )
+  else:
+    # no timeout and exit code is 0
+    DIRAC.gLogger.info( res['Value'][1] )
   
 def log( n, line ):
   """ print line
