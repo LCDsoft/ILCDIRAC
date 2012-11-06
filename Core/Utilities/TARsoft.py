@@ -138,6 +138,8 @@ def install(app, config, area):
   folder_name = app_tar.replace(".tgz", "").replace(".tar.gz", "")
   if appName == "slic":
     folder_name = "%s%s" % (appName, appVersion)
+  app_tar_base = os.path.basename(app_tar)
+
     
   appli_exists = False
   
@@ -159,7 +161,7 @@ def install(app, config, area):
     appli_exists = True #this basically makes that all the following ifs are not true
     if not overwrite:
       gLogger.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
-      return S_OK()
+      return S_OK([folder_name, app_tar_base])
     
   #Now lock the area
   res = createLock(lockname)##This will fail if not allowed to write here
@@ -195,7 +197,6 @@ def install(app, config, area):
     
     
   #downloading file from url, but don't do if file is already there.
-  app_tar_base = os.path.basename(app_tar)
   if not os.path.exists("%s/%s"%(os.getcwd(), app_tar_base)) and not appli_exists:
     if TarBallURL.find("http://")>-1:
       try :
