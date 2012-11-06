@@ -3,7 +3,7 @@ Created by S Poss
 
 May 2011
 """
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea, listAreaDirectory
 
 from ILCDIRAC.ProcessProductionSystem.Client.ProcessProdClient import ProcessProdClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
@@ -83,6 +83,10 @@ class InstallSoftModule():
       mySoftwareRoot = ''
       localArea = LocalArea()
       sharedArea = SharedArea()
+      self.log.info("Local Area is %s" % localArea)
+      listAreaDirectory(localArea)
+      self.log.info("Shared Area is %s" % sharedArea)
+      listAreaDirectory(sharedArea)
       if os.path.exists('%s%s%s' % (localArea, os.sep, appDir)):
         mySoftwareRoot = localArea
       elif os.path.exists('%s%s%s' % (sharedArea, os.sep, appDir)):
@@ -91,7 +95,7 @@ class InstallSoftModule():
         self.log.error('%s: Could not find neither local area not shared area install' % app)
         continue
       myappDir = os.path.join(mySoftwareRoot, appDir)
-      
+      self.log.info("Will attempt to remove %s " % myappDir)
       #### Hacky hack needed when the DB was in parallel to the Mokka version
       if appname.lower() == 'mokka':
         dbloc = os.path.join(mySoftwareRoot, "CLICMokkaDB.sql")
