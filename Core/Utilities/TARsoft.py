@@ -180,11 +180,9 @@ def install(app, app_tar, TarBallURL, overwrite, area):
   res = checkLockAge(lockname)
   if not res['OK']:
     gLogger.error("Something uncool happened with the lock, will try to proceed anyway")
-  potentialoverwrite = False
   if res.has_key('Value'):
-    potentialoverwrite = res['Value']
-  if potentialoverwrite:
-    overwrite = True
+    if res['Value']: #this means the lock file was very old, meaning that the installation failed elsewhere
+      overwrite = True
 
   #Check if the application is here and not to be overwritten
   if os.path.exists(folder_name): #This should include a checksum verification of some sort
