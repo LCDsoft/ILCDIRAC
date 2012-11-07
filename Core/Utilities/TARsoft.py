@@ -29,11 +29,13 @@ def createLock(lockname):
 def checkLockAge(lockname):
   """ Check if there is a lock, and in that case deal with it, potentially remove it after n minutes
   """
+  overwrite = False
   count = 0
   while (1):
     if not os.path.exists(lockname):
       break
     count += 1
+    gLogger.warn("Will wait one minute before proceeding")
     res = WasteCPUCycles(60)
     if not res['OK']:
       continue
@@ -46,11 +48,12 @@ def checkLockAge(lockname):
       break
     loc_time = time.time()
     if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
+      overwrite = True
       res = clearLock(lockname)
       if res['OK']:
         break
       
-  return S_OK()
+  return S_OK(overwrite)
   
 def clearLock(lockname):
   """ And we need to clear the lock once the operation is done
@@ -75,7 +78,16 @@ def TARinstall(app, config, area):
     depapp.append(dep["version"])
     gLogger.info("Installing dependency %s %s" % (dep["app"], dep["version"]))
     
-    res = install(depapp, config, area)
+    res = getTarBallLocation(depapp, config, area)
+    if not res['OK']:
+      gLogger.error("Could not install dependency %s %s: %s" % (dep["app"], dep["version"], res['Message']))
+      return S_ERROR('Failed to install software')
+    res_from_getTarBall = res['Value']
+    app_tar = res_from_getTarBall[0]
+    TarBallURL = res_from_getTarBall[1]
+    overwrite = res_from_getTarBall[2]
+    
+    res = install(depapp, app_tar, TarBallURL, overwrite, area)
     os.chdir(curdir)
     if not res['OK']:
       gLogger.error("Could not install dependency %s %s: %s" % (dep["app"], dep["version"], res['Message']))
@@ -94,13 +106,22 @@ def TARinstall(app, config, area):
       
     os.chdir(curdir)
     
-  res = install(app, config, area)
+  res = getTarBallLocation(app, config, area)
+  if not res['OK']:
+    gLogger.error("Could not install dependency %s %s: %s" % (appName, appVersion, res['Message']))
+    return S_ERROR('Failed to install software')
+  res_from_getTarBall = res['Value']
+  app_tar = res_from_getTarBall[0]
+  TarBallURL = res_from_getTarBall[1]
+  overwrite = res_from_getTarBall[2]
+  
+  res = install(app, app_tar, TarBallURL, overwrite, area)
   os.chdir(curdir)
   if not res['OK']:
     gLogger.error("Could not install software %s %s: %s" % (appName, appVersion, res['Message']))
     return S_ERROR('Failed to install software')
-  
   res_from_install = res['Value']
+  
   res = configure(app, area, res_from_install)
   os.chdir(curdir)
   if not res['OK']:
@@ -115,8 +136,8 @@ def TARinstall(app, config, area):
   
   return res
 
-def install(app, config, area):
-  """ Actually install the applications. 
+def getTarBallLocation(app, config, area):
+  """ Get the tar ball location. 
   """
   ops = Operations()
   appName    = app[0]
@@ -134,15 +155,20 @@ def install(app, config, area):
     gLogger.error('Could not find TarBallURL in CS for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find TarBallURL in CS')
 
-  #Check if folder is already there:
+  return S_OK([app_tar, TarBallURL, overwrite])
+
+def install(app, app_tar, TarBallURL, overwrite, area):
+  """ Install the software
+  """
+  appName    = app[0]
+  appVersion = app[1]
   folder_name = app_tar.replace(".tgz", "").replace(".tar.gz", "")
   if appName == "slic":
     folder_name = "%s%s" % (appName, appVersion)
+  
+  appli_exists = False
   app_tar_base = os.path.basename(app_tar)
 
-    
-  appli_exists = False
-  
   ###########################################
   ###Go where the software is to be installed
   os.chdir(area)
@@ -154,7 +180,12 @@ def install(app, config, area):
   res = checkLockAge(lockname)
   if not res['OK']:
     gLogger.error("Something uncool happened with the lock, will try to proceed anyway")
-  
+  potentialoverwrite = False
+  if res.has_key('Value'):
+    potentialoverwrite = res['Value']
+  if potentialoverwrite:
+    overwrite = True
+
   #Check if the application is here and not to be overwritten
   if os.path.exists(folder_name): #This should include a checksum verification of some sort
     # and not appName =="slic":
@@ -162,7 +193,6 @@ def install(app, config, area):
     if not overwrite:
       gLogger.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
       return S_OK([folder_name, app_tar_base])
-    
   #Now lock the area
   res = createLock(lockname)##This will fail if not allowed to write here
   if not res['OK']:
@@ -194,13 +224,16 @@ def install(app, config, area):
       #if not res['OK']:
       #    gLogger.error("Lock file could not be cleared")
       return S_ERROR("Not allowed to write in %s" % area)
-    
-    
+
+  #need to make sure the url ends with /, other wise concatenation below returns bad url
+  if TarBallURL[-1] != "/":
+    TarBallURL += "/"
+      
   #downloading file from url, but don't do if file is already there.
   if not os.path.exists("%s/%s"%(os.getcwd(), app_tar_base)) and not appli_exists:
     if TarBallURL.find("http://")>-1:
       try :
-        gLogger.debug("Downloading software", '%s_%s' % (appName, appVersion))
+        gLogger.debug("Downloading software", '%s' % (folder_name))
         #Copy the file locally, don't try to read from remote, soooo slow
         #Use string conversion %s%s to set the address, makes the system more stable
         tarball, headers = urllib.urlretrieve("%s%s" % (TarBallURL, app_tar), app_tar_base)
@@ -221,7 +254,7 @@ def install(app, config, area):
         return resget
 
   if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)) and not appli_exists:
-    gLogger.error('Failed to download software','%s_%s' % (appName, appVersion))
+    gLogger.error('Failed to download software','%s' % (folder_name))
     res = clearLock(lockname)
     if not res['OK']:
       gLogger.error("Lock file could not be cleared")
@@ -238,8 +271,8 @@ def install(app, config, area):
         if not res['OK']:
           gLogger.error("Lock file could not be cleared")
         return S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base, e))
-      if appName == "slic":
-        slicname = "%s%s" % (appName, appVersion)
+      if folder_name.count("slic"):
+        slicname = folder_name
         members = app_tar_to_untar.getmembers()
         fileexample = members[0].name
         basefolder = fileexample.split("/")[0]
@@ -264,6 +297,7 @@ def install(app, config, area):
   res = clearLock(lockname)
   if not res['OK']:
     gLogger.error("Lock file could not be cleared")
+    
   return S_OK([folder_name, app_tar_base]) 
  
 def configure(app, area, res_from_install):
