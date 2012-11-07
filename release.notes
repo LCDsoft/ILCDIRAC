@@ -1,6 +1,11 @@
 [v14r0p0]
 Move to Dirac v6r4p28 for webFC
 
+[v13r2p3]
+* Core
+CHANGE: Some refactoring to have clearer installation
+CHANGE: If the lock file is too old, it means somehow the other installation was broken midcourse, then overwrite
+
 [v13r2p2]
 * Core
 BUGFIX: return value of install was bad
