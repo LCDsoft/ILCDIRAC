@@ -239,7 +239,7 @@ arch_runtime_compatiblity = {
                                 }
 
 flavor_runtime_equivalence = {
-                              "slc6"  : ["slc6", "rhel6" ],
+                              "slc6"  : ["slc6", "co6", "rhel6" ],
                               "slc5"  : ["slc5", "co5", "rhel5", "ub9", "fc12", "fc11", "fc10"],
                               "slc4"  : ["slc4", "co4", "rhel4", "deb4"],
                               "slc3"  : ["slc3", "suse90", "suse100"],
