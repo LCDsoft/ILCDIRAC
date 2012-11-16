@@ -217,6 +217,7 @@ lsb_flavour_aliases   = {
                         }
 
 flavor_runtime_compatibility = {
+                                "slc6"  : ["slc6", "slc5"],
                                 "slc5"  : ["slc5", "slc4"],
                                 "slc4"  : ["slc4", "slc3"],
                                 "slc3"  : ["slc3"],
@@ -238,6 +239,7 @@ arch_runtime_compatiblity = {
                                 }
 
 flavor_runtime_equivalence = {
+                              "slc6"  : ["slc6", "rhel6" ],
                               "slc5"  : ["slc5", "co5", "rhel5", "ub9", "fc12", "fc11", "fc10"],
                               "slc4"  : ["slc4", "co4", "rhel4", "deb4"],
                               "slc3"  : ["slc3", "suse90", "suse100"],
@@ -248,6 +250,7 @@ flavor_runtime_equivalence = {
                              }
 
 supported_compilers = {
+                       "slc6"   : ["gcc44"],
                        "slc5"   : ["gcc43"],
                        "slc4"   : ["gcc34"],
                        "slc3"   : ["gcc323"],
