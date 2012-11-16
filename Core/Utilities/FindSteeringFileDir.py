@@ -1,4 +1,7 @@
 '''
+This module is used to obtain the related steering file directory given a certain 
+software name, version and system config
+
 Created on Feb 10, 2012
 
 @author: Stephane Poss
@@ -9,7 +12,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFol
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 def getSteeringFileDirName(systemConfig, application, applicationVersion):
-  """ Locate the path of the steering file directory assigned to the specified appliciation
+  """ Locate the path of the steering file directory assigned to the specified application
   """
   ops = Operations()
   version = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (systemConfig, 
