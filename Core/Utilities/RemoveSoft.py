@@ -1,8 +1,11 @@
 '''
+Module to remove software. Not used if using the ProcessPorductionSystem
+
 Created on Jul 14, 2011
 
 @author: Stephane Poss
 '''
+
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
@@ -20,6 +23,7 @@ class RemoveSoft(object):
     self.step_commons = {}
     self.workflow_commons = {}
     self.ops = Operations()
+    
   def execute(self):
     """ Look in folders (Shared Area and Local Area) and try ot remove the applications specified.
     """
