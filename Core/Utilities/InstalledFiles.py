@@ -1,4 +1,6 @@
 '''
+List of files in the SteeringFiles tar ball.
+
 Created on Nov 8, 2011
 
 @author: Stephane Poss
