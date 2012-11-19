@@ -1,4 +1,6 @@
 '''
+For any input file, try to determine from the FC the number of events / luminosity / event type. 
+
 Created on Nov 2, 2010
 
 @author: sposs
