@@ -1,3 +1,10 @@
+"""
+SID DBD specific production job utility
+
+@author: S. Poss
+@since: Jul 01, 2012
+"""
+
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Workflow.Module import ModuleDefinition

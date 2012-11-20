@@ -1,5 +1,5 @@
 """
-DiracILC is the API to use to submit jobs in the ILC VO
+API to use to submit jobs in the ILC VO
 
 @since:  Apr 13, 2010
 
@@ -20,7 +20,7 @@ COMPONENT_NAME = 'DiracILC'
 class DiracILC(Dirac):
   """DiracILC is VO specific API Dirac
   
-  Adding specific ILC functionalities to the Dirac class, and implement the preSubmissionChecks method
+  Adding specific ILC functionalities to the Dirac class, and implement the L{preSubmissionChecks} method
   """
   def __init__(self, withRepo = False, repoLocation = ''):
     """Internal initialization of the ILCDIRAC API.
@@ -34,7 +34,8 @@ class DiracILC(Dirac):
     self.ops = Operations()
     
   def getProcessList(self): 
-    """ Get the process list needed by Whizard.
+    """ Get the L{ProcessList} needed by L{Whizard}.
+    @return: process list object
     """   
     processlistpath = gConfig.getValue("/LocalSite/ProcessListPath", "")
     if not processlistpath:
@@ -130,6 +131,8 @@ class DiracILC(Dirac):
   
   def _do_check(self, job):
     """ Main method for checks
+    @param job: job object
+    @return: S_OK() or S_ERROR()
     """
     #Start by taking care of sandbox
     if hasattr(job, "inputsandbox"):
@@ -171,6 +174,10 @@ class DiracILC(Dirac):
   
   def _checkapp(self, config, appName, appVersion):
     """ Check availability of application in CS
+    @param config: System config
+    @param appName: Application name
+    @param appVersion: Application version
+    @return: S_OK() or S_ERROR()
     """
     app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion),'')
     if not app_version:
@@ -180,6 +187,8 @@ class DiracILC(Dirac):
   
   def _checkoutputpath(self, path):
     """ Validate the outputpath specified for the application
+    @param path: Path of output data
+    @return: S_OK() or S_ERROR()
     """
     if path.find("//") > -1 or path.find("/./") > -1 or path.find("/../") > -1:
       self.log.error("OutputPath of setOutputData() contains invalid characters, please remove any //, /./, or /../")
@@ -192,6 +201,9 @@ class DiracILC(Dirac):
   
   def _checkdataconsistency(self, useroutputdata, useroutputsandbox):
     """ Make sure the files are either in OutpuSandbox or OutputData but not both
+    @param useroutputdata: List of files set in the outputdata
+    @param useroutputsandbox: List of files set in the output sandbox
+    @return: S_OK() or S_ERROR()
     """
     useroutputdata = useroutputdata.split(";")
     for data in useroutputdata:
@@ -206,6 +218,8 @@ class DiracILC(Dirac):
 
   def checkInputSandboxLFNs(self, job):
     """ Check that LFNs in ISB exist in the FileCatalog
+    @param job: job object
+    @return: S_OK() or S_ERROR()
     """
     lfns = []
     inputsb = job.workflow.findParameter("InputSandbox")
