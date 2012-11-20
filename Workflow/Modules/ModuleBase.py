@@ -26,7 +26,7 @@ def GenRandString(length=8, chars = string.letters + string.digits):
 class ModuleBase(object):
   """ Base class of the ILCDIRAC modules. Several common utilities are defined here.
   In particular, all sub classes should call the L{resolveInputVariables} method, and implement
-  the L{applicationSpecificInputs.
+  the L{applicationSpecificInputs}.
   """
   #############################################################################
   def __init__(self):
