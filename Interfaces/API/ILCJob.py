@@ -1,3 +1,6 @@
+"""
+Forget this, it should NOT be used
+"""
 from DIRAC import gLogger
 class ILCJob():
   def __init__(self):

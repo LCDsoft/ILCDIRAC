@@ -1,5 +1,7 @@
 '''
-Created on Jan 26, 2012
+DBD Whizard generation, not completed, never used
+
+@since: Jan 26, 2012
 
 @author: Stephane Poss
 '''
