@@ -1,7 +1,10 @@
 '''
+Checks the validity of the provided XML files at job submission
+
 Created on Feb 24, 2011
 
-@author: sposs
+@author: S. Poss
+@since: Feb 24, 2011
 '''
 from DIRAC                                                import S_OK, S_ERROR
 from xml.etree.ElementTree                                import ElementTree

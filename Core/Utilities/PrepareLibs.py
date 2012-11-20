@@ -1,7 +1,8 @@
 '''
-Created on Jan 26, 2011
+Remove any system library provided in the application tar ball
 
 @author: sposs
+@since: Jan 26, 2011
 '''
 import os
 

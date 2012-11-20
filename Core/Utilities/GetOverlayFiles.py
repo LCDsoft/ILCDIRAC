@@ -1,9 +1,8 @@
 '''
-List the content of the overlay directory given a bakground type. Called from L{PrepareXMLFile}.
+List the content of the overlay directory given a background type. Called from L{PrepareXMLFile}.
 
-Created on Jan 28, 2011
-
-@author: sposs
+@author: S. Poss
+@since: Jan 28, 2011
 '''
 from DIRAC import gLogger
 import os

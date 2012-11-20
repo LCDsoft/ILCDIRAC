@@ -1,8 +1,12 @@
 ########################################################################
 # $Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $
 ########################################################################
-""" Utility to construct production LFNs from workflow parameters
-    according to LHCb conventions.
+""" 
+Utility to construct production LFNs from workflow parameters
+according to LHCb conventions.
+
+@author: S. Poss
+@since: Jun 16, 2010
 """
 
 __RCSID__ = "$Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $"

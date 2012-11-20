@@ -1,10 +1,11 @@
 '''
-This module is used to obtain the related steering file directory given a certain 
+Otain the related steering file directory given a certain 
 software name, version and system config
 
 Created on Feb 10, 2012
 
 @author: Stephane Poss
+@since: Feb 10, 2012
 '''
 
 from DIRAC import S_OK, S_ERROR

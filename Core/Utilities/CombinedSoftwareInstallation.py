@@ -1,9 +1,7 @@
 # $HeadURL$
 # $Id$
 """
-Based on LHCbDIRAC.Core.Utilities.CombinedSoftwareInstalation module, 
-
-New version of CombinedSoftwareInstallation, installs properly ILD soft and SiD soft, and all dependencies
+Installs properly ILD soft and SiD soft, and all dependencies
 
 @since: Feb 4, 2010
 

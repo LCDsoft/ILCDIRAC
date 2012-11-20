@@ -1,7 +1,8 @@
 '''
-Created on Jul 30, 2010
+Determine the final output files names
 
-@author: sposs
+@author: S. Poss
+@since: Jul 30, 2010
 '''
 
 def getProdFilename(filename, prodID, jobID):

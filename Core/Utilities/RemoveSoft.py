@@ -1,9 +1,8 @@
 '''
-Module to remove software. Not used if using the ProcessPorductionSystem
-
-Created on Jul 14, 2011
+Module to remove software. Not used if using the ProcessProductionSystem
 
 @author: Stephane Poss
+@since: Jul 14, 2011
 '''
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea

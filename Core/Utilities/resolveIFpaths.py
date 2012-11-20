@@ -1,7 +1,8 @@
 '''
-Created on Jun 28, 2010
+Find out in which sub-directory are each InputData files
 
 @author: sposs
+@since: Jun 28, 2010
 '''
 import os
 from DIRAC import S_OK, S_ERROR
