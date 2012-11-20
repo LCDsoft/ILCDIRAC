@@ -1,5 +1,7 @@
 '''
-Created on Jun 3, 2011
+Run Pythia, but only specific versions (the CDR ttbar ones)
+
+@since:  Jun 3, 2011
 
 @author: Stephane Poss
 '''
@@ -9,7 +11,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFol
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
 from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
-from DIRAC import gLogger, S_OK, S_ERROR, gConfig
+from DIRAC import gLogger, S_OK, S_ERROR
 
 import os
 

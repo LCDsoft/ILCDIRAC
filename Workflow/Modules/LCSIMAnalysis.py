@@ -2,7 +2,9 @@
 # $HeadURL: $
 #####################################################
 '''
-ILCDIRAC.Workflow.Modules.LCSIMAnalysis Called by Job Agent. 
+Run LCSIM
+
+Called by Job Agent. 
 
 @since: Apr 7, 2010
 

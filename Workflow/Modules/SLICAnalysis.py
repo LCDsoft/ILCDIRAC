@@ -2,7 +2,7 @@
 # $HeadURL: $
 #####################################################
 '''
-ILCDIRAC.Workflow.Modules.SLICAnalysis Called by Job Agent. 
+Run SLIC
 
 @since:  Apr 7, 2010
 

@@ -3,6 +3,10 @@
 #####################################################
 """
 Module to concatenate LCIO files
+
+@author: Ching Bon Lam
+@since: Dec 17, 2011
+
 """
 
 __RCSID__ = "$Id: LCIOConcatenate.py 48402 2012-03-09 09:33:09Z sposs $"

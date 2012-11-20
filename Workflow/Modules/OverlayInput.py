@@ -2,7 +2,9 @@
 # $HeadURL: $
 #####################################################
 '''
-Created on Jan 27, 2011
+Get the overlay files
+
+@since: Jan 27, 2011
 
 @author: sposs
 '''

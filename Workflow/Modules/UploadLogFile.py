@@ -1,8 +1,12 @@
 ########################################################################
 # $HeadURL: $
 ########################################################################
-""" UploadLogFile module is used to upload the files present in the working
-    directory.
+""" 
+UploadLogFile module is used to upload the files present in the working
+directory.
+
+@author: S. Poss
+@since: Sep 01, 2010
 """
 
 __RCSID__ = "$Id: $"

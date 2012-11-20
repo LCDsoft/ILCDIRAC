@@ -2,7 +2,9 @@
 # $HeadURL$
 #####################################################
 '''
-Created on Sep 8, 2010
+Register the meta data of the production files
+
+@since: Sep 8, 2010
 
 @author: sposs
 '''

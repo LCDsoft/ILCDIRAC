@@ -2,7 +2,9 @@
 # $HeadURL: $
 #####################################################
 '''
-Created on Dec 20, 2010
+Run the Post generation filter, not the same as L{StdHepCut}
+
+@since: Dec 20, 2010
 
 @author: sposs
 '''

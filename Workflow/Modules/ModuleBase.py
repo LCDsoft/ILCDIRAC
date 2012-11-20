@@ -1,9 +1,14 @@
 #####################################################
 # $HeadURL$
 #####################################################
-""" ModuleBase - base class for ILC workflow modules. 
+""" 
+Base class for ILC workflow modules. 
+
 Stolen by S. Poss from LHCbSystem.Workflow.Modules
 
+@since: Feb 02, 2010
+@author: S. Poss
+@author: S. Paterson
 """
 
 __RCSID__ = "$Id$"

@@ -1,5 +1,7 @@
 '''
-Created on Jan 26, 2012
+Goes with DBDGeneration, not used
+
+@since: Jan 26, 2012
 
 @author: Stephane Poss
 '''

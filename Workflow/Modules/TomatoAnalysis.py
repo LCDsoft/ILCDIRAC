@@ -2,9 +2,12 @@
 # $HeadURL: $
 #####################################################
 '''
-Created on Feb 24, 2011
+Run TOMATO
 
-@author: sposs
+@since: Feb 24, 2011
+
+@author: S. Poss
+@author: C. B. Lam
 '''
 
 __RCSID__ = "$Id: $"
@@ -17,7 +20,7 @@ from DIRAC                                                 import S_OK, S_ERROR,
 import os, types
 
 class TomatoAnalysis(MarlinAnalysis):
-  """ Module to run Tomato: the auTomated Analysis TOol by CB Lam.
+  """ Module to run Tomato: the auTOMated Analysis TOol by C.B. Lam.
   """
   def __init__(self):
     MarlinAnalysis.__init__()
