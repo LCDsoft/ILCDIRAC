@@ -285,4 +285,4 @@ def getSoftwareFolder(folder):
   else:
     return S_ERROR('Missing installation of %s!' % folder)
   mySoftDir = os.path.join(mySoftwareRoot, folder)
-  return S_OK(mySoftDir)    
+  return S_OK(mySoftDir)

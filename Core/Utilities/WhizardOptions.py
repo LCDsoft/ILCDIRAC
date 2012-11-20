@@ -2,8 +2,8 @@
 Created on Nov 3, 2011
 
 
-for SUSY special treatment of the pythia parameters have to be thought of: if the model is SUSY, then need to add
- IMSS(1)=11; IMSS(21)=71; IMSS(22)=71;
+For SUSY special treatment of the pythia parameters have to be thought of: if the model is SUSY, then need to add
+IMSS(1)=11; IMSS(21)=71; IMSS(22)=71;
 
 This is currently done on the job definition side
  
