@@ -2,7 +2,9 @@
 # $HeadURL: $
 #####################################################
 '''
-Created on Oct 25, 2010
+Run SLICPandora
+
+@since: Oct 25, 2010
 
 @author: sposs
 '''

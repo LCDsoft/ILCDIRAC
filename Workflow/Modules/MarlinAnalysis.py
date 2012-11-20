@@ -3,13 +3,14 @@
 ##############################################################
 
 '''
-ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
+Run Marlin
 
-Define the Marlin analysis part of the workflow
+ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
 @since: Feb 9, 2010
 
-@author: Stephane Poss and Przemyslaw Majewski
+@author: Stephane Poss 
+@author: Przemyslaw Majewski
 '''
 
 __RCSID__ = "$Id$"

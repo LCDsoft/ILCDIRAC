@@ -4,7 +4,7 @@
 '''
 Dummy module that prints out the workflow parameters
 
-Created on Mar 11, 2011
+@since: Mar 11, 2011
 
 @author: sposs
 '''

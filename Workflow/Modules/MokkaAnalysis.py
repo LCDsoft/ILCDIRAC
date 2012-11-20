@@ -2,11 +2,14 @@
 # $HeadURL$
 #####################################################
 '''
-Mokka analysis module. Called by Job Agent. 
+Mokka analysis module. 
+
+Called by Job Agent. 
 
 @since:  Jan 29, 2010
 
-@author: Stephane Poss and Przemyslaw Majewski
+@author: Stephane Poss
+@author: Przemyslaw Majewski
 '''
 
 __RCSID__ = "$Id$"

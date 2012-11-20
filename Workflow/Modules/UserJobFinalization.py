@@ -1,8 +1,12 @@
 ########################################################################
 # $HeadURL: $
 ########################################################################
-""" Module to upload specified job output files according to the parameters
-    defined in the user workflow.
+""" 
+Module to upload specified job output files according to the parameters
+defined in the user workflow.
+
+@author: S. Poss
+@since: Sep 01, 2010
 """
 
 __RCSID__ = "$Id: $"

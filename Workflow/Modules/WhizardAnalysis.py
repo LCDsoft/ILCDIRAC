@@ -2,11 +2,13 @@
 # $HeadURL$
 ########################################################################
 '''
-Whizard analysis module. Called by Job Agent. 
+Whizard analysis module.
 
-Created on Sep 22, 2010
+Called by Job Agent. 
 
-@author: sposs
+@since: Sep 22, 2010
+
+@author: S. Poss
 '''
 
 __RCSID__ = "$Id$"
@@ -24,7 +26,7 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                   import removeLibc
 from ILCDIRAC.Core.Utilities.GeneratorModels               import GeneratorModels
 from ILCDIRAC.Core.Utilities.WhizardOptions                import WhizardOptions
 
-from DIRAC import gLogger, S_OK, S_ERROR, gConfig
+from DIRAC import gLogger, S_OK, S_ERROR
 
 import os, shutil, glob
 
@@ -535,6 +537,9 @@ class WhizardAnalysis(ModuleBase):
     return S_OK( { "OutputFile": self.OutputFile } )
 
   def makeWhizardDotCut1(self, cutdict):
+    """ When users need whizard cuts, this is called to prepare the file
+    @return: S_OK()
+    """
     cutf = file("whizard.cut1","w")
     for key, values in cutdict.items():
       cutf.write("process %s\n"%key)

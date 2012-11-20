@@ -1,8 +1,13 @@
 ########################################################################
 # $HeadURL: $
 ########################################################################
-""" Create and send a combined request for any pending operations at
-    the end of a job.
+""" 
+Create and send a combined request for any pending operations at
+the end of a job.
+
+@author: S. Poss
+@author: S. Paterson
+
 """
 
 __RCSID__ = "$Id: $"

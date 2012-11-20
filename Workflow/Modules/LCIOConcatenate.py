@@ -3,6 +3,8 @@
 #####################################################
 """
 Module to concatenate LCIO files
+@author: Chiong Bon Lam
+@since: Dec 17, 2011
 """
 
 __RCSID__ = "$Id$"

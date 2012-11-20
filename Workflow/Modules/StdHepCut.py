@@ -1,9 +1,13 @@
 '''
-Created on May 11, 2011
+Run the StdHepCut utility
+
+Apply a set of cuts on input stdhep files
+
+@since: May 11, 2011
 
 @author: Stephane Poss
 '''
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from DIRAC.Core.Utilities.Subprocess                      import shellCall

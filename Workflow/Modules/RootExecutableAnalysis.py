@@ -2,9 +2,7 @@
 # $HeadURL: $
 #####################################################
 '''
-ILCDIRAC.Workflow.Modules.RootMacroAnalysis
-
-Module to run root macros
+Module to run root executables
 
 @since:  Apr 29, 2010
 

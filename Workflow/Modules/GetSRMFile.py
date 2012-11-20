@@ -4,7 +4,7 @@
 '''
 Module that gets a file from its SRM definition
 
-Created on Aug 27, 2010
+@since: Aug 27, 2010
 
 @author: sposs
 '''

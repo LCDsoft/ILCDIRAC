@@ -2,9 +2,9 @@
 # $HeadURL: $
 #####################################################
 '''
-Module to compute the outputdata list for production jobs
+Compute the outputdata list for production jobs
 
-Created on Jun 30, 2010
+@since:  Jun 30, 2010
 
 @author: sposs
 '''
