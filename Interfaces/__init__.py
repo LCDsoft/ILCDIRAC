@@ -3,7 +3,7 @@
 """
 ILCDIRAC.Interfaces package
 
-   This contains the LCD specific API plugins for DIRAC.
+This contains the LCD specific API plugins for DIRAC.
    
 created by S. Poss
 

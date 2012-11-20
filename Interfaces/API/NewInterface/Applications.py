@@ -1869,8 +1869,8 @@ class Marlin(Application):
     
     >>> ma.setProcessorsToExclude(['libLCFIVertex.so'])
     
-    @param list: list of processors to exclude
-    @type list: list
+    @param processorlist: list of processors to exclude
+    @type processorlist: list
     """
     self._checkArgs( {
         'processorlist' : types.ListType
