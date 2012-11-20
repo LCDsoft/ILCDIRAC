@@ -2,8 +2,10 @@
 Created on Nov 3, 2011
 
 
-for SUSY speacil treatment of the pythia parameters have to be thought of: if the model is SUSY, then need to add
+for SUSY special treatment of the pythia parameters have to be thought of: if the model is SUSY, then need to add
  IMSS(1)=11; IMSS(21)=71; IMSS(22)=71;
+
+This is currently done on the job definition side
  
 @author: Stephane Poss
 '''
@@ -637,7 +639,7 @@ class WhizardOptions(object):
     return S_OK()
   
   def getMainFields(self):
-    """ Get teh main fields
+    """ Get the main fields
     """
     listoffields = []
     for elem in self.whizardxml.getchildren():
@@ -675,7 +677,7 @@ class WhizardOptions(object):
     return S_OK(self.whizardxml)
   
   def getAsDict(self):
-    """ Get the content as dict, like the one used for settign the options
+    """ Get the content as dict, like the one used for setting the options
     """
     whiz_opt = {}
     for element in self.whizardxml.getchildren():
