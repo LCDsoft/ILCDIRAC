@@ -1,9 +1,8 @@
 '''
-Created on Sep 21, 2010
+Interface to the processlist.cfg that contains all the processes known to WHIZARD.
 
-This object is the interface to the processlist.cfg that contains all the processes known to WHIZARD.
-
-@author: sposs
+@author: S. Poss
+@since: Sep 21, 2010
 '''
 from DIRAC                    import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.CFG import CFG

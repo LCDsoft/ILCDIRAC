@@ -3,6 +3,8 @@
 ###########################################################################
 
 """ Contains the list of models and their properties
+@author: S. Poss
+@since: Jul 07, 2011
 """
 __RCSID__ = " $Id: $ "
 

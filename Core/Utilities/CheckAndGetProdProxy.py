@@ -1,4 +1,6 @@
 '''
+Checks and potentially provides production proxy, called from L{ProductionJob}
+
 Created on Feb 10, 2011
 
 @author: sposs

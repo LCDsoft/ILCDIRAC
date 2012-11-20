@@ -1,6 +1,4 @@
 '''
-ILCDIRAC.Core.Utilities.ResolveDependencies
-
 Set of functions used to resolve the applications' dependencies, looking into the CS
 
 Works recursively

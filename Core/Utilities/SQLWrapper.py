@@ -2,13 +2,13 @@
 # $Id$
 '''
 Wrapper script to run mokka with a local database setup 
+
 Based on Jan Engels bash script
 
 Called from ILCDIRAC.Workflow.Modules.MokkaAnalysis
 
-Created on Feb 1, 2010
-
 @author: Przemyslaw Majewski and Stephane Poss
+@since: Feb 1, 2010
 '''
 
 from DIRAC import S_OK, S_ERROR, gLogger

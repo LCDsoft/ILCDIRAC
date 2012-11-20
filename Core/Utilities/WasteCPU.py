@@ -1,9 +1,8 @@
 '''
-Created on Jul 26, 2011
+This is the worst piece of code ever NEEDED: just run some CPU intensive code to waste CPU time.
 
 @author: Stephane Poss
-
-So this is the worst piece of code ever NEEDED: just run some CPU intensive code to waste CPU time.
+@since: Jul 26, 2011
 '''
 import time
 from math import log

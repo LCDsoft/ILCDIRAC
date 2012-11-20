@@ -1,13 +1,10 @@
 # $HeadURL$
 # $Id$
 '''
-ILCDIRAC.Core.Utilities.PrepareOptionFiles
-
-This provides a set of methods to prepare the option files needed by the ILC applications.
-
-Created on Jan 29, 2010
+Provides a set of methods to prepare the option files needed by the ILC applications.
 
 @author: Stephane Poss
+@since: Jan 29, 2010
 '''
 
 from DIRAC import S_OK, gLogger, S_ERROR, gConfig
