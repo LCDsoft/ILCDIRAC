@@ -241,7 +241,7 @@ class SLICAnalysis(ModuleBase):
                                                                                       os.environ['SLIC_VERSION']))
     script.write('declare -x MALLOC_CHECK_=0\n')
     if os.path.exists("%s/lib" % (mySoftwareRoot)):
-      script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH' % (mySoftwareRoot))
+      script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH\n' % (mySoftwareRoot))
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo =========\n')
