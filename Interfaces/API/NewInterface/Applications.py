@@ -1540,7 +1540,7 @@ class OverlayInput(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.ops = Operations()
+    self._ops = Operations()
     self.BXOverlay = None
     self.ggtohadint = 0
     self.NbSigEvtsPerJob = 0
@@ -1729,7 +1729,7 @@ class OverlayInput(Application):
     if not self.energy:
       return  S_ERROR("Energy MUST be specified for the overlay")
 
-    res = self.ops.getSections('/Overlay')
+    res = self._ops.getSections('/Overlay')
     if not res['OK']:
       return S_ERROR("Could not resolve the CS path to the overlay specifications")
     sections = res['Value']
@@ -1743,11 +1743,11 @@ class OverlayInput(Application):
       energytouse =  "%sgev" % (Decimal(str(self.energy)))
     if energytouse.count(".0"):
       energytouse = energytouse.replace(".0", "")
-    res = self.ops.getSections("/Overlay/%s" % self.machine)
+    res = self._ops.getSections("/Overlay/%s" % self.machine)
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s" % energytouse)
     
-    res = self.ops.getSections("/Overlay/%s/%s" % (self.machine, energytouse))
+    res = self._ops.getSections("/Overlay/%s/%s" % (self.machine, energytouse))
     if not res['OK']:
       return S_ERROR("Could not find the detector models")
     
