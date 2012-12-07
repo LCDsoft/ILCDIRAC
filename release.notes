@@ -1,3 +1,8 @@
+[v16r3p0]
+Move to DIRAC v6r6
+* Interfaces
+Change some log levels to reflect the fact that the default is Notice
+
 [v16r2p0]
 Move to Dirac v6r6-pre13
 [v16r1p0]
