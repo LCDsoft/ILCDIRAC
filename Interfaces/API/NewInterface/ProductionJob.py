@@ -380,7 +380,7 @@ class ProductionJob(Job):
     
     workflowName = self.workflow.getName()
     fileName = '%s.xml' % workflowName
-    self.log.verbose('Workflow XML file name is: %s' % fileName)
+    self.log.verbose('Workflow XML file name is:', '%s' % fileName)
     try:
       self.createWorkflow()
     except Exception, x:
@@ -469,7 +469,7 @@ class ProductionJob(Job):
     """
     for key in metadict.keys():
       if key in self.finalMetaDictNonSearch[self.basepath].keys():
-        self.log.error("Not allowed to overwrite existing metadata: ", key)
+        self.log.error("Not allowed to overwrite existing metadata: ", "%s" % key)
     self.finalMetaDictNonSearch[self.basepath].update(metadict)
     return S_OK()
   
@@ -530,7 +530,7 @@ class ProductionJob(Job):
 
     res = self._registerMetadata()
     if not res['OK']:
-      self.log.error("Could not register the following directories :", res['Failed'])
+      self.log.error("Could not register the following directories :", "%s" % str(res['Failed']))
     return S_OK()  
   #############################################################################
   
@@ -548,34 +548,34 @@ class ProductionJob(Job):
       if result['OK']:
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
-            self.log.verbose("Successfully created directory:", path)
+            self.log.verbose("Successfully created directory:", "%s" % path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
-            self.log.error('Failed to create directory:', result['Value']['Failed'][path])
+            self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
         self.log.error('Failed to create directory:', result['Message'])
         failed.append(path)
       result = self.fc.setMetadata(path.rstrip("/"), meta)
       if not result['OK']:
-        self.log.error("Could not preset metadata", meta)
+        self.log.error("Could not preset metadata", "%s" % str(meta))
 
     for path, meta in self.finalMetaDictNonSearch.items():
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
-            self.log.verbose("Successfully created directory:", path)
+            self.log.verbose("Successfully created directory:", "%s" % path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
-            self.log.error('Failed to create directory:', result['Value']['Failed'][path])
+            self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
         self.log.error('Failed to create directory:', result['Message'])
         failed.append(path)
       result = self.fc.setMetadata(path.rstrip("/"), meta)
       if not result['OK']:
-        self.log.error("Could not preset metadata", meta)        
+        self.log.error("Could not preset metadata", "%s" % str(meta))        
 
     if len(failed):
       return  { 'OK' : False, 'Failed': failed}
@@ -704,13 +704,13 @@ class ProductionJob(Job):
       self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
-      self.log.info("Will store the files under %s" % path)
+      self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
       path = self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/DST"
       self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
       fname = self.basename + "_dst.slcio"
       application.setOutputDstFile(fname, path)  
-      self.log.info("Will store the files under %s" % path)
+      self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
     elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath + self.machine + energypath + self.evttypepath
@@ -728,7 +728,7 @@ class ProductionJob(Job):
         application.datatype = self.datatype
       path += application.datatype
       self.finalMetaDict[path] = {'Datatype' : application.datatype}
-      self.log.info("Will store the files under %s" % path)
+      self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
       extension = 'stdhep'
       if application.datatype in ['SIM', 'REC']:
