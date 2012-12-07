@@ -696,9 +696,9 @@ class Whizard(Application):
         self.evttype = self.globalname
       for process in processes:
         if not self._processlist.existsProcess(process)['Value']:
-          self._log.info("Available processes are:")
+          self._log.notice("Available processes are:")
           self._processlist.printProcesses()
-          return S_ERROR('Process %s does no exists'%process)
+          return S_ERROR('Process %s does not exists'%process)
         else:
           cspath = self._processlist.getCSPath(process)
           whiz_file = os.path.basename(cspath)
@@ -1254,7 +1254,7 @@ class Mokka(Application):
     if os.path.exists(macfile) or macfile.lower().count("lfn:"):
       self.inputSB.append(macfile)
     else:
-      self._log.info("Mac file not found locally and is not an lfn, I hope you know what you are doing...")  
+      self._log.notice("Mac file not found locally and is not an lfn, I hope you know what you are doing...")  
     
     
   def setStartFrom(self, startfrom):
@@ -1294,7 +1294,7 @@ class Mokka(Application):
     if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
       self.inputSB.append(dbSlice)
     else:
-      self._log.info("DB slice not found locally and is not an lfn, I hope you know what you are doing...")  
+      self._log.notice("DB slice not found locally and is not an lfn, I hope you know what you are doing...")  
       
     
   def _userjobmodules(self, stepdefinition):
@@ -1432,7 +1432,7 @@ class SLIC(Application):
       if os.path.exists(detectorModel):
         self.inputSB.append(detectorModel)
       else:
-        self._log.info("Specified detector model does not exist locally, I hope you know what you're doing")
+        self._log.notice("Specified detector model does not exist locally, I hope you know what you're doing")
     
     
     self.detectorModel = os.path.basename(detectorModel).replace(".zip","")
@@ -1487,7 +1487,7 @@ class SLIC(Application):
         self.prodparameters['slic_detectormodel'] = self.detectorModel
    
     if not self.startFrom :
-      self._log.info('No startFrom define for Slic : start from the begining')
+      self._log.info('No startFrom defined for Slic : start from the begining')
     
     return S_OK()  
   
@@ -2297,7 +2297,7 @@ class SLICPandora(Application):
     #  return res
       
     if not self.startFrom :
-      self._log.info('No startFrom define for SlicPandora : start from the begining')
+      self._log.info('No startFrom defined for SlicPandora : start from the begining')
       
     if not self._jobtype == 'User':
       self.prodparameters['slicpandora_steeringfile'] = self.steeringfile
@@ -2469,7 +2469,7 @@ class SLCIOConcatenate(Application):
       
     if not self.outputFile and self._jobtype =='User' :
       self.setOutputFile('LCIOFileConcatenated.slcio')
-      self._log.info('No output file name specified. Output file : LCIOFileConcatenated.slcio')
+      self._log.notice('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
@@ -2562,7 +2562,7 @@ class SLCIOSplit(Application):
     self.nbevts = self.numberofeventsperfile
       
     if not self.outputFile and self._jobtype =='User' :
-      self._log.info('No output file name specified.')
+      self._log.notice('No output file name specified.')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
@@ -2654,7 +2654,7 @@ class StdHepSplit(Application):
     self.nbevts = self.numberofeventsperfile
       
     if not self.outputFile and self._jobtype =='User' :
-      self._log.info('No output file name specified.')
+      self._log.notice('No output file name specified.')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 

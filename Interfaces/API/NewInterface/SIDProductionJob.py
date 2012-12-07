@@ -301,7 +301,7 @@ class SIDProductionJob(ProductionJob):
       path += application.datatype
 
       self.finalMetaDict[path] = {"Datatype" : application.datatype}      
-      self.log.info("Will store the files under %s" % path)
+      self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
 
       extension = 'stdhep'
