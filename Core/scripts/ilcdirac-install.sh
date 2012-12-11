@@ -10,11 +10,7 @@ csserver=dips://volcd01.cern.ch:9135/Configuration/Server
 
 scripts/dirac-configure -V $vo -S $setup -C $csserver -d --SkipCAChecks
 echo ""
-echo "You might want to run :"
-echo "./dirac-install -V ILCDIRAC -g 2012-02-20"
-echo "to get the grid UI (-g option), if available for your platform"
-echo ""
 echo "To get the proper environment, run source bashrc"
 echo ""
-echo "You can now obtain a proxy by running"
+echo "You can now obtain a dirac proxy by running"
 echo "dirac-proxy-init"
