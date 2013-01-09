@@ -120,17 +120,17 @@ class Job(DiracJob):
     
     res = application._checkConsistency()
     if not res['OK']:
-      self.log.error("%s failed to check its consistency:", "%s" % (application, res['Message']))
+      self.log.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
     
     res = self._jobSpecificParams(application)
     if not res['OK']:
-      self.log.error("%s failed job specific checks:", "%s" % (application, res['Message']))
+      self.log.error("%s failed job specific checks:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed job specific checks: %s" % (application, res['Message']))
 
     res = application._checkFinalConsistency()
     if not res['OK']:
-      self.log.error("%s failed to check its consistency:", "%s" % (application, res['Message']))
+      self.log.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
