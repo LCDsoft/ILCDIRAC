@@ -137,6 +137,11 @@ class DiracILC(Dirac):
     #Start by taking care of sandbox
     if hasattr(job, "inputsandbox"):
       if type( job.inputsandbox ) == list and len( job.inputsandbox ):
+        for items in job.inputsandbox:
+          if type(items) == type([]):
+            for f in items:
+              job.inputsandbox.append(f)
+            job.inputsandbox.remove(items)
         resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
         fileList = string.join( resolvedFiles, ";" )
         description = 'Input sandbox file list'
