@@ -137,12 +137,16 @@ class DiracILC(Dirac):
     #Start by taking care of sandbox
     if hasattr(job, "inputsandbox"):
       if type( job.inputsandbox ) == list and len( job.inputsandbox ):
+        found_list = False
         for items in job.inputsandbox:
           if type(items) == type([]):
+            found_list = True
             for f in items:
               job.inputsandbox.append(f)
             job.inputsandbox.remove(items)
         resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
+        if found_list:
+          self.log.warn("Input Sandbox contains list of lists. Please avoid that.")
         fileList = string.join( resolvedFiles, ";" )
         description = 'Input sandbox file list'
         job._addParameter( job.workflow, 'InputSandbox', 'JDL', fileList, description )
