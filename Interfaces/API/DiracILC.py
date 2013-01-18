@@ -139,7 +139,7 @@ class DiracILC(Dirac):
       if type( job.inputsandbox ) == list and len( job.inputsandbox ):
         found_list = False
         for items in job.inputsandbox:
-          if type(items) == type([]):
+          if type(items) == type([]):#We fix the SB in the case is contains a list of lists
             found_list = True
             for f in items:
               job.inputsandbox.append(f)
