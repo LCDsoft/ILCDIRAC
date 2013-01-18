@@ -15,7 +15,8 @@ import string, re, os, types, datetime
 
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
 from DIRAC.Core.Security.ProxyInfo import getVOfromProxyGroup
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from DIRAC import S_OK, S_ERROR, gLogger
 
 gLogger = gLogger.getSubLogger('ProductionData')
 #############################################################################
@@ -177,12 +178,16 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
   yearMonth = '%s_%s' % (timeTup[0], string.zfill(str(timeTup[1]), 2))
   outputLFNs = {}
   if not vo:
-    res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
+    #res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
+    res = getVOfromProxyGroup()
     if not res['OK']:
       gLogger.error('Could not get VO from CS, assuming ilc')
       vo = 'ilc'
     else:
       vo = res['Value']
+  ops = Operations(vo = vo)
+  lfn_prefix = ops.getValue("LFNUserPrefix", "user")
+      
   #Strip out any leading or trailing slashes but allow fine structure
   if outputPath:
     outputPathList = string.split(outputPath, os.sep)
@@ -201,9 +206,9 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
     outputFile = outputFile.replace('LFN:', '')
     lfn = ''
     if outputPath:
-      lfn = os.sep+os.path.join(vo, 'user', initial, owner, outputPath + os.sep + os.path.basename(outputFile))
+      lfn = os.sep+os.path.join(vo, lfn_prefix, initial, owner, outputPath + os.sep + os.path.basename(outputFile))
     else:
-      lfn = os.sep+os.path.join(vo, 'user', initial, owner, yearMonth, subdir, str(jobID)) + os.sep + os.path.basename(outputFile)
+      lfn = os.sep+os.path.join(vo, lfn_prefix, initial, owner, yearMonth, subdir, str(jobID)) + os.sep + os.path.basename(outputFile)
     outputLFNs[outputFile] = lfn
   
   outputData = outputLFNs.values()
