@@ -142,6 +142,8 @@ class DiracILC(Dirac):
           if type(items) == type([]):#We fix the SB in the case is contains a list of lists
             found_list = True
             for f in items:
+              if type(f) == type([]):
+                return S_ERROR("Too many lists of lists in the input sandbox, please fix!")
               job.inputsandbox.append(f)
             job.inputsandbox.remove(items)
         resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
