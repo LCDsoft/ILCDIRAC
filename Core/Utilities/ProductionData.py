@@ -14,7 +14,7 @@ __RCSID__ = "$Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $"
 import string, re, os, types, datetime
 
 from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
-
+from DIRAC.Core.Security.ProxyInfo import getVOfromProxyGroup
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 
 gLogger = gLogger.getSubLogger('ProductionData')
@@ -43,7 +43,9 @@ def constructProductionLFNs(paramDict):
   inputData = ''
   if paramDict.has_key('InputData'):
     inputData = paramDict['InputData']
-  res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
+
+  res = getVOfromProxyGroup()
+  #res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
   if not res['OK']:
     gLogger.error('Could not get VO from CS, assuming ilc')
     vo = 'ilc'
