@@ -1,3 +1,6 @@
+[v16r6p0]
+Move to DIRAC v6r6p10
+
 [v16r5p2]
 * Core
 Allow choosing the user prefix in the user LFNs.
