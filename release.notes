@@ -1,3 +1,9 @@
+[v16r5p2]
+* Core
+Allow choosing the user prefix in the user LFNs.
+* Interfaces
+Secure input sandbox: when list of list is provided this should be flattened
+
 [v16r5p1]
 Move to DIRAC v6r6p3
 [v16r5p0]
