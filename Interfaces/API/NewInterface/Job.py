@@ -82,6 +82,7 @@ class Job(DiracJob):
     res = self._addToWorkflow()
     if not res['OK']:
       return res
+    self.oktosubmit = True    
     return dirac.checkparams(self)
       
   def _askUser(self):
