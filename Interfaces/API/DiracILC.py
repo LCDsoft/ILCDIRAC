@@ -26,7 +26,8 @@ class DiracILC(Dirac):
     """Internal initialization of the ILCDIRAC API.
     """
     #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
-    Dirac.__init__(self, withRepo = withRepo, repoLocation = repoLocation)
+    super(DiracILC, self).__init__(withRepo, repoLocation )
+    #Dirac.__init__(self, withRepo = withRepo, repoLocation = repoLocation)
     self.log = gLogger
     self.software_versions = {}
     self.checked = False
