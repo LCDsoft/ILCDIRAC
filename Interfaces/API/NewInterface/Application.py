@@ -27,8 +27,7 @@ class Application(object):
     @type paramdict: dict
     
     """
-    ##Would be cool to have the possibility to pass a dictionary to set the parameters, a bit like the current interface
-    
+    super(Application, self).__init( paramdict )
     #application nane (executable)
     self.appname = ""
     #application version

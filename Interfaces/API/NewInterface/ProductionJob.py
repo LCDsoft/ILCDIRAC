@@ -32,7 +32,7 @@ class ProductionJob(Job):
   """ Production job class. Suitable for CLIC studies. Need to sub class and overload for other clients.
   """
   def __init__(self, script = None):
-    Job.__init__(self , script)
+    super(ProductionJob, self).__init__( script )
     self.prodVersion = __RCSID__
     self.created = False
     self.checked = False

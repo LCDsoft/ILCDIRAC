@@ -17,7 +17,7 @@ from decimal import Decimal
 
 class SIDProductionJob(ProductionJob):
   def __init__(self):
-    ProductionJob.__init__(self)
+    super(SIDProductionJob, self).__init__()
     self.machine = 'ilc'
     self.basepath = '/ilc/prod/ilc/sid/'
     self.polarization = ""

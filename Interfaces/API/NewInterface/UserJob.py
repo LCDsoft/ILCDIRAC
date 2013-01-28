@@ -18,7 +18,7 @@ class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
   def __init__(self, script = None):
-    Job.__init__(self, script)
+    super(UserJob, self).__init__( script )
     self.type = 'User'
     self.diracinstance = None
     
