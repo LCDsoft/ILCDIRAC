@@ -68,7 +68,7 @@ class GenericApplication(Application):
     self.arguments = ''
     self.dependencies = {}
     ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
-    Application.__init__(self, paramdict)
+    super(GenericApplication, self).__init__( paramdict )
     #Those have to come last as the defaults from Application are not right
     self._modulename = "ApplicationScript"
     self.appname = self._modulename
@@ -184,7 +184,7 @@ class GetSRMFile(Application):
   """
   def __init__(self, paramdict = None):
     self.filedict = {}
-    Application.__init__(self, paramdict)
+    super(GetSRMFile, self).__init__( paramdict )
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
     self._moduledescription = "Module to get files directly from Storage"
@@ -258,7 +258,7 @@ class _Root(Application):
   def __init__(self, paramdict = None):
     self.arguments = ''
     self.script = None
-    Application.__init__(self, paramdict)
+    super(_Root, self).__init__( paramdict )
     
     
   def setScript(self, script):
@@ -358,7 +358,7 @@ class RootScript(_Root):
   """
   def __init__(self, paramdict = None):
     self.script = None
-    _Root.__init__(self, paramdict)
+    super(RootScript, self).__init__( paramdict )
     self._modulename = "RootExecutableAnalysis"
     self.appname = 'root'
     self._moduledescription = 'Root application script'
@@ -396,7 +396,7 @@ class RootMacro(_Root):
   """
   def __init__(self, paramdict = None):
     self.script = None
-    _Root.__init__(self, paramdict)
+    super(RootMacro, self).__init__( paramdict )
     self._modulename = "RootMacroAnalysis"
     self.appname = 'root'
     self._moduledescription = 'Root macro execution'
@@ -456,7 +456,7 @@ class Whizard(Application):
     self._processlist = None
     if processlist:
       self._processlist = processlist
-    Application.__init__(self, paramdict)
+    super(Whizard, self).__init__( paramdict )
     ##Those 4 need to come after default constructor
     self._modulename = 'WhizardAnalysis'
     self._moduledescription = 'Module to run WHIZARD'
@@ -895,7 +895,7 @@ class Pythia(Application):
   """
   def __init__(self, paramdict = None):
     self.evttype = ''
-    Application.__init__(self, paramdict)
+    super(Pythia, self).__init__( paramdict )
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
     self._moduledescription = 'Module to run PYTHIA'
@@ -963,7 +963,7 @@ class PostGenSelection(Application):
   def __init__(self, paramdict = None):
 
     self.NbEvtsToKeep = 0
-    Application.__init__(self, paramdict)
+    super(PostGenSelection, self).__init__( paramdict )
     self._modulename = "PostGenSelection"
     self.appname = 'postgensel'
     self._moduledescription = 'Helper to filter generator selection'
@@ -1052,7 +1052,7 @@ class StdhepCut(Application):
     self.maxevts = 0
     self.nbevtsperfile = 0
     self.selectionEfficiency = 0
-    Application.__init__(self, paramdict)
+    super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'
     self._modulename = 'StdHepCut'
@@ -1195,7 +1195,7 @@ class Mokka(Application):
     self.dbSlice = ''
     self.detectorModel = ''
     self.processID = ''
-    Application.__init__(self, paramdict)
+    super(Mokka).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
     self._moduledescription = 'Module to run MOKKA'
@@ -1397,7 +1397,7 @@ class SLIC(Application):
     self.startFrom = 0
     self.seed = 0
     self.detectorModel = ''
-    Application.__init__(self, paramdict)
+    super(SLIC,self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICAnalysis'
     self._moduledescription = 'Module to run SLIC'
@@ -1548,7 +1548,7 @@ class OverlayInput(Application):
     self.inputenergy = ''
     self.prodid = 0
     self.machine = 'clic_cdr'
-    Application.__init__(self, paramdict)
+    super(OverlayInput, self).__init__( paramdict )
     self.version = '1'
     self._modulename = "OverlayInput"
     self.appname = self._modulename
@@ -1788,7 +1788,7 @@ class Marlin(Application):
     self.inputGearFile = ''
     self.processorlisttouse = []
     self.processorlisttoexclude = []
-    Application.__init__(self, paramdict)
+    super(Marlin, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'MarlinAnalysis'
     self._moduledescription = 'Module to run MARLIN'
@@ -1990,7 +1990,7 @@ class LCSIM(Application):
     self.extraParams = ''
     self.aliasProperties = ''
     self.trackingstrategy = ''
-    Application.__init__(self, paramdict)
+    super(LCSIM, self).__init__( paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
     self._moduledescription = 'Module to run LCSIM'
@@ -2217,7 +2217,7 @@ class SLICPandora(Application):
     self.startFrom = 0
     self.pandoraSettings = ''
     self.detectorModel = ''
-    Application.__init__(self, paramdict)
+    super(SLICPandora, self).__init__( paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICPandoraAnalysis'
     self._moduledescription = 'Module to run SLICPANDORA'
@@ -2352,7 +2352,7 @@ class CheckCollections(Application):
   """
   def __init__(self, paramdict = None):
     self.collections = []
-    Application.__init__(self, paramdict)
+    super(CheckCollections, self).__init__( paramdict )
     if not self.version:
       self.version = 'HEAD'
     self._modulename = "CheckCollections"
@@ -2434,7 +2434,7 @@ class SLCIOConcatenate(Application):
   """
   def __init__(self, paramdict = None):
 
-    Application.__init__(self, paramdict)
+    super(SLCIOConcatenate, self).__init__( paramdict)
     if not self.version:
       self.version = 'HEAD'
     self._modulename = "LCIOConcatenate"
@@ -2506,7 +2506,7 @@ class SLCIOSplit(Application):
   """
   def __init__(self, paramdict = None):
     self.numberofeventsperfile = 0
-    Application.__init__(self, paramdict)
+    super(SLCIOSplit, self).__init__( paramdict)
     if not self.version:
       self.version = 'HEAD'
     self._modulename = "LCIOSplit"
@@ -2600,7 +2600,7 @@ class StdHepSplit(Application):
   """
   def __init__(self, paramdict = None):
     self.numberofeventsperfile = 0
-    Application.__init__(self, paramdict)
+    super(StdHepSplit, self).__init__( paramdict )
     if not self.version:
       self.version = 'V2'
     self._modulename = "StdHepSplit"
@@ -2693,7 +2693,7 @@ class Tomato(Application):
   def __init__(self, paramdict = None):
 
     self.libTomato = ''
-    Application.__init__(self, paramdict)
+    super(Tomato, self).__init__( paramdict )
     if not self.version:
       self.version = 'HEAD'
     self._modulename = "TomatoAnalysis"

@@ -18,7 +18,7 @@ import string
 
 class DBDGeneration(ProductionJob):
   def __init__(self, script = None):
-    ProductionJob.__init__(self, script)
+    super(DBDGeneration, self).__init__(script)
     self.machine = 'ilc'
     self.basepath = '/ilc/prod/ilc/mc-dbd/generated'
     self._addParameter(self.workflow, "IS_DBD_GENPROD", 'JDL', True, "This job is a production job")

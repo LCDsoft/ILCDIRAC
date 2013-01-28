@@ -21,7 +21,8 @@ class Job(DiracJob):
   Inherit most functionality from DIRAC Job class
   """
   def __init__(self, script = None):
-    DiracJob.__init__(self, script)
+    super(Job, self).__init__(script)
+    #DiracJob.__init__(self, script)
     self.log = gLogger.getSubLogger("ILCJob")
     self.applicationlist = []
     self.inputsandbox = []
