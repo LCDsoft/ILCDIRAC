@@ -37,6 +37,7 @@ class ModuleBase(object):
   def __init__(self):
     """ Initialization of module base.
     """
+    super(ModuleBase, self).__init__()
     self.log = gLogger.getSubLogger('ModuleBase')
     # FIXME: do we need to do this for every module?
     result = getProxyInfoAsString()

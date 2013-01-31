@@ -35,7 +35,7 @@ class UserJobFinalization(ModuleBase):
   def __init__(self):
     """Module initialization.
     """
-    ModuleBase.__init__(self)
+    super(UserJobFinalization, self).__init__(self)
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "UserJobFinalization" )
     self.enable = True
@@ -43,7 +43,7 @@ class UserJobFinalization(ModuleBase):
     self.defaultOutputSE = gConfig.getValue( '/Resources/StorageElementGroups/Tier1-USER', [])    
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     #List all parameters here
-    self.userFileCatalog = ['FileCatalog']
+    self.userFileCatalog = self.ops.getValue('/UserJobs/Catalogs', ['FileCatalog'] )
     self.request = None
     self.lastStep = False
     #Always allow any files specified by users    
