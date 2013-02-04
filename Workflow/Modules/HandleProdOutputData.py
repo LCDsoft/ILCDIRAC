@@ -22,7 +22,7 @@ from DIRAC                                                import S_OK, S_ERROR, 
 
 class HandleProdOutputData(ModuleBase):
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(HandleProdOutputData, self).__init__()
     self.result = S_ERROR()
     self.fc = FileCatalogClient()
     self.rm = ReplicaManager()

@@ -35,7 +35,7 @@ class WhizardAnalysis(ModuleBase):
   Specific Module to run a Whizard job.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(WhizardAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.debug = True

@@ -42,7 +42,7 @@ class SLICAnalysis(ModuleBase):
   Specific Module to run a SLIC job.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(SLICAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "SLICAnalysis" )

@@ -31,7 +31,7 @@ class UploadLogFile(ModuleBase):
   def __init__(self):
     """Module initialization.
     """
-    ModuleBase.__init__(self)
+    super(UploadLogFile, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('UploadLogFile')
     self.PRODUCTION_ID = None

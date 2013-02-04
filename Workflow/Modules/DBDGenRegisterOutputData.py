@@ -17,7 +17,7 @@ class DBDGenRegisterOutputData(ModuleBase):
   """ Normally, was supposed to be used to produce the DBD gen level files. Dropped in the end.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(DBDGenRegisterOutputData).__init__()
     self.version = "DBDGenRegisterOutputData v1"
     self.log = gLogger.getSubLogger( "DBDGenRegisterOutputData" )
     self.commandTimeOut = 10 * 60

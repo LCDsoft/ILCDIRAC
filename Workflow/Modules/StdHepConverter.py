@@ -21,7 +21,7 @@ class StdHepConverter(ModuleBase):
   """
   def __init__(self):
 
-    ModuleBase.__init__(self)
+    super(StdHepConverter, self).__init__()
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "StdHepConverter" )

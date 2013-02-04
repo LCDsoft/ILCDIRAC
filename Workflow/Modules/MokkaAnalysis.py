@@ -35,7 +35,7 @@ class MokkaAnalysis(ModuleBase):
   Specific Module to run a Mokka job.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(MokkaAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MokkaAnalysis" )

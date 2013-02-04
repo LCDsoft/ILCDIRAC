@@ -35,7 +35,7 @@ class UserJobFinalization(ModuleBase):
   def __init__(self):
     """Module initialization.
     """
-    super(UserJobFinalization, self).__init__(self)
+    super(UserJobFinalization, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "UserJobFinalization" )
     self.enable = True

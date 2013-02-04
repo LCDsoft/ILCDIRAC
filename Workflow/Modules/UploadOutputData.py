@@ -29,7 +29,7 @@ class UploadOutputData(ModuleBase):
   def __init__(self):
     """Module initialization.
     """
-    ModuleBase.__init__(self)
+    super(UploadOutputData, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "UploadOutputData" )
     self.commandTimeOut = 10*60

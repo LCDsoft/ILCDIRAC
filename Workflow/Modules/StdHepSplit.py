@@ -27,7 +27,7 @@ class StdHepSplit(ModuleBase):
   """
   def __init__(self):
 
-    ModuleBase.__init__(self)
+    super(StdHepSplit, self).__init__()
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "StdHepSplit" )
