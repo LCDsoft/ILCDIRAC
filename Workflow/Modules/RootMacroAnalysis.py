@@ -19,7 +19,7 @@ class RootMacroAnalysis(ModuleBase):
   """Run Root macro
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(RootMacroAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "RootMacroAnalysis" )

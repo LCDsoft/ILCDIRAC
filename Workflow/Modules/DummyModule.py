@@ -18,7 +18,7 @@ class DummyModule(ModuleBase):
   """ Dummy module used to check Workflow Parameters (Parametric jobs check)
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(DummyModule, self).__init__()
     self.result = S_ERROR()
     self.log = gLogger.getSubLogger( "DummyModuleChecking" )
     

@@ -40,7 +40,7 @@ class SLICPandoraAnalysis (ModuleBase):
   """ Run SLIC Pandora  
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(SLICPandoraAnalysis, self).__init__()
     self.STEP_NUMBER = ''
     self.result = S_ERROR()
     self.applicationName = 'SLICPandora'

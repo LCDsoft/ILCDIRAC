@@ -24,7 +24,7 @@ class LCIOSplit(ModuleBase):
   """
   def __init__(self):
 
-    ModuleBase.__init__(self)
+    super(LCIOSplit, self).__init__()
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "LCIOSplit" )

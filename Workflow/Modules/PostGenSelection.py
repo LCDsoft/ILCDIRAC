@@ -24,7 +24,7 @@ class PostGenSelection(ModuleBase):
   """ Apply cuts after generator (whizard). Used only by JJ Blaising up to now.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(PostGenSelection, self).__init__()
     self.STEP_NUMBER = ''
     self.enable = True 
     self.log = gLogger.getSubLogger( "PostGenSelection" )

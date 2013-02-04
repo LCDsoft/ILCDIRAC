@@ -19,7 +19,7 @@ class PythiaAnalysis(ModuleBase):
   """ Run pythia. Used for CDR vol2, but not for vol3: easier to produce the files locally.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(PythiaAnalysis, self).__init__()
     self.NumberOfEvents = 1
     self.enable = True
     self.STEP_NUMBER = ''

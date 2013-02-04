@@ -52,7 +52,7 @@ class OverlayInput (ModuleBase):
   """ Download the files for overlay.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(OverlayInput, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "OverlayInput" )

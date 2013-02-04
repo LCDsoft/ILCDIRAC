@@ -19,7 +19,7 @@ class ApplicationScript(ModuleBase):
   """ Default application environment. Called GenericApplication in the Interface.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(ApplicationScript, self).__init__()
     self.enable = True 
     self.log = gLogger.getSubLogger( "ScriptAnalysis" )
     self.script = None

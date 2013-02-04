@@ -20,7 +20,7 @@ class RegisterOutputData( ModuleBase ):
   """ At the end of a production Job, we need to register meta data info for the files. 
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(RegisterOutputData, self).__init__()
     self.version = "RegisterOutputData v1"
     self.log = gLogger.getSubLogger( "RegisterOutputData" )
     self.commandTimeOut = 10*60

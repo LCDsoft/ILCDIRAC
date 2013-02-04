@@ -21,7 +21,7 @@ class StdHepCut(ModuleBase):
   """ Apply cuts on stdhep files, based on L. Weuste utility.
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(StdHepCut, self).__init__()
     self.log = gLogger.getSubLogger( "StdhepCut" )
     self.applicationName = 'stdhepCut'
     self.STEP_NUMBER = ''

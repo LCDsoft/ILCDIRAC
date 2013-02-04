@@ -21,7 +21,7 @@ class LCIOConcatenate(ModuleBase):
   """
   def __init__(self):
 
-    ModuleBase.__init__(self)
+    super(LCIOConcatenate, self).__init__()
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "LCIOConcatenate" )

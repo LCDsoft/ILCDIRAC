@@ -20,7 +20,7 @@ class RootExecutableAnalysis(ModuleBase):
   
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(RootExecutableAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "RootExecutableAnalysis" )

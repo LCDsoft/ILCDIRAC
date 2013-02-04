@@ -22,7 +22,7 @@ class CheckCollections(ModuleBase):
   """
   def __init__(self):
 
-    ModuleBase.__init__(self)
+    super(CheckCollections, self).__init__()
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "CheckCollections" )

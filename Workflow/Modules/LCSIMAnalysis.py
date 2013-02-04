@@ -30,7 +30,7 @@ class LCSIMAnalysis(ModuleBase):
   """Define the LCSIM analysis part of the workflow
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(LCSIMAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "LCSIMAnalysis" )

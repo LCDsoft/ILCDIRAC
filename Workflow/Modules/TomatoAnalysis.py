@@ -23,7 +23,7 @@ class TomatoAnalysis(MarlinAnalysis):
   """ Module to run Tomato: the auTOMated Analysis TOol by C.B. Lam.
   """
   def __init__(self):
-    MarlinAnalysis.__init__()
+    super(TomatoAnalysis, self).__init__()
     self.applicationName = "Tomato"
     self.log = gLogger.getSubLogger( "TomatoAnalysis" )
     self.collection = ''

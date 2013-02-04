@@ -36,7 +36,7 @@ class MarlinAnalysis(ModuleBase):
   """Define the Marlin analysis part of the workflow
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(MarlinAnalysis, self).__init__( )
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
@@ -194,7 +194,7 @@ class MarlinAnalysis(ModuleBase):
           shutil.copy(os.path.join(myMarlinDir, 'Settings', pandorasettings), 
                       os.path.join(os.getcwd(), pandorasettings))
         except Exception, x:
-          self.log.error('Could not copy PandoraSettings.xml, exception: %s' % x)
+          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
     
     finalXML = "marlinxml_" + self.STEP_NUMBER + ".xml"
 
@@ -203,7 +203,7 @@ class MarlinAnalysis(ModuleBase):
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
-      self.log.error('Could not find the steering file directory')
+      self.log.warn('Could not find the steering file directory')
 
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if self.inputGEAR and not os.path.exists(self.inputGEAR):

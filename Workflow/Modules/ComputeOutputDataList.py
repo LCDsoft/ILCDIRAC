@@ -23,7 +23,7 @@ class ComputeOutputDataList(ModuleBase):
   def __init__(self):
     """Module initialization.
     """
-    ModuleBase.__init__(self)
+    super(ComputeOutputDataList, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "ComputeOutputData" )
     self.listoutput = []

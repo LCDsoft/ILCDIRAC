@@ -21,7 +21,7 @@ class SIDRegisterOutputData(ModuleBase):
   """ Register output data in the FC for the SID productions 
   """
   def __init__(self):
-    ModuleBase.__init__(self)
+    super(SIDRegisterOutputData, self).__init__()
     self.version = "SIDRegisterOutputData v1"
     self.log = gLogger.getSubLogger( "SIDRegisterOutputData" )
     self.commandTimeOut = 10 * 60
