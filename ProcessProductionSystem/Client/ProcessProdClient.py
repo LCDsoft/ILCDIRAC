@@ -14,5 +14,6 @@ from DIRAC.Core.Base.Client                         import Client
 class ProcessProdClient(Client):
   """ Client of the ProcessProdHandler
   """
-  def __init__(self, name = 'ProcessProdClient'):
+  def __init__(self):
+    Client.__init__(self)
     self.setServer('ProcessProduction/ProcessManager')
