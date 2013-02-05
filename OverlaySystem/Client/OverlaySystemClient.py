@@ -9,5 +9,6 @@ class OverlaySystemClient (Client):
   """ Client of the OverlaySystemHandler. Used from the ResetCounter Agent
   """
   def __init__(self):
+    Client.__init__(self)
     self.setServer("Overlay/Overlay")
     
