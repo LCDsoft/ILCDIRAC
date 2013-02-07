@@ -1,3 +1,15 @@
+[v16r8r0]
+* Overlay
+Proper init of Client
+* Interfaces
+Use super for class inheritance
+Fix bug in error catching
+* Workflow
+Use super for class uinheritance
+Catch more error in Whizard
+* ProcessProductionSystem
+Proper init of Client
+
 [v16r7p0]
 Move to DIRAC v6r6p14
 [v16r6p0]
