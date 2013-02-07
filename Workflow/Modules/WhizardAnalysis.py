@@ -249,6 +249,7 @@ class WhizardAnalysis(ModuleBase):
       depfolder = dep.replace(".tgz", "").replace(".tar.gz", "")
       res = getSoftwareFolder(depfolder)
       if not res['OK']:
+        self.log.error("Failed getting software folder ", res['Message'])
         return res
       depfolder = res['Value']
       if depfolder.count("beam_spectra"):
