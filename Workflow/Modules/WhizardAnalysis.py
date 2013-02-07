@@ -231,6 +231,8 @@ class WhizardAnalysis(ModuleBase):
     whizardDir = whizardDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(whizardDir)
     if not res['OK']:
+      self.log.error("Failed getting software folder", res['Message'])
+      self.setApplicationStatus('Failed finding software')
       return res
     mySoftDir = res['Value']
 
@@ -249,7 +251,8 @@ class WhizardAnalysis(ModuleBase):
       depfolder = dep.replace(".tgz", "").replace(".tar.gz", "")
       res = getSoftwareFolder(depfolder)
       if not res['OK']:
-        self.log.error("Failed getting software folder ", res['Message'])
+        self.log.error("Failed getting software folder", res['Message'])
+        self.setApplicationStatus('Failed finding software')
         return res
       depfolder = res['Value']
       if depfolder.count("beam_spectra"):
@@ -326,10 +329,14 @@ class WhizardAnalysis(ModuleBase):
             if os.path.exists("%s/%s" % (mySoftDir, self.genmodel.getFile(self.Model)['Value'])):
               leshouchesfiles = "%s/%s" % (mySoftDir, self.genmodel.getFile(self.Model)['Value'])
             else:
+              self.log.error("Request LesHouches file is missing, cannot proceed")
+              self.setApplicationStatus("LesHouches file missing")
               return S_ERROR("The LesHouches file was not found. Probably you are using a wrong version of whizard.") 
           else:
             self.log.warn("No file found attached to model %s" % self.Model)
         else:
+          self.log.error("Model undefined:",self.Model)
+          self.setApplicationStatus("Model undefined")
           return S_ERROR("No Model %s defined" % self.Model)
     else:
       leshouchesfiles = "LesHouches.msugra_1.in"
