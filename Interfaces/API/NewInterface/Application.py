@@ -27,7 +27,7 @@ class Application(object):
     @type paramdict: dict
     
     """
-    super(Application, self).__init( paramdict )
+    super(Application, self).__init__( paramdict )
     #application nane (executable)
     self.appname = ""
     #application version
