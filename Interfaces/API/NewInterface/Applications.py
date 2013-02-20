@@ -1195,7 +1195,7 @@ class Mokka(Application):
     self.dbSlice = ''
     self.detectorModel = ''
     self.processID = ''
-    super(Mokka).__init__( paramdict )
+    super(Mokka, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
     self._moduledescription = 'Module to run MOKKA'
