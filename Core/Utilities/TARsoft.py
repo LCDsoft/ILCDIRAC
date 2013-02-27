@@ -313,6 +313,11 @@ def configure(app, area, res_from_install):
   removeLibc(os.path.join(os.getcwd(), basefolder) + "/LDLibs")
   if os.path.isdir(os.path.join(os.getcwd(), basefolder) + "/lib"):
     removeLibc(os.path.join(os.getcwd(), basefolder) + "/lib")
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib:" + os.environ['LD_LIBRARY_PATH']
+    else:
+      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib"
+      
   if appName == "slic":
     os.environ['SLIC_DIR'] = basefolder
     slicv = ''
