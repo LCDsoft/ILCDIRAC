@@ -81,18 +81,13 @@ class InstallSoftModule():
                                                                           appname, appversion), '')
       appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''
-      localArea = LocalArea()
       sharedArea = SharedArea()
-      self.log.info("Local Area is %s" % localArea)
-      listAreaDirectory(localArea)
       self.log.info("Shared Area is %s" % sharedArea)
       listAreaDirectory(sharedArea)
-      if os.path.exists('%s%s%s' % (localArea, os.sep, appDir)):
-        mySoftwareRoot = localArea
-      elif os.path.exists('%s%s%s' % (sharedArea, os.sep, appDir)):
+      if os.path.exists('%s%s%s' % (sharedArea, os.sep, appDir)):
         mySoftwareRoot = sharedArea
-      else:
-        self.log.error('%s: Could not find neither local area not shared area install' % app)
+      if not mySoftwareRoot:
+        self.log.error('%s: Could not find in shared area' % app)
         continue
       myappDir = os.path.join(mySoftwareRoot, appDir)
       self.log.info("Will attempt to remove %s " % myappDir)
