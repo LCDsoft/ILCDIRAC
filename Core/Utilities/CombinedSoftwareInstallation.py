@@ -114,6 +114,12 @@ class CombinedSoftwareInstallation(object):
             self.jobConfig = ceConfig
             found_config = True
             break
+    if not found_config:
+      if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
+        DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
+        return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
+      else:
+        DIRAC.gLogger.info( 'Assume locally running job, will install software in ' )
           
     areas = []
     ###Deal with shared/local area: first try to see if the Shared area exists and if not create it (try to). If it fails, fall back to local area
@@ -127,12 +133,6 @@ class CombinedSoftwareInstallation(object):
       areas.append(self.sharedArea)
     areas.append(self.localArea)       
        
-    if not found_config:
-      if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
-        DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
-        return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
-      else:
-        DIRAC.gLogger.info( 'Assume locally running job, will install software in ' )
     
     for app in self.apps:
       failed = False    
