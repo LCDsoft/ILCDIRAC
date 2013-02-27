@@ -45,7 +45,7 @@ class UserJob(Job):
        Example usage:
 
        >>> job = Job()
-       >>> job.setInputData(['/ilc/prod/whizard/processlist.cfg'])
+       >>> job.setInputData(['/ilc/prod/whizard/processlist.whiz'])
 
        @param lfns: Logical File Names
        @type lfns: Single LFN string or list of LFNs

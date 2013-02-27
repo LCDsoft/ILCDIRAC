@@ -1,5 +1,5 @@
 '''
-Interface to the processlist.cfg that contains all the processes known to WHIZARD.
+Interface to the processlist.whiz that contains all the processes known to WHIZARD.
 
 @author: S. Poss
 @since: Sep 21, 2010
