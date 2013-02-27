@@ -21,6 +21,7 @@ from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from DIRAC.RequestManagementSystem.Client.RequestContainer   import RequestContainer
 from DIRAC.RequestManagementSystem.Client.RequestClient      import RequestClient
 from ILCDIRAC.Core.Utilities.ProcessList                     import ProcessList
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 from DIRAC import gConfig, S_ERROR, S_OK
 
@@ -31,6 +32,7 @@ diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
 requestClient = RequestClient()
+ops = Operations()
 modifiedCS = False
 
 def usage():
@@ -143,12 +145,12 @@ if len(args) < 3:
 
 
 softwareSection = "/Operations/Defaults/AvailableTarBalls"
-processlistLocation = "/Operations/Defaults/ProcessList/Location"
+processlistLocation = "ProcessList/Location"
 
 appName = "whizard"
 
 
-path_to_process_list = gConfig.getOption(processlistLocation, None)
+path_to_process_list = ops.getValue(processlistLocation, "")
 if not path_to_process_list:
   print "Could not find process list Location in CS"
   DIRAC.exit(2)
