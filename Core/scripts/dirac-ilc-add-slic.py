@@ -92,7 +92,7 @@ softwareSection = "/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43/slic
 tarballname = os.path.basename(tarballloc)
 appVersion = tarballname.slit("_")[0].split("-")[1]
 
-md5sum = md5.md5(tarballloc).hexdigest()
+md5sum = md5.md5(file(tarballloc).read()).hexdigest()
 
 subject = 'slic %s added to DIRAC CS' % (appVersion)
 msg = 'New application slic %s declared into Configuration service\n %s' % (appVersion, comment)

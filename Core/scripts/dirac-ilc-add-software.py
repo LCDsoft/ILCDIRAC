@@ -105,7 +105,7 @@ appTar = "%s%s.tgz" % (appName, appVersion)
 subject = '%s %s added to DIRAC CS' % (appName, appVersion)
 msg = 'New application %s %s declared into Configuration service\n %s' % (appName, appVersion, comment)
 
-md5sum = md5.md5(appTar).hexdigest()
+md5sum = md5.md5(file(appTar).read()).hexdigest()
 
 av_platforms = gConfig.getSections(softwareSection, [])
 if av_platforms['OK']:

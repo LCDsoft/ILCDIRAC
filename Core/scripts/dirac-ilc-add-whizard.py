@@ -275,7 +275,7 @@ myappTar = tarfile.open(appTar, "w:gz")
 myappTar.add("whizard" + whizard_version)
 myappTar.close()
 
-md5sum = md5.md5(appTar).hexdigest()
+md5sum = md5.md5(file(appTar).read()).hexdigest()
 
 print "Done"
 print "Registering new Tar Ball in CS"
