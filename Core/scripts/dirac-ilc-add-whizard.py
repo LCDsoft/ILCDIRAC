@@ -27,7 +27,10 @@ from DIRAC import gConfig, S_ERROR, S_OK
 
 import os, tarfile, shutil, sys, string
 
-
+try:
+  import hashlib as md5
+except:
+  import md5
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
@@ -271,6 +274,9 @@ os.remove("ldd.sh")
 myappTar = tarfile.open(appTar, "w:gz")
 myappTar.add("whizard" + whizard_version)
 myappTar.close()
+
+md5sum = md5.md5(appTar).hexdigest()
+
 print "Done"
 print "Registering new Tar Ball in CS"
 tarballurl = {}
@@ -310,6 +316,10 @@ if appName.lower() in av_apps['Value']:
         if not res['OK']:
           print "Upload to %s failed" % tarballurl
           DIRAC.exit(255)
+    result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
+                                    md5sum)
+    if result['OK']:
+      modifiedCS = True      
     result = diracAdmin.csSetOption("%s/%s/%s/%s/Dependencies/beam_spectra/version" % (softwareSection,
                                                                                        platform,
                                                                                        appName.lower(),
@@ -330,6 +340,9 @@ else:
       if not res['OK']:
         print "Upload to %s failed" % tarballurl
         DIRAC.exit(255)
+  result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
+                                  md5sum)
+        
   result = diracAdmin.csSetOption("%s/%s/%s/%s/Dependencies/beam_spectra/version" % (softwareSection,
                                                                                      platform,
                                                                                      appName.lower(),
