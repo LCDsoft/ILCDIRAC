@@ -46,7 +46,11 @@ from DIRAC.RequestManagementSystem.Client.RequestClient    import RequestClient
 from DIRAC import gConfig, S_OK, S_ERROR
 import DIRAC
 import string, os, shutil
-
+try:
+  import hashlib as md5
+except:
+  import md5
+  
 diracAdmin = DiracAdmin()
 rm = ReplicaManager()
 request = RequestContainer()
@@ -85,7 +89,7 @@ def upload(path, appTar):
     #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
     if not res['OK']:
       return res
-    requestName = appTar.replace('.tgz', '')
+    requestName = os.path.basename(appTar).replace('.tgz', '')
     request.setRequestAttributes({'RequestName' : requestName})
     requestxml = request.toXML()['Value']
     res = requestClient.setRequest(requestName, requestxml)
@@ -100,6 +104,8 @@ softwareSection = "/Operations/Defaults/AvailableTarBalls"
 appTar = "%s%s.tgz" % (appName, appVersion)
 subject = '%s %s added to DIRAC CS' % (appName, appVersion)
 msg = 'New application %s %s declared into Configuration service\n %s' % (appName, appVersion, comment)
+
+md5sum = md5.md5(appTar).hexdigest()
 
 av_platforms = gConfig.getSections(softwareSection, [])
 if av_platforms['OK']:
@@ -135,6 +141,10 @@ if appName.lower() in av_apps['Value']:
         if not res['OK']:
           print "Upload to %s failed" % tarballurl
           DIRAC.exit(255)
+    resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(),
+                                                             appVersion), md5sum)
+    if result['OK']:
+      modifiedCS = True
     result = diracAdmin.csSetOptionComment("%s/%s/%s/%s/TarBall"%(softwareSection, platform,
                                                                   appName.lower(), appVersion), comment)
     if not result['OK']:
@@ -151,10 +161,15 @@ else:
       if not res['OK']:
         print "Upload to %s failed" % tarballurl
         DIRAC.exit(255)
+  resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),   
+                                  md5sum)
+  if result['OK']:
+    modifiedCS = True
   result = diracAdmin.csSetOptionComment("%s/%s/%s/%s/TarBall" % (softwareSection, platform, appName.lower(), appVersion),
                                          comment)
   if not result['OK']:
     print "Error setting comment in CS"
+    
 #Commit the changes if nothing has failed and the CS has been modified
 if modifiedCS:
   result = diracAdmin.csCommitChanges(False)

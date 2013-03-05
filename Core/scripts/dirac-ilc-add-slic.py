@@ -37,7 +37,10 @@ from DIRAC.Interfaces.API.DiracAdmin                  import DiracAdmin
 from DIRAC.Core.Security.Misc                         import getProxyInfo
 from DIRAC                                            import gConfig, S_OK, S_ERROR
 import DIRAC
-
+try:
+  import hashlib as md5
+except:
+  import md5
 
 rm = ReplicaManager()
 
@@ -89,6 +92,8 @@ softwareSection = "/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43/slic
 tarballname = os.path.basename(tarballloc)
 appVersion = tarballname.slit("_")[0].split("-")[1]
 
+md5sum = md5.md5(tarballloc).hexdigest()
+
 subject = 'slic %s added to DIRAC CS' % (appVersion)
 msg = 'New application slic %s declared into Configuration service\n %s' % (appVersion, comment)
 
@@ -104,7 +109,8 @@ if result['OK']:
   result = diracAdmin.csSetOptionComment("%s/%s/TarBall" % (softwareSection, appVersion), comment)
   if not result['OK']:
     print "Error setting comment in CS"
-    
+result = diracAdmin.csSetOption("%s/%s/Md5Sum" % (softwareSection, appVersion), md5sum)
+
 if modifiedCS:
   result = diracAdmin.csCommitChanges(False)
   print result
