@@ -179,6 +179,9 @@ class SLICPandoraAnalysis (ModuleBase):
           except Exception, x:
             self.log.error('Could not copy %s, exception: %s' % (f, str(x)))
             return S_ERROR('Could not copy PandoraSettings file')
+      else:
+        self.log.error("Failed to find PandoraSettings anywhere, possibly SLICPandora install broken")
+        return S_ERROR("Failed to find PandoraSettings anywhere")
     if not os.path.exists(self.pandorasettings):
       self.log.error("PandoraSettings %s not found" % (self.pandorasettings))
       return S_ERROR("PandoraSettings not found locally")
