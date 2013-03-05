@@ -99,7 +99,14 @@ def TARinstall(app, config, area):
       return S_ERROR('Failed to install software')
     res_from_install = res['Value']
     
-    res = configure(depapp, area, res_from_install)
+    res = check(depapp, area, res_from_install)
+    os.chdir(curdir)
+    if not res['OK']:
+      gLogger.error("Failed to check dependency %s %s" % (dep["app"], dep["version"]))
+      return S_ERROR('Failed to check integrity of software')
+    res_from_check = res['Value']
+    
+    res = configure(depapp, area, res_from_check)
     os.chdir(curdir)
     if not res['OK']:
       gLogger.error("Failed to configure dependency %s %s" % (dep["app"], dep["version"]))
@@ -127,7 +134,14 @@ def TARinstall(app, config, area):
     return S_ERROR('Failed to install software')
   res_from_install = res['Value']
   
-  res = configure(app, area, res_from_install)
+  res = check(depapp, area, res_from_install)
+  os.chdir(curdir)
+  if not res['OK']:
+    gLogger.error("Failed to check software %s %s" % (dep["app"], dep["version"]))
+    return S_ERROR('Failed to check integrity of software')
+  res_from_check = res['Value']
+    
+  res = configure(app, area, res_from_check)
   os.chdir(curdir)
   if not res['OK']:
     gLogger.error("Failed to configure software %s %s" % (appName, appVersion))
@@ -258,12 +272,18 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
         return resget
 
   ##Tar ball is obtained, need to check its md5 sum
-  if md5sum and md5sum != md5.md5(app_tar_base).hexdigest():
+  tar_ball_md5 = ''
+  try:
+    tar_ball_md5 = md5.md5(file(app_tar_base).read()).hexdigest()
+  except:
+    gLogger.error("Failed to get tar ball md5, try without")
+    md5sum = ''
+  if md5sum and md5sum != tar_ball_md5:
     gLogger.error('Hash does not correspond, cannot continue')
     res = clearLock(lockname)
     if not res['OK']:
       gLogger.error("Lock file could not be cleared")
-    return resget
+    return S_ERROR("Hash validation failed")
 
   if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)) and not appli_exists:
     gLogger.error('Failed to download software','%s' % (folder_name))
@@ -311,8 +331,40 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
     gLogger.error("Lock file could not be cleared")
     
   return S_OK([folder_name, app_tar_base]) 
- 
-def configure(app, area, res_from_install):
+
+def check(app, area, res_from_install):
+  """ Now that the tar ball is here, we need to check that all is there
+  """
+  ###########################################
+  ###Go where the software is to be installed
+  os.chdir(area)
+  #We go back to the initial place either at the end of the installation or at any error
+  ###########################################
+  
+  basefolder = res_from_install[0]
+  
+  if os.path.exists(os.path.join(basefolder,'md5_checksum.md5')):
+    md5file = file(os.path.join(basefolder,'md5_checksum.md5'), 'r')
+    for line in md5file:
+      line = line.rstrip()
+      md5sum, fin = line.split()
+      if fin=='-': continue
+      fin = os.path.join(basefolder, fin.replace("./",""))
+      if not os.path.exists(fin):
+        return S_ERROR("The file %s is missing" % fin)
+      fmd5 = ''
+      try:
+        fmd5 = md5.md5(file(fin).read()).hexdigest()
+      except:
+        return S_ERROR("Failed to compute md5 sum")
+      if md5sum != fmd5:
+        return S_ERROR("File %s has a wrong sum" % fin)
+  else:
+    gLogger.warn("The application does not come with md5 checksum file:", app)
+  
+  return S_OK([basefolder])
+
+def configure(app, area, res_from_check):
   """ Configure our applications: set the proper env variables
   """
   ###########################################
@@ -323,7 +375,7 @@ def configure(app, area, res_from_install):
   
   appName = app[0].lower()
   ### Set env variables  
-  basefolder = res_from_install[0]
+  basefolder = res_from_check[0]
   removeLibc(os.path.join(os.getcwd(), basefolder) + "/LDLibs")
   if os.path.isdir(os.path.join(os.getcwd(), basefolder) + "/lib"):
     removeLibc(os.path.join(os.getcwd(), basefolder) + "/lib")
