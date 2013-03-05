@@ -342,6 +342,9 @@ def check(app, area, res_from_install):
   ###########################################
   
   basefolder = res_from_install[0]
+  if os.path.isfile(basefolder):
+    #This is the case of LCSIM that's a jar file
+    return S_OK([basefolder])
   
   if os.path.exists(os.path.join(basefolder,'md5_checksum.md5')):
     md5file = file(os.path.join(basefolder,'md5_checksum.md5'), 'r')
@@ -351,13 +354,16 @@ def check(app, area, res_from_install):
       if fin=='-': continue
       fin = os.path.join(basefolder, fin.replace("./",""))
       if not os.path.exists(fin):
+        gLogger.error("File missing :", fin)
         return S_ERROR("The file %s is missing" % fin)
       fmd5 = ''
       try:
         fmd5 = md5.md5(file(fin).read()).hexdigest()
       except:
+        gLogger.error("Failed to compute md5 sum")
         return S_ERROR("Failed to compute md5 sum")
       if md5sum != fmd5:
+        gLogger.error("File has wrong checksum :", fin)
         return S_ERROR("File %s has a wrong sum" % fin)
   else:
     gLogger.warn("The application does not come with md5 checksum file:", app)
