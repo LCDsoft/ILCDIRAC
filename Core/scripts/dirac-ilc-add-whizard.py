@@ -265,6 +265,9 @@ whizarddir=%s
 rm -rf $whizarddir
 mkdir $whizarddir
 cp -r *.cut1 *.in cross_sections_* whizard whizard.prc whizard.mdl lib/ $whizarddir
+cd $whizarddir
+find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5
+cd ..
 """ % ("whizard" + whizard_version))
 script.close()
 os.chmod(scriptName, 0755)
