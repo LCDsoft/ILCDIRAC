@@ -14,6 +14,10 @@ from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 from ILCDIRAC.Core.Utilities.WasteCPU import WasteCPUCycles
 import os, urllib, tarfile, subprocess, shutil, time
+try:
+  import hashlib as md5
+except:
+  import md5
 
 def createLock(lockname):
   """ Need to lock the area to prevent 2 jobs to write in the same area
@@ -86,8 +90,9 @@ def TARinstall(app, config, area):
     app_tar = res_from_getTarBall[0]
     TarBallURL = res_from_getTarBall[1]
     overwrite = res_from_getTarBall[2]
+    md5sum = res_from_getTarBall[3]
     
-    res = install(depapp, app_tar, TarBallURL, overwrite, area)
+    res = install(depapp, app_tar, TarBallURL, overwrite, md5sum, area)
     os.chdir(curdir)
     if not res['OK']:
       gLogger.error("Could not install dependency %s %s: %s" % (dep["app"], dep["version"], res['Message']))
@@ -145,6 +150,7 @@ def getTarBallLocation(app, config, area):
   appName = appName.lower()
   app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (config, appName, appVersion), '')
   overwrite = ops.getValue('/AvailableTarBalls/%s/%s/%s/Overwrite' % (config, appName, appVersion), False)
+  md5sum = ops.getValue('/AvailableTarBalls/%s/%s/%s/Md5Sum' % (config, appName, appVersion), '')
 
   if not app_tar:
     gLogger.error('Could not find tar ball for %s %s'%(appName, appVersion))
@@ -155,9 +161,9 @@ def getTarBallLocation(app, config, area):
     gLogger.error('Could not find TarBallURL in CS for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find TarBallURL in CS')
 
-  return S_OK([app_tar, TarBallURL, overwrite])
+  return S_OK([app_tar, TarBallURL, overwrite, md5sum])
 
-def install(app, app_tar, TarBallURL, overwrite, area):
+def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   """ Install the software
   """
   appName    = app[0]
@@ -250,6 +256,14 @@ def install(app, app_tar, TarBallURL, overwrite, area):
         if not res['OK']:
           gLogger.error("Lock file could not be cleared")
         return resget
+
+  ##Tar ball is obtained, need to check its md5 sum
+  if md5sum and md5sum != md5.md5(app_tar_base).hexdigest():
+    gLogger.error('Hash does not correspond, cannot continue')
+    res = clearLock(lockname)
+    if not res['OK']:
+      gLogger.error("Lock file could not be cleared")
+    return resget
 
   if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)) and not appli_exists:
     gLogger.error('Failed to download software','%s' % (folder_name))
