@@ -158,13 +158,13 @@ if not path_to_process_list:
   print "Could not find process list Location in CS"
   DIRAC.exit(2)
 
-res = rm.getFile(path_to_process_list['Value'])
+res = rm.getFile(path_to_process_list)
 if not res['OK']:
   print "Error while getting process list from storage"
   DIRAC.exit(2)
 print "done"
 
-processlist = os.path.basename(path_to_process_list['Value'])
+processlist = os.path.basename(path_to_process_list)
 if not os.path.exists(processlist):
   print "Process list does not exist locally"
   DIRAC.exit(2)
@@ -369,13 +369,13 @@ os.chdir(startdir)
 
 pl.writeProcessList()
 
-res = rm.removeFile(path_to_process_list['Value'])
+res = rm.removeFile(path_to_process_list)
 if not res['OK']:
   print "Could not remove process list from storage, do it by hand"
   DIRAC.exit(2)
 
 
-res = upload(os.path.dirname(path_to_process_list['Value']) + "/", processlist)
+res = upload(os.path.dirname(path_to_process_list) + "/", processlist)
 if not res['OK']:
   print "something went wrong in the copy"
   DIRAC.exit(2)
