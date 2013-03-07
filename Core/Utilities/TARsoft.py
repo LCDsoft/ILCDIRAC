@@ -27,6 +27,7 @@ def createLock(lockname):
     lock.write("Locking this directory\n")
     lock.close()
   except Exception, x :
+    gLogger.error("Failed creating lock")
     return S_ERROR("Not allowed to write here: %s %s" % (Exception, str(x)))
   return S_OK()
 
@@ -52,6 +53,7 @@ def checkLockAge(lockname):
       break
     loc_time = time.time()
     if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
+      gLogger.info("File is %s seconds old" % loc_time-last_touch)
       overwrite = True
       res = clearLock(lockname)
       if res['OK']:
@@ -60,9 +62,7 @@ def checkLockAge(lockname):
       gLogger.error("Seems file stat is wrong, assume buggy, will fail installation")
       #overwrite = True
       res = clearLock(lockname)
-      if res['OK']:
-        break
-      return S_ERROR("Buggy lock")
+      return S_ERROR("Buggy lock, removed: %s" % res['OK'])
       
   return S_OK(overwrite)
   
@@ -72,6 +72,7 @@ def clearLock(lockname):
   try:
     os.unlink(lockname)
   except Exception, x:
+    gLogger.error("Failed cleaning lock")
     return S_ERROR("Failed to clear lock: %s %s" % (Exception, str(x)) )
   return S_OK()
 
@@ -207,6 +208,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   res = checkLockAge(lockname)
   if not res['OK']:
     gLogger.error("Something uncool happened with the lock, will kill installation")
+    gLogger.error("Message: %s" % res['Message'])
     return S_ERROR("Failed lock checks")
   if res.has_key('Value'):
     if res['Value']: #this means the lock file was very old, meaning that the installation failed elsewhere
