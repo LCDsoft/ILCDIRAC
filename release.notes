@@ -1,5 +1,10 @@
 [v17r0r0]
 Based on DIRAC v6r7 
+[v16r9r0]
+* TarSoft
+Add md5sum checks, and add time out to lock file validity.
+* scripts
+Make them proper script, with __name__=="__main__".
 
 [v16r8r2]
 * Interfaces
