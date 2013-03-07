@@ -46,10 +46,10 @@ class Params(object):
     self.path = optionValue
     return S_OK()
   def registerSwitches(self):
-    Script.registerSwitch('P:', "Platform", 'Platform to use', self.setPlatform)
-    Script.registerSwitch('p:', "Path", "Path where Whizard is", self.setPath)
-    Script.registerSwitch("V:", "Version", "Whizard version", self.setVersion)
-    Script.registerSwitch('b:', 'BeamSpectra', 'Beam spectra version', self.setBeamSpectra)
+    Script.registerSwitch('P:', "Platform=", 'Platform to use', self.setPlatform)
+    Script.registerSwitch('p:', "Path=", "Path where Whizard is", self.setPath)
+    Script.registerSwitch("V:", "Version=", "Whizard version", self.setVersion)
+    Script.registerSwitch('b:', 'BeamSpectra=', 'Beam spectra version', self.setBeamSpectra)
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
