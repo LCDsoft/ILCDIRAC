@@ -56,6 +56,12 @@ def checkLockAge(lockname):
       res = clearLock(lockname)
       if res['OK']:
         break
+    if count > 60:
+      gLogger.warn("Seems file stat is wrong, assume buggy")
+      overwrite = True
+      res = clearLock(lockname)
+      if res['OK']:
+        break
       
   return S_OK(overwrite)
   
