@@ -2,7 +2,7 @@
 Upload SLIC version and publish in CS
 """
 from DIRAC.Core.Base import Script
-import os, sys, shutil
+import os, shutil
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.FrameworkSystem.Client.NotificationClient  import NotificationClient
@@ -88,11 +88,11 @@ if __name__=="__main__":
 
   if not tarballloc and not version:
     Script.showHelp()
-    sys.exit(2)
+    DIRAC.exit(2)
 
   if not os.path.exists(tarballloc):
     print "Cannot find the tar ball %s" % tarballloc
-    sys.exit(2)
+    DIRAC.exit(2)
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
