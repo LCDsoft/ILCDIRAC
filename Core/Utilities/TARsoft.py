@@ -134,8 +134,9 @@ def TARinstall(app, config, area):
   app_tar = res_from_getTarBall[0]
   TarBallURL = res_from_getTarBall[1]
   overwrite = res_from_getTarBall[2]
-  
-  res = install(app, app_tar, TarBallURL, overwrite, area)
+  md5sum = res_from_getTarBall[3]
+
+  res = install(app, app_tar, TarBallURL, overwrite, md5sum, area)
   os.chdir(curdir)
   if not res['OK']:
     gLogger.error("Could not install software %s %s: %s" % (appName, appVersion, res['Message']))
