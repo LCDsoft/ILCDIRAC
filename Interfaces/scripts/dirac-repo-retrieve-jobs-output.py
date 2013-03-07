@@ -30,8 +30,7 @@ class Params(object):
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] )  )
     
 if __name__=="__main__":
-  outputdata = False
-  repoLocation = None
+  repoLocation = ''
   clip = Params()
   clip.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
