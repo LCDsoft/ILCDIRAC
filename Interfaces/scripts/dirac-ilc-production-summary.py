@@ -9,7 +9,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient         import Trans
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
 
 from ILCDIRAC.Core.Utilities.HTML import *
-from DIRAC import gConfig, exit as dexit
+from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
 
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
@@ -41,6 +41,7 @@ def getFileInfo(lfn):
 def translate(detail):
   """ Replace whizard naming convention by human conventions
   """
+  detail = detail.replace('v','n1:n2:n3:N1:N2:N3')
   detail = detail.replace('e1','e-')
   detail = detail.replace('E1','e+')
   detail = detail.replace('e2','mu-')
@@ -78,13 +79,21 @@ def translate(detail):
 
 class Params(object):
   def __init__(self):
-    self.prod = ''
+    self.prod = []
+    self.minprod = 0
     self.full_det = False
     self.verbose = False
     self.ptypes = ['MCGeneration','MCSimulation','MCReconstruction',"MCReconstruction_Overlay"]
     self.statuses = ['Active','Stopped','Completed','Archived']
   def setProdID(self, opt):
-    self.prod = opt
+    if opt.count("gt"):
+      self.minprod = int(opt.replace("gt",""))
+    elif opt.count("-"):
+      self.prod = range(int(opt.split("-")[0]), int(opt.split("-")[1])+1)
+    elif opt.count(","):
+      self.prod = [int(p) for p in opt.split(",")]
+    else:
+      self.prod = int(opt)
     return S_OK()
   def setFullDetail(self,opt):
     self.full_det = True
@@ -100,7 +109,7 @@ class Params(object):
     return S_OK()
 
   def registerSwitch(self):
-    Script.registerSwitch("P:", "prod=", "production", self.setProdID)
+    Script.registerSwitch("P:", "prods=", "Productions: greater with gt, range with -, list with ,", self.setProdID)
     Script.registerSwitch("f", "full_detail", "full detail", self.setFullDetail)
     Script.registerSwitch("v", "verbose", "verbose output", self.setVerbose)
     Script.registerSwitch("t:", "types=", "Production Types, comma separated", self.setProdTypes)
@@ -133,16 +142,16 @@ if __name__=="__main__":
      for transfs in res['Value']:
        prodids.append(transfs['TransformationID'])
   else:
-    prodids.append(prod)
+    prodids.extend(prod)
 
   metadata = []
   
   for prodID in prodids:
-    if prodID<700:
+    if prodID<clip.minprod:
       continue
     meta = {}
-    meta['ProdID']=int(prodID)
-    res = trc.getTransformation(prodID)
+    meta['ProdID']=prodID
+    res = trc.getTransformation(str(prodID))
     if not res['OK']:
       print "Error getting transformation %s" % prodID 
       continue
@@ -214,7 +223,7 @@ if __name__=="__main__":
   
   
     if not prodtype == 'MCGeneration':
-      res = trc.getTransformationInputDataQuery(prodID)
+      res = trc.getTransformationInputDataQuery(str(prodID))
       if res['OK']:
         if res['Value'].has_key('ProdID'):
           dirmeta['MomProdID']=res['Value']['ProdID']
@@ -224,21 +233,40 @@ if __name__=="__main__":
     metadata.append(dirmeta)
   
   detectors = {}
-  detectors['ILD'] = []
-  detectors['SID'] = []
-  detectors['sid'] = []
+  detectors['ILD'] = {}
+  corres = {"MCGeneration":'gen',"MCSimulation":'SIM',"MCReconstruction":"REC","MCReconstruction_Overlay":"REC"}
+  detectors['ILD']['SIM'] = []
+  detectors['ILD']['REC'] = []
+  detectors['SID'] = {}
+  detectors['SID']['SIM'] = []
+  detectors['SID']['REC'] = []
+  detectors['sid'] = {}
+  detectors['sid']['SIM'] = []
+  detectors['sid']['REC'] = []
   detectors['gen']=[]
   for channel in metadata:
     if not channel.has_key('DetectorType'):
-      detectors['gen'].append((channel['detail'],channel['Energy'],channel['ProdID'],channel['nb_files'],channel['NumberOfEvents']/channel['nb_files'],channel['NumberOfEvents'],
-                                 channel['CrossSection'],str(channel['proddetail']))
-                                )
+      detectors['gen'].append((channel['detail'],
+                               channel['Energy'],
+                               channel['ProdID'],
+                               channel['nb_files'],
+                               channel['NumberOfEvents']/channel['nb_files'],
+                               channel['NumberOfEvents'],
+                               channel['CrossSection'],str(channel['proddetail'])))
     else:
       if not channel['DetectorType'] in detectors:
         print "This is unknown detector", channel['DetectorType']
         continue
-      detectors[channel['DetectorType']].append((channel['detail'],channel['Energy'],channel['DetectorType'],channel['ProdID'],channel['nb_files'],channel['NumberOfEvents']/channel['nb_files'],
-                                                     channel['NumberOfEvents'],channel['CrossSection'],channel['MomProdID'],str(channel['proddetail'])))
+      detectors[channel['DetectorType']][corres[prodtype]].append((channel['detail'],
+                                                                   channel['Energy'],
+                                                                   channel['DetectorType'],
+                                                                   channel['ProdID'],
+                                                                   channel['nb_files'],
+                                                                   channel['NumberOfEvents']/channel['nb_files'],
+                                                                   channel['NumberOfEvents'],
+                                                                   channel['CrossSection'],
+                                                                   channel['MomProdID'],
+                                                                   str(channel['proddetail'])))
   
   of = file("tables.html","w")
   of.write("""<!DOCTYPE html>
@@ -259,38 +287,48 @@ if __name__=="__main__":
       print str(t)
 
   if len(detectors['ILD']):           
-    of.write("<hr>\n<h1>ILD prods</h1>\n")
-    t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
-    for item in detectors['ILD']:
-      t.rows.append( item )
-    of.write(str(t))
-    if clip.verbose:
-      print "ILC CDR prods"
-      print str(t)
+    of.write("<h1>ILD prods</h1>\n")
+    for ptype in detectors['ILD'].keys():
+      if len(detectors['ILD'][ptype]):
+        of.write("<h2>%s</h2>\n"%ptype)
+        t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+        for item in detectors['ILD'][ptype]:
+          t.rows.append( item )
+        of.write(str(t))
+        if clip.verbose:
+          print "ILC CDR prods %s"%ptype
+          print str(t)
   
   if len(detectors['SID']):           
-    of.write("<hr>\n<h1>SID prods</h1>\n")
-    t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
-    for item in detectors['SID']:
-      t.rows.append( item )
-    of.write(str(t))
-    if clip.verbose:
-      print "SID CDR prods"
-      print str(t)
+    of.write("<h1>SID prods</h1>\n")
+    for ptype in detectors['SID'].keys():
+      if len(detectors['SID'][ptype]):
+        of.write("<h2>%s</h2>\n"%ptype)
+        t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+        for item in detectors['SID'][ptype]:
+          t.rows.append( item )
+        of.write(str(t))
+        if clip.verbose:
+          print "SID CDR prods %s"%ptype
+          print str(t)
 
   if len(detectors['sid']):           
-    of.write("<hr>\n<h1>sid dbd prods</h1>\n")
-    t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
-    for item in detectors['sid']:
-      t.rows.append( item )
-    of.write(str(t))
-    if clip.verbose:
-      print "sid DBD prods" 
-      print str(t)
+    of.write("<h1>sid dbd prods</h1>\n")
+    for ptype in detectors['SID'].keys():
+      if len(detectors['sid'][ptype]):
+        of.write("<h2>%s</h2>\n"%ptype)
+        t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+        for item in detectors['sid'][ptype]:
+          t.rows.append( item )
+        of.write(str(t))
+        if clip.verbose:
+          print "sid DBD prods %s"%ptype
+          print str(t)
   
   of.write("""
 </body>
 </html>
 """)
-  of.close()   
+  of.close()
+  print "Check ./tables.html in any browser for the results"
   dexit(0)
