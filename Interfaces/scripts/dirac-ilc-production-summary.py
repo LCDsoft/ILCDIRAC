@@ -109,11 +109,11 @@ class Params(object):
     return S_OK()
 
   def registerSwitch(self):
-    Script.registerSwitch("P:", "prods=", "Productions: greater with gt, range with -, list with ,", self.setProdID)
-    Script.registerSwitch("f", "full_detail", "full detail", self.setFullDetail)
-    Script.registerSwitch("v", "verbose", "verbose output", self.setVerbose)
-    Script.registerSwitch("t:", "types=", "Production Types, comma separated", self.setProdTypes)
-    Script.registerSwitch("S:", "Statuses=", "Statuses, comma separated", self.setStatuses)
+    Script.registerSwitch("P:", "prods=", "Productions: greater than with gt1234, range with 32-56, list with 34,56", self.setProdID)
+    Script.registerSwitch("p", "precise_detail", "Precise detail, slow", self.setFullDetail)
+    Script.registerSwitch("v", "verbose", "Verbose output", self.setVerbose)
+    Script.registerSwitch("t:", "types=", "Production Types, comma separated, default all", self.setProdTypes)
+    Script.registerSwitch("S:", "Statuses=", "Statuses, comma separated, default all", self.setStatuses)
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
