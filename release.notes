@@ -1,6 +1,10 @@
 [v17r0r0]
 Based on DIRAC v6r7 
-[v16r9r0]
+[v16r9r2]
+* FindSteeringFiles
+Fix import error
+
+[v16r9r1]
 * TarSoft
 Don't check the checksum of the md5sum file as it's never going to be correct
 
