@@ -366,7 +366,7 @@ def check(app, area, res_from_install):
       fin = os.path.join(basefolder, fin.replace("./",""))
       if not os.path.exists(fin):
         gLogger.error("File missing :", fin)
-        return S_ERROR("The file %s is missing" % fin)
+        return S_ERROR("Incomplete install: The file %s is missing" % fin)
       fmd5 = ''
       try:
         fmd5 = md5.md5(file(fin).read()).hexdigest()
@@ -375,7 +375,7 @@ def check(app, area, res_from_install):
         return S_ERROR("Failed to compute md5 sum")
       if md5sum != fmd5:
         gLogger.error("File has wrong checksum :", fin)
-        return S_ERROR("File %s has a wrong sum" % fin)
+        return S_ERROR("Corrupted install: File %s has a wrong sum" % fin)
   else:
     gLogger.warn("The application does not come with md5 checksum file:", app)
   
