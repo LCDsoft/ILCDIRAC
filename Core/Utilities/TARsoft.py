@@ -362,7 +362,7 @@ def check(app, area, res_from_install):
     for line in md5file:
       line = line.rstrip()
       md5sum, fin = line.split()
-      if fin=='-': continue
+      if fin=='-' or fin.count("md5_checksum.md5"): continue
       fin = os.path.join(basefolder, fin.replace("./",""))
       if not os.path.exists(fin):
         gLogger.error("File missing :", fin)
