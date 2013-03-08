@@ -11,7 +11,7 @@ Created on Feb 10, 2012
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
-from ILCDIRAC.Core.Utilities.TARSoft import check
+from ILCDIRAC.Core.Utilities.TARsoft import check
 
 def getSteeringFileDirName(systemConfig, application, applicationVersion):
   """ Locate the path of the steering file directory assigned to the specified application
