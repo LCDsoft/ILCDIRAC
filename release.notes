@@ -2,6 +2,10 @@
 Based on DIRAC v6r7 
 [v16r9r0]
 * TarSoft
+Don't check the checksum of the md5sum file as it's never going to be correct
+
+[v16r9r0]
+* TarSoft
 Add md5sum checks, and add time out to lock file validity.
 * scripts
 Make them proper script, with __name__=="__main__".
