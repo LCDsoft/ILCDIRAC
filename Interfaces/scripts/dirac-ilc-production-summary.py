@@ -78,14 +78,22 @@ def translate(detail):
   return detail
 
 class Params(object):
+  """ CLI Parameters class
+  """
   def __init__(self):
+    """ Initialize
+    """
     self.prod = []
     self.minprod = 0
     self.full_det = False
     self.verbose = False
     self.ptypes = ['MCGeneration','MCSimulation','MCReconstruction',"MCReconstruction_Overlay"]
     self.statuses = ['Active','Stopped','Completed','Archived']
+    
   def setProdID(self, opt):
+    """ Set the prodID to use. can be a range, a list, a unique value
+    and a 'greater than' value
+    """
     if opt.count("gt"):
       self.minprod = int(opt.replace("gt",""))
     elif opt.count("-"):
@@ -95,20 +103,35 @@ class Params(object):
     else:
       self.prod = int(opt)
     return S_OK()
+
   def setFullDetail(self,opt):
+    """ Get every individual file's properties, makes this 
+    very very slow
+    """
     self.full_det = True
     return S_OK()
+
   def setVerbose(self, opt):
+    """ Extra printouts
+    """
     self.verbose = True
     return S_OK()
+
   def setProdTypes(self, opt):
+    """ The prod types to consider
+    """
     self.ptypes = opt.split(",")
     return S_OK()
+
   def setStatuses(self, opt):
+    ''' The prod statuses
+    '''
     self.statuses = opt.split(",")
     return S_OK()
 
   def registerSwitch(self):
+    """ Register all CLI switches
+    """
     Script.registerSwitch("P:", "prods=", "Productions: greater than with gt1234, range with 32-56, list with 34,56", self.setProdID)
     Script.registerSwitch("p", "precise_detail", "Precise detail, slow", self.setFullDetail)
     Script.registerSwitch("v", "verbose", "Verbose output", self.setVerbose)
