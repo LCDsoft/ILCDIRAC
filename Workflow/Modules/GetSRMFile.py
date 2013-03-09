@@ -32,6 +32,8 @@ class GetSRMFile(ModuleBase):
     self.counter = 1
     
   def applicationSpecificInputs(self):
+    """ Resolve the srm files to get
+    """
     if not self.srmfiles:
       return S_ERROR("List of files to treat is not set")
     self.files = self.srmfiles
