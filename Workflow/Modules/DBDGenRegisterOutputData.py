@@ -9,9 +9,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
-from DIRAC import S_OK, S_ERROR, gLogger
-
-import string
+from DIRAC import S_OK, gLogger
 
 class DBDGenRegisterOutputData(ModuleBase):
   """ Normally, was supposed to be used to produce the DBD gen level files. Dropped in the end.
@@ -24,12 +22,11 @@ class DBDGenRegisterOutputData(ModuleBase):
     self.enable = True
     self.fc = FileCatalogClient()
     self.nbofevents = 0
+    self.prodOutputLFNs = []
     
   def applicationSpecificInputs(self):
     if self.workflow_commons.has_key('ProductionOutputData'):
       self.prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
-    else:
-      self.prodOutputLFNs = []
       
     if self.workflow_commons.has_key('NbOfEvents'):
       self.nbofevents = self.workflow_commons['NbOfEvents']
@@ -52,7 +49,7 @@ class DBDGenRegisterOutputData(ModuleBase):
       self.log.info('No production data found, so no metadata registration to be done')  
       return S_OK("No files' metadata to be registered")
     
-    self.log.verbose("Will try to set the metadata for the following files: \n %s" % string.join(self.prodOutputLFNs, "\n"))
+    self.log.verbose("Will try to set the metadata for the following files: \n %s" % '\n'.join(self.prodOutputLFNs))
     
     for files in self.prodOutputLFNs:
       metadict = {}

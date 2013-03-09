@@ -13,7 +13,7 @@ __RCSID__ = "$Id: $"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents

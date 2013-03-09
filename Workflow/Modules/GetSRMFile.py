@@ -14,7 +14,7 @@ from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.Core.DISET.RPCClient                            import RPCClient
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC import S_OK, S_ERROR, gLogger
 import os, tempfile, time
 
 class GetSRMFile(ModuleBase):

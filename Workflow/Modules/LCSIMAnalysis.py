@@ -24,7 +24,7 @@ from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfe
 from ILCDIRAC.Core.Utilities.PrepareLibs                     import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringFileDirName
 
-from DIRAC                                                   import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC                                                   import S_OK, S_ERROR, gLogger
 
 class LCSIMAnalysis(ModuleBase):
   """Define the LCSIM analysis part of the workflow
@@ -192,8 +192,8 @@ class LCSIMAnalysis(ModuleBase):
     if not os.path.isdir(os.path.join(cachedir, ".lcsim")):
       try:
         os.mkdir(os.path.join(cachedir, ".lcsim"))
-      except:
-        self.log.error("Could not create .lcsim folder !")
+      except OSError, x:
+        self.log.error("Could not create .lcsim folder !", str(x))
     if os.path.exists(os.path.join(cachedir, ".lcsim")):
       lcsimfolder = os.path.join(cachedir, ".lcsim")
       if os.path.exists(aliasproperties):
@@ -202,8 +202,8 @@ class LCSIMAnalysis(ModuleBase):
       if os.path.exists(os.path.basename(self.detectorModel)):
         try:
           os.mkdir(os.path.join(lcsimfolder, "detectors"))
-        except:
-          self.log.error("Could not create detectors folder !")
+        except OSError, x:
+          self.log.error("Could not create detectors folder !", str(x))
         if os.path.exists(os.path.join(lcsimfolder, "detectors")):
           self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
           shutil.copy(os.path.basename(self.detectorModel), 

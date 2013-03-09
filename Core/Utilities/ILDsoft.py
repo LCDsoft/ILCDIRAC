@@ -27,7 +27,7 @@ def install(app, config, area):
       DIRAC.gLogger.debug("Downloading software", '%s_%s' % (appName, appVersion))
       #Copy the file locally, don't try to read from remote, soooo slow
       #Use string conversion %s%s to set the address, makes the system more stable
-      tarball, headers = urllib.urlretrieve("%s%s" % (TarBallURL, app_tar), app_tar)
+      urllib.urlretrieve("%s%s" % (TarBallURL, app_tar), app_tar)
     except:
       DIRAC.gLogger.exception()
       return False
