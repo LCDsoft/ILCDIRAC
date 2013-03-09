@@ -8,7 +8,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient         import Trans
 
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
 
-from ILCDIRAC.Core.Utilities.HTML import *
+from ILCDIRAC.Core.Utilities.HTML import Table
 from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
 
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
