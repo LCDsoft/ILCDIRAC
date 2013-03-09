@@ -259,13 +259,13 @@ def LocalArea():
     if os.path.exists( localArea ):
       try:
         os.remove( localArea )
-      except Exception, x:
+      except OSError, x:
         DIRAC.gLogger.error( 'Cannot remove:', localArea )
         localArea = ''
     else:
       try:
         os.mkdir( localArea )
-      except Exception, x:
+      except OSError, x:
         DIRAC.gLogger.error( 'Cannot create:', localArea )
         localArea = ''
   return localArea

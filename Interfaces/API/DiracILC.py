@@ -55,7 +55,7 @@ class DiracILC(Dirac):
     self.pl = ProcessList(processlist)
     return self.pl
     
-  def preSubmissionChecks(self, job, mode):
+  def preSubmissionChecks(self, job, mode = None):
     """Overridden method from DIRAC.Interfaces.API.Dirac
     
     Checks from CS that required software packages are available.

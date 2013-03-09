@@ -150,7 +150,7 @@ class SLICPandoraAnalysis (ModuleBase):
 
         for detector_url in detector_urls:
           try:
-            detModel, headers = urllib.urlretrieve("%s%s"%(detector_url, detmodel + ".zip"), detmodel + ".zip")
+            urllib.urlretrieve("%s%s"%(detector_url, detmodel + ".zip"), detmodel + ".zip")
           except:
             self.log.error("Download of detector model failed")
             continue
