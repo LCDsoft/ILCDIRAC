@@ -171,10 +171,15 @@ if __name__=="__main__":
     nb_files = len(lfns)
     path = ""
     if not len(lfns):
-        print "no files found"
-        continue
+     if clip.verbose:
+       print "No files found for prod %s" % prodID
+     continue
     path = os.path.dirname(lfns[0])
     res = fc.getDirectoryMetadata(path)
+    if not res['OK']:
+      if clip.verbose:
+        print 'No meta data found for %s' % path
+      continue
     dirmeta = {}
     dirmeta['proddetail'] = proddetail    
     dirmeta['nb_files']=nb_files
