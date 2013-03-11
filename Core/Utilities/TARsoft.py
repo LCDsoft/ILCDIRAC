@@ -14,6 +14,7 @@ from DIRAC.DataManagementSystem.Client.ReplicaManager       import ReplicaManage
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 from ILCDIRAC.Core.Utilities.WasteCPU                       import WasteCPUCycles
 import os, urllib, tarfile, subprocess, shutil, time
+from tarfile import TarError
 try:
   import hashlib as md5
 except:
@@ -26,9 +27,9 @@ def createLock(lockname):
     lock = file(lockname,"w")
     lock.write("Locking this directory\n")
     lock.close()
-  except Exception, x :
+  except IOError as e:
     gLogger.error("Failed creating lock")
-    return S_ERROR("Not allowed to write here: %s %s" % (Exception, str(x)))
+    return S_ERROR("Not allowed to write here: IOError %s" % (str(e)))
   return S_OK()
 
 def checkLockAge(lockname):
@@ -71,9 +72,9 @@ def clearLock(lockname):
   """
   try:
     os.unlink(lockname)
-  except Exception, x:
-    gLogger.error("Failed cleaning lock:", "%s %s" % (Exception, str(x)))
-    return S_ERROR("Failed to clear lock: %s %s" % (Exception, str(x)) )
+  except OSError as e:
+    gLogger.error("Failed cleaning lock: OSError", "%s" % (str(e)))
+    return S_ERROR("Failed to clear lock: %s" % (str(e)) )
   return S_OK()
 
 def deleteOld(folder_name):
@@ -85,17 +86,17 @@ def deleteOld(folder_name):
       try:
         shutil.rmtree(folder_name)
       except Exception, x:
-        gLogger.error("Failed deleting %s because %s,%s" % (folder_name, Exception, str(x)))
+        gLogger.error("Failed deleting %s because :" % (folder_name), "%s %s" % ( Exception, str(x)))
     else:
       try:
         os.remove(folder_name)
-      except Exception, x:
-        gLogger.error("Failed deleting %s because %s,%s"%(folder_name, Exception, str(x)))
+      except OSError as e:
+        gLogger.error("Failed deleting %s because :" % (folder_name),"OSError %s" % ( str(e)))
   if os.path.exists(folder_name):
     gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name) 
   return S_OK()
 
-def downloadFile(TarBallURL, app_tar, folder_name, lockname):
+def downloadFile(TarBallURL, app_tar, folder_name):
   """ Get the file locally.
   """
   #need to make sure the url ends with /, other wise concatenation below returns bad url
@@ -251,6 +252,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   appName    = app[0]
   appVersion = app[1]
   folder_name = app_tar.replace(".tgz", "").replace(".tar.gz", "")
+  #jar file does not contain .tgz nor tar.gz so the file name is untouched and folder_name = app_tar
   if appName == "slic":
     folder_name = "%s%s" % (appName, appVersion)
   
@@ -276,10 +278,12 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
 
   #Check if the application is here and not to be overwritten
   if os.path.exists(folder_name):
-    appli_exists = True #this basically makes that all the following ifs are not true
+    appli_exists = True
     if not overwrite:
       gLogger.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
       return S_OK([folder_name, app_tar_base])
+  
+  ## If we are here, it means the application was never installed OR its overwrite flag is true
     
   #Now lock the area
   res = createLock(lockname)##This will fail if not allowed to write here
@@ -287,33 +291,30 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
     gLogger.error(res['Message'])
     return res
   
-  ## CLeanup old version if overwrite flag is true
+  ## Cleanup old version in case it has to be overwritten (implies it's already here)
+  ## In particular the jar file of LCSIM
   if appli_exists and overwrite:
     gLogger.info("Overwriting %s found in %s" % (folder_name, area))
-    appli_exists = False
-    if CanWrite(area):
-      res = deleteOld(folder_name) 
-      if not res['OK']:
-        clearLock(lockname)
-        return res
-
-  if not appli_exists:
-    if not CanWrite(area):
-      #res = clearLock(lockname) ##no need to clean as it was not created in the first place
-      #if not res['OK']:
-      #    gLogger.error("Lock file could not be cleared")
-      return S_ERROR("Not allowed to write in %s" % area)
-
-      
-  ## Downloading file from url, but don't do if file is already there.
-  if not os.path.exists("%s/%s"%(os.getcwd(), app_tar_base)) and not appli_exists:
-    res = downloadFile(TarBallURL, app_tar, folder_name, lockname)
-    if not res['OK']:
+    res = deleteOld(folder_name) 
+    if not res['OK']:#should be always OK for the time being
       clearLock(lockname)
       return res
+    ## Now application must have been removed
   
-  ## Check that the tar ball is there.
-  if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)) and not appli_exists:
+  ## If here, the application DOES NOT exist locally: either it was here and the overwrite flag was false and 
+  ## we returned earlier, either it was here and the overwrite flag was true and it was removed, or finally it
+  ## was never here so here appli_exists=False always
+
+  ## Now we can get the files and unpack them
+    
+  ## Downloading file from url
+  res = downloadFile(TarBallURL, app_tar, folder_name)
+  if not res['OK']:
+    clearLock(lockname)
+    return res
+  
+  ## Check that the tar ball is there. Should never happen as download file catches the errors
+  if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)):
     gLogger.error('Failed to download software','%s' % (folder_name))
     clearLock(lockname)
     return S_ERROR('Failed to download software')
@@ -322,12 +323,16 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   res = tarMd5Check(app_tar_base, md5sum)
   if not res['OK']:
     gLogger.error("Will try getting the file again, who knows")
+    try:
+      os.unlink("%s/%s" % (os.getcwd(), app_tar_base))
+    except OSError:
+      gLogger.error("Failed to clean tar ball, something bad is happening")
     ## Clean up existing stuff (if any, in particular the jar file)
     res = deleteOld(folder_name)
-    if not res['OK']:
+    if not res['OK']:#should be always OK for the time being
       clearLock(lockname)
       return res
-    res = downloadFile(TarBallURL, app_tar, folder_name, lockname)
+    res = downloadFile(TarBallURL, app_tar, folder_name)
     if not res['OK']:
       clearLock(lockname)
       return res
@@ -338,32 +343,32 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
       return S_ERROR("MD5 check failed")
   
 
-  if not appli_exists:    
-    if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
-      app_tar_to_untar = tarfile.open(app_tar_base)
-      try:
-        app_tar_to_untar.extractall()
-      except Exception, e:
-        gLogger.error("Could not extract tar ball %s because of %s, cannot continue !" % (app_tar_base, e))
-        clearLock(lockname)
-        return S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base, e))
-      if folder_name.count("slic"):
-        slicname = folder_name
-        members = app_tar_to_untar.getmembers()
-        fileexample = members[0].name
-        basefolder = fileexample.split("/")[0]
-        try:
-          os.rename(basefolder, slicname)
-        except:
-          clearLock(lockname)
-          return S_ERROR("Could not rename slic directory")
+  if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
+    app_tar_to_untar = tarfile.open(app_tar_base)
     try:
-      dircontent = os.listdir(folder_name)
-      if not len(dircontent):
+      app_tar_to_untar.extractall()
+    except TarError as e:
+      gLogger.error("Could not extract tar ball %s because of %s, cannot continue !" % (app_tar_base, str(e)))
+      clearLock(lockname)
+      return S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base, str(e)))
+    if folder_name.count("slic"):
+      slicname = folder_name
+      members = app_tar_to_untar.getmembers()
+      fileexample = members[0].name
+      basefolder = fileexample.split("/")[0]
+      try:
+        os.rename(basefolder, slicname)
+      except OSError as e:
+        gLogger.error("Failed renaming slic:", str(e))
         clearLock(lockname)
-        return S_ERROR("Folder %s is empty, considering install as failed" % folder_name)
-    except:
-      pass
+        return S_ERROR("Could not rename slic directory")
+  try:
+    dircontent = os.listdir(folder_name)
+    if not len(dircontent):
+      clearLock(lockname)
+      return S_ERROR("Folder %s is empty, considering install as failed" % folder_name)
+  except:
+    pass
   
   #Everything went fine, we try to clear the lock  
   clearLock(lockname)
@@ -488,7 +493,7 @@ def clean(area, res_from_install):
   ###########################################
   ###Go where the software is to be installed
   os.chdir(area)
-  #We go back to the initial place either at the end
+  #We go back to the initial place at the end
   ###########################################
   app_tar_base = res_from_install[1]
   #remove now useless tar ball
@@ -496,8 +501,8 @@ def clean(area, res_from_install):
     if app_tar_base.find(".jar") < 0:
       try:
         os.unlink(app_tar_base)
-      except:
-        gLogger.error("Could not remove tar ball")
+      except OSError as e:
+        gLogger.error("Could not remove tar ball:",str(e))
   return S_OK()
 
 def remove():
@@ -515,8 +520,11 @@ def CanWrite(area):
     f.write("Testing writing\n")
     f.close()
     os.remove("testfile.txt")
-  except Exception, x:
-    gLogger.error('Problem trying to write in area %s: %s' % (area, str(x)))
+  except IOError as ioe:
+    gLogger.error('Problem trying to write in area %s: %s' % (area, str(ioe)))
+    return False
+  except OSError as ose:
+    gLogger.error('Problem removing from area %s: %s' % (area, str(ose)))
     return False
   finally:
     os.chdir(curdir)
