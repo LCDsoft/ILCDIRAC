@@ -1,3 +1,9 @@
+[v17r1p2]
+* Interface
+Scripts are actual scripts, removed out dated things
+* Workflow
+Some cleanup
+
 [v17r1p1]
 * Core
 Reshuffle a bit more the TARsoft utility
