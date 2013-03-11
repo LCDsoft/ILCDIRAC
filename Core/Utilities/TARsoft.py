@@ -72,8 +72,44 @@ def clearLock(lockname):
   try:
     os.unlink(lockname)
   except Exception, x:
-    gLogger.error("Failed cleaning lock")
+    gLogger.error("Failed cleaning lock:", "%s %s" % (Exception, str(x)))
     return S_ERROR("Failed to clear lock: %s %s" % (Exception, str(x)) )
+  return S_OK()
+
+def downloadFile(TarBallURL, app_tar, folder_name, lockname):
+  """ Get the file locally.
+  """
+  app_tar_base = os.path.basename(app_tar)
+  if TarBallURL.find("http://")>-1:
+    try :
+      gLogger.debug("Downloading software", '%s' % (folder_name))
+      #Copy the file locally, don't try to read from remote, soooo slow
+      #Use string conversion %s%s to set the address, makes the system more stable
+      urllib.urlretrieve("%s%s" % (TarBallURL, app_tar), app_tar_base)
+    except:
+      gLogger.exception()
+      return S_ERROR('Exception during url retrieve')
+  else:
+    rm = ReplicaManager()
+    resget = rm.getFile("%s%s" % (TarBallURL, app_tar))
+    if not resget['OK']:
+      gLogger.error("File could not be downloaded from the grid")
+      return resget
+  return S_OK()
+
+def tarMd5Check(app_tar_base, md5sum ):
+  """ Check the tar ball md5 sum 
+  """
+  ##Tar ball is obtained, need to check its md5 sum
+  tar_ball_md5 = ''
+  try:
+    tar_ball_md5 = md5.md5(file(app_tar_base).read()).hexdigest()
+  except:
+    gLogger.error("Failed to get tar ball md5, try without")
+    md5sum = ''
+  if md5sum and md5sum != tar_ball_md5:
+    gLogger.error('Hash does not correspond, cannot continue')
+    return S_ERROR("Hash does not correspond")
   return S_OK()
 
 def TARinstall(app, config, area):
@@ -260,48 +296,29 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
       
   #downloading file from url, but don't do if file is already there.
   if not os.path.exists("%s/%s"%(os.getcwd(), app_tar_base)) and not appli_exists:
-    if TarBallURL.find("http://")>-1:
-      try :
-        gLogger.debug("Downloading software", '%s' % (folder_name))
-        #Copy the file locally, don't try to read from remote, soooo slow
-        #Use string conversion %s%s to set the address, makes the system more stable
-        tarball, headers = urllib.urlretrieve("%s%s" % (TarBallURL, app_tar), app_tar_base)
-      except:
-        gLogger.exception()
-        res = clearLock(lockname)
-        if not res['OK']:
-          gLogger.error("Lock file could not be cleared")
-        return S_ERROR('Exception during url retrieve')
-    else:
-      rm = ReplicaManager()
-      resget = rm.getFile("%s%s" % (TarBallURL, app_tar))
-      if not resget['OK']:
-        gLogger.error("File could not be downloaded from the grid")
-        res = clearLock(lockname)
-        if not res['OK']:
-          gLogger.error("Lock file could not be cleared")
-        return resget
-
-  ##Tar ball is obtained, need to check its md5 sum
-  tar_ball_md5 = ''
-  try:
-    tar_ball_md5 = md5.md5(file(app_tar_base).read()).hexdigest()
-  except:
-    gLogger.error("Failed to get tar ball md5, try without")
-    md5sum = ''
-  if md5sum and md5sum != tar_ball_md5:
-    gLogger.error('Hash does not correspond, cannot continue')
-    res = clearLock(lockname)
+    res = downloadFile(TarBallURL, app_tar, folder_name, lockname)
     if not res['OK']:
-      gLogger.error("Lock file could not be cleared")
-    return S_ERROR("Hash validation failed")
-
+      clearLock(lockname)
+      return res
+  
   if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)) and not appli_exists:
     gLogger.error('Failed to download software','%s' % (folder_name))
-    res = clearLock(lockname)
-    if not res['OK']:
-      gLogger.error("Lock file could not be cleared")
+    clearLock(lockname)
     return S_ERROR('Failed to download software')
+
+  res = tarMd5Check(app_tar_base, md5sum)
+  if not res['OK']:
+    gLogger.error("Will try getting the file again, who knows")
+    res = downloadFile(TarBallURL, app_tar, folder_name, lockname)
+    if not res['OK']:
+      clearLock(lockname)
+      return res
+    res = tarMd5Check(app_tar_base, md5sum)
+    if not res['OK']:
+      gLogger.error("Hash failed again, something is really wrong, cannot continue.")
+      clearLock(lockname)
+      return S_ERROR("MD5 check failed")
+  
 
   if not appli_exists:    
     if tarfile.is_tarfile(app_tar_base):##needed because LCSIM is jar file
@@ -310,9 +327,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
         app_tar_to_untar.extractall()
       except Exception, e:
         gLogger.error("Could not extract tar ball %s because of %s, cannot continue !" % (app_tar_base, e))
-        res = clearLock(lockname)
-        if not res['OK']:
-          gLogger.error("Lock file could not be cleared")
+        clearLock(lockname)
         return S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base, e))
       if folder_name.count("slic"):
         slicname = folder_name
@@ -322,24 +337,18 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
         try:
           os.rename(basefolder, slicname)
         except:
-          res = clearLock(lockname)
-          if not res['OK']:
-            gLogger.error("Lock file could not be cleared")
+          clearLock(lockname)
           return S_ERROR("Could not rename slic directory")
     try:
       dircontent = os.listdir(folder_name)
       if not len(dircontent):
-        res = clearLock(lockname)
-        if not res['OK']:
-          gLogger.error("Lock file could not be cleared")
+        clearLock(lockname)
         return S_ERROR("Folder %s is empty, considering install as failed" % folder_name)
     except:
       pass
   
   #Everything went fine, we try to clear the lock  
-  res = clearLock(lockname)
-  if not res['OK']:
-    gLogger.error("Lock file could not be cleared")
+  clearLock(lockname)
     
   return S_OK([folder_name, app_tar_base]) 
 
