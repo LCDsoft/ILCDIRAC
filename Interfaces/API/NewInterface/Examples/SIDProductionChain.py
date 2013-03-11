@@ -6,8 +6,7 @@ Created on Feb 10, 2012
 
 from DIRAC.Core.Base import Script
 
-import sys, types
-import os.path
+import sys
 
 Script.registerSwitch( 'D:', 'description=', 'Short description of the workflow (default set by metadata)' )
 Script.registerSwitch( 'e:', 'evttype=', 'Name of the production event type (optional in addition to production ID)' )
@@ -82,7 +81,7 @@ if (detectorName == None) or (prodID == None):
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC,LCSIM,SLICPandora,OverlayInput
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-from DIRAC.Resources.Catalogs.FileCatalogClient import FileCatalogClient
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 dirac = DiracILC()
 
 
