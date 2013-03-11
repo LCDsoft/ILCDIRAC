@@ -8,7 +8,7 @@ from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard,Mokka,Marlin,OverlayInput
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard, Mokka, Marlin, OverlayInput
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 dirac = DiracILC()

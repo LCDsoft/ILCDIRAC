@@ -2,11 +2,11 @@ from DIRAC.Core.Base import Script
 
 Script.parseCommandLine()
 
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import *
-from ILCDIRAC.Interfaces.API.NewInterface.UserJob import *
-from ILCDIRAC.Interfaces.API.DiracILC import *
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput, Marlin
+from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
-from DIRAC.Resources.Catalog.FileCatalogClient import *
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 fc = FileCatalogClient()
 
 meta={}
@@ -64,4 +64,4 @@ for ov in overlay:
       print res['Message']
       exit()
 
-    d.submit(j)
+    j.submit(d)
