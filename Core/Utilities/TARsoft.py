@@ -323,7 +323,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   res = tarMd5Check(app_tar_base, md5sum)
   if not res['OK']:
     gLogger.error("Will try getting the file again, who knows")
-    try:
+    try:#Remove tar ball that we just got
       os.unlink("%s/%s" % (os.getcwd(), app_tar_base))
     except OSError:
       gLogger.error("Failed to clean tar ball, something bad is happening")
