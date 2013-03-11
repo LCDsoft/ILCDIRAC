@@ -1,9 +1,11 @@
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
-from ILCDIRAC.Interfaces.API.DiracILC import *
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import *
-from ILCDIRAC.Interfaces.API.NewInterface.UserJob import *
+from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard, Mokka, Marlin, OverlayInput
+from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+
+from DIRAC import exit as dexit
 
 dirac =DiracILC()
 
@@ -23,7 +25,7 @@ wh.setModel("sm")
 res = j.append(wh)
 if not res['OK']:
     print res['Message']
-    exit()
+    dexit(1)
 
 
 mo = Mokka()
@@ -35,7 +37,7 @@ mo.setOutputFile("somefile.slcio")
 res = j.append(mo)
 if not res['OK']:
     print res['Message']
-    exit()
+    dexit(1)
 
 
 ov = OverlayInput()
@@ -46,7 +48,7 @@ ov.setNbSigEvtsPerJob(1)
 res = j.append(ov)
 if not res['OK']:
     print res['Message']
-    exit()
+    dexit(1)
 
 
 ma = Marlin()
@@ -58,7 +60,7 @@ ma.setDebug(True)
 res = j.append(ma)
 if not res['OK']:
     print res['Message']
-    exit()
+    dexit(1)
 #print appplication's attributes.
 ma.listAttributes()
 
@@ -68,6 +70,6 @@ j.setOutputSandbox("*.log")
 res = dirac.checkparams(j)
 if not res['OK']:
     print res['Message']
-    sys.exit(1)
+    dexit(1)
 
 
