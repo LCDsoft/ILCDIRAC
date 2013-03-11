@@ -8,11 +8,11 @@ Also installs all dependencies for the applications
 @author: Stephane Poss
 '''
 from DIRAC import gLogger, S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.ResolveDependencies      import resolveDeps
-from ILCDIRAC.Core.Utilities.PrepareLibs              import removeLibc
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
-from ILCDIRAC.Core.Utilities.WasteCPU import WasteCPUCycles
+from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
+from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc
+from DIRAC.DataManagementSystem.Client.ReplicaManager       import ReplicaManager
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
+from ILCDIRAC.Core.Utilities.WasteCPU                       import WasteCPUCycles
 import os, urllib, tarfile, subprocess, shutil, time
 try:
   import hashlib as md5
