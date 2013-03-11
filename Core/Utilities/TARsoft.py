@@ -76,9 +76,32 @@ def clearLock(lockname):
     return S_ERROR("Failed to clear lock: %s %s" % (Exception, str(x)) )
   return S_OK()
 
+def deleteOld(folder_name):
+  """ Remove directories
+  """
+  gLogger.info("Deleting existing version %s" % folder_name)
+  if os.path.exists(folder_name):
+    if os.path.isdir(folder_name):
+      try:
+        shutil.rmtree(folder_name)
+      except Exception, x:
+        gLogger.error("Failed deleting %s because %s,%s" % (folder_name, Exception, str(x)))
+    else:
+      try:
+        os.remove(folder_name)
+      except Exception, x:
+        gLogger.error("Failed deleting %s because %s,%s"%(folder_name, Exception, str(x)))
+  if os.path.exists(folder_name):
+    gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name) 
+  return S_OK()
+
 def downloadFile(TarBallURL, app_tar, folder_name, lockname):
   """ Get the file locally.
   """
+  #need to make sure the url ends with /, other wise concatenation below returns bad url
+  if TarBallURL[-1] != "/":
+    TarBallURL += "/"
+
   app_tar_base = os.path.basename(app_tar)
   if TarBallURL.find("http://")>-1:
     try :
@@ -237,7 +260,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   ###########################################
   ###Go where the software is to be installed
   os.chdir(area)
-  #We go back to the initial place either at the end of the installation or at any error
+  #We go back to the initial place at any return
   ###########################################
   ##Handle the locking
   lockname = folder_name+".lock"
@@ -252,36 +275,27 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
       overwrite = True
 
   #Check if the application is here and not to be overwritten
-  if os.path.exists(folder_name): #This should include a checksum verification of some sort
-    # and not appName =="slic":
+  if os.path.exists(folder_name):
     appli_exists = True #this basically makes that all the following ifs are not true
     if not overwrite:
       gLogger.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
       return S_OK([folder_name, app_tar_base])
+    
   #Now lock the area
   res = createLock(lockname)##This will fail if not allowed to write here
   if not res['OK']:
     gLogger.error(res['Message'])
     return res
   
+  ## CLeanup old version if overwrite flag is true
   if appli_exists and overwrite:
     gLogger.info("Overwriting %s found in %s" % (folder_name, area))
     appli_exists = False
     if CanWrite(area):
-      gLogger.info("First we delete existing version %s" % folder_name)
-      if os.path.exists(folder_name):
-        if os.path.isdir(folder_name):
-          try:
-            shutil.rmtree(folder_name)
-          except Exception, x:
-            gLogger.error("Failed deleting %s because %s,%s" % (folder_name, Exception, str(x)))
-        else:
-          try:
-            os.remove(folder_name)
-          except Exception, x:
-            gLogger.error("Failed deleting %s because %s,%s"%(folder_name, Exception, str(x)))
-      if os.path.exists(folder_name):
-        gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name)  
+      res = deleteOld(folder_name) 
+      if not res['OK']:
+        clearLock(lockname)
+        return res
 
   if not appli_exists:
     if not CanWrite(area):
@@ -290,25 +304,29 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
       #    gLogger.error("Lock file could not be cleared")
       return S_ERROR("Not allowed to write in %s" % area)
 
-  #need to make sure the url ends with /, other wise concatenation below returns bad url
-  if TarBallURL[-1] != "/":
-    TarBallURL += "/"
       
-  #downloading file from url, but don't do if file is already there.
+  ## Downloading file from url, but don't do if file is already there.
   if not os.path.exists("%s/%s"%(os.getcwd(), app_tar_base)) and not appli_exists:
     res = downloadFile(TarBallURL, app_tar, folder_name, lockname)
     if not res['OK']:
       clearLock(lockname)
       return res
   
+  ## Check that the tar ball is there.
   if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)) and not appli_exists:
     gLogger.error('Failed to download software','%s' % (folder_name))
     clearLock(lockname)
     return S_ERROR('Failed to download software')
 
+  ## Check that the downloaded file (or existing one) has the right checksum
   res = tarMd5Check(app_tar_base, md5sum)
   if not res['OK']:
     gLogger.error("Will try getting the file again, who knows")
+    ## Clean up existing stuff (if any, in particular the jar file)
+    res = deleteOld(folder_name)
+    if not res['OK']:
+      clearLock(lockname)
+      return res
     res = downloadFile(TarBallURL, app_tar, folder_name, lockname)
     if not res['OK']:
       clearLock(lockname)
