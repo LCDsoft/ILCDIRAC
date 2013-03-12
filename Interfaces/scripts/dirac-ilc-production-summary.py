@@ -35,6 +35,10 @@ def translate(detail):
   """ Replace whizard naming convention by human conventions
   """
   detail = detail.replace('v','n1:n2:n3:N1:N2:N3')
+  detail = detail.replace('qli','u:d:s:U:D:S')
+  detail = detail.replace('ql','u:d:s:c:b:U:D:S:C:B')
+  detail = detail.replace('q','u:d:s:c:b:t')
+  detail = detail.replace('Q','U:D:S:C:B:T')
   detail = detail.replace('e1','e-')
   detail = detail.replace('E1','e+')
   detail = detail.replace('e2','mu-')
@@ -56,7 +60,6 @@ def translate(detail):
   detail = detail.replace('B','bbar')
   detail = detail.replace('Z0','Z')
   detail = detail.replace('Z','Z0')
-  #detail = detail.replace('ql','u:d:s:c:b:U:D:S:C:B')
   detail = detail.replace('gghad','gamma gamma -> hadrons')
   detail = detail.replace(',','')
   detail = detail.replace('n N','nu nub')
