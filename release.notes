@@ -1,3 +1,9 @@
+[v17r1p3]
+* Core
+Bugfix: Changed import order in scripts to make them right
+* Interfaces
+Bugfix: Changed import order in scripts to make them right
+
 [v17r1p2]
 * Interface
 Scripts are actual scripts, removed out dated things
