@@ -1,24 +1,17 @@
+#!/bin/env python
 """
 Prepare the production summary tables
 """
 from DIRAC.Core.Base import Script
-
-import os,string
-from DIRAC.TransformationSystem.Client.TransformationClient         import TransformationClient
-
-from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
-
-from ILCDIRAC.Core.Utilities.HTML import Table
 from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
-
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-
-from DIRAC.Core.Utilities import DEncode
-
+import os
 
 def getFileInfo(lfn):
   """ Retrieve the file info
   """
+  from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+  from DIRAC.Core.Utilities import DEncode
+
   fc = FileCatalogClient()
   lumi = 0
   nbevts = 0
@@ -145,6 +138,10 @@ if __name__=="__main__":
   clip = Params()
   clip.registerSwitch()
   Script.parseCommandLine()
+  from ILCDIRAC.Core.Utilities.HTML                             import Table
+  from ILCDIRAC.Core.Utilities.ProcessList                      import ProcessList
+  from DIRAC.TransformationSystem.Client.TransformationClient   import TransformationClient
+
   prod = clip.prod
   full_detail = clip.full_det
   fc = FileCatalogClient()
