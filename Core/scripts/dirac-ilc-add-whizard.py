@@ -1,3 +1,4 @@
+#!/bin/env python
 '''
 Define a new WHIZARD version: update the process list, create the new tar ball, upload it, upload the new processlist
 

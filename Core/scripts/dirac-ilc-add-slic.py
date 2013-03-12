@@ -1,3 +1,4 @@
+#!/bin/env python
 """
 Upload SLIC version and publish in CS
 """
