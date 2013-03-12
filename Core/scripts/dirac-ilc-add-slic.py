@@ -4,9 +4,7 @@ Upload SLIC version and publish in CS
 from DIRAC.Core.Base import Script
 import os, shutil
 
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC.FrameworkSystem.Client.NotificationClient  import NotificationClient
-from DIRAC.Interfaces.API.DiracAdmin                  import DiracAdmin
 from DIRAC.Core.Security.Misc                         import getProxyInfo
 from DIRAC                                            import gConfig, S_OK, S_ERROR
 import DIRAC
@@ -44,6 +42,10 @@ class Params(object):
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
     
 def upload(path, appTar):
+  """ Upload the file to its final location, put and register it and replicate
+  """
+  from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+
   rm = ReplicaManager()
   if not os.path.exists(appTar):
     print "Tar ball %s does not exists, cannot continue." % appTar
@@ -93,6 +95,7 @@ if __name__=="__main__":
   if not os.path.exists(tarballloc):
     print "Cannot find the tar ball %s" % tarballloc
     DIRAC.exit(2)
+  from DIRAC.Interfaces.API.DiracAdmin   import DiracAdmin
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
