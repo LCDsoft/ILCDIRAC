@@ -87,7 +87,7 @@ class MoveInFC(ModuleBase):
       try:
         os.unlink(inputfile)
       except OSError:
-        self.log.warn("Failed to remove intial file, increased \
+        self.log.warn("Failed to remove initial file, increased \
         disk space usage")
         
     #all the files are in the run directory 
