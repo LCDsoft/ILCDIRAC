@@ -6,7 +6,7 @@ Created on Mar 24, 2010
 @author: sposs
 '''
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK, E_RROR, exit as dexit
+from DIRAC import S_OK, S_ERROR, exit as dexit
 from DIRAC.Interfaces.API.Dirac import Dirac
 
 class Params(object):
