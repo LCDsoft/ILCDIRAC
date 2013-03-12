@@ -7,7 +7,6 @@ Created on Mar 24, 2010
 '''
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, exit as dexit
-from DIRAC.Interfaces.API.Dirac import Dirac
 
 class Params(object):
   def __init__(self):
@@ -38,7 +37,8 @@ if __name__=="__main__":
   if not repoLocation:
     Script.showHelp()
     dexit(1)
-  
+  from DIRAC.Interfaces.API.Dirac import Dirac
+
   dirac = Dirac(True, repoLocation)
   
   exitCode = 0

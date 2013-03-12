@@ -1,13 +1,12 @@
+#!/bin/env python
 '''
 Created on Apr 22, 2010
 
 @author: Stephane Poss
 '''
 
-import DIRAC
 from DIRAC.Core.Base import Script
-from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-import sys
+from DIRAC import exit as dexit
 
 class Params(object):
   def __init__(self):
@@ -29,7 +28,8 @@ if __name__=="__main":
   repoLocation =  cliparams.repo
   if not repoLocation:
     Script.showHelp()
-    DIRAC.exit(2)
+    dexit(2)
+  from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
   dirac = DiracILC(True, repoLocation)
   
   dirac.monitorRepository(False)
@@ -39,4 +39,4 @@ if __name__=="__main":
   for lfn in lfns :
     print '"LFN:%s",' % lfn
   print "]"
-  DIRAC.exit(0)
+  dexit(0)
