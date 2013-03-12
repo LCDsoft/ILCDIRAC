@@ -16,6 +16,7 @@ from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContain
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
 from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -36,7 +37,7 @@ class UploadOutputData(ModuleBase):
     self.enable = True
     self.failoverTest = False #flag to put file to failover SE by default
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
-
+    self.ops = Operations()
     #List all parameters here
     self.outputDataFileMask = ''
     self.outputMode = 'Any' #or 'Local' for reco case
@@ -44,6 +45,7 @@ class UploadOutputData(ModuleBase):
     self.request = None
     self.PRODUCTION_ID = ""
     self.prodOutputLFNs = []
+    self.experiment = "CLIC"
 
   #############################################################################
   def applicationSpecificInputs(self):
@@ -190,6 +192,17 @@ class UploadOutputData(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
 
+    ##determine the experiment
+    example_file = self.prodOutputLFNs[0]
+    if "/ilc/prod/clic" in example_file:
+      self.experiment = "CLIC"
+    elif "/ilc/prod/ilc/sid" in example_file:
+      self.experiment = 'ILC_SID'
+    elif "/ilc/prod/ilc/mc-dbd" in example_file:
+      self.experiment = 'ILC_ILD' 
+    else:
+      self.log.warn("Failed to determine experiment, reverting to default")
+      
     #Determine the final list of possible output files for the
     #workflow and all the parameters needed to upload them.
     result = self.getCandidateFiles(self.outputList, self.prodOutputLFNs, self.outputDataFileMask)
@@ -264,6 +277,8 @@ class UploadOutputData(ModuleBase):
     else:
       failover = final
 
+    self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)  
+
     cleanUp = False
     for fileName, metadata in failover.items():
       self.log.info('Setting default catalog for failover transfer to FileCatalog')
@@ -271,7 +286,7 @@ class UploadOutputData(ModuleBase):
       targetSE = metadata['resolvedSE'][0]
       metadata['resolvedSE'] = self.failoverSEs
       result = failoverTransfer.transferAndRegisterFileFailover(fileName, metadata['localpath'],
-                                                                metadata['lfn'], targetSE,metadata['resolvedSE'],
+                                                                metadata['lfn'], targetSE, metadata['resolvedSE'],
                                                                 fileGUID = metadata['guid'], fileCatalog = catalogs)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
