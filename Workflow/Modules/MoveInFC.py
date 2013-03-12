@@ -28,32 +28,13 @@ class MoveInFC(ModuleBase):
     self.applicationName = 'MoveInFC'
     self.rm = ReplicaManager()
     self.listoutput = {}
+    self.outputpath = ''
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-      
-    if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
-        #self.OutputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
-          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-      
-    if len(self.InputData):
-      if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
-        res = getNumberOfevents(self.InputData)
-        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
-          self.workflow_commons["NbOfEvents"] = res["nbevts"]
-          self.workflow_commons["NbOfEvts"] = res["nbevts"]
-          if self.NumberOfEvents > res["nbevts"]:
-            self.NumberOfEvents = res["nbevts"]
-        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"] = res["lumi"]
-        if res.has_key('EvtType') and not self.processID:
-          self.processID = res['EvtType']
-
+    
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         self.InputFile.append(files)
@@ -106,9 +87,12 @@ class MoveInFC(ModuleBase):
       try:
         os.unlink(inputfile)
       except OSError:
-        self.log.warn("Failed to remove intiial file, increased disk space usage")
+        self.log.warn("Failed to remove intial file, increased \
+        disk space usage")
         
     #all the files are in the run directory 
+    
+    #get all metadata, ancestor/daughter relations, etc. for all the files
     
     #Update the listoutput
     if self.listoutput:
@@ -120,6 +104,16 @@ class MoveInFC(ModuleBase):
         item['outputDataSE'] = self.listoutput['outputDataSE']
         outputlist.append(item)
       self.step_commons['listoutput'] = outputlist
+
+    ## Make sure the path contains / at the end as we are going to 
+    ## concatenate final path and local files
+    if not self.outputpath[-1]=='/':
+      self.outputpath += "/"
+
+    if 'ProductionOutputData' in self.workflow_commons:
+      file_list = ";".join([self.outputpath+name for name in [os.path.basename(fin) for fin in localpaths]])
+      self.workflow_commons['ProductionOutputData'] = file_list
+      
     #Now remove them
     if self.enable:
       res = self.rm.removeFile(lfns, force=True)
@@ -134,4 +128,4 @@ class MoveInFC(ModuleBase):
     ## that the job will not be killed between now and the time the UploadOutputData module
     ## is called
     
-    return S_OK()
+    return self.finalStatusReport(0)
