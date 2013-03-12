@@ -103,7 +103,10 @@ class MoveInFC(ModuleBase):
         item['outputPath'] = self.listoutput['outputPath']
         item['outputDataSE'] = self.listoutput['outputDataSE']
         outputlist.append(item)
-      self.step_commons['listoutput'] = outputlist
+      if self.enable:
+        self.step_commons['listoutput'] = outputlist
+      else:
+        self.log.info("listoutput would have been ",outputlist)
 
     ## Make sure the path contains / at the end as we are going to 
     ## concatenate final path and local files
@@ -112,7 +115,10 @@ class MoveInFC(ModuleBase):
 
     if 'ProductionOutputData' in self.workflow_commons:
       file_list = ";".join([self.outputpath+name for name in [os.path.basename(fin) for fin in localpaths]])
-      self.workflow_commons['ProductionOutputData'] = file_list
+      if self.enable:
+        self.workflow_commons['ProductionOutputData'] = file_list
+      else:
+        self.log.info("ProductionOutputData would have been", file_list)
       
     #Now remove them
     if self.enable:
