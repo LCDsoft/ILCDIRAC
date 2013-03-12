@@ -5,15 +5,10 @@ Created on May 5, 2010
 '''
 import sys
 from DIRAC.Core.Base import Script
-
 from DIRAC.FrameworkSystem.Client.NotificationClient       import NotificationClient
-from DIRAC.Interfaces.API.DiracAdmin                       import DiracAdmin
-from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
-from DIRAC.RequestManagementSystem.Client.RequestClient    import RequestClient
 
-from DIRAC import gConfig, S_OK, S_ERROR
-import DIRAC
+from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
+
 import string, os, shutil
 try:
   import hashlib as md5
@@ -55,6 +50,11 @@ class Params(object):
 def upload(path, appTar):
   """ Upload to storage
   """
+  from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
+  from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
+  from DIRAC.RequestManagementSystem.Client.RequestClient    import RequestClient
+  rm = ReplicaManager()
+
   if not os.path.exists(appTar):
     print "Tar ball %s does not exists, cannot continue." % appTar
     return S_ERROR()
@@ -105,10 +105,10 @@ if __name__=="__main__":
   comment = cliParams.comment
   if (not platform) or (not appName) or not appVersion or not comment:
     Script.showHelp()
-    DIRAC.exit(2)
+    dexit(2)
+  from DIRAC.Interfaces.API.DiracAdmin                       import DiracAdmin
   
   diracAdmin = DiracAdmin()
-  rm = ReplicaManager()
 
   modifiedCS = False
   mailadress = 'ilc-dirac@cern.ch'
@@ -126,10 +126,10 @@ if __name__=="__main__":
     if not platform in av_platforms['Value']:
       print "Platform %s unknown, available are %s." % (platform, string.join(av_platforms['Value'], ", "))
       print "If yours is missing add it in CS"
-      DIRAC.exit(255)
+      dexit(255)
   else:
     print "Could not find all platforms available in CS"
-    DIRAC.exit(255)
+    dexit(255)
 
   av_apps = gConfig.getSections("%s/%s" % (softwareSection, platform), [])
   if not av_apps['OK']:
@@ -140,10 +140,10 @@ if __name__=="__main__":
     versions = gConfig.getSections("%s/%s/%s" % (softwareSection, platform, appName.lower()), [])
     if not versions['OK']:
       print "Could not find all versions available in CS"
-      DIRAC.exit(255)
+      dexit(255)
     if appVersion in versions['Value']:
       print 'Application %s %s for %s already in CS, nothing to do' % (appName.lower(), appVersion, platform)
-      DIRAC.exit(0)
+      dexit(0)
     else:
       result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall" % (softwareSection, platform, appName.lower(),
                                                              appVersion), appTar)
@@ -154,7 +154,7 @@ if __name__=="__main__":
           res = upload(tarballurl['Value'], appTar)
           if not res['OK']:
             print "Upload to %s failed" % tarballurl
-            DIRAC.exit(255)
+            dexit(255)
       resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(),
                                                                appVersion), md5sum)
       if result['OK']:
@@ -174,7 +174,7 @@ if __name__=="__main__":
         res = upload(tarballurl['Value'], appTar)
         if not res['OK']:
           print "Upload to %s failed" % tarballurl
-          DIRAC.exit(255)
+          dexit(255)
     resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),   
                                     md5sum)
     if result['OK']:
@@ -190,7 +190,7 @@ if __name__=="__main__":
     print result
     if not result[ 'OK' ]:
       print 'ERROR: Commit failed with message = %s' % (result[ 'Message' ])
-      DIRAC.exit(255)
+      dexit(255)
     else:
       print 'Successfully committed changes to CS'
       notifyClient = NotificationClient()
@@ -201,4 +201,4 @@ if __name__=="__main__":
   else:
     print 'No modifications to CS required'
 
-  DIRAC.exit(0)
+  dexit(0)

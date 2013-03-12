@@ -8,16 +8,10 @@ Created on Sep 21, 2010
 
 from DIRAC.Core.Base import Script
 
-from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
-from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
-from DIRAC.RequestManagementSystem.Client.RequestContainer   import RequestContainer
-from DIRAC.RequestManagementSystem.Client.RequestClient      import RequestClient
 from ILCDIRAC.Core.Utilities.ProcessList                     import ProcessList
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
-import DIRAC
-
-from DIRAC import gConfig, S_ERROR, S_OK
+from DIRAC import gConfig, S_ERROR, S_OK, exit as dexit
 
 import os, tarfile, shutil, sys, string
 
@@ -57,6 +51,9 @@ class Params(object):
 def upload(path, appTar):
   """ Upload to storage
   """
+  from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
+  from DIRAC.RequestManagementSystem.Client.RequestContainer   import RequestContainer
+  from DIRAC.RequestManagementSystem.Client.RequestClient      import RequestClient
   global appVersion
   if not os.path.exists(appTar):
     print "File %s does not exists, cannot continue." % appTar
@@ -172,7 +169,9 @@ if __name__=="__main__":
 
   if not whizard_location or not whizard_version or not beam_spectra_version:
     Script.showHelp()
-    DIRAC.exit(2)
+    dexit(2)
+  from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
+  
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
@@ -186,19 +185,19 @@ if __name__=="__main__":
   path_to_process_list = ops.getValue(processlistLocation, "")
   if not path_to_process_list:
     print "Could not find process list Location in CS"
-    DIRAC.exit(2)
+    dexit(2)
 
   rm = ReplicaManager()
   res = rm.getFile(path_to_process_list)
   if not res['OK']:
     print "Error while getting process list from storage"
-    DIRAC.exit(2)
+    dexit(2)
   print "done"
 
   processlist = os.path.basename(path_to_process_list)
   if not os.path.exists(processlist):
     print "Process list does not exist locally"
-    DIRAC.exit(2)
+    dexit(2)
 
 
   pl = ProcessList(processlist)
@@ -211,17 +210,17 @@ if __name__=="__main__":
   if whiz_here == 0:
     print "whizard executable not found in %s, please check" % whizard_location
     os.chdir(startdir)
-    DIRAC.exit(2)
+    dexit(2)
   whizprc_here = folderlist.count("whizard.prc")
   if whizprc_here == 0:
     print "whizard.prc not found in %s, please check" % whizard_location
     os.chdir(startdir)
-    DIRAC.exit(2)
+    dexit(2)
   whizmdl_here = folderlist.count("whizard.mdl")
   if whizprc_here == 0:
     print "whizard.mdl not found in %s, please check" % whizard_location
     os.chdir(startdir)
-    DIRAC.exit(2)
+    dexit(2)
    
     
   print "Preparing process list"
@@ -320,25 +319,25 @@ if __name__=="__main__":
     if not platform in av_platforms['Value']:
       print "Platform %s unknown, available are %s." % (platform, string.join(av_platforms['Value'], ", "))
       print "If yours is missing add it in CS"
-      DIRAC.exit(255)
+      dexit(255)
   else:
     print "Could not find all platforms available in CS"
-    DIRAC.exit(255)
+    dexit(255)
   
   av_apps = gConfig.getSections("%s/%s" % (softwareSection, platform), [])
   if not av_apps['OK']:
     print "Could not find all applications available in CS"
-    DIRAC.exit(255)
+    dexit(255)
   
   if appName.lower() in av_apps['Value']:
     versions = gConfig.getSections("%s/%s/%s" % (softwareSection, platform, appName.lower()), 
                                    [])
     if not versions['OK']:
       print "Could not find all versions available in CS"
-      DIRAC.exit(255)
+      dexit(255)
     if appVersion in versions['Value']:
       print 'Application %s %s for %s already in CS, nothing to do' % (appName.lower(), appVersion, platform)
-      DIRAC.exit(0)
+      dexit(0)
     else:
       result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall" % (softwareSection, platform, appName.lower(), appVersion),
                                       os.path.basename(appTar))
@@ -349,7 +348,7 @@ if __name__=="__main__":
           res = upload(tarballurl['Value'], appTar)
           if not res['OK']:
             print "Upload to %s failed" % tarballurl
-            DIRAC.exit(255)
+            dexit(255)
       result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                       md5sum)
       if result['OK']:
@@ -373,7 +372,7 @@ if __name__=="__main__":
         res = upload(tarballurl['Value'], appTar)
         if not res['OK']:
           print "Upload to %s failed" % tarballurl
-          DIRAC.exit(255)
+          dexit(255)
     result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                     md5sum)
           
@@ -403,13 +402,13 @@ if __name__=="__main__":
   res = rm.removeFile(path_to_process_list)
   if not res['OK']:
     print "Could not remove process list from storage, do it by hand"
-    DIRAC.exit(2)
+    dexit(2)
   
   
   res = upload(os.path.dirname(path_to_process_list) + "/", processlist)
   if not res['OK']:
     print "something went wrong in the copy"
-    DIRAC.exit(2)
+    dexit(2)
   
   localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
   if localprocesslistpath['Value']:
@@ -424,4 +423,4 @@ if __name__=="__main__":
     print result
   
   exitCode = 0
-  DIRAC.exit(exitCode)
+  dexit(exitCode)
