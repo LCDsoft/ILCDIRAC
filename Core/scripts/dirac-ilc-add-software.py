@@ -6,7 +6,6 @@ Created on May 5, 2010
 '''
 import sys
 from DIRAC.Core.Base import Script
-from DIRAC.FrameworkSystem.Client.NotificationClient       import NotificationClient
 
 from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
 
@@ -108,7 +107,8 @@ if __name__=="__main__":
     Script.showHelp()
     dexit(2)
   from DIRAC.Interfaces.API.DiracAdmin                       import DiracAdmin
-  
+  from DIRAC.FrameworkSystem.Client.NotificationClient       import NotificationClient
+
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
