@@ -1,3 +1,4 @@
+#!/bin/env python
 '''
 Created on Dec 17, 2010
 
@@ -5,13 +6,11 @@ Created on Dec 17, 2010
 '''
 from DIRAC.Core.Base import Script
 
-from DIRAC import gConfig
 
-import string
 
 if __name__=="__main__":
   Script.parseCommandLine()
-
+  from DIRAC import gConfig, gLogger
   base = '/Operations/Defaults/AvailableTarBalls'
 
   platforms = gConfig.getSections(base)
@@ -20,18 +19,18 @@ if __name__=="__main__":
     print "For platform %s, here are the available software" % platform
     apps = gConfig.getSections(base + "/" + platform)
     for app in apps['Value']:
-      print "   - %s" % app
+      gLogger.notice("   - %s" % app)
       versions = gConfig.getSections(base + "/" + platform + "/" + app)
       for vers in  versions['Value']:
-        print "     * %s" % vers
+        gLogger.notice("     * %s" % vers)
         depsb = gConfig.getSections(base + "/" + platform + "/" + app + "/" + vers)
         if len(depsb['Value']):
-          print "       Depends on"
+          gLogger.notice("       Depends on")
           deps = gConfig.getSections(base + "/" + platform + "/" + app + "/" + vers + "/Dependencies")
           for dep in deps['Value']:
             depversions = gConfig.getOption(base + "/" + platform + "/" + app + "/" + vers + "/Dependencies/" + dep + "/version")
-            print "         %s %s" % (dep, depversions['Value'])
+            gLogger.notice("         %s %s" % (dep, depversions['Value']))
                       
       if not len(versions['Value']):
-        print "      No version available"
+        gLogger.notice("      No version available")
 
