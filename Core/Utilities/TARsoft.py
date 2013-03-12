@@ -206,7 +206,7 @@ def TARinstall(app, config, area):
   res = check(app, area, res_from_install)
   os.chdir(curdir)
   if not res['OK']:
-    gLogger.error("Failed to check software %s %s" % (dep["app"], dep["version"]))
+    gLogger.error("Failed to check software %s %s" % (appName, appVersion))
     return S_ERROR('Failed to check integrity of software')
   res_from_check = res['Value']
     
