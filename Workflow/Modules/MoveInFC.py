@@ -27,6 +27,7 @@ class MoveInFC(ModuleBase):
     self.log = gLogger.getSubLogger( "MoveInFC" )
     self.applicationName = 'MoveInFC'
     self.rm = ReplicaManager()
+    self.listoutput = {}
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -39,20 +40,6 @@ class MoveInFC(ModuleBase):
         #                                  int(self.workflow_commons["JOB_ID"]))
         if self.workflow_commons.has_key('ProductionOutputData'):
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-          for obj in outputlist:
-            if obj.lower().count("_sim_"):
-              self.OutputFile = os.path.basename(obj)
-            elif obj.lower().count("_gen_"):
-              self.InputFile = [os.path.basename(obj)]
-        else:
-          self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))
-          #if self.workflow_commons.has_key("WhizardOutput"):
-          #  self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],
-          #                                    int(self.workflow_commons["PRODUCTION_ID"]),
-          #                                    int(self.workflow_commons["JOB_ID"]))
-          self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))]
       
     if len(self.InputData):
       if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
@@ -70,7 +57,10 @@ class MoveInFC(ModuleBase):
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         self.InputFile.append(files)
-        
+    
+    if self.step_commons.has_key('listoutput'):
+      self.listoutput = self.step_commons['listoutput'][0]
+    
     return S_OK()
   
   def execute(self):
@@ -120,8 +110,17 @@ class MoveInFC(ModuleBase):
         
     #all the files are in the run directory 
     
-    
-    
+    #Update the listoutput
+    if self.listoutput:
+      outputlist = []
+      for f in localpaths:
+        item = {}
+        item['outputFile'] = f
+        item['outputPath'] = self.listoutput['outputPath']
+        item['outputDataSE'] = self.listoutput['outputDataSE']
+        outputlist.append(item)
+      self.step_commons['listoutput'] = outputlist
+    #Now remove them
     if self.enable:
       res = self.rm.removeFile(lfns, force=True)
       if not res['OK']:
@@ -131,5 +130,8 @@ class MoveInFC(ModuleBase):
     else:
       self.log.info("Would have removed: ","%s" % str(lfns))
     
+    ## Now the files are not on the storage anymore, they exist only locally. We can hope 
+    ## that the job will not be killed between now and the time the UploadOutputData module
+    ## is called
     
     return S_OK()
