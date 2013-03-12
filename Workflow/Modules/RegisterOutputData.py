@@ -31,6 +31,7 @@ class RegisterOutputData( ModuleBase ):
     self.luminosity = 0
     self.add_info = ''
     self.filecatalog = FileCatalogClient()
+    self.filemeta = {}
 
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
@@ -58,6 +59,8 @@ class RegisterOutputData( ModuleBase ):
     if self.workflow_commons.has_key('Info'):
       self.add_info = DEncode.encode(self.workflow_commons['Info'])
     
+    if 'FileMetadata' in self.workflow_commons:
+      self.filemeta = self.workflow_commons['FileMetadata']
       
     return S_OK('Parameters resolved')
   
@@ -200,12 +203,7 @@ class RegisterOutputData( ModuleBase ):
           if not res['OK']:
             self.log.error('Registration of Ancestors for %s failed' % files)
             return res
-      # FIXME: in next DIRAC release, remove loop and replace key,value below by meta  
-      #res = self.filecatalog.setMetadata(os.path.dirname(files),meta)
-      #if not res['OK']:
-      #  self.log.error('Could not register metadata %s for %s'%(meta, files))
-      #  return res
-    
+
     return S_OK('Output data metadata registered in catalog')
   
   
