@@ -22,8 +22,8 @@ class Params(object):
     return S_OK()
   
   def registerSwitches(self):
-    Script.registerSwitch( 'd', 'outputdata', 'retrieve also the outputdata', self.setOuputData)
-    Script.registerSwitch( 'r:', 'repository=', 'repository file to use', self.setRepo)
+    Script.registerSwitch( 'O', 'Outputdata', 'retrieve also the outputdata', self.setOuputData)
+    Script.registerSwitch( 'r:', 'Repository=', 'repository file to use', self.setRepo)
     Script.setUsageMessage('\n'.join( [ __doc__.split( '\n' )[1],
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] )  )
