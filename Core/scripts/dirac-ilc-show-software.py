@@ -1,12 +1,12 @@
 #!/bin/env python
 '''
+Get all software registered in the Configuration service
+
 Created on Dec 17, 2010
 
 @author: sposs
 '''
 from DIRAC.Core.Base import Script
-
-
 
 if __name__=="__main__":
   Script.parseCommandLine()
@@ -16,7 +16,7 @@ if __name__=="__main__":
   platforms = gConfig.getSections(base)
   
   for platform in platforms['Value']:
-    print "For platform %s, here are the available software" % platform
+    gLogger.notice("For platform %s, here are the available software" % platform)
     apps = gConfig.getSections(base + "/" + platform)
     for app in apps['Value']:
       gLogger.notice("   - %s" % app)
