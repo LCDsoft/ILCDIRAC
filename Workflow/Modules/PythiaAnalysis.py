@@ -10,7 +10,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, Ge
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
-from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from DIRAC import gLogger, S_OK, S_ERROR
 
 import os
