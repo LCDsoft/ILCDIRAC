@@ -37,6 +37,7 @@ if __name__=="__main__":
   if not repoLocation:
     Script.showHelp()
     dexit(1)
+  from DIRAC import gLogger
   from DIRAC.Interfaces.API.Dirac import Dirac
 
   dirac = Dirac(True, repoLocation)
@@ -44,16 +45,16 @@ if __name__=="__main__":
   exitCode = 0
   res = dirac.monitorRepository(False)
   if not res['OK']:
-    print "Failed because %s" % res['Message']
+    gLogger.error("Failed because %s" % res['Message'])
     dexit(1)
     
   res = dirac.retrieveRepositorySandboxes()
   if not res['OK']:
-    print "Failed because %s" % res['Message']
+    gLogger.error("Failed because %s" % res['Message'])
     dexit(1)
   if clip.outputdata:
     res = dirac.retrieveRepositoryData()
     if not res['OK']:
-      print "Failed because %s" % res['Message']
+      gLogger.error("Failed because %s" % res['Message'])
       exit(1)
   dexit(exitCode)

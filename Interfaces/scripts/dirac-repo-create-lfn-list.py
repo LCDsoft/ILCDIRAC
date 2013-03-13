@@ -24,6 +24,7 @@ if __name__=="__main":
   cliparams = Params()
   cliparams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
+  from DIRAC import gLogger
   
   repoLocation =  cliparams.repo
   if not repoLocation:
@@ -35,8 +36,8 @@ if __name__=="__main":
   dirac.monitorRepository(False)
   lfns = []
   lfns = dirac.retrieveRepositoryOutputDataLFNs()
-  print "lfnlist=["
+  gLogger.notice("lfnlist=[")
   for lfn in lfns :
-    print '"LFN:%s",' % lfn
-  print "]"
+    gLogger.notice('"LFN:%s",' % lfn)
+  gLogger.notice("]")
   dexit(0)
