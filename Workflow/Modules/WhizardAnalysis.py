@@ -21,7 +21,7 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizard
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFileTemplate, GetNewLDLibs
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from ILCDIRAC.Core.Utilities.ProcessList                   import ProcessList
-from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from ILCDIRAC.Core.Utilities.PrepareLibs                   import removeLibc
 from ILCDIRAC.Core.Utilities.GeneratorModels               import GeneratorModels
 from ILCDIRAC.Core.Utilities.WhizardOptions                import WhizardOptions

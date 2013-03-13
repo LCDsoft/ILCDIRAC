@@ -13,8 +13,7 @@ __RCSID__ = "$Id: LCIOConcatenate.py 48402 2012-03-09 09:33:09Z sposs $"
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
-from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 

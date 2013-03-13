@@ -6,9 +6,8 @@
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
-from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename, resolveIFpaths
 from ILCDIRAC.Core.Utilities.InputFilesUtilities           import getNumberOfevents
-from ILCDIRAC.Core.Utilities.resolveIFpaths                import resolveIFpaths
 
 from DIRAC import gLogger, S_OK, S_ERROR
 import os, shutil

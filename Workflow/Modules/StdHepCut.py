@@ -13,7 +13,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFold
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
-from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
 
 import os, shutil
 

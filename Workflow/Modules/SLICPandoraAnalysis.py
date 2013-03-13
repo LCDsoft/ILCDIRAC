@@ -17,7 +17,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
-from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs, GetNewPATH
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc

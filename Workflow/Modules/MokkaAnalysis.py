@@ -21,8 +21,7 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareSteering
 from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
-from ILCDIRAC.Core.Utilities.resolveIFpaths               import resolveIFpaths
-from ILCDIRAC.Core.Utilities.resolveOFnames               import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
