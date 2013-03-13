@@ -9,11 +9,6 @@ Created on Sep 21, 2010
 
 from DIRAC.Core.Base import Script
 
-from DIRAC.Core.Utilities.Subprocess                         import shellCall
-from ILCDIRAC.Core.Utilities.ProcessList                     import ProcessList
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
-from DIRAC import gConfig, S_ERROR, S_OK, exit as dexit
-
 import os, tarfile, shutil, sys, string
 
 try:
@@ -48,52 +43,6 @@ class Params(object):
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
-
-def upload(path, appTar):
-  """ Upload to storage
-  """
-  from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
-  from DIRAC.RequestManagementSystem.Client.RequestContainer   import RequestContainer
-  from DIRAC.RequestManagementSystem.Client.RequestClient      import RequestClient
-  global appVersion
-  if not os.path.exists(appTar):
-    print "File %s does not exists, cannot continue." % appTar
-    return S_ERROR()
-  if path.find("http://www.cern.ch/lcd-data") > -1:
-    final_path = "/afs/cern.ch/eng/clic/data/software/"
-    try:
-      shutil.copy(appTar, "%s%s" % (final_path, appTar))
-    except Exception, x:
-      print "Could not copy because %s" % x
-      return S_ERROR()
-  elif path.find("http://") > -1:
-    print "path %s was not forseen, location not known, upload to location yourself, and publish in CS manually" % path
-    return S_ERROR()
-  else:
-    rm = ReplicaManager()
-    lfnpath = "%s%s" % (path, os.path.basename(appTar))
-    res = rm.putAndRegister(lfnpath, appTar, "CERN-SRM")
-    if not res['OK']:
-      return res
-    request = RequestContainer()
-    request.setRequestName('default_request_%s.xml' % os.path.basename(appTar).replace(".tgz",""))
-    request.setSourceComponent('ReplicateILCSoft')
-    requestClient = RequestClient()
-    res = request.addSubRequest({'Attributes': {'Operation' : 'replicateAndRegister',
-                                                'TargetSE' : 'IN2P3-SRM'},
-                                 'Files':[{'LFN':lfnpath}]},
-                                 'transfer')
-    #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
-    if not res['OK']:
-      return res
-    requestName = appTar.replace('.tgz','').replace('.cfg','_%s' % appVersion)
-    request.setRequestAttributes({'RequestName' : requestName})
-    requestxml = request.toXML()['Value']
-    res = requestClient.setRequest(requestName, requestxml)
-    if not res['OK']:
-      print 'Could not set replication request %s' % res['Message']
-    return S_OK('Application uploaded')
-  return S_OK()
 
 def redirectLogOutput(fd, message):
   """ Needed to catch the log output of the shellCall below
@@ -162,6 +111,8 @@ if __name__=="__main__":
   cliParams = Params()
   cliParams.registerSwitches()
   Script.parseCommandLine( ignoreErrors= False)
+  
+  from DIRAC import gConfig, gLogger, S_ERROR, S_OK, exit as dexit
   whizard_location = cliParams.path
   platform = cliParams.platform
   whizard_version = cliParams.version
@@ -171,8 +122,13 @@ if __name__=="__main__":
   if not whizard_location or not whizard_version or not beam_spectra_version:
     Script.showHelp()
     dexit(2)
-  from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
   
+  from DIRAC.Core.Utilities.Subprocess                         import shellCall
+  from ILCDIRAC.Core.Utilities.ProcessList                     import ProcessList
+  from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations 
+  from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
+  from ILCDIRAC.Core.Utilities.FileUtils                       import upload
+
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
@@ -185,19 +141,20 @@ if __name__=="__main__":
   ops = Operations()
   path_to_process_list = ops.getValue(processlistLocation, "")
   if not path_to_process_list:
-    print "Could not find process list Location in CS"
+    gLogger.error("Could not find process list Location in CS")
     dexit(2)
-
+    
+  gLogger.verbose("Getting process list from storage")
   rm = ReplicaManager()
   res = rm.getFile(path_to_process_list)
   if not res['OK']:
-    print "Error while getting process list from storage"
+    gLogger.error("Error while getting process list from storage")
     dexit(2)
-  print "done"
+  gLogger.verbose("done")
 
   processlist = os.path.basename(path_to_process_list)
   if not os.path.exists(processlist):
-    print "Process list does not exist locally"
+    gLogger.error("Process list does not exist locally")
     dexit(2)
 
 
@@ -209,22 +166,22 @@ if __name__=="__main__":
   folderlist = os.listdir(os.getcwd())
   whiz_here = folderlist.count("whizard")
   if whiz_here == 0:
-    print "whizard executable not found in %s, please check" % whizard_location
+    gLogger.error("whizard executable not found in %s, please check" % whizard_location)
     os.chdir(startdir)
     dexit(2)
   whizprc_here = folderlist.count("whizard.prc")
   if whizprc_here == 0:
-    print "whizard.prc not found in %s, please check" % whizard_location
+    gLogger.error("whizard.prc not found in %s, please check" % whizard_location)
     os.chdir(startdir)
     dexit(2)
   whizmdl_here = folderlist.count("whizard.mdl")
   if whizprc_here == 0:
-    print "whizard.mdl not found in %s, please check" % whizard_location
+    gLogger.error("whizard.mdl not found in %s, please check" % whizard_location)
     os.chdir(startdir)
     dexit(2)
    
     
-  print "Preparing process list"
+  gLogger.verbose("Preparing process list")
   
   for f in folderlist:
     if f.count(".in"):
@@ -277,7 +234,7 @@ if __name__=="__main__":
           inputlist[currprocess]['CrossSection'] = line.split()[1]
   
   
-  print "Preparing Tar ball"
+  gLogger.verbose("Preparing Tar ball")
   appTar = os.path.join(os.getcwd(), "whizard" + whizard_version + ".tgz")
   
   if os.path.exists('lib'):
@@ -311,33 +268,33 @@ if __name__=="__main__":
   
   md5sum = md5.md5(file(appTar).read()).hexdigest()
   
-  print "Done"
-  print "Registering new Tar Ball in CS"
+  gLogger.verbose("Done creating tar ball")
+  gLogger.verbose("Registering new Tar Ball in CS")
   tarballurl = {}
   
   av_platforms = gConfig.getSections(softwareSection, [])
   if av_platforms['OK']:
     if not platform in av_platforms['Value']:
-      print "Platform %s unknown, available are %s." % (platform, string.join(av_platforms['Value'], ", "))
-      print "If yours is missing add it in CS"
+      gLogger.error("Platform %s unknown, available are %s." % (platform, string.join(av_platforms['Value'], ", ")))
+      gLogger.error("If yours is missing add it in CS")
       dexit(255)
   else:
-    print "Could not find all platforms available in CS"
+    gLogger.error("Could not find all platforms available in CS")
     dexit(255)
   
   av_apps = gConfig.getSections("%s/%s" % (softwareSection, platform), [])
   if not av_apps['OK']:
-    print "Could not find all applications available in CS"
+    gLogger.error("Could not find all applications available in CS")
     dexit(255)
   
   if appName.lower() in av_apps['Value']:
     versions = gConfig.getSections("%s/%s/%s" % (softwareSection, platform, appName.lower()), 
                                    [])
     if not versions['OK']:
-      print "Could not find all versions available in CS"
+      gLogger.error("Could not find all versions available in CS")
       dexit(255)
     if appVersion in versions['Value']:
-      print 'Application %s %s for %s already in CS, nothing to do' % (appName.lower(), appVersion, platform)
+      gLogger.error('Application %s %s for %s already in CS, nothing to do' % (appName.lower(), appVersion, platform))
       dexit(0)
     else:
       result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall" % (softwareSection, platform, appName.lower(), appVersion),
@@ -348,7 +305,7 @@ if __name__=="__main__":
         if len(tarballurl['Value']) > 0:
           res = upload(tarballurl['Value'], appTar)
           if not res['OK']:
-            print "Upload to %s failed" % tarballurl
+            gLogger.error("Upload to %s failed" % tarballurl)
             dexit(255)
       result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                       md5sum)
@@ -372,7 +329,7 @@ if __name__=="__main__":
       if len(tarballurl['Value']) > 0:
         res = upload(tarballurl['Value'], appTar)
         if not res['OK']:
-          print "Upload to %s failed" % tarballurl
+          gLogger.error("Upload to %s failed" % tarballurl)
           dexit(255)
     result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                     md5sum)
@@ -382,46 +339,47 @@ if __name__=="__main__":
                                                                                        appName.lower(),
                                                                                        appVersion),
                                     beam_spectra_version)
-  print "Done"
+  gLogger.verbose("Done uploading the tar ball")
   
   os.remove(appTar)
   #Set for all new processes the TarBallURL
   for process in inputlist.keys():
     inputlist[process]['TarBallCSPath'] = tarballurl['Value'] + os.path.basename(appTar)
   
-  
+  gLogger.verbose("Updating process list:")
   knownprocess = pl.getProcessesDict()
   knownprocess.update(inputlist)
   pl.updateProcessList(knownprocess)
-  print "Done"
+  gLogger.verbose("Done Updating process list")
   
   #Return to initial location
   os.chdir(startdir)
   
   pl.writeProcessList()
-  
+  gLogger.verbose("Removing process list from storage")
+
   res = rm.removeFile(path_to_process_list)
   if not res['OK']:
-    print "Could not remove process list from storage, do it by hand"
+    gLogger.error("Could not remove process list from storage, do it by hand")
     dexit(2)
   
   
   res = upload(os.path.dirname(path_to_process_list) + "/", processlist)
   if not res['OK']:
-    print "something went wrong in the copy"
+    gLogger.error("something went wrong in the copy")
     dexit(2)
-  
+  gLogger.verbose("Done Removing process list from storage")
+  gLogger.verbose("Putting process list to local processlist directory")
   localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
   if localprocesslistpath['Value']:
     try:
       shutil.copy(processlist, localprocesslistpath['Value'])
     except:
-      print "Copy of process list to %s failed!" % localprocesslistpath['Value']
-  print "Done"
+      gLogger.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
+  gLogger.verbose("Done")
   #Commit the changes if nothing has failed and the CS has been modified
   if modifiedCS:
     result = diracAdmin.csCommitChanges(False)
-    print result
-  
-  exitCode = 0
-  dexit(exitCode)
+    gLogger.verbose(result)
+  gLogger.notice('All done OK!')
+  dexit(0)
