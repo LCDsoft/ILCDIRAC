@@ -13,7 +13,7 @@ __RCSID__ = "$Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $"
 
 import string, re, os, types, datetime
 
-from ILCDIRAC.Core.Utilities.resolveOFnames import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames import getProdFilename
 from DIRAC.Core.Security.ProxyInfo import getVOfromProxyGroup
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC import S_OK, S_ERROR, gLogger
