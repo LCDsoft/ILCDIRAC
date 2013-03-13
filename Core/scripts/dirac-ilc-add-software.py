@@ -39,7 +39,7 @@ class Params(object):
     self.comment = optionValue
     return S_OK()
   def registerSwitches(self):
-    Script.registerSwitch("P:", "platform=", "Platform", self.setPlatform)
+    Script.registerSwitch("P:", "platform=", "Platform ex. %s" % self.platform, self.setPlatform)
     Script.registerSwitch("N:", "name=", "Application name", self.setName)
     Script.registerSwitch("V:", "version=", "Version", self.setVersion)
     Script.registerSwitch("C:", "comment=", "Comment",self.setComment)
