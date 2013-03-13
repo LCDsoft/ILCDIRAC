@@ -1,8 +1,7 @@
 '''
-Find out in which sub-directory are each InputData files
-
+Several utilities to "guess" the files names and the paths
 @author: sposs
-@since: Jun 28, 2010
+@since: March 13th, 2013
 '''
 import os
 from DIRAC import S_OK, S_ERROR
@@ -31,7 +30,8 @@ def getProdFilename(filename, prodID, jobID):
   return outfile
 
 def resolveIFpaths(inputfiles):
-  """ Try to find out in which sub-directory are each file. In the future, should be useless if PoolXMLCatalog can be used. 
+  """ Try to find out in which sub-directory are each file. In the future, should be useless if 
+  PoolXMLCatalog can be used. 
   """
   listoffiles = []
   string = "Will look for:"
