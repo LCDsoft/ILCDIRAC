@@ -132,7 +132,7 @@ def tarMd5Check(app_tar_base, md5sum ):
     gLogger.error("Failed to get tar ball md5, try without")
     md5sum = ''
   if md5sum and md5sum != tar_ball_md5:
-    gLogger.error('Hash does not correspond, cannot continue')
+    gLogger.error('Hash does not correspond, found %s, expected %s, cannot continue' % (tar_ball_md5, md5sum))
     return S_ERROR("Hash does not correspond")
   return S_OK()
 
@@ -407,6 +407,7 @@ def check(app, area, res_from_install):
         return S_ERROR("Failed to compute md5 sum")
       if md5sum != fmd5:
         gLogger.error("File has wrong checksum :", fin)
+        gLogger.error("Found %s, expected %s" % ( fmd5, md5sum ))
         return S_ERROR("Corrupted install: File %s has a wrong sum" % fin)
   else:
     gLogger.warn("The application does not come with md5 checksum file:", app)
