@@ -212,7 +212,7 @@ if __name__=="__main__":
     elif prodtype == 'MCSimulation':
       meta['Datatype']='SIM'
     elif prodtype in ['Split','Merge']:
-      gLogger.error("Invalid query for %s productions" % prodtype)
+      gLogger.warn("Invalid query for %s productions" % prodtype)
       continue
     else:
       gLogger.error("Unknown production type %s"% prodtype)
@@ -225,12 +225,12 @@ if __name__=="__main__":
     nb_files = len(lfns)
     path = ""
     if not len(lfns):
-      gLogger.info("No files found for prod %s" % prodID)
+      gLogger.warn("No files found for prod %s" % prodID)
       continue
     path = os.path.dirname(lfns[0])
     res = fc.getDirectoryMetadata(path)
     if not res['OK']:
-      gLogger.info('No meta data found for %s' % path)
+      gLogger.warn('No meta data found for %s' % path)
       continue
     dirmeta = {}
     dirmeta['proddetail'] = proddetail
