@@ -293,6 +293,8 @@ if __name__=="__main__":
     if xsec and files:
       xsec /= files
       dirmeta['CrossSection']=xsec
+    else:
+      dirmeta['CrossSection']=0.0
           
     if nbevts:
       dirmeta['NumberOfEvents']=nbevts
