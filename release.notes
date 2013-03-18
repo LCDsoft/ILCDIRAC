@@ -1,3 +1,10 @@
+[v17r2p0]
+* Core
+Make proper scripts, merge common utilities
+* Interfaces
+Fix scripts once again
+* Workflow
+Adjust to merging od utilitites in Core.
 [v17r1p6]
 Same as previous
 [v17r1p5]
