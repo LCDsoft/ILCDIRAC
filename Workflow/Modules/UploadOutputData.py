@@ -14,7 +14,7 @@ __RCSID__ = "$Id:  $"
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
-from ILCDIRAC.Core.Utilities.resolveOFnames                import getProdFilename
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 
