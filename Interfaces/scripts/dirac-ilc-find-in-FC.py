@@ -27,7 +27,6 @@ def createQueryDict(argss):
   metaDict = {}
   contMode = False
   for arg in argss:
-    print arg
     if not contMode:
       operation = ''
       for op in ['>=','<=','>','<','!=','=']:
@@ -127,7 +126,6 @@ if __name__ == '__main__':
   args = Script.getPositionalArgs()
   
   from DIRAC import gLogger, exit as dexit
-  print args
   path = args[0]
   gLogger.verbose("Path:", path)
   metaQuery = args[1:]
@@ -143,6 +141,8 @@ if __name__ == '__main__':
   if not res['OK']:
     gLogger.error(res['Message'])
     dexit(1)
+  if not res['Value']:
+    gLogger.notice("No files found")
   for files in res['Value']:
     gLogger.notice(files)
   dexit(0)
