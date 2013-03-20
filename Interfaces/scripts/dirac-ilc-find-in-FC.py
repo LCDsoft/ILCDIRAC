@@ -123,10 +123,18 @@ def createQueryDict(argss):
 if __name__ == '__main__':
   from DIRAC.Core.Base import Script
   Script.parseCommandLine()
+  Script.setUsageMessage(  "%s /ilc/prod/ meta1=A meta2=B etc." % Script.scriptName)
+
   args = Script.getPositionalArgs()
-  
+  if len(args<2):
+    gLogger.error('Not enough arguments')
+    Script.showHelp()
+    dexit(1)
+    
   from DIRAC import gLogger, exit as dexit
   path = args[0]
+  if path == '.':
+    path = '/'
   gLogger.verbose("Path:", path)
   metaQuery = args[1:]
   metaDict = createQueryDict(metaQuery)
