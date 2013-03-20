@@ -1,3 +1,4 @@
+#!/bin/env python
 '''
 Created on Mar 20, 2013
 
@@ -10,7 +11,6 @@ def createQueryDict(argss):
   """
   Create a proper dictionary, stolen from FC CLI
   """  
-  argss = args.split()
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   
   fc = FileCatalogClient()
@@ -27,6 +27,7 @@ def createQueryDict(argss):
   metaDict = {}
   contMode = False
   for arg in argss:
+    print arg
     if not contMode:
       operation = ''
       for op in ['>=','<=','>','<','!=','=']:
@@ -34,7 +35,6 @@ def createQueryDict(argss):
           operation = op
           break
       if not operation:
-        
         gLogger.error("Error: operation is not found in the query")
         return None
         
@@ -121,21 +121,24 @@ def createQueryDict(argss):
   
   return metaDict
 
-if __name__ == '_main__':
+if __name__ == '__main__':
   from DIRAC.Core.Base import Script
   Script.parseCommandLine()
+  args = Script.getPositionalArgs()
   
   from DIRAC import gLogger, exit as dexit
-  
-  args = Script.getPositionalArgs()
+  print args
   path = args[0]
-  metaQuery = args[:1]
+  gLogger.verbose("Path:", path)
+  metaQuery = args[1:]
   metaDict = createQueryDict(metaQuery)
-
+  gLogger.verbose("Query:",str(metaDict))
+  if not metaDict:
+    gLogger.info("No query")
+    dexit(1)
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   
   fc = FileCatalogClient()
-  metaDict = {}
   res = fc.findFilesByMetadata(metaDict, path)
   if not res['OK']:
     gLogger.error(res['Message'])
