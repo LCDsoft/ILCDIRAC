@@ -66,17 +66,18 @@ class ILDProductionJob(ProductionJob):
       compatmeta = res['Value']
       compatmeta.update(metadata)
     
-    #get all the files available
+    #get all the files available, if any
     res = self.fc.findFilesByMetadata(metadata, self.basepath)
     if not res['OK']:
       return self._reportError("Could not find the files with this metadata")
-    my_lfn= res['Value'][0]
-    ##Get the meta data of the first one as it should be enough is the registration was 
-    ## done right
-    res = self.fc.getFileUserMetadata(my_lfn)
-    if not res['OK']:
-      return self._reportError('Failed to get file metadata, cannot build filename')
-    compatmeta.update(res['Value'])
+    if len(res['Value']):
+      my_lfn= res['Value'][0]
+      ##Get the meta data of the first one as it should be enough is the registration was 
+      ## done right
+      res = self.fc.getFileUserMetadata(my_lfn)
+      if not res['OK']:
+        return self._reportError('Failed to get file metadata, cannot build filename')
+      compatmeta.update(res['Value'])
     
     if compatmeta.has_key('EvtClass'):
       if type(compatmeta['EvtClass']) in types.StringTypes:
