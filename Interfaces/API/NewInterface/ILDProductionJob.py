@@ -18,7 +18,8 @@ class ILDProductionJob(ProductionJob):
   def __init__(self):
     super(ILDProductionJob, self).__init__()
     self.machine = 'ilc'
-    self.basepath = '/ilc/prod/ilc/mc-dbd/ild/'
+    self.experiment = 'ILC_ILD'
+    self.basepath = self.ops.getValue('/Production/%s/BasePath'%self.experiment,'/ilc/prod/ilc/mc-dbd/ild/')
     self.polarization = ""
     self.machineparams = ''
     self.detector = ''
