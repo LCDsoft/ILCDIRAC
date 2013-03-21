@@ -44,7 +44,7 @@ class UploadLogFile(ModuleBase):
     self.logSE = self.ops.getValue('/LogStorage/LogSE', 'LogSE')
     self.root = gConfig.getValue('/LocalSite/Root', os.getcwd())
     self.logSizeLimit = self.ops.getValue('/LogFiles/SizeLimit', 20 * 1024 * 1024)
-    self.logExtensions = self.ops.getValue('/LogFiles/Extensions', [])
+    self.logExtensions = []
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
     self.diracLogo = self.ops.getValue('/SAM/LogoURL', 
                                       'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
@@ -93,6 +93,16 @@ class UploadLogFile(ModuleBase):
       self.logFilePath = self.logFilePath[0]
     if not type(self.logLFNPath) == type(' '):
       self.logLFNPath = self.logLFNPath[0]
+      
+    example_file = self.logFilePath
+    if "/ilc/prod/clic" in example_file:
+      self.experiment = "CLIC"
+    elif "/ilc/prod/ilc/sid" in example_file:
+      self.experiment = 'ILC_SID'
+    elif "/ilc/prod/ilc/mc-dbd" in example_file:
+      self.experiment = 'ILC_ILD' 
+    else:
+      self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
 
     if self.workflow_commons.has_key('Request'):
       self.request = self.workflow_commons['Request']
@@ -133,6 +143,7 @@ class UploadLogFile(ModuleBase):
     """ finalize method performs final operations after all the job
         steps were executed. Only production jobs are treated.
     """
+    
     self.log.verbose('Starting UploadLogFile finalize')
     ##########################################
     # First determine the files which should be saved
@@ -227,16 +238,6 @@ class UploadLogFile(ModuleBase):
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self.request)
     ##determine the experiment
-    example_file = self.logFilePath
-    if "/ilc/prod/clic" in example_file:
-      self.experiment = "CLIC"
-    elif "/ilc/prod/ilc/sid" in example_file:
-      self.experiment = 'ILC_SID'
-    elif "/ilc/prod/ilc/mc-dbd" in example_file:
-      self.experiment = 'ILC_ILD' 
-    else:
-      self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
-
     self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
 
     random.shuffle(self.failoverSEs)
@@ -272,12 +273,14 @@ class UploadLogFile(ModuleBase):
     """ The files which are below a configurable size will be stored in the logs.
         This will typically pick up everything in the working directory minus the output data files.
     """
-    logFileExtensions = ['*.txt', '*.log', '*.out', '*.output', '*.xml', '*.sh', '*.info', '*.err'] #'*.root',
+    logFileExtensions = ['*.txt', '*.log', '*.out', '*.output', '*.xml', '*.sh', '*.info', '*.err','*.root']
+    self.logExtensions = self.ops.getValue('/LogFiles/%s/Extensions' % self.experiment, [])
+
     if self.logExtensions:
-      self.log.info('Using list of log extensions from CS:\n%s' % (string.join(self.logExtensions,', ')))
+      self.log.info('Using list of log extensions from CS:\n%s' % (', '.join(self.logExtensions)))
       logFileExtensions = self.logExtensions
     else:
-      self.log.info('Using default list of log extensions:\n%s' % (string.join(logFileExtensions,', ')))
+      self.log.info('Using default list of log extensions:\n%s' % (', '.join(logFileExtensions)))
 
     candidateFiles = []
     for ext in logFileExtensions:
