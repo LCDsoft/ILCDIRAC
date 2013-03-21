@@ -6,7 +6,6 @@ SID DBD specific production job utility
 """
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
