@@ -587,6 +587,7 @@ class ProductionJob(Job):
     metadict = {}
     for meta in self.finalMetaDict.values():
       metadict.update(meta)
+    del metadict['NumberOfEvents'] #As this is not supposed to be a searchable thing
     return metadict
   
   def _setProdParameter(self, prodID, pname, pvalue):
