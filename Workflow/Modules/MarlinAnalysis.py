@@ -185,15 +185,6 @@ class MarlinAnalysis(ModuleBase):
       return res
     listofslcio = res['Value']
 
-    ##Handle PandoraSettings.xml
-    pandorasettings = 'PandoraSettings.xml'
-    if not os.path.exists(pandorasettings):
-      if os.path.exists(os.path.join(myMarlinDir, 'Settings', pandorasettings)):
-        try:
-          shutil.copy(os.path.join(myMarlinDir, 'Settings', pandorasettings), 
-                      os.path.join(os.getcwd(), pandorasettings))
-        except Exception, x:
-          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
     
     finalXML = "marlinxml_" + self.STEP_NUMBER + ".xml"
 
@@ -203,7 +194,23 @@ class MarlinAnalysis(ModuleBase):
       steeringfiledirname = res['Value']
     else:
       self.log.warn('Could not find the steering file directory')
-
+      
+    ##Handle PandoraSettings.xml
+    pandorasettings = 'PandoraSettings.xml'
+    if not os.path.exists(pandorasettings):
+      if os.path.exists(os.path.join(myMarlinDir, 'Settings', pandorasettings)):
+        try:
+          shutil.copy(os.path.join(myMarlinDir, 'Settings', pandorasettings), 
+                      os.path.join(os.getcwd(), pandorasettings))
+        except Exception, x:
+          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
+      elif steeringfiledirname and os.path.exists(os.path.join(steeringfiledirname,pandorasettings)):
+        try:
+          shutil.copy(os.path.join(steeringfiledirname, pandorasettings), 
+                      os.path.join(os.getcwd(), pandorasettings))
+        except Exception, x:
+          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
+           
     self.inputGEAR = os.path.basename(self.inputGEAR)
     if self.inputGEAR and not os.path.exists(self.inputGEAR):
       if steeringfiledirname:
