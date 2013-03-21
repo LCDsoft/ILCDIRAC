@@ -1,4 +1,7 @@
+#!/bin/env python
 '''
+Get production logs
+
 Created on Mar 21, 2013
 
 @author: stephane
