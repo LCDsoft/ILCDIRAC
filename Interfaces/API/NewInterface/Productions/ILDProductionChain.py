@@ -111,10 +111,10 @@ if ild_rec_ov:
     print "Marlin: No reconstruction suitable for this energy"
 
 
-##Reconstruction w/o overlay
+##Reconstruction ILD w/o overlay
 ma = Marlin()
 ma.setDebug()
-ma.setVersion('v0111Prod')
+ma.setVersion('v0111Prod') ##PUT HERE YOUR MARLIN VERSION
 if ild_rec:
   if energy in [500.]:
     ma.setSteeringFile("clic_ild_cdr500_steering.xml")
@@ -166,6 +166,7 @@ if ild_sim and meta:
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
   pmo = ILDProductionJob()
+  pmo.setILDConfig(ILDConfig)
   pmo.setLogLevel("verbose")
   pmo.setProdType('MCSimulation')
   res = pmo.setInputDataQuery(meta)
@@ -242,13 +243,14 @@ if ild_rec and meta:
   #######################
   #Define the reconstruction prod    
   pma = ILDProductionJob()
+  pma.setILDConfig(ILDConfig)
   pma.setLogLevel("verbose")
   pma.setProdType('MCReconstruction')
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
       print res['Message']
       exit(1)
-  pma.setOutputSE("CERN-SRM")
+  pma.setOutputSE("DESY-SRM")
   wname = process+"_"+str(energy)+"_ild_rec"
   wname += additional_name  
   pma.setWorkflowName(wname)
