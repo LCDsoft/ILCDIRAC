@@ -29,6 +29,8 @@ def getNumberOfevents(inputfile):
   luminosity = 0
   numberofevents = 0
   evttype = ''
+  others = {}
+
   for path, files in flist.items():
     found_nbevts = False
     found_lumi = False
@@ -45,6 +47,7 @@ def getNumberOfevents(inputfile):
       if tags.has_key("Luminosity") and not found_lumi:
         luminosity += float(tags["Luminosity"])  
         found_lumi = True
+      others.update(tags)  
       if found_nbevts: 
         continue
         
@@ -59,6 +62,7 @@ def getNumberOfevents(inputfile):
         found_lumi = True
       if tags.has_key("EvtType"):
         evttype = tags["EvtType"]
+      others.update(tags)    
       if found_nbevts: 
         continue
       
@@ -71,8 +75,12 @@ def getNumberOfevents(inputfile):
         numberofevents += int(tags["NumberOfEvents"])
       if tags.has_key("Luminosity") and not found_lumi:
         luminosity += float(tags["Luminosity"])
+      others.update(tags)  
         
   nbevts['nbevts'] = numberofevents
   nbevts['lumi'] = luminosity
   nbevts['EvtType'] = evttype
+  del others['NumberOfEvents']
+  del others['Luminosity']
+  nbevts['AdditionalMeta'] = others
   return nbevts
