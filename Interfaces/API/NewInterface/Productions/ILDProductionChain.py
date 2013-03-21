@@ -11,7 +11,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJ
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka, Marlin, OverlayInput
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOSplit, StdHepSplit
 
-analysis = 'tripleH' ##Some analysis: the prods will belong to the ProdGroup
+analysis = 'ILD-DBD-tripleH' ##Some analysis: the prods will belong to the ProdGroup
 process = 'tt' ##Only used for the meta data query
 #additional_name = '_neu1_356'
 additional_name = '' ## This is to allow defining unique name productions
@@ -22,8 +22,9 @@ detectorModel = 'ILD_o1_v05' ##OR anything valid, but be careful with the overla
 ILDConfig = 'SOMETHING' #whatever you defined
 
 #For meta def
+##This is where magic happens
 meta = {}
-meta['ProdID']=1
+meta['ProdID']=1 
 meta['GenProcessID']=process
 meta['Energy'] = meta_energy
 
@@ -66,10 +67,10 @@ stdhepsplit.setNumberOfEventsPerFile(nbevtsperfilestdhep)
 mo = Mokka()
 mo.setVersion('0706P08') ###SET HERE YOUR MOKKA VERSION
 mo.setDetectorModel(detectorModel)
-if energy in [500., 350.]: ##YOU COULD HAVE THE SAME STEERING FILE FOR DIFFERENT ENERGIES
-  mo.setSteeringFile("clic_ild_cdr500.steer")
+if energy in [500.]: ##YOU COULD HAVE THE SAME STEERING FILE FOR DIFFERENT ENERGIES
+  mo.setSteeringFile("clic_ild_cdr500.steer") ## define the prod steering file
 else:
-  mo.setSteeringFile("clic_ild_cdr.steer")
+  mo.setSteeringFile("clic_ild_cdr.steer")## define the prod steering file
 
 
 ##Split
@@ -78,10 +79,10 @@ split.setNumberOfEventsPerFile(nbevtsperfile)
 
 ##Define the overlay
 overlay = OverlayInput()
-overlay.setMachine("ilc_dbd")
-overlay.setEnergy(energy)
-overlay.setDetectorModel(detectorModel)
-if energy==500.:
+overlay.setMachine("ilc_dbd") #Don't touch, this is how the system knows what files to get
+overlay.setEnergy(energy)#Don't touch, this is how the system knows what files to get
+overlay.setDetectorModel(detectorModel)#Don't touch, this is how the system knows what files to get
+if energy==500.: #here you chose the overlay parameters as this determines how many files you need
   overlay.setBXOverlay(300)
   overlay.setGGToHadInt(0.3)##When running at 500geV
 elif energy == 1000.:
