@@ -189,7 +189,8 @@ def PrepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
 def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
                         stdhepFile, mac, nbOfRuns, startFrom,
                         randomseed, mcrunnumber, particle_tbl,
-                        processID='', debug = False, outputlcio = None):
+                        processID='', debug = False, outputlcio = None, 
+                        filemeta = {}):
   """Writes out a steering file for Mokka
   
   Using specified parameters in the job definition passed from L{MokkaAnalysis}
@@ -272,7 +273,37 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
     output.write("/Mokka/init/lcioFilename %s\n" % outputlcio)
   if processID:
     output.write("#Set processID as event parameter\n")
-    output.write("/Mokka/init/lcioEventParameter string processID %s\n" % processID)
+    output.write("/Mokka/init/lcioEventParameter string Process %s\n" % processID)
+  if 'CrossSection' in filemeta:
+    output.write("/Mokka/init/lcioEventParameter float CrossSection_fb %s\n" % float(filemeta['CrossSection']))
+  if 'Energy' in filemeta:
+    output.write("/Mokka/init/lcioEventParameter float Energy %s\n" % float(filemeta['Energy']))
+  if 'PolarizationB1' in filemeta:
+    polb1 = filemeta['PolarizationB1']
+    if not polb1.count('L') or not polb1.count('R'):
+      polb1 = '0.'
+    else:
+      polb1 = polb1.replace("L","-").replace("R","")
+      if polb1 == '-':
+        polb1 = '-1.0'
+      elif polb1 == '':
+        polb1 = '1.0'
+      else:
+        polb1 = str(float(polb1)/100.)
+    output.write("/Mokka/init/lcioEventParameter float Pol_ep %s\n" % float(polb1))
+  if 'PolarizationB2' in filemeta:
+    polb2 = filemeta['PolarizationB2']
+    if not polb2.count('L') or not polb2.count('R'):
+      polb2 = '0.'
+    else:
+      polb2 = polb2.replace("L","-").replace("R","")
+      if polb2 == '-':
+        polb2 = '-1.0'
+      elif polb2 == '':
+        polb2 = '1.0'
+      else:
+        polb2 = str(float(polb1)/100.)
+    output.write("/Mokka/init/lcioEventParameter float Pol_em %s\n" % float(polb2))
       
   output.write("#Set event start number to value given as job parameter\n")  
   output.write("/Mokka/init/startEventNumber %d\n" % startFrom)
