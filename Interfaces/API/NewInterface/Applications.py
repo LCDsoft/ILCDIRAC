@@ -1320,7 +1320,8 @@ class Mokka(Application):
       return S_ERROR('No Steering File') 
     
     if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-      res = Exists(self.steeringfile)
+      #res = Exists(self.steeringfile)
+      res = S_OK()
       if not res['OK']:
         return res  
     
@@ -1904,7 +1905,8 @@ class Marlin(Application):
 
     if self.steeringfile:
       if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-        res = Exists(self.steeringfile)
+        #res = Exists(self.steeringfile)
+        res = S_OK()
         if not res['OK']:
           return res  
       if os.path.exists(self.steeringfile):
@@ -1916,7 +1918,8 @@ class Marlin(Application):
       self._log.info('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
     if self.inputGearFile:
       if not os.path.exists(self.inputGearFile) and not self.inputGearFile.lower().count("lfn:"):
-        res = Exists(self.inputGearFile)
+        #res = Exists(self.inputGearFile)
+        res = S_OK()
         if not res['OK']:
           return res  
 
