@@ -41,8 +41,7 @@ class UploadLogFile(ModuleBase):
     self.logFilePath = ""
     self.logLFNPath = ""
     self.logdir = ''
-    self.setup = gConfig.getValue('/DIRAC/Setup')
-    self.logSE = self.ops.getValue('/LogStorage/%s/LogSE' % (self.setup), 'LogSE')
+    self.logSE = self.ops.getValue('/LogStorage/LogSE', 'LogSE')
     self.root = gConfig.getValue('/LocalSite/Root', os.getcwd())
     self.logSizeLimit = self.ops.getValue('/LogFiles/SizeLimit', 20 * 1024 * 1024)
     self.logExtensions = self.ops.getValue('/LogFiles/Extensions', [])
@@ -51,6 +50,7 @@ class UploadLogFile(ModuleBase):
                                       'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
     self.rm = ReplicaManager()
 
+    self.experiment = 'CLIC'
     self.enable = True
     self.failoverTest = False #flag to put log files to failover by default
     self.jobID = ''
@@ -157,10 +157,10 @@ class UploadLogFile(ModuleBase):
 
     #########################################
     # Create a tailored index page
-    self.log.info('Creating an index page for the logs')
-    result = self.__createLogIndex(selectedFiles)
-    if not result['OK']:
-      self.log.error('Failed to create index page for logs', res['Message'])
+    #self.log.info('Creating an index page for the logs')
+    #result = self.__createLogIndex(selectedFiles)
+    #if not result['OK']:
+    #  self.log.error('Failed to create index page for logs', res['Message'])
 
     if not self.enable:
       self.log.info('Module is disabled by control flag')
@@ -171,6 +171,7 @@ class UploadLogFile(ModuleBase):
     result = self.__setLogFilePermissions(self.logdir)
     if not result['OK']:
       self.log.error('Could not set permissions of log files to 0755 with message:\n%s' % (result['Message']))
+
 
     #########################################
     # Attempt to uplaod logs to the LogSE
@@ -187,9 +188,9 @@ class UploadLogFile(ModuleBase):
         #storageElement = StorageElement(self.logSE)
         #pfn = storageElement.getPfnForLfn(self.logFilePath)['Value']
         #logURL = getPfnForProtocol(res['Value'],'http')['Value']
-        logURL = '<a href="http://volcd03.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
-        self.setJobParameter('Log URL', logURL)
-        self.log.info('Logs for this job may be retrieved from %s' % logURL)
+        logURL = '%s' % self.logFilePath
+        self.setJobParameter('Log LFN', logURL)
+        self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % logURL)
         return S_OK()
 
     #########################################
@@ -223,12 +224,21 @@ class UploadLogFile(ModuleBase):
     #  return S_OK()#because if the logs are lost, it's not the end of the world.
 
     ############################################################
-    logURL = '<a href="http://ilc-logs.cern.ch/storage%s">Log file directory</a>' % self.logFilePath
-    self.setJobParameter('Log URL', logURL)
-    self.log.info('Logs for this job may be retrieved from %s' % logURL)
-
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self.request)
+    ##determine the experiment
+    example_file = self.logFilePath
+    if "/ilc/prod/clic" in example_file:
+      self.experiment = "CLIC"
+    elif "/ilc/prod/ilc/sid" in example_file:
+      self.experiment = 'ILC_SID'
+    elif "/ilc/prod/ilc/mc-dbd" in example_file:
+      self.experiment = 'ILC_ILD' 
+    else:
+      self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
+
+    self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
+
     random.shuffle(self.failoverSEs)
     self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, 
                                                                                string.join(self.failoverSEs, ', ')))
