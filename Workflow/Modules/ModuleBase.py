@@ -10,6 +10,7 @@ Stolen by S. Poss from LHCbSystem.Workflow.Modules
 @author: S. Poss
 @author: S. Paterson
 """
+import shutil
 
 __RCSID__ = "$Id$"
 
@@ -19,6 +20,7 @@ from DIRAC.Core.Utilities.Adler                           import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 
 import os, string, sys, re, types
 from random import choice
@@ -404,6 +406,24 @@ class ModuleBase(object):
     #Next is also a module parameter, should be already set
     if self.step_commons.has_key('debug'):
       self.debug = self.step_commons['debug']
+
+    if 'ILDConfigPackage' in self.workflow_commons:
+      config_dir = self.workflow_commons['ILDConfigPackage']
+      #try to copy everything from there to here:
+      res = getSoftwareFolder(config_dir)
+      if not res['OK']:
+        return S_ERROR('Failed to locate %s as config dir'% config_dir)
+      path = res['Value']
+      list_f = os.listdir(path)
+      for f in list_f:
+        try:
+          if os.path.isdir(path+f):
+            shutil.copytree(path+f, "./"+f)
+          else:
+            shutil.copy2(path+f, "./"+f)
+        except:
+          self.log.error('Could not copy %s here!' % f)
+      
 
           
     res = self.applicationSpecificInputs()
