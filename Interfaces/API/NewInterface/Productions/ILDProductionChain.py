@@ -11,8 +11,8 @@ from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJ
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka, Marlin, OverlayInput
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOSplit, StdHepSplit
 
-analysis = 'ILD-DBD-tripleH' ##Some analysis: the prods will belong to the ProdGroup
-process = 'tt' ##Only used for the meta data query
+analysis = 'ILD-DBD-ttH' ##Some analysis: the prods will belong to the ProdGroup
+process = '106452' ##Only used for the meta data query, here tth-6q-hbb
 #additional_name = '_neu1_356'
 additional_name = '' ## This is to allow defining unique name productions
 energy = 1000. ##This is mostly needed to define easily the steering files and the overlay parameters
