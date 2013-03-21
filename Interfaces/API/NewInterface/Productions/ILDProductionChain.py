@@ -4,6 +4,11 @@ Created on Feb 8, 2012
 @author: Stephane Poss
 '''
 
+#CANNOT RUN THIS: the RECO needs at least a file to be done to get the meta data to build the file name
+# Need to review: maybe the file name can be set to a "default" and properly defined during the job
+# using the experiment. Needs some thinking
+
+
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
