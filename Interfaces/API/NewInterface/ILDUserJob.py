@@ -8,8 +8,7 @@ User Job class. Used to define (guess what?) user jobs!
 '''
 
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
-from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC import S_OK
 
 
