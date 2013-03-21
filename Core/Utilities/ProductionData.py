@@ -105,6 +105,7 @@ def constructProductionLFNs(paramDict):
   #logPath = _makeProductionPath(str(jobID).zfill(8),lfnRoot,'LOG',wfLfnprefix,str(productionID).zfill(8),log=True)
   logPathtemp = fileTupleList[0][0].split("/")
   logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
+  #TODO adjust for ILD
   logPath = logPathroot + "/LOG/" + str(productionID).zfill(8)
   logFilePath = ['%s/%s' % (logPath, str(int(jobID)/1000).zfill(3))]
   logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3))]
