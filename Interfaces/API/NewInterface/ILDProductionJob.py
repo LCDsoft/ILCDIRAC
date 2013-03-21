@@ -245,7 +245,7 @@ class ILDProductionJob(ProductionJob):
       #  return S_ERROR("Application does not know which model to use, so the production does not either.")
     
     
-    energypath =  "%s-%s/" % (self.energy,self.machineparams)# 1000-B1s_ws
+    energypath =  "%s-%s/" % (self.energy, self.machineparams)# 1000-B1s_ws
  
     
     #TODO: Make sure basename is correct. Maybe allow for setting basename prefix
