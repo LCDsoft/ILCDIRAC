@@ -1,3 +1,11 @@
+[v17r3p0]
+* Interface
+Add ILDProductionJob and ILDProductionChain script
+* Core 
+Get all the file meta data, needed for ILDProduction namin conventions to adjust
+* Workflow
+Add ILDConfig package resolution, get all meta data and put some in the Mokka RunHeader
+
 [v17r2p3]
 * Interface
 Added CLI find utility
