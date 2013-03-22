@@ -275,8 +275,10 @@ class ILDProductionJob(ProductionJob):
       
     if 'GenProcessID' in self.compatmeta:
       self.basename += '.I'+ self.compatmeta['GenProcessID']
-    if 'EvtClass' in self.compatmeta:
-      self.basename += '.P'+self.compatmeta['EvtClass'] #To be fixed with Jan
+    if 'EvtType' in self.compatmeta:
+      self.basename += '.P'+self.compatmeta['EvtType'] #To be fixed with Jan
+    elif 'GenProcessType' in self.compatmeta:
+      self.basename += '.P'+self.compatmeta['GenProcessType']
     if 'BeamParticle1' in self.compatmeta:
       self.basename += '.'
       if self.compatmeta['BeamParticle1'] == 'e1':
