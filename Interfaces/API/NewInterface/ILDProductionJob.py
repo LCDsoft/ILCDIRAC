@@ -29,7 +29,7 @@ class ILDProductionJob(ProductionJob):
   def setILDConfig(self,Version):
     """ Define the Configuration package to obtain
     """
-    appName = 'ILDConfig'
+    appName = 'ildconfig'
     self._addSoftware(appName, Version)
     self.ildconfigvers = Version
     self.prodparameters['ILDConfigVersion'] = Version
