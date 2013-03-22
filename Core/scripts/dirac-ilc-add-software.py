@@ -72,7 +72,8 @@ if __name__=="__main__":
   from DIRAC.FrameworkSystem.Client.NotificationClient       import NotificationClient
   from DIRAC import gLogger
   from ILCDIRAC.Core.Utilities.FileUtils import upload
-
+  from DIRAC.Core.Security.ProxyInfo import getProxyInfo
+  
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
@@ -169,6 +170,12 @@ if __name__=="__main__":
       gLogger.info('Successfully committed changes to CS')
       notifyClient = NotificationClient()
       gLogger.info('Sending mail for software installation %s' % (mailadress))
+      res = getProxyInfo()
+      if not res['OK']:
+        sender = 'stephane.poss@cern.ch'
+      else:
+        #sender = res['Value']['']
+        sender = 'someone@cern.ch'
       res = notifyClient.sendMail(mailadress, subject, msg, 'stephane.poss@cern.ch', localAttempt = False)
       if not res[ 'OK' ]:
         gLogger.error('The mail could not be sent')
