@@ -82,9 +82,19 @@ class ILDProductionJob(ProductionJob):
     
     if compatmeta.has_key('EvtClass'):
       if type(compatmeta['EvtClass']) in types.StringTypes:
-        self.evttype  = compatmeta['EvtClass']
+        self.evtclass  = compatmeta['EvtClass']
       if type(compatmeta['EvtClass']) == type([]):
-        self.evttype = compatmeta['EvtClass'][0]
+        self.evtclass = compatmeta['EvtClass'][0]
+    if compatmeta.has_key('GenProcessName'):
+      if type(compatmeta['GenProcessName']) in types.StringTypes:
+        self.evttype  = compatmeta['GenProcessName']
+      if type(compatmeta['GenProcessName']) == type([]):
+        self.evttype = compatmeta['GenProcessName'][0]
+    if compatmeta.has_key('EvtType'):
+      if type(compatmeta['EvtType']) in types.StringTypes:
+        self.evttype  = compatmeta['EvtType']
+      if type(compatmeta['EvtType']) == type([]):
+        self.evttype = compatmeta['EvtType'][0]
     #elif compatmeta.has_key('GenProcessID'):
       
     else:
@@ -202,6 +212,7 @@ class ILDProductionJob(ProductionJob):
         self.prodparameters["SWPackages"] += ";%s" % ( curpackage )
     else :
       self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
+      
     softwarepath = application.version
     
     if not self.energy:
@@ -265,7 +276,7 @@ class ILDProductionJob(ProductionJob):
     if 'GenProcessID' in self.compatmeta:
       self.basename += '.I'+ self.compatmeta['GenProcessID']
     if 'EvtClass' in self.compatmeta:
-      self.basename += '.P'+self.compatmeta['EvtClass'] #To be fixed with Jan
+      self.basename += '.P'+self.compatmeta['EvtType'] #To be fixed with Jan
     if 'BeamParticle1' in self.compatmeta:
       self.basename += '.'
       if self.compatmeta['BeamParticle1'] == 'e1':
@@ -295,7 +306,15 @@ class ILDProductionJob(ProductionJob):
       self.evttype += '/'  
     else:
       evttypemeta = self.evttype.rstrip("/")
+      
+    if not self.evtclass[-1] == '/':
+      evtclassmeta = self.evtclass
+      self.evtclass += '/'  
+    else:
+      evtclassmeta = self.evtclass.rstrip("/")
 
+    softwaremeta = softwarepath
+    softwarepath += "/"
     if self.detector:
       if not self.detector[-1] == "/":
         detectormeta = self.detector
@@ -307,16 +326,19 @@ class ILDProductionJob(ProductionJob):
     ###Need to resolve file names and paths
     #TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
     if hasattr(application,"setOutputRecFile") and not application.willBeCut:
-      path = self.basepath+'rec/'+energypath+self.evttype+self.detector+softwarepath+'/'
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evttype] = {"EvtType" : evttypemeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwarepath}
+      path = self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype] = {"EvtType" : evttypemeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
       self.finalpaths.append(path)
-      path = self.basepath+'dst/'+energypath+self.evttype+self.detector+"/"+softwarepath
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwarepath}
+      path = self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype] = {"EvtType" : evttypemeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.finalpaths.append(path)
@@ -324,7 +346,9 @@ class ILDProductionJob(ProductionJob):
       if (not application.datatype) and self.datatype:
         application.datatype = self.datatype
       path = self.basepath + application.datatype
-      path += energypath + self.evttype
+      path += energypath + self.evtclass
+      self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}      
+      path += self.evttype
       self.finalMetaDict[path] = {"EvtType" : evttypemeta}      
       if hasattr(application, "detectorModel"):
         if application.detectorModel:
@@ -336,7 +360,7 @@ class ILDProductionJob(ProductionJob):
           self.finalMetaDict[path] = {"DetectorModel" : self.detector}
           path += '/'
       path += softwarepath     
-      self.finalMetaDict[path] = {"SoftwareTag" : softwarepath}
+      self.finalMetaDict[path] = {"SoftwareTag" : softwaremeta}
       path += '/'
       
       self.log.info("Will store the files under", "%s" % path)
