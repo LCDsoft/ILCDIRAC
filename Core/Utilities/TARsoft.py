@@ -185,6 +185,7 @@ def TARinstall(app, config, area):
       gLogger.error("Failed to clean useless tar balls, deal with it: %s %s" % (dep["app"], dep["version"]))
       
     os.chdir(curdir)
+    gLogger.notice("Successfully installed %s %s in %s" % (dep["app"], dep["version"], area))
     
   res = getTarBallLocation(app, config, area)
   if not res['OK']:
@@ -221,7 +222,7 @@ def TARinstall(app, config, area):
   if not res['OK']:
     gLogger.error("Failed to clean useless tar balls, deal with it")
     return S_OK()
-  
+  gLogger.notice("Successfully installed %s %s in %s" % (appName, appVersion, area))
   return res
 
 def getTarBallLocation(app, config, area):
