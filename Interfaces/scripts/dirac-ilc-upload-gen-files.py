@@ -24,6 +24,7 @@ class Params(object):
     self.p2 = 'p'
     self.pol1 = ''
     self.pol2 = ''
+    self.software = ''
     self.fmeta = {}
     self.force = False
     
@@ -78,7 +79,7 @@ class Params(object):
       self.p1 = 'p'
     else:
       self.p1 = opt
-    return OK()
+    return S_OK()
   def setBeamP2(self,opt):
     self.fmeta['BeamParticle2'] = opt
     if opt=='e1':
@@ -87,16 +88,19 @@ class Params(object):
       self.p2 = 'p'
     else:
       self.p2 = opt
-    return OK()
+    return S_OK()
   def setPol1(self,opt):
     self.fmeta['PolarizationB1'] = opt
-    return OK()
+    self.pol1 = opt
+    return S_OK()
   def setPol2(self,opt):
     self.fmeta['PolarizationB2'] = opt
-    return OK()
+    self.pol2 = opt
+    return S_OK()
   
   def setSoftware(self,opt):
     self.fmeta['ProgramNameVersion'] = opt
+    self.software = opt
     return S_OK()
   
   def setXSec(self,opt):
@@ -110,7 +114,7 @@ class Params(object):
     self.force = True
     return S_OK()
   
-  def registerSwitched(self):
+  def registerSwitches(self):
     Script.registerSwitch('P:', 'Path=', 'Path where the file(s) are (directory or single file)', self.setDir)
     Script.registerSwitch('S:', "SE=", 'Storage element(s) to use ex: DESY-SRM', self.setSE)
     Script.registerSwitch('M:', "MachineParams=", 'Machine Parameters, default: %s' % self.machineParams, 
@@ -121,26 +125,26 @@ class Params(object):
     Script.registerSwitch("T:", "EvtType=",'Process type, like 6f_yyyyee',self.setEvtType)
     Script.registerSwitch("L:", "Luminosity=",'Luminosity of the sample',self.setLumi)
     Script.registerSwitch("N:", "NumberOfEvents=",'Number of events per file',self.setNumberOfEvents)
-    Script.registerSwitch('', 'BeamPart1=', 'Particle of beam 1', self.setBeamP1 )
-    Script.registerSwitch('', 'BeamPart2=', 'Particle of beam 2', self.setBeamP2 )
-    Script.registerSwitch('', 'PolB1=', 'Polarization for particle of beam 1', self.setPol1 )
-    Script.registerSwitch('', 'PolB2=', 'Polarization for particle of beam 2', self.setPol2 )
-    Script.registerSwitch('', 'CrossSection=', 'Cross section in fb' , self.setXSec)
-    Script.registerSwitch('', 'CrossSectionError=', 'Cross section error in fb', self.setXSecE )
+    Script.registerSwitch('', 'BeamParticle1=', 'Particle of beam 1', self.setBeamP1 )
+    Script.registerSwitch('', 'BeamParticle2=', 'Particle of beam 2', self.setBeamP2 )
+    Script.registerSwitch('', 'PolarisationBeam1=', 'Polarisation for particle of beam 1', self.setPol1 )
+    Script.registerSwitch('', 'PolarisationBeam2=', 'Polarisation for particle of beam 2', self.setPol2 )
+    Script.registerSwitch('', 'XSection=', 'Cross section in fb' , self.setXSec)
+    Script.registerSwitch('', 'XSectionError=', 'Cross section error in fb', self.setXSecE )
     Script.registerSwitch('', 'Software=', "Software and version, e.g. %s"%self.software, self.setSoftware)
     Script.registerSwitch('f', 'force', "Do not stop for confirmation", self.setForce)
-    Script.setUsageMessage('%s -P /some/path/ -E 1000 -M B1b_ws -I 35945 etc.' % Script.scriptName)  
+    Script.setUsageMessage('\n%s -P /some/path/ -E 1000 -M B1b_ws -I 35945 etc.\n' % Script.scriptName)  
   
 if __name__ == '__main__':
   clip = Params()
-  
+  clip.registerSwitches()
   Script.parseCommandLine()
 
   
   from DIRAC import gLogger, exit as dexit
 
   if not clip.dir:
-    gLogger.error('You need the path')
+    gLogger.error('You need to set the path')
     Script.showHelp()
     dexit(1)
   if not clip.se:
@@ -191,7 +195,7 @@ if __name__ == '__main__':
   dirmeta.append({'path':os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass), 'meta':{'EvtClass':clip.evtclass }})
   dirmeta.append({'path':finalpath, 'meta': {'EvtType':clip.evttype ,'Luminosity':clip.lumi} })
   
-  final_fname_base = 'E'+clip.energy+"-"+clip.machineParams+".P"+clip.fmeta['GenProcessType']+".G"+clicp.fmeta['ProgramNameVersion'] + "."+clip.p1+clip.pol1+"."+clip.p1+clip.pol2+".I"+clip.fmeta['GenProcessID']
+  final_fname_base = 'E'+clip.energy+"-"+clip.machineParams+".P"+clip.fmeta['GenProcessName']+".G"+clip.fmeta['ProgramNameVersion'] + "."+clip.p1+clip.pol1+"."+clip.p2+clip.pol2+".I"+str(clip.fmeta['GenProcessID'])
   gLogger.notice("Final file name will be %s where XXX will be replaced by file number, and ext by the input file extension" % (final_fname_base+".XXX.ext") )
   if not clip.force:
     res = promptUser('Continue?', ['y','n'], 'n')
