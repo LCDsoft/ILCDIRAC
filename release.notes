@@ -1,3 +1,6 @@
+[v17r3p2]
+* TarSoft
+Print a message when software installation was successful
 [v17r3p1]
 *  Workflow
 Same as previous, but fix tag
