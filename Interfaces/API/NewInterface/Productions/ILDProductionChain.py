@@ -1,0 +1,319 @@
+'''
+Created on Feb 8, 2012
+
+@author: Stephane Poss
+'''
+
+#CANNOT RUN THIS: the RECO needs at least a file to be done to get the meta data to build the file name
+# Need to review: maybe the file name can be set to a "default" and properly defined during the job
+# using the experiment. Needs some thinking
+
+
+from DIRAC.Core.Base import Script
+Script.parseCommandLine()
+
+from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJob
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka, Marlin, OverlayInput
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOSplit, StdHepSplit
+
+analysis = 'ILD-DBD-ttH' ##Some analysis: the prods will belong to the ProdGroup
+process = '106452' ##Only used for the meta data query, here tth-6q-hbb
+#additional_name = '_neu1_356'
+additional_name = '' ## This is to allow defining unique name productions
+energy = 1000. ##This is mostly needed to define easily the steering files and the overlay parameters
+meta_energy = '1000' ##This is needed for the meta data search below
+
+detectorModel = 'ILD_o1_v05' ##OR anything valid, but be careful with the overlay, the files need to exist
+ILDConfig = 'SOMETHING' #whatever you defined
+
+#For meta def
+##This is where magic happens
+meta = {}
+meta['ProdID']=1 
+meta['GenProcessID']=process
+meta['Energy'] = meta_energy
+
+#DoSplit at stdhep level
+activesplitstdhep = False
+nbevtsperfilestdhep = 100
+
+#Do Sim
+ild_sim = False
+
+#DoSplit
+activesplit = False
+nbevtsperfile = 200
+
+#Do Reco
+ild_rec = False
+#Do Reco with Overlay
+ild_rec_ov = False
+
+
+
+
+###### Whatever is below is not to be touched... Or at least only when something changes
+
+# stdhepc = StdhepCut()
+# stdhepc.setVersion("V5")
+# if cut and not cutfile:
+#     print "No cut file defined, cannot proceed"
+#     exit(1)
+# stdhepc.setSteeringFile(cutfile)
+# stdhepc.setMaxNbEvts(n_keep)
+# stdhepc.setSelectionEfficiency(seleff)
+
+##Split
+stdhepsplit = StdHepSplit()
+stdhepsplit.setVersion("V2")
+stdhepsplit.setNumberOfEventsPerFile(nbevtsperfilestdhep)
+
+##Simulation ILD
+mo = Mokka()
+mo.setVersion('0706P08') ###SET HERE YOUR MOKKA VERSION
+mo.setDetectorModel(detectorModel)
+if energy in [500.]: ##YOU COULD HAVE THE SAME STEERING FILE FOR DIFFERENT ENERGIES
+  mo.setSteeringFile("clic_ild_cdr500.steer") ## define the prod steering file
+else:
+  mo.setSteeringFile("clic_ild_cdr.steer")## define the prod steering file
+
+
+##Split
+split = SLCIOSplit()
+split.setNumberOfEventsPerFile(nbevtsperfile)
+
+##Define the overlay
+overlay = OverlayInput()
+overlay.setMachine("ilc_dbd") #Don't touch, this is how the system knows what files to get
+overlay.setEnergy(energy)#Don't touch, this is how the system knows what files to get
+overlay.setDetectorModel(detectorModel)#Don't touch, this is how the system knows what files to get
+if energy==500.: #here you chose the overlay parameters as this determines how many files you need
+  overlay.setBXOverlay(300)
+  overlay.setGGToHadInt(0.3)##When running at 500geV
+elif energy == 1000.:
+  overlay.setBXOverlay(60)
+  overlay.setGGToHadInt(1.3)##When running at 1tev
+else:
+  print "Overlay ILD: No overlay parameters defined for this energy"  
+
+##Reconstruction ILD with overlay
+mao = Marlin()
+mao.setDebug()
+mao.setVersion('v0111Prod') ##PUT HERE YOUR MARLIN VERSION
+if ild_rec_ov:
+  if energy==500.:
+    mao.setSteeringFile("clic_ild_cdr500_steering_overlay.xml") #STEERINGFILE for 500gev
+    mao.setGearFile('clic_ild_cdr500.gear') #GEAR FILE for 500gev
+  elif energy==1000.0:
+    mao.setSteeringFile("clic_ild_cdr_steering_overlay_1400.0.xml") #STEERINGFILE for 1tev
+    mao.setGearFile('clic_ild_cdr.gear') #GEAR FILE for 1tev
+  else:
+    print "Marlin: No reconstruction suitable for this energy"
+
+
+##Reconstruction ILD w/o overlay
+ma = Marlin()
+ma.setDebug()
+ma.setVersion('v0111Prod') ##PUT HERE YOUR MARLIN VERSION
+if ild_rec:
+  if energy in [500.]:
+    ma.setSteeringFile("clic_ild_cdr500_steering.xml")
+    ma.setGearFile('clic_ild_cdr500.gear')
+  elif energy in [1000.]:
+    ma.setSteeringFile("clic_ild_cdr_steering.xml")
+    ma.setGearFile('clic_ild_cdr.gear')
+  else:
+    print "Marlin: No reconstruction suitable for this energy"
+
+###################################################################################
+### HERE WE DEFINE THE PRODUCTIONS  
+if activesplitstdhep and meta:
+  pstdhepsplit =  ILDProductionJob()
+  pstdhepsplit.setLogLevel("verbose")
+  pstdhepsplit.setProdType('Split')
+  res = pstdhepsplit.setInputDataQuery(meta)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pstdhepsplit.setOutputSE("DESY-SRM")
+  wname = process+"_"+str(energy)+"_split"
+  wname += additional_name  
+  pstdhepsplit.setWorkflowName(wname)
+  pstdhepsplit.setProdGroup(analysis+"_"+str(energy))
+  
+  #Add the application
+  res = pstdhepsplit.append(stdhepsplit)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pstdhepsplit.addFinalization(True,True,True,True)
+  descrp = "Splitting stdhep files"
+  if additional_name:  
+    descrp += ", %s"%additional_name
+  pstdhepsplit.setDescription(descrp)  
+  
+  res = pstdhepsplit.createProduction()
+  if not res['OK']:
+      print res['Message']
+  res = pstdhepsplit.finalizeProd()
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  #As before: get the metadata for this production to input into the next
+  meta = pstdhepsplit.getMetadata()
+  
+if ild_sim and meta:
+  ####################
+  ##Define the second production (simulation). Notice the setInputDataQuery call
+  pmo = ILDProductionJob()
+  pmo.setILDConfig(ILDConfig)
+  pmo.setLogLevel("verbose")
+  pmo.setProdType('MCSimulation')
+  res = pmo.setInputDataQuery(meta)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pmo.setOutputSE("DESY-SRM")
+  wname = process+"_"+str(energy)+"_ild_sim"
+  wname += additional_name  
+  pmo.setWorkflowName(wname)
+  pmo.setProdGroup(analysis+"_"+str(energy))
+  #Add the application
+  res = pmo.append(mo)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pmo.addFinalization(True,True,True,True)
+  descrp = "%s model" % detectorModel
+  
+  if additional_name:  
+    descrp += ", %s"%additional_name   
+  pmo.setDescription(descrp)
+  res = pmo.createProduction()
+  if not res['OK']:
+      print res['Message']
+  res = pmo.finalizeProd()
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  #As before: get the metadata for this production to input into the next
+  meta = pmo.getMetadata()
+
+##Split at slcio level (after sim)
+if activesplit and meta:
+  #######################
+  ## Split the input files.  
+  psplit =  ILDProductionJob()
+  psplit.setCPUTime(30000)
+  psplit.setLogLevel("verbose")
+  psplit.setProdType('Split')
+  psplit.setDestination("LCG.CERN.ch")
+  res = psplit.setInputDataQuery(meta)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  psplit.setOutputSE("CERN-SRM")
+  wname = process+"_"+str(energy)+"_split"
+  wname += additional_name  
+  psplit.setWorkflowName(wname)
+  psplit.setProdGroup(analysis+"_"+str(energy))
+  
+  #Add the application
+  res = psplit.append(split)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  psplit.addFinalization(True,True,True,True)
+  descrp = "Splitting slcio files"
+  if additional_name:  
+    descrp += ", %s"%additional_name
+  psplit.setDescription(descrp)  
+  
+  res = psplit.createProduction()
+  if not res['OK']:
+      print res['Message']
+  res = psplit.finalizeProd()
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  #As before: get the metadata for this production to input into the next
+  meta = psplit.getMetadata()
+  
+if ild_rec and meta:
+  #######################
+  #Define the reconstruction prod    
+  pma = ILDProductionJob()
+  pma.setILDConfig(ILDConfig)
+  pma.setLogLevel("verbose")
+  pma.setProdType('MCReconstruction')
+  res = pma.setInputDataQuery(meta)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pma.setOutputSE("DESY-SRM")
+  wname = process+"_"+str(energy)+"_ild_rec"
+  wname += additional_name  
+  pma.setWorkflowName(wname)
+  pma.setProdGroup(analysis+"_"+str(energy))
+  
+  #Add the application
+  res = pma.append(ma)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pma.addFinalization(True,True,True,True)
+  descrp = "%s, No overlay" % detectorModel
+  if additional_name:  
+    descrp += ", %s"%additional_name  
+  pma.setDescription(descrp)
+  
+  res = pma.createProduction()
+  if not res['OK']:
+      print res['Message']
+  res = pma.finalizeProd()
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+
+if ild_rec_ov and meta:
+  #######################
+  #Define the reconstruction prod    
+  pmao = ILDProductionJob()
+  pmao.setLogLevel("verbose")
+  pmao.setProdType('MCReconstruction_Overlay')
+  res = pmao.setInputDataQuery(meta)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pmao.setOutputSE("DESY-SRM")
+  wname = process+"_"+str(energy)+"_ild_rec_overlay"
+  wname += additional_name  
+  pmao.setWorkflowName(wname)
+  pmao.setProdGroup(analysis+"_"+str(energy))
+  
+  #Add the application
+  res = pmao.append(overlay)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  #Add the application
+  res = pmao.append(mao)
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+  pmao.addFinalization(True,True,True,True)
+  descrp = "%s, Overlay" % detectorModel
+  
+  if additional_name:  
+    descrp += ", %s"%additional_name
+  pmao.setDescription( descrp ) 
+  res = pmao.createProduction()
+  if not res['OK']:
+      print res['Message']
+  res = pmao.finalizeProd()
+  if not res['OK']:
+      print res['Message']
+      exit(1)
+
+    
+##In principle nothing else is needed.
