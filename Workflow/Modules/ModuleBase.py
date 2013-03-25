@@ -422,8 +422,8 @@ class ModuleBase(object):
             shutil.copytree(path+f, "./"+f)
           else:
             shutil.copy2(path+f, "./"+f)
-        except:
-          self.log.error('Could not copy %s here!' % f)
+        except Exception as e:
+          self.log.error('Could not copy %s here because %s!' % (f, str(e)))
       
 
           
