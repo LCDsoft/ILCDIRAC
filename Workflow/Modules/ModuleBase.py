@@ -418,10 +418,10 @@ class ModuleBase(object):
       list_f = os.listdir(path)
       for f in list_f:
         try:
-          if os.path.isdir(path+f):
-            shutil.copytree(path+f, "./"+f)
+          if os.path.isdir(os.path.join(path,f)):
+            shutil.copytree(os.path.join(path,f), "./"+f)
           else:
-            shutil.copy2(path+f, "./"+f)
+            shutil.copy2(os.path.join(path,f), "./"+f)
         except Exception as e:
           self.log.error('Could not copy %s here because %s!' % (f, str(e)))
       
