@@ -180,6 +180,8 @@ if __name__ == '__main__':
   else:
     gLogger.error("%s is not a file nor a directory" % clip.dir)
     dexit(1)  
+  
+  gLogger.notice("Will eventually upload %s file(s)" % len(flist))
     
   from DIRAC.Core.Utilities.PromptUser import promptUser
     
@@ -190,7 +192,7 @@ if __name__ == '__main__':
     dexit(1)
     
   finalpath = os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass, clip.evttype)
-  gLogger.notice("Will upload the files under %s" % finalpath)
+  gLogger.notice("Will upload the file(s) under %s" % finalpath)
   if not clip.force:
     res = promptUser('Continue?', ['y','n'], 'n')
     if not res['OK']:
@@ -206,7 +208,7 @@ if __name__ == '__main__':
   dirmeta.append({'path':finalpath, 'meta': {'EvtType':clip.evttype ,'Luminosity':clip.lumi} })
   
   final_fname_base = 'E'+clip.energy+"-"+clip.machineParams+".P"+clip.fmeta['GenProcessName']+".G"+clip.fmeta['ProgramNameVersion'] + "."+clip.p1+clip.pol1+"."+clip.p2+clip.pol2+".I"+str(clip.fmeta['GenProcessID'])
-  gLogger.notice("Final file name will be %s where XXX will be replaced by file number, and ext by the input file extension" % (final_fname_base+".XXX.ext") )
+  gLogger.notice("Final file name(s) will be %s where XXX will be replaced by file number, and ext by the input file extension" % (final_fname_base+".XXX.ext") )
   if not clip.force:
     res = promptUser('Continue?', ['y','n'], 'n')
     if not res['OK']:
