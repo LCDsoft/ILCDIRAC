@@ -412,6 +412,7 @@ class ModuleBase(object):
       #try to copy everything from there to here:
       res = getSoftwareFolder(config_dir)
       if not res['OK']:
+        self.log.error("Cannot find %s"% config_dir, res['Message'])
         return S_ERROR('Failed to locate %s as config dir'% config_dir)
       path = res['Value']
       list_f = os.listdir(path)
