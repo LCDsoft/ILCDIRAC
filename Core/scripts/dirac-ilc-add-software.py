@@ -73,7 +73,7 @@ if __name__=="__main__":
   from DIRAC import gLogger
   from ILCDIRAC.Core.Utilities.FileUtils import upload
   from DIRAC.Core.Security.ProxyInfo import getProxyInfo
-  
+  from DIRAC.ConfigurationSystem.Client.Helpers.Registry import getUserOption
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
@@ -175,8 +175,11 @@ if __name__=="__main__":
         sender = 'stephane.poss@cern.ch'
       else:
         #sender = res['Value']['']
-        sender = 'someone@cern.ch'
-      res = notifyClient.sendMail(mailadress, subject, msg, 'stephane.poss@cern.ch', localAttempt = False)
+        if 'username' in res['Value']:
+          sender = getUserOption(res['Value']['username'],'Email')
+        else:
+          sender = 'nobody@cern.ch'
+      res = notifyClient.sendMail(mailadress, subject, msg, sender, localAttempt = False)
       if not res[ 'OK' ]:
         gLogger.error('The mail could not be sent')
   else:
