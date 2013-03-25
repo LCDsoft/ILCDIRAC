@@ -31,6 +31,7 @@ class Params(object):
   def setDir(self, opt):
     self.dir = opt
     return S_OK()
+  
   def setSE(self,opt):
     if opt.count(","):
       return S_ERROR('Cannot use a list of storage elements (yet)')
@@ -51,7 +52,10 @@ class Params(object):
     return S_OK()
   
   def setProcessID(self,opt):
-    self.fmeta['GenProcessID'] = int(opt)
+    try:
+      self.fmeta['GenProcessID'] = int(opt)
+    except ValueError:
+      return S_ERROR("EvtID MUST be integer")
     return S_OK()
   
   def setEvtClass(self,opt):
@@ -104,10 +108,16 @@ class Params(object):
     return S_OK()
   
   def setXSec(self,opt):
-    self.fmeta['CrossSection'] = float(opt)
+    try:
+      self.fmeta['CrossSection'] = float(opt)
+    except ValueError:
+      return S_ERROR("XSection must be float, unit less")
     return S_OK()
   def setXSecE(self,opt):
-    self.fmeta['CrossSectionError'] = float(opt)
+    try:
+      self.fmeta['CrossSectionError'] = float(opt)
+    except ValueError:
+      return S_ERROR("XSectionError must be float, unit less")
     return S_OK()
   
   def setForce(self,opt):
