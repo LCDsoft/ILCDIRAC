@@ -1,13 +1,8 @@
 '''
-Created on Feb 8, 2012
+Created on Mar 26, 2012
 
 @author: Stephane Poss
 '''
-
-#CANNOT RUN THIS: the RECO needs at least a file to be done to get the meta data to build the file name
-# Need to review: maybe the file name can be set to a "default" and properly defined during the job
-# using the experiment. Needs some thinking
-
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -18,10 +13,12 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOSplit, StdHep
 
 analysis = 'ILD-DBD-ttH' ##Some analysis: the prods will belong to the ProdGroup
 process = '106452' ##Only used for the meta data query, here tth-6q-hbb
-#additional_name = '_neu1_356'
 additional_name = '' ## This is to allow defining unique name productions
 energy = 1000. ##This is mostly needed to define easily the steering files and the overlay parameters
 meta_energy = '1000' ##This is needed for the meta data search below
+
+dryrun = True #do not register anything nor create anything. Most likely will break the second prod 
+#submitted in the chain. Should be used once the splitting-at-stdhep-level prods are submitted.
 
 detectorModel = 'ILD_o1_v05' ##OR anything valid, but be careful with the overlay, the files need to exist
 ILDConfig = 'SOMETHING' #whatever you defined
@@ -29,9 +26,10 @@ ILDConfig = 'SOMETHING' #whatever you defined
 #For meta def
 ##This is where magic happens
 meta = {}
-meta['ProdID']=1 
+#meta['ProdID']=1 
 meta['GenProcessID']=process
 meta['Energy'] = meta_energy
+meta['Machine'] = 'ilc'
 
 #DoSplit at stdhep level
 activesplitstdhep = False
@@ -122,6 +120,7 @@ if ild_rec:
 ### HERE WE DEFINE THE PRODUCTIONS  
 if activesplitstdhep and meta:
   pstdhepsplit =  ILDProductionJob()
+  pstdhepsplit.setDryRun(dryrun)
   pstdhepsplit.setLogLevel("verbose")
   pstdhepsplit.setProdType('Split')
   res = pstdhepsplit.setInputDataQuery(meta)
@@ -159,6 +158,7 @@ if ild_sim and meta:
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
   pmo = ILDProductionJob()
+  pmo.setDryRun(dryrun)
   pmo.setProdPlugin('Limited')
   pmo.setILDConfig(ILDConfig)
   pmo.setLogLevel("verbose")
@@ -199,6 +199,7 @@ if activesplit and meta:
   #######################
   ## Split the input files.  
   psplit =  ILDProductionJob()
+  psplit.setDryRun(dryrun)
   psplit.setCPUTime(30000)
   psplit.setLogLevel("verbose")
   psplit.setProdType('Split')
@@ -238,6 +239,7 @@ if ild_rec and meta:
   #######################
   #Define the reconstruction prod    
   pma = ILDProductionJob()
+  pma.setDryRun(dryrun)
   pma.setILDConfig(ILDConfig)
   pma.setLogLevel("verbose")
   pma.setProdType('MCReconstruction')
