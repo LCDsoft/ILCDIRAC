@@ -347,7 +347,11 @@ class ILDProductionJob(ProductionJob):
     elif hasattr(application,"outputFile") and hasattr(application,'datatype') and (not application.outputFile) and (not application.willBeCut):
       if (not application.datatype) and self.datatype:
         application.datatype = self.datatype
-      path = self.basepath + application.datatype
+      if application.datatype == 'gen':
+        datatype = 'generated/'
+      elif application.datatype == 'SIM':
+        datatype = 'sim/'
+      path = self.basepath + datatype
       path += energypath + self.evtclass
       self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}      
       path += self.evttype
