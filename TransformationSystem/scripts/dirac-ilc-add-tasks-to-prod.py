@@ -49,7 +49,7 @@ if __name__=='__main__':
   trans= res['Value']
   transp = trans['Plugin']
   if transp != 'Limited':
-    gLogger.error("This cannot be used on productions that are not using the Limited plugin")
+    gLogger.error("This cannot be used on productions that are not using the 'Limited' plugin")
     dexit(0)
   
   gLogger.info("Prod %s has %s tasks registered" % (clip.prod, trans['MaxNumberOfTasks']) )
@@ -58,9 +58,11 @@ if __name__=='__main__':
     groupsize = trans['GroupSize']
     gLogger.notice("Adding %s tasks (%s file(s)) to production %s" %(clip.tasks, clip.tasks*groupsize, clip.prod))
   elif clip.tasks <0:
-    gLogger.notice("Now all existing files in the DB for prod %s will be processed." % clip.prod)
+    max_tasks = -1
+    gLogger.notice("Now all existing files in the DB for production %s will be processed." % clip.prod)
   else:
     gLogger.error("Number of tasks must be different from 0")
+    dexit(1)
   res = tc.setTransformationParameter(clip.prod, 'MaxNumberOfTasks', max_tasks)
   if not res['OK']:
     gLogger.error(res['Message'])
