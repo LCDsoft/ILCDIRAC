@@ -438,7 +438,9 @@ class ProductionJob(Job):
       finalpaths = finalpaths.rstrip("/")
       finalpaths += "/"+str(self.transfid).zfill(8)
       finals.append(finalpaths)
-      self.finalMetaDict[finalpaths] = {'NumberOfEvents' : self.jobFileGroupSize * self.nbevts, "ProdID" : self.transfid}
+      self.finalMetaDict[finalpaths] = {"ProdID" : self.transfid}
+      if self.nbevts:
+        self.finalMetaDict[finalpaths].update({'NumberOfEvents' : self.jobFileGroupSize * self.nbevts})
     self.finalpaths = finals
     self.created = True
     
