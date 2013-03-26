@@ -60,7 +60,7 @@ class ILDProductionJob(ProductionJob):
       compatmeta.update(metadata)
     
     #get all the files available, if any
-    res = self.fc.findFilesByMetadata(metadata, self.basepath)
+    res = self.fc.findFilesByMetadata(metadata, '/ilc/prod/ilc')
     if not res['OK']:
       return self._reportError("Could not find the files with this metadata")
     if len(res['Value']):
@@ -72,6 +72,7 @@ class ILDProductionJob(ProductionJob):
         return self._reportError('Failed to get file metadata, cannot build filename')
       compatmeta.update(res['Value'])
     
+    self.log.verbose("Using %s to build path" % str(compatmeta))
     if compatmeta.has_key('EvtClass'):
       if type(compatmeta['EvtClass']) in types.StringTypes:
         self.evtclass  = compatmeta['EvtClass']
@@ -87,10 +88,13 @@ class ILDProductionJob(ProductionJob):
         self.evttype  = compatmeta['EvtType']
       if type(compatmeta['EvtType']) == type([]):
         self.evttype = compatmeta['EvtType'][0]
-    #elif compatmeta.has_key('GenProcessID'):
-      
+    elif compatmeta.has_key('GenProcessName'):
+      if type(compatmeta['GenProcessName']) in types.StringTypes:
+        self.evttype  = compatmeta['GenProcessName']
+      if type(compatmeta['GenProcessName']) == type([]):
+        self.evttype = compatmeta['GenProcessName'][0]      
     else:
-      return self._reportError("EvtClass is not in the metadata, it has to be!")
+      return self._reportError("EvtType is not in the metadata, it has to be!")
 
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
@@ -100,9 +104,11 @@ class ILDProductionJob(ProductionJob):
 
     if compatmeta.has_key("MachineParams"):
       if type(compatmeta["MachineParams"]) in types.StringTypes:
-        self.machineTuning = compatmeta["MachineParams"]
+        self.machineparams = compatmeta["MachineParams"]
       if type(compatmeta["MachineParams"]) == type([]):
         self.machineparams = compatmeta["MachineParams"][0]
+    if not self.machineparams:
+      return self._reportError("MachineParams should part of the metadata")    
     gendata = False    
     if compatmeta.has_key('Datatype'):
       if type(compatmeta['Datatype']) in types.StringTypes:
@@ -121,7 +127,6 @@ class ILDProductionJob(ProductionJob):
         self.detector = compatmeta["DetectorModel"][0]
 
     self.compatmeta = compatmeta
-    #TODO: fix base name to ILD conventions, maybe let it partly free.
     self.basename = ''
 
     self.energy = Decimal(self.energycat)  
@@ -266,7 +271,7 @@ class ILDProductionJob(ProductionJob):
       self.basename += '-'+self.compatmeta['MachineParams']
       
     if 'GenProcessID' in self.compatmeta:
-      self.basename += '.I'+ self.compatmeta['GenProcessID']
+      self.basename += '.I'+ str(self.compatmeta['GenProcessID'])
     if 'EvtType' in self.compatmeta:
       self.basename += '.P'+self.compatmeta['EvtType'] #To be fixed with Jan
     elif 'GenProcessType' in self.compatmeta:
