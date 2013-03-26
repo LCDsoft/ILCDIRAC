@@ -39,6 +39,8 @@ nbevtsperfilestdhep = 100
 
 #Do Sim
 ild_sim = False
+nbtasks = 10 #Take 10 files from input meta data query result
+#can be extended with dirac-ilc-add-tasks-to-prod
 
 #DoSplit
 activesplit = False
@@ -53,15 +55,6 @@ ild_rec_ov = False
 
 
 ###### Whatever is below is not to be touched... Or at least only when something changes
-
-# stdhepc = StdhepCut()
-# stdhepc.setVersion("V5")
-# if cut and not cutfile:
-#     print "No cut file defined, cannot proceed"
-#     exit(1)
-# stdhepc.setSteeringFile(cutfile)
-# stdhepc.setMaxNbEvts(n_keep)
-# stdhepc.setSelectionEfficiency(seleff)
 
 ##Split
 stdhepsplit = StdHepSplit()
@@ -117,7 +110,7 @@ ma.setDebug()
 ma.setVersion('v0111Prod') ##PUT HERE YOUR MARLIN VERSION
 if ild_rec:
   if energy in [500.]:
-    ma.setSteeringFile("clic_ild_cdr500_steering.xml")
+    ma.setSteeringFile("clic_ild_cdr500_steering.xml")##PUT HERE YOUR MARLIN steering files
     ma.setGearFile('clic_ild_cdr500.gear')
   elif energy in [1000.]:
     ma.setSteeringFile("clic_ild_cdr_steering.xml")
@@ -166,6 +159,7 @@ if ild_sim and meta:
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
   pmo = ILDProductionJob()
+  pmo.setProdPlugin('Limited')
   pmo.setILDConfig(ILDConfig)
   pmo.setLogLevel("verbose")
   pmo.setProdType('MCSimulation')
@@ -196,6 +190,7 @@ if ild_sim and meta:
   if not res['OK']:
       print res['Message']
       exit(1)
+  pmo.setNbOfTasks(nbtasks)    
   #As before: get the metadata for this production to input into the next
   meta = pmo.getMetadata()
 
@@ -207,12 +202,12 @@ if activesplit and meta:
   psplit.setCPUTime(30000)
   psplit.setLogLevel("verbose")
   psplit.setProdType('Split')
-  psplit.setDestination("LCG.CERN.ch")
+  psplit.setDestination("LCG.CERN.ch") #this is because we can do it there.
   res = psplit.setInputDataQuery(meta)
   if not res['OK']:
       print res['Message']
       exit(1)
-  psplit.setOutputSE("CERN-SRM")
+  psplit.setOutputSE("CERN-SRM")#this is because we can do it there.
   wname = process+"_"+str(energy)+"_split"
   wname += additional_name  
   psplit.setWorkflowName(wname)
