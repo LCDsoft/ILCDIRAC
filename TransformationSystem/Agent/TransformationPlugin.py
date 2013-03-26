@@ -7,7 +7,7 @@ from DIRAC import S_OK, S_ERROR
 
 class TransformationPlugin(DTP):
   """
-  This plugin is ONLY used when illing to limit the number of tasks to a certain number of files.
+  This plugin is ONLY used when willing to limit the number of tasks to a certain number of files.
   """
   def __init__(self, plugin, transClient = None, replicaManager = None):
     DTP.__init__(self, plugin, transClient, replicaManager)
@@ -15,6 +15,9 @@ class TransformationPlugin(DTP):
   def _Limited(self):
     """
     Limit the number of tasks created to the MaxNumberOfTasks 
+    Get the total number of tasks submitted
+    Check if that's bigger than the MaxNumberOfTasks
+    Extend by the number of tasks if needed to reach MaxNumberOfTasks
     """
     max_tasks = self.params['MaxNumberOfTasks']
     res = self.transClient.getCounters( 'TransformationFiles', ['Status'], 
