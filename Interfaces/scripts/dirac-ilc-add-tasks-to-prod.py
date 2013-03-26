@@ -52,6 +52,7 @@ if __name__=='__main__':
     gLogger.error("This cannot be used on productions that are not using the Limited plugin")
     dexit(0)
   
+  gLogger.info("Prod %s has %s tasks registered" % (clip.prod, trans['MaxNumberOfTasks']) )
   max_tasks = trans['MaxNumberOfTasks'] + clip.tasks
   groupsize = trans['GroupSize']
   gLogger.notice("Adding %s tasks (%s file(s)) to production %s" %(clip.tasks, clip.tasks*groupsize, clip.prod))
