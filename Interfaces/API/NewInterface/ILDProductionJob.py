@@ -26,16 +26,6 @@ class ILDProductionJob(ProductionJob):
     self.ildconfigvers = ''
     self.compatmeta = {}
     
-  def setILDConfig(self,Version):
-    """ Define the Configuration package to obtain
-    """
-    appName = 'ildconfig'
-    self._addSoftware(appName, Version)
-    self.ildconfigvers = Version
-    self.prodparameters['ILDConfigVersion'] = Version
-    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
-    return S_OK()  
-  
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
     """
