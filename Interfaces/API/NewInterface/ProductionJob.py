@@ -514,8 +514,8 @@ class ProductionJob(Job):
       info.append('- Energy %s GeV' % self.prodparameters["Energy"])
 
     self.prodparameters['nbevts'] = self.jobFileGroupSize * self.nbevts
-
-    info.append("- %s events per job" % (self.prodparameters['nbevts']))
+    if self.prodparameters['nbevts']:
+      info.append("- %s events per job" % (self.prodparameters['nbevts']))
     if self.prodparameters.has_key('lumi'):
       if self.prodparameters['lumi']:
         info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * \
