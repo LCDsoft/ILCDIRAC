@@ -13,12 +13,12 @@ from DIRAC.Core.Workflow.Module                             import ModuleDefinit
 from DIRAC.Core.Workflow.Step                               import StepDefinition
 from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-from DIRAC.TransformationSystem.Client.Transformation       import Transformation
+from ILCDIRAC.TransformationSystem.Client.Transformation    import Transformation
 from DIRAC.Core.DISET.RPCClient                             import RPCClient
 
 from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogClient
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 
 from math                                                   import modf
 
