@@ -79,6 +79,8 @@ overlay.setMachine("ilc_dbd") #Don't touch, this is how the system knows what fi
 overlay.setEnergy(energy)#Don't touch, this is how the system knows what files to get
 overlay.setDetectorModel(detectorModel)#Don't touch, this is how the system knows what files to get
 if energy==500.: #here you chose the overlay parameters as this determines how many files you need
+  #it does NOT affect the content of the marlin steering file whatsoever, you need to make sure the values 
+  #there are correct. Only the file names are handled properly so that you don't need to care
   overlay.setBXOverlay(300)
   overlay.setGGToHadInt(0.3)##When running at 500geV
 elif energy == 1000.:
