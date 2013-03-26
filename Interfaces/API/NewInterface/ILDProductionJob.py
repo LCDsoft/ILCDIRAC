@@ -35,6 +35,8 @@ class ILDProductionJob(ProductionJob):
       print "Could not contact File Catalog"
       return S_ERROR()
     metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
+    metaFCkeys.extend(res['Value']['FileMetaFields'].keys())
+
     for key in metakeys:
       for meta in metaFCkeys:
         if meta != key:
