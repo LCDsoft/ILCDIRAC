@@ -111,6 +111,16 @@ class ProductionJob(Job):
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
   
+  def setILDConfig(self,Version):
+    """ Define the Configuration package to obtain
+    """
+    appName = 'ildconfig'
+    self._addSoftware(appName, Version)
+    self.ildconfigvers = Version
+    self.prodparameters['ILDConfigVersion'] = Version
+    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
+    return S_OK()  
+  
   def setDryRun(self, run):
     """ In case one wants to get all the info as if the prod was being submitted
     """
@@ -631,6 +641,7 @@ class ProductionJob(Job):
         self.log.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     else:
       self.log.notice("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
+      result = S_OK()
     return result
   
   def _jobSpecificParams(self, application):
