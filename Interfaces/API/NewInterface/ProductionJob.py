@@ -51,10 +51,9 @@ class ProductionJob(Job):
     self.jobFileGroupSize = 1
     self.nbtasks = 1
     self.basename = ''
-    self.basepath = "/ilc/prod/"
+    self.basepath = self.ops.getValue('/Production/CLIC/BasePath','/ilc/prod/clic/')
     self.evttype = ''
     self.datatype = ''
-    self.machine = 'clic'
     self.energycat = ''
     self.detector = ''
     self.currtrans = None
@@ -243,12 +242,6 @@ class ProductionJob(Job):
       #  return self._reportError('Nb of events does not have any type recognised')
 
     self.basename = self.evttype
-    self.basepath = "/ilc/prod/"
-    if compatmeta.has_key("Machine"):
-      if type(compatmeta["Machine"]) in types.StringTypes:
-        self.machine = compatmeta["Machine"] + "/"
-      if type(compatmeta["Machine"]) == type([]):
-        self.machine = compatmeta["Machine"][0] + "/"
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
@@ -283,11 +276,6 @@ class ProductionJob(Job):
     self.prodparameters["FCInputQuery"] = self.inputBKSelection
 
     return S_OK()
-
-  def setMachine(self, machine):
-    """ Define the machine type: clic or ilc
-    """
-    self.machine = machine
 
   def setDescription(self, desc):
     """ Set the production's description
@@ -731,30 +719,28 @@ class ProductionJob(Job):
     if not self.basename:
       self.basename = self.evttype
     
-    if not self.machine[-1] == '/':
-      self.machine += "/"
     if not self.evttype[-1] == '/':
       self.evttypepath = self.evttype + '/'  
     
     path = self.basepath  
     ###Need to resolve file names and paths
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
-      path = self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/REC"
-      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath] = {"EvtType":self.evttype}
-      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
-      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
+      path = self.basepath + energypath + self.evttypepath + application.detectortype + "/REC"
+      self.finalMetaDict[self.basepath + energypath + self.evttypepath] = {"EvtType":self.evttype}
+      self.finalMetaDict[self.basepath + energypath + self.evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
+      self.finalMetaDict[self.basepath + energypath + self.evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
       self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
-      path = self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/DST"
-      self.finalMetaDict[self.basepath + self.machine + energypath + self.evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
+      path = self.basepath + energypath + self.evttypepath + application.detectortype + "/DST"
+      self.finalMetaDict[self.basepath + energypath + self.evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
       fname = self.basename + "_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
     elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
-      path = self.basepath + self.machine + energypath + self.evttypepath
+      path = self.basepath + energypath + self.evttypepath
       self.finalMetaDict[path] = {"EvtType" : self.evttype}      
       if hasattr(application, "detectortype"):
         if application.detectortype:

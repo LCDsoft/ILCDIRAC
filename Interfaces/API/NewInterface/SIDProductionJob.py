@@ -18,8 +18,7 @@ from decimal import Decimal
 class SIDProductionJob(ProductionJob):
   def __init__(self):
     super(SIDProductionJob, self).__init__()
-    self.machine = 'ilc'
-    self.basepath = '/ilc/prod/ilc/sid/'
+    self.basepath = self.ops.getValue('/Production/ILC_SID/BasePath','/ilc/prod/ilc/sid/')
     self.polarization = ""
     self.machineparams = ''
     self.detector = ''
@@ -253,8 +252,6 @@ class SIDProductionJob(ProductionJob):
     if not self.basename:
       self.basename = self.evttype
     
-    if not self.machine[-1] == '/':
-      self.machine += "/"
     if not self.evttype[-1] == '/':
       evttypemeta = self.evttype
       self.evttype += '/'  
