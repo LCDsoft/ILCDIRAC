@@ -156,10 +156,10 @@ class ILDProductionJob(ProductionJob):
     body = string.replace(importLine, '<MODULE>', 'FailoverRequest')
     failoverRequest.setBody(body)
 
-    registerdata = ModuleDefinition('SIDRegisterOutputData')
+    registerdata = ModuleDefinition('ILDRegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
     self._addParameter(registerdata, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(importLine, '<MODULE>', 'SIDRegisterOutputData')
+    body = string.replace(importLine, '<MODULE>', 'ILDRegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
