@@ -34,6 +34,7 @@ class ProductionJob(Job):
   def __init__(self, script = None):
     super(ProductionJob, self).__init__( script )
     self.prodVersion = __RCSID__
+    self.dryrun = False
     self.created = False
     self.checked = False
     self.call_finalization = False
@@ -109,6 +110,11 @@ class ProductionJob(Job):
     else:
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
+  
+  def setDryRun(self, run):
+    """ In case one wants to get all the info as if the prod was being submitted
+    """
+    self.dryrun = run
       
   #############################################################################
   def setProdGroup(self, group):
@@ -392,9 +398,12 @@ class ProductionJob(Job):
     if not name:
       name = workflowName
 
+
     res = self.trc.getTransformationStats(name)
     if res['OK']:
       return self._reportError("Transformation with name %s already exists! Cannot proceed." % name)
+
+    
     
     ###Create Tranformation
     Trans = Transformation()
@@ -409,17 +418,22 @@ class ProductionJob(Job):
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
     Trans.setEventsPerTask(self.jobFileGroupSize * self.nbevts)
-    res = Trans.addTransformation()
-    if not res['OK']:
-      print res['Message']
-      return res
     self.currtrans = Trans
-    self.transfid = Trans.getTransformationID()['Value']
+    if self.dryrun:
+      self.log.notice('Would create prod called',name)
+      self.transfid = 12345
+    else: 
+      res = Trans.addTransformation()
+      if not res['OK']:
+        print res['Message']
+        return res
+      self.transfid = Trans.getTransformationID()['Value']
 
     if self.inputBKSelection:
       res = self.applyInputDataQuery()
-    Trans.setAgentType("Automatic")  
-    Trans.setStatus("Active")
+    if not self.dryrun:
+      Trans.setAgentType("Automatic")  
+      Trans.setStatus("Active")
     
     finals = []
     for finalpaths in self.finalpaths:
@@ -429,6 +443,7 @@ class ProductionJob(Job):
       self.finalMetaDict[finalpaths] = {'NumberOfEvents' : self.jobFileGroupSize * self.nbevts, "ProdID" : self.transfid}
     self.finalpaths = finals
     self.created = True
+    
     return S_OK()
 
   def setNbOfTasks(self, nbtasks):
@@ -459,9 +474,12 @@ class ProductionJob(Job):
       self.inputBKSelection = metadata
 
     client = TransformationClient()
-    res = client.createTransformationInputDataQuery(self.transfid, self.inputBKSelection)
-    if not res['OK']:
-      return res
+    if not self.dryrun:
+      res = client.createTransformationInputDataQuery(self.transfid, self.inputBKSelection)
+      if not res['OK']:
+        return res
+    else:
+      self.log.notice("Would use %s as metadata query for production" % str(self.inputBKSelection))
     return S_OK()
   
   def addMetadataToFinalFiles(self, metadict):
@@ -478,7 +496,10 @@ class ProductionJob(Job):
     """
     currtrans = 0
     if self.currtrans:
-      currtrans = self.currtrans.getTransformationID()['Value']
+      if not self.dryrun:
+        currtrans = self.currtrans.getTransformationID()['Value']
+      else:
+        currtrans = 12345
     if prodid:
       currtrans = prodid
     if not currtrans:
@@ -523,6 +544,7 @@ class ProductionJob(Job):
       
     infoString = string.join(info,'\n')
     self.prodparameters['DetailedInfo'] = infoString
+    
     for n, v in self.prodparameters.items():
       result = self._setProdParameter(currtrans, n, v)
       if not result['OK']:
@@ -541,7 +563,11 @@ class ProductionJob(Job):
       chain in 1 go. 
     """
     
-
+    if self.dryrun:
+      self.log.notice("Would have created and registered the following", str(self.finalMetaDict))
+      self.log.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
+      return S_OK()
+    
     failed = []
     for path, meta in self.finalMetaDict.items():
       result = self.fc.createDirectory(path)
@@ -599,9 +625,12 @@ class ProductionJob(Job):
     prodClient = RPCClient('Transformation/TransformationManager', timeout=120)
     if type(pvalue) == type(2):
       pvalue = str(pvalue)
-    result = prodClient.setTransformationParameter(int(prodID), str(pname), str(pvalue))
-    if not result['OK']:
-      self.log.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
+    if not self.dryrun:  
+      result = prodClient.setTransformationParameter(int(prodID), str(pname), str(pvalue))
+      if not result['OK']:
+        self.log.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
+    else:
+      self.log.notice("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
     return result
   
   def _jobSpecificParams(self, application):
