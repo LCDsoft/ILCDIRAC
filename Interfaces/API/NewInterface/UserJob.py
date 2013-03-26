@@ -159,3 +159,12 @@ class UserJob(Job):
       return self._reportError( 'Expected file string or list of files for output sandbox contents', **kwargs )
 
     return S_OK()
+    
+  def setILDConfig(self,Version):
+    """ Define the Configuration package to obtain
+    """
+    appName = 'ildconfig'
+    self._addSoftware(appName, Version)
+    
+    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
+    return S_OK()
