@@ -561,7 +561,9 @@ class ProductionJob(Job):
       chain in 1 go. 
     """
     
-    if self.dryrun:
+    prevent_registration = self.ops.getValue("Production/PreventMetadataRegistration", False)
+    
+    if self.dryrun or prevent_registration:
       self.log.notice("Would have created and registered the following", str(self.finalMetaDict))
       self.log.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
       return S_OK()
