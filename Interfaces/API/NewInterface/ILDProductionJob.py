@@ -346,6 +346,7 @@ class ILDProductionJob(ProductionJob):
         application.datatype = self.datatype
       if application.datatype == 'gen':
         datatype = 'generated/'
+        self.basepath = "/".join(self.basepath.split("/")[:-2]) + '/' #because for generated, it's common to all ILC
       elif application.datatype == 'SIM':
         datatype = 'sim/'
       path = self.basepath + datatype
