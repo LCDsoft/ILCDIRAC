@@ -126,7 +126,7 @@ if __name__ == '__main__':
   Script.setUsageMessage(  "%s /ilc/prod/ meta1=A meta2=B etc." % Script.scriptName)
 
   args = Script.getPositionalArgs()
-  if len(args<2):
+  if len(args)<2:
     gLogger.error('Not enough arguments')
     Script.showHelp()
     dexit(1)
