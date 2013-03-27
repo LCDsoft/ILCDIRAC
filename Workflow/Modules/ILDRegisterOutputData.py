@@ -150,7 +150,8 @@ class ILDRegisterOutputData(ModuleBase):
             return res
         meta.update(fmeta)
       if ['BeamParticle1'] in self.inputdataMeta:
-        fmeta = {'BeamParticle1':self.inputdataMeta['BeamParticle1'],'BeamParticle2':self.inputdataMeta['BeamParticle2']}
+        fmeta = {'BeamParticle1':self.inputdataMeta['BeamParticle1'],
+                 'BeamParticle2':self.inputdataMeta['BeamParticle2']}
         if self.enable:
           res = self.filecatalog.setMetadata(files, fmeta)
           if not res['OK']:
@@ -158,7 +159,8 @@ class ILDRegisterOutputData(ModuleBase):
             return res
         meta.update(fmeta)
       if ['PolarizationB1'] in self.inputdataMeta:
-        fmeta = {'PolarizationB1':self.inputdataMeta['PolarizationB1'],'PolarizationB2':self.inputdataMeta['PolarizationB2']}
+        fmeta = {'PolarizationB1':self.inputdataMeta['PolarizationB1'],
+                 'PolarizationB2':self.inputdataMeta['PolarizationB2']}
         if self.enable:
           res = self.filecatalog.setMetadata(files, fmeta)
           if not res['OK']:
