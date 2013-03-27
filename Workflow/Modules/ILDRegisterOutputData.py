@@ -26,11 +26,10 @@ class ILDRegisterOutputData(ModuleBase):
     self.commandTimeOut = 10 * 60
     self.enable = True
     self.prodOutputLFNs = []
-    self.swpackages = []
     self.nbofevents = 0
-    self.luminosity = 0
     self.filecatalog = FileCatalogClient()
-
+    self.ildconfig = ''
+    
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
       self.enable = self.step_commons['Enable']
@@ -47,9 +46,8 @@ class ILDRegisterOutputData(ModuleBase):
       self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
 
     self.nbofevents = self.NumberOfEvents #comes from ModuleBase
-    
-    if self.workflow_commons.has_key('Luminosity'):
-      self.luminosity = self.workflow_commons['Luminosity']
+    if 'ILDConfigPackage' in self.workflow_commons:
+      self.ildconfig = self.workflow_commons['ILDConfigPackage']
     return S_OK('Parameters resolved')
   
   def execute(self):
@@ -167,7 +165,14 @@ class ILDRegisterOutputData(ModuleBase):
             self.log.error('Could not register metadata Polarization')
             return res
         meta.update(fmeta)
-     
+      if self.ildconfig:
+        fmeta = {'ILDConfig' : self.ildconfig}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata ILDConfig')
+            return res
+        meta.update(fmeta)
       
       self.log.info("Registered %s with tags %s"%(files, meta))
       
