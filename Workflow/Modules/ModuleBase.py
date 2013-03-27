@@ -397,10 +397,6 @@ class ModuleBase(object):
           self.InputData = paramdata.split(";")
 
     if not self.OutputFile:
-      #this is to keep compatibility with old interface, where step param is with o  
-      if self.step_commons.has_key("outputFile"):
-        self.OutputFile = self.step_commons["outputFile"]
-      #this is for new interface where step param has O  
       if self.step_commons.has_key("OutputFile"):
         self.OutputFile = self.step_commons["OutputFile"]
 
