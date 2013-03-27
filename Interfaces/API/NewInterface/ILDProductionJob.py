@@ -210,7 +210,7 @@ class ILDProductionJob(ProductionJob):
     else :
       self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
       
-    softwarepath = application.version
+    softwarepath = application.appname+application.version
     
     if not self.energy:
       if application.energy:
