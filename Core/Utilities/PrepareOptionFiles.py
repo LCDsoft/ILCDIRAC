@@ -274,6 +274,9 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
   if processID:
     output.write("#Set processID as event parameter\n")
     output.write("/Mokka/init/lcioEventParameter string Process %s\n" % processID)
+  elif 'GenProcessID' in filemeta:
+    output.write("#Set processID as event parameter\n")
+    output.write("/Mokka/init/lcioEventParameter string Process %s\n" % filemeta['GenProcessID'])
   if 'CrossSection' in filemeta:
     output.write("/Mokka/init/lcioEventParameter float CrossSection_fb %s\n" % float(filemeta['CrossSection']))
   if 'Energy' in filemeta:
