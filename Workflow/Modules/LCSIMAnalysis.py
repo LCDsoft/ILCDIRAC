@@ -74,16 +74,6 @@ class LCSIMAnalysis(ModuleBase):
     if self.step_commons.has_key('ExtraParams'):
       self.extraparams = self.step_commons['ExtraParams']    
 
-    if self.InputData:
-      if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
-        res = getNumberOfevents(self.InputData)
-        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
-          self.workflow_commons["NbOfEvents"] = res["nbevts"]
-          self.workflow_commons["NbOfEvts"] = res["nbevts"]
-          self.NumberOfEvents = res["nbevts"]
-        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"] = res["lumi"]
-
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),

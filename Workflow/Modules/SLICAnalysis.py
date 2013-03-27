@@ -59,10 +59,7 @@ class SLICAnalysis(ModuleBase):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    ##NEed to keep for backward compat.
-    if self.step_commons.has_key('numberOfEvents'):
-      self.NumberOfEvents = self.step_commons['numberOfEvents']
-          
+
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
 
@@ -92,16 +89,6 @@ class SLICAnalysis(ModuleBase):
                                           int(self.workflow_commons["PRODUCTION_ID"]),
                                           int(self.workflow_commons["JOB_ID"]))
 
-    if len(self.InputData):
-      if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
-        res = getNumberOfevents(self.InputData)
-        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
-          self.workflow_commons["NbOfEvents"] = res["nbevts"]
-          self.workflow_commons["NbOfEvts"] = res["nbevts"]
-          if self.NumberOfEvents > res["nbevts"]:
-            self.NumberOfEvents = res["nbevts"]
-        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"] = res["lumi"]
       
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:

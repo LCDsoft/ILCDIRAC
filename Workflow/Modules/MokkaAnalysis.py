@@ -52,7 +52,7 @@ class MokkaAnalysis(ModuleBase):
     self.processID = ''
     self.RandomSeed = 0
     self.mcRunNumber = 0
-    self.filemeta = {}
+
 #############################################################################
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -118,22 +118,12 @@ class MokkaAnalysis(ModuleBase):
           self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))]
       
-    if len(self.InputData):
-      res = getNumberOfevents(self.InputData)
-      if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
-        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
-          self.workflow_commons["NbOfEvents"] = res["nbevts"]
-          self.workflow_commons["NbOfEvts"] = res["nbevts"]
-          if self.NumberOfEvents > res["nbevts"]:
-            self.NumberOfEvents = res["nbevts"]
-        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"] = res["lumi"]
-      if 'EvtClass' in res and not self.processID:
-        self.processID = res['EvtClass']
-      if 'EvtType' in res and not self.processID:
-        self.processID = res['EvtType']
-      if 'AdditionalMeta' in res: 
-        self.filemeta= res['AdditionalMeta']
+    if len(self.InputData):      
+      if 'EvtClass' in self.inputdataMeta and not self.processID:
+        self.processID = self.inputdataMeta['EvtClass']
+      if 'EvtType' in self.inputdataMeta and not self.processID:
+        self.processID = self.inputdataMeta['EvtType']
+
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".stdhep") > -1 or files.lower().find(".hepevt") > -1:
@@ -294,7 +284,7 @@ class MokkaAnalysis(ModuleBase):
                                   self.processID,
                                   self.debug,
                                   self.OutputFile,
-                                  self.filemeta)
+                                  self.inputdataMeta)
     if not steerok['OK']:
       self.log.error('Failed to create MOKKA steering file')
       return S_ERROR('Failed to create MOKKA steering file')

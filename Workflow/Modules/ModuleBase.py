@@ -21,6 +21,7 @@ from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 
 import os, string, sys, re, types
 from random import choice
@@ -71,6 +72,7 @@ class ModuleBase(object):
     self.eventstring = ['']
     self.excludeAllButEventString = False
     self.ignoreapperrors = False
+    self.inputdataMeta = {}
     #############
     #Set from workflow object
     self.workflow_commons = {}
@@ -368,7 +370,6 @@ class ModuleBase(object):
     if self.workflow_commons.has_key('NbOfEvts'):
       if self.workflow_commons['NbOfEvts'] > 0:
         self.NumberOfEvents = self.workflow_commons['NbOfEvts']
-        self.workflow_commons['NbOfEvents'] = self.NumberOfEvents
 
     if self.step_commons.has_key('InputFile'):
       ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string 
@@ -426,7 +427,13 @@ class ModuleBase(object):
           self.log.error('Could not copy %s here because %s!' % (f, str(e)))
       
 
-          
+    if self.InputData:
+      res = getNumberOfevents(self.InputData)
+      self.inputdataMeta.update(res['AdditionalMeta'])
+      if res["nbevts"]:
+        if self.NumberOfEvents > res['nbevts'] or self.NumberOfEvents == 0:
+          self.NumberOfEvents = res['nbevts']
+        
     res = self.applicationSpecificInputs()
     if not res['OK']:
       return res
