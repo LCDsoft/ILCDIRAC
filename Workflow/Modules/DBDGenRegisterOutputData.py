@@ -28,8 +28,6 @@ class DBDGenRegisterOutputData(ModuleBase):
     if self.workflow_commons.has_key('ProductionOutputData'):
       self.prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
       
-    if self.workflow_commons.has_key('NbOfEvents'):
-      self.nbofevents = self.workflow_commons['NbOfEvents']
     if self.workflow_commons.has_key('NbOfEvts'):
       self.nbofevents = self.workflow_commons[ 'NbOfEvts']          
     return S_OK("Parameters resolved")
