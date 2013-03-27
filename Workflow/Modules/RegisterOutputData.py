@@ -26,7 +26,6 @@ class RegisterOutputData( ModuleBase ):
     self.commandTimeOut = 10*60
     self.enable = True
     self.prodOutputLFNs = []
-    self.swpackages = []
     self.nbofevents = 0
     self.luminosity = 0
     self.add_info = ''
@@ -45,14 +44,11 @@ class RegisterOutputData( ModuleBase ):
     else:
       self.prodOutputLFNs = []
       
-    if self.workflow_commons.has_key('SoftwarePackages'):
-      self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
-
     self.nbofevents = self.NumberOfEvents
     if self.workflow_commons.has_key('Luminosity'):
       self.luminosity = self.workflow_commons['Luminosity']
     
-    ##Additional info: cross section only for the time being
+    ##Additional info: cross section only for the time being, comes from WHIZARD
     if self.workflow_commons.has_key('Info'):
       self.add_info = DEncode.encode(self.workflow_commons['Info'])
     
@@ -86,51 +82,31 @@ class RegisterOutputData( ModuleBase ):
         if self.workflow_commons.has_key('file_number_of_event_relation'):
           if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
-        if self.enable:
-          res = self.filecatalog.setMetadata(files, nbevts)
-          if not res['OK']:
-            self.log.error('Could not register metadata NumberOfEvents, with value %s for %s' % (self.nbofevents, 
-                                                                                                 files))
-            return res
         metafiles.update(nbevts)  
       if self.luminosity:
         lumi = {}
         lumi['Luminosity'] = self.luminosity
-        if self.enable:
-          res = self.filecatalog.setMetadata(files, lumi)
-          if not res['OK']:
-            self.log.error('Could not register metadata Luminosity, with value %s for %s' % (self.luminosity, 
-                                                                                             files))
-            return res
         metafiles.update(lumi)
+        
       if self.add_info:
         info = {}
         info['AdditionalInfo'] = self.add_info
-        if self.enable:
-          res = self.filecatalog.setMetadata(files, info)
-          if not res['OK']:
-            self.log.error('Could not register metadata Info, with value %s for %s' % (self.add_info, files))
-            return res
         metafiles.update(info)
       elif 'AdditionalInfo' in self.inputdataMeta:
         info = {}
         info['AdditionalInfo'] = self.inputdataMeta['AdditionalInfo']
-        if self.enable:
-          res = self.filecatalog.setMetadata(files, info)
-          if not res['OK']:
-            self.log.error('Could not register metadata Info, with value %s for %s' % (self.inputdataMeta['AdditionalInfo'], 
-                                                                                       files))
-            return res
         metafiles.update(info)
       
       if ['CrossSection'] in self.inputdataMeta:
         xsec = {'CrossSection':self.inputdataMeta['CrossSection']}
-        if self.enable:
-          res = self.filecatalog.setMetadata(files, xsec)
-          if not res['OK']:
-            self.log.error('Could not register metadata CrossSection, with value %s for %s' % (self.add_info, files))
-            return res
         metafiles.update(xsec)
+      
+      if self.enable:
+        res = self.filecatalog.setMetadata(files, metafiles)
+        if not res['OK']:
+          self.log.error(res['Message'])
+          self.log.error('Could not register metadata for %s' % files)
+          return res
         
       self.log.info("Registered %s with tags %s" % (files, metafiles))
       
