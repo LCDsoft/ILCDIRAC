@@ -80,7 +80,9 @@ def getNumberOfevents(inputfile):
   nbevts['nbevts'] = numberofevents
   nbevts['lumi'] = luminosity
   nbevts['EvtType'] = evttype
-  del others['NumberOfEvents']
-  del others['Luminosity']
+  if 'NumberOfEvents' in others:
+    del others['NumberOfEvents']
+  if 'Luminosity' in others:
+    del others['Luminosity']
   nbevts['AdditionalMeta'] = others
   return nbevts
