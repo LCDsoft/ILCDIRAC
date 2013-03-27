@@ -113,8 +113,8 @@ class ProductionJob(Job):
   def setILDConfig(self,Version):
     """ Define the Configuration package to obtain
     """
-    appName = 'ildconfig'
-    self._addSoftware(appName, Version)
+    appName = 'ILDConfig'
+    self._addSoftware(appName.lower(), Version)
     self.ildconfigvers = Version
     self.prodparameters['ILDConfigVersion'] = Version
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
