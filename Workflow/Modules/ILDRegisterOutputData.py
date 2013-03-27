@@ -14,7 +14,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.Resources.Catalog.FileCatalogClient             import FileCatalogClient
 
 from DIRAC import S_OK, gLogger
-import string
+import os
 
 class ILDRegisterOutputData(ModuleBase):
   """ Register output data in the FC for the ILD productions 
@@ -46,10 +46,8 @@ class ILDRegisterOutputData(ModuleBase):
     if self.workflow_commons.has_key('SoftwarePackages'):
       self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
 
-    if self.workflow_commons.has_key('NbOfEvents'):
-      self.nbofevents = self.workflow_commons['NbOfEvents']
-    if self.workflow_commons.has_key('NbOfEvts'):
-      self.nbofevents = self.workflow_commons[ 'NbOfEvts']    
+    self.nbofevents = self.NumberOfEvents #comes from ModuleBase
+    
     if self.workflow_commons.has_key('Luminosity'):
       self.luminosity = self.workflow_commons['Luminosity']
     return S_OK('Parameters resolved')
@@ -69,8 +67,7 @@ class ILDRegisterOutputData(ModuleBase):
       self.log.info('No production data found, so no metadata registration to be done')  
       return S_OK("No files' metadata to be registered")
     
-    self.log.verbose("Will try to set the metadata for the following files: \n %s"% string.join(self.prodOutputLFNs, 
-                                                                                                "\n"))
+    self.log.verbose("Will try to set the metadata for the following files: \n %s"% "\n".join(self.prodOutputLFNs))
 
     #TODO: What meta data should be stored at file level?
 
@@ -83,25 +80,97 @@ class ILDRegisterOutputData(ModuleBase):
       if self.nbofevents:
         nbevts = {}
         nbevts['NumberOfEvents'] = self.nbofevents
+        if self.workflow_commons.has_key('file_number_of_event_relation'):
+          if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
+            nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         if self.enable:
           res = self.filecatalog.setMetadata(files, nbevts)
           if not res['OK']:
             self.log.error('Could not register metadata NumberOfEvents, with value %s for %s' % (self.nbofevents, 
                                                                                                  files))
             return res
-        meta.update(nbevts)
-      if self.luminosity:
-        lumi = {}
-        lumi['Luminosity'] = self.luminosity
+      
+      if ['CrossSection'] in self.inputdataMeta:
+        xsec = {'CrossSection':self.inputdataMeta['CrossSection']}
         if self.enable:
-          res = self.filecatalog.setMetadata(files, lumi)
+          res = self.filecatalog.setMetadata(files, xsec)
           if not res['OK']:
-            self.log.error('Could not register metadata Luminosity, with value %s for %s'%(self.luminosity, files))
+            self.log.error('Could not register metadata CrossSection, with value %s for %s' % (self.inputdataMeta['CrossSection'],
+                                                                                   files))
             return res
-        meta.update(lumi)
-#      meta.update(metaprodid)
-      
-      
+        meta.update(xsec)
+        
+      if ['CrossSectionError'] in self.inputdataMeta:
+        xsec = {'CrossSectionError':self.inputdataMeta['CrossSectionError']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, xsec)
+          if not res['OK']:
+            self.log.error('Could not register metadata CrossSectionError, with value %s for %s' % (self.inputdataMeta['CrossSectionError'],
+                                                                                  files))
+            return res
+        meta.update(xsec)
+      if ['GenProcessID'] in self.inputdataMeta:
+        fmeta = {'GenProcessID':self.inputdataMeta['GenProcessID']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata GenProcessID, with value %s for %s' % (self.inputdataMeta['GenProcessID'],
+                                                                                  files))
+            return res
+        meta.update(fmeta)
+      if ['GenProcessType'] in self.inputdataMeta:
+        fmeta = {'GenProcessType':self.inputdataMeta['GenProcessType']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata GenProcessType, with value %s for %s' % (self.inputdataMeta['GenProcessType'],
+                                                                                  files))
+            return res
+        meta.update(fmeta)
+      if ['GenProcessType'] in self.inputdataMeta:
+        fmeta = {'GenProcessType':self.inputdataMeta['GenProcessType']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata GenProcessType, with value %s for %s' % (self.inputdataMeta['GenProcessType'],
+                                                                                  files))
+            return res
+        meta.update(fmeta)
+      if ['GenProcessName'] in self.inputdataMeta:
+        fmeta = {'GenProcessName':self.inputdataMeta['GenProcessName']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata GenProcessName, with value %s for %s' % (self.inputdataMeta['GenProcessName'],
+                                                                                  files))
+            return res
+        meta.update(fmeta)
+      if ['Luminosity'] in self.inputdataMeta:
+        fmeta = {'Luminosity':self.inputdataMeta['Luminosity']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata Luminosity, with value %s for %s' % (self.inputdataMeta['Luminosity'],
+                                                                                  files))
+            return res
+        meta.update(fmeta)
+      if ['BeamParticle1'] in self.inputdataMeta:
+        fmeta = {'BeamParticle1':self.inputdataMeta['BeamParticle1'],'BeamParticle2':self.inputdataMeta['BeamParticle2']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata BeamParticle' )
+            return res
+        meta.update(fmeta)
+      if ['PolarizationB1'] in self.inputdataMeta:
+        fmeta = {'PolarizationB1':self.inputdataMeta['PolarizationB1'],'PolarizationB2':self.inputdataMeta['PolarizationB2']}
+        if self.enable:
+          res = self.filecatalog.setMetadata(files, fmeta)
+          if not res['OK']:
+            self.log.error('Could not register metadata Polarization')
+            return res
+        meta.update(fmeta)
+     
       
       self.log.info("Registered %s with tags %s"%(files, meta))
       
