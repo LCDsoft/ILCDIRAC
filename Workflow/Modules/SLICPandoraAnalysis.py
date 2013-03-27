@@ -69,15 +69,6 @@ class SLICPandoraAnalysis (ModuleBase):
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
       self.InputFile = inputf
-
-    if self.InputData:
-      if not self.workflow_commons.has_key("Luminosity") or not self.workflow_commons.has_key("NbOfEvents"):
-        res = getNumberOfevents(self.InputData)
-        if res["nbevts"] and not self.workflow_commons.has_key("Luminosity") :
-          self.workflow_commons["NbOfEvents"] = res["nbevts"]
-          self.workflow_commons["NbOfEvts"] = res["nbevts"]
-        if res["lumi"] and not self.workflow_commons.has_key("NbOfEvents"):
-          self.workflow_commons["Luminosity"] = res["lumi"]
         
     if self.step_commons.has_key('EvtsToProcess'):
       self.NumberOfEvents = self.step_commons['EvtsToProcess']

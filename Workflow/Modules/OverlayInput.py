@@ -129,12 +129,12 @@ class OverlayInput (ModuleBase):
     #  self.site = self.workflow_commons['Site']
 
     if len(self.InputData):
-      res = getNumberOfevents(self.InputData)
-      if res.has_key("nbevts"):
-        self.nbsigeventsperfile = res["nbevts"]
+      if self.NumberOfEvents:
+        self.nbsigeventsperfile = self.NumberOfEvents
       else:
-        return S_ERROR("Could not find number of signal events per input file")
+        return S_ERROR("Number of events in the signal file is missing")
       self.nbinputsigfile = len(self.InputData)
+      
     if not self.NbSigEvtsPerJob and not self.nbsigeventsperfile:
       return S_ERROR("Could not determine the number of signal events per input file")
     return S_OK("Input variables resolved")
