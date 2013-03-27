@@ -103,7 +103,7 @@ elif [ $# -eq 2 ]; then
 	    exit 1;
 	fi
 
-	softwarefolder=/afs/cern.ch/eng/clic/data/software
+	softwarefolder=/afs/cern.ch/eng/clic/software
 	rsync -avzlr $softwarefolder/mysql4grid .
 	#Move DB dump into Mokka folder
         rsync -av CLICMokkaDB.sql $mokkatarballfolder/
