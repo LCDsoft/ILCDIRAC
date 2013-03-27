@@ -265,6 +265,8 @@ class ILDProductionJob(ProductionJob):
       self.basename = 's'+self.ildconfigvers
     if 'DetectorModel'  in self.compatmeta:
       self.basename += '.m'+self.compatmeta['DetectorModel']
+    elif self.detector:
+      self.basename += '.m'+self.detector
     if self.energy:
       self.basename += '.E'+str(self.energy)
     if 'MachineParams' in self.compatmeta:
@@ -272,6 +274,8 @@ class ILDProductionJob(ProductionJob):
       
     if 'GenProcessID' in self.compatmeta:
       self.basename += '.I'+ str(self.compatmeta['GenProcessID'])
+    elif 'ProcessID' in self.compatmeta:
+      self.basename += '.I'+ str(self.compatmeta['ProcessID'])
     if 'EvtType' in self.compatmeta:
       self.basename += '.P'+self.compatmeta['EvtType'] #To be fixed with Jan
     elif 'GenProcessType' in self.compatmeta:
@@ -326,8 +330,12 @@ class ILDProductionJob(ProductionJob):
     #TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
     if hasattr(application,"setOutputRecFile") and not application.willBeCut:
       path = self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath
+      emeta = {"EvtType" : evttypemeta}
+      if 'ProcessID' in self.compatmeta:
+        emeta.update({"ProcessID":self.compatmeta['ProcessID']})#because we need to propagate this info 
+
       self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype] = {"EvtType" : evttypemeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype] = emeta
       self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
       self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_rec.slcio"
@@ -335,7 +343,7 @@ class ILDProductionJob(ProductionJob):
       self.finalpaths.append(path)
       path = self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath
       self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype] = {"EvtType" : evttypemeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype] = emeta
       self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
       self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_dst.slcio"
@@ -353,7 +361,12 @@ class ILDProductionJob(ProductionJob):
       path += energypath + self.evtclass
       self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}      
       path += self.evttype
-      self.finalMetaDict[path] = {"EvtType" : evttypemeta}      
+      metap = {"EvtType" : evttypemeta}
+      if 'GenProcessID' in self.compatmeta:
+        metap.update({"ProcessID":self.compatmeta['GenProcessID']}) #because we need 2 fields for the same info: file and directory metadata
+      elif 'ProcessID' in self.compatmeta:
+        metap.update({"ProcessID":self.compatmeta['ProcessID']})  
+      self.finalMetaDict[path] = metap   
       if hasattr(application, "detectorModel"):
         if application.detectorModel:
           path += application.detectorModel
