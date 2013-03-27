@@ -22,7 +22,6 @@ from ILCDIRAC.Core.Utilities.SQLWrapper                   import SQLWrapper
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
-from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger, gConfig

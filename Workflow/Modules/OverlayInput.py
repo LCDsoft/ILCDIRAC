@@ -14,7 +14,6 @@ __RCSID__ = "$Id: $"
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
 from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
-from ILCDIRAC.Core.Utilities.InputFilesUtilities             import getNumberOfevents
 from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Core.Utilities.WasteCPU                        import WasteCPUCycles
