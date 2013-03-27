@@ -72,9 +72,6 @@ class ILDRegisterOutputData(ModuleBase):
     #TODO: What meta data should be stored at file level?
 
     for files in self.prodOutputLFNs:
-#      elements = files.split("/")
-#      metaprodid = {}
-#      metaforfiles = {}
       meta = {}  
 
       if self.nbofevents:
