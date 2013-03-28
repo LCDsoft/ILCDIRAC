@@ -25,6 +25,7 @@ class ILDProductionJob(ProductionJob):
     self.detector = ''
     self.ildconfigvers = ''
     self.compatmeta = {}
+    self.processID = 0
     
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
@@ -78,11 +79,6 @@ class ILDProductionJob(ProductionJob):
         self.evtclass  = compatmeta['EvtClass']
       if type(compatmeta['EvtClass']) == type([]):
         self.evtclass = compatmeta['EvtClass'][0]
-    if compatmeta.has_key('GenProcessName'):
-      if type(compatmeta['GenProcessName']) in types.StringTypes:
-        self.evttype  = compatmeta['GenProcessName']
-      if type(compatmeta['GenProcessName']) == type([]):
-        self.evttype = compatmeta['GenProcessName'][0]
     if compatmeta.has_key('EvtType'):
       if type(compatmeta['EvtType']) in types.StringTypes:
         self.evttype  = compatmeta['EvtType']
@@ -95,7 +91,20 @@ class ILDProductionJob(ProductionJob):
         self.evttype = compatmeta['GenProcessName'][0]      
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
-
+    if 'GenProcessID' in compatmeta:
+      if type(compatmeta['GenProcessID']) in types.StringTypes:
+        self.processID  = compatmeta['GenProcessID']
+      if type(compatmeta['GenProcessID']) == type([]):
+        self.processID = compatmeta['GenProcessID'][0]
+    elif 'ProcessID' in compatmeta:
+      if type(compatmeta['ProcessID']) in types.StringTypes:
+        self.processID  = compatmeta['ProcessID']
+      if type(compatmeta['ProcessID']) == type([]):
+        self.processID = compatmeta['ProcessID'][0]
+    else:
+      return self._reportError("Cannot find ProcessID, it's mandatory for path definition")
+        
+        
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
@@ -304,6 +313,7 @@ class ILDProductionJob(ProductionJob):
     
     if not self.machine[-1] == '/':
       self.machine += "/"
+      
     if not self.evttype[-1] == '/':
       evttypemeta = self.evttype
       self.evttype += '/'  
@@ -329,23 +339,23 @@ class ILDProductionJob(ProductionJob):
     ###Need to resolve file names and paths
     #TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
     if hasattr(application,"setOutputRecFile") and not application.willBeCut:
-      path = self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath
+      path = self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath
       emeta = {"EvtType" : evttypemeta}
       if 'ProcessID' in self.compatmeta:
         emeta.update({"ProcessID":self.compatmeta['ProcessID']})#because we need to propagate this info 
 
       self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype] = emeta
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"] = emeta
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector] = {"DetectorModel" : detectormeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
       self.finalpaths.append(path)
-      path = self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath
+      path = self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath
       self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype] = emeta
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"] = emeta
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector] = {"DetectorModel" : detectormeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.finalpaths.append(path)
@@ -360,7 +370,7 @@ class ILDProductionJob(ProductionJob):
       path = self.basepath + datatype
       path += energypath + self.evtclass
       self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}      
-      path += self.evttype
+      path += str(self.processID)+"/"
       metap = {"EvtType" : evttypemeta}
       if 'GenProcessID' in self.compatmeta:
         metap.update({"ProcessID":self.compatmeta['GenProcessID']}) #because we need 2 fields for the same info: file and directory metadata
