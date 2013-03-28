@@ -533,7 +533,8 @@ class ProductionJob(Job):
     for finalpath in self.finalpaths:
       if not self.finalMetaDictNonSearch.has_key(finalpath):
         self.finalMetaDictNonSearch[finalpath] = {}
-      self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
+      if "SWPackages" in self.prodparameters:
+        self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
     
     info.append('- Registered metadata: ')
     for k, v in self.finalMetaDict.items():
