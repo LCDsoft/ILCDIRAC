@@ -231,7 +231,8 @@ class MokkaAnalysis(ModuleBase):
       configdir = os.listdir(dir_to_particletbl)
       if 'particle.tbl' in configdir:
         path_to_particle_tbl = os.path.join(dir_to_particletbl, 'particle.tbl')
-
+    if os.path.exists('./particle.tbl'):
+      path_to_particle_tbl = "./particle.tbl"    
     ###steering file that will be used to run
     mokkasteer = "mokka.steer"
     if os.path.exists("mokka.steer"):
