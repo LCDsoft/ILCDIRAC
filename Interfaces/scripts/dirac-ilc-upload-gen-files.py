@@ -190,6 +190,8 @@ if __name__ == '__main__':
   if not basepath:
     gLogger.error('Failed to contact CS, please try again')
     dexit(1)
+  
+  basepath = "/".join(basepath.split("/")[:-2])+"/" #need to get rid of the ild/ part at the end
     
   finalpath = os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass, clip.evttype)
   gLogger.notice("Will upload the file(s) under %s" % finalpath)
