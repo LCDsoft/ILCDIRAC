@@ -76,7 +76,7 @@ class ProductionJob(Job):
     self.prodparameters = {}
     self.prodparameters['NbInputFiles'] = 1
     self.prodparameters['nbevts']  = 0 
-    self.prodparameters["SWPackages"] = ''
+    #self.prodparameters["SWPackages"] = ''
     self._addParameter(self.workflow, "IS_PROD", 'JDL', True, "This job is a production job")
     if not script:
       self.__setDefaults()
@@ -526,8 +526,10 @@ class ProductionJob(Job):
       info.append('Using InputDataQuery :')
       for k, v in self.prodparameters['FCInputQuery'].items():
         info.append('    %s = %s' % (k, v))
-        
-    info.append('- SW packages %s' % self.prodparameters["SWPackages"])
+    if "SWPackages" in self.prodparameters:
+      info.append('- SW packages %s' % self.prodparameters["SWPackages"])
+    if "SoftwareTag" in self.prodparameters:
+      info.append('- SW tags %s' % self.prodparameters["SoftwareTag"])
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
     for finalpath in self.finalpaths:
@@ -691,7 +693,7 @@ class ProductionJob(Job):
       return S_ERROR("You need to specify the Output storage element")
     
     curpackage = "%s.%s" % (application.appname, application.version)
-    if self.prodparameters["SWPackages"]:      
+    if "SWPackages" in self.prodparameters:      
       if not self.prodparameters["SWPackages"].count(curpackage):
         self.prodparameters["SWPackages"] += ";%s" % ( curpackage )    
     else :

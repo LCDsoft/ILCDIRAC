@@ -212,12 +212,12 @@ class ILDProductionJob(ProductionJob):
       
       #in fact a bit more tricky as the log files have the prodID and jobID in them
     
-    #if self.prodparameters["SWPackages"]:
-    #  curpackage = "%s.%s" % (application.appname, application.version)
-    #  if not self.prodparameters["SWPackages"].count(curpackage):
-    #    self.prodparameters["SWPackages"] += ";%s" % ( curpackage )
-    #else :
-    #  self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
+    if "SoftwareTag" in self.prodparameters:
+      curpackage = "%s.%s" % (application.appname, application.version)
+      if not self.prodparameters["SoftwareTag"].count(curpackage):
+        self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
+    else :
+      self.prodparameters["SoftwareTag"] = "%s.%s" % (application.appname, application.version)
       
     softwarepath = application.appname+application.version
     
@@ -339,23 +339,21 @@ class ILDProductionJob(ProductionJob):
     ###Need to resolve file names and paths
     #TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
     if hasattr(application,"setOutputRecFile") and not application.willBeCut:
-      path = self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath
-      emeta = {"EvtType" : evttypemeta}
-      if 'ProcessID' in self.compatmeta:
-        emeta.update({"ProcessID":self.compatmeta['ProcessID']})#because we need to propagate this info 
-
+      path = self.basepath+'rec/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"+self.detector+softwarepath
       self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"] = emeta
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype] = {"EvtType" : evttypemeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"] = {'ProcessID': self.processID}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"+self.detector] = {"DetectorModel" : detectormeta}
+      self.finalMetaDict[self.basepath+'rec/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
       self.finalpaths.append(path)
       path = self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath
       self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass] = {"EvtClass" : evtclassmeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"] = emeta
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector] = {"DetectorModel" : detectormeta}
-      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+str(self.processID)+"/"+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype] =  {"EvtType" : evttypemeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"] = {'ProcessID': self.processID}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"+self.detector] = {"DetectorModel" : detectormeta}
+      self.finalMetaDict[self.basepath+'dst/'+energypath+self.evtclass+self.evttype+str(self.processID)+"/"+self.detector+softwarepath] = {"SoftwareTag" : softwaremeta}
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.finalpaths.append(path)
@@ -369,14 +367,17 @@ class ILDProductionJob(ProductionJob):
         datatype = 'sim/'
       path = self.basepath + datatype
       path += energypath + self.evtclass
-      self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}      
+      self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}
+      path += self.evttype
+      self.finalMetaDict[path] = {"EvtType" : evttypemeta}
       path += str(self.processID)+"/"
-      metap = {"EvtType" : evttypemeta}
+      metap = {}
       if 'GenProcessID' in self.compatmeta:
         metap.update({"ProcessID":self.compatmeta['GenProcessID']}) #because we need 2 fields for the same info: file and directory metadata
+        self.finalMetaDict[path] = metap   
       elif 'ProcessID' in self.compatmeta:
         metap.update({"ProcessID":self.compatmeta['ProcessID']})  
-      self.finalMetaDict[path] = metap   
+        self.finalMetaDict[path] = metap   
       if hasattr(application, "detectorModel"):
         if application.detectorModel:
           path += application.detectorModel
