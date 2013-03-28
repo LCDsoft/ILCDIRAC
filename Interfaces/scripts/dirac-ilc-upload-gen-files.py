@@ -205,7 +205,7 @@ if __name__ == '__main__':
   dirmeta.append({'path':os.path.join(basepath, 'generated'), 'meta':{'Datatype':'gen'}})
   dirmeta.append({'path':os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams), 'meta':{'Energy':clip.energy, 'MachineParams':clip.machineParams}})
   dirmeta.append({'path':os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass), 'meta':{'EvtClass':clip.evtclass }})
-  dirmeta.append({'path':finalpath, 'meta': {'EvtType':clip.evttype ,'Luminosity':clip.lumi} })
+  dirmeta.append({'path':finalpath, 'meta': {'EvtType':clip.evttype ,'Luminosity':clip.lumi, 'ProcessID': clip.fmeta['GenProcessID']} })
   
   final_fname_base = 'E'+clip.energy+"-"+clip.machineParams+".P"+clip.fmeta['GenProcessName']+".G"+clip.fmeta['ProgramNameVersion'] + "."+clip.p1+clip.pol1+"."+clip.p2+clip.pol2+".I"+str(clip.fmeta['GenProcessID'])
   gLogger.notice("Final file name(s) will be %s where XXX will be replaced by file number, and ext by the input file extension" % (final_fname_base+".XXX.ext") )
