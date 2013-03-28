@@ -128,7 +128,7 @@ if __name__=="__main__":
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations 
   from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
   from ILCDIRAC.Core.Utilities.FileUtils                       import upload
-
+  from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
