@@ -92,15 +92,15 @@ class ILDProductionJob(ProductionJob):
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
     if 'GenProcessID' in compatmeta:
-      if type(compatmeta['GenProcessID']) in types.StringTypes:
+      if type(compatmeta['GenProcessID']) == type(2L):
         self.processID  = compatmeta['GenProcessID']
       if type(compatmeta['GenProcessID']) == type([]):
-        self.processID = compatmeta['GenProcessID'][0]
+        self.processID = int(compatmeta['GenProcessID'][0])
     elif 'ProcessID' in compatmeta:
-      if type(compatmeta['ProcessID']) in types.StringTypes:
+      if type(compatmeta['ProcessID']) == type(2L):
         self.processID  = compatmeta['ProcessID']
       if type(compatmeta['ProcessID']) == type([]):
-        self.processID = compatmeta['ProcessID'][0]
+        self.processID = int(compatmeta['ProcessID'][0])
     else:
       return self._reportError("Cannot find ProcessID, it's mandatory for path definition")
         
@@ -212,12 +212,12 @@ class ILDProductionJob(ProductionJob):
       
       #in fact a bit more tricky as the log files have the prodID and jobID in them
     
-    if self.prodparameters["SWPackages"]:
-      curpackage = "%s.%s" % (application.appname, application.version)
-      if not self.prodparameters["SWPackages"].count(curpackage):
-        self.prodparameters["SWPackages"] += ";%s" % ( curpackage )
-    else :
-      self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
+    #if self.prodparameters["SWPackages"]:
+    #  curpackage = "%s.%s" % (application.appname, application.version)
+    #  if not self.prodparameters["SWPackages"].count(curpackage):
+    #    self.prodparameters["SWPackages"] += ";%s" % ( curpackage )
+    #else :
+    #  self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
       
     softwarepath = application.appname+application.version
     
