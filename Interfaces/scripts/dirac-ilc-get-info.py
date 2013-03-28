@@ -70,6 +70,8 @@ if __name__ == "__main__":
                 fmeta.update(res['Value'])
                 break
           
+    #here we have trans and fmeta
+    gLogger.notice("got trans and fmeta")
             
       
 
@@ -107,13 +109,27 @@ if __name__ == "__main__":
           gLogger.error("This file does not follow the ILCDIRAC production conventions!")
           gLogger.error("Please specify a prod ID directly or check the file.")
           dexit(0)
-        print pid
+      #as task follows the prod id, to get it we need
+      tid = fitems[fitems.index(pid)+1]
+      last_folder = str(int(tid)/1000).zfill(3)
       
       res = fc.findDirectoriesbyMetadata({'ProdID':int(pid)})
       if not res['OK']:
         gLogger.error(res['Message'])
         dexit(1)
       dir_ex = res['Value'].values()[0]
+      if dir_ex.split("/")[-1] == pid:
+        fpath = dir_ex+last_folder+"/"
+      elif dir_ex.split("/")[-2] == pid:
+        fpath = "/".join(dir_ex.split('/')[:-2])+"/"+last_folder+"/"
+      else:
+        gLogger.error('Path does not follow conventions, will not get file family')
+      
+      if fpath:
+        fpath += f
+        res = fc.getFileAncestors() 
+        res = fc.getFileDescendents()
+          
       res = fc.getDirectoryMetadata(dir_ex)
       if not res['OK']:
         gLogger.error(res['Message'])
