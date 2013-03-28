@@ -8,7 +8,7 @@ Created on Sep 21, 2010
 '''
 
 from DIRAC.Core.Base import Script
-
+from DIRAC import S_OK
 import os, tarfile, shutil, sys, string
 
 try:
