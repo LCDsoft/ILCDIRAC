@@ -55,7 +55,7 @@ def upload(path, appTar):
       index_copy += 1
     requestxml = request.toXML()['Value']
     if copies_at:
-      res = requestClient.setRequest(request.getRequestName(), requestxml)
+      res = requestClient.setRequest(request.getRequestName()['Value'], requestxml)
       if not res['OK']:
         gLogger.error('Could not set replication request %s' % res['Message'])
       return S_OK('Application uploaded')
