@@ -234,7 +234,7 @@ if __name__=="__main__":
           inputlist[currprocess]['CrossSection'] = line.split()[1]
   
   
-  gLogger.verbose("Preparing Tar ball")
+  gLogger.notice("Preparing Tar ball")
   appTar = os.path.join(os.getcwd(), "whizard" + whizard_version + ".tgz")
   
   if os.path.exists('lib'):
@@ -269,7 +269,7 @@ if __name__=="__main__":
   md5sum = md5.md5(file(appTar).read()).hexdigest()
   
   gLogger.verbose("Done creating tar ball")
-  gLogger.verbose("Registering new Tar Ball in CS")
+  gLogger.notice("Registering new Tar Ball in CS")
   tarballurl = {}
   
   av_platforms = gConfig.getSections(softwareSection, [])
@@ -305,7 +305,7 @@ if __name__=="__main__":
         if len(tarballurl['Value']) > 0:
           res = upload(tarballurl['Value'], appTar)
           if not res['OK']:
-            gLogger.error("Upload to %s failed" % tarballurl)
+            gLogger.error("Upload to %s failed" % tarballurl['Value'])
             dexit(255)
       result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                       md5sum)
@@ -329,7 +329,7 @@ if __name__=="__main__":
       if len(tarballurl['Value']) > 0:
         res = upload(tarballurl['Value'], appTar)
         if not res['OK']:
-          gLogger.error("Upload to %s failed" % tarballurl)
+          gLogger.error("Upload to %s failed" % tarballurl['Value'])
           dexit(255)
     result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                     md5sum)
