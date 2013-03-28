@@ -24,7 +24,7 @@ def upload(path, appTar):
   if path.find("http://www.cern.ch/lcd-data") > -1:
     final_path = "/afs/cern.ch/eng/clic/data/software/"
     try:
-      shutil.copy(appTar,"%s%s" % (final_path, appTar))
+      shutil.copy(appTar,"%s%s" % (final_path, os.path.basename(appTar)))
     except Exception, x:
       gLogger.error("Could not copy because %s" % x)
       return S_ERROR("Could not copy because %s" % x)
@@ -32,14 +32,14 @@ def upload(path, appTar):
     gLogger.error("path %s was not foreseen, location not known, upload to location yourself, and publish in CS manually" % path)
     return S_ERROR()
   else:
-    lfnpath = "%s%s" % (path, appTar)
+    lfnpath = "%s%s" % (path, os.path.basename(appTar))
     res = rm.putAndRegister(lfnpath, appTar, ops.getValue('Software/BaseStorageElement',"CERN-SRM"))
     if not res['OK']:
       return res
     request = RequestContainer()
     request.setCreationTime()
     requestClient = RequestClient()
-    request.setRequestName('copy_%s' % appTar.replace(".tgz","").replace(".tar.gz",""))
+    request.setRequestName('copy_%s' % os.path.basename(appTar).replace(".tgz","").replace(".tar.gz",""))
     request.setSourceComponent('ReplicateILCSoft')
     copies_at = ops.getValue('Software/CopiesAt',[])
     index_copy = 0
