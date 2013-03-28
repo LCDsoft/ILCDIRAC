@@ -193,7 +193,7 @@ if __name__ == '__main__':
   
   basepath = "/".join(basepath.split("/")[:-2])+"/" #need to get rid of the ild/ part at the end
     
-  finalpath = os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass, clip.evttype)
+  finalpath = os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass, str(clip.fmeta['GenProcessID']))
   gLogger.notice("Will upload the file(s) under %s" % finalpath)
   if not clip.force:
     res = promptUser('Continue?', ['y','n'], 'n')
