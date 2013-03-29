@@ -24,7 +24,7 @@ from math                                                   import modf
 
 from DIRAC                                                  import S_OK, S_ERROR
 
-import string, os, shutil, types
+import os, shutil, types
 from decimal import Decimal
 
 
@@ -70,6 +70,7 @@ class ProductionJob(Job):
     self.inputdataquery = False
     self.inputBKSelection = {}
     self.plugin = 'Standard'
+    self.prodGroup = ''
 
     self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 
                       'MCReconstruction_Overlay', 'Merge', 'Split']
@@ -115,7 +116,6 @@ class ProductionJob(Job):
     """
     appName = 'ILDConfig'
     self._addSoftware(appName.lower(), Version)
-    self.ildconfigvers = Version
     self.prodparameters['ILDConfigVersion'] = Version
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
     return S_OK()  
@@ -151,7 +151,7 @@ class ProductionJob(Job):
     """Set prod type.
     """
     if not prodType in self.prodTypes:
-      raise TypeError,'Prod must be one of %s' % (string.join(self.prodTypes,', '))
+      raise TypeError,'Prod must be one of %s' % (', '.join(self.prodTypes))
     self.setType(prodType)
   #############################################################################
   def setWorkflowName(self, name):
@@ -316,25 +316,25 @@ class ProductionJob(Job):
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
     self._addParameter(dataUpload, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(importLine, '<MODULE>', 'UploadOutputData')
+    body = importLine.replace('<MODULE>', 'UploadOutputData')
     dataUpload.setBody(body)
 
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
     self._addParameter(failoverRequest, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(importLine, '<MODULE>', 'FailoverRequest')
+    body = importLine.replace('<MODULE>', 'FailoverRequest')
     failoverRequest.setBody(body)
 
     registerdata = ModuleDefinition('RegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
     self._addParameter(registerdata, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(importLine, '<MODULE>', 'RegisterOutputData')
+    body = importLine.replace('<MODULE>', 'RegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
     self._addParameter(logUpload, 'enable', 'bool', False, 'EnableFlag')
-    body = string.replace(importLine, '<MODULE>', 'UploadLogFile')
+    body = importLine.replace('<MODULE>', 'UploadLogFile')
     logUpload.setBody(body)
 
     finalization = StepDefinition('Job_Finalization')
@@ -439,6 +439,9 @@ class ProductionJob(Job):
       finalpaths += "/"+str(self.transfid).zfill(8)
       finals.append(finalpaths)
       self.finalMetaDict[finalpaths] = {"ProdID" : self.transfid}
+      if 'ILDConfigVersion' in self.prodparameters:
+        self.finalMetaDict[finalpaths].update({"ILDConfig":self.prodparameters['ILDConfigVersion']})
+        
       if self.nbevts:
         self.finalMetaDict[finalpaths].update({'NumberOfEvents' : self.jobFileGroupSize * self.nbevts})
     self.finalpaths = finals
@@ -530,6 +533,8 @@ class ProductionJob(Job):
       info.append('- SW packages %s' % self.prodparameters["SWPackages"])
     if "SoftwareTag" in self.prodparameters:
       info.append('- SW tags %s' % self.prodparameters["SoftwareTag"])
+    if "ILDConfigVersion" in self.prodparameters:
+      info.append('- ILDConfig %s' % self.prodparameters['ILDConfigVersion'])  
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
     for finalpath in self.finalpaths:
@@ -545,7 +550,7 @@ class ProductionJob(Job):
     for k, v in self.finalMetaDictNonSearch.items():
       info.append('    %s = %s' % (k, v))
       
-    infoString = string.join(info,'\n')
+    infoString = '\n'.join(info)
     self.prodparameters['DetailedInfo'] = infoString
     
     for n, v in self.prodparameters.items():
@@ -626,7 +631,7 @@ class ProductionJob(Job):
     """ Set a production parameter.
     """
     if type(pvalue) == type([]):
-      pvalue = string.join(pvalue, '\n')
+      pvalue = '\n'.join(pvalue)
 
     prodClient = RPCClient('Transformation/TransformationManager', timeout=120)
     if type(pvalue) == type(2):
