@@ -244,6 +244,16 @@ if __name__ == "__main__":
       fmeta.update(res['Value'])
       if 'ProdID' in fmeta:
         pid = str(fmeta['ProdID'])
+      res = fc.getFileAncestors([f], 1) 
+      if res["OK"]:
+        for lfn,ancestorsDict in res['Value']['Successful'].items():
+          if ancestorsDict.keys():
+            fmeta["Ancestors"] = ancestorsDict.keys()
+      res = fc.getFileDescendents([f], 1)
+      if res["OK"]:
+        for lfn,descendDict in res['Value']['Successful'].items():
+          if descendDict.keys():
+            fmeta['Descendants'] = descendDict.keys()  
     else:
       ext = f.split(".")[-1]
       fitems = []
