@@ -251,7 +251,6 @@ if __name__ == "__main__":
       pid = ''
       if ext == 'stdhep':
         pid = fitems[fitems.index('gen')+1]
-        print pid
       if ext == 'slcio':
         if 'rec' in fitems:
           pid = fitems[fitems.index('rec')+1]
