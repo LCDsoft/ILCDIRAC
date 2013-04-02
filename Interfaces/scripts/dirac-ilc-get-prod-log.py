@@ -8,7 +8,7 @@ Created on Mar 21, 2013
 '''
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, exit as dexit
-from DIRACmain.Core.Utilities import PromptUser
+from DIRAC.Core.Utilities import PromptUser
 
 class Params(object):
   def __init__(self):
