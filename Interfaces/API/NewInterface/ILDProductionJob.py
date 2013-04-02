@@ -219,8 +219,12 @@ class ILDProductionJob(ProductionJob):
     else :
       self.prodparameters["SoftwareTag"] = "%s.%s" % (application.appname, application.version)
       
-    softwarepath = application.appname+application.version
-    
+    #softwarepath = application.appname+application.version
+    if 'ILDConfigVersion' in self.prodparameters:
+      softwarepath = self.prodparameters['ILDConfigVersion']
+    else:
+      return S_ERROR("ILDConfig not set, it is mandatory for path definition, please use p.setILDConfig() before appending applications")
+
     if not self.energy:
       if application.energy:
         self.energy = Decimal(str(application.energy))
