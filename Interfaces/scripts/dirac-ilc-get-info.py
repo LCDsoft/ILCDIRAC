@@ -2,6 +2,7 @@
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, exit as dexit
+import pprint
 
 class Params(object):
   def __init__(self):
@@ -26,7 +27,6 @@ class Params(object):
 
 def createTransfoInfo(trans):
   info = []
-  info.append("Production %s has the following parameters:" % trans['TransformationID'])
   info.append(" - It's a %s production" % trans['Type'])
   info.append(" - It's described as %s" % trans["LongDescription"])
   info.append(" - It's part of the %s group" % trans['TransformationGroup'])
@@ -36,6 +36,21 @@ def createTransfoInfo(trans):
   info.append(" - It was created by %s" % trans['AuthorDN'])
   if 'InputDataQuery' in trans:
     info.append(' - Was input with %s ' % str(trans['InputDataQuery']))
+  if 'AddParams' in trans:
+    for key, val in trans['AddParams'].items():
+      if key == 'SWPackages':
+        info.append(" - Uses the software %s" % trans['AddParams']['SWPackages'].replace(";", ", "))
+      if key.lower().count("steeringfile"):
+        info.append(" - The steering file used for %s is %s" % (key.split("_")[0], trans['AddParams'][key]))
+      if key.lower().count("detectormodel"):
+        info.append(" - Detector model %s" % trans['AddParams'][key])
+      if key.lower().count('trackingstra'):
+        info.append(" - Tracking strategy %s" % trans['AddParams'][key])
+      if key.count('whizardparams'):
+        pp = pprint.PrettyPrinter(indent=4)
+        whizp = pp.pformat(eval(trans['AddParams'][key]))
+        info.append(" - Uses the following whizard parameters:")
+        info.append("      %s" % whizp)
   info.append('')
   
   return info
@@ -121,12 +136,11 @@ def createFileInfo(fmeta):
     try:
       dinfo = DEncode.decode(fmeta["AdditionalInfo"])   
     except:
-      dinfo = fmeta["AdditionalInfo"]  
+      dinfo = eval(fmeta["AdditionalInfo"])  
     info.append(" - There is some additional info:")
-    if type(dinfo) == type(()):
-      inf = dinfo[0]
-      if type(inf) == type({}):
-        dictinfo = inf
+    
+    if type(dinfo) == type({}):
+        dictinfo = dinfo
         if 'xsection' in dictinfo:
           if 'sum' in dictinfo['xsection']:
             if 'xsection' in dictinfo['xsection']['sum']:
@@ -145,15 +159,17 @@ def createFileInfo(fmeta):
     del fmeta['Luminosity']
     
   if 'Ancestors' in fmeta:
-    info.append(" - Was produced from:")
-    for anc in fmeta["Ancestors"]:
-      info.append('    %s' % anc)
+    if len(fmeta["Ancestors"]):
+      info.append(" - Was produced from:")
+      for anc in fmeta["Ancestors"]:
+        info.append('    %s' % anc)
     del fmeta["Ancestors"]
     
   if 'Descendants' in fmeta:
-    info.append(" - Gave the following files:")
-    for des in fmeta["Descendants"]:
-      info.append('    %s' % des)
+    if len(fmeta["Descendants"]):
+      info.append(" - Gave the following files:")
+      for des in fmeta["Descendants"]:
+        info.append('    %s' % des)
     del fmeta["Descendants"]
 
   if 'DetectorType' in fmeta:
@@ -196,6 +212,9 @@ if __name__ == "__main__":
     res = tc.getTransformationInputDataQuery( clip.prodid )
     if res['OK']:
       trans['InputDataQuery'] = res['Value']
+    res = tc.getAdditionalParameters ( clip.prodid )
+    if res['OK']:
+      trans['AddParams'] = res['Value']
     #do something with transf
     res = fc.findDirectoriesByMetadata({'ProdID':clip.prodid})
     if res['OK']:
@@ -220,6 +239,7 @@ if __name__ == "__main__":
           
     #here we have trans and fmeta
     info.append("")
+    info.append("Production %s has the following parameters:" % trans['TransformationID'])
     info.extend(createTransfoInfo(trans))
     if fmeta:
       info.append('The files created by this production have the following metadata:')
@@ -313,11 +333,14 @@ if __name__ == "__main__":
       res = tc.getTransformationInputDataQuery( pid )
       if res['OK']:
         trans['InputDataQuery'] = res['Value']
+      res = tc.getAdditionalParameters ( pid )
+      if res['OK']:
+        trans['AddParams'] = res['Value']
     info.append("")
     info.append("Input file has the following properties:")
     info.extend(createFileInfo(fmeta))  
     info.append("")
-    info.append('It was created with the following production:')
+    info.append('It was created with the production %s:' % pid)
     if trans:
       info.extend(createTransfoInfo(trans))
         
