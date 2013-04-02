@@ -23,8 +23,8 @@ Data recovery agent: sets as unused files that are really undone.
     - Mark the recovered input file status as 'Unused' in the ProductionDB
 """
 
-__RCSID__   = "$Id: DataRecovery.py 18182 2009-11-11 14:45:10Z paterson $"
-__VERSION__ = "$Revision: 1.9 $"
+__RCSID__   = "$Id: $"
+__VERSION__ = "$Revision: $"
 
 from DIRAC                                                     import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule                               import AgentModule
@@ -74,7 +74,6 @@ class DataRecoveryAgent( AgentModule ):
     fileSelectionStatus = ['Assigned', 'MaxReset']
     updateStatus = 'Unused'
     wmsStatusList = ['Failed']
-        
     #only worry about files > 12hrs since last update    
     selectDelay = self.am_getOption("Delay", 2) #hours 
 
@@ -164,15 +163,15 @@ class DataRecoveryAgent( AgentModule ):
         self.log.error(result)
         continue
 
-      jobsWithFilesOKToUpdate = result['Value']['jobfiledictok']
+      jobsWithFilesOKToUpdate = result['Value']['filesToMarkUnused']
       jobsWithFilesProcessed = result['Value']['filesprocessed']
-      self.log.info('====> Transformation %s total jobs that can be updated now: %s' % (transformation, len(jobsWithFilesOKToUpdate.keys())))
+      self.log.info('====> Transformation %s total jobs that can be updated now: %s' % (transformation, len(jobsWithFilesOKToUpdate)))
 
       filesToUpdateUnused = []
-      for fileList in jobsWithFilesOKToUpdate.values():
-        filesToUpdateUnused += fileList
+      for fileList in jobsWithFilesOKToUpdate:
+        filesToUpdateUnused.append(fileList)
       
-      if filesToUpdateUnused:
+      if len(filesToUpdateUnused):
         result = self.updateFileStatus(transformation, filesToUpdateUnused, updateStatus)
         if not result['OK']:
           self.log.error('Recoverable files were not updated with result:\n%s' % (result['Message']))
@@ -180,9 +179,12 @@ class DataRecoveryAgent( AgentModule ):
       else:
         self.log.info('There are no files with failed jobs to update for production %s in this cycle' % transformation)             
 
+      filesToUpdateProcessed = []  
+      for fileList in jobsWithFilesProcessed:
+        filesToUpdateProcessed.append(fileList)
       
-      if jobsWithFilesProcessed:
-        result = self.updateFileStatus(transformation, jobsWithFilesProcessed, 'Processed')
+      if len(filesToUpdateProcessed):
+        result = self.updateFileStatus(transformation, filesToUpdateProcessed, 'Processed')
         if not result['OK']:
           self.log.error('Recoverable files were not updated with result:\n%s' % (result['Message']))
           continue          
@@ -336,6 +338,7 @@ class DataRecoveryAgent( AgentModule ):
     expectedlfns = []
     contactfailed = []
     fileprocessed = []
+    files = []
     for filep, task in filedict.items():
       commons = {}
       commons['outputList'] = olist
@@ -349,15 +352,19 @@ class DataRecoveryAgent( AgentModule ):
         self.log.error('Getting metadata failed')
         contactfailed.append(filep)
         continue
+      files.append(filep)      
       success = res['Value']['Successful'].keys()
       failed = res['Value']['Failed'].keys()
       if len(success) and not len(failed):
         fileprocessed.append(filep)
 
-    for filep in fileprocessed:
-      if jobFileDict.has_key(filep):
-        del jobFileDict[filep]
-    result = {'filesprocessed' : fileprocessed, 'jobfiledictok' : jobFileDict}    
+    final_list_unused = files
+    for file_all in files:
+      if file_all in fileprocessed:
+        final_list_unused.remove(filep)
+
+        
+    result = {'filesprocessed' : fileprocessed, 'filesToMarkUnused' : final_list_unused}    
     return S_OK(result)
 
   #############################################################################
