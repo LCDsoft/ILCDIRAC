@@ -17,8 +17,8 @@ additional_name = '' ## This is to allow defining unique name productions
 energy = 1000. ##This is mostly needed to define easily the steering files and the overlay parameters
 meta_energy = '1000' ##This is needed for the meta data search below
 
-dryrun = True #do not register anything nor create anything. Most likely will break the second prod 
-#submitted in the chain. Should be used once the splitting-at-stdhep-level prods are submitted.
+dryrun = True #do not register anything nor create anything. 
+# Should be used once the splitting-at-stdhep-level prods are submitted.
 
 detectorModel = 'ILD_o1_v05' ##OR anything valid, but be careful with the overlay, the files need to exist
 ILDConfig = 'SOMETHING' #whatever you defined
@@ -278,6 +278,7 @@ if ild_rec_ov and meta:
   #######################
   #Define the reconstruction prod    
   pmao = ILDProductionJob()
+  pmao.setILDConfig(ILDConfig)
   pmao.setLogLevel("verbose")
   pmao.setProdType('MCReconstruction_Overlay')
   res = pmao.setInputDataQuery(meta)
