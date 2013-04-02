@@ -2,7 +2,7 @@
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, exit as dexit
-import pprint
+import pprint, types
 
 class Params(object):
   def __init__(self):
@@ -137,9 +137,10 @@ def createFileInfo(fmeta):
       dinfo = DEncode.decode(fmeta["AdditionalInfo"])   
     except:
       dinfo = eval(fmeta["AdditionalInfo"])  
-    info.append(" - There is some additional info:")
-    
-    if type(dinfo) == type({}):
+    info.append(" - There is some additional info:")    
+    if type(dinfo) == types.TupleType:
+      dinfo = dinfo[0]
+    if type(dinfo) == types.DictType:
         dictinfo = dinfo
         if 'xsection' in dictinfo:
           if 'sum' in dictinfo['xsection']:
