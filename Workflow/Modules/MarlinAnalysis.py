@@ -334,6 +334,7 @@ class MarlinAnalysis(ModuleBase):
       script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n')
       
     script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
+    script.write('declare -x MARLIN_DEBUG=1\n')##Needed for recent version of marlin (from 03 april 2013)
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
