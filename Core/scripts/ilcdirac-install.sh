@@ -4,11 +4,14 @@ wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/sc
 chmod +x dirac-install
 ./dirac-install -V ILCDIRAC
 
+source bashrc
+dirac-proxy-init -x
+
 vo=ilc
 setup=ILC-Production
 csserver=dips://volcd01.cern.ch:9135/Configuration/Server
 
-scripts/dirac-configure -V $vo -S $setup -C $csserver -d --SkipCAChecks
+dirac-configure -V $vo -S $setup -C $csserver -d --SkipCAChecks
 echo ""
 echo "To get the proper environment, run source bashrc"
 echo ""
