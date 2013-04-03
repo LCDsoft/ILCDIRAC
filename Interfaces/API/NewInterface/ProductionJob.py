@@ -111,7 +111,7 @@ class ProductionJob(Job):
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
   
-  def setILDConfig(self,Version):
+  def setConfig(self,Version):
     """ Define the Configuration package to obtain
     """
     appName = 'ILDConfig'
