@@ -357,7 +357,7 @@ class DataRecoveryAgent( AgentModule ):
       failed = res['Value']['Failed'].keys()
       if len(success) and not len(failed):
         fileprocessed.append(filep)
-
+        
     final_list_unused = files
     for file_all in files:
       if file_all in fileprocessed:
