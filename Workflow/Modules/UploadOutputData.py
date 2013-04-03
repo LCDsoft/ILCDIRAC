@@ -293,6 +293,8 @@ class UploadOutputData(ModuleBase):
         cleanUp = True
         break #no point continuing if one completely fails
 
+    os.remove("DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK") #cleanup the mess
+
     #Now after all operations, retrieve potentially modified request object
     result = failoverTransfer.getRequestObject()
     if not result['OK']:
