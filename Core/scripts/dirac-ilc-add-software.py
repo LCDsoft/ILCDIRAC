@@ -9,7 +9,7 @@ from DIRAC.Core.Base import Script
 
 from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
 
-import string, os, shutil
+import os
 try:
   import hashlib as md5
 except:
