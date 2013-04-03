@@ -14,7 +14,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
 from DIRAC.Resources.Catalog.FileCatalogClient    import FileCatalogClient
 from DIRAC.Core.Utilities                         import DEncode
 from DIRAC import S_OK, gLogger
-import string, os
+import os
 
 class RegisterOutputData( ModuleBase ):
   """ At the end of a production Job, we need to register meta data info for the files. 
