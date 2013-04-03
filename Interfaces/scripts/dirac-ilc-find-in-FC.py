@@ -123,7 +123,7 @@ def createQueryDict(argss):
 if __name__ == '__main__':
   from DIRAC.Core.Base import Script
   Script.parseCommandLine()
-  Script.setUsageMessage(  "%s /ilc/prod/ meta1=A meta2=B etc." % Script.scriptName)
+  Script.setUsageMessage(  "%s path meta1=A meta2=B etc." % Script.scriptName)
 
   args = Script.getPositionalArgs()
   if len(args)<2:
