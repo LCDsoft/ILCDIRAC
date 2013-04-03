@@ -38,6 +38,8 @@ nbevtsperfilestdhep = 100
 #Do Sim
 ild_sim = False
 nbtasks = 10 #Take 10 files from input meta data query result
+#It's possible to get this number automatically by getting the number of events per file (if known)
+#nbtasks = math.ceil(number_of_events_to_process/nb_events_per_signal_file) #needs import math
 #can be extended with dirac-ilc-add-tasks-to-prod
 
 #DoSplit
