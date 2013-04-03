@@ -23,7 +23,6 @@ class ILDProductionJob(ProductionJob):
     self.polarization = ""
     self.machineparams = ''
     self.detector = ''
-    self.ildconfigvers = ''
     self.compatmeta = {}
     self.processID = 0
     
@@ -275,7 +274,7 @@ class ILDProductionJob(ProductionJob):
     # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include 
     # EvtClass automatically)
     if not self.basename:
-      self.basename = 's'+self.ildconfigvers
+      self.basename = 's'+self.prodparameters['ILDConfigVersion']
     if 'DetectorModel'  in self.compatmeta:
       self.basename += '.m'+self.compatmeta['DetectorModel']
     elif self.detector:
