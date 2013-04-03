@@ -17,7 +17,8 @@ def upload(path, appTar):
   """
   rm = ReplicaManager()
   ops = Operations()
-  
+  if path[-1] != "/":
+    path += "/"
   if not os.path.exists(appTar):
     gLogger.error("Tar ball %s does not exists, cannot continue." % appTar)
     return S_ERROR()
