@@ -1,3 +1,32 @@
+[v18r0p0]
+* Core
+- Added the createTarBall scripts
+- Merge several script into one, define the FileUtils to handle the upload of the softwares
+- Update the ilcdirac-install script to get the proxy before getting the the dirac-configure
+- Handle the file meta data for ILD case, generalize to all
+
+* ILCTransformationSystem
+- New system
+- Add DataRecoveryAgent: fix it and simplify
+- add Transformation Class to handle the Limited plugin
+- Add the Limited plugin to allow restricting the productions to a certain number of tasks
+- add script to increase the number of tasks for the Limited productions
+
+* Interfaces
+- Finalize the ILDProductionJob
+- Finalize the ILDProductionChain script
+- Add dirac-ilc-get-info script that obtains all the info of a given file and/or production
+- Change the setILDConfig to setConfig in PoructionJob, add method in ILDProductionJob, setILDconfig that calls the first
+
+* ProcessProductionSystem
+- Removed the DataRecoveryAgent as it's in the ILCTransformationSystem
+
+* Workflow
+- Change a bit the logic, in particular promote the number of events resolution to Module Base
+- Get all the file meta data and push to the daughter what is relevant (default and ILDRegisterOutputData)
+- A bit of cleanup: remove unused imports
+
+
 [v17r3p6]
 * Interfaces
 Use the Transformation class provided in ILCDIRAC
