@@ -133,7 +133,7 @@ if __name__=="__main__":
         if len(tarballurl['Value']) > 0:
           res = upload(tarballurl['Value'], appTar)
           if not res['OK']:
-            gLogger.error("Upload to %s failed" % tarballurl)
+            gLogger.error("Upload to %s failed" % tarballurl['Value'], res['Value'])
             dexit(255)
       resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(),
                                                                appVersion), md5sum)
@@ -153,7 +153,7 @@ if __name__=="__main__":
       if len(tarballurl['Value']) > 0:
         res = upload(tarballurl['Value'], appTar)
         if not res['OK']:
-          gLogger.error("Upload to %s failed" % tarballurl)
+          gLogger.error("Upload to %s failed" % tarballurl['Value'], res['Value'])
           dexit(255)
     resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),   
                                     md5sum)
