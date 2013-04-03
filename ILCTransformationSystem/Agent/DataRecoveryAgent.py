@@ -166,7 +166,7 @@ class DataRecoveryAgent( AgentModule ):
 
       jobsWithFilesOKToUpdate = result['Value']['filesToMarkUnused']
       jobsWithFilesProcessed = result['Value']['filesprocessed']
-      self.log.info('====> Transformation %s total jobs that can be updated now: %s' % (transformation, len(jobsWithFilesOKToUpdate)))
+      self.log.info('====> Transformation %s total files that can be updated now: %s' % (transformation, len(jobsWithFilesOKToUpdate)))
 
       filesToUpdateUnused = []
       for fileList in jobsWithFilesOKToUpdate:
@@ -340,7 +340,12 @@ class DataRecoveryAgent( AgentModule ):
     contactfailed = []
     fileprocessed = []
     files = []
-    for filep, task in filedict.items():
+    tasks_to_be_checked = {}
+    for files in jobFileDict.values():
+      for f in files:
+        if f in filedict:
+          tasks_to_be_checked[f] = filedict[f] #get the tasks that need to be checked
+    for filep, task in tasks_to_be_checked.items():
       commons = {}
       commons['outputList'] = olist
       commons['PRODUCTION_ID'] = transformation
@@ -353,7 +358,8 @@ class DataRecoveryAgent( AgentModule ):
         self.log.error('Getting metadata failed')
         contactfailed.append(filep)
         continue
-      files.append(filep)      
+      if not filep in files:
+        files.append(filep)      
       success = res['Value']['Successful'].keys()
       failed = res['Value']['Failed'].keys()
       if len(success) and not len(failed):
@@ -362,7 +368,10 @@ class DataRecoveryAgent( AgentModule ):
     final_list_unused = files
     for file_all in files:
       if file_all in fileprocessed:
-        final_list_unused.remove(filep)
+        try:
+          final_list_unused.remove(filep)
+        except:
+          self.log.warn("Item not in list anymore")
 
         
     result = {'filesprocessed' : fileprocessed, 'filesToMarkUnused' : final_list_unused}    
