@@ -167,7 +167,6 @@ if __name__=="__main__":
   #Commit the changes if nothing has failed and the CS has been modified
   if modifiedCS:
     result = diracAdmin.csCommitChanges(False)
-    print result
     if not result[ 'OK' ]:
       gLogger.error('Commit failed with message = %s' % (result[ 'Message' ]))
       dexit(255)
