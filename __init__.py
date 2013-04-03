@@ -8,9 +8,9 @@ __path__ = extend_path(__path__, __name__)
 
 # Define Version
 
-majorVersion = 17
-minorVersion = 3
-patchLevel   = 6
+majorVersion = 18
+minorVersion = 0
+patchLevel   = 0
 preVersion   = 0
     
 version      = "v%sr%s" % ( majorVersion, minorVersion )
