@@ -90,6 +90,11 @@ if __name__=="__main__":
       appTar = "%s%s.tgz" % (appName, appVersion)
     else:
       gLogger.notice("Version not defined")
+
+  if not os.path.exists(appTar):
+    gLogger.error("Cannot find the file %s, exiting" % appTar)
+    dexit(1)    
+    
   appTar_name = os.path.basename(appTar)  
   subject = '%s %s added to DIRAC CS' % (appName, appVersion)
   msg = 'New application %s %s declared into Configuration service\n %s' % (appName, appVersion, comment)
