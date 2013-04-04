@@ -1,127 +1,174 @@
 [v18r0p0]
+
+NEW: New system: ILCTransformationSystem
+
 * Core
-- Added the createTarBall scripts
-- Merge several script into one, define the FileUtils to handle the upload of the softwares
-- Update the ilcdirac-install script to get the proxy before getting the the dirac-configure
-- Handle the file meta data for ILD case, generalize to all
+NEW: Added the createTarBall scripts
+CHANGE: Merge several script into one, define the FileUtils to handle the upload of the softwares
+CHANGE: Update the ilcdirac-install script to get the proxy before getting the the dirac-configure
+CHANGE: Handle the file meta data for ILD case, generalize to all
 
 * ILCTransformationSystem
-- New system
-- Add DataRecoveryAgent: fix it and simplify
-- add Transformation Class to handle the Limited plugin
-- Add the Limited plugin to allow restricting the productions to a certain number of tasks
-- add script to increase the number of tasks for the Limited productions
+NEW: Add DataRecoveryAgent: fix it and simplify
+NEW: add Transformation Class to handle the Limited plugin
+NEW: Add the Limited plugin to allow restricting the productions to a certain number of tasks
+NEW: add script to increase the number of tasks for the Limited productions
 
 * Interfaces
-- Finalize the ILDProductionJob
-- Finalize the ILDProductionChain script
-- Add dirac-ilc-get-info script that obtains all the info of a given file and/or production
-- Change the setILDConfig to setConfig in PoructionJob, add method in ILDProductionJob, setILDconfig that calls the first
+CHANGE: Finalize the ILDProductionJob
+CHANGE: Finalize the ILDProductionChain script
+NEW: Add dirac-ilc-get-info script that obtains all the info of a given file and/or production
+CHANGE: Change the setILDConfig to setConfig in PoructionJob, add method in ILDProductionJob, setILDconfig that calls the first
 
 * ProcessProductionSystem
-- Removed the DataRecoveryAgent as it's in the ILCTransformationSystem
+CHANGE: Removed the DataRecoveryAgent as it's in the ILCTransformationSystem
 
 * Workflow
-- Change a bit the logic, in particular promote the number of events resolution to Module Base
-- Get all the file meta data and push to the daughter what is relevant (default and ILDRegisterOutputData)
-- A bit of cleanup: remove unused imports
-
+CHANGE: Change a bit the logic, in particular promote the number of events resolution to Module Base
+CHANGE: Get all the file meta data and push to the daughter what is relevant (default and ILDRegisterOutputData)
+CHANGE: A bit of cleanup: remove unused imports
 
 [v17r3p6]
+
 * Interfaces
-Use the Transformation class provided in ILCDIRAC
-Fix the ILDConfig handling
+CHANGE: Use the Transformation class provided in ILCDIRAC
+FIX: Fix the ILDConfig handling
+
 * Transformation
-Allow for -1 as number of tasks
-Add our Transformation class (needed for the moment)
+CHANGE: Allow for -1 as number of tasks
+NEW: Add our Transformation class (needed for the moment)
+
 * Workflow
-Remove obsoleted code, refactor a bit, complete the ILDRegisterOutputData module
+CHANGE: Remove obsoleted code, refactor a bit, complete the ILDRegisterOutputData module
 
 [v17r3p5]
+
 * Interfaces
-Add script to upload generator files for Akiya, Mikael, Tim
-Add script to extend Limited productions
+NEW: Add script to upload generator files for Akiya, Mikael, Tim
+NEW: Add script to extend Limited productions
+
 * TransfornmationSystem
-New plugin for Limited transformations
+NEW: New plugin for Limited transformations
+
 [v17r3p3]
+
 * ModuleBase
-Fix copy path
+FIX: Fix copy path
+
 [v17r3p3]
+
 * ModuleBase
-Add more message for debugging
+CHANGE: Add more message for debugging
+
 [v17r3p2]
+
 * TarSoft
-Print a message when software installation was successful
+CHANGE: Print a message when software installation was successful
+
 [v17r3p1]
+
 *  Workflow
-Same as previous, but fix tag
+FIX: Same as previous, but fix tag
+
 [v17r3p0]
+
 * Interface
-Add ILDProductionJob and ILDProductionChain script
+NEW: Add ILDProductionJob and ILDProductionChain script
+
 * Core 
-Get all the file meta data, needed for ILDProduction namin conventions to adjust
+CHANGE: Get all the file meta data, needed for ILDProduction namin conventions to adjust
+
 * Workflow
-Add ILDConfig package resolution, get all meta data and put some in the Mokka RunHeader
+NEW: Add ILDConfig package resolution, get all meta data and put some in the Mokka RunHeader
 
 [v17r2p3]
+
 * Interface
-Added CLI find utility
+NEW: Added CLI find utility
+
 [v17r2p2]
+
 * Workflow
-Fix bad import
+FIX: Fix bad import
+
 [v17r2p1]
-Fix version
+
+FIX: Fix version
+
 [v17r2p0]
+
 * Core
-Make proper scripts, merge common utilities
+CHANGE: Make proper scripts, merge common utilities
+
 * Interfaces
-Fix scripts once again
+FIX: Fix scripts once again
+
 * Workflow
-Adjust to merging od utilitites in Core.
+CHANGE: Adjust to merging old utilities in Core.
+
 [v17r1p6]
-Same as previous
+
+FIX: Same as previous
+
 [v17r1p5]
+
 * TARSoft
-Bug fix
+FIX: Bug fix
 
 [v17r1p4]
+
 * All
-Same as previous, but with proper tags for the packages
+FIX: Same as previous, but with proper tags for the packages
+
 [v17r1p3]
+
 * Core
-Bugfix: Changed import order in scripts to make them right
+FIX: Changed import order in scripts to make them right
+
 * Interfaces
-Bugfix: Changed import order in scripts to make them right
+FIX: Changed import order in scripts to make them right
 
 [v17r1p2]
+
 * Interface
 Scripts are actual scripts, removed out dated things
+
 * Workflow
 Some cleanup
 
 [v17r1p1]
+
 * Core
 Reshuffle a bit more the TARsoft utility
 
 [v17r1r0]
+
 Based on DIRAC v6r7p15 
+
 [v17r0r0]
+
 Based on DIRAC v6r7 
+
 [v16r9r2]
+
 * FindSteeringFiles
 Fix import error
 
 [v16r9r1]
+
 * TarSoft
 Don't check the checksum of the md5sum file as it's never going to be correct
 
 [v16r9r0]
+
 * TarSoft
 Add md5sum checks, and add time out to lock file validity.
+
 * scripts
 Make them proper script, with __name__=="__main__".
 
 [v16r8r2]
+
 * Interfaces
 Fix Application initialization
 [v16r8r1]
