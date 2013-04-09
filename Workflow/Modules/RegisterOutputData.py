@@ -97,7 +97,7 @@ class RegisterOutputData( ModuleBase ):
         info['AdditionalInfo'] = self.inputdataMeta['AdditionalInfo']
         metafiles.update(info)
       
-      if ['CrossSection'] in self.inputdataMeta:
+      if 'CrossSection' in self.inputdataMeta:
         xsec = {'CrossSection':self.inputdataMeta['CrossSection']}
         metafiles.update(xsec)
       
