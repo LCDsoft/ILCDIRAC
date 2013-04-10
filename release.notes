@@ -1,3 +1,14 @@
+[v18r0p2]
+
+*Workflow
+NEW: Added StdhepCutJava application: need final command call
+FIX: ApplicationScript arguments were overwritten by ParametricParameters, mostly empty
+
+[v18r0p1]
+
+*ALL
+CHANGE: This was made from git
+
 [v18r0p0]
 
 NEW: New system: ILCTransformationSystem
