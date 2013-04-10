@@ -28,10 +28,14 @@ class ApplicationScript(ModuleBase):
     self.applicationVersion = ''
     
   def applicationSpecificInputs(self):
-    if self.workflow_commons.has_key('ParametricParameters'):
-      self.arguments = self.workflow_commons['ParametricParameters']
-      if type(self.arguments) == types.ListType:
-        self.arguments = " ".join(self.arguments)
+    if 'ParametricParameters' in self.workflow_commons:
+      parametric = ' '
+      if type(self.workflow_commons['ParametricParameters']) == types.ListType:
+        parametric = " ".join(self.workflow_commons['ParametricParameters'])
+      else:
+        parametric = self.workflow_commons['ParametricParameters']
+      self.arguments += parametric
+
     return S_OK()
 
   def execute(self):
