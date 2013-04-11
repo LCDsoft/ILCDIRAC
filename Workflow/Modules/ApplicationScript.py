@@ -28,6 +28,7 @@ class ApplicationScript(ModuleBase):
     self.applicationVersion = ''
     
   def applicationSpecificInputs(self):
+    self.log.info("The arguments are %s"% self.arguments)
     if 'ParametricParameters' in self.workflow_commons:
       parametric = ' '
       if type(self.workflow_commons['ParametricParameters']) == types.ListType:
