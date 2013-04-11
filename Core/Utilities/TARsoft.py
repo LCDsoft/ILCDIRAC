@@ -483,7 +483,7 @@ def configure(app, area, res_from_check):
     res = checkJava()
     if not res['OK']:
       return res
-  elif appName == "lcsim":
+  elif appName in ["lcsim",'stdhepcutjava']:
     res = checkJava()
     if not res['OK']:
       return res
