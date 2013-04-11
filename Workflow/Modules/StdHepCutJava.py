@@ -115,7 +115,7 @@ class StdHepCutJava(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s' % self.MaxNbEvts
-    comm = "java -Xmx1536m -Xms256m -server -Djava.library.path=$JAVALIBPATH -jar %s %s -o %s -c %s  *.stdhep\n" % (appDir, extraopts, self.OutputFile, self.SteeringFile)
+    comm = "java -Xmx1536m -Xms256m -Djava.library.path=$JAVALIBPATH -jar %s %s -o %s -c %s  *.stdhep\n" % (appDir, extraopts, self.OutputFile, self.SteeringFile)
     self.log.info("Running %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
