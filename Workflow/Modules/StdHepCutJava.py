@@ -105,7 +105,7 @@ class StdHepCutJava(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     if os.path.exists("lib"):
-      script.write("declare -x CLASSPATH=./lib\n")
+      script.write("declare -x CLASSPATH=./lib:$CLASSPATH\n")
     script.write('echo =========\n')
     script.write('echo java version :\n')
     script.write('java -version\n')
