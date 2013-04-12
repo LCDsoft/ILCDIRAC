@@ -104,9 +104,8 @@ class StdHepCutJava(ModuleBase):
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    script.write("declare -x JAVALIBPATH=./\n")
     if os.path.exists("lib"):
-      script.write("declare -x JAVALIBPATH=./lib\n")
+      script.write("declare -x CLASSPATH=./lib\n")
     script.write('echo =========\n')
     script.write('echo java version :\n')
     script.write('java -version\n')
@@ -115,7 +114,7 @@ class StdHepCutJava(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s' % self.MaxNbEvts
-    comm = "java -Xmx1536m -Xms256m -Djava.library.path=$JAVALIBPATH -jar %s %s -o %s -c %s  *.stdhep\n" % (appDir, extraopts, self.OutputFile, self.SteeringFile)
+    comm = "java -Xmx1536m -Xms256m -jar %s %s -o %s -c %s  *.stdhep\n" % (appDir, extraopts, self.OutputFile, self.SteeringFile)
     self.log.info("Running %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
