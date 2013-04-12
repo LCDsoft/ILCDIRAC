@@ -24,7 +24,7 @@ class Params(object):
     self.p2 = 'p'
     self.pol1 = ''
     self.pol2 = ''
-    self.software = ''
+    self.software = 'whizard-1.95'
     self.fmeta = {}
     self.force = False
     
@@ -135,10 +135,10 @@ class Params(object):
     Script.registerSwitch("T:", "EvtType=",'Process type, like 6f_yyyyee',self.setEvtType)
     Script.registerSwitch("L:", "Luminosity=",'Luminosity of the sample',self.setLumi)
     Script.registerSwitch("N:", "NumberOfEvents=",'Number of events per file',self.setNumberOfEvents)
-    Script.registerSwitch('', 'BeamParticle1=', 'Particle of beam 1', self.setBeamP1 )
-    Script.registerSwitch('', 'BeamParticle2=', 'Particle of beam 2', self.setBeamP2 )
-    Script.registerSwitch('', 'PolarisationBeam1=', 'Polarisation for particle of beam 1', self.setPol1 )
-    Script.registerSwitch('', 'PolarisationBeam2=', 'Polarisation for particle of beam 2', self.setPol2 )
+    Script.registerSwitch('', 'BeamParticle1=', 'Particle of beam 1, e.g. e1', self.setBeamP1 )
+    Script.registerSwitch('', 'BeamParticle2=', 'Particle of beam 2, e.g. E1', self.setBeamP2 )
+    Script.registerSwitch('', 'PolarisationBeam1=', 'Polarisation for particle of beam 1: L, R, W', self.setPol1 )
+    Script.registerSwitch('', 'PolarisationBeam2=', 'Polarisation for particle of beam 2: L, R, W', self.setPol2 )
     Script.registerSwitch('', 'XSection=', 'Cross section in fb' , self.setXSec)
     Script.registerSwitch('', 'XSectionError=', 'Cross section error in fb', self.setXSecE )
     Script.registerSwitch('', 'Software=', "Software and version, e.g. %s"%self.software, self.setSoftware)
