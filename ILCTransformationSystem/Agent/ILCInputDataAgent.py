@@ -9,56 +9,17 @@ key set in the DIRAC FileCatalog.
 import time, datetime
 
 from DIRAC                                                                import S_OK, gLogger, gMonitor
-from DIRAC.Core.Base.AgentModule                                          import AgentModule
-from DIRAC.TransformationSystem.Client.TransformationClient               import TransformationClient
-from DIRAC.Resources.Catalog.FileCatalogClient                            import FileCatalogClient
+from DIRAC.TransformationSystem.Agent.InputDataAgent                      import InputDataAgent
 from DIRAC.Core.Utilities.List                                            import sortList
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations                  import Operations
-
-from math import ceil
 
 AGENT_NAME = 'Transformation/ILCInputDataAgent'
 
-class ILCInputDataAgent( AgentModule ):
+class ILCInputDataAgent( InputDataAgent ):
 
   def __init__( self, *args, **kwargs ):
     ''' c'tor
     '''
-    AgentModule.__init__( self, *args, **kwargs )
-
-    self.fileLog = {}
-    self.timeLog = {}
-    self.fullTimeLog = {}
-
-    self.pollingTime = self.am_getOption( 'PollingTime', 120 )
-    self.fullUpdatePeriod = self.am_getOption( 'FullUpdatePeriod', 86400 )
-    self.refreshonly = self.am_getOption( 'RefreshOnly', False )
-    self.dateKey = self.am_getOption( 'DateKey', None )
-
-    self.transClient = TransformationClient()
-    self.metadataClient = FileCatalogClient()
-    self.transformationTypes = None
-
-  #############################################################################
-  def initialize( self ):
-    ''' Make the necessary initializations
-    '''
-    gMonitor.registerActivity( "Iteration", "Agent Loops", AGENT_NAME, "Loops/min", gMonitor.OP_SUM )
-    agentTSTypes = self.am_getOption( 'TransformationTypes', [] )
-    if agentTSTypes:
-      self.transformationTypes = sortList( agentTSTypes )
-    else:
-      dataProc = Operations().getValue( 'Transformations/DataProcessing', ['MCSimulation', 'Merge'] )
-      dataManip = Operations().getValue( 'Transformations/DataManipulation', ['Replication', 'Removal'] )
-      self.transformationTypes = sortList( dataProc + dataManip )
-    extendables = Operations().getValue( 'Transformations/ExtendableTransfTypes', [])
-    if extendables:
-      for extendable in extendables:
-        if extendable in self.transformationTypes:
-          self.transformationTypes.remove(extendable)
-          #This is because the Extendables do not use this Agent (have no Input data query)
-          
-    return S_OK()
+    InputDataAgent.__init__( self, *args, **kwargs )
 
   ##############################################################################
   def execute( self ):
