@@ -34,13 +34,13 @@ class ILCWorkflowTasks( WorkflowTasks ):
     if paramsDict.has_key( 'InputData' ):
       if paramsDict['InputData']:
         self.log.verbose( 'Setting input data to %s' % paramsDict['InputData'] )
-        lfns = paramsDict['InputData']
+        lfns = paramsDict['InputData'].split(";") #it comes as one string with;
         final_lfns = []
         for f in lfns:
           lfn = f.split(":")
           final_lfns.append(lfn[0])
           if len(lfn)>1:
             oJob._addJDLParameter( 'StartFrom', lfn[1] )
-        oJob.setInputData( final_lfns )
+        oJob.setInputData( ";".join( final_lfns ) )#pass it back as one string
         
         
