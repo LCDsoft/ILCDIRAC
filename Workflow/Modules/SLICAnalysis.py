@@ -62,6 +62,9 @@ class SLICAnalysis(ModuleBase):
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
 
+    if self.WorkflowStartFrom:
+      self.startFrom = self.WorkflowStartFrom
+
     if self.step_commons.has_key('stdhepFile'):
       inputf = self.step_commons["stdhepFile"]
       if not type(inputf) == types.ListType:
