@@ -59,7 +59,7 @@ class ModuleBase(object):
     self.SteeringFile = ''
     self.energy = 0
     self.NumberOfEvents = 0
-    self.WokflowStartFrom = 0
+    self.WorkflowStartFrom = 0
     self.result = S_ERROR()
     self.InputFile = []
     self.ignoremissingInput = False
@@ -374,7 +374,7 @@ class ModuleBase(object):
 
     if 'StartFrom' in self.workflow_commons:
       if self.workflow_commons['StartFrom'] > 0:
-        self.WokflowStartFrom = self.workflow_commons['StartFrom']
+        self.WorkflowStartFrom = self.workflow_commons['StartFrom']
 
     if self.step_commons.has_key('InputFile'):
       ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string 
