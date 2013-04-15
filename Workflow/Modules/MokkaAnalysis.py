@@ -63,6 +63,9 @@ class MokkaAnalysis(ModuleBase):
           
     if self.step_commons.has_key('startFrom'):
       self.startFrom = self.step_commons['startFrom']
+      
+    if self.WorkflowStartFrom:
+      self.startFrom = self.WorkflowStartFrom
 
       #Need to keep until old prods are archived.
     if self.step_commons.has_key("steeringFile"):
