@@ -106,12 +106,12 @@ class ILCInputDataAgent( InputDataAgent ):
                 break
               nb_evts_in_file = float(fmeta['NumberOfEvents'])
               slice_nb = 0
-              tot_evts_processed = 0
+              remaining_evts = nb_evts_in_file
               start_evt_in_slice = 0
-              while start_evt_in_slice <= nb_evts_in_file:
+              while remaining_evts > 0:
                 start_evt_in_slice = slice_nb*evts_slice
                 slice_nb += 1
-                tot_evts_processed += evts_slice
+                remaining_evts -= evts_slice
                 final_list.append(lfn+":"+int(start_evt_in_slice)) ##This is where the magic happens
                 
             if broke:
