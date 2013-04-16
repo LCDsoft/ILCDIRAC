@@ -1,3 +1,11 @@
+[v18r0p8]
+
+*Interfaces
+FIX: ProductionJob allows to used Limited, Sliced and SlicedLimited plugins
+
+*ILCTransformationSystem
+FIX: Many small glitches here and there.
+
 [v18r0p7]
 
 *Workflow
