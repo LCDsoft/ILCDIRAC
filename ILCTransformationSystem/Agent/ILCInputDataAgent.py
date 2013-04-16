@@ -17,7 +17,7 @@ AGENT_NAME = 'ILCTransformation/ILCInputDataAgent'
 class ILCInputDataAgent( InputDataAgent ):
 
   def __init__( self, *args, **kwargs ):
-    ''' c'tor
+    ''' An AgentModule class for ILCDIRAC (this string is needed for allowing installation)
     '''
     InputDataAgent.__init__( self, *args, **kwargs )
 
