@@ -86,7 +86,7 @@ class ILCInputDataAgent( InputDataAgent ):
       final_list = []
       if 'Plugin' in transDict:
         if transDict['Plugin'] == 'Sliced':
-          res = self.transClient.getTransformationParameters(transID, ['EventsPerSlice'])
+          res = self.transClient.getTransformationParameters(transID, ['EventsPerTask'])
           if not res['OK']:
             gLogger.error("Failed getting the EventsPerSlice parameter", res['Message'])
             continue
