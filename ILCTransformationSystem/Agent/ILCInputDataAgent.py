@@ -85,7 +85,8 @@ class ILCInputDataAgent( InputDataAgent ):
       ##Now take care of the Sliced transformations
       final_list = []
       if 'Plugin' in transDict:
-        if transDict['Plugin'] == 'Sliced':
+        if transDict['Plugin'] in ['Sliced','SlicedLimited']:
+          gLogger.verbose('Processing Sliced transformation')
           res = self.transClient.getTransformationParameters(transID, ['EventsPerTask'])
           if not res['OK']:
             gLogger.error("Failed getting the EventsPerSlice parameter", res['Message'])
@@ -113,6 +114,7 @@ class ILCInputDataAgent( InputDataAgent ):
                 slice_nb += 1
                 remaining_evts -= evts_slice
                 final_list.append(lfn+":%s" % ( int( start_evt_in_slice ) ) ) ##This is where the magic happens
+                #gLogger.verbose("Added ", final_list[-1])
                 
             if broke:
               gLogger.error("Cannot proceed with this transformation")
