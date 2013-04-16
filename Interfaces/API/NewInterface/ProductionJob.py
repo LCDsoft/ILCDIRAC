@@ -50,6 +50,7 @@ class ProductionJob(Job):
     self.defaultProdJobID = '12345'
     self.jobFileGroupSize = 1
     self.nbtasks = 1
+    self.slicesize =0
     self.basename = ''
     self.basepath = self.ops.getValue('/Production/CLIC/BasePath','/ilc/prod/clic/')
     self.evttype = ''
@@ -145,6 +146,11 @@ class ProductionJob(Job):
       needed for total number of evts.")
     self.jobFileGroupSize = files
     self.prodparameters['NbInputFiles'] = files
+    
+  def setNbEvtsPerSlice(self,nbevts):
+    """ Define the number of events in a slice.
+    """
+    self.slicesize = nbevts
     
   #############################################################################
   def setProdType(self, prodType):
@@ -415,7 +421,10 @@ class ProductionJob(Job):
       Trans.setGroupSize(self.jobFileGroupSize)
     Trans.setTransformationGroup(self.prodGroup)
     Trans.setBody(workflowXML)
-    Trans.setEventsPerTask(self.jobFileGroupSize * self.nbevts)
+    if not self.slicesize:
+      Trans.setEventsPerTask(self.jobFileGroupSize * self.nbevts)
+    else:
+      Trans.setEventsPerTask(self.slicesize)
     self.currtrans = Trans
     if self.dryrun:
       self.log.notice('Would create prod called',name)
@@ -518,7 +527,10 @@ class ProductionJob(Job):
     if self.prodparameters.has_key("Energy"):
       info.append('- Energy %s GeV' % self.prodparameters["Energy"])
 
-    self.prodparameters['nbevts'] = self.jobFileGroupSize * self.nbevts
+    if not self.slicesize:
+      self.prodparameters['nbevts'] = self.jobFileGroupSize * self.nbevts
+    else:
+      self.prodparameters['nbevts'] = self.slicesize
     if self.prodparameters['nbevts']:
       info.append("- %s events per job" % (self.prodparameters['nbevts']))
     if self.prodparameters.has_key('lumi'):
@@ -661,16 +673,19 @@ class ProductionJob(Job):
       #in fact a bit more tricky as the log files have the prodID and jobID in them
     
     ### Retrieve from the application the essential info to build the prod info.
-    if not self.nbevts:
+    if not self.nbevts and not self.slicesize:
       self.nbevts = application.nbevts
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
     elif not application.nbevts:
-      res = application.setNbEvts(self.jobFileGroupSize * self.nbevts)
+      if not self.slicesize:
+        res = application.setNbEvts(self.jobFileGroupSize * self.nbevts)
+      else:
+        res = application.setNbEvts(self.slicesize)
       if not res['OK']:
         return res
     
-    if application.nbevts > 0 and self.jobFileGroupSize * self.nbevts > application.nbevts:
+    if application.nbevts > 0 and (self.jobFileGroupSize * self.nbevts > application.nbevts or self.slicesize > application.nbevts):
       self.nbevts = application.nbevts 
 
     
