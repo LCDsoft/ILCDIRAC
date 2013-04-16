@@ -90,7 +90,7 @@ class ILCInputDataAgent( InputDataAgent ):
           if not res['OK']:
             gLogger.error("Failed getting the EventsPerSlice parameter", res['Message'])
             continue
-          evts_slice = float(res['Value']['EventsPerSlice'])
+          evts_slice = float(res['Value'])
           if evts_slice > 0:
             broke = False
             for lfn in lfnList:
@@ -112,7 +112,7 @@ class ILCInputDataAgent( InputDataAgent ):
                 start_evt_in_slice = slice_nb*evts_slice
                 slice_nb += 1
                 remaining_evts -= evts_slice
-                final_list.append(lfn+":"+int(start_evt_in_slice)) ##This is where the magic happens
+                final_list.append(lfn+":%s" % ( int( start_evt_in_slice ) ) ) ##This is where the magic happens
                 
             if broke:
               gLogger.error("Cannot proceed with this transformation")
