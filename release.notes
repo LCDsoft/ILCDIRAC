@@ -1,3 +1,18 @@
+[v18r0p6]
+
+*ILCTransformationSystem
+NEW: Implementation of ILCDIRAC specific agents to handle the Sliced productions
+NEW: Implement the plugin for the sliced productions
+
+*Workflow
+CHANGE: Get the StartFrom form the Workflow and pass it properly to Mokka and SLIC, needed for the Sliced productions
+
+*Interfaces
+CHANGE: Update a few scripts documentation
+
+*Core
+CHANGE: A bit of cleanup, and a few fixes
+
 [v18r0p5]
 
 *Interfaces.Applications
