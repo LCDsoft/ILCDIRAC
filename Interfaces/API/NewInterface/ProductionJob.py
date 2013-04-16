@@ -464,7 +464,7 @@ class ProductionJob(Job):
     if not self.currtrans:
       self.log.error("Not transformation defined earlier")
       return S_ERROR("No transformation defined")
-    if self.inputBKSelection and self.plugin != 'Limited':
+    if self.inputBKSelection and self.plugin not in  ['Limited', 'SlicedLimited']:
       self.log.error("Meta data selection activated, should not specify the number of jobs")
       return S_ERROR()
     self.nbtasks = nbtasks
