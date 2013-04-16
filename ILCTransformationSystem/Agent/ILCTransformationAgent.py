@@ -7,7 +7,7 @@ from DIRAC.Core.Utilities.List                                      import break
 from DIRAC import S_OK
 import time, re
 
-AGENT_NAME = 'Transformation/ILCTransformationAgent'
+AGENT_NAME = 'ILCTransformation/ILCTransformationAgent'
 gSynchro = Synchronizer()
 
 class ILCTransformationAgent( TransformationAgent ):

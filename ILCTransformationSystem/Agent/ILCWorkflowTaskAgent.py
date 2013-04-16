@@ -5,7 +5,7 @@
 from DIRAC.TransformationSystem.Agent.WorkflowTaskAgent  import WorkflowTaskAgent
 from ILCDIRAC.ILCTransformationSystem.Client.ILCTaskManager          import ILCWorkflowTasks
 
-AGENT_NAME = 'Transformation/ILCWorkflowTaskAgent'
+AGENT_NAME = 'ILCTransformation/ILCWorkflowTaskAgent'
 
 class ILCWorkflowTaskAgent( WorkflowTaskAgent ):
   ''' An AgentModule class to submit workflow tasks

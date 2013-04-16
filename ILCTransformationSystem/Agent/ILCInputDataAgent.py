@@ -12,7 +12,7 @@ from DIRAC                                                                import
 from DIRAC.TransformationSystem.Agent.InputDataAgent                      import InputDataAgent
 from DIRAC.Core.Utilities.List                                            import sortList
 
-AGENT_NAME = 'Transformation/ILCInputDataAgent'
+AGENT_NAME = 'ILCTransformation/ILCInputDataAgent'
 
 class ILCInputDataAgent( InputDataAgent ):
 

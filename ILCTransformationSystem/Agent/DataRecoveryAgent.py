@@ -40,7 +40,7 @@ from ILCDIRAC.Core.Utilities.ProductionData                    import constructP
 
 import string,datetime
 
-AGENT_NAME = 'TransformationSystem/DataRecoveryAgent'
+AGENT_NAME = 'ILCTransformationSystem/DataRecoveryAgent'
 
 class DataRecoveryAgent( AgentModule ):
   def __init__(self, *args, **kwargs):
