@@ -42,7 +42,8 @@ def Exists(myfile):
            "ild_00.gear",
            "ild_00_steering.xml",
            "ild_00.steer",
-           "cuts_quarks_1400.txt","cuts_taus_1400.txt"]
+           "cuts_quarks_1400.txt","cuts_taus_1400.txt",
+           "cuts_h_gammaZ_1400.txt","cuts_h_gammagamma_1400.txt"]
   if myfile in files:
     return S_OK()
   else:
