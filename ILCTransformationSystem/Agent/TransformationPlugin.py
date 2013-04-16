@@ -76,7 +76,7 @@ class TransformationPlugin(DTP):
     lfns = self.data
     newTasks = []
     for lfn in lfns.keys():
-      newTasks.append( ( '', lfn ) )
+      newTasks.append( ( '', [lfn] ) )
       total_used += 1
       if total_used >= max_tasks and max_tasks > 0:
         break
