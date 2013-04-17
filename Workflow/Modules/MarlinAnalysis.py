@@ -360,7 +360,6 @@ class MarlinAnalysis(ModuleBase):
         script.write('ldd ./lib/lddlib/*.so \n')
       script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
-    script.write('echo =============================\n')
 
     if (os.path.exists("%s/Executable/Marlin" % myMarlinDir)):
       if (os.path.exists(inputxml)):
