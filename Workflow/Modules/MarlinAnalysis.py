@@ -345,19 +345,20 @@ class MarlinAnalysis(ModuleBase):
     script.write('echo MARLIN_DLL is\n')
     script.write('echo $MARLIN_DLL | tr ":" "\n"\n')
     script.write('echo =============================\n')
-    script.write('echo ldd of executable is\n')
-    script.write('ldd %s/Executable/* \n' % myMarlinDir)
-    script.write('echo =============================\n')
-    script.write('echo ldd of Marlin_DLL objects is\n')
-    script.write('ldd %s/MARLIN_DLL/* \n' % myMarlinDir)
-    if os.path.exists('./lib/marlin_dll'):
-      script.write('ldd ./lib/marlin_dll/*.so \n')
-    script.write('echo =============================\n')
-    script.write('echo ldd of LDLIBS objects is\n')
-    script.write('ldd %s/LDLibs/* \n' % myMarlinDir)  
-    if os.path.exists('./lib/lddlib'):
-      script.write('ldd ./lib/lddlib/*.so \n')
-    script.write('echo =============================\n')
+    if self.debug:
+      script.write('echo ldd of executable is\n')
+      script.write('ldd %s/Executable/* \n' % myMarlinDir)
+      script.write('echo =============================\n')
+      script.write('echo ldd of Marlin_DLL objects is\n')
+      script.write('ldd %s/MARLIN_DLL/* \n' % myMarlinDir)
+      if os.path.exists('./lib/marlin_dll'):
+        script.write('ldd ./lib/marlin_dll/*.so \n')
+      script.write('echo =============================\n')
+      script.write('echo ldd of LDLIBS objects is\n')
+      script.write('ldd %s/LDLibs/* \n' % myMarlinDir)  
+      if os.path.exists('./lib/lddlib'):
+        script.write('ldd ./lib/lddlib/*.so \n')
+      script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
 
