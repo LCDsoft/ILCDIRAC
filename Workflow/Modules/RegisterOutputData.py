@@ -101,6 +101,9 @@ class RegisterOutputData( ModuleBase ):
         xsec = {'CrossSection':self.inputdataMeta['CrossSection']}
         metafiles.update(xsec)
       
+      if self.WorkflowStartFrom:
+        metafiles.update({"FirstEventFromInput":self.WorkflowStartFrom})
+      
       if self.enable:
         res = self.filecatalog.setMetadata(files, metafiles)
         if not res['OK']:

@@ -132,7 +132,9 @@ class SIDRegisterOutputData(ModuleBase):
         meta.update(lumi)
 #      meta.update(metaprodid)
       
-      
+      if self.WorkflowStartFrom:
+        meta.update({"FirstEventFromInput":self.WorkflowStartFrom})
+
       
       self.log.info("Registered %s with tags %s"%(files, meta))
       

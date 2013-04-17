@@ -117,6 +117,10 @@ class ILDRegisterOutputData(ModuleBase):
       if self.ildconfig:
         fmeta = {'ILDConfig' : self.ildconfig}
         meta.update(fmeta)
+      
+      if self.WorkflowStartFrom:
+        meta.update({"FirstEventFromInput":self.WorkflowStartFrom})
+
         
       if self.enable:
         res = self.filecatalog.setMetadata(files, meta)
