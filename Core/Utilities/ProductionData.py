@@ -25,7 +25,7 @@ def constructProductionLFNs(paramDict):
       LFN construction is tidied.  This works using the workflow commons for
       on the fly construction.
   """
-  keys = ['PRODUCTION_ID', 'JOB_ID', 'JobType', 'outputList']
+  keys = ['PRODUCTION_ID', 'JOB_ID', 'outputList']
   for k in keys:
     if not paramDict.has_key(k):
       return S_ERROR('%s not defined' % k)
@@ -39,11 +39,7 @@ def constructProductionLFNs(paramDict):
   # wfMask = paramDict['outputDataFileMask']
   if not type(wfMask) == type([]):
     wfMask = [i.lower().strip() for i in wfMask.split(';')]
-  wfType = paramDict['JobType']
   outputList = paramDict['outputList']
-  inputData = ''
-  if paramDict.has_key('InputData'):
-    inputData = paramDict['InputData']
 
   res = getVOfromProxyGroup()
   #res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
@@ -69,7 +65,6 @@ def constructProductionLFNs(paramDict):
     #  fileName[index+1]=str(jobID).zfill(8)
     fileTupleList.append((info['outputPath'], fileName))
 
-  lfnRoot = ''
   debugRoot = ''
   #if inputData:
   #  gLogger.verbose('Making LFN_ROOT for job with inputdata: %s' %(inputData))
@@ -103,10 +98,10 @@ def constructProductionLFNs(paramDict):
 
   #Get log file path - unique for all modules
   #logPath = _makeProductionPath(str(jobID).zfill(8),lfnRoot,'LOG',wfLfnprefix,str(productionID).zfill(8),log=True)
-  logPathtemp = fileTupleList[0][0].split("/")
-  logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
+  logPathtemp = fileTupleList[0][0]
+  #logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
   #TODO adjust for ILD
-  logPath = logPathroot + "/LOG/" + str(productionID).zfill(8)
+  logPath = logPathtemp + "/" + str(productionID).zfill(8) + "/LOG"
   logFilePath = ['%s/%s' % (logPath, str(int(jobID)/1000).zfill(3))]
   logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3))]
   #[ aside, why does makeProductionPath not append the jobID itself ????
