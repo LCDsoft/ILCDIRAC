@@ -282,9 +282,14 @@ class UploadOutputData(ModuleBase):
     cleanUp = False
     for fileName, metadata in failover.items():
       self.log.info('Setting default catalog for failover transfer to FileCatalog')
-      random.shuffle(self.failoverSEs)
+      failovers = self.failoverSEs
       targetSE = metadata['resolvedSE'][0]
-      metadata['resolvedSE'] = self.failoverSEs
+      try:#remove duplicate site, otherwise it will do nasty things where processing the request
+        failovers.remove(targetSE)
+      except:
+        pass
+      random.shuffle(failovers)
+      metadata['resolvedSE'] = failovers
       result = failoverTransfer.transferAndRegisterFileFailover(fileName, metadata['localpath'],
                                                                 metadata['lfn'], targetSE, metadata['resolvedSE'],
                                                                 fileGUID = metadata['guid'], fileCatalog = catalogs)
