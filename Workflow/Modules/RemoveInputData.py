@@ -7,7 +7,7 @@ __RCSID__ = "$Id:  $"
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 
 class RemoveInputData(ModuleBase):
   """ Remove the input data: to be used when Merging things
@@ -15,6 +15,7 @@ class RemoveInputData(ModuleBase):
   def __init__(self):
     super(RemoveInputData, self).__init__()
     self.rm = ReplicaManager()
+    self.log = gLogger.getSubLogger( "RemoveInputData" )
     
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
@@ -39,7 +40,10 @@ class RemoveInputData(ModuleBase):
     self.result = self.resolveInputVariables()
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
-      return S_OK('No output data upload attempted')
+      return S_OK('No removal of input data attempted')
+    if not self.enable:
+      self.log.info("Would have tried to remove %s" % self.InputData)
+      return S_OK( 'Input Data Removed' )
     try:
       #Try to remove the file list with failover if necessary
       failover = []
