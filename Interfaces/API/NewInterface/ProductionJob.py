@@ -597,6 +597,10 @@ class ProductionJob(Job):
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
             self.log.verbose("Successfully created directory:", "%s" % path)
+            res = self.fc.changePathMode({path:755})
+            if not res['OK']:
+              self.log.error(res['Message'])
+              failed.append(path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
             self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
@@ -614,6 +618,10 @@ class ProductionJob(Job):
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
             self.log.verbose("Successfully created directory:", "%s" % path)
+            res = self.fc.changePathMode({path:755})
+            if not res['OK']:
+              self.log.error(res['Message'])
+              failed.append(path)
         elif result['Value']['Failed']:
           if result['Value']['Failed'].has_key(path):  
             self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
