@@ -63,7 +63,7 @@ class ProductionJob(Job):
     self.finalpaths = []
     self.finalMetaDict = {}
     self.finalMetaDictNonSearch = {}
-
+    self.metadict_external = {}
     self.outputStorage = ''
 
     self.proxyinfo = getProxyInfo()
@@ -497,10 +497,8 @@ class ProductionJob(Job):
   def addMetadataToFinalFiles(self, metadict):
     """ Add additionnal non-query metadata 
     """
-    for key in metadict.keys():
-      if key in self.finalMetaDictNonSearch[self.basepath].keys():
-        self.log.error("Not allowed to overwrite existing metadata: ", "%s" % key)
-    self.finalMetaDictNonSearch[self.basepath].update(metadict)
+    self.metadict_external = metadict
+    
     return S_OK()
   
   def finalizeProd(self, prodid = None, prodinfo = None):
@@ -554,6 +552,9 @@ class ProductionJob(Job):
         self.finalMetaDictNonSearch[finalpath] = {}
       if "SWPackages" in self.prodparameters:
         self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
+        
+      if self.metadict_external:
+        self.finalMetaDictNonSearch[finalpath].update(self.metadict_external)  
     
     info.append('- Registered metadata: ')
     for k, v in self.finalMetaDict.items():
