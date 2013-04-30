@@ -597,7 +597,7 @@ class ProductionJob(Job):
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
             self.log.verbose("Successfully created directory:", "%s" % path)
-            res = self.fc.changePathMode({path:755})
+            res = self.fc.changePathMode({path:775})
             if not res['OK']:
               self.log.error(res['Message'])
               failed.append(path)
@@ -618,7 +618,7 @@ class ProductionJob(Job):
         if result['Value']['Successful']:
           if result['Value']['Successful'].has_key(path):
             self.log.verbose("Successfully created directory:", "%s" % path)
-            res = self.fc.changePathMode({path:755})
+            res = self.fc.changePathMode({path:775})
             if not res['OK']:
               self.log.error(res['Message'])
               failed.append(path)
