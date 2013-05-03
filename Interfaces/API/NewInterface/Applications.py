@@ -437,7 +437,7 @@ class Whizard(Application):
     
     self.parameterdict = {}
     self.model = 'sm'  
-    self.seed = 0
+    self.RandomSeed = 0
     self.lumi = 0
     self.jobindex = ''
     self._optionsdictstr = ''
@@ -502,17 +502,17 @@ class Whizard(Application):
       } )    
     self.lumi = lumi
 
-  def setRandomSeed(self, seed):
+  def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
     
-    @param seed: Seed to use during integration and generation. 
-    @type seed: int
+    @param RandomSeed: Seed to use during integration and generation. 
+    @type RandomSeed: int
     """
     self._checkArgs( {
-        'seed' : types.IntType
+        'RandomSeed' : types.IntType
       } )
 
-    self.seed = seed
+    self.RandomSeed = RandomSeed
   
   def setParameterDict(self, paramdict):
     """ Parameters for Whizard steering files
@@ -850,7 +850,7 @@ class Whizard(Application):
   
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("evttype",            self.evttype)
-    moduleinstance.setValue("RandomSeed",         self.seed)
+    moduleinstance.setValue("RandomSeed",         self.RandomSeed)
     moduleinstance.setValue("Lumi",               self.lumi)
     moduleinstance.setValue("Model",              self.model)
     moduleinstance.setValue("SteeringFile",       self.steeringfile)
@@ -1217,7 +1217,7 @@ class Mokka(Application):
 
     self.startFrom = 0
     self.macFile = ''
-    self.seed = 0
+    self.RandomSeed = 0
     self.runnumber = 0
     self.dbSlice = ''
     self.detectorModel = ''
@@ -1230,19 +1230,19 @@ class Mokka(Application):
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
      
-  def setRandomSeed(self, seed):
+  def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is JobID. 
     
     Also used as mcRunNumber.
     
-    @param seed: Seed to use during integration and generation. Default is Job ID.
-    @type seed: int
+    @param RandomSeed: Seed to use during integration and generation. Default is Job ID.
+    @type RandomSeed: int
     """
     self._checkArgs( {
-        'seed' : types.IntType
+        'RandomSeed' : types.IntType
       } )
 
-    self.seed = seed    
+    self.RandomSeed = RandomSeed    
     
   def setmcRunNumber(self, runnumber):
     """ Optional: Define mcRunNumber to use. Default is 0. In Production jobs, is equal to RandomSeed
@@ -1384,7 +1384,7 @@ class Mokka(Application):
   
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",      self.seed)
+    moduleinstance.setValue("RandomSeed",      self.RandomSeed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
     moduleinstance.setValue("mcRunNumber",     self.runnumber)
     moduleinstance.setValue("macFile",         self.macFile)
@@ -1423,7 +1423,7 @@ class SLIC(Application):
   def __init__(self, paramdict = None):
 
     self.startFrom = 0
-    self.seed = 0
+    self.RandomSeed = 0
     self.detectorModel = ''
     super(SLIC,self).__init__( paramdict )
     ##Those 5 need to come after default constructor
@@ -1433,17 +1433,17 @@ class SLIC(Application):
     self.datatype = 'SIM'
     self.detectortype = 'SID'
      
-  def setRandomSeed(self, seed):
+  def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
     
-    @param seed: Seed to use during simulation. 
-    @type seed: int
+    @param RandomSeed: Seed to use during simulation. 
+    @type RandomSeed: int
     """
     self._checkArgs( {
-        'seed' : types.IntType
+        'RandomSeed' : types.IntType
       } )
 
-    self.seed = seed    
+    self.RandomSeed = RandomSeed    
     
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for Slic simulation 
@@ -1533,7 +1533,7 @@ class SLIC(Application):
   
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",      self.seed)
+    moduleinstance.setValue("RandomSeed",      self.RandomSeed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("debug",           self.debug)
