@@ -64,8 +64,8 @@ class GenericApplication(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.script = None
-    self.arguments = ''
+    self.Script = None
+    self.Arguments = ''
     self.dependencies = {}
     ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
     super(GenericApplication, self).__init__( paramdict )
@@ -86,7 +86,7 @@ class GenericApplication(Application):
       } )
     if os.path.exists(script) or script.lower().count("lfn:"):
       self.inputSB.append(script)
-    self.script = script
+    self.Script = script
     return S_OK()
     
   def setArguments(self, args):
@@ -99,7 +99,7 @@ class GenericApplication(Application):
     self._checkArgs( {
         'args' : types.StringTypes
       } )  
-    self.arguments = args
+    self.Arguments = args
     return S_OK()
       
   def setDependency(self, appdict):
@@ -127,9 +127,9 @@ class GenericApplication(Application):
     return m1
   
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("script",    self.script)
-    moduleinstance.setValue('arguments', self.arguments)
-    moduleinstance.setValue('debug',     self.debug)
+    moduleinstance.setValue("script",    self.Script)
+    moduleinstance.setValue('arguments', self.Arguments)
+    moduleinstance.setValue('debug',     self.Debug)
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -183,7 +183,7 @@ class GetSRMFile(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.filedict = {}
+    self.Files = {}
     super(GetSRMFile, self).__init__( paramdict )
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
@@ -199,7 +199,7 @@ class GetSRMFile(Application):
     if not type(fdict) == type({}) and not type(fdict) == type([]):
       return self._reportError('Expected dict or list of dicts for fdict', __name__, **kwargs)
     
-    self.filedict = fdict
+    self.Files = fdict
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -208,8 +208,8 @@ class GetSRMFile(Application):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("srmfiles", self.filedict)  
-    moduleinstance.setValue("debug",    self.debug)  
+    moduleinstance.setValue("srmfiles", self.Files)  
+    moduleinstance.setValue("debug",    self.Debug)  
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -256,8 +256,8 @@ class _Root(Application):
   """
   
   def __init__(self, paramdict = None):
-    self.arguments = ''
-    self.script = None
+    self.Arguments = ''
+    self.Script = None
     super(_Root, self).__init__( paramdict )
     
     
@@ -285,7 +285,7 @@ class _Root(Application):
     self._checkArgs( {
         'args' : types.StringTypes
       } )  
-    self.arguments = args
+    self.Arguments = args
     return S_OK()
       
 
@@ -298,9 +298,9 @@ class _Root(Application):
   
   
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('arguments',   self.arguments)
-    moduleinstance.setValue("script",      self.script)
-    moduleinstance.setValue('debug',       self.debug)
+    moduleinstance.setValue('arguments',   self.Arguments)
+    moduleinstance.setValue("script",      self.Script)
+    moduleinstance.setValue('debug',       self.Debug)
     
   
   def _userjobmodules(self, stepdefinition):
@@ -323,7 +323,7 @@ class _Root(Application):
     """
     if not self.script:
       return S_ERROR("Script or macro not defined")
-    if not self.version:
+    if not self.Version:
       return S_ERROR("You need to specify the Root version")
     
     #res = self._checkRequiredApp() ##Check that job order is correct
@@ -374,7 +374,7 @@ class RootScript(_Root):
         'executable' : types.StringTypes
       } )
 
-    self.script = executable
+    self.Script = executable
     if os.path.exists(executable) or executable.lower().count("lfn:"):
       self.inputSB.append(executable)
     return S_OK()
@@ -395,7 +395,7 @@ class RootMacro(_Root):
   
   """
   def __init__(self, paramdict = None):
-    self.script = None
+    self.Script = None
     super(RootMacro, self).__init__( paramdict )
     self._modulename = "RootMacroAnalysis"
     self.appname = 'root'
@@ -412,7 +412,7 @@ class RootMacro(_Root):
         'macro' : types.StringTypes
       } )
 
-    self.script = macro
+    self.Script = macro
     if os.path.exists(macro) or macro.lower().count("lfn:"):
       self.inputSB.append(macro)
     return S_OK()
@@ -435,19 +435,19 @@ class Whizard(Application):
   """
   def __init__(self, processlist = None, paramdict = None):    
     
-    self.parameterdict = {}
-    self.model = 'sm'  
+    self.ParameterDict = {}
+    self.Model = 'sm'  
     self.RandomSeed = 0
-    self.lumi = 0
-    self.jobindex = ''
+    self.Luminosity = 0
+    self.JobIndex = ''
     self._optionsdictstr = ''
-    self.optionsdict = {}
-    self.genlevelcuts = {}
+    self.FullParameterDict = {}
+    self.GeneratorLevelCuts = {}
     self._genlevelcutsstr = ''
     self._leshouchesfiles = None
     self._generatormodels = GeneratorModels()
-    self.evttype = ''
-    self.globalname = ''
+    self.EvtType = ''
+    self.GlobalEvtType = ''
     self.useGridFiles = False
     self._allowedparams = ['PNAME1', 'PNAME2', 'POLAB1', 'POLAB2', 'USERB1', 'USERB2',
                            'ISRB1', 'ISRB2', 'EPAB1', 'EPAB2', 'RECOIL', 'INITIALS', 'USERSPECTRUM']
@@ -462,6 +462,8 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
     self.datatype = 'gen'
+    self._paramsToExclude.extend(['_optionsdictstr','_genlevelcutsstr','_leshouchesfiles','_generatormodels',
+                                  '_allowedparams','_wo','_processlist'])
   
   def getPDict(self):
     """ Provide predefined parameter dictionary
@@ -480,7 +482,7 @@ class Whizard(Application):
     if self.addedtojob:
       self._log.error("Cannot modify this attribute once application has been added to Job")
       return S_ERROR("Cannot modify")
-    self.evttype = evttype
+    self.EvtType = evttype
 
   def setGlobalEvtType(self, globalname):
     """ When producing multiple process in one job, it is needed to define this for the output file name.
@@ -489,7 +491,7 @@ class Whizard(Application):
     self._checkArgs( {
         'globalname' : types.StringTypes
       } )
-    self.globalname = globalname
+    self.GlobalEvtType = globalname
 
   def setLuminosity(self, lumi):
     """ Optional: Define luminosity to generate 
@@ -500,7 +502,7 @@ class Whizard(Application):
     self._checkArgs( {
         'lumi' : types.FloatType
       } )    
-    self.lumi = lumi
+    self.Luminosity = lumi
 
   def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
@@ -524,7 +526,7 @@ class Whizard(Application):
         'paramdict' : types.DictType
       } )
 
-    self.parameterdict = paramdict
+    self.ParameterDict = paramdict
 
   def setGeneratorLevelCuts(self, cutsdict):
     """ Define generator level cuts (to be put in whizard.cut1)
@@ -539,7 +541,7 @@ class Whizard(Application):
     self._checkArgs( {
         'cutsdict' : types.DictType
       } )
-    self.genlevelcuts = cutsdict
+    self.GeneratorLevelCuts = cutsdict
 
   def setFullParameterDict(self, pdict):
     """ Parameters for Whizard steering files, better than above as much more complete (cannot be more complete)
@@ -570,7 +572,7 @@ class Whizard(Application):
         'pdict' : types.DictType
       } )
 
-    self.optionsdict = pdict
+    self.FullParameterDict = pdict
     #self._wo.changeAndReturn(dict)
   
   def setModel(self, model):
@@ -583,7 +585,7 @@ class Whizard(Application):
         'model' : types.StringTypes
       } )
 
-    self. model = model
+    self.Model = model
   
   def willCut(self):
     """ You need this if you plan on cutting using L{StdhepCut} 
@@ -607,7 +609,7 @@ class Whizard(Application):
         'index' : types.StringTypes
       } )
 
-    self.jobindex = index
+    self.JobIndex = index
   
   def dumpWhizardDotIn(self, fname = 'whizard.in'):
     """ Dump the content of the whizard.in file requested for this application
@@ -620,31 +622,31 @@ class Whizard(Application):
   def _checkConsistency(self):
     """ Check the consistency, called from Application
     """
-    self._wo = WhizardOptions(self.model)
+    self._wo = WhizardOptions(self.Model)
 
-    if not self.optionsdict:
-      if not self.energy :
+    if not self.FullParameterDict:
+      if not self.Energy :
         return S_ERROR('Energy not set')
       
-      if not self.nbevts :
+      if not self.NbEvts :
         return S_ERROR('Number of events not set!')
     
-      if not self.evttype:
+      if not self.EvtType:
         return S_ERROR("Process not defined")
     else:
-      res = self._wo.checkFields(self.optionsdict)
+      res = self._wo.checkFields(self.FullParameterDict)
       if not res['OK']:
         return res
-      self._wo.changeAndReturn(self.optionsdict)
+      self._wo.changeAndReturn(self.FullParameterDict)
       res = self._wo.getValue("process_input/process_id")
       if not len(res['Value']):
-        if self.evttype:
-          if not self.optionsdict.has_key('process_input'):
-            self.optionsdict['process_input'] = {}
-          self.optionsdict['process_input']['process_id'] = self.evttype
+        if self.EvtType:
+          if not self.FullParameterDict.has_key('process_input'):
+            self.FullParameterDict['process_input'] = {}
+          self.FullParameterDict['process_input']['process_id'] = self.EvtType
         else:
           return S_ERROR("Event type not specified")
-      self.evttype = res['Value']
+      self.EvtType = res['Value']
       
       res = self._wo.getValue("process_input/sqrts")
       if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
@@ -652,14 +654,14 @@ class Whizard(Application):
       else:
         energy = eval(res['Value'])
       if not energy:
-        if self.energy:
+        if self.Energy:
           if not self.optionsdict.has_key('process_input'):
             self.optionsdict['process_input'] = {}
-          self.optionsdict['process_input']['sqrts'] = self.energy
-          energy = self.energy
+          self.optionsdict['process_input']['sqrts'] = self.Energy
+          energy = self.Energy
         else:
           return S_ERROR("Energy set to 0")
-      self.energy = energy
+      self.Energy = energy
       
       res = self._wo.getValue("simulation_input/n_events")
       if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
@@ -667,33 +669,33 @@ class Whizard(Application):
       else:
         nbevts = eval(res['Value'])      
       if not nbevts:
-        if self.nbevts:
-          if not self.optionsdict.has_key('simulation_input'):
-            self.optionsdict['simulation_input'] = {}
-          self.optionsdict['simulation_input']['n_events'] = self.nbevts
-          nbevts = self.nbevts
+        if self.NbEvts:
+          if not self.FullParameterDict.has_key('simulation_input'):
+            self.FullParameterDict['simulation_input'] = {}
+          self.FullParameterDict['simulation_input']['n_events'] = self.NbEvts
+          nbevts = self.NbEvts
         else:
           return S_ERROR("Number of events set to 0")
-      self.nbevts = nbevts
+      self.NbEvts = nbevts
       
     if not self._processlist:
       return S_ERROR("Process list was not given")
 
-    if self.genlevelcuts:
-      for process in self.genlevelcuts.keys():
-        if not process in self.evttype.split():
-          self._log.info("You want to cut on %s but that process is not to be generated"%process)
-      for values in self.genlevelcuts.values():
+    if self.GeneratorLevelCuts:
+      for process in self.GeneratorLevelCuts.keys():
+        if not process in self.EvtType.split():
+          self._log.info("You want to cut on %s but that process is not to be generated" % process)
+      for values in self.GeneratorLevelCuts.values():
         if not type(values) == types.ListType:
-          return S_ERROR('Type of %s is not a list, cannot proceed'%values)    
-      self._genlevelcutsstr = str(self.genlevelcuts)
+          return S_ERROR('Type of %s is not a list, cannot proceed' % values)    
+      self._genlevelcutsstr = str(self.GeneratorLevelCuts)
     
-    if self.evttype:
-      processes = self.evttype.split()
-      if len(processes) > 1 and not self.globalname:
+    if self.EvtType:
+      processes = self.EvtType.split()
+      if len(processes) > 1 and not self.GlobalEvtType:
         return S_ERROR("Global name MUST be defined when producing multiple processes in one job")
-      elif self.globalname:
-        self.evttype = self.globalname
+      elif self.GlobalEvtType:
+        self.EvtType = self.GlobalEvtType
       for process in processes:
         if not self._processlist.existsProcess(process)['Value']:
           self._log.notice("Available processes are:")
@@ -703,127 +705,127 @@ class Whizard(Application):
           cspath = self._processlist.getCSPath(process)
           whiz_file = os.path.basename(cspath)
           version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
-          if self.version:
-            if self.version != version:
+          if self.Version:
+            if self.Version != version:
               return S_ERROR("All processes to consider are not available in the same WHIZARD version")
-          self.version = version
-          self._log.info("Found the process %s in whizard %s"%(process, self.version))
+          self.Version = version
+          self._log.info("Found the process %s in whizard %s"%(process, self.Version))
         
-    if not self.version:
+    if not self.Version:
       return S_ERROR('No version found')
       
-    if self.model:
-      if not self._generatormodels.hasModel(self.model)['OK']:
-        return S_ERROR("Unknown model %s"%self.model)
+    if self.Model:
+      if not self._generatormodels.hasModel(self.Model)['OK']:
+        return S_ERROR("Unknown model %s" % self.Model)
 
-    if self.outputFile:
-      if self.outputFile.count("/"):
+    if self.OutputFile:
+      if self.OutputFile.count("/"):
         return S_ERROR("The OutputFile name is a file name, not a path. Remove any / in there")
 
-    if not self.outputFile and self._jobtype == 'User':
-      self.outputFile = self.evttype
-      if self.jobindex :
-        self.outputFile += "_"+self.jobindex
-      self.outputFile += "_gen.stdhep"  
+    if not self.OutputFile and self._jobtype == 'User':
+      self.OutputFile = self.EvtType
+      if self.JobIndex :
+        self.OutputFile += "_" + self.JobIndex
+      self.OutputFile += "_gen.stdhep"  
 
     if not self._jobtype == 'User':
       if not self.willBeCut:
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
                                    "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nbevts'] = self.nbevts
-      self.prodparameters['Process'] = self.evttype
-      self.prodparameters['model'] = self.model
-      self.prodparameters['Energy'] = self.energy
-      self.prodparameters['whizardparams'] = self.optionsdict
-      self.prodparameters['gencuts'] = self.genlevelcuts
+      self.prodparameters['nbevts'] = self.NbEvts
+      self.prodparameters['Process'] = self.EvtType
+      self.prodparameters['model'] = self.Model
+      self.prodparameters['Energy'] = self.Energy
+      self.prodparameters['whizardparams'] = self.FullParameterDict
+      self.prodparameters['gencuts'] = self.GeneratorLevelCuts
       self.prodparameters['gridfiles'] = self.useGridFiles
    
-    if not self.optionsdict and  self.parameterdict:
-      for key in self.parameterdict.keys():
+    if not self.FullParameterDict and  self.ParameterDict:
+      for key in self.ParameterDict.keys():
         if not key in self._allowedparams:
           return S_ERROR("Unknown parameter %s"%key)
 
-      if not self.parameterdict.has_key('PNAME1'):
+      if not self.ParameterDict.has_key('PNAME1'):
         self._log.info("Assuming incoming beam 1 to be electrons")
         self.parameters.append('PNAME1=e1')
       else:
-        self.parameters.append("PNAME1=%s" %self.parameterdict["PNAME1"] )
+        self.parameters.append("PNAME1=%s" % self.ParameterDict["PNAME1"] )
       
-      if not self.parameterdict.has_key('PNAME2'):
+      if not self.ParameterDict.has_key('PNAME2'):
         self._log.info("Assuming incoming beam 2 to be positrons")
         self.parameters.append('PNAME2=E1')
       else:
-        self.parameters.append("PNAME2=%s" %self.parameterdict["PNAME2"] )
+        self.parameters.append("PNAME2=%s" %self.ParameterDict["PNAME2"] )
        
-      if not self.parameterdict.has_key('POLAB1'):
+      if not self.ParameterDict.has_key('POLAB1'):
         self._log.info("Assuming no polarization for beam 1")
         self.parameters.append('POLAB1=0.0 0.0')
       else:
-        self.parameters.append("POLAB1=%s" % self.parameterdict["POLAB1"])
+        self.parameters.append("POLAB1=%s" % self.ParameterDict["POLAB1"])
           
-      if not self.parameterdict.has_key('POLAB2'):
+      if not self.ParameterDict.has_key('POLAB2'):
         self._log.info("Assuming no polarization for beam 2")
         self.parameters.append('POLAB2=0.0 0.0')
       else:
-        self.parameters.append("POLAB2=%s" % self.parameterdict["POLAB2"])
+        self.parameters.append("POLAB2=%s" % self.ParameterDict["POLAB2"])
           
-      if not self.parameterdict.has_key('USERB1'):
+      if not self.ParameterDict.has_key('USERB1'):
         self._log.info("Will put beam spectrum to True for beam 1")
         self.parameters.append('USERB1=T')
       else:
-        self.parameters.append("USERB1=%s" % self.parameterdict["USERB1"])
+        self.parameters.append("USERB1=%s" % self.ParameterDict["USERB1"])
           
-      if not self.parameterdict.has_key('USERB2'):
+      if not self.ParameterDict.has_key('USERB2'):
         self._log.info("Will put beam spectrum to True for beam 2")
         self.parameters.append('USERB2=T')
       else:
-        self.parameters.append("USERB2=%s" % self.parameterdict["USERB2"])
+        self.parameters.append("USERB2=%s" % self.ParameterDict["USERB2"])
           
-      if not self.parameterdict.has_key('ISRB1'):
+      if not self.ParameterDict.has_key('ISRB1'):
         self._log.info("Will put ISR to True for beam 1")
         self.parameters.append('ISRB1=T')
       else:
-        self.parameters.append("ISRB1=%s" % self.parameterdict["ISRB1"])
+        self.parameters.append("ISRB1=%s" % self.ParameterDict["ISRB1"])
           
-      if not self.parameterdict.has_key('ISRB2'):
+      if not self.ParameterDict.has_key('ISRB2'):
         self._log.info("Will put ISR to True for beam 2")
         self.parameters.append('ISRB2=T')
       else:
-        self.parameters.append("ISRB2=%s" % self.parameterdict["ISRB2"])
+        self.parameters.append("ISRB2=%s" % self.ParameterDict["ISRB2"])
           
-      if not self.parameterdict.has_key('EPAB1'):
+      if not self.ParameterDict.has_key('EPAB1'):
         self._log.info("Will put EPA to False for beam 1")
         self.parameters.append('EPAB1=F')
       else:
-        self.parameters.append("EPAB1=%s" % self.parameterdict["EPAB1"])
+        self.parameters.append("EPAB1=%s" % self.ParameterDict["EPAB1"])
           
-      if not self.parameterdict.has_key('EPAB2'):
+      if not self.ParameterDict.has_key('EPAB2'):
         self._log.info("Will put EPA to False for beam 2")
         self.parameters.append('EPAB2=F')
       else:
-        self.parameters.append("EPAB2=%s" % self.parameterdict["EPAB2"])
+        self.parameters.append("EPAB2=%s" % self.ParameterDict["EPAB2"])
          
-      if not self.parameterdict.has_key('RECOIL'):
+      if not self.ParameterDict.has_key('RECOIL'):
         self._log.info("Will set Beam_recoil to False")
         self.parameters.append('RECOIL=F')
       else:
-        self.parameters.append("RECOIL=%s" % self.parameterdict["RECOIL"])
+        self.parameters.append("RECOIL=%s" % self.ParameterDict["RECOIL"])
           
-      if not self.parameterdict.has_key('INITIALS'):
+      if not self.ParameterDict.has_key('INITIALS'):
         self._log.info("Will set keep_initials to False")
         self.parameters.append('INITIALS=F')
       else:
-        self.parameters.append("INITIALS=%s" % self.parameterdict["INITIALS"])
+        self.parameters.append("INITIALS=%s" % self.ParameterDict["INITIALS"])
           
-      if not self.parameterdict.has_key('USERSPECTRUM'):
+      if not self.ParameterDict.has_key('USERSPECTRUM'):
         self._log.info("Will set USER_spectrum_on to +-11")
         self.parameters.append('USERSPECTRUM=11')
       else:
-        self.parameters.append("USERSPECTRUM=%s" % self.parameterdict["USERSPECTRUM"])
+        self.parameters.append("USERSPECTRUM=%s" % self.ParameterDict["USERSPECTRUM"])
       
       self.parameters = string.join(self.parameters, ";")
-    elif self.optionsdict:
-      self._optionsdictstr = str(self.optionsdict)
+    elif self.FullParameterDict:
+      self._optionsdictstr = str(self.FullParameterDict)
     
       
     return S_OK()  
@@ -849,18 +851,18 @@ class Whizard(Application):
 
   
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("evttype",            self.evttype)
+    moduleinstance.setValue("evttype",            self.EvtType)
     moduleinstance.setValue("RandomSeed",         self.RandomSeed)
-    moduleinstance.setValue("Lumi",               self.lumi)
-    moduleinstance.setValue("Model",              self.model)
+    moduleinstance.setValue("Lumi",               self.Luminosity)
+    moduleinstance.setValue("Model",              self.Model)
     moduleinstance.setValue("SteeringFile",       self.steeringfile)
-    moduleinstance.setValue("JobIndex",           self.jobindex)
+    moduleinstance.setValue("JobIndex",           self.JobIndex)
     moduleinstance.setValue("steeringparameters", self.parameters)
     moduleinstance.setValue("OptionsDictStr",     self._optionsdictstr)
     moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
     moduleinstance.setValue("willCut",            self.willBeCut)
     moduleinstance.setValue("useGridFiles",       self.useGridFiles)
-    moduleinstance.setValue("debug",              self.debug)
+    moduleinstance.setValue("debug",              self.Debug)
     
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -894,7 +896,7 @@ class Pythia(Application):
 
   """
   def __init__(self, paramdict = None):
-    self.evttype = ''
+    self.EvtType = ''
     super(Pythia, self).__init__( paramdict )
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
@@ -925,24 +927,24 @@ class Pythia(Application):
     return S_OK()
       
   def _checkConsistency(self):
-    if not self.version:
+    if not self.Version:
       return S_ERROR("Version not specified")
     
     #Resolve event type, needed for production jobs
-    self.evttype = self.version.split("_")[0]
+    self.EvtType = self.Version.split("_")[0]
     
-    if not self.nbevts:
+    if not self.NbEvts:
       return S_ERROR("Number of events to generate not defined")
 
-    if not self.outputFile:
+    if not self.OutputFile:
       return S_ERROR("Output File not defined")
     
     if not self._jobtype == 'User':
       if not self.willBeCut:      
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
                                    "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nbevts'] = self.nbevts
-      self.prodparameters['Process'] = self.evttype
+      self.prodparameters['nbevts'] = self.NbEvts
+      self.prodparameters['Process'] = self.EvtType
 
     return S_OK()
  
@@ -992,7 +994,7 @@ class PostGenSelection(Application):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKeep)
-    moduleinstance.setValue('debug',                       self.debug)
+    moduleinstance.setValue('debug',                       self.Debug)
    
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1049,9 +1051,9 @@ class StdhepCut(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.maxevts = 0
-    self.nbevtsperfile = 0
-    self.selectionEfficiency = 0
+    self.MaxNbEvts = 0
+    self.NbEvtsPerFile = 0
+    self.SelectionEfficiency = 0
     super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'
@@ -1060,26 +1062,26 @@ class StdhepCut(Application):
     self.datatype = 'gen'
     
   def setMaxNbEvts(self, nbevts):
-    """ Max number of events to keep in each file
+    """ Max number of events passing cuts to write (number of events in the final file)
     
-    @param nbevts: Maximum number of events to read from input file
+    @param nbevts: Maximum number of events passing cuts to write
     @type nbevts: int
     """
     self._checkArgs( {
         'nbevts' : types.IntType
       } )
-    self.maxevts = nbevts
+    self.MaxNbEvts = nbevts
     
   def setNbEvtsPerFile(self, nbevts):
-    """ Number of events per file
+    """ Number of events per file (not used)
     
-    @param nbevts: Number of evetns to keep in each file.
+    @param nbevts: Number of events to keep in each file.
     @type nbevts: int
     """
     self._checkArgs( {
         'nbevts' : types.IntType
       } )
-    self.nbevtsperfile = nbevts  
+    self.NbEvtsPerFile = nbevts  
 
   def setSelectionEfficiency(self, efficiency):
     """ Selection efficiency of your cuts, needed to determine the number of files that will be created
@@ -1090,18 +1092,18 @@ class StdhepCut(Application):
     self._checkArgs( {
         'efficiency' : types.FloatType
       } )
-    self.selectionEfficiency = efficiency
+    self.SelectionEfficiency = efficiency
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
-    m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of evetns to read"))
+    m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of events to read"))
     m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
 
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("MaxNbEvts", self.maxevts)
-    moduleinstance.setValue("debug",     self.debug)
+    moduleinstance.setValue("MaxNbEvts", self.MaxNbEvts)
+    moduleinstance.setValue("debug",     self.Debug)
     
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1118,24 +1120,24 @@ class StdhepCut(Application):
     return S_OK()    
 
   def _checkConsistency(self):
-    if not self.steeringfile:
+    if not self.SteeringFile:
       return S_ERROR("Cut file not specified")
-    elif not self.steeringfile.lower().count("lfn:") and not os.path.exists(self.steeringfile):
-      res = Exists(self.steeringfile)
+    elif not self.SteeringFile.lower().count("lfn:") and not os.path.exists(self.SteeringFile):
+      res = Exists(self.SteeringFile)
       if not res['OK']:
         return res  
           
-    if not self.maxevts:
+    if not self.MaxNbEvts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
     
-    if not self.selectionEfficiency:
+    if not self.SelectionEfficiency:
       return S_ERROR('You need to know the selection efficiency of your cuts')
     
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nbevts_kept'] = self.maxevts
-      self.prodparameters['cut_file'] = self.steeringfile
+      self.prodparameters['nbevts_kept'] = self.MaxNbEvts
+      self.prodparameters['cut_file'] = self.SteeringFile
       
     #res = self._checkRequiredApp() ##Check that job order is correct
     #if not res['OK']:
@@ -1146,11 +1148,11 @@ class StdhepCut(Application):
   def _checkFinalConsistency(self):
     """ Final check of consistency: check that there are enough events generated
     """
-    if not self.nbevts:
+    if not self.NbEvts:
       return S_ERROR('Please specify the number of events that will be generated in that step')
     
-    kept = self.nbevts * self.selectionEfficiency
-    if kept < 2*self.maxevts:
+    kept = self.NbEvts * self.SelectionEfficiency
+    if kept < 2*self.MaxNbEvts:
       return S_ERROR("You don't generate enough events") 
     
     return S_OK()
@@ -1184,9 +1186,9 @@ class StdhepCutJava(StdhepCut):
   
   """
   def __init__(self, paramdict = None):
-    self.maxevts = 0
-    self.nbevtsperfile = 0
-    self.selectionEfficiency = 0
+    self.MaxNbEvts = 0
+    self.NbEvtsPerFile = 0
+    self.SelectionEfficiency = 0
     super(StdhepCutJava, self).__init__( paramdict )
 
     self.appname = 'stdhepcutjava'
@@ -1215,13 +1217,13 @@ class Mokka(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.startFrom = 0
-    self.macFile = ''
+    self.StartFrom = 0
+    self.MacFile = ''
     self.RandomSeed = 0
-    self.runnumber = 0
-    self.dbSlice = ''
-    self.detectorModel = ''
-    self.processID = ''
+    self.mcRunNumber = 0
+    self.DbSlice = ''
+    self.DetectorModel = ''
+    self.ProcessID = ''
     super(Mokka, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
@@ -1229,6 +1231,7 @@ class Mokka(Application):
     self.appname = 'mokka'    
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
+    self._paramsToExclude.extend(["outputDstPath","outputRecPath","OutputDstFile","OutputRecFile"])
      
   def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is JobID. 
@@ -1254,7 +1257,7 @@ class Mokka(Application):
         'runnumber' : types.IntType
       } )
 
-    self.runnumber = runnumber    
+    self.mcRunNumber = runnumber    
     
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for Mokka simulation 
@@ -1266,7 +1269,7 @@ class Mokka(Application):
         'detectorModel' : types.StringTypes
       } )
 
-    self.detectorModel = detectorModel    
+    self.DetectorModel = detectorModel    
     
   def setMacFile(self, macfile):
     """ Optional: Define Mac File. Useful if using particle gun.
@@ -1277,12 +1280,14 @@ class Mokka(Application):
     self._checkArgs( {
         'macfile' : types.StringTypes
       } )
-    self.macFile = macfile
+    self.MacFile = macfile  
     if os.path.exists(macfile) or macfile.lower().count("lfn:"):
       self.inputSB.append(macfile)
+    elif self.MacFile:
+      self._log.notice("Mac file not found locally and is not an lfn, I hope you know what you are doing...") 
+      self._log.notice("MacFile:", self.MacFile) 
     else:
-      self._log.notice("Mac file not found locally and is not an lfn, I hope you know what you are doing...")  
-    
+      pass
     
   def setStartFrom(self, startfrom):
     """ Optional: Define from where mokka starts to read in the generator file
@@ -1293,7 +1298,7 @@ class Mokka(Application):
     self._checkArgs( {
         'startfrom' : types.IntType
       } )
-    self.startFrom = startfrom  
+    self.StartFrom = startfrom  
     
     
   def setProcessID(self, processID):
@@ -1305,7 +1310,7 @@ class Mokka(Application):
     self._checkArgs( {
         'processID' : types.StringTypes
       } )
-    self.processID = processID
+    self.ProcessID = processID
     
     
   def setDbSlice(self, dbSlice):
@@ -1317,11 +1322,14 @@ class Mokka(Application):
     self._checkArgs( {
         'dbSlice' : types.StringTypes
       } )
-    self.dbSlice = dbSlice
+    self.DbSlice = dbSlice
     if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
       self.inputSB.append(dbSlice)
+    elif dbSlice:
+      self._log.notice("Slice not found locally and is not an lfn, I hope you know what you are doing...")
+      self._log.notice("DB slice:", self.DbSlice)
     else:
-      self._log.notice("DB slice not found locally and is not an lfn, I hope you know what you are doing...")  
+      pass
       
     
   def _userjobmodules(self, stepdefinition):
@@ -1340,14 +1348,14 @@ class Mokka(Application):
   
   def _checkConsistency(self):
 
-    if not self.version:
+    if not self.Version:
       return S_ERROR('No version found')   
     
-    if not self.steeringfile :
+    if not self.SteeringFile :
       return S_ERROR('No Steering File') 
     
-    if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-      #res = Exists(self.steeringfile)
+    if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+      #res = Exists(self.SteeringFile)
       res = S_OK()
       if not res['OK']:
         return res  
@@ -1358,9 +1366,9 @@ class Mokka(Application):
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['mokka_steeringfile'] = self.steeringfile
-      if self.detectorModel:
-        self.prodparameters['mokka_detectormodel'] = self.detectorModel
+      self.prodparameters['mokka_steeringfile'] = self.SteeringFile
+      if self.DetectorModel:
+        self.prodparameters['mokka_detectormodel'] = self.DetectorModel
       self.prodparameters['detectorType'] = self.detectortype
    
     return S_OK()  
@@ -1373,7 +1381,7 @@ class Mokka(Application):
     md1.addParameter(Parameter("mcRunNumber",          0,    "int", "", "", False, False, 
                                "mcRunNumber parameter for Mokka"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False, 
-                               "Detecor model for simulation"))
+                               "Detector model for simulation"))
     md1.addParameter(Parameter("macFile",             "", "string", "", "", False, False, "Mac file"))
     md1.addParameter(Parameter("startFrom",            0,    "int", "", "", False, False, 
                                "From where Mokka start to read the input file"))
@@ -1385,13 +1393,13 @@ class Mokka(Application):
   def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("RandomSeed",      self.RandomSeed)
-    moduleinstance.setValue("detectorModel",   self.detectorModel)
-    moduleinstance.setValue("mcRunNumber",     self.runnumber)
-    moduleinstance.setValue("macFile",         self.macFile)
-    moduleinstance.setValue("startFrom",       self.startFrom)
-    moduleinstance.setValue("dbSlice",         self.dbSlice)
-    moduleinstance.setValue("ProcessID",       self.processID)
-    moduleinstance.setValue("debug",           self.debug)
+    moduleinstance.setValue("detectorModel",   self.DetectorModel)
+    moduleinstance.setValue("mcRunNumber",     self.mcRunNumber)
+    moduleinstance.setValue("macFile",         self.MacFile)
+    moduleinstance.setValue("startFrom",       self.StartFrom)
+    moduleinstance.setValue("dbSlice",         self.DbSlice)
+    moduleinstance.setValue("ProcessID",       self.ProcessID)
+    moduleinstance.setValue("debug",           self.Debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
@@ -1422,9 +1430,9 @@ class SLIC(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.startFrom = 0
+    self.StartFrom = 0
     self.RandomSeed = 0
-    self.detectorModel = ''
+    self.DetectorModel = ''
     super(SLIC,self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICAnalysis'
@@ -1432,6 +1440,8 @@ class SLIC(Application):
     self.appname = 'slic'    
     self.datatype = 'SIM'
     self.detectortype = 'SID'
+    self._paramsToExclude.extend(["outputDstPath","outputRecPath","OutputDstFile","OutputRecFile"])
+
      
   def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
@@ -1463,7 +1473,7 @@ class SLIC(Application):
         self._log.notice("Specified detector model does not exist locally, I hope you know what you're doing")
     
     
-    self.detectorModel = os.path.basename(detectorModel).replace(".zip","")
+    self.DetectorModel = os.path.basename(detectorModel).replace(".zip","")
     
     
   def setStartFrom(self, startfrom):
@@ -1475,7 +1485,7 @@ class SLIC(Application):
     self._checkArgs( {
         'startfrom' : types.IntType
       } )
-    self.startFrom = startfrom  
+    self.StartFrom = startfrom  
     
     
   def _userjobmodules(self, stepdefinition):
@@ -1494,11 +1504,11 @@ class SLIC(Application):
   
   def _checkConsistency(self):
 
-    if not self.version:
+    if not self.Version:
       return S_ERROR('No version found')   
-    if self.steeringfile:
-      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-        res = Exists(self.steeringfile)
+    if self.SteeringFile:
+      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+        res = Exists(self.SteeringFile)
         if not res['OK']:
           return res  
     
@@ -1509,12 +1519,12 @@ class SLIC(Application):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['slic_steeringfile'] = self.steeringfile
+      self.prodparameters['slic_steeringfile'] = self.SteeringFile
       self.prodparameters['detectorType'] = self.detectortype
-      if self.detectorModel:
-        self.prodparameters['slic_detectormodel'] = self.detectorModel
+      if self.DetectorModel:
+        self.prodparameters['slic_detectormodel'] = self.DetectorModel
    
-    if not self.startFrom :
+    if not self.StartFrom :
       self._log.info('No startFrom defined for Slic : start from the begining')
     
     return S_OK()  
@@ -1534,9 +1544,9 @@ class SLIC(Application):
   def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("RandomSeed",      self.RandomSeed)
-    moduleinstance.setValue("detectorModel",   self.detectorModel)
-    moduleinstance.setValue("startFrom",       self.startFrom)
-    moduleinstance.setValue("debug",           self.debug)
+    moduleinstance.setValue("detectorModel",   self.DetectorModel)
+    moduleinstance.setValue("startFrom",       self.StartFrom)
+    moduleinstance.setValue("debug",           self.Debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
@@ -1570,18 +1580,18 @@ class OverlayInput(Application):
   def __init__(self, paramdict = None):
     self._ops = Operations()
     self.BXOverlay = None
-    self.ggtohadint = 0
+    self.GGToHadInt = 0
     self.NbSigEvtsPerJob = 0
     self.BkgEvtType = ''
-    self.inputenergy = ''
-    self.prodid = 0
-    self.machine = 'clic_cdr'
+    self.ProdID = 0
+    self.Machine = 'clic_cdr'
     super(OverlayInput, self).__init__( paramdict )
-    self.version = '1'
+    self.Version = '1'
     self._modulename = "OverlayInput"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
     self.accountInProduction = False
+    self._paramsToExclude.append('_ops')
     
   def setMachine(self, machine):
     """ Define the machine to use, clic_cdr or ilc_dbd
@@ -1589,13 +1599,13 @@ class OverlayInput(Application):
     self._checkArgs( {
         'machine' : types.StringTypes
       } )
-    self.machine = machine
+    self.Machine = machine
 
   def setProdID(self, pid):
     """ Define the prodID to use as input, experts only
     """
     self._checkArgs( {'pid': types.IntType})
-    self.prodid = pid
+    self.ProdID = pid
     return S_OK()
       
   def setBXOverlay(self, bxoverlay):
@@ -1620,7 +1630,7 @@ class OverlayInput(Application):
     self._checkArgs( {
         'ggtohadint' : types.FloatType
       } )  
-    self.ggtohadint = ggtohadint
+    self.GGToHadInt = ggtohadint
     return S_OK()
       
   def setNbSigEvtsPerJob(self, nbsigevtsperjob):
@@ -1649,7 +1659,7 @@ class OverlayInput(Application):
         'detectormodel' : types.StringTypes
       } )
     
-    self.detectortype = detectormodel
+    self.DetectorModel = detectormodel
     return S_OK()
 
 
@@ -1690,7 +1700,7 @@ class OverlayInput(Application):
     m1.addParameter(Parameter("BkgEvtType",     "", "string", "", "", False, False, 
                               "Background type. Default is gg -> had"))
     m1.addParameter(Parameter("detectormodel",       "", "string", "", "", False, False, 
-                              "Detector model."))
+                              "Detector type."))
     m1.addParameter(Parameter("machine",       "", "string", "", "", False, False, 
                               "machine: clic_cdr or ilc_dbd"))
     m1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
@@ -1699,13 +1709,13 @@ class OverlayInput(Application):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("BXOverlay",         self.BXOverlay)
-    moduleinstance.setValue('ggtohadint',        self.ggtohadint)
+    moduleinstance.setValue('ggtohadint',        self.GGToHadInt)
     moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
-    moduleinstance.setValue('prodid',            self.prodid)
+    moduleinstance.setValue('prodid',            self.ProdID)
     moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
-    moduleinstance.setValue('detectormodel',     self.detectortype)
-    moduleinstance.setValue('debug',             self.debug)
-    moduleinstance.setValue('machine',           self.machine  )
+    moduleinstance.setValue('detectormodel',     self.DetectorModel)
+    moduleinstance.setValue('debug',             self.Debug)
+    moduleinstance.setValue('machine',           self.Machine  )
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1732,8 +1742,8 @@ class OverlayInput(Application):
       self.BXOverlay = 60
       self._log.info("Using default number of BX to overlay: 60")
           
-    if not self.ggtohadint :
-      self.ggtohadint = 3.2
+    if not self.GGToHadInt :
+      self.GGToHadInt = 3.2
       self._log.info("Number of GG -> had is set to 3.2 by default")  
       
     if not self.BkgEvtType :
@@ -1745,16 +1755,16 @@ class OverlayInput(Application):
       if not self.NbSigEvtsPerJob :
         return S_ERROR("Number of signal event per job is not defined")
     else:
-      self.prodparameters['detectorModel'] = self.detectortype
+      self.prodparameters['detectorModel'] = self.DetectorModel
       self.prodparameters['BXOverlay']  = self.BXOverlay
-      self.prodparameters['GGtoHadInt'] = self.ggtohadint
+      self.prodparameters['GGtoHadInt'] = self.GGToHadInt
     
     return S_OK() 
   
   def _checkFinalConsistency(self):
     """ Final check of consistency: the overlay files for the specifed energy must exist
     """
-    if not self.energy:
+    if not self.Energy:
       return  S_ERROR("Energy MUST be specified for the overlay")
 
     res = self._ops.getSections('/Overlay')
@@ -1764,11 +1774,11 @@ class OverlayInput(Application):
     if not self.machine in sections:
       return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.machine, sections))  
     
-    fracappen = modf(float(self.energy)/1000.)
+    fracappen = modf(float(self.Energy)/1000.)
     if fracappen[1] > 0: 
-      energytouse = "%stev" % (Decimal(str(self.energy))/Decimal("1000."))
+      energytouse = "%stev" % (Decimal(str(self.Energy))/Decimal("1000."))
     else:
-      energytouse =  "%sgev" % (Decimal(str(self.energy)))
+      energytouse =  "%sgev" % (Decimal(str(self.Energy)))
     if energytouse.count(".0"):
       energytouse = energytouse.replace(".0", "")
     res = self._ops.getSections("/Overlay/%s" % self.machine)
@@ -1783,7 +1793,7 @@ class OverlayInput(Application):
       return S_ERROR("Detector model specified has no overlay data with that energy and machine")
       
     
-    res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.detectortype, machine = self.machine)  
+    res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.DetectorModel, machine = self.machine)  
     if not res['OK']:
       return res
     if res['Value'] < 0:
@@ -1810,12 +1820,12 @@ class Marlin(Application):
   def __init__(self, paramdict = None):
 
     self.outputDstPath = ''
-    self.outputDstFile = ''
+    self.OutputDstFile = ''
     self.outputRecPath = ''
-    self.outputRecFile = ''
-    self.inputGearFile = ''
-    self.processorlisttouse = []
-    self.processorlisttoexclude = []
+    self.OutputRecFile = ''
+    self.GearFile = ''
+    self.ProcessorsToUse = []
+    self.ProcessorsToExclude = []
     super(Marlin, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'MarlinAnalysis'
@@ -1823,7 +1833,6 @@ class Marlin(Application):
     self.appname = 'marlin'    
     self.datatype = 'REC'
     self.detectortype = 'ILD'
-     
     
   def setGearFile(self, GearFile):
     """ Define input gear file for Marlin
@@ -1835,7 +1844,7 @@ class Marlin(Application):
         'GearFile' : types.StringTypes
       } )
 
-    self.inputGearFile = GearFile
+    self.GearFile = GearFile
     if os.path.exists(GearFile) or GearFile.lower().count("lfn:"):
       self.inputSB.append(GearFile) 
     
@@ -1851,9 +1860,9 @@ class Marlin(Application):
     self._checkArgs( {
         'outputRecFile' : types.StringTypes
       } )
-    self.outputRecFile = outputRecFile
-    self.prodparameters[self.outputRecFile] = {}
-    self.prodparameters[self.outputRecFile]['datatype'] = 'REC'
+    self.OutputRecFile = outputRecFile
+    self.prodparameters[self.OutputRecFile] = {}
+    self.prodparameters[self.OutputRecFile]['datatype'] = 'REC'
     if path:
       self.outputRecPath = path      
     
@@ -1869,9 +1878,9 @@ class Marlin(Application):
     self._checkArgs( {
         'outputDstFile' : types.StringTypes
       } )
-    self.outputDstFile = outputDstFile
-    self.prodparameters[self.outputDstFile] = {}
-    self.prodparameters[self.outputDstFile]['datatype'] = 'DST'
+    self.OutputDstFile = outputDstFile
+    self.prodparameters[self.OutputDstFile] = {}
+    self.prodparameters[self.OutputDstFile]['datatype'] = 'DST'
     if path:
       self.outputDstPath = path    
   
@@ -1888,7 +1897,7 @@ class Marlin(Application):
     self._checkArgs( {
         'processorlist' : types.ListType
       } )
-    self.processorlisttouse = processorlist
+    self.ProcessorsToUse = processorlist
     
   def setProcessorsToExclude(self, processorlist):
     """ Define processor list to exclude
@@ -1903,7 +1912,7 @@ class Marlin(Application):
     self._checkArgs( {
         'processorlist' : types.ListType
       } )
-    self.processorlisttoexclude = processorlist
+    self.ProcessorsToExclude = processorlist
       
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1915,9 +1924,9 @@ class Marlin(Application):
   def _prodjobmodules(self, stepdefinition):
     
     ## Here one needs to take care of listoutput
-    if self.outputPath:
+    if self.OutputPath:
       self._listofoutput.append({'OutputFile' : '@{OutputFile}', "outputPath" : "@{OutputPath}", 
-                                 "outputDataSE" : self.outputSE})
+                                 "outputDataSE" : '@{OutputSE}'})
     
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     res2 = self._setOutputComputeDataList(stepdefinition)
@@ -1927,25 +1936,25 @@ class Marlin(Application):
   
   def _checkConsistency(self):
         
-    if not self.version:
+    if not self.Version:
       return S_ERROR('Version not set!')   
 
-    if self.steeringfile:
-      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-        #res = Exists(self.steeringfile)
+    if self.SteeringFile:
+      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+        #res = Exists(self.SteeringFile)
         res = S_OK()
         if not res['OK']:
           return res  
-      if os.path.exists(self.steeringfile):
-        res = CheckXMLValidity(self.steeringfile)
+      if os.path.exists(self.SteeringFile):
+        res = CheckXMLValidity(self.SteeringFile)
         if not res['OK']:
           return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
     
-    if not self.inputGearFile :
+    if not self.GearFile :
       self._log.info('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
-    if self.inputGearFile:
-      if not os.path.exists(self.inputGearFile) and not self.inputGearFile.lower().count("lfn:"):
-        #res = Exists(self.inputGearFile)
+    if self.GearFile:
+      if not os.path.exists(self.GearFile) and not self.GearFile.lower().count("lfn:"):
+        #res = Exists(self.GearFile)
         res = S_OK()
         if not res['OK']:
           return res  
@@ -1954,18 +1963,18 @@ class Marlin(Application):
     #if not res['OK']:
     #  return res
 
-    if not self.inputGearFile:
-      self.inputGearFile = 'GearOutput.xml'
+    if not self.GearFile:
+      self.GearFile = 'GearOutput.xml'
 
     if not self._jobtype == 'User' :
-      if not self.outputFile:
+      if not self.OutputFile:
         self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", 
                                    "outputDataSE":'@{OutputSE}'})
         self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}", 
                                    "outputDataSE":'@{OutputSE}'})
       self.prodparameters['detectorType'] = self.detectortype
-      self.prodparameters['marlin_gearfile'] = self.inputGearFile
-      self.prodparameters['marlin_steeringfile'] = self.steeringfile
+      self.prodparameters['marlin_gearfile'] = self.GearFile
+      self.prodparameters['marlin_steeringfile'] = self.SteeringFile
       
 
     return S_OK()  
@@ -1985,10 +1994,10 @@ class Marlin(Application):
   
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("inputGEAR",              self.inputGearFile)
-    moduleinstance.setValue('ProcessorListToUse',     self.processorlisttouse)
-    moduleinstance.setValue('ProcessorListToExclude', self.processorlisttoexclude)
-    moduleinstance.setValue("debug",                  self.debug)
+    moduleinstance.setValue("inputGEAR",              self.GearFile)
+    moduleinstance.setValue('ProcessorListToUse',     self.ProcessorsToUse)
+    moduleinstance.setValue('ProcessorListToExclude', self.ProcessorsToExclude)
+    moduleinstance.setValue("debug",                  self.Debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
@@ -2017,9 +2026,10 @@ class LCSIM(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.extraParams = ''
-    self.aliasProperties = ''
-    self.trackingstrategy = ''
+    self.ExtraParams = ''
+    self.AliasProperties = ''
+    self.TrackingStrategy = ''
+    self.DetectorModel = ''
     super(LCSIM, self).__init__( paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
@@ -2027,7 +2037,6 @@ class LCSIM(Application):
     self.appname = 'lcsim'
     self.datatype = 'REC'
     self.detectortype = 'SID'
-    self.detectorModel = ''
      
   def setOutputRecFile(self, outputRecFile, path = None):
     """ Optional: Define output rec file for LCSIM
@@ -2041,9 +2050,9 @@ class LCSIM(Application):
     self._checkArgs( {
         'outputRecFile' : types.StringTypes
                        } )
-    self.outputRecFile = outputRecFile
-    self.prodparameters[self.outputRecFile] = {}
-    self.prodparameters[self.outputRecFile]['datatype'] = 'REC'
+    self.OutputRecFile = outputRecFile
+    self.prodparameters[self.OutputRecFile] = {}
+    self.prodparameters[self.OutputRecFile]['datatype'] = 'REC'
     if path:
       self.outputRecPath = path
     
@@ -2059,9 +2068,9 @@ class LCSIM(Application):
     self._checkArgs( {
         'outputDstFile' : types.StringTypes
       } )
-    self.outputDstFile = outputDstFile 
-    self.prodparameters[self.outputDstFile] = {}
-    self.prodparameters[self.outputDstFile]['datatype'] = 'DST'
+    self.OutputDstFile = outputDstFile 
+    self.prodparameters[self.OutputDstFile] = {}
+    self.prodparameters[self.OutputDstFile]['datatype'] = 'DST'
     if path:
       self.outputDstPath = path            
     
@@ -2075,7 +2084,7 @@ class LCSIM(Application):
         'alias' : types.StringTypes
       } )
 
-    self.aliasProperties = alias     
+    self.AliasProperties = alias     
     if os.path.exists(alias) or alias.lower().count("lfn:"):
       self.inputSB.append(alias) 
   
@@ -2088,7 +2097,7 @@ class LCSIM(Application):
     self._checkArgs( {
         'model' : types.StringTypes
       } )    
-    self.detectorModel = model
+    self.DetectorModel = model
     if os.path.exists(model) or model.lower().count("lfn:"):
       self.inputSB.append(model)
   
@@ -2102,9 +2111,9 @@ class LCSIM(Application):
     self._checkArgs( {
         'trackingstrategy' : types.StringTypes
       } )  
-    self.trackingstrategy = trackingstrategy
-    if os.path.exists(self.trackingstrategy) or self.trackingstrategy.lower().count('lfn:'):
-      self.inputSB.append(self.trackingstrategy)
+    self.TrackingStrategy = trackingstrategy
+    if os.path.exists(self.TrackingStrategy) or self.TrackingStrategy.lower().count('lfn:'):
+      self.inputSB.append(self.TrackingStrategy)
       
   def setExtraParams(self, extraparams):
     """ Optional: Define command line parameters to pass to java
@@ -2116,7 +2125,7 @@ class LCSIM(Application):
         'extraparams' : types.StringTypes
       } )
 
-    self.extraParams = extraparams     
+    self.ExtraParams = extraparams     
     
   def willRunSLICPandora(self):
     """ You need this if you plan on running L{SLICPandora}
@@ -2139,32 +2148,32 @@ class LCSIM(Application):
   
   def _checkConsistency(self):
 
-    if not self.energy :
+    if not self.Energy :
       self._log.info('Energy set to 0 !')
       
-    if not self.nbevts :
+    if not self.NbEvts :
       self._log.info('Number of events set to 0 !')
         
-    if not self.version:
+    if not self.Version:
       return S_ERROR('No version found')   
 
-    if self.steeringfile:
-      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-        res = Exists(self.steeringfile)
+    if self.SteeringFile:
+      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+        res = Exists(self.SteeringFile)
         if not res['OK']:
           return res  
-      if os.path.exists(self.steeringfile):
-        res = CheckXMLValidity(self.steeringfile)
+      if os.path.exists(self.SteeringFile):
+        res = CheckXMLValidity(self.SteeringFile)
         if not res['OK']:
           return S_ERROR("Supplied steering file cannot be read by XML parser: %s" % ( res['Message'] ) )
-    if self.trackingstrategy:
-      if not os.path.exists(self.trackingstrategy) and not self.trackingstrategy.lower().count("lfn:"):
-        res = Exists(self.trackingstrategy)
+    if self.TrackingStrategy:
+      if not os.path.exists(self.TrackingStrategy) and not self.TrackingStrategy.lower().count("lfn:"):
+        res = Exists(self.TrackingStrategy)
         if not res['OK']:
           return res  
         
-    if self.detectorModel:
-      if not self.detectorModel.lower().count(".zip"):
+    if self.DetectorModel:
+      if not self.DetectorModel.lower().count(".zip"):
         return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. \
         Or use the alias.properties.")
         
@@ -2174,7 +2183,7 @@ class LCSIM(Application):
     
     if not self._jobtype == 'User':
       #slicp = False
-      if self._inputapp and not self.outputFile and not self.willBeCut:
+      if self._inputapp and not self.OutputFile and not self.willBeCut:
         for app in self._inputapp:
           if app.appname in ['slicpandora', 'marlin']:
             self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}", 
@@ -2184,8 +2193,8 @@ class LCSIM(Application):
             #slicp = True
             break
       self.prodparameters['detectorType'] = self.detectortype
-      self.prodparameters['lcsim_steeringfile'] = self.steeringfile
-      self.prodparameters['lcsim_trackingstrategy'] = self.trackingstrategy
+      self.prodparameters['lcsim_steeringfile'] = self.SteeringFile
+      self.prodparameters['lcsim_trackingstrategy'] = self.TrackingStrategy
 
       #if not slicp:
       #  self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})    
@@ -2210,11 +2219,11 @@ class LCSIM(Application):
   
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("extraparams",        self.extraParams)
-    moduleinstance.setValue("aliasproperties",    self.aliasProperties)
-    moduleinstance.setValue("debug",              self.debug)
-    moduleinstance.setValue("detectorModel",      self.detectorModel)
-    moduleinstance.setValue("trackingstrategy",   self.trackingstrategy)
+    moduleinstance.setValue("extraparams",        self.ExtraParams)
+    moduleinstance.setValue("aliasproperties",    self.AliasProperties)
+    moduleinstance.setValue("debug",              self.Debug)
+    moduleinstance.setValue("detectorModel",      self.DetectorModel)
+    moduleinstance.setValue("trackingstrategy",   self.TrackingStrategy)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
@@ -2244,9 +2253,9 @@ class SLICPandora(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.startFrom = 0
-    self.pandoraSettings = ''
-    self.detectorModel = ''
+    self.StartFrom = 0
+    self.PandoraSettings = ''
+    self.DetectorModel = ''
     super(SLICPandora, self).__init__( paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICPandoraAnalysis'
@@ -2254,7 +2263,7 @@ class SLICPandora(Application):
     self.appname = 'slicpandora'    
     self.datatype = 'REC'
     self.detectortype = 'SID'
-        
+    self._paramsToExclude.extend(["outputDstPath","outputRecPath","OutputDstFile","OutputRecFile"])
     
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for SlicPandora simulation 
@@ -2266,7 +2275,7 @@ class SLICPandora(Application):
         'detectorModel' : types.StringTypes
       } )
 
-    self.detectorModel = detectorModel    
+    self.DetectorModel = detectorModel    
     if os.path.exists(detectorModel) or detectorModel.lower().count("lfn:"):
       self.inputSB.append(detectorModel)   
     
@@ -2279,7 +2288,7 @@ class SLICPandora(Application):
     self._checkArgs( {
         'startfrom' : types.IntType
       } )
-    self.startFrom = startfrom     
+    self.StartFrom = startfrom     
     
   def setPandoraSettings(self, pandoraSettings):
     """ Optional: Define the path where pandora settings are
@@ -2290,7 +2299,7 @@ class SLICPandora(Application):
     self._checkArgs( {
         'pandoraSettings' : types.StringTypes
       } )
-    self.pandoraSettings = pandoraSettings  
+    self.PandoraSettings = pandoraSettings  
     if os.path.exists(pandoraSettings) or pandoraSettings.lower().count("lfn:"):
       self.inputSB.append(pandoraSettings)    
     
@@ -2310,28 +2319,28 @@ class SLICPandora(Application):
   
   def _checkConsistency(self):
 
-    if not self.version:
+    if not self.Version:
       return S_ERROR('No version found')   
 
-    if self.steeringfile:
-      if not os.path.exists(self.steeringfile) and not self.steeringfile.lower().count("lfn:"):
-        res = Exists(self.steeringfile)
+    if self.SteeringFile:
+      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+        res = Exists(self.SteeringFile)
         if not res['OK']:
           return res  
     
-    if not self.pandoraSettings:
+    if not self.PandoraSettings:
       return S_ERROR("PandoraSettings not set, you need it")
     
     #res = self._checkRequiredApp()
     #if not res['OK']:
     #  return res
       
-    if not self.startFrom :
+    if not self.StartFrom :
       self._log.info('No startFrom defined for SlicPandora : start from the begining')
       
     if not self._jobtype == 'User':
-      self.prodparameters['slicpandora_steeringfile'] = self.steeringfile
-      self.prodparameters['slicpandora_detectorModel'] = self.detectorModel
+      self.prodparameters['slicpandora_steeringfile'] = self.SteeringFile
+      self.prodparameters['slicpandora_detectorModel'] = self.DetectorModel
       
         
     return S_OK()  
@@ -2351,10 +2360,10 @@ class SLICPandora(Application):
   
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("pandorasettings",    self.pandoraSettings)
-    moduleinstance.setValue("detectorxml",        self.detectorModel)
-    moduleinstance.setValue("startFrom",          self.startFrom)
-    moduleinstance.setValue("debug",              self.debug)
+    moduleinstance.setValue("pandorasettings",    self.PandoraSettings)
+    moduleinstance.setValue("detectorxml",        self.DetectorModel)
+    moduleinstance.setValue("startFrom",          self.StartFrom)
+    moduleinstance.setValue("debug",              self.Debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()
@@ -2381,10 +2390,10 @@ class CheckCollections(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.collections = []
+    self.Collections = []
     super(CheckCollections, self).__init__( paramdict )
-    if not self.version:
-      self.version = 'HEAD'
+    if not self.Version:
+      self.Version = 'HEAD'
     self._modulename = "CheckCollections"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
@@ -2400,7 +2409,7 @@ class CheckCollections(Application):
         'CollectionList' : types.ListType
       } )
     
-    self.collections = CollectionList
+    self.Collections = CollectionList
     return S_OK()
 
 
@@ -2412,8 +2421,8 @@ class CheckCollections(Application):
   
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('collections',             self.collections)
-    moduleinstance.setValue('debug',                   self.debug)
+    moduleinstance.setValue('collections',             self.Collections)
+    moduleinstance.setValue('debug',                   self.Debug)
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2465,8 +2474,8 @@ class SLCIOConcatenate(Application):
   def __init__(self, paramdict = None):
 
     super(SLCIOConcatenate, self).__init__( paramdict)
-    if not self.version:
-      self.version = 'HEAD'
+    if not self.Version:
+      self.Version = 'HEAD'
     self._modulename = "LCIOConcatenate"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to concatenate SLCIO files'
@@ -2477,7 +2486,7 @@ class SLCIOConcatenate(Application):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('debug',                       self.debug)
+    moduleinstance.setValue('debug',                       self.Debug)
    
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2497,7 +2506,7 @@ class SLCIOConcatenate(Application):
     """ Checks that all needed parameters are set
     """
       
-    if not self.outputFile and self._jobtype =='User' :
+    if not self.OutputFile and self._jobtype =='User' :
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self._log.notice('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
@@ -2535,10 +2544,10 @@ class SLCIOSplit(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.numberofeventsperfile = 0
+    self.NumberOfEventsPerFile = 0
     super(SLCIOSplit, self).__init__( paramdict)
-    if not self.version:
-      self.version = 'HEAD'
+    if not self.Version:
+      self.Version = 'HEAD'
     self._modulename = "LCIOSplit"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to split SLCIO files'
@@ -2549,7 +2558,7 @@ class SLCIOSplit(Application):
     self._checkArgs( {
         'numberofevents' : types.IntType
       } )
-    self.numberofeventsperfile = numberofevents
+    self.NumberOfEventsPerFile = numberofevents
 
   
 
@@ -2561,8 +2570,8 @@ class SLCIOSplit(Application):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('debug',            self.debug)
-    moduleinstance.setValue('nbEventsPerSlice', self.numberofeventsperfile)
+    moduleinstance.setValue('debug',            self.Debug)
+    moduleinstance.setValue('nbEventsPerSlice', self.NumberOfEventsPerFile)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2589,15 +2598,15 @@ class SLCIOSplit(Application):
       self.detectortype = self._job.detector
     
     #This is needed for metadata registration
-    self.nbevts = self.numberofeventsperfile
+    self.NbEvts = self.NumberOfEventsPerFile
       
-    if not self.outputFile and self._jobtype =='User' :
+    if not self.OutputFile and self._jobtype =='User' :
       self._log.notice('No output file name specified.')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nb_events_per_file'] = self.numberofeventsperfile
+      self.prodparameters['nb_events_per_file'] = self.NumberOfEventsPerFile
 
       
     return S_OK()
@@ -2629,10 +2638,10 @@ class StdHepSplit(Application):
   
   """
   def __init__(self, paramdict = None):
-    self.numberofeventsperfile = 0
+    self.NumberOfEventsPerFile = 0
     super(StdHepSplit, self).__init__( paramdict )
-    if not self.version:
-      self.version = 'V2'
+    if not self.Version:
+      self.Version = 'V2'
     self._modulename = "StdHepSplit"
     self.appname = 'stdhepsplit'
     self._moduledescription = 'Helper call to split Stdhep files'
@@ -2643,7 +2652,7 @@ class StdHepSplit(Application):
     self._checkArgs( {
         'numberofevents' : types.IntType
       } )
-    self.numberofeventsperfile = numberofevents
+    self.NumberOfEventsPerFile = numberofevents
 
   
 
@@ -2655,8 +2664,8 @@ class StdHepSplit(Application):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('debug',            self.debug)
-    moduleinstance.setValue('nbEventsPerSlice', self.numberofeventsperfile)
+    moduleinstance.setValue('debug',            self.Debug)
+    moduleinstance.setValue('nbEventsPerSlice', self.NumberOfEventsPerFile)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2681,15 +2690,15 @@ class StdHepSplit(Application):
       self.datatype = self._job.datatype
     
     #This is needed for metadata registration
-    self.nbevts = self.numberofeventsperfile
+    self.NbEvts = self.NumberOfEventsPerFile
       
-    if not self.outputFile and self._jobtype =='User' :
+    if not self.OutputFile and self._jobtype =='User' :
       self._log.notice('No output file name specified.')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nb_events_per_file'] = self.numberofeventsperfile
+      self.prodparameters['nb_events_per_file'] = self.NumberOfEventsPerFile
 
       
     return S_OK()
@@ -2722,10 +2731,10 @@ class Tomato(Application):
   """
   def __init__(self, paramdict = None):
 
-    self.libTomato = ''
+    self.LibTomato = ''
     super(Tomato, self).__init__( paramdict )
-    if not self.version:
-      self.version = 'HEAD'
+    if not self.Version:
+      self.Version = 'HEAD'
     self._modulename = "TomatoAnalysis"
     self.appname = 'tomato'
     self._moduledescription = 'Helper Application over Marlin reconstruction'
@@ -2741,7 +2750,7 @@ class Tomato(Application):
         'libTomato' : types.StringTypes
       } )
     
-    self.libTomato = libTomato
+    self.LibTomato = libTomato
     return S_OK()
 
 
@@ -2753,8 +2762,8 @@ class Tomato(Application):
   
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('libTomato',     self.libTomato)
-    moduleinstance.setValue('debug',         self.debug)
+    moduleinstance.setValue('libTomato',     self.LibTomato)
+    moduleinstance.setValue('debug',         self.Debug)
    
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -2774,10 +2783,10 @@ class Tomato(Application):
     """ Checks that all needed parameters are set
     """ 
 
-    if not self.version:
+    if not self.Version:
       return S_ERROR("You need to specify which version of Marlin to use.")
     
-    if not self.libTomato :
+    if not self.LibTomato :
       self._log.info('Tomato library not given. It will run without it')
 
     #res = self._checkRequiredApp()

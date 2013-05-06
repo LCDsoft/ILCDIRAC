@@ -94,9 +94,9 @@ class Job(DiracJob):
     if not self.check:
       return S_OK()
     for app in self.applicationlist:
-      print app
+      self.log.notice(app)
       app.listAttributes()
-      print "\n"
+      self.log.notice("\n")
     res = promptUser('Proceed and submit job(s)?', logger = self.log)
     if not res['OK']:
       return S_ERROR("User did not validate")
@@ -182,12 +182,12 @@ class Job(DiracJob):
 #    application._addedtojob()
 #  
 #    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
-    if application.nbevts:
-      self._addParameter(self.workflow, 'NbOfEvts', 'int', application.nbevts, "Number of events to process")
+    if application.NbEvts:
+      self._addParameter(self.workflow, 'NbOfEvts', 'int', application.NbEvts, "Number of events to process")
   
     ##Finally, add the software packages if needed
-    if application.appname and application.version:
-      self._addSoftware(application.appname, application.version)
+    if application.appname and application.Version:
+      self._addSoftware(application.appname, application.Version)
       
     return S_OK()
   
@@ -259,21 +259,21 @@ class Job(DiracJob):
     """ Every type of job has to reimplement this method. By default, just set the log file if not 
     provided and the energy.
     """
-    if not application.logfile:      
+    if not application.LogFile:      
       logf = application.appname
-      if application.version:
-        logf += "_" + application.version
+      if application.Version:
+        logf += "_" + application.Version
       logf += "_Step_%s.log" % (len(self.applicationlist)+1)
       application.setLogFile(logf)
     
     if self.energy:
-      if not application.energy:
+      if not application.Energy:
         application.setEnergy(self.energy)
-      elif application.energy != self.energy:
+      elif application.Energy != self.energy:
         return S_ERROR("You have to use always the same energy per job.")
     else:
-      if application.energy:
-        self.energy = application.energy
+      if application.Energy:
+        self.energy = application.Energy
       else:
         self.log.warn("Energy not set for this step")
       #  return S_ERROR("Energy must be set somewhere.")

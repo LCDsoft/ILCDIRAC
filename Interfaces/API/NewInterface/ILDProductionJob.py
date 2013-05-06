@@ -208,8 +208,8 @@ class ILDProductionJob(ProductionJob):
     if self.created:
       return S_ERROR("The production was created, you cannot add new applications to the job.")
 
-    if not application.logfile:
-      logf = application.appname+"_"+application.version+"_@{STEP_ID}.log"
+    if not application.LogFile:
+      logf = application.appname+"_"+application.Version+"_@{STEP_ID}.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
@@ -217,24 +217,24 @@ class ILDProductionJob(ProductionJob):
       #in fact a bit more tricky as the log files have the prodID and jobID in them
     
     if "SoftwareTag" in self.prodparameters:
-      curpackage = "%s.%s" % (application.appname, application.version)
+      curpackage = "%s.%s" % (application.appname, application.Version)
       if not self.prodparameters["SoftwareTag"].count(curpackage):
         self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
     else :
-      self.prodparameters["SoftwareTag"] = "%s.%s" % (application.appname, application.version)
+      self.prodparameters["SoftwareTag"] = "%s.%s" % (application.appname, application.Version)
       
-    #softwarepath = application.appname+application.version
+    #softwarepath = application.appname+application.Version
     if 'ILDConfigVersion' in self.prodparameters:
       softwarepath = self.prodparameters['ILDConfigVersion']
     else:
       return S_ERROR("ILDConfig not set, it is mandatory for path definition, please use p.setILDConfig() before appending applications")
 
     if not self.energy:
-      if application.energy:
+      if application.Energy:
         self.energy = Decimal(str(application.energy))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
-    elif not application.energy:
+    elif not application.Energy:
       res = application.setEnergy(float(self.energy))
       if not res['OK']:
         return res
@@ -243,8 +243,8 @@ class ILDProductionJob(ProductionJob):
       self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
-      if hasattr(application,'evttype'):
-        self.evttype = application.evttype
+      if hasattr(application,'EvtType'):
+        self.evttype = application.EvtType
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
       

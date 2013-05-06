@@ -164,13 +164,13 @@ class DBDGeneration(ProductionJob):
     if self.created:
       return S_ERROR("The production was created, you cannot add new applications to the job.")
     
-    if not application.logfile:
+    if not application.LogFile:
       logf = "SomeLog.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
     if not self.nbevts:
-      self.nbevts = application.nbevts
+      self.nbevts = application.NbEvts
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
 
@@ -184,8 +184,8 @@ class DBDGeneration(ProductionJob):
       self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
-      if hasattr(application,'evttype'):
-        self.evttype = application.evttype
+      if hasattr(application,'EvtType'):
+        self.evttype = application.EvtType
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
       self.prodparameters['Process'] = self.evttype
@@ -194,9 +194,9 @@ class DBDGeneration(ProductionJob):
       return S_ERROR("You need to specify the Output storage element")
         
     if self.prodparameters["SWPackages"]:
-      self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.version)
+      self.prodparameters["SWPackages"] +=";%s.%s"%(application.appname,application.Version)
     else :
-      self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.version)
+      self.prodparameters["SWPackages"] ="%s.%s"%(application.appname,application.Version)
 
     res = self._updateProdParameters(application)
     if not res['OK']:

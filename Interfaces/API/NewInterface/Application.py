@@ -31,29 +31,29 @@ class Application(object):
     #application nane (executable)
     self.appname = ""
     #application version
-    self.version = ""
+    self.Version = ""
     #Number of evetns to process
-    self.nbevts = 0
+    self.NbEvts = 0
     #Steering file (duh!)
-    self.steeringfile = ""
+    self.SteeringFile = ""
     #Input sandbox: steering file automatically added to SB
     self.inputSB = []
     #Input file
-    self.inputfile = ""
-    self.forget_about_Input = False
+    self.InputFile = ""
+    self.ForgetAboutInput = False
     #Output file
-    self.outputFile = ""
-    self.outputPath = ""
-    self.outputDstFile = ''
+    self.OutputFile = ""
+    self.OutputPath = ""
+    self.OutputDstFile = ''
     self.outputDstPath = ''
-    self.outputRecFile = ''
+    self.OutputRecFile = ''
     self.outputRecPath = ''    
-    self.outputSE = ''
+    self.OutputSE = ''
     self._listofoutput = []
     #Log file
-    self.logfile = ""
+    self.LogFile = ""
     #Energy to use (duh! again)
-    self.energy = 0
+    self.Energy = 0
     #Detector type (ILD or SID)
     self.detectortype = ""
     #Data type : gen, SIM, REC, DST
@@ -63,7 +63,7 @@ class Application(object):
     self.willBeCut = False
     
     ##Debug mode
-    self.debug = False
+    self.Debug = False
     
     #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
@@ -93,13 +93,21 @@ class Application(object):
     self._log = gLogger.getSubLogger(self.__class__.__name__)
     self._errorDict = {}
     
+    #This is used to filter out the members that should not be set when using a dict as input
+    self._paramsToExclude = ['_paramsToExclude',"_log","_errorDict","addedtojob",
+                             "_inputappstep","_linkedidx","_inputapp","_jobtype",
+                             "_jobsteps","_jobapps","_job","_systemconfig","_importLocation",
+                             "_moduledescription","_modulename","prodparameters",
+                             "datatype","detectortype","_listofoutput","inputSB",
+                             "appname",'accountInProduction','OutputPath']
+    
     ### Next is to use the setattr method.
     self._setparams(paramdict)
   
   def __repr__(self):
     classstr  = "%s" % self.appname
-    if self.version:
-      classstr += " %s" % self.version
+    if self.Version:
+      classstr += " %s" % self.Version
     return classstr
   
   def _setparams(self, params):
@@ -115,7 +123,17 @@ class Application(object):
       except:
         self._log.error("The %s class does not have a set%s method." % (self.__class__.__name__, param))
     return S_OK()  
-    
+  
+  def _getParamsDict(self):
+    """ Return dictionary that can be used to build a new application based on the current
+    """
+    curdict = self.__dict__
+    pdict = {}
+    for key, val in curdict.items():
+      if not key in self._paramsToExclude:
+        if val:
+          pdict[key] = val
+    return S_OK(pdict)
     
   def setName(self, name):
     """ Define name of application
@@ -134,7 +152,7 @@ class Application(object):
     @type version: string
     """
     self._checkArgs({ 'version' : types.StringTypes } )
-    self.version = version
+    self.Version = version
     return S_OK()  
     
   def setSteeringFile(self, steeringfile):
@@ -144,7 +162,7 @@ class Application(object):
     @type steeringfile: string
     """
     self._checkArgs({ 'steeringfile' : types.StringTypes } )
-    self.steeringfile = steeringfile
+    self.SteeringFile = steeringfile
     if os.path.exists(steeringfile) or steeringfile.lower().count("lfn:"):
       self.inputSB.append(steeringfile) 
     return S_OK()  
@@ -156,7 +174,7 @@ class Application(object):
     @type logfile: string
     """
     self._checkArgs({ 'logfile' : types.StringTypes } )
-    self.logfile = logfile
+    self.LogFile = logfile
     return S_OK()  
   
   def setNbEvts(self, nbevts):
@@ -166,7 +184,7 @@ class Application(object):
     @type nbevts: int
     """
     self._checkArgs({ 'nbevts' : types.IntType })
-    self.nbevts = nbevts  
+    self.NbEvts = nbevts  
     return S_OK()  
 
   def setNumberOfEvents(self, nbevts):
@@ -174,16 +192,16 @@ class Application(object):
     """
     return self.setNbEvts(nbevts)
     
-  def setEnergy(self, energy):
+  def setEnergy(self, Energy):
     """ Set the energy to use
     
-    @param energy: Energy used in GeV
-    @type energy: float
+    @param Energy: Energy used in GeV
+    @type Energy: float
     """
-    if not type(energy) == type(1.1):
-      energy = float(energy)
-    self._checkArgs({ 'energy' : types.FloatType })
-    self.energy = energy
+    if not type(Energy) == type(1.1):
+      Energy = float(Energy)
+    self._checkArgs({ 'Energy' : types.FloatType })
+    self.Energy = Energy
     return S_OK()  
     
   def setOutputFile(self, ofile, path = None):
@@ -196,7 +214,7 @@ class Application(object):
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
     
-    self.outputFile = ofile
+    self.OutputFile = ofile
     self.prodparameters[ofile] = {}
     if self.detectortype:
       self.prodparameters[ofile]['detectortype'] = self.detectortype
@@ -205,9 +223,9 @@ class Application(object):
     
     if path:
       self._checkArgs({ 'path' : types.StringTypes } )
-      self.outputPath = path
+      self.OutputPath = path
       
-    return S_OK()  
+    return S_OK()
   
   def setOutputSE(self, se):
     """ Set the output storage element for all files produced by this application.
@@ -217,7 +235,7 @@ class Application(object):
   
     """
     self._checkArgs({ 'se' : types.StringTypes } )
-    self.outputSE = se
+    self.OutputSE = se
     return S_OK()
   
   def setInputFile(self, inputfile):
@@ -235,15 +253,15 @@ class Application(object):
       if os.path.exists(inf) or inf.lower().count("lfn:"):
         self.inputSB.append(inf)
         
-    self.inputfile = string.join(inputfile, ";")
+    self.InputFile = string.join(inputfile, ";")
 
     return S_OK()
   
-  def setForgetAboutInput(self):
+  def setForgetAboutInput(self, flag):
     """ Do not overwrite the input set in the SteeringFile
     """
     
-    self.forget_about_Input = True
+    self.ForgetAboutInput = flag
     
     return S_OK()
   
@@ -270,18 +288,18 @@ class Application(object):
     @type debug: bool
     """
     self._checkArgs({ "debug": types.BooleanType} )
-    self.debug = debug
+    self.Debug = debug
     return S_OK()
 
   def listAttributes(self):
     """ Method to list attributes for users. Doesn't list any private or semi-private attributes
     """
-    print 'Attribute list :'
+    self._log.notice('Attribute list :')
     for key, val in self.__dict__.items():
-      if not key[0] == "_":
+      if key not in self._paramsToExclude:
         if not val:
           val = "Not defined"
-        print "  ", key, ":", val
+        self._log.notice("  %s: %s"%( key, val))
 
 
 ########################################################################################
@@ -431,12 +449,12 @@ class Application(object):
     stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
     stepdefinition.addParameter(Parameter("ForgetInput",     False, "boolean", "", "", False, False, 
                                           "Do not overwrite input steering"))
-    if len(self.outputFile):
+    if len(self.OutputFile):
       stepdefinition.addParameter(Parameter("OutputFile",       "", "string", "", "", False,  False, "Output File"))
-    if len(self.outputDstFile):
+    if len(self.OutputDstFile):
       stepdefinition.addParameter(Parameter("outputDST",        "", "string", "", "", False,  False, 
                                             "Output DST File"))
-    if len(self.outputRecFile):
+    if len(self.OutputRecFile):
       stepdefinition.addParameter(Parameter("outputREC",       "", "string", "", "",  False,  False, 
                                             "Output REC File"))
       
@@ -461,22 +479,22 @@ class Application(object):
     """
         
     stepinstance.setValue("applicationName",    self.appname)
-    stepinstance.setValue("applicationVersion", self.version)
-    stepinstance.setValue("applicationLog",     self.logfile)
-    stepinstance.setValue("SteeringFile",       self.steeringfile)
+    stepinstance.setValue("applicationVersion", self.Version)
+    stepinstance.setValue("applicationLog",     self.LogFile)
+    stepinstance.setValue("SteeringFile",       self.SteeringFile)
     if not self._inputapp:
-      stepinstance.setValue("InputFile",        self.inputfile)
-    stepinstance.setValue( "ForgetInput",       self.forget_about_Input)
-    if len(self.outputFile):  
-      stepinstance.setValue("OutputFile",       self.outputFile)
-    if len(self.outputRecFile):  
-      stepinstance.setValue("outputREC",        self.outputRecFile)
-    if len(self.outputDstFile):  
-      stepinstance.setValue("outputDST",        self.outputDstFile)
-    stepinstance.setValue("OutputPath",         self.outputPath)
+      stepinstance.setValue("InputFile",        self.InputFile)
+    stepinstance.setValue( "ForgetInput",       self.ForgetAboutInput)
+    if len(self.OutputFile):  
+      stepinstance.setValue("OutputFile",       self.OutputFile)
+    if len(self.OutputRecFile):  
+      stepinstance.setValue("outputREC",        self.OutputRecFile)
+    if len(self.OutputDstFile):  
+      stepinstance.setValue("outputDST",        self.OutputDstFile)
+    stepinstance.setValue("OutputPath",         self.OutputPath)
     stepinstance.setValue("outputPathREC",      self.outputRecPath)
     stepinstance.setValue("outputPathDST",      self.outputDstPath)
-    stepinstance.setValue("OutputSE",           self.outputSE)
+    stepinstance.setValue("OutputSE",           self.OutputSE)
     stepinstance.setValue('listoutput',         self._listofoutput)
     return S_OK()
       

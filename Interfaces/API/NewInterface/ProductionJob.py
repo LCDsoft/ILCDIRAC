@@ -673,8 +673,8 @@ class ProductionJob(Job):
     if self.created:
       return S_ERROR("The production was created, you cannot add new applications to the job.")
 
-    if not application.logfile:
-      logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
+    if not application.LogFile:
+      logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
@@ -683,10 +683,10 @@ class ProductionJob(Job):
     
     ### Retrieve from the application the essential info to build the prod info.
     if not self.nbevts and not self.slicesize:
-      self.nbevts = application.nbevts
+      self.nbevts = application.NbEvts
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
-    elif not application.nbevts:
+    elif not application.NbEvts:
       if not self.slicesize:
         res = application.setNbEvts(self.jobFileGroupSize * self.nbevts)
       else:
@@ -694,16 +694,16 @@ class ProductionJob(Job):
       if not res['OK']:
         return res
     
-    if application.nbevts > 0 and (self.jobFileGroupSize * self.nbevts > application.nbevts or self.slicesize > application.nbevts):
-      self.nbevts = application.nbevts 
+    if application.NbEvts > 0 and (self.jobFileGroupSize * self.nbevts > application.NbEvts or self.slicesize > application.NbEvts):
+      self.nbevts = application.NbEvts 
 
     
     if not self.energy:
-      if application.energy:
-        self.energy = Decimal(str(application.energy))
+      if application.Energy:
+        self.energy = Decimal(str(application.Energy))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
-    elif not application.energy:
+    elif not application.Energy:
       res = application.setEnergy(float(self.energy))
       if not res['OK']:
         return res
@@ -712,8 +712,8 @@ class ProductionJob(Job):
       self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
-      if hasattr(application, 'evttype'):
-        self.evttype = application.evttype
+      if hasattr(application, 'EvtType'):
+        self.evttype = application.EvtType
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
       self.prodparameters['Process'] = self.evttype
@@ -721,7 +721,7 @@ class ProductionJob(Job):
     if not self.outputStorage:
       return S_ERROR("You need to specify the Output storage element")
     
-    curpackage = "%s.%s" % (application.appname, application.version)
+    curpackage = "%s.%s" % (application.appname, application.Version)
     if "SWPackages" in self.prodparameters:      
       if not self.prodparameters["SWPackages"].count(curpackage):
         self.prodparameters["SWPackages"] += ";%s" % ( curpackage )    
