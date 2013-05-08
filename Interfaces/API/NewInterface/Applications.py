@@ -1771,8 +1771,8 @@ class OverlayInput(Application):
     if not res['OK']:
       return S_ERROR("Could not resolve the CS path to the overlay specifications")
     sections = res['Value']
-    if not self.machine in sections:
-      return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.machine, sections))  
+    if not self.Machine in sections:
+      return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.Machine, sections))  
     
     fracappen = modf(float(self.Energy)/1000.)
     if fracappen[1] > 0: 
@@ -1781,11 +1781,11 @@ class OverlayInput(Application):
       energytouse =  "%sgev" % (Decimal(str(self.Energy)))
     if energytouse.count(".0"):
       energytouse = energytouse.replace(".0", "")
-    res = self._ops.getSections("/Overlay/%s" % self.machine)
+    res = self._ops.getSections("/Overlay/%s" % self.Machine)
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s" % energytouse)
     
-    res = self._ops.getSections("/Overlay/%s/%s" % (self.machine, energytouse))
+    res = self._ops.getSections("/Overlay/%s/%s" % (self.Machine, energytouse))
     if not res['OK']:
       return S_ERROR("Could not find the detector models")
     
@@ -1793,7 +1793,7 @@ class OverlayInput(Application):
       return S_ERROR("Detector model specified has no overlay data with that energy and machine")
       
     
-    res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.DetectorModel, machine = self.machine)  
+    res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.DetectorModel, machine = self.Machine)  
     if not res['OK']:
       return res
     if res['Value'] < 0:
