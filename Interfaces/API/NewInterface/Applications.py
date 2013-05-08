@@ -1789,7 +1789,7 @@ class OverlayInput(Application):
     if not res['OK']:
       return S_ERROR("Could not find the detector models")
     
-    if not self.detectortype in res['Value']:
+    if not self.DetectorModel in res['Value']:
       return S_ERROR("Detector model specified has no overlay data with that energy and machine")
       
     
