@@ -103,6 +103,7 @@ YESNO=""
 		rsync -avL $string $directoryname/LDLibs
 	    fi
 	done
+	python PrepareLibs.py $directoryname/LDLibs
 	rsync --exclude '.svn' -av ${ROOTSYS}/lib ${ROOTSYS}/etc ${ROOTSYS}/bin  $directoryname/ROOT
 
         #Now we replace all processor libraries in LD_LIBS with links to the Libraries in the MARLIN_DLL folder

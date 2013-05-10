@@ -86,6 +86,8 @@ elif [ $# -eq 2 ]; then
 ##this way we don't always have to copy them again, after we strip the rpath
 	rsync -avzL $string temp/
 	rsync -avzL $temp $mokkatarballfolder
+	##Clean the libs that will fail the check sum validation
+	python PrepareLibs.py $mokkatarballfolder
 
 	for file in $( ls $mokkatarballfolder/*.so ); do
 	    chrpath -d $file
