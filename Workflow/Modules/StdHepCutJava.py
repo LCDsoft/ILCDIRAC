@@ -162,6 +162,12 @@ class StdHepCutJava(ModuleBase):
       if self.workflow_commons.has_key('Luminosity'):
         self.workflow_commons['Luminosity'] = self.workflow_commons['Luminosity'] * sel_eff
       self.workflow_commons['NbOfEvts'] = nbevtswritten
+      info = {}
+      info['SelectionEfficiency'] = sel_eff
+      if 'Info' not in self.workflow_commons:
+        self.workflow_commons['Info'] = info
+      else:
+        self.workflow_commons['Info'].update(info)
     else:
       self.log.error('Not enough events somewhere: read: %s, pass:%s, written:%s' % (nbevtsread, nbevtspassing, 
                                                                                      nbevtswritten))

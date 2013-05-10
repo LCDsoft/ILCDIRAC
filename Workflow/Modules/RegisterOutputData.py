@@ -28,6 +28,7 @@ class RegisterOutputData( ModuleBase ):
     self.prodOutputLFNs = []
     self.nbofevents = 0
     self.luminosity = 0
+    self.sel_eff = 0
     self.add_info = ''
     self.filecatalog = FileCatalogClient()
     self.filemeta = {}
@@ -50,6 +51,9 @@ class RegisterOutputData( ModuleBase ):
     
     ##Additional info: cross section only for the time being, comes from WHIZARD
     if self.workflow_commons.has_key('Info'):
+      if 'SelectionEfficiency' in self.workflow_commons['Info']:
+        self.sel_eff = self.workflow_commons['Info']['SelectionEfficiency']
+        del self.workflow_commons['Info']['SelectionEfficiency']
       self.add_info = DEncode.encode(self.workflow_commons['Info'])
     
     return S_OK('Parameters resolved')
@@ -84,22 +88,19 @@ class RegisterOutputData( ModuleBase ):
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         metafiles.update(nbevts)  
       if self.luminosity:
-        lumi = {}
-        lumi['Luminosity'] = self.luminosity
-        metafiles.update(lumi)
+        metafiles.update({'Luminosity': self.luminosity})
+      
+      if self.sel_eff:
+        metafiles.update({'SelectionEfficiency':self.sel_eff})
         
       if self.add_info:
-        info = {}
-        info['AdditionalInfo'] = self.add_info
-        metafiles.update(info)
+        metafiles.update({'AdditionalInfo':self.add_info})
+        
       elif 'AdditionalInfo' in self.inputdataMeta:
-        info = {}
-        info['AdditionalInfo'] = self.inputdataMeta['AdditionalInfo']
-        metafiles.update(info)
+        metafiles.update({'AdditionalInfo':self.inputdataMeta['AdditionalInfo']})
       
       if 'CrossSection' in self.inputdataMeta:
-        xsec = {'CrossSection':self.inputdataMeta['CrossSection']}
-        metafiles.update(xsec)
+        metafiles.update({'CrossSection':self.inputdataMeta['CrossSection']})
       
       if self.WorkflowStartFrom:
         metafiles.update({"FirstEventFromInput":self.WorkflowStartFrom})
