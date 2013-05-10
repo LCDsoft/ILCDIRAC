@@ -37,7 +37,12 @@ def getLibsToIgnore():
 
 if __name__ == "__main__":
   import sys
-  path = sys.argv[0]
+  if not len(sys.argv)>1:
+    print "You need to pass the path"
+    exit(1)
+  path = sys.argv[1]
+  print "Will remove from %s the files that look like %s" % (path, getLibsToIgnore())  
+  
   if not removeLibc(path):
     print "Could not clean libs"
     exit(1)
