@@ -76,7 +76,7 @@ for FILE in $( find $TARBALL_DIR/bin -type f -perm -u+x ! -type d ); do
 
     echo "Copying files for $FILE"
     rsync -avzL $FILES $TARBALL_DIR/lib
-    python PrepareLibs.py $TARBALL_DIR/lib
+    python $DIRAC/ILCDIRAC/Core/Utilities/PrepareLibs.py $TARBALL_DIR/lib
 done
 
 cd $TARBALL_DIR/

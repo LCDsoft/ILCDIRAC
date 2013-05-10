@@ -41,7 +41,7 @@ else
 	    string="$file $string"
 	done
 	rsync -avzL $string $directoryname/LDLibs
-	python PrepareLibs.py $directoryname/LDLibs
+	python $DIRAC/ILCDIRAC/Core/Utilities/PrepareLibs.py $directoryname/LDLibs
 	echo -e "\E[034mComputing md5 checksum\E[030m"
 	cd $directoryname
 	find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5
