@@ -9,7 +9,7 @@ Also installs all dependencies for the applications
 '''
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
-from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc
+from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc, getLibsToIgnore
 from DIRAC.DataManagementSystem.Client.ReplicaManager       import ReplicaManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 from ILCDIRAC.Core.Utilities.WasteCPU                       import WasteCPUCycles
@@ -396,6 +396,12 @@ def check(app, area, res_from_install):
       line = line.rstrip()
       md5sum, fin = line.split()
       if fin=='-' or fin.count("md5_checksum.md5"): continue
+      found_lib_to_ignore = False
+      for lib in getLibsToIgnore():
+        if fin.count(lib):
+          found_lib_to_ignore
+      if found_lib_to_ignore:
+        continue
       fin = os.path.join(basefolder, fin.replace("./",""))
       if not os.path.exists(fin):
         gLogger.error("File missing :", fin)

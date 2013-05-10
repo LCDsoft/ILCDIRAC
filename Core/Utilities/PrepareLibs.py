@@ -6,6 +6,8 @@ Remove any system library provided in the application tar ball
 '''
 import os
 
+files_to_remove = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so"]
+
 def removeLibc(path):
   """ Remove libraries that can be problematic, like libc.so
   @param path: path to look for libraries to remove
@@ -19,15 +21,24 @@ def removeLibc(path):
     return True  
   listlibs = os.listdir(os.getcwd())
   for lib in listlibs:
-    if (lib.count("libc.so") or lib.count("libc-2.5") or lib.count("libm.so") 
-        or lib.count("libpthread.so") or lib.count("libdl.so")):
-      try:
-        os.remove(os.getcwd() + os.sep + lib)
-      except:
-        print "Could not remove %s" % lib
-        os.chdir(curdir)
-        return False
+    for lib_to_remove in files_to_remove:
+      if lib.count(lib_to_remove):
+        try:
+          os.remove(os.getcwd() + os.sep + lib)
+        except:
+          print "Could not remove %s" % lib
+          os.chdir(curdir)
+          return False
   os.chdir(curdir)
   return True
 
-  
+def getLibsToIgnore():
+  return files_to_remove
+
+if __name__ == "__main__":
+  import sys
+  path = sys.argv[0]
+  if not removeLibc(path):
+    print "Could not clean libs"
+    exit(1)
+  exit(0)
