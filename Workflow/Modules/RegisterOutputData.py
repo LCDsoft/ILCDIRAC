@@ -29,6 +29,7 @@ class RegisterOutputData( ModuleBase ):
     self.nbofevents = 0
     self.luminosity = 0
     self.sel_eff = 0
+    self.cut_eff = 0
     self.add_info = ''
     self.filecatalog = FileCatalogClient()
     self.filemeta = {}
@@ -51,9 +52,10 @@ class RegisterOutputData( ModuleBase ):
     
     ##Additional info: cross section only for the time being, comes from WHIZARD
     if self.workflow_commons.has_key('Info'):
-      if 'SelectionEfficiency' in self.workflow_commons['Info']:
-        self.sel_eff = self.workflow_commons['Info']['SelectionEfficiency']
-        del self.workflow_commons['Info']['SelectionEfficiency']
+      if 'stdhepcut' in self.workflow_commons['Info']:
+        self.sel_eff = self.workflow_commons['Info']['stdhepcut']['SelectionEfficiency']
+        self.cut_eff = self.workflow_commons['Info']['stdhepcut']['CutEfficiency']
+        del self.workflow_commons['Info']['stdhepcut']
       self.add_info = DEncode.encode(self.workflow_commons['Info'])
     
     return S_OK('Parameters resolved')
@@ -91,8 +93,9 @@ class RegisterOutputData( ModuleBase ):
         metafiles.update({'Luminosity': self.luminosity})
       
       if self.sel_eff:
-        metafiles.update({'SelectionEfficiency':self.sel_eff})
-        
+        metafiles.update({'Reduction':self.sel_eff})
+      if self.cut_eff:
+        metafiles.update({'CutEfficiency': self.cut_eff})  
       if self.add_info:
         metafiles.update({'AdditionalInfo':self.add_info})
         

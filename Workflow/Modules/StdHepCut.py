@@ -165,7 +165,9 @@ class StdHepCut(ModuleBase):
         self.workflow_commons['Luminosity'] = self.workflow_commons['Luminosity'] * sel_eff
       self.workflow_commons['NbOfEvts'] = nbevtswritten
       info = {}
-      info['SelectionEfficiency'] = sel_eff
+      info['stdhepcut'] = {}
+      info['stdhepcut']['SelectionEfficiency'] = sel_eff
+      info['stdhepcut']['CutEfficiency'] = cut_eff
       if 'Info' not in self.workflow_commons:
         self.workflow_commons['Info'] = info
       else:
