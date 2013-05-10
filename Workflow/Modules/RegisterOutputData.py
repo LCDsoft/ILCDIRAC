@@ -53,7 +53,7 @@ class RegisterOutputData( ModuleBase ):
     ##Additional info: cross section only for the time being, comes from WHIZARD
     if self.workflow_commons.has_key('Info'):
       if 'stdhepcut' in self.workflow_commons['Info']:
-        self.sel_eff = self.workflow_commons['Info']['stdhepcut']['SelectionEfficiency']
+        self.sel_eff = self.workflow_commons['Info']['stdhepcut']['Reduction']
         self.cut_eff = self.workflow_commons['Info']['stdhepcut']['CutEfficiency']
         del self.workflow_commons['Info']['stdhepcut']
       self.add_info = DEncode.encode(self.workflow_commons['Info'])

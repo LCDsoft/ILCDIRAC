@@ -164,7 +164,7 @@ class StdHepCutJava(ModuleBase):
       self.workflow_commons['NbOfEvts'] = nbevtswritten
       info = {}
       info['stdhepcut'] = {}
-      info['stdhepcut']['SelectionEfficiency'] = sel_eff
+      info['stdhepcut']['Reduction'] = sel_eff
       info['stdhepcut']['CutEfficiency'] = cut_eff
       if 'Info' not in self.workflow_commons:
         self.workflow_commons['Info'] = info
