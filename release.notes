@@ -1,3 +1,17 @@
+[v19r0p1]
+
+*Core
+NEW: Script to list the VO members
+CHANGE: Make PrepareLibs a code that can be called directly, and use that in the createXXTarBall scripts
+
+*Interfaces
+CHANGE: Rename all Application members to match the setters
+NEW: Have a function to return the dictionary of the application, allows deep copy and recreation from scratch
+
+*Workflow
+NEW: Add CutEfficiency and Reduction as metadata for the files produced by stdhepcutX
+
+
 [v18r0p8]
 
 *Interfaces
