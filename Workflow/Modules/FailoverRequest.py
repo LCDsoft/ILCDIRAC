@@ -39,6 +39,7 @@ class FailoverRequest(ModuleBase):
     self.jobReport  = None
     self.fileReport = None
     self.request = None
+    self.jobType = ''
 
   #############################################################################
   def applicationSpecificInputs(self):
@@ -113,7 +114,7 @@ class FailoverRequest(ModuleBase):
       self.log.info('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       inputFiles = self.fileReport.getFiles()
       for lfn in inputFiles:
-        if inputFiles[lfn] != 'ApplicationCrash':
+        if inputFiles[lfn] != 'ApplicationCrash' and self.jobType != "Split":
           self.log.info('Forcing status to "Unused" due to workflow failure for: %s' % (lfn))
           self.fileReport.setFileStatus(int(self.productionID), lfn, 'Unused')
     else:
