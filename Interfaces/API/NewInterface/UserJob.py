@@ -31,13 +31,13 @@ class UserJob(Job):
     """
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
-      return S_ERROR("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
+      return self._reportError("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
     if self.proxyinfo['Value'].has_key('group'):
       group = self.proxyinfo['Value']['group']
       if not group == self.usergroup:
-        return S_ERROR("Not allowed to submit job, you need a %s proxy." % self.usergroup)
+        return self._reportError("Not allowed to submit job, you need a %s proxy." % self.usergroup)
     else:
-      return S_ERROR("Could not determine group, you do not have the right proxy.")
+      return self._reportError("Could not determine group, you do not have the right proxy.")
     
     res = self._addToWorkflow()
     if not res['OK']:
