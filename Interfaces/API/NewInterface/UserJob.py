@@ -11,7 +11,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK
 
 import string, types
 
