@@ -9,8 +9,9 @@ User Job class. Used to define (guess what?) user jobs!
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
-from DIRAC import S_OK
+from DIRAC import S_OK, S_ERROR
 
 import string, types
 
@@ -21,11 +22,23 @@ class UserJob(Job):
     super(UserJob, self).__init__( script )
     self.type = 'User'
     self.diracinstance = None
+    self.usergroup = 'ilc_user'
+    self.proxyinfo = getProxyInfo()
     
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
     add the job to DIRAC.
     """
+    #Check the credentials. If no proxy or not user proxy, return an error
+    if not self.proxyinfo['OK']:
+      return S_ERROR("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
+    if self.proxyinfo['Value'].has_key('group'):
+      group = self.proxyinfo['Value']['group']
+      if not group == self.usergroup:
+        return S_ERROR("Not allowed to submit job, you need a %s proxy." % self.usergroup)
+    else:
+      return S_ERROR("Could not determine group, you do not have the right proxy.")
+    
     res = self._addToWorkflow()
     if not res['OK']:
       return res
