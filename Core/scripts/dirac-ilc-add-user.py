@@ -3,7 +3,6 @@
 from DIRAC.Core.Base import Script
 
 from DIRAC import S_OK, S_ERROR
-from DIRAC.Interfaces.API.DiracAdmin import voName
 class Params(object):
   def __init__(self):
     self.uname = ''
@@ -40,6 +39,7 @@ if __name__=="__main__":
   clip = Params()
   clip.registerSwitches()
   Script.parseCommandLine()
+  from DIRAC.Interfaces.API.DiracAdmin import voName
   from DIRAC import gLogger, gConfig, exit as dexit
   
   if not clip.uname or not clip.CN or not clip.groups or not clip.DN or not clip.Email:
@@ -90,11 +90,11 @@ if __name__=="__main__":
       gLogger.error(res['Message'])
       continue
     
-    res = fc.changePathGroup({bpath:grp})
+    res = fc.changePathGroup({ bpath: { "Group": grp } }, False)
     if not res['OK']:
       gLogger.error(res['Message'])
       
-    res = fc.changePathOwner({bpath:clip.uname})
+    res = fc.changePathOwner({ bpath: {"Owner": clip.uname } }, False)
     if not res['OK']:
       gLogger.error(res['Message'])
     
