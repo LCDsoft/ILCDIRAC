@@ -2,6 +2,8 @@
 """ List the VO members
 """
 
+
+
 def setUser(opt):
   from DIRAC import S_OK
   global username
@@ -9,6 +11,12 @@ def setUser(opt):
   return S_OK()
 
 if __name__ == "__main__":
+  try:
+    import suds
+  except:
+    print "Run easy_install suds"
+    exit(1)
+
   from DIRAC.Core.Base import Script
   username = None
   Script.registerSwitch("u:", "UserName", "Family name of the user", setUser)  
