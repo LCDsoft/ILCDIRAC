@@ -1,12 +1,14 @@
-[v19r0p3]
+[v19r1p0]
 
 *Core
+NEW: Script to register users, adding them to the FC
 NEW: Script to list the VO members
 CHANGE: Make PrepareLibs a code that can be called directly, and use that in the createXXTarBall scripts
 
 *Interfaces
 CHANGE: Rename all Application members to match the setters
 NEW: Have a function to return the dictionary of the application, allows deep copy and recreation from scratch
+CHANGE: UserJob will now require a user proxy.
 
 [v19r0p2]
 
