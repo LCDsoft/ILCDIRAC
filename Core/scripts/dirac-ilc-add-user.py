@@ -71,6 +71,10 @@ if __name__=="__main__":
   from DIRAC.ConfigurationSystem.Client.Helpers  import Registry
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   fc = FileCatalogClient()
+  res = fc.addUser(clip.uname)
+  if not res['OK']:
+    gLogger.error("Failed to add user to FC, but it does not really matter:", res['Message'])
+    gLogger.error("Add by hand (in the FC-CLI: user add %s)" %(clip.uname) )
 
   bpath = ''  
   for grp in clip.groups:
