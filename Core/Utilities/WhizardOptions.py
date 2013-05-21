@@ -752,3 +752,52 @@ class WhizardOptions(object):
     of.write("\n")
     return S_OK(True)
   
+  def fromWhizardDotIn(self, filename):
+    """ Given a whizard.in, create the parameter dict used for the production definition
+    """
+    pdict = {}
+    whizin = file(filename,"r")
+    beam_input_idx = 0
+    curkey = ""
+    for line in whizin:
+      line = line.rstrip()
+      if line[0]=="&":
+        key = line.split("&")[1].rstrip().lstrip()
+        if key.count("beam_input"):
+          if not beam_input_idx:
+            curkey = key+"_1"
+            beam_input_idx += 1
+          else:
+            curkey = key+"_2"
+        else:
+          curkey = key
+        pdict[curkey] = {}
+      elif line.count("="):
+        elems = line.split("=")
+        key = elems[0].lstrip().rstrip()
+        val = str("=".join(elems[1:])).lstrip().rstrip().lstrip('"').rstrip('"')
+        if not val.count("T") and not val.count("F"):
+          if val.count("."):
+            try:
+              val = float(val)
+            except:
+              pass
+          else:
+            try:
+              val = int(val)
+            except:
+              pass
+        pdict[curkey][key] = val
+    return self.changeAndReturn(pdict)
+
+if __name__=="__main__":
+  import sys, pprint
+  fname = sys.argv[1]
+  wh = WhizardOptions()
+  res = wh.fromWhizardDotIn(fname)
+  if not res['OK']:
+    print "Error:",res['Message']
+    exit(1)
+  
+  pp = pprint.PrettyPrinter(indent=2)
+  pp.pprint(wh.getAsDict()['Value'])
