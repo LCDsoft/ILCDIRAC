@@ -760,7 +760,10 @@ class WhizardOptions(object):
     beam_input_idx = 0
     curkey = ""
     for line in whizin:
-      line = line.rstrip()
+      line = line.rstrip().lstrip()
+      if not line or line[0] in ["!","/"]:
+        continue
+      
       if line[0]=="&":
         key = line.split("&")[1].rstrip().lstrip()
         if key.count("beam_input"):
@@ -793,10 +796,15 @@ class WhizardOptions(object):
 if __name__=="__main__":
   import sys, pprint
   fname = sys.argv[1]
-  wh = WhizardOptions()
+  model = 'sm'
+  if len(sys.argv)>2:
+    model = sys.argv[2]
+  wh = WhizardOptions(model)
   res = wh.fromWhizardDotIn(fname)
   if not res['OK']:
     print "Error:",res['Message']
+    if res['Message'].count("parameter_input"):
+      print "Maybe you are trying to set a mass that will be overwritten by a LesHouches file?"
     exit(1)
   
   pp = pprint.PrettyPrinter(indent=2)
