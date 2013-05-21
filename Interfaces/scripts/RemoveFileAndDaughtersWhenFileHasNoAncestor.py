@@ -1,5 +1,18 @@
 #/bin/env python
 
+"""
+If the registration failed somehow, a registration request was 
+issued and the file was added later in the catalog, after the job finished.
+
+But, as the registration failed, the job thought the upload failed, and marked the input file as 
+unused.
+
+So at then end, we have 2 files that were produced with the same input, but the first one has no 
+ancestor registered.
+
+This code removes the files that have no ancestors while they should have, and also removes their daughters 
+"""
+
 if __name__ == "__main__":
   from DIRAC.Core.Base import Script
   Script.parseCommandLine()
@@ -11,7 +24,7 @@ if __name__ == "__main__":
   #Set the meta data here.
   meta = {}
   meta['ProdID']={">=":2354}
-  meta['Datatype']='SIM'
+  meta['Datatype']='SIM' #MUST NEVER BE "gen"! Can work with REC/DST files
   
   res = fc.findFilesByMetadata(meta)
   if not res['OK']:
