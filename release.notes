@@ -4,6 +4,7 @@
 NEW: Script to register users, adding them to the FC
 NEW: Script to list the VO members
 CHANGE: Make PrepareLibs a code that can be called directly, and use that in the createXXTarBall scripts
+NEW: Read in the whizard.in and return the python dictionary.
 
 *Interfaces
 CHANGE: Rename all Application members to match the setters
