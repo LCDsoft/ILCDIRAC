@@ -124,15 +124,25 @@ if __name__=="__main__":
     gLogger.error("Failed to get the WSDL client")
     gLogger.error("User registration in e-group must be done manually")
     dexit(1)
-  
+  #Now get the admin account
+  username = gConfig.getValue("/Security/egroupAdmin","")
+  password = gConfig.getValue("/Security/egroupPass","")
+  if not username or not password:
+    gLogger.error("Missing configuration parameters: username or password for WSDL interactions")
+    dexit(1)
+    
   user = client.factory.create("ns1:MemberType")
   comm = "phonebook --login %s --terse firstname --terse surname --terse ccid --terse email" % clip.username
   from DIRAC.Core.Utilities.Subprocess import shellCall
   res = shellCall(0, comm)
   if not res['OK']:
-      gLogger.error("Failed getting user info:",res['Message'])
-      gLogger.error("Please add user in e-group by hand")
-      dexit(1)
+    gLogger.error("Failed getting user info:",res['Message'])
+    gLogger.error("Please add user in e-group by hand.")
+    dexit(1)
+  if res['Value'][0]:  
+    gLogger.error("phonebook command returned an error:",res['Value'][2])
+    gLogger.error("Please add user in e-group by hand.")
+    dexit(1)
   output = res['Value'][1]
   if output:
     output = output.split("\n")
@@ -140,15 +150,15 @@ if __name__=="__main__":
       gLogger.error("This user has many accounts, please choose the right one and register by hand")
       gLogger.error("%s"%output)
       dexit(1)
-    user_fname = output.split(";")[0] #firstname
-    user_sname = output.split(";")[1] # surname
+    user_fname = output[0].split(";")[0] #firstname
+    user_sname = output[0].split(";")[1] # surname
     user['PrimaryAccount'] = clip.username.upper()
-    user['ID'] = output.split(";")[2] # CCID
+    user['ID'] = output[0].split(";")[2] # CCID
     user['Type'] = 'Person'
     user['Name'] = '%s, %s' %(user_sname.upper(), user_fname)
-    user['Email'] = output.split(";")[3] #email
+    user['Email'] = output[0].split(";")[3] #email
   else:
-    gLogger.notice("User %s does not appear to be in the CERN phonebook, will register as external")
+    gLogger.notice("User %s does not appear to be in the CERN phonebook, will register as 'External'")
     user['ID'] = clip.uname
     user['Type'] = 'External'
     user['Email'] = clip.Email
@@ -156,12 +166,6 @@ if __name__=="__main__":
   userl = client.factory.create("ns1:MembersType")
   userl.Member.append(user)
   
-  #Now get the admin account
-  username = gConfig.getValue("/","")
-  password = gConfig.getValue("/","")
-  if not username or not password:
-    gLogger.error("Missing configuration parameters: username or password for WSDL interactions")
-    dexit(1)
   res = client.service.addEgroupMembers(username,password,'ilc-dirac',userl, False)
   
   dexit(0)  
