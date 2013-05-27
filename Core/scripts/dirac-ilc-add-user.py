@@ -1,5 +1,13 @@
 #/bin/env python
 
+"""
+Registers a user in ILCDIRAC. Registers him in the CS, the FileCatalog, and in the e-group. 
+For that last functionality to be work, you need to have the sections 
+/Security/egroupAdmin and /Security/egroupPass options in a dirac.cfg. 
+Ideally, the local dirac.cfg (~/.dirac.cfg) can be used. It's also possible to pass the value with
+-o /Security/egroupAdmin=something -o /Security/egroupPass=something
+"""
+
 try:
   import suds
 except:
