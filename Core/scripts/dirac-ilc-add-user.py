@@ -1,5 +1,11 @@
 #/bin/env python
 
+try:
+  import suds
+except:
+  print "suds module missing: Install it with easy_install suds"
+  exit(1)
+
 from DIRAC.Core.Base import Script
 
 from DIRAC import S_OK, S_ERROR
@@ -10,6 +16,7 @@ class Params(object):
     self.DN = ''
     self.CN = ''
     self.Email = ''
+    self.cernid = ''
   def setUName(self,opt):
     self.uname = opt
     return S_OK()
@@ -27,12 +34,16 @@ class Params(object):
       return S_ERROR('Not a valid mail address')
     self.Email = opt
     return S_OK()
+  def setCERNID(self,opt):
+    self.cernid = opt
+    return S_OK()
   def registerSwitches(self):
     Script.registerSwitch("U:", "UserName=", "DIRAC user name", self.setUName)
     Script.registerSwitch("G:","Groups=","DIRAC groups in which to add the new user, comma separated", self.setGroup)
     Script.registerSwitch("D:","DN=","user DN",self.setDN)  
     Script.registerSwitch("C:","CN=","user CN (or CA)",self.setCN)
     Script.registerSwitch("E:","Email=","User mail",self.setEmail)
+    Script.registerSwitch("","CCID=","CERN CC user ID (if any)", self.setCERNID)
     Script.setUsageMessage("%s -U toto -G ilc_user,private_pilot -D /something/ -C /somethingelse/ -E toto@aplace.com" % Script.scriptName)
     
 if __name__=="__main__":
@@ -104,6 +115,53 @@ if __name__=="__main__":
     
     res = fc.setMetadata(bpath, {"Owner":clip.uname})
     if not res['OK']:
-      gLogger.error(res['Message'])  
-    
+      gLogger.error(res['Message'])
+      
+  #Adding user to e-group
+  try:
+    client = suds.client.Client(url='https://cra-ws.cern.ch/cra-ws/CraEgroupsWebService.wsdl')
+  except:
+    gLogger.error("Failed to get the WSDL client")
+    gLogger.error("User registration in e-group must be done manually")
+    dexit(1)
+  
+  user = client.factory.create("ns1:MemberType")
+  comm = "phonebook --login %s --terse firstname --terse surname --terse ccid --terse email" % clip.username
+  from DIRAC.Core.Utilities.Subprocess import shellCall
+  res = shellCall(0, comm)
+  if not res['OK']:
+      gLogger.error("Failed getting user info:",res['Message'])
+      gLogger.error("Please add user in e-group by hand")
+      dexit(1)
+  output = res['Value'][1]
+  if output:
+    output = output.split("\n")
+    if len(output)>2:
+      gLogger.error("This user has many accounts, please choose the right one and register by hand")
+      gLogger.error("%s"%output)
+      dexit(1)
+    user_fname = output.split(";")[0] #firstname
+    user_sname = output.split(";")[1] # surname
+    user['PrimaryAccount'] = clip.username.upper()
+    user['ID'] = output.split(";")[2] # CCID
+    user['Type'] = 'Person'
+    user['Name'] = '%s, %s' %(user_sname.upper(), user_fname)
+    user['Email'] = output.split(";")[3] #email
+  else:
+    gLogger.notice("User %s does not appear to be in the CERN phonebook, will register as external")
+    user['ID'] = clip.uname
+    user['Type'] = 'External'
+    user['Email'] = clip.Email
+
+  userl = client.factory.create("ns1:MembersType")
+  userl.Member.append(user)
+  
+  #Now get the admin account
+  username = gConfig.getValue("/","")
+  password = gConfig.getValue("/","")
+  if not username or not password:
+    gLogger.error("Missing configuration parameters: username or password for WSDL interactions")
+    dexit(1)
+  res = client.service.addEgroupMembers(username,password,'ilc-dirac',userl, False)
+  
   dexit(0)  
