@@ -1,3 +1,11 @@
+[v19r1p1]
+
+*Core
+CHANGE: When using dirac-ilc-add-user, if at CERN, the user will also be added to the e-group
+
+*Interfaces
+NEW: Add script to remove broken ancestor/daughters chains
+
 [v19r1p0]
 
 *Core
