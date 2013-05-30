@@ -1,7 +1,8 @@
-[Next]
+[v19r1p2]
 
 *Applications
 NEW: Add CheckWNs application to probe the WNs. This dumps into a log file several properties of the WN, in particular the SharedArea content and disk usage
+FIX: A few typos in the Applications.
 
 *Workflow
 NEW: Corresponding module to probe the WNs
