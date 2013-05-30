@@ -2812,7 +2812,7 @@ class Tomato(Application):
 class CheckWNs(Application):
   def __init__(self, paramdict = None):
     super(CheckWNs,self).__init__( paramdict )
-    self._modulename = "AnalyseWNs"
+    self._modulename = "AnalyseWN"
     self.appname = 'analysewns'
     self._moduledescription = 'Analyse the WN on which this app runs'
     self.Version = "1"
