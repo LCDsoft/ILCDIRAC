@@ -2817,5 +2817,23 @@ class CheckWNs(Application):
     self._moduledescription = 'Analyse the WN on which this app runs'
     self.Version = "1"
     self.accountInProduction = False
-    
+  def _applicationModule(self):
+    m1 = self._createModuleDefinition()
+    return m1
+      
+  def _userjobmodules(self, stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    if not res1["OK"]:
+      return S_ERROR('userjobmodules failed')
+    return S_OK() 
   
+  def _prodjobmodules(self, stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    if not res1["OK"]:
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()    
+
+  def _checkConsistency(self):
+    """ Checks that all needed parameters are set
+    """ 
+    return S_OK()  
