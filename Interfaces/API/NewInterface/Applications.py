@@ -2805,4 +2805,17 @@ class Tomato(Application):
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
+
+#######################################################################################
+# This application is used to obtain the host information. It has no input/output, only the log file matters
+#######################################################################################
+class CheckWNs(Application):
+  def __init__(self, paramdict = None):
+    super(CheckWNs,self).__init__( paramdict )
+    self._modulename = "AnalyseWNs"
+    self.appname = 'analysewns'
+    self._moduledescription = 'Analyse the WN on which this app runs'
+    self.Version = "1"
+    self.accountInProduction = False
+    
   
