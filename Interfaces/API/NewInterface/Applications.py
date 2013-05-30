@@ -224,15 +224,15 @@ class GetSRMFile(Application):
   
   def _checkConsistency(self):
 
-    if not self.filedict:
+    if not self.Files:
       return S_ERROR("The file list was not defined")
     
-    if type(self.filedict) == type({}):
-      self.filedict = [self.filedict]
+    if type(self.Files) == type({}):
+      self.Files = [self.Files]
 
     ##For the getInputFromApp to work, we nedd to tell the application about the expected OutputFile
     flist = ''
-    for fdict in self.filedict:
+    for fdict in self.Files:
       f = fdict['file']
       bname = f.split("/")[-1]
       flist += bname+";"
@@ -321,7 +321,7 @@ class _Root(Application):
   def _checkConsistency(self):
     """ Checks that script is set.
     """
-    if not self.script:
+    if not self.Script:
       return S_ERROR("Script or macro not defined")
     if not self.Version:
       return S_ERROR("You need to specify the Root version")
@@ -655,9 +655,9 @@ class Whizard(Application):
         energy = eval(res['Value'])
       if not energy:
         if self.Energy:
-          if not self.optionsdict.has_key('process_input'):
-            self.optionsdict['process_input'] = {}
-          self.optionsdict['process_input']['sqrts'] = self.Energy
+          if not self.FullParameterDict.has_key('process_input'):
+            self.FullParameterDict['process_input'] = {}
+          self.FullParameterDict['process_input']['sqrts'] = self.Energy
           energy = self.Energy
         else:
           return S_ERROR("Energy set to 0")
@@ -855,7 +855,7 @@ class Whizard(Application):
     moduleinstance.setValue("RandomSeed",         self.RandomSeed)
     moduleinstance.setValue("Lumi",               self.Luminosity)
     moduleinstance.setValue("Model",              self.Model)
-    moduleinstance.setValue("SteeringFile",       self.steeringfile)
+    moduleinstance.setValue("SteeringFile",       self.SteeringFile)
     moduleinstance.setValue("JobIndex",           self.JobIndex)
     moduleinstance.setValue("steeringparameters", self.parameters)
     moduleinstance.setValue("OptionsDictStr",     self._optionsdictstr)
@@ -2442,7 +2442,7 @@ class CheckCollections(Application):
     """ Checks that all needed parameters are set
     """
 
-    if not self.collections :
+    if not self.Collections :
       return S_ERROR('No collections to check')
 
     res = self._checkRequiredApp()
