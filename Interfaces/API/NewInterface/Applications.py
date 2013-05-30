@@ -160,9 +160,9 @@ class GenericApplication(Application):
   def _checkConsistency(self):
     """ Checks that script and dependencies are set.
     """
-    if not self.script:
+    if not self.Script:
       return S_ERROR("Script not defined")
-    elif not self.script.lower().count("lfn:") and not os.path.exists(self.script):
+    elif not self.Script.lower().count("lfn:") and not os.path.exists(self.Script):
       return S_ERROR("Specified script is not an LFN and was not found on disk")
       
     #if not len(self.dependencies):
