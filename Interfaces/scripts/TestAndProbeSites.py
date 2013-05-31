@@ -7,15 +7,18 @@ class Params(object):
   def __init__(self):
     self.site = None
     self.ce = None
+    
   def setSite(self, opt):
     self.site = opt
     return S_OK()
+  
   def setCE(self,opt):
     self.ce = opt
     return S_OK()
+  
   def registerswitches(self):
     Script.registerSwitch("S:", "Site=", "Site to probe", self.setSite)
-    Script.registerSwitch("C:","CE=","Computing Element to probe", self.setCE)
+    Script.registerSwitch("C:", "CE=","Computing Element to probe", self.setCE)
     Script.setUsageMessage("%s --Site LCG.CERN.ch" % Script.scriptName)
     
 if __name__=="__main__":
