@@ -23,20 +23,23 @@ dirac = DiracILC()
 
 
 def getdicts(process):
+  """ Create the proper structures to build all the prodcutions for the samples with ee_, ea_ aa_.
+  """
   plist = []
   if process.count("ee_"):
     plist.append({'process':process,'pname1':'e1', 'pname2':'E1', "epa_b1":'F', "epa_b2":'F'})
-  if process.count("ea_"):
+  elif process.count("ea_"):
     plist.append({'process':process,'pname1':'e1', 'pname2':'E1', "epa_b1":'F', "epa_b2":'T'})
     plist.append({'process':process,'pname1':'e1', 'pname2':'A', "epa_b1":'F', "epa_b2":'F'})
     plist.append({'process':process.replace("ea_","ae_"),'pname1':'e1', 'pname2':'E1', "epa_b1":'T', "epa_b2":'F'})
     plist.append({'process':process.replace("ea_","ae_"),'pname1':'A', 'pname2':'E1', "epa_b1":'F', "epa_b2":'F'})
-  if process.count("aa_"):
+  elif process.count("aa_"):
     plist.append({'process':process,'pname1':'e1', 'pname2':'E1', "epa_b1":'T', "epa_b2":'T'})
     plist.append({'process':process,'pname1':'e1', 'pname2':'A', "epa_b1":'T', "epa_b2":'F'})
     plist.append({'process':process,'pname1':'A', 'pname2':'E1', "epa_b1":'F', "epa_b2":'T'})
     plist.append({'process':process,'pname1':'A', 'pname2':'A', "epa_b1":'F', "epa_b2":'F'})
-
+  else:
+    plist.append({'process':process,'pname1':'e1', 'pname2':'E1', "epa_b1":'F', "epa_b2":'F'})
   return plist
 
 ## tripleH, Hrecoil, stau, gauginos, Hmass, tt, Htautau, Hmumu, Hee, Hbbccmumu, squarks, LCFITraining, Hgammagamma
