@@ -101,7 +101,7 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
     
     slicPandoraDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
-                                                                                "slicpandora", 
+                                                                                self.applicationName, 
                                                                                 self.applicationVersion), '')
     slicPandoraDir = slicPandoraDir.replace(".tgz", "").replace(".tar.gz", "")
     res = getSoftwareFolder(slicPandoraDir)
@@ -114,9 +114,9 @@ class SLICPandoraAnalysis (ModuleBase):
     removeLibc(myslicPandoraDir + "/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "slicpandora", self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
 
-    new_path = GetNewPATH(self.systemConfig, "slicpandora", self.applicationVersion)
+    new_path = GetNewPATH(self.systemConfig, self.applicationName, self.applicationVersion)
 
     res = resolveIFpaths(self.InputFile)
     if not res['OK']:

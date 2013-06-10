@@ -145,7 +145,7 @@ class SLICAnalysis(ModuleBase):
       return res
     mySoftwareRoot = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "slic", self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
 
     #retrieve detector model from web
     detector_urls = self.ops.getValue('/SLICweb/SLICDetectorModels', [''])
@@ -185,7 +185,7 @@ class SLICAnalysis(ModuleBase):
     if len(self.SteeringFile) > 0:
       self.SteeringFile = os.path.basename(self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        res = getSteeringFileDirName(self.systemConfig, "slic", self.applicationVersion)     
+        res = getSteeringFileDirName(self.systemConfig, self.applicationName, self.applicationVersion)     
         if not res['OK']:
           self.log.error("Could not find where the steering files are")
         steeringfiledirname = res['Value']

@@ -137,7 +137,7 @@ class LCSIMAnalysis(ModuleBase):
     
     #look for lcsim filename
     lcsim_name = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, 
-                                                                          "lcsim", 
+                                                                          self.applicationName, 
                                                                           self.applicationVersion), '')
     if not lcsim_name:
       self.log.error("Could not find lcsim file name from CS")
@@ -149,7 +149,7 @@ class LCSIMAnalysis(ModuleBase):
       return res
     lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "lcsim", self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
 
     runonslcio = []
     if len(self.InputFile):
@@ -204,7 +204,7 @@ class LCSIMAnalysis(ModuleBase):
       if len(myfile):
         #file = os.path.basename(file)
         if not os.path.exists(myfile):
-          res =  getSteeringFileDirName(self.systemConfig, "lcsim", self.applicationVersion)     
+          res =  getSteeringFileDirName(self.systemConfig, self.applicationName, self.applicationVersion)     
           if not res['OK']:
             return res
           steeringfiledirname = res['Value']

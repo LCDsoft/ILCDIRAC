@@ -222,7 +222,7 @@ class WhizardAnalysis(ModuleBase):
     #if self.debug:
     #  self.excludeAllButEventString = False
 
-    whizardDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, "whizard", 
+    whizardDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, self.applicationName, 
                                                                           self.applicationVersion), '')
     if not whizardDir:
       self.log.error('Could not get info from CS')
@@ -240,11 +240,11 @@ class WhizardAnalysis(ModuleBase):
     removeLibc(mySoftDir + "/lib")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "whizard", self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
     #Don't forget to prepend the application's libs
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
-    deps = resolveDepsTar(self.systemConfig, "whizard", self.applicationVersion)
+    deps = resolveDepsTar(self.systemConfig, self.applicationName, self.applicationVersion)
     path_to_beam_spectra = ""
     path_to_gridfiles = ""
     for dep in deps:
