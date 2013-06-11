@@ -776,7 +776,7 @@ class ProductionJob(Job):
       application.setOutputDstFile(fname, path)  
       self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
-    elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
+    elif hasattr(application, "OutputFile") and hasattr(application, 'datatype') and not application.OutputFile and not application.willBeCut:
       path = self.basepath + energypath + self.evttypepath
       self.finalMetaDict[path] = {"EvtType" : self.evttype}      
       if hasattr(application, "detectortype"):
