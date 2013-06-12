@@ -250,10 +250,12 @@ for proddict in prodlist:
   mo = Mokka()
   mo.setVersion('0706P08')
   #mo.setNbEvts(1000)
-  if energy in [500., 350.]:
+  if energy in [500., 375., 350.]:
     mo.setSteeringFile("clic_ild_cdr500.steer")
-  else:
+  elif energy in [3000., 1400.]:
     mo.setSteeringFile("clic_ild_cdr.steer")
+  else:
+    print 'Detector Model for Mokka undefined for this energy'  
   if detectormodel=='ild_00':
     mo.setSteeringFile("ild_00.steer")
 
