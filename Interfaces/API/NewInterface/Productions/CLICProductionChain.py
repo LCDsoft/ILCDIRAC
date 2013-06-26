@@ -208,7 +208,7 @@ for proddict in prodlist:
   pdict['beam_input_2']['USER_spectrum_on'] = 'T'
   pdict['beam_input_2']['ISR_on'] = 'T'
   pdict['beam_input_2']['USER_spectrum_mode'] = -spectrum
-  pdict['beam_input_1']['EPA_on'] = proddict['epa_b2']
+  pdict['beam_input_2']['EPA_on'] = proddict['epa_b2']
   
   prod_name+= "_"+proddict['pname1']+proddict['epa_b1']+"_"+proddict['pname2']+proddict['epa_b2']
   
