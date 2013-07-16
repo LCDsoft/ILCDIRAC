@@ -37,7 +37,7 @@ class Params(object):
     return S_OK()
   def registerSwitches(self):
     Script.registerSwitch('P:', "Platform=", 'Platform to use', self.setPlatform)
-    Script.registerSwitch('p:', "Path=", "Path where Whizard is", self.setPath)
+    Script.registerSwitch('p:', "Path=", "Path to the Whizard results directory", self.setPath)
     Script.registerSwitch("V:", "Version=", "Whizard version", self.setVersion)
     Script.registerSwitch('b:', 'BeamSpectra=', 'Beam spectra version', self.setBeamSpectra)
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
@@ -117,6 +117,20 @@ def checkGFortranVersion():
     return S_ERROR
 
 
+"""Get List of Libraries for library or executable"""
+def getListOfLibraries(pathName):
+  listOfLibraries = []
+  p = subprocess.Popen(['ldd', pathName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = p.communicate()
+  for line in out.split("\n"):
+    fields = line.split("=>")
+    if len(fields) == 2:
+      newFields = fields[1].split()
+      if len(newFields) == 2:
+        lib = newFields[0].strip()
+        listOfLibraries.append(lib)
+  return listOfLibraries
+
 
 if __name__=="__main__":
 
@@ -129,13 +143,13 @@ if __name__=="__main__":
   Script.parseCommandLine( ignoreErrors= False)
   
   from DIRAC import gConfig, gLogger, exit as dexit
-  whizard_location = cliParams.path
+  whizardResultFolder = cliParams.path
   platform = cliParams.platform
   whizard_version = cliParams.version
   appVersion = whizard_version
   beam_spectra_version = cliParams.beam_spectra
 
-  if not whizard_location or not whizard_version or not beam_spectra_version:
+  if not whizardResultFolder or not whizard_version or not beam_spectra_version:
     Script.showHelp()
     dexit(2)
   
@@ -176,27 +190,27 @@ if __name__=="__main__":
 
   pl = ProcessList(processlist)
   
-  startdir = os.getcwd()
+  startDir = os.getcwd()
   inputlist = {}
-  os.chdir(whizard_location)
-  folderlist = os.listdir(os.getcwd())
+  os.chdir(whizardResultFolder)
+  folderlist = os.listdir(whizardResultFolder)
 
   whiz_here = folderlist.count("whizard")
   if whiz_here == 0:
-    gLogger.error("whizard executable not found in %s, please check" % whizard_location)
-    os.chdir(startdir)
+    gLogger.error("whizard executable not found in %s, please check" % whizardResultFolder)
+    os.chdir(startDir)
     dexit(2)
 
   whizprc_here = folderlist.count("whizard.prc")
   if whizprc_here == 0:
-    gLogger.error("whizard.prc not found in %s, please check" % whizard_location)
-    os.chdir(startdir)
+    gLogger.error("whizard.prc not found in %s, please check" % whizardResultFolder)
+    os.chdir(startDir)
     dexit(2)
 
   whizmdl_here = folderlist.count("whizard.mdl")
   if whizprc_here == 0:
-    gLogger.error("whizard.mdl not found in %s, please check" % whizard_location)
-    os.chdir(startdir)
+    gLogger.error("whizard.mdl not found in %s, please check" % whizardResultFolder)
+    os.chdir(startDir)
     dexit(2)
    
     
@@ -254,41 +268,38 @@ if __name__=="__main__":
   
   
   gLogger.notice("Preparing Tar ball")
-  appTar = os.path.join(os.getcwd(), "whizard" + whizard_version + ".tgz")
+
+  ##Make a folder in the current directory of the user to store the whizard libraries, executable et al.
+  localWhizardFolder = os.path.join(startDir,("whizard" + whizard_version))
+  os.mkdirs(localWhizardFolder)
   
-  if os.path.exists('lib'):
-    shutil.rmtree('lib')
-  scriptName = './ldd.sh'
-  script = file(scriptName, "w")
-  script.write('#!/bin/bash \n')
-  script.write("""string1=$(ldd whizard | grep '=>' | sed 's/.*=>//g' | sed 's/(.*)//g')
-  string=""
-  for file in $string1; do
-    string=\"$file $string\"
-  done
-  mkdir lib
-  cp $string ./lib
-  whizarddir=%s 
-  rm -rf $whizarddir
-  mkdir $whizarddir
-  cp -r *.cut1 *.in cross_sections_* whizard whizard.prc whizard.mdl lib/ $whizarddir
-  cd $whizarddir
-  find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5
-  cd ..
-  """ % ("whizard" + whizard_version))
-  script.close()
-  os.chmod(scriptName, 0755)
-  comm = 'source %s' % (scriptName)
-  result = shellCall(0, comm, callbackFunction = redirectLogOutput, bufferLimit = 20971520)
-  os.remove("ldd.sh")
+  localWhizardLibFolder = os.path.join(localWhizardFolder,'lib')
+  if os.path.exists(localWhizardLibFolder):
+    shutil.rmtree(localWhizardLibFolder)
+  os.mkdirs(localWhizardLibFolder) ##creates the lib folder
+
+  whizardLibraries = getListOfLibraries(os.path.join(whizardResultFolder, "whizard"))
+  for lib in whizardLibraries:
+    shutil.cp(lib, localWhizardLibFolder)
+
+  for file in folderlist:
+    shutil.cp(file, localWhizardFolder)
+
+  ##Get the list of md5 sums for all the files in the folder to be tarred
+  os.chdir( localWhizardFolder )
+  os.call("find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5")
+  os.chdir(startDir)
+
+  ##Create the Tarball
+  appTar = localWhizardFolder + ".tgz"
   myappTar = tarfile.open(appTar, "w:gz")
-  myappTar.add("whizard" + whizard_version)
+  myappTar.add(localWhizardFolder)
   myappTar.close()
   
-  md5sum = md5.md5(file(appTar).read()).hexdigest()
+  md5sum = md5.md5(open( appTar, 'r' ).read()).hexdigest()
   
-  gLogger.verbose("Done creating tar ball")
-  gLogger.notice("Registering new Tar Ball in CS")
+  gLogger.verbose("Done creating Tarball")
+  gLogger.notice("Registering new Tarball in CS")
   tarballurl = {}
   
   av_platforms = gConfig.getSections(softwareSection, [])
@@ -372,7 +383,7 @@ if __name__=="__main__":
   gLogger.verbose("Done Updating process list")
   
   #Return to initial location
-  os.chdir(startdir)
+  os.chdir(startDir)
   
   pl.writeProcessList()
   gLogger.verbose("Removing process list from storage")
