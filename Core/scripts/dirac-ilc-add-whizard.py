@@ -8,7 +8,7 @@ Created on Sep 21, 2010
 '''
 
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK
+from DIRAC import S_OK,S_ERROR
 import os, tarfile, shutil, sys, string
 
 try:
@@ -107,12 +107,28 @@ def getDetailsFromPRC(prc, processin):
   return details
 
 
+"""Find the version of the gfortran compiler"""
+def checkGFortranVersion():
+  p = subprocess.Popen(['gfortran', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = p.communicate()
+  if out.find("4.4") > -1:
+    return S_OK
+  else:
+    return S_ERROR
+
+
+
 if __name__=="__main__":
+
+  if checkGFortranVersion() == S_ERROR:
+    gLogger.error("Wrong Version of gfortran found, need version 4.4")
+    dexit(1)
+
   cliParams = Params()
   cliParams.registerSwitches()
   Script.parseCommandLine( ignoreErrors= False)
   
-  from DIRAC import gConfig, gLogger, S_ERROR, S_OK, exit as dexit
+  from DIRAC import gConfig, gLogger, exit as dexit
   whizard_location = cliParams.path
   platform = cliParams.platform
   whizard_version = cliParams.version
@@ -164,16 +180,19 @@ if __name__=="__main__":
   inputlist = {}
   os.chdir(whizard_location)
   folderlist = os.listdir(os.getcwd())
+
   whiz_here = folderlist.count("whizard")
   if whiz_here == 0:
     gLogger.error("whizard executable not found in %s, please check" % whizard_location)
     os.chdir(startdir)
     dexit(2)
+
   whizprc_here = folderlist.count("whizard.prc")
   if whizprc_here == 0:
     gLogger.error("whizard.prc not found in %s, please check" % whizard_location)
     os.chdir(startdir)
     dexit(2)
+
   whizmdl_here = folderlist.count("whizard.mdl")
   if whizprc_here == 0:
     gLogger.error("whizard.mdl not found in %s, please check" % whizard_location)
