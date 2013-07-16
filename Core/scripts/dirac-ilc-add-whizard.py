@@ -10,6 +10,7 @@ Created on Sep 21, 2010
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK,S_ERROR
 import os, tarfile, shutil, sys, string
+import subprocess
 
 try:
   import hashlib as md5
@@ -113,8 +114,7 @@ def checkGFortranVersion():
   out, err = p.communicate()
   if out.find("4.4") > -1:
     return S_OK
-  else:
-    return S_ERROR
+  return S_ERROR
 
 
 """Get List of Libraries for library or executable"""
@@ -133,16 +133,16 @@ def getListOfLibraries(pathName):
 
 
 if __name__=="__main__":
+  from DIRAC import gConfig, gLogger, exit as dexit
 
   if checkGFortranVersion() == S_ERROR:
-    gLogger.error("Wrong Version of gfortran found, need version 4.4")
+    gLogger.notice("Wrong Version of gfortran found, need version 4.4")
     dexit(1)
 
   cliParams = Params()
   cliParams.registerSwitches()
   Script.parseCommandLine( ignoreErrors= False)
   
-  from DIRAC import gConfig, gLogger, exit as dexit
   whizardResultFolder = cliParams.path
   platform = cliParams.platform
   whizard_version = cliParams.version
@@ -267,30 +267,39 @@ if __name__=="__main__":
           inputlist[currprocess]['CrossSection'] = line.split()[1]
   
   
-  gLogger.notice("Preparing Tar ball")
+  gLogger.notice("Preparing Tarball")
 
   ##Make a folder in the current directory of the user to store the whizard libraries, executable et al.
   localWhizardFolder = os.path.join(startDir,("whizard" + whizard_version))
-  os.mkdirs(localWhizardFolder)
+
+  if not os.path.exists(localWhizardFolder):
+    os.makedirs(localWhizardFolder)
   
   localWhizardLibFolder = os.path.join(localWhizardFolder,'lib')
   if os.path.exists(localWhizardLibFolder):
     shutil.rmtree(localWhizardLibFolder)
-  os.mkdirs(localWhizardLibFolder) ##creates the lib folder
+  os.makedirs(localWhizardLibFolder) ##creates the lib folder
 
   whizardLibraries = getListOfLibraries(os.path.join(whizardResultFolder, "whizard"))
+  copyLibsCall = ["rsync","-avzL"]
   for lib in whizardLibraries:
-    shutil.cp(lib, localWhizardLibFolder)
+    copyLibsCall.append(lib)
+  copyLibsCall.append(localWhizardLibFolder)
+  p = subprocess.Popen(copyLibsCall, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = p.communicate()
+  print out
 
   for file in folderlist:
-    shutil.cp(file, localWhizardFolder)
+    shutil.copy(file, localWhizardFolder)
 
   ##Get the list of md5 sums for all the files in the folder to be tarred
+  print localWhizardFolder
   os.chdir( localWhizardFolder )
-  os.call("find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5")
+  subprocess.call(["find . -type f -exec md5sum {} > ../md5_checksum.md5 \; && mv ../md5_checksum.md5 ."], shell=True)
   os.chdir(startDir)
 
   ##Create the Tarball
+  gLogger.verbose("Creating Tarball...")
   appTar = localWhizardFolder + ".tgz"
   myappTar = tarfile.open(appTar, "w:gz")
   myappTar.add(localWhizardFolder)
@@ -298,7 +307,8 @@ if __name__=="__main__":
   
   md5sum = md5.md5(open( appTar, 'r' ).read()).hexdigest()
   
-  gLogger.verbose("Done creating Tarball")
+  gLogger.verbose("...Done")
+
   gLogger.notice("Registering new Tarball in CS")
   tarballurl = {}
   
@@ -384,9 +394,10 @@ if __name__=="__main__":
   
   #Return to initial location
   os.chdir(startDir)
-  
+
   pl.writeProcessList()
   gLogger.verbose("Removing process list from storage")
+
 
   res = rm.removeFile(path_to_process_list)
   if not res['OK']:
