@@ -171,17 +171,18 @@ if __name__=="__main__":
   ops = Operations()
   path_to_process_list = ops.getValue(processlistLocation, "")
   if not path_to_process_list:
-    gLogger.error("Could not find process list Location in CS")
+    gLogger.error("Could not find process list location in CS")
     dexit(2)
     
-  gLogger.verbose("Getting process list from storage")
-  rm = ReplicaManager()
-  res = rm.getFile(path_to_process_list)
+  gLogger.verbose("Getting process list from file catalog")
+  replicaManager = ReplicaManager()
+  res = replicaManager.getFile(path_to_process_list)
   if not res['OK']:
     gLogger.error("Error while getting process list from storage")
     dexit(2)
   gLogger.verbose("done")
 
+  ##just the name of the local file in current working directory
   processlist = os.path.basename(path_to_process_list)
   if not os.path.exists(processlist):
     gLogger.error("Process list does not exist locally")
@@ -215,10 +216,11 @@ if __name__=="__main__":
    
     
   gLogger.verbose("Preparing process list")
-  
+
+  ## FIXME:: What is this doing exactly? Is this necessary? -- APS, JFS
   for f in folderlist:
     if f.count(".in"):
-      infile = file(f, "r")
+      infile = open(f, "r")
       found_detail = False
       
       for line in infile:
@@ -244,7 +246,9 @@ if __name__=="__main__":
               inputlist[currprocess]["Restrictions"] = process_detail["Restrictions"]
       #if len(inputlist[currprocess].items()):
       #  inputlist.append(processdict)    
-  
+  ## END FIXEME
+
+
   ##Update inputlist with what was found looking in the prc file
   processes = readPRCFile("whizard.prc")
   inputlist.update(processes)
@@ -253,7 +257,7 @@ if __name__=="__main__":
   #Need full process list
   for f in folderlist:
     if f.count("cross_sections_"):
-      crossfile = file(f, "r")
+      crossfile = open(f, "r")
       for line in crossfile:
         line = line.rstrip().lstrip()
         if not len(line):
@@ -287,19 +291,17 @@ if __name__=="__main__":
   copyLibsCall.append(localWhizardLibFolder)
   p = subprocess.Popen(copyLibsCall, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = p.communicate()
-  print out
 
-  for file in folderlist:
-    shutil.copy(file, localWhizardFolder)
+  for fileName in folderlist:
+    shutil.copy(fileName, localWhizardFolder)
 
   ##Get the list of md5 sums for all the files in the folder to be tarred
-  print localWhizardFolder
   os.chdir( localWhizardFolder )
   subprocess.call(["find . -type f -exec md5sum {} > ../md5_checksum.md5 \; && mv ../md5_checksum.md5 ."], shell=True)
   os.chdir(startDir)
 
   ##Create the Tarball
-  gLogger.verbose("Creating Tarball...")
+  gLogger.notice("Creating Tarball...")
   appTar = localWhizardFolder + ".tgz"
   myappTar = tarfile.open(appTar, "w:gz")
   myappTar.add(localWhizardFolder)
@@ -307,7 +309,7 @@ if __name__=="__main__":
   
   md5sum = md5.md5(open( appTar, 'r' ).read()).hexdigest()
   
-  gLogger.verbose("...Done")
+  gLogger.notice("...Done")
 
   gLogger.notice("Registering new Tarball in CS")
   tarballurl = {}
@@ -382,42 +384,19 @@ if __name__=="__main__":
   gLogger.verbose("Done uploading the tar ball")
   
   os.remove(appTar)
+
   #Set for all new processes the TarBallURL
   for process in inputlist.keys():
     inputlist[process]['TarBallCSPath'] = tarballurl['Value'] + os.path.basename(appTar)
   
-  gLogger.verbose("Updating process list:")
-  knownprocess = pl.getProcessesDict()
-  knownprocess.update(inputlist)
-  pl.updateProcessList(knownprocess)
-  gLogger.verbose("Done Updating process list")
-  
-  #Return to initial location
-  os.chdir(startDir)
+  pl.updateProcessList(inputlist)
 
   pl.writeProcessList()
-  gLogger.verbose("Removing process list from storage")
-
-
-  res = rm.removeFile(path_to_process_list)
-  if not res['OK']:
-    gLogger.error("Could not remove process list from storage, do it by hand")
-    dexit(2)
   
-  
-  res = upload(os.path.dirname(path_to_process_list) + "/", processlist)
-  if not res['OK']:
-    gLogger.error("something went wrong in the copy")
-    dexit(2)
-  gLogger.verbose("Done Removing process list from storage")
-  gLogger.verbose("Putting process list to local processlist directory")
-  localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
-  if localprocesslistpath['Value']:
-    try:
-      shutil.copy(processlist, localprocesslistpath['Value'])
-    except:
-      gLogger.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
-  gLogger.verbose("Done")
+  raw_input("Do you want to upload the process list? Press ENTER to proceed or CTRL-C to abort!")
+
+  pl.uploadProcessListToFileCatalog(path_to_process_list, appVersion)
+
   #Commit the changes if nothing has failed and the CS has been modified
   if modifiedCS:
     result = diracAdmin.csCommitChanges(False)

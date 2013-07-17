@@ -55,15 +55,17 @@ class ProcessList(object):
     """ Adds a new entry or updates an existing one.
     @param processes: dictionary of processes to treat
     """
+    gLogger.verbose("Updating process list:")
     for process, mydict in processes.items():
       if not self._existsProcess(process):
         self._addEntry(process, mydict)
         #return res
       else:
-        gLogger.info("Process %s already defined in ProcessList, will replace it" % process)
+        gLogger.warn("Process %s already defined in ProcessList, will replace it" % process)
         self.cfg.deleteKey("Processes/%s" % process)
         self._addEntry(process, mydict)
         #return res
+    gLogger.verbose("Done Updating process list")
     return S_OK()
     
   def _addEntry(self, process, processdic):
@@ -135,4 +137,32 @@ class ProcessList(object):
     #for key,value in processesdict.items():
     #  print "%s: [%s], generated with '%s' with the model '%s' using diagram restrictions %s"%(key,value['Detail'],value['Generator'],value['Model'],value['Restrictions'])
     pprint(processesdict)
-  
+
+  def uploadProcessListToFileCatalog(self, path_to_process_list, appVersion):
+    from ILCDIRAC.Core.Utilities.FileUtils                       import upload
+    from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
+    from DIRAC import gConfig, gLogger, exit as dexit
+
+    replicaManager = ReplicaManager()
+    gLogger.notice("Removing process list from file catalog" + path_to_process_list)
+    res = replicaManager.removeFile(path_to_process_list)
+    if not res['OK']:
+      gLogger.error("Could not remove process list from file catalog, do it by hand")
+      dexit(2)
+    gLogger.notice("Done removing process list from file catalog")
+
+    res = upload(os.path.dirname(path_to_process_list) + "/", self.location)
+    if not res['OK']:
+      gLogger.error("something went wrong in the copy")
+      dexit(2)
+    gLogger.notice("Putting process list to local processlist directory")
+    localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
+    if localprocesslistpath['Value']:
+      try:
+        localSvnRepo = "/afs/cern.ch/eng/clic/software/whizard/whizard_195/"
+        shutil.copy(localprocesslistpath['Value'], localSvnRepo) ## because it does not make a difference if we hardcode it here or in ${DIRAC}/etc/dirac.cfg, yours truly APS, JFS
+        os.call( ["svn","ci", os.path.join( localSvnRepo, os.path.basename(localprocesslistpath['Value'] )), '-m"Process list for whizard version %s"' % appVersion ] )
+        shutil.copy(processlist, localprocesslistpath['Value'])
+      except:
+        gLogger.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
+    gLogger.notice("Done")
