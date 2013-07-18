@@ -365,7 +365,7 @@ class ILDProductionJob(ProductionJob):
       fname = self.basename+"_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.finalpaths.append(path)
-    elif hasattr(application,"outputFile") and hasattr(application,'datatype') and (not application.outputFile) and (not application.willBeCut):
+    elif hasattr(application,"OutputFile") and hasattr(application,'datatype') and (not application.OutputFile) and (not application.willBeCut):
       if (not application.datatype) and self.datatype:
         application.datatype = self.datatype
       if application.datatype == 'gen':
