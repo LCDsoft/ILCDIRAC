@@ -151,18 +151,19 @@ class ProcessList(object):
       dexit(2)
     gLogger.notice("Done removing process list from file catalog")
 
-    res = upload(os.path.dirname(path_to_process_list) + "/", self.location)
+    res = upload(os.path.dirname(path_to_process_list) + "/", self.location )
     if not res['OK']:
       gLogger.error("something went wrong in the copy")
       dexit(2)
+
     gLogger.notice("Putting process list to local processlist directory")
     localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
     if localprocesslistpath['Value']:
       try:
         localSvnRepo = "/afs/cern.ch/eng/clic/software/whizard/whizard_195/"
-        shutil.copy(localprocesslistpath['Value'], localSvnRepo) ## because it does not make a difference if we hardcode it here or in ${DIRAC}/etc/dirac.cfg, yours truly APS, JFS
+        shutil.copy(self.location, localSvnRepo) ## because it does not make a difference if we hardcode it here or in ${DIRAC}/etc/dirac.cfg, yours truly APS, JFS
         os.call( ["svn","ci", os.path.join( localSvnRepo, os.path.basename(localprocesslistpath['Value'] )), '-m"Process list for whizard version %s"' % appVersion ] )
-        shutil.copy(processlist, localprocesslistpath['Value'])
+        shutil.copy(self.location, localprocesslistpath['Value'])
       except:
         gLogger.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
     gLogger.notice("Done")
