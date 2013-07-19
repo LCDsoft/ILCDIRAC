@@ -114,7 +114,16 @@ def checkGFortranVersion():
   out, err = p.communicate()
   if out.find("4.4") > -1:
     return S_OK
-  return S_ERROR
+  return S_ERROR("Wrong gFortran version")
+
+
+"""Check the version of the operating system compiler"""
+def checkSLCVersion():
+  p = subprocess.Popen(['cat', '/etc/issue'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = p.communicate()
+  if out.find("release 5") > -1:
+    return S_OK
+  return S_ERROR("Wrong Operating System")
 
 
 """Get List of Libraries for library or executable"""
@@ -135,8 +144,14 @@ def getListOfLibraries(pathName):
 if __name__=="__main__":
   from DIRAC import gConfig, gLogger, exit as dexit
 
-  if checkGFortranVersion() == S_ERROR:
-    gLogger.notice("Wrong Version of gfortran found, need version 4.4")
+  res = checkSLCVersion()
+  if res != S_OK:
+    gLogger.error(res['Message'])
+    dexit(1)
+
+  res = checkGFortranVersion()
+  if res != S_OK:
+    gLogger.error(res['Message'])
     dexit(1)
 
   cliParams = Params()
