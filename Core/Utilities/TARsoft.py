@@ -542,7 +542,7 @@ def CanWrite(area):
 def checkJava():
   """ Check if JAVA is availalbe locally.
   """
-  args = ['java', "-version"]
+  args = ['java', "-Xmx1536m", "-Xms256m", "-version"]
   try:
     p = subprocess.check_call(args)
     if p:
