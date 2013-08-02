@@ -45,6 +45,7 @@ ov.setDetectorType("ILD")
 ov.setBXOverlay(60)
 ov.setGGToHadInt(3.2)
 ov.setNbSigEvtsPerJob(1)
+ov.setBkgEvtType("gghad")
 res = j.append(ov)
 if not res['OK']:
     print res['Message']

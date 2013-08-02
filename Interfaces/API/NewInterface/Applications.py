@@ -1664,9 +1664,9 @@ class OverlayInput(Application):
 
 
   def setBkgEvtType(self, BkgEvtType):
-    """ Optional: Define the background type. Default is gg -> had. For the moment only gghad is used.
+    """ Define the background type.
     
-    @param BkgEvtType: Background type. Default is gg -> had 
+    @param BkgEvtType: Background type.
     @type BkgEvtType: string
     
     """  
@@ -1698,7 +1698,7 @@ class OverlayInput(Application):
     m1.addParameter(Parameter("prodid",          0,    "int", "", "", False, False, 
                               "ProdID to use"))
     m1.addParameter(Parameter("BkgEvtType",     "", "string", "", "", False, False, 
-                              "Background type. Default is gg -> had"))
+                              "Background type."))
     m1.addParameter(Parameter("detectormodel",       "", "string", "", "", False, False, 
                               "Detector type."))
     m1.addParameter(Parameter("machine",       "", "string", "", "", False, False, 
@@ -1744,13 +1744,11 @@ class OverlayInput(Application):
           
     if not self.GGToHadInt :
       self.GGToHadInt = 3.2
-      self._log.info("Number of GG -> had is set to 3.2 by default")  
+      self._log.info("Number of Background events, is set to 3.2 by default")  
       
     if not self.BkgEvtType :
-      self.BkgEvtType = 'gghad'
-      self._log.info("Background event type is gg -> had by default")
-    
-    
+      return S_ERROR("Background event type is not defined: Chose one gghad, aa_lowpt, ...")
+        
     if self._jobtype == 'User' :
       if not self.NbSigEvtsPerJob :
         return S_ERROR("Number of signal event per job is not defined")

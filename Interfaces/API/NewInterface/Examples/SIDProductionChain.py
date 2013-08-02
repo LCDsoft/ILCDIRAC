@@ -181,6 +181,7 @@ overlay = OverlayInput()
 overlay.setBXOverlay(60)
 overlay.setGGToHadInt(1.3)##When running at 1.4TeV
 overlay.setDetectorType("SID")
+overlay.setBkgEvtType("gghad")
 
 lcsim_prepandora_ov = LCSIM()
 lcsim_prepandora_ov.setVersion(lcsimVers)

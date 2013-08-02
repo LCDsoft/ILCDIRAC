@@ -72,6 +72,7 @@ overlay = OverlayInput()
 overlay.setBXOverlay(60)
 overlay.setGGToHadInt(1.3)##When running at 1.4TeV
 overlay.setDetectorType("ILD")
+overlay.setBkgEvtType("gghad")
 
 ##Reconstruction
 ma = Marlin()

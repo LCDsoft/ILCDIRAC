@@ -275,6 +275,7 @@ for proddict in prodlist:
   overlay = OverlayInput()
   overlay.setMachine("clic_cdr")
   overlay.setEnergy(energy)
+  overlay.setBkgEvtType("gghad")
   if energy==500.:
     overlay.setBXOverlay(300)
     overlay.setGGToHadInt(0.3)##When running at 500geV

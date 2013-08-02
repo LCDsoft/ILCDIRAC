@@ -26,6 +26,7 @@ ovi.setEnergy(500.)
 ovi.setBXOverlay(300)
 ovi.setGGToHadInt(0.3)
 ovi.setNbSigEvtsPerJob(10)
+ovi.setBkgEvtType("gghad")
 ovi.setDetectorType("ILD")
 
 overlay = [True,False]

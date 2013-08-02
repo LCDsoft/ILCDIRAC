@@ -41,6 +41,7 @@ for i in range(n_jobs):
   ov.setBXOverlay(60)
   ov.setGGToHadInt(3.2)
   ov.setNbSigEvtsPerJob(n_evts_per_job)
+  ov.setBkgEvtType("gghad")
   ov.setDetectorType("ILD")
 
   res = j.append(ov)
