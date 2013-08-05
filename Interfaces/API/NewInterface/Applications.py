@@ -1575,6 +1575,7 @@ class OverlayInput(Application):
   >>> over.setBXOverlay(300)
   >>> over.setGGToHadInt(3.2)
   >>> over.setNbSigEvtsPerJob(10)
+  >>> over.setBkgEvtType("gghad")
   
   """
   def __init__(self, paramdict = None):
