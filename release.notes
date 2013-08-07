@@ -1,3 +1,9 @@
+[v19r1p9]
+
+*Overlay
+FIX: Bug in the order of selecting the number of events in one case, had energy before detector, but order is detector and then energy
+CHANGE: Remove the default value for setBkgEvtType
+
 [v19r1p7]
 
 *TarSoft

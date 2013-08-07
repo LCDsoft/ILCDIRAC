@@ -155,8 +155,9 @@ class OverlayInput (ModuleBase):
     if self.detector:
       res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, self.detector, 
                                                                self.energytouse, self.BkgEvtType), 0)
-      self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/%s/NbEvts" % (self.machine, self.detector, 
+      self.nbofeventsperfile = self.ops.getValue("/Overlay/%s/%s/%s/%s/NbEvts" % (self.machine, 
                                                                                   self.energytouse, 
+                                                                                  self.detector, 
                                                                                   self.BkgEvtType), 
                                                  100)
 
