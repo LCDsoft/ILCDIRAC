@@ -357,6 +357,7 @@ for proddict in prodlist:
   overlay_sid = OverlayInput()
   overlay_sid.setMachine("clic_cdr")
   overlay_sid.setEnergy(energy)
+  overlay_sid.setBkgEvtType("gghad")
   if energy == 3000.:
     overlay_sid.setBXOverlay(60)
     overlay_sid.setGGToHadInt(3.2)##When running at 3TeV
