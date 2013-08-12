@@ -1740,12 +1740,10 @@ class OverlayInput(Application):
     """ Checks that all needed parameters are set
     """
     if not self.BXOverlay :
-      self.BXOverlay = 60
-      self._log.info("Using default number of BX to overlay: 60")
+      return S_ERROR("Number of overlay bunch crossings not defined")
           
     if not self.GGToHadInt :
-      self.GGToHadInt = 3.2
-      self._log.info("Number of Background events, is set to 3.2 by default")  
+      return S_ERROR("Number of background events per bunch crossing is not defined")
       
     if not self.BkgEvtType :
       return S_ERROR("Background event type is not defined: Chose one gghad, aa_lowpt, ...")
