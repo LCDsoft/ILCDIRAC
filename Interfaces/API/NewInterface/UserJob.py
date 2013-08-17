@@ -71,7 +71,9 @@ class UserJob(Job):
     if type( lfns ) == list and len( lfns ):
       for i in xrange( len( lfns ) ):
         lfns[i] = lfns[i].replace( 'LFN:', '' )
-      inputData = map( lambda x: 'LFN:' + x, lfns )
+      #inputData = map( lambda x: 'LFN:' + x, lfns )
+      inputData = lfns #because we don't need the LFN: for inputData, and it breaks the 
+      #resolution of the metadata in the InputFilesUtilities
       inputDataStr = string.join( inputData, ';' )
       description = 'List of input data specified by LFNs'
       self._addParameter( self.workflow, 'InputData', 'JDL', inputDataStr, description )
