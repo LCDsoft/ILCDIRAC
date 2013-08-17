@@ -394,6 +394,7 @@ class ModuleBase(object):
       if not type(inputdata) == types.ListType:
         if len(inputdata):
           self.InputData = inputdata.split(";")
+          self.InputData = [x.replace("LFN:","") for x in self.InputData]
       
     if self.workflow_commons.has_key('ParametricInputData'):
       paramdata = self.workflow_commons['ParametricInputData']
