@@ -1,8 +1,14 @@
 [v19r1p9]
 
-*Overlay
+* Interfaces
+CHANGE: More intuitive method names for overlay application, removed default values for defining number of overlay events
+
+* Workflow
 FIX: Bug in the order of selecting the number of events in one case, had energy before detector, but order is detector and then energy
-CHANGE: Remove the default value for setBkgEvtType
+CHANGE: Use energy in lookup of overlay input
+
+[v19r1p8]
+
 
 [v19r1p7]
 
