@@ -1608,9 +1608,11 @@ class OverlayInput(Application):
     self._checkArgs( {'pid': types.IntType})
     self.ProdID = pid
     return S_OK()
-      
-  def setBXOverlay(self, bxoverlay):
-    """ Define bunch crossings to overlay
+  
+  def setOverlayBXPerSigEvt( self, bxoverlay):
+    """ Define number bunch crossings to overlay for each signal event. 
+    This is used to determine the number of required overlay events.
+    It does not modify any of the actual application parameters using the overly input.
     
     @param bxoverlay: Bunch crossings to overlay.
     @type bxoverlay: float
@@ -1621,21 +1623,46 @@ class OverlayInput(Application):
     self.BXOverlay = bxoverlay
     return S_OK()
     
-  def setGGToHadInt(self, ggtohadint):
-    """ Define the optional number of gamma gamma -> hadrons interactions per bunch crossing, default is 3.2
+  def setBXOverlay(self, bxoverlay):
+    """ Define number bunch crossings to overlay for each signal event.
+    This is used to determine the number of required overlay events.
+    It does not modify any of the actual application parameters using the overly input.
     
-    @param ggtohadint: optional number of gamma gamma -> hadrons interactions per bunch crossing
-    @type ggtohadint: float
+    @param bxoverlay: Bunch crossings to overlay.
+    @type bxoverlay: float
+    """
+    self.setOverlayBXPerSigEvt( bxoverlay )
+  
+  def setOverlayEvtsPerBX( self, noverlay ):
+    """ Define the number of overlay events per bunch crossing.
+    This is used to determine the number of required overlay events.
+    It does not modify any of the actual application parameters using the overly input.
+    
+    @param noverlay: optional number of overlay events interactions per bunch crossing
+    @type noverlay: float
     
     """
     self._checkArgs( {
         'ggtohadint' : types.FloatType
       } )  
-    self.GGToHadInt = ggtohadint
+    self.GGToHadInt = noverlay
     return S_OK()
+  
+  def setGGToHadInt(self, ggtohadint):
+    """ Define the number of overlay events per bunch crossing.
+    This is used to determine the number of required overlay events.
+    It does not modify any of the actual application parameters using the overly input.
+    
+    @param ggtohadint: optional number of overlay events interactions per bunch crossing
+    @type ggtohadint: float
+    
+    """
+    self.setOverlayEvtsPerBX( ggtohadint )
       
   def setNbSigEvtsPerJob(self, nbsigevtsperjob):
-    """ Set the number of signal events per job
+    """ Set the number of signal events per job.
+    This is used to determine the number of required overlay events.
+    It does not modify any of the actual application parameters using the overly input.
     
     @param nbsigevtsperjob: Number of signal events per job
     @type nbsigevtsperjob: int
