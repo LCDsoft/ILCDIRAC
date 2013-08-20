@@ -1631,7 +1631,7 @@ class OverlayInput(Application):
     @param bxoverlay: Bunch crossings to overlay.
     @type bxoverlay: float
     """
-    self.setOverlayBXPerSigEvt( bxoverlay )
+    return self.setOverlayBXPerSigEvt( bxoverlay )
   
   def setOverlayEvtsPerBX( self, noverlay ):
     """ Define the number of overlay events per bunch crossing.
@@ -1657,7 +1657,7 @@ class OverlayInput(Application):
     @type ggtohadint: float
     
     """
-    self.setOverlayEvtsPerBX( ggtohadint )
+    return self.setOverlayEvtsPerBX( ggtohadint )
       
   def setNbSigEvtsPerJob(self, nbsigevtsperjob):
     """ Set the number of signal events per job.
