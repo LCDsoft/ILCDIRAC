@@ -1,5 +1,10 @@
 [v19r1p9]
 
+* Workflow
+FIX: energy meta data look-up for overlay input was broken. in addition, it is now only used if actually set.
+
+[v19r1p9]
+
 * Interfaces
 CHANGE: More intuitive method names for overlay application, removed default values for defining number of overlay events
 
