@@ -142,7 +142,8 @@ class OverlayInput (ModuleBase):
     """ Get the list of files from the FileCatalog.
     """
     meta = {}
-    meta['Energy'] = str(int(self.energytouse))
+    if self.energy:
+        meta['Energy'] = str(int(self.energy))
     meta['EvtType'] = self.BkgEvtType
     meta['Datatype'] = 'SIM'
     if self.detectormodel:
