@@ -12,6 +12,7 @@ from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 from xml.etree.ElementTree                                import ElementTree
 from xml.etree.ElementTree                                import Element
 from xml.etree.ElementTree                                import Comment
+from xml.etree.ElementTree                                import tostring
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
@@ -313,6 +314,13 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
   output.close()
   return S_OK(True)
 
+def fixedXML(element):
+  """ As the ElementTree writes out proper XML, we need to corrupt it for LCFI
+  """
+  fixed_element = element.replace("&amp;","&")
+  fixed_element = fixed_element.replace("&gt;",">").replace("&lt;","<")
+  return fixed_element
+
 def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
@@ -343,6 +351,7 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     print "Found Exception %s %s" % (Exception, x)
     return S_ERROR("Found Exception %s %s" % (Exception, x))
 
+  root = tree.getroot()
   ##Get all processors:
   overlay = False
   #recoutput=False
@@ -469,7 +478,13 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 subparam.text = string.join(files,"\n")
                 com = Comment("Overlay files changed")
                 param.insert(0, com)
-  tree.write(finalxml)
+  
+  #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
+  root_str = fixedXML(tostring(root))
+  of = file(finalxml,"w")
+  of.write(root_str)
+  of.close()
+  #tree.write(finalxml)
   return S_OK(True)
 
 
