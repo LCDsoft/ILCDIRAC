@@ -28,6 +28,8 @@ class DummyModule(ModuleBase):
     for key, val in self.workflow_commons.items():
       self.log.info("%s=%s" % (key, val))
       
+    for key, val in self.step_commons.items():
+      self.log.info("%s=%s" % (key, val))  
     return S_OK()
 
   def execute(self):
