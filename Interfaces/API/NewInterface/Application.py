@@ -9,7 +9,7 @@ from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
 
 from DIRAC import S_OK, S_ERROR, gLogger
-import inspect, sys, string, types, os
+import inspect, sys, string, types, os, urllib
 
 
 class Application(object):
@@ -59,6 +59,9 @@ class Application(object):
     #Data type : gen, SIM, REC, DST
     self.datatype = ""
 
+    #Extra command line arguments
+    self.ExtraCLIArguments = ""
+    
     ##Needed for Generation+Stdhepcut
     self.willBeCut = False
     
@@ -291,6 +294,13 @@ class Application(object):
     self.Debug = debug
     return S_OK()
 
+  def setExtraCLIArguments(self,arguments):
+    """ Pass any CLI argument as a string to the application
+    """
+    self._checkArgs({ "arguments": types.StringTypes} )
+    self.ExtraCLIArguments = arguments
+    return S_OK()
+
   def listAttributes(self):
     """ Method to list attributes for users. Doesn't list any private or semi-private attributes
     """
@@ -446,6 +456,7 @@ class Application(object):
                                           "Application Version"))
     stepdefinition.addParameter(Parameter("SteeringFile",       "", "string", "", "", False, False, "Steering File"))
     stepdefinition.addParameter(Parameter("applicationLog",     "", "string", "", "", False, False, "Log File"))
+    stepdefinition.addParameter(Parameter("ExtraCLIArguments",     "", "string", "", "", False, False, "Extra CLI arguments"))
     stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
     stepdefinition.addParameter(Parameter("ForgetInput",     False, "boolean", "", "", False, False, 
                                           "Do not overwrite input steering"))
@@ -496,6 +507,7 @@ class Application(object):
     stepinstance.setValue("outputPathDST",      self.outputDstPath)
     stepinstance.setValue("OutputSE",           self.OutputSE)
     stepinstance.setValue('listoutput',         self._listofoutput)
+    stepinstance.setValue('ExtraCLIArguments',  urllib.quote(self.ExtraCLIArguments))
     return S_OK()
       
       
