@@ -62,6 +62,9 @@ class GenericApplication(Application):
   >>> ga.setArguments("some command line arguments")
   >>> ga.setDependency({"root":"5.26"})
   
+  In case you also use the setExtraCLIArguments method, whatever you put
+  in there will be added at the end of the CLI, i.e. after the Arguments
+  
   """
   def __init__(self, paramdict = None):
     self.Script = None
@@ -355,6 +358,7 @@ class RootScript(_Root):
   >>> rootsc.setScript("myscript.exe")
   >>> rootsc.setArguments("some command line arguments")
   
+  The ExtraCLIArguments is not used here, only use the Arguments
   """
   def __init__(self, paramdict = None):
     self.script = None
@@ -393,6 +397,7 @@ class RootMacro(_Root):
   >>> rootmac.setMacro("mymacro.C")
   >>> rootmac.setArguments("some command line arguments")
   
+  The setExtraCLIArguments is not available here, use the Arguments
   """
   def __init__(self, paramdict = None):
     self.Script = None
@@ -432,6 +437,8 @@ class Whizard(Application):
   >>> wh.setNbEvts(1000)
   >>> wh.setModel("sm")
 
+  use setExtraArguments to overwrite the content of the whizard.in
+  in case you use something not standard (parameter scan for exmple)
   """
   def __init__(self, processlist = None, paramdict = None):    
     
@@ -708,7 +715,8 @@ class Whizard(Application):
           if self.Version:
             if self.Version != version:
               return S_ERROR("All processes to consider are not available in the same WHIZARD version")
-          self.Version = version
+          else:
+            self.Version = version
           self._log.info("Found the process %s in whizard %s"%(process, self.Version))
         
     if not self.Version:
@@ -1214,6 +1222,8 @@ class Mokka(Application):
   >>> mo.setMacFile('MyMacFile.mac')
   >>> mo.setStartFrom(10)
   
+  Use setExtraCLIArguments if you want to pass CLI arguments to Mokka
+  
   """
   def __init__(self, paramdict = None):
 
@@ -1426,6 +1436,8 @@ class SLIC(Application):
   >>> slic.getInputFromApp(wh)
   >>> slic.setSteeringFile("mymacrofile.mac")
   >>> slic.setStartFrom(10)
+  
+  Use setExtraCLIArguments in case you want to use CLI parameters
   
   """
   def __init__(self, paramdict = None):
@@ -1840,6 +1852,9 @@ class Marlin(Application):
   >>> marlin.setOutputRecFile('MyOutputRecFile.rec')
   >>> marlin.setOutputDstFile('MyOutputDstFile.dst')
   
+  Use setExtraCLIArguments if you want to get CLI parameters
+  Needed for easy parameter scan, and passing non-standard strings (like cuts)
+  
   """
   def __init__(self, paramdict = None):
 
@@ -2046,6 +2061,8 @@ class LCSIM(Application):
   >>> lcsim.getInputFromApp(slic)
   >>> lcsim.setSteeringFile("MySteeringFile.xml")
   >>> lcsim.setStartFrom(10)
+  
+  Use setExtraCLIArguments to add CLI arguments to the lcsim call
   
   """
   def __init__(self, paramdict = None):
@@ -2273,6 +2290,8 @@ class SLICPandora(Application):
   >>> slicpandora.getInputFromApp(lcsim)
   >>> slicpandora.setPandoraSettings("~/GreatPathToHeaven/MyPandoraSettings.xml")
   >>> slicpandora.setStartFrom(10)
+  
+  Use setExtraCLIArguments if you want to add arguments to the PandoraFrontend call
   
   """
   def __init__(self, paramdict = None):

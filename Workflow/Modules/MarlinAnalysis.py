@@ -364,9 +364,9 @@ class MarlinAnalysis(ModuleBase):
     if (os.path.exists("%s/Executable/Marlin" % myMarlinDir)):
       if (os.path.exists(inputxml)):
         #check
-        script.write('%s/Executable/Marlin -c %s\n' % (myMarlinDir, inputxml))
+        script.write('%s/Executable/Marlin -c %s %s\n' % (myMarlinDir, inputxml, self.extraCLIarguments))
         #real run
-        script.write('%s/Executable/Marlin %s\n' % (myMarlinDir, inputxml))
+        script.write('%s/Executable/Marlin %s %s\n' % (myMarlinDir, inputxml, self.extraCLIarguments))
     else:
       script.close()
       self.log.error("Marlin executable is missing, something is wrong with the installation!")

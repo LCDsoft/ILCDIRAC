@@ -361,8 +361,8 @@ class MokkaAnalysis(ModuleBase):
     script.write('echo =============================\n')
       
     ##Tear appart this mokka-wrapper
-    comm = '%s/Mokka %s -hlocalhost:%s/mysql.sock %s\n' % (myMokkaDir, mokkaextraoption, sqlwrapper.getMokkaTMPDIR(), 
-                                                           mokkasteer)
+    comm = '%s/Mokka %s -hlocalhost:%s/mysql.sock %s %s\n' % (myMokkaDir, mokkaextraoption, sqlwrapper.getMokkaTMPDIR(), 
+                                                           mokkasteer, self.extraCLIarguments)
     print "Command : %s" % (comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')

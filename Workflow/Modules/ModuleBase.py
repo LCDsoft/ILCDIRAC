@@ -23,7 +23,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 
-import os, string, sys, re, types
+import os, string, sys, re, types, urllib
 from random import choice
 
 def GenRandString(length=8, chars = string.letters + string.digits):
@@ -67,6 +67,7 @@ class ModuleBase(object):
     self.jobType = ''
     self.stdError = ''
     self.debug = False
+    self.extraCLIarguments = ""
     self.jobID = None
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
@@ -357,7 +358,9 @@ class ModuleBase(object):
       
     if self.step_commons.has_key('applicationLog'):
       self.applicationLog = self.step_commons['applicationLog']
-      
+    
+    if self.step_commons.has_key('ExtraCLIArguments'):
+      self.extraCLIarguments = urllib.unquote(self.step_commons['ExtraCLIArguments']) 
       
     if self.step_commons.has_key('SteeringFile'):
       self.SteeringFile = self.step_commons['SteeringFile']

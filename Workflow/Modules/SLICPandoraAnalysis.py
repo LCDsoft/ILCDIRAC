@@ -215,12 +215,13 @@ class SLICPandoraAnalysis (ModuleBase):
       prefixpath ="%s/Executable" % myslicPandoraDir
     if prefixpath:
       if oldversion:
-        comm = '%s/PandoraFrontend %s %s %s %s %s\n' % (prefixpath, self.detectorxml, self.pandorasettings,
+        comm = '%s/PandoraFrontend %s %s %s %s %s' % (prefixpath, self.detectorxml, self.pandorasettings,
                                                         runonslcio, self.OutputFile, str(self.NumberOfEvents))
       else:
-        comm = '%s/PandoraFrontend -g %s -c %s -i %s -o %s -r %s\n' % (prefixpath, self.detectorxml, 
+        comm = '%s/PandoraFrontend -g %s -c %s -i %s -o %s -r %s' % (prefixpath, self.detectorxml, 
                                                                       self.pandorasettings, runonslcio,
                                                                       self.OutputFile, str(self.NumberOfEvents))
+      comm = "%s %s\n" % (comm, self.extraCLIarguments)
       self.log.info("Will run %s" % comm)
       script.write(comm)
     else:

@@ -59,10 +59,10 @@ class ApplicationScript(ModuleBase):
     if re.search('.py$', self.script):
       Cmd.append('python')
       Cmd.append(os.path.basename(self.script))
-      Cmd.append(self.arguments) 
     else:
       Cmd.append("./" + os.path.basename(self.script))
-      Cmd.append(self.arguments)
+    Cmd.append(self.arguments)
+    Cmd.append(self.extraCLIarguments)
 
     command = ' '.join(Cmd)
     self.log.info( 'Command = %s' % (command))  #Really print here as this is useful to see

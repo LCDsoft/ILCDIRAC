@@ -406,11 +406,11 @@ class WhizardAnalysis(ModuleBase):
       
     comm = ""
     if foundproceesinwhizardin:
-      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\' %s\n' % (outputfilename, extracmd)
+      comm = 'whizard --simulation_input \'write_events_file = \"%s\"\'' % (outputfilename)
     else:
-      comm = 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' %s\n' % (self.evttype, 
-                                                                                                                        outputfilename, 
-                                                                                                                        extracmd)
+      comm = 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' ' % (self.evttype, 
+                                                                                                                        outputfilename)
+    comm = "%s %s %s\n" % (comm, self.extraCLIarguments, extracmd)
     self.log.info("Will run %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
