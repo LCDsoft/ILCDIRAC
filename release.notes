@@ -1,4 +1,16 @@
-[v19r1p9]
+[v19r1p11]
+
+* Core
+FIX: excaping and de-escaping of special characters in the xml handler for Marlin
+
+* Interfaces:
+NEW: Add possibility of additional user provided CLI parameters
+
+* Workflow:
+NEW: Add support of additional user provided CLI parameters
+
+
+[v19r1p10]
 
 * Workflow
 FIX: energy meta data look-up for overlay input was broken. in addition, it is now only used if actually set.
