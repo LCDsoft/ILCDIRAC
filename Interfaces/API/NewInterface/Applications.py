@@ -1645,19 +1645,19 @@ class OverlayInput(Application):
     """
     return self.setOverlayBXPerSigEvt( bxoverlay )
   
-  def setOverlayEvtsPerBX( self, noverlay ):
+  def setOverlayEvtsPerBX( self, ggtohadint ):
     """ Define the number of overlay events per bunch crossing.
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
     
-    @param noverlay: optional number of overlay events interactions per bunch crossing
-    @type noverlay: float
+    @param ggtohadint: optional number of overlay events interactions per bunch crossing
+    @type ggtohadint: float
     
     """
     self._checkArgs( {
         'ggtohadint' : types.FloatType
       } )  
-    self.GGToHadInt = noverlay
+    self.GGToHadInt = ggtohadint
     return S_OK()
   
   def setGGToHadInt(self, ggtohadint):
