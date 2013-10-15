@@ -38,6 +38,7 @@ class UploadOutputData(ModuleBase):
     self.failoverTest = False #flag to put file to failover SE by default
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     self.ops = Operations()
+
     #List all parameters here
     self.outputDataFileMask = ''
     self.outputMode = 'Any' #or 'Local' for reco case
@@ -256,7 +257,9 @@ class UploadOutputData(ModuleBase):
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self.request)
 
-    catalogs = ['FileCatalog', 'LcgFileCatalog']
+    self.catalogs= self.ops.getValue('Production/%s/Catalogs' % self.experiment,
+                                     ['FileCatalog', 'LcgFileCatalog'])
+
 
 
     #One by one upload the files with failover if necessary
@@ -268,7 +271,7 @@ class UploadOutputData(ModuleBase):
                                                                                                ', ')))
         result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], 
                                                           metadata['lfn'], metadata['resolvedSE'], 
-                                                          fileGUID = metadata['guid'], fileCatalog = catalogs)
+                                                          fileGUID = metadata['guid'], fileCatalog = self.catalogs)
         if not result['OK']:
           self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
           failover[fileName] = metadata
@@ -292,7 +295,7 @@ class UploadOutputData(ModuleBase):
       metadata['resolvedSE'] = failovers
       result = failoverTransfer.transferAndRegisterFileFailover(fileName, metadata['localpath'],
                                                                 metadata['lfn'], targetSE, metadata['resolvedSE'],
-                                                                fileGUID = metadata['guid'], fileCatalog = catalogs)
+                                                                fileGUID = metadata['guid'], fileCatalog = self.catalogs)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
