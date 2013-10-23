@@ -22,7 +22,7 @@ class UserJob(Job):
     super(UserJob, self).__init__( script )
     self.type = 'User'
     self.diracinstance = None
-    self.usergroup = 'ilc_user'
+    self.usergroup = ['ilc_user','calice_user']
     self.proxyinfo = getProxyInfo()
     
   def submit(self, diracinstance = None, mode = "wms"):
@@ -36,7 +36,7 @@ class UserJob(Job):
                                self.__class__.__name__)
     if self.proxyinfo['Value'].has_key('group'):
       group = self.proxyinfo['Value']['group']
-      if not group == self.usergroup:
+      if not group in self.usergroup:
         self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
         return self._reportError("Not allowed to submit job, you need a %s proxy." % self.usergroup,
                                  self.__class__.__name__)
