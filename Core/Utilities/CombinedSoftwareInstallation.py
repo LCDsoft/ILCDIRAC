@@ -201,7 +201,7 @@ def SharedArea():
   if len(sharedArea):
     # if defined, check that it really exists
     if not os.path.isdir( sharedArea ):
-      DIRAC.gLogger.error( 'Missing Shared Area Directory:', sharedArea )
+      DIRAC.gLogger.warn( 'Missing Shared Area Directory:', sharedArea )
       sharedArea = ''
 
   return sharedArea
