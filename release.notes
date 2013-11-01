@@ -1,3 +1,8 @@
+[v20r0p3]
+
+* Core: 
+CHANGE: Check if the env script is present in CVMFS
+
 [v20r0p2]
 
 * Core: 
