@@ -1,4 +1,12 @@
-[v19r1p14]
+[v20r0p1]
+
+* Core: 
+CHANGE: few pylint compliance things
+
+*Workflow:
+FIX: MokkaAnalysis call back to the getEnvScript missing
+
+[v20r0p0]
 
 * Core: 
 CHANGE: Adjust the CombineSoftwareInstallation for the future CVMFS support
