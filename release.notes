@@ -1,5 +1,15 @@
 [v19r1p14]
 
+* Core: 
+CHANGE: Adjust the CombineSoftwareInstallation for the future CVMFS support
+CHANGE: drop the Particle.tbl from the mokka steering file, put it in command line
+
+*Workflow:
+CHANGE: ILCSoft modules (Mokka, Marlin, SLIC, SLICPandora) now uses environment variables
+CHANGE: Mokka: drop the SQLWrapper (finally)
+
+[v19r1p14]
+
 * Core:
 CHANGE: updated list of installed steering files
 
