@@ -1,3 +1,6 @@
+########################################################################
+# $HeadURL $
+########################################################################
 '''
 Base application class. All applications inherit this class.
 
@@ -9,8 +12,10 @@ from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
 
 from DIRAC import S_OK, S_ERROR, gLogger
-import inspect, sys, string, types, os, urllib
+import inspect, sys, types, os, urllib
 
+
+__RCSID__ = "$Id: $"
 
 class Application(object):
   """ General application definition. Any new application should inherit from this class.
@@ -97,12 +102,12 @@ class Application(object):
     self._errorDict = {}
     
     #This is used to filter out the members that should not be set when using a dict as input
-    self._paramsToExclude = ['_paramsToExclude',"_log","_errorDict","addedtojob",
-                             "_inputappstep","_linkedidx","_inputapp","_jobtype",
-                             "_jobsteps","_jobapps","_job","_systemconfig","_importLocation",
-                             "_moduledescription","_modulename","prodparameters",
-                             "datatype","detectortype","_listofoutput","inputSB",
-                             "appname",'accountInProduction','OutputPath']
+    self._paramsToExclude = ['_paramsToExclude', "_log", "_errorDict", "addedtojob",
+                             "_inputappstep", "_linkedidx", "_inputapp", "_jobtype",
+                             "_jobsteps", "_jobapps", "_job", "_systemconfig", "_importLocation",
+                             "_moduledescription", "_modulename", "prodparameters",
+                             "datatype", "detectortype", "_listofoutput", "inputSB",
+                             "appname", 'accountInProduction', 'OutputPath']
     
     ### Next is to use the setattr method.
     self._setparams(paramdict)
@@ -256,7 +261,7 @@ class Application(object):
       if os.path.exists(inf) or inf.lower().count("lfn:"):
         self.inputSB.append(inf)
         
-    self.InputFile = string.join(inputfile, ";")
+    self.InputFile = ";".join(inputfile)
 
     return S_OK()
   
@@ -294,7 +299,7 @@ class Application(object):
     self.Debug = debug
     return S_OK()
 
-  def setExtraCLIArguments(self,arguments):
+  def setExtraCLIArguments(self, arguments):
     """ Pass any CLI argument as a string to the application
     """
     self._checkArgs({ "arguments": types.StringTypes} )
@@ -625,7 +630,7 @@ class Application(object):
       if kwargs[key]:
         arguments.append( '%s = %s ( %s )' % ( key, kwargs[key], type( kwargs[key] ) ) )
     finalReport = 'Problem with %s.%s() call:\nArguments: %s\nMessage: %s\n' % ( className, methodName, 
-                                                                                 string.join( arguments, ', ' ), 
+                                                                                 ', '.join( arguments ), 
                                                                                  message )
     if self._errorDict.has_key( methodName ):
       tmp = self._errorDict[methodName]

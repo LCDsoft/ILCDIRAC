@@ -1,3 +1,7 @@
+########################################################################
+# $HeadURL $
+########################################################################
+
 """
 This module contains the definition of the different applications that can
 be used to create jobs.
@@ -47,6 +51,7 @@ from math import modf
 from decimal import Decimal
 import string, types, os
 
+__RCSID__ = "$Id: $"
 
 #################################################################  
 #            Generic Application: use a script in an 
@@ -469,8 +474,8 @@ class Whizard(Application):
     self._moduledescription = 'Module to run WHIZARD'
     self.appname = 'whizard'
     self.datatype = 'gen'
-    self._paramsToExclude.extend(['_optionsdictstr','_genlevelcutsstr','_leshouchesfiles','_generatormodels',
-                                  '_allowedparams','_wo','_processlist'])
+    self._paramsToExclude.extend( [ '_optionsdictstr', '_genlevelcutsstr', '_leshouchesfiles', '_generatormodels',
+                                  '_allowedparams', '_wo','_processlist' ] )
   
   def getPDict(self):
     """ Provide predefined parameter dictionary
@@ -1241,7 +1246,7 @@ class Mokka(Application):
     self.appname = 'mokka'    
     self.datatype = 'SIM'
     self.detectortype = 'ILD'
-    self._paramsToExclude.extend(["outputDstPath","outputRecPath","OutputDstFile","OutputRecFile"])
+    self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
      
   def setRandomSeed(self, RandomSeed):
     """ Optional: Define random seed to use. Default is JobID. 
@@ -1445,14 +1450,14 @@ class SLIC(Application):
     self.StartFrom = 0
     self.RandomSeed = 0
     self.DetectorModel = ''
-    super(SLIC,self).__init__( paramdict )
+    super(SLIC, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICAnalysis'
     self._moduledescription = 'Module to run SLIC'
     self.appname = 'slic'    
     self.datatype = 'SIM'
     self.detectortype = 'SID'
-    self._paramsToExclude.extend(["outputDstPath","outputRecPath","OutputDstFile","OutputRecFile"])
+    self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
 
      
   def setRandomSeed(self, RandomSeed):
@@ -2306,7 +2311,7 @@ class SLICPandora(Application):
     self.appname = 'slicpandora'    
     self.datatype = 'REC'
     self.detectortype = 'SID'
-    self._paramsToExclude.extend(["outputDstPath","outputRecPath","OutputDstFile","OutputRecFile"])
+    self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
     
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for SlicPandora simulation 
@@ -2853,17 +2858,21 @@ class Tomato(Application):
 # This application is used to obtain the host information. It has no input/output, only the log file matters
 #######################################################################################
 class CheckWNs(Application):
+  """ Small utility to probe a worker node: list the machine's properties, the sharedare, 
+  and check if CVMFS is present
+  """
   def __init__(self, paramdict = None):
-    super(CheckWNs,self).__init__( paramdict )
+    super(CheckWNs, self).__init__( paramdict )
     self._modulename = "AnalyseWN"
     self.appname = 'analysewns'
     self._moduledescription = 'Analyse the WN on which this app runs'
     self.Version = "1"
     self.accountInProduction = False
+    
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     return m1
-      
+  
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
     if not res1["OK"]:
