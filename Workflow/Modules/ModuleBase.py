@@ -423,6 +423,10 @@ class ModuleBase(object):
       path = res['Value']
       list_f = os.listdir(path)
       for f in list_f:
+        if os.path.basename(self.SteeringFile) == os.path.basename(f) and \
+        os.path.exists("./" + os.path.basename(self.SteeringFile) ):
+          ##Do not overwrite user defined steering file, if it exists locally.
+          continue
         try:
           if os.path.isdir(os.path.join(path,f)):
             shutil.copytree(os.path.join(path,f), "./"+f)
