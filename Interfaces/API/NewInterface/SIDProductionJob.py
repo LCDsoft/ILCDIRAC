@@ -1,3 +1,6 @@
+########################################################################
+# $HeadURL$
+########################################################################
 """
 SID DBD specific production job utility
 
@@ -13,6 +16,8 @@ from DIRAC import S_OK, S_ERROR
 
 import types,string
 from decimal import Decimal
+
+__RCSID__ = "$Id: "
 
 
 class SIDProductionJob(ProductionJob):

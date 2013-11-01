@@ -1,5 +1,5 @@
 ########################################################################
-# $HeadURL $
+# $HeadURL$
 ########################################################################
 '''
 New Job class, for the new interface. This job class should not be used to create jobs. 
