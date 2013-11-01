@@ -1,3 +1,11 @@
+[v20r0p5]
+
+* Core:
+FIX: CheckCVMFS method
+
+*Interfaces:
+FIX: LCApplication: only add the steering files to the soft to install if it's been defined
+
 [v20r0p4]
 
 * Interfaces
