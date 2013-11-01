@@ -1,3 +1,11 @@
+[v20r0p4]
+
+* Interfaces
+NEW: LCApplication class, between Application and Applications. Allows the definition of the steering files per application
+
+* Workflow
+CHANGE: Handle the steering files per applications
+
 [v20r0p3]
 
 * Core: 
