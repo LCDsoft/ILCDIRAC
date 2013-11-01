@@ -11,7 +11,8 @@ Mostly similar to L{UserJob}, but cannot be (and should not be) used like the Us
 @author: Ching Bon Lam
 '''
 
-__RCSID__ = "$Id: "
+__RCSID__ = "$Id$"
+
 from DIRAC.Core.Workflow.Module                             import ModuleDefinition
 from DIRAC.Core.Workflow.Step                               import StepDefinition
 from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
