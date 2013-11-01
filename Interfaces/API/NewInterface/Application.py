@@ -15,7 +15,7 @@ from DIRAC import S_OK, S_ERROR, gLogger
 import inspect, sys, types, os, urllib
 
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 class Application(object):
   """ General application definition. Any new application should inherit from this class.

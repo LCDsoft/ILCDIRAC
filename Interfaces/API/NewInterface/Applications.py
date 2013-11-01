@@ -51,7 +51,7 @@ from math import modf
 from decimal import Decimal
 import string, types, os
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 #################################################################  
 #            Generic Application: use a script in an 

@@ -1,3 +1,6 @@
+########################################################################
+# $HeadURL $
+########################################################################
 '''
 New Job class, for the new interface. This job class should not be used to create jobs. 
 Use L{UserJob} or L{ProductionJob}.
@@ -12,8 +15,9 @@ from DIRAC.Core.Utilities.PromptUser                   import promptUser
 from DIRAC.Core.Workflow.Step                          import StepDefinition
 
 from DIRAC import S_ERROR, S_OK, gLogger
-import string, inspect
+import inspect
 
+__RCSID__ = "$Id$"
 
 class Job(DiracJob):
   """ ILCDIRAC job class
@@ -295,7 +299,7 @@ class Job(DiracJob):
     else:
       apps = self.workflow.findParameter( swPackages ).getValue()
 
-      if not currentApp in string.split( apps, ';' ):
+      if not currentApp in apps.split( ';' ):
         apps += ';' + currentApp
 
       self._addParameter( self.workflow, swPackages, 'JDL', apps, description )
