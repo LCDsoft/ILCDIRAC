@@ -1,9 +1,15 @@
+########################################################################
+# $HeadURL$
+########################################################################
+
 """
 SID DBD specific production job utility
 
 @author: S. Poss
 @since: Jul 01, 2012
 """
+
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Core.Workflow.Module import ModuleDefinition
