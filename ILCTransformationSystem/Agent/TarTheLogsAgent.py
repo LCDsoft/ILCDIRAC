@@ -1,6 +1,6 @@
-##################################################################################################################
+#######################################################################################################################
 # $HeadURL$
-##################################################################################################################
+#######################################################################################################################
 '''
 Created on Nov 2, 2013
 
@@ -9,12 +9,14 @@ Created on Nov 2, 2013
 
 from DIRAC.Core.Base.AgentModule                         import AgentModule
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
-
+from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC import S_OK, S_ERROR, gLogger
 
 import glob
 
 __RCSID__ = "$Id$"
+
+ACTIVE_STATUS = ["Active", 'Completing']
 
 class TarTheProdLogsAgent( AgentModule ):
   '''
@@ -30,6 +32,7 @@ class TarTheProdLogsAgent( AgentModule ):
     self.name = "TarTheProdLogsAgent"
     self.log = gLogger
     self.basepath = ""
+    self.tc = None
 
   def initialize(self):
     """Sets defaults
@@ -43,6 +46,8 @@ class TarTheProdLogsAgent( AgentModule ):
     self.dest_se = self.ops.getValue("Transformations/ArchiveSE", "")
     if not self.dest_se:
       return S_ERROR("Archival SE option not defined")
+    
+    self.tc = TransformationClient()
     
     self.log.info("Running ")
     return S_OK()
@@ -59,12 +64,14 @@ class TarTheProdLogsAgent( AgentModule ):
       return res
     
     prods = res['Value']
-    for prod in prods:
-
-      if not self.transIsStopped(prod):
+    for prod, paths in prods.items():
+      res = self.transIsStopped(prod)
+      if not res['OK']:
         continue
-      
-      prodFiles = self.getFiles(prod)
+      if not res["Value"]:
+        continue
+            
+      prodFiles = self.getFiles(paths)
       if not prodFiles:
         continue
       res = self.createTarBall(prodFiles)
@@ -99,9 +106,17 @@ class TarTheProdLogsAgent( AgentModule ):
   def transIsStopped(self, prod):
     """ Check from the TS if the prod is Active or not
     """
-    return False
+    res = self.tc.getTransformation(prod)
+    if not res['OK']:
+      return res
+    
+    trans = res["Value"]
+    if trans["Status"] in ACTIVE_STATUS:
+      return S_OK(False)
+    #meaning the prods are neither Active nor Completing
+    return S_OK(True)
   
-  def getFiles(self, prod):
+  def getFiles(self, paths):
     """ get the files in the directory of the prod
     """
     flist = []
