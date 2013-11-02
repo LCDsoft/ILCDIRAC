@@ -12,7 +12,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC import S_OK, S_ERROR, gLogger
 
-import glob
+import glob, os
 
 __RCSID__ = "$Id$"
 
@@ -125,6 +125,12 @@ class TarTheProdLogsAgent( AgentModule ):
   def cleanTarBall(self, tarballpath):
     """ Physically remove the tar ball that was created to free disk space
     """
+    try:
+      os.unlink(tarballpath)
+    except OSError, x:
+      return S_ERROR("Failed with %s" % str(x))
+    if os.path.exists(tarballpath):
+      self.log.error("The tar ball still exists while it should have be removed: ", tarballpath)
     return S_OK()
   
   def uploadToStorage(self, tarballpath):
