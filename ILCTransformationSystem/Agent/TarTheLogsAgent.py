@@ -56,7 +56,7 @@ class TarTheProdLogsAgent( AgentModule ):
     self.am_setModuleParam("shifterProxy", "ProductionManager")
     self.basepath = self.am_getOption("BasePath", "")
     if not self.basepath:
-      return S_ERROR("Missing mandatory option Basepath")
+      return S_ERROR("Missing mandatory option BasePath")
     self.baselogpath = self.am_getOption("BaseLogPath", "")
     if not self.basepath:
       return S_ERROR("Missing mandatory option BaseLogpath")
@@ -115,7 +115,7 @@ class TarTheProdLogsAgent( AgentModule ):
       else:
         res = self.cleanTarBall(tarBall)
         if not res["OK"]:
-          self.log.error("Failed removong the Tar Ball", res["Message"])
+          self.log.error("Failed removing the Tar Ball", res["Message"])
           
       
     return S_OK()
@@ -242,6 +242,8 @@ class TarTheProdLogsAgent( AgentModule ):
   
   def createTarBallAndCleanTheLogs(self, prod, prodFiles):
     """ Create and return the path to the tar ball containing all the prod files
+    The file name contains the first and last taskID included. Allows easy finding of
+    the right tar ball.
     """
     starttaskid = int(prodFiles[0].split("_")[-2])
     lasttaskid = int(prodFiles[-1].split("_")[-2])
