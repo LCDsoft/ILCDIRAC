@@ -62,22 +62,21 @@ class LCIOSplit(ModuleBase):
           self.InputFile.append(files)
       
     if self.step_commons.has_key('listoutput'):
-      self.listoutput = self.step_commons['listoutput'][0]
+      if len(self.step_commons['listoutput']):
+        self.listoutput = self.step_commons['listoutput'][0]
       
     return S_OK('Parameters resolved')
 
   def execute(self):
     """ Execute the module, called by JobAgent
     """
-    # Get input variables
-
-    self.result = self.resolveInputVariables()
     # Checks
-
+    self.result = self.resolveInputVariables()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
     if not os.environ.has_key("LCIO"):
@@ -85,8 +84,9 @@ class LCIOSplit(ModuleBase):
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     if len(self.InputFile):
-      res = resolveIFpaths(self.InputFile)
+      res = resolveIFpaths(self.basedirectory, self.InputFile)
       if not res['OK']:
+        self.log.error("Missing slcio file!")
         self.setApplicationStatus('LCIOSplit: missing input slcio file')
         return S_ERROR('Missing slcio file!')
       runonslcio = res['Value'][0]
@@ -189,7 +189,7 @@ exit $?
       elif line.count("events"):
         numberofeventsdict[fname] = int(line.split()[0])
     
-    self.log.verbose("numberofeventsdict dict: %s" % numberofeventsdict)   
+    self.log.verbose("Number of eventsdict dict: %s" % numberofeventsdict)   
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for 
     #the registerOutputData
@@ -220,6 +220,6 @@ exit $?
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
-
+    self.listDir()
     return self.finalStatusReport(status)
 

@@ -21,9 +21,10 @@ from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 
-import os, string, sys, re, types, urllib
+import os, string, sys, re, types, urllib, glob
 from random import choice
 
 def GenRandString(length=8, chars = string.letters + string.digits):
@@ -81,6 +82,10 @@ class ModuleBase(object):
     self.step_commons = {}
     self.workflowStatus = S_OK()
     self.stepStatus = S_OK()
+    self.isProdJob = False
+    
+    self.basedirectory = os.getcwd()
+    
 
   #############################################################################
   def setApplicationStatus(self, status, sendFlag=True):
@@ -294,7 +299,7 @@ class ModuleBase(object):
     @return: File Metadata
     """
     #Retrieve the POOL File GUID(s) for any final output files
-    self.log.info('Will search for POOL GUIDs for: %s' %(string.join(candidateFiles.keys(), ', ')))
+    self.log.info('Will search for POOL GUIDs for: %s' %(', '.join(candidateFiles.keys())))
     pfnGUIDs = {}
     generated = []
     for fname in candidateFiles.keys():
@@ -310,7 +315,7 @@ class ModuleBase(object):
     #  for fileName in candidateFiles.keys():
     #    candidateFiles[fileName]['guid']=''
     #if pfnGUID['generated']:
-    self.log.debug('Generated GUID(s) for the following files ', string.join(pfnGUID['generated'], ', '))
+    self.log.debug('Generated GUID(s) for the following files ', ', '.join(pfnGUID['generated']))
     #else:
     #  self.log.info('GUIDs found for all specified POOL files: %s' %(string.join(candidateFiles.keys(),', ')))
 
@@ -344,6 +349,12 @@ class ModuleBase(object):
     """ Common utility for all sub classes, resolve the workflow parameters 
     for the current step. Module parameters are resolved directly. 
     """
+    self.log.verbose("Workflow commons:", self.workflow_commons)
+    self.log.verbose("Step commons:", self.step_commons)
+    if self.workflow_commons.has_key("IS_PROD"):
+      if self.workflow_commons["IS_PROD"]:
+        self.isProdJob = True
+        
     if self.workflow_commons.has_key('SystemConfig'):
       self.systemConfig = self.workflow_commons['SystemConfig']
       
@@ -413,29 +424,7 @@ class ModuleBase(object):
     if self.step_commons.has_key('debug'):
       self.debug = self.step_commons['debug']
 
-    if 'ILDConfigPackage' in self.workflow_commons:
-      config_dir = self.workflow_commons['ILDConfigPackage']
-      #try to copy everything from there to here:
-      res = getSoftwareFolder(config_dir)
-      if not res['OK']:
-        self.log.error("Cannot find %s"% config_dir, res['Message'])
-        return S_ERROR('Failed to locate %s as config dir'% config_dir)
-      path = res['Value']
-      list_f = os.listdir(path)
-      for f in list_f:
-        if os.path.basename(self.SteeringFile) == os.path.basename(f) and \
-        os.path.exists("./" + os.path.basename(self.SteeringFile) ):
-          ##Do not overwrite user defined steering file, if it exists locally.
-          continue
-        try:
-          if os.path.isdir(os.path.join(path,f)):
-            shutil.copytree(os.path.join(path,f), "./"+f)
-          else:
-            shutil.copy2(os.path.join(path,f), "./"+f)
-        except Exception as e:
-          self.log.error('Could not copy %s here because %s!' % (f, str(e)))
-      
-
+          
     if self.InputData:
       res = getNumberOfevents(self.InputData)
       self.inputdataMeta.update(res['AdditionalMeta'])
@@ -450,6 +439,182 @@ class ModuleBase(object):
   
   def applicationSpecificInputs(self):
     """ Method overwritten by sub classes. Called from the above.
+    """
+    return S_OK()
+
+  def execute(self):
+    """ The execute method. This is called by the workflow wrapper when the module is needed
+    Here we do preliminary things like resolving the application parameters, and getting a dedicated directory
+    """
+    workdir = os.path.join(self.basedirectory, self.step_commons["STEP_DEFINITION_NAME"])
+    if not os.path.exists(workdir):
+      try:
+        os.makedirs( workdir )
+      except OSError, e:
+        self.log.error("Failed to create the work directory :", str(e))
+    
+    #now go there
+    os.chdir( workdir )
+    self.log.verbose("We are now in ", workdir)
+    
+    result = self.resolveInputVariables()
+    if not result['OK']:
+      self.log.error("Failed to resolve input variables:", result['Message'])
+      return result
+
+    if self.InputFile:
+      ##Try to copy the input file to the work fdfir
+      for inf in self.InputFile:
+        bpath = os.path.join(self.basedirectory, inf)
+        if os.path.exists(bpath):
+          try:
+            shutil.move(bpath, "./"+inf)
+          except EnvironmentError, why:
+            self.log.error("Failed to get the file:", str(why))
+    
+          
+    if self.SteeringFile:
+      bpath = os.path.join(self.basedirectory, os.path.basename(self.SteeringFile))
+      if os.path.exists(bpath):
+        try:
+          shutil.move(bpath, "./"+os.path.basename(self.SteeringFile))
+        except EnvironmentError, why:
+          self.log.error("Failed to get the file:", str(why))
+          
+    # because we need to make sure this does not overwrite steering files provided  by the user
+    # it must be here.
+    if "SteeringFileVers" in self.step_commons:
+      steeringfilevers = self.step_commons["SteeringFileVers"]
+      self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
+      res = getSteeringFileDir(self.systemConfig, steeringfilevers)
+      if not res['OK']:
+        self.log.error("Cannot find the steering file directory: %s" % steeringfilevers, 
+                       res['Message'])
+        return S_ERROR("Failed to locate steering files %s" % steeringfilevers)
+      path = res['Value']
+      list_f = os.listdir(path)
+      for f in list_f:
+        if os.path.exists("./"+f):
+          self.log.verbose("Found local file, don't overwrite")
+          #Do not overwrite local files with the same name
+          continue
+        try:
+          if os.path.isdir(os.path.join(path, f)):
+            shutil.copytree(os.path.join(path, f), "./"+f)
+          else:
+            shutil.copy2(os.path.join(path, f), "./"+f)
+        except EnvironmentError, why:
+          self.log.error('Could not copy %s here because :' % f, str(why) )
+
+    if 'ILDConfigPackage' in self.workflow_commons:
+      config_dir = self.workflow_commons['ILDConfigPackage']
+      #seems it's not on CVMFS, try local install then:
+      res = getSoftwareFolder(self.systemConfig, "ILDConfig", config_dir.replace("ILDConfig", ""))
+      if not res['OK']:
+        self.log.error("Cannot find %s" % config_dir, res['Message'])
+        return S_ERROR('Failed to locate %s as config dir' % config_dir)
+      path = res['Value']
+      list_f = os.listdir(path)
+      for f in list_f:
+        if os.path.exists("./"+f):
+          self.log.verbose("Found local file, don't overwrite")
+          #Do not overwrite local files with the same name
+          continue
+        try:
+          if os.path.isdir(os.path.join(path, f)):
+            shutil.copytree(os.path.join(path, f), "./"+f)
+          else:
+            shutil.copy2(os.path.join(path, f), "./"+f)
+        except EnvironmentError, why:
+          self.log.error('Could not copy %s here because %s!' % (f, str(why)))
+
+
+    if self.SteeringFile:
+      if os.path.exists(os.path.basename(self.SteeringFile)):
+        self.log.verbose("Found local copy of %s" % self.SteeringFile)
+ 
+    
+    if os.path.isdir(os.path.join(self.basedirectory, 'lib')):
+      try:
+        shutil.copy2(os.path.join(self.basedirectory, 'lib'), './lib')
+      except EnvironmentError, why:
+        self.log.error("Failed to get the lib directory:", str(why))
+    
+    try:
+      self.applicationSpecificMoveBefore()    
+    except EnvironmentError, e:
+      self.log.error("Failed to copy the required files", str(e))
+      return S_ERROR("Failed to copy the required files%s" % str(e))
+    
+    before_app_dir = os.listdir(os.getcwd())
+
+    appres = self.runIt()
+    if not appres["OK"]:
+      self.log.error("Somehow the application did not exit properly")
+    
+    ##Try to move things back to the base directory
+    if self.OutputFile:
+      for ofile in glob.glob("*"+self.OutputFile+"*"):
+        try:
+          shutil.move(ofile, os.path.join(self.basedirectory, ofile))
+        except EnvironmentError, why:
+          self.log.error('Failed to move the file back to the main directory:', str(why))
+          appres = S_ERROR("Failed moving files")
+          
+    if os.path.exists(self.applicationLog):
+      try:
+        shutil.move("./"+self.applicationLog, os.path.join(self.basedirectory, self.applicationLog))
+      except EnvironmentError, why:
+        self.log.error("Failed to move the log to the basedir", str(why))
+      
+    try:
+      self.applicationSpecificMoveAfter()
+    except EnvironmentError, e:
+      self.log.warn("Failed to move things back, next step may fail")
+      
+    #now move all the new stuff that wasn't moved before
+    for item in os.listdir(os.getcwd()):
+      if item not in before_app_dir and item != os.path.basename(self.SteeringFile) and not os.path.isdir(item):        
+        try:
+          shutil.move("./" + item, os.path.join(self.basedirectory, item) )
+        except EnvironmentError, why:
+          self.log.error("Failed to move the file %s to the basedir" % item, str(why))
+        
+    #move the InputFile back too if it's here
+    for inf in self.InputFile:
+      localname = os.path.join("./", os.path.basename(inf))
+      if os.path.exists(localname):
+        try:
+          shutil.move(localname, os.path.join(self.basedirectory, os.path.basename(inf)))
+        except EnvironmentError, why:
+          self.log.error("Failed to move the input file back to the basedir", str(why))
+      
+    ##Now we go back to the base directory
+    os.chdir(self.basedirectory)
+    
+    self.log.verbose("We are now back to ", self.basedirectory)
+    self.listDir()
+    
+    return appres
+  
+  def listDir(self):
+    """ List the current directories content
+    """
+    ldir = os.listdir(os.getcwd())
+    self.log.verbose("Base directory content:", "\n".join(ldir))
+  
+  def runIt(self):
+    """ Dummy call, needs to be overwritten by the actual applications
+    """
+    return S_OK()
+
+  def applicationSpecificMoveBefore(self):
+    """ If some application need specific things: Marlin needs the GearFile from Mokka
+    """
+    return S_OK()
+  
+  def applicationSpecificMoveAfter(self):
+    """ If some application need specific things: Marlin needs send back its output
     """
     return S_OK()
 

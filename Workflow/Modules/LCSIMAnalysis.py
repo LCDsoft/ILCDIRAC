@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Run LCSIM
@@ -11,7 +11,7 @@ Called by Job Agent.
 @author: Stephane Poss
 '''
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 import os, shutil, types
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
@@ -111,7 +111,17 @@ class LCSIMAnalysis(ModuleBase):
     self.log.info("Input files to treat %s" % self.InputFile)      
     return S_OK('Parameters resolved')
 
-  def execute(self):
+  def applicationSpecificMoveBefore(self):
+    """ Handle the tracking strategy
+    """
+    if self.trackingstrategy:
+      if os.path.exists(os.path.join(self.basedirectory, os.path.basename(self.trackingstrategy))):
+        shutil.copy2(os.path.join(self.basedirectory, os.path.basename(self.trackingstrategy)), 
+                     "./"+os.path.basename(self.trackingstrategy))
+
+    return
+
+  def runIt(self):
     """
     Called by JobAgent
     
@@ -123,29 +133,23 @@ class LCSIMAnalysis(ModuleBase):
       - run java and catch the exit code
     @return: S_OK(), S_ERROR()
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('LCSIM should not proceed as previous step did not end properly')
     
-    #look for lcsim filename
-    lcsim_name = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, 
-                                                                          self.applicationName, 
-                                                                          self.applicationVersion), '')
-    if not lcsim_name:
-      self.log.error("Could not find lcsim file name from CS")
-      return S_ERROR("Could not find lcsim file name from CS")
     
-    res = getSoftwareFolder(lcsim_name)
+    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
     if not res['OK']:
-      self.log.error('Application %s was not found in either the local area or shared area' % (lcsim_name))
+      self.log.error('LCSIM was not found in either the local area or shared area:', res['Message'])
       return res
     lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
@@ -153,7 +157,7 @@ class LCSIMAnalysis(ModuleBase):
 
     runonslcio = []
     if len(self.InputFile):
-      res = resolveIFpaths(self.InputFile)
+      res = resolveIFpaths(self.basedirectory, self.InputFile)
       if not res['OK']:
         self.setApplicationStatus('LCSIM: missing input slcio file')
         return S_ERROR('Missing slcio file!')
@@ -206,18 +210,20 @@ class LCSIMAnalysis(ModuleBase):
         if not os.path.exists(myfile):
           res =  getSteeringFileDirName(self.systemConfig, self.applicationName, self.applicationVersion)     
           if not res['OK']:
+            self.log.error('Failed finding the steering file folder:', res["Message"])
             return res
           steeringfiledirname = res['Value']
           if os.path.exists(os.path.join(steeringfiledirname, myfile)):
             paths[myfile] = os.path.join(steeringfiledirname, myfile)
         if not os.path.exists(paths[myfile]):
+          self.log.error('Failed finding file', paths[myfile])
           return S_ERROR("Could not find file %s" % paths[myfile])    
     self.SteeringFile = paths[os.path.basename(self.SteeringFile)]
     self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
     
     lcsimfile = "job_%s.lcsim" % self.STEP_NUMBER
     res = PrepareLCSIMFile(self.SteeringFile, lcsimfile, self.NumberOfEvents, 
-                           self.trackingstrategy, runonslcio, jars, cachedir,
+                           self.trackingstrategy, runonslcio, self.basedirectory, jars, cachedir,
                            self.OutputFile, self.outputREC, self.outputDST, self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file because %s" % res['Message'])
@@ -272,7 +278,7 @@ class LCSIMAnalysis(ModuleBase):
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    self.log.info( "Status after the application execution is", str( status ) )
 
     return self.finalStatusReport(status)
 

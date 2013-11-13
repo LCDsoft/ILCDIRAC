@@ -1,5 +1,5 @@
 ########################################################################
-# $HeadURL: $
+# $HeadURL$
 ########################################################################
 """ 
 Module to upload specified job output files according to the parameters
@@ -9,7 +9,7 @@ defined in the production workflow.
 @since: Sep 01, 2010
 """
 
-__RCSID__ = "$Id:  $"
+__RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
@@ -21,7 +21,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
-import string, os, random, time
+import os, random, time
 
 class UploadOutputData(ModuleBase):
   """ As name suggest: upload output data. For Production only: See L{UserJobFinalization} for User job upload.
@@ -52,10 +52,6 @@ class UploadOutputData(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
-    self.log.verbose("Workflow commons:")
-    self.log.verbose(self.workflow_commons)
-    self.log.verbose("Step commons:")
-    self.log.verbose(self.step_commons)
 
     if self.step_commons.has_key('Enable'):
       self.enable = self.step_commons['Enable']
@@ -186,7 +182,7 @@ class UploadOutputData(ModuleBase):
     self.log.info('Initializing %s' % self.version)
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error(result['Message'])
+      self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -208,12 +204,14 @@ class UploadOutputData(ModuleBase):
     #workflow and all the parameters needed to upload them.
     result = self.getCandidateFiles(self.outputList, self.prodOutputLFNs, self.outputDataFileMask)
     if not result['OK']:
+      self.log.error(result['Message'])
       self.setApplicationStatus(result['Message'])
       return result
     
     fileDict = result['Value']      
     result = self.getFileMetadata(fileDict)
     if not result['OK']:
+      self.log.error(result['Message'])
       self.setApplicationStatus(result['Message'])
       return result
 
@@ -236,7 +234,7 @@ class UploadOutputData(ModuleBase):
       final[fileName] = metadata
       final[fileName]['resolvedSE'] = resolvedSE
 
-    self.log.info('The following files will be uploaded: %s' % (string.join(final.keys(), ', ')))
+    self.log.info('The following files will be uploaded: %s' % (', '.join(final.keys() )))
     for fileName, metadata in final.items():
       self.log.info('--------%s--------' % fileName)
       for n, v in metadata.items():
@@ -245,7 +243,7 @@ class UploadOutputData(ModuleBase):
     #At this point can exit and see exactly what the module would have uploaded
     if not self.enable:
       self.log.info('Module is disabled by control flag, would have attempted to upload the \
-      following files %s' % string.join(final.keys(), ', '))
+      following files %s' % ', '.join(final.keys()))
       return S_OK('Module is disabled by control flag')
 
     #Disable the watchdog check in case the file uploading takes a long time
@@ -267,8 +265,7 @@ class UploadOutputData(ModuleBase):
     if not self.failoverTest:
       for fileName, metadata in final.items():
         self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
-                                                                                   string.join(metadata['resolvedSE'], 
-                                                                                               ', ')))
+                                                                                   ', '.join(metadata['resolvedSE'])))
         result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], 
                                                           metadata['lfn'], metadata['resolvedSE'], 
                                                           fileGUID = metadata['guid'], fileCatalog = self.catalogs)

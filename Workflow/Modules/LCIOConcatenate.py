@@ -42,15 +42,14 @@ class LCIOConcatenate(ModuleBase):
     if not self.OutputFile:
       return S_ERROR( 'No output file defined' )
     
-    if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
-        if self.workflow_commons.has_key('ProductionOutputData'):
-          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-          for obj in outputlist:
-            if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
-              self.OutputFile = os.path.basename(obj)
-        else:
-          self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
+    if self.isProdJob:
+      if self.workflow_commons.has_key('ProductionOutputData'):
+        outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+        for obj in outputlist:
+          if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
+            self.OutputFile = os.path.basename(obj)
+      else:
+        self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
 
     return S_OK('Parameters resolved')
@@ -59,7 +58,6 @@ class LCIOConcatenate(ModuleBase):
     """ Execute the module, called by JobAgent
     """
     # Get input variables
-
     self.result = self.resolveInputVariables()
     # Checks
 
@@ -67,6 +65,7 @@ class LCIOConcatenate(ModuleBase):
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
     if not os.environ.has_key("LCIO"):
@@ -145,6 +144,7 @@ exit $?
     status      = resultTuple[0]
 
     self.log.info( "Status after the application execution is %s" % str( status ) )
-
+    
+    self.listDir()
     return self.finalStatusReport(status)
 

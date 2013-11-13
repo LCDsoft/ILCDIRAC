@@ -28,22 +28,20 @@ class StdHepConverter(ModuleBase):
     # Step parameters
     self.applicationName = 'StdhepConverter'
 
-    print "%s initialized" % ( self.__str__() )
-
   def execute(self):
     """ Called from Workflow 
     """
     # Get input variables
 
-    result = self.resolveInputVariables()
-
-    if not result['OK']:
-      return result
-
-        # Checks
+    self.result = self.resolveInputVariables()
 
     if not self.systemConfig:
-      result = S_ERROR( 'No ILC platform selected' )
+      self.result = S_ERROR( 'No ILC platform selected' )
+
+    if not self.result['OK']:
+      self.log.error('Failed to resolve input parameters:', self.result['Message'])
+      return self.result
+
 
     if not os.environ.has_key("LCIO"):
       self.log.error("Environment variable LCIO was not defined, cannot do anything")

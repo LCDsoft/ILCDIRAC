@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Module that gets a file from its SRM definition
@@ -8,7 +8,7 @@ Module that gets a file from its SRM definition
 
 @author: sposs
 '''
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.Core.DISET.RPCClient                            import RPCClient
@@ -47,6 +47,7 @@ class GetSRMFile(ModuleBase):
       return S_OK('Workflow status is not OK')
     result = self.resolveInputVariables()
     if not result['OK']:
+      self.log.error("FFailed to resolve input parameters:", result["Message"])
       return result
     if not self.srmfiles:
       self.log.error('Files txt where not found correctly: %s' % self.srmfiles)
@@ -91,6 +92,7 @@ class GetSRMFile(ModuleBase):
         result = self.repman.getStorageFile(filed['file'], filed['site'], singleFile = True)
       os.chdir(start)
       if not result['OK']:
+        self.log.error("Failed to get the file from storage:", result['Message'])
         return result
       self.counter += 1
       

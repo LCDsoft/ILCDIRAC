@@ -6,7 +6,7 @@ Remove any system library provided in the application tar ball
 '''
 import os
 
-files_to_remove = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so"]
+files_to_remove = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so", "libstdc++.so"]
 
 def removeLibc(path):
   """ Remove libraries that can be problematic, like libc.so

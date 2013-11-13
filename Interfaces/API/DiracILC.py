@@ -14,6 +14,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Opera
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
 import string, os
 
+__RCSID__ = "$Id$"
 
 COMPONENT_NAME = 'DiracILC'
 

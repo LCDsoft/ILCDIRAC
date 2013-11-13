@@ -1,5 +1,5 @@
 ########################################################################
-# $HeadURL: $
+# $HeadURL$
 ########################################################################
 """ 
 Create and send a combined request for any pending operations at
@@ -10,7 +10,7 @@ the end of a job.
 
 """
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
@@ -45,9 +45,6 @@ class FailoverRequest(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module input parameters are resolved here.
     """
-    self.log.debug(self.workflow_commons)
-    self.log.debug(self.step_commons)
-
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
       self.log.verbose('Found WMS JobID = %s' %self.jobID)
@@ -67,12 +64,6 @@ class FailoverRequest(ModuleBase):
 
     if self.workflow_commons.has_key('FileReport'):
       self.fileReport = self.workflow_commons['FileReport']
-
-    if self.InputData:
-      if type(self.InputData) != type([]):
-        self.InputData = self.InputData.split(';')
-
-      self.InputData = [x.replace('LFN:','') for x in self.InputData]
 
     if self.workflow_commons.has_key('Request'):
       self.request = self.workflow_commons['Request']
@@ -97,7 +88,7 @@ class FailoverRequest(ModuleBase):
     self.log.info('Initializing %s' % self.version)
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error(result['Message'])
+      self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     if not self.fileReport:

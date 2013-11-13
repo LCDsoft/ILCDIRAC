@@ -29,6 +29,7 @@ class ILDRegisterOutputData(ModuleBase):
     self.nbofevents = 0
     self.filecatalog = FileCatalogClient()
     self.ildconfig = ''
+    self.swpackages = []
     
   def applicationSpecificInputs(self):
     if self.step_commons.has_key('Enable'):
@@ -54,7 +55,7 @@ class ILDRegisterOutputData(ModuleBase):
     self.log.info('Initializing %s' % self.version)
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error(result['Message'])
+      self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -125,8 +126,7 @@ class ILDRegisterOutputData(ModuleBase):
       if self.enable:
         res = self.filecatalog.setMetadata(files, meta)
         if not res['OK']:
-          self.log.error(res['Message'])
-          self.log.error('Could not register metadata ')
+          self.log.error('Could not register metadata:', res['Message'])
           return res
       self.log.info("Registered %s with tags %s"%(files, meta))
       
@@ -136,7 +136,8 @@ class ILDRegisterOutputData(ModuleBase):
         if self.enable:
           res = self.filecatalog.addFileAncestors({files : {'Ancestors' : inputdata}})
           if not res['OK']:
-            self.log.error('Registration of Ancestors for %s failed' % files)
+            self.log.error('Registration of Ancestors failed for:', str(files) )
+            self.log.error('because of', res['Message'])
             return res
 
     return S_OK('Output data metadata registered in catalog')

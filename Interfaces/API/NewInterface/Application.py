@@ -37,15 +37,12 @@ class Application(object):
     self.appname = ""
     #application version
     self.Version = ""
-    #Number of evetns to process
-    self.NbEvts = 0
     #Steering file (duh!)
     self.SteeringFile = ""
     #Input sandbox: steering file automatically added to SB
     self.inputSB = []
     #Input file
     self.InputFile = ""
-    self.ForgetAboutInput = False
     #Output file
     self.OutputFile = ""
     self.OutputPath = ""
@@ -57,8 +54,7 @@ class Application(object):
     self._listofoutput = []
     #Log file
     self.LogFile = ""
-    #Energy to use (duh! again)
-    self.Energy = 0
+
     #Detector type (ILD or SID)
     self.detectortype = ""
     #Data type : gen, SIM, REC, DST
@@ -185,32 +181,6 @@ class Application(object):
     self.LogFile = logfile
     return S_OK()  
   
-  def setNbEvts(self, nbevts):
-    """ Set the number of events to process
-    
-    @param nbevts: Number of events to process (or generate)
-    @type nbevts: int
-    """
-    self._checkArgs({ 'nbevts' : types.IntType })
-    self.NbEvts = nbevts  
-    return S_OK()  
-
-  def setNumberOfEvents(self, nbevts):
-    """ Set the number of events to process, alias to setNbEvts
-    """
-    return self.setNbEvts(nbevts)
-    
-  def setEnergy(self, Energy):
-    """ Set the energy to use
-    
-    @param Energy: Energy used in GeV
-    @type Energy: float
-    """
-    if not type(Energy) == type(1.1):
-      Energy = float(Energy)
-    self._checkArgs({ 'Energy' : types.FloatType })
-    self.Energy = Energy
-    return S_OK()  
     
   def setOutputFile(self, ofile, path = None):
     """ Set the output file
@@ -263,14 +233,6 @@ class Application(object):
         
     self.InputFile = ";".join(inputfile)
 
-    return S_OK()
-  
-  def setForgetAboutInput(self, flag):
-    """ Do not overwrite the input set in the SteeringFile
-    """
-    
-    self.ForgetAboutInput = flag
-    
     return S_OK()
   
   def getInputFromApp(self, application):
@@ -463,8 +425,7 @@ class Application(object):
     stepdefinition.addParameter(Parameter("applicationLog",     "", "string", "", "", False, False, "Log File"))
     stepdefinition.addParameter(Parameter("ExtraCLIArguments",     "", "string", "", "", False, False, "Extra CLI arguments"))
     stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
-    stepdefinition.addParameter(Parameter("ForgetInput",     False, "boolean", "", "", False, False, 
-                                          "Do not overwrite input steering"))
+    
     if len(self.OutputFile):
       stepdefinition.addParameter(Parameter("OutputFile",       "", "string", "", "", False,  False, "Output File"))
     if len(self.OutputDstFile):
@@ -488,6 +449,12 @@ class Application(object):
     #stepdefinition.addParameter(Parameter("NbOfEvents",         0,    "int", "", "", False, False, 
     #                                      "Number of events to process"))
     #stepdefinition.addParameter(Parameter("Energy",             0,    "int", "", "", False, False, "Energy"))
+    
+    return self._getSpecificAppParameters(stepdefinition)
+  
+  def _getSpecificAppParameters(self, stepdef):
+    """ Add specific parameters, should be overloaded
+    """
     return S_OK()
   
   def _setBaseStepParametersValues(self, stepinstance):
@@ -500,7 +467,7 @@ class Application(object):
     stepinstance.setValue("SteeringFile",       self.SteeringFile)
     if not self._inputapp:
       stepinstance.setValue("InputFile",        self.InputFile)
-    stepinstance.setValue( "ForgetInput",       self.ForgetAboutInput)
+    
     if len(self.OutputFile):  
       stepinstance.setValue("OutputFile",       self.OutputFile)
     if len(self.OutputRecFile):  
@@ -513,8 +480,12 @@ class Application(object):
     stepinstance.setValue("OutputSE",           self.OutputSE)
     stepinstance.setValue('listoutput',         self._listofoutput)
     stepinstance.setValue('ExtraCLIArguments',  urllib.quote(self.ExtraCLIArguments))
-    return S_OK()
-      
+    return self._setSpecificAppParameters(stepinstance)
+
+  def _setSpecificAppParameters(self, stepinstance):
+    """ Set the value of the parameters. Should be overloaded
+    """
+    return S_OK()    
       
   def _addParametersToStep(self, stepdefinition):
     """ Method to be overloaded by every application. Add the parameters to the given step. 
@@ -550,6 +521,12 @@ class Application(object):
     
     self._jobtype      = job.type
     
+    return self._doSomethingWithJob()
+  
+  def _doSomethingWithJob(self):
+    """ As name suggest, if there is something to do with the job, it should be done now
+    Example: software to install
+    """
     return S_OK()
 
   def _addedtojob(self):

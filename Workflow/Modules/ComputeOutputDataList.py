@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Compute the outputdata list for production jobs
@@ -9,7 +9,7 @@ Compute the outputdata list for production jobs
 @author: sposs
 '''
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
@@ -46,5 +46,6 @@ class ComputeOutputDataList(ModuleBase):
     """
     res = self.resolveInputVariables()
     if not res['OK']:
+      self.log.error("Failed to resolve input variables:", res['Message'])
       return res
     return S_OK()

@@ -3,7 +3,7 @@
 
 @author: sposs
 '''
-
+__RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename, resolveIFpaths
@@ -65,7 +65,7 @@ class MoveInFC(ModuleBase):
     lfns = self.InputFile
     
     ##Check that all the files are here:
-    res = resolveIFpaths(lfns)
+    res = resolveIFpaths(self.basedirectory, lfns)
     if not res['OK']:
       self.log.error(res['Message'])
       return S_ERROR("Failed to find a file locally")

@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Run TOMATO
@@ -10,12 +10,12 @@ Run TOMATO
 @author: C. B. Lam
 '''
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareTomatoSalad
-from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
+from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
 from DIRAC                                                 import S_OK, S_ERROR, gLogger
 import os, types
 
@@ -46,60 +46,36 @@ class TomatoAnalysis(MarlinAnalysis):
           self.InputFile.append(files)
     return S_OK()  
 
-  def execute(self):
+  def runIt(self):
     """ Run the module
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error('Failed to resolve input parameters:', self.result['Message'])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    tomatoDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "tomato", 
-                                                                           self.applicationVersion), '')
-    if not tomatoDir:
-      self.log.error('Could not get Tomato tar ball name, cannot proceed')
-      return S_ERROR('Problem accessing CS')
-    tomatoDir = tomatoDir.replace(".tgz", "").replace(".tar.gz", "")
-    res = getSoftwareFolder(tomatoDir)
-    if not res['Value']:
-      self.setApplicationStatus('Tomato: Could not find neither local area not shared area install')
+    res  = getEnvironmentScript(self.systemConfig, "tomato", self.applicationVersion, self.getEnvScript)
+    if not res["OK"]:
+      self.log.error("Failed to get the env for Tomato:", res["Message"])
       return res
-    myTomatoDir = res['Value']
-
-    res = self.prepareMARLIN_DLL(myTomatoDir)
+    env_script_path = res["Value"]
+    
+    res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
       self.log.error('Failed building MARLIN_DLL: %s' % res['Message'])
       self.setApplicationStatus('Failed to setup MARLIN_DLL')
       return S_ERROR('Something wrong with software installation')
 
-    self.envdict['MARLIN_DLL'] = res['Value']
+    marlin_dll = res['Value']
     
-    deps = resolveDepsTar(self.systemConfig, "tomato", self.applicationVersion)
-    for dep in deps:
-      if dep.lower().count('marlin'):
-        marlindir = dep.replace(".tgz", "").replace(".tar.gz", "")
-        res = getSoftwareFolder(marlindir)
-        if not res['OK']:
-          self.log.error('Marlin was not found in software directory')
-          return res
-        else:
-          self.envdict['MarlinDIR'] = res['Value']
-        break
-
-    new_ldlibs = ''
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      new_ldlibs = os.path.join(myTomatoDir, 'LDLibs') + ":%s" % os.environ['LD_LIBRARY_PATH']
-    else:
-      new_ldlibs = os.path.join(myTomatoDir, 'LDLibs')
-    self.envdict['LD_LIB_PATH'] = new_ldlibs
- 
     res = self.GetInputFiles()
     if not res['OK']:
       self.log.error(res['Message'])
@@ -113,7 +89,7 @@ class TomatoAnalysis(MarlinAnalysis):
       self.setApplicationStatus('Failed to setup Tomato')
       return S_ERROR('Failed to setup Tomato')
     
-    self.result = self.runMarlin(finalXML, self.envdict)
+    self.result = self.runMarlin(finalXML, env_script_path, marlin_dll)
     if not self.result['OK']:
       self.log.error('Something wrong during running: %s' % self.result['Message'])
       self.setApplicationStatus('Error during running %s' % self.applicationName)
@@ -125,6 +101,7 @@ class TomatoAnalysis(MarlinAnalysis):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
+        self.log.error('Missing log file')
         return S_ERROR('%s did not produce the expected log' % (self.applicationName))
 
     status = resultTuple[0]
@@ -133,3 +110,40 @@ class TomatoAnalysis(MarlinAnalysis):
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
     return self.finalStatusReport(status)
+  
+  def getEnvScript(self, sysconfig, appname, appversion):
+    """ Called if CVMFS install is not here
+    """
+    res = getSoftwareFolder(sysconfig, appname, appversion)
+    if not res['Value']:
+      self.setApplicationStatus('Tomato: Could not find neither local area not shared area install')
+      return res
+    myTomatoDir = res['Value']
+    deps = resolveDeps(sysconfig, "tomato", appversion)
+    for dep in deps:
+      if dep["app"].lower() == 'marlin':
+        res = getSoftwareFolder(sysconfig, "marlin", dep["version"])
+        if not res['OK']:
+          self.log.error('Marlin was not found in software directory')
+          return res
+        else:
+          myMarlinDir = res['Value']
+        break
+
+    env_script_name = "TomatoEnv.sh"
+    script = open(env_script_name, "w")
+    script.write("#!/bin/sh\n")
+    script.write('###########################################################\n')
+    script.write('# Dynamically generated script to get the Env for Tomato. #\n')
+    script.write('###########################################################\n')
+    script.write("declare -x PATH=%s/Executable:$PATH\n" % myMarlinDir)
+    script.write('declare -x ROOTSYS=%s/ROOT\n' % (myMarlinDir))
+    script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs\n' % (myMarlinDir))
+    script.write("declare -x LD_LIBRARY_PATH=%s/LDLibs:$LD_LIBRARY_PATH\n" % myTomatoDir)
+    
+    script.close()
+    return S_OK(os.path.abspath(env_script_name))
+  
+  
+
+#############################################################

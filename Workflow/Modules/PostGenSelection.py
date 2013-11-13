@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Run the Post generation filter, not the same as L{StdHepCut}
@@ -9,7 +9,7 @@ Run the Post generation filter, not the same as L{StdHepCut}
 @author: sposs
 '''
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
@@ -74,6 +74,7 @@ class PostGenSelection(ModuleBase):
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )  
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
     
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -81,13 +82,10 @@ class PostGenSelection(ModuleBase):
       return S_OK('PostGenSelection should not proceed as previous step did not end properly')
 
     if not os.environ.has_key('ROOTSYS'):
-      return S_OK('Root environment is not set')
-    postgenDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, 
-                                                                           "postgensel", 
-                                                                           self.applicationVersion), '')
-    postgenDir = postgenDir.replace(".tgz", "").replace(".tar.gz", "")    
-    res = getSoftwareFolder(postgenDir)
+      return S_OK('Root environment is not set') 
+    res = getSoftwareFolder(self.systemConfig, "postgensel", self.applicationVersion)
     if not res['OK']:
+      self.log.error("Failed finding the sofware")
       self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')      
       return res
     

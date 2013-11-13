@@ -1,5 +1,5 @@
 ########################################################################
-# $HeadURL: $
+# $HeadURL$
 ########################################################################
 """ 
 Module to upload specified job output files according to the parameters
@@ -9,7 +9,7 @@ defined in the user workflow.
 @since: Sep 01, 2010
 """
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
@@ -25,7 +25,7 @@ from ILCDIRAC.Core.Utilities.ResolveSE                    import getDestinationS
 from DIRAC                                                 import S_OK, S_ERROR, gLogger, gConfig
 
 import DIRAC
-import string, os, random, time
+import os, random, time
 
 class UserJobFinalization(ModuleBase):
   """ User Job finalization: takes care of uploading the output data to the specified storage elements
@@ -57,8 +57,6 @@ class UserJobFinalization(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
-    self.log.verbose(self.workflow_commons)
-    self.log.verbose(self.step_commons)
 
     #Earlier modules may have populated the report objects
     if self.workflow_commons.has_key('JobReport'):
@@ -102,8 +100,7 @@ class UserJobFinalization(ModuleBase):
       if not type(specifiedSE) == type([]):
         self.userOutputSE = [i.strip() for i in specifiedSE.split(';')]
     else:
-      self.log.verbose('No UserOutputSE specified, using default value: %s' % (string.join(self.defaultOutputSE, 
-                                                                                           ', ')))
+      self.log.verbose('No UserOutputSE specified, using default value: %s' % (', '.join(self.defaultOutputSE)))
       self.userOutputSE = self.defaultOutputSE
 
     if self.workflow_commons.has_key('UserOutputPath'):
@@ -131,7 +128,7 @@ class UserJobFinalization(ModuleBase):
     
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error(result['Message'])
+      self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     self.log.info('Initializing %s' % self.version)
@@ -148,21 +145,22 @@ class UserJobFinalization(ModuleBase):
     #workflow and all the parameters needed to upload them.
     outputList = []
     for i in self.userOutputData:
-      outputList.append({'outputPath' : string.upper(string.split(i, '.')[-1]),
+      outputList.append({'outputPath' : i.split('.')[-1].upper(),
                          'outputDataSE' : self.userOutputSE,
                          'outputFile' : os.path.basename(i)})
 
     userOutputLFNs = []
     if self.userOutputData:
-      self.log.info('Constructing user output LFN(s) for %s' % (string.join(self.userOutputData, ', ')))
+      self.log.info('Constructing user output LFN(s) for %s' % (', '.join(self.userOutputData)))
       if not self.jobID:
         self.jobID = 12345
       owner = ''
-      if self.workflow_commons.has_key('Owner'):
+      if 'Owner' in self.workflow_commons:
         owner = self.workflow_commons['Owner']
       else:
         res = self.getCurrentOwner()
         if not res['OK']:
+          self.log.error('Could not find proxy')
           return S_ERROR('Could not obtain owner from proxy')
         owner = res['Value']
       vo = ''
@@ -171,6 +169,7 @@ class UserJobFinalization(ModuleBase):
       else:
         res = self.getCurrentVO()
         if not res['OK']:
+          self.log.error('Failed finding the VO')
           return S_ERROR('Could not obtain VO from proxy')
         vo = res['Value']
       
@@ -184,6 +183,7 @@ class UserJobFinalization(ModuleBase):
     result = self.getCandidateFiles(outputList, userOutputLFNs, self.outputDataFileMask)
     if not result['OK']:
       if not self.ignoreapperrors:
+        self.log.error(result['Message'])
         self.setApplicationStatus(result['Message'])
         return S_OK()
     
@@ -191,6 +191,7 @@ class UserJobFinalization(ModuleBase):
     result = self.getFileMetadata(fileDict)
     if not result['OK']:
       if not self.ignoreapperrors:
+        self.log.error(result['Message'])
         self.setApplicationStatus(result['Message'])
         return S_OK()
 
@@ -227,7 +228,7 @@ class UserJobFinalization(ModuleBase):
           prependSEs.append(userSE)
       orderedSEs = prependSEs + orderedSEs
     
-    self.log.info('Ordered list of output SEs is: %s' % (string.join(orderedSEs, ', ')))    
+    self.log.info('Ordered list of output SEs is: %s' % (', '.join(orderedSEs)))    
     final = {}
     for fileName, metadata in fileMetadata.items():
       final[fileName] = metadata
@@ -236,7 +237,7 @@ class UserJobFinalization(ModuleBase):
     #At this point can exit and see exactly what the module will upload
     if not self.enable:
       self.log.info('Module is disabled by control flag, would have attempted \
-      to upload the following files %s' % string.join(final.keys(), ', '))
+      to upload the following files %s' % ', '.join(final.keys()))
       for fileName, metadata in final.items():
         self.log.info('--------%s--------' % fileName)
         for n, v in metadata.items():
@@ -254,8 +255,7 @@ class UserJobFinalization(ModuleBase):
     if not self.failoverTest:
       for fileName, metadata in final.items():
         self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
-                                                                                   string.join(metadata['resolvedSE'], 
-                                                                                               ', ')))
+                                                                                   ', '.join(metadata['resolvedSE'])))
         result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], metadata['lfn'],
                                                           metadata['resolvedSE'], fileGUID = metadata['guid'], 
                                                           fileCatalog = self.userFileCatalog)
@@ -300,7 +300,7 @@ class UserJobFinalization(ModuleBase):
 
     #For files correctly uploaded must report LFNs to job parameters
     if uploaded:
-      report = string.join( uploaded, ', ' )
+      report = ', '.join( uploaded )
       self.jobReport.setJobParameter( 'UploadedOutputData', report )
 
     #Now after all operations, retrieve potentially modified request object

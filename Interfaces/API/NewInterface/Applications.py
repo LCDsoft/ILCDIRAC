@@ -38,7 +38,8 @@ prints out all the available methods.
 @author: Ching Bon Lam
 """
 
-from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication as Application
+from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
 from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
 from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, getDict
@@ -49,7 +50,7 @@ from ILCDIRAC.Core.Utilities.CheckXMLValidity         import CheckXMLValidity
 
 from math import modf
 from decimal import Decimal
-import string, types, os
+import types, os
 
 __RCSID__ = "$Id$"
 
@@ -180,7 +181,7 @@ class GenericApplication(Application):
 #################################################################
 #            GetSRMFile: as its name suggests...
 #################################################################  
-class GetSRMFile(Application):
+class GetSRMFile(LCUtilityApplication):
   """ Gets a given file from storage directly using srm path.
   
   Usage:
@@ -836,7 +837,7 @@ class Whizard(Application):
       else:
         self.parameters.append("USERSPECTRUM=%s" % self.ParameterDict["USERSPECTRUM"])
       
-      self.parameters = string.join(self.parameters, ";")
+      self.parameters = ";".join( self.parameters )
     elif self.FullParameterDict:
       self._optionsdictstr = str(self.FullParameterDict)
     
@@ -965,7 +966,7 @@ class Pythia(Application):
 #################################################################
 #     PostGenSelection : Helper to filter generator selection 
 #################################################################  
-class PostGenSelection(Application):
+class PostGenSelection(LCUtilityApplication):
   """ Helper to filter generator selection
   
   Example:
@@ -1050,7 +1051,7 @@ class PostGenSelection(Application):
 #            StdhepCut: apply generator level cuts after pythia or whizard
 ##########################################################################
 class StdhepCut(Application): 
-  """ Call stdhep cut after whizard of pythia
+  """ Call stdhep cut after whizard or pythia
   
   Usage:
   
@@ -1067,6 +1068,7 @@ class StdhepCut(Application):
     self.MaxNbEvts = 0
     self.NbEvtsPerFile = 0
     self.SelectionEfficiency = 0
+    self.InlineCuts = ""
     super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'
@@ -1107,16 +1109,29 @@ class StdhepCut(Application):
       } )
     self.SelectionEfficiency = efficiency
 
+  def setInlineCuts(self, cutsstring):
+    """ Define cuts directly, not by specifying a file
+    @param cutsstring: Cut string. Can be multiline
+    @type cutsstring: string
+    """
+    self._checkArgs( {
+        'cutsstring' : types.StringTypes
+      } )
+    
+    self.InlineCuts = ";".join([cut.rstrip().lstrip() for cut in cutsstring.rstrip().lstrip().split("\n")])
+
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of events to read"))
     m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
+    m1.addParameter(Parameter("inlineCuts", "", "string", "", "", False, False, "Inline cuts"))
 
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("MaxNbEvts", self.MaxNbEvts)
     moduleinstance.setValue("debug",     self.Debug)
+    moduleinstance.setValue("inlineCuts", self.InlineCuts )
     
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1133,12 +1148,14 @@ class StdhepCut(Application):
     return S_OK()    
 
   def _checkConsistency(self):
-    if not self.SteeringFile:
-      return S_ERROR("Cut file not specified")
-    elif not self.SteeringFile.lower().count("lfn:") and not os.path.exists(self.SteeringFile):
-      res = Exists(self.SteeringFile)
-      if not res['OK']:
-        return res  
+    if not self.SteeringFile and not self.InlineCuts:
+      return S_ERROR("Cuts not specified")
+    if self.SteeringFile and self.InlineCuts:
+      self._log.notice("You specifed a cuts file and InlineCuts. InlineCuts has precedence.")
+    #elif not self.SteeringFile.lower().count("lfn:") and not os.path.exists(self.SteeringFile):
+    # res = Exists(self.SteeringFile)
+    # if not res['OK']:
+    #   return res  
           
     if not self.MaxNbEvts:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
@@ -1583,7 +1600,7 @@ class SLIC(Application):
 from ILCDIRAC.Workflow.Modules.OverlayInput import allowedBkg
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
-class OverlayInput(Application):
+class OverlayInput(LCUtilityApplication):
   """ Helper call to define Overlay processor/driver inputs. 
   
   Example:
@@ -2427,7 +2444,7 @@ class SLICPandora(Application):
 #################################################################
 #            CheckCollection : Helper to check collection 
 #################################################################  
-class CheckCollections(Application):
+class CheckCollections(LCUtilityApplication):
   """ Helper to check collection 
   
   Example:
@@ -2509,7 +2526,7 @@ class CheckCollections(Application):
 #################################################################
 #     SLCIOConcatenate : Helper to concatenate SLCIO files 
 #################################################################  
-class SLCIOConcatenate(Application):
+class SLCIOConcatenate(LCUtilityApplication):
   """ Helper to concatenate slcio files
   
   Example:
@@ -2581,7 +2598,7 @@ class SLCIOConcatenate(Application):
 #################################################################
 #     SLCIOSplit : Helper to split SLCIO files 
 #################################################################  
-class SLCIOSplit(Application):
+class SLCIOSplit(LCUtilityApplication):
   """ Helper to split slcio files
   
   Example:
@@ -2649,7 +2666,7 @@ class SLCIOSplit(Application):
     self.NbEvts = self.NumberOfEventsPerFile
       
     if not self.OutputFile and self._jobtype =='User' :
-      self._log.notice('No output file name specified.')
+      self._log.error('No output file name specified.')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", 
@@ -2672,7 +2689,7 @@ class SLCIOSplit(Application):
 #################################################################
 #     StdHepSplit : Helper to split Stdhep files 
 #################################################################  
-class StdHepSplit(Application):
+class StdHepSplit(LCUtilityApplication):
   """ Helper to split stdhep files
   
   Example:

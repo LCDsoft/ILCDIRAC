@@ -4,21 +4,23 @@ List the content of the overlay directory given a background type. Called from L
 @author: S. Poss
 @since: Jan 28, 2011
 '''
+__RCSID__ = "$Id$"
+
 from DIRAC import gLogger
 import os
 
-def getOverlayFiles(evttype = 'gghad'):
+def getOverlayFiles(basedir, evttype = 'gghad'):
   """ Return the list of files contained in the overlay_BKG folder, where BKG can be anything
   """
   localfiles = []
-  if not os.path.exists( "./overlayinput_"+evttype ):
+  ovdir = os.path.join(basedir, "overlayinput_"+evttype )
+
+  if not os.path.exists( ovdir):
     gLogger.error( 'overlay directory does not exists' )
     return localfiles
-  curdir = os.getcwd()
-  os.chdir( "./overlayinput_"+evttype )
-  listdir = os.listdir( os.getcwd() )
+  #os.chdir( os.path.join(basedir, "overlayinput_"+evttype ) )
+  listdir = os.listdir( ovdir )
   for item in listdir:
     if item.count( '.slcio' ):
-      localfiles.append( os.getcwd()+os.sep+item )
-  os.chdir(curdir)
+      localfiles.append( os.path.join( ovdir, item ) )
   return localfiles

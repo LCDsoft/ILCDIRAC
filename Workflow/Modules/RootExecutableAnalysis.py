@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Module to run root executables
@@ -8,9 +8,9 @@ Module to run root executables
 
 @author: Stephane Poss
 '''
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
-import os
+import os, shutil
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -38,7 +38,12 @@ class RootExecutableAnalysis(ModuleBase):
     
     return S_OK('Parameters resolved') 
   
-  def execute(self):
+  def applicationSpecificMoveBefore(self):
+    basescriptpath = os.path.join(self.basedirectory, os.path.basename(self.script))
+    if os.path.exists(basescriptpath):
+      shutil.copy2(basescriptpath, "./"+os.path.basename(self.script))
+  
+  def runIt(self):
     """
     Called by Agent
     
@@ -47,12 +52,13 @@ class RootExecutableAnalysis(ModuleBase):
       - check for presence of ROOTSYS variable
       
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
     
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -72,6 +78,7 @@ class RootExecutableAnalysis(ModuleBase):
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
     if len(self.script) < 1:
+      self.log.error('Executable file not defined, should not happen!')
       return S_ERROR("Executable file not defined")
      
     self.script = os.path.basename(self.script)

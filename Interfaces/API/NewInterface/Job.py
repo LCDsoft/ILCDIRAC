@@ -209,7 +209,7 @@ class Job(DiracJob):
     
       res = application._checkWorkflowConsistency()
       if not res['OK']:
-        self.log.error("%s failed to check its consistency:","%s" % (application, res['Message']))
+        self.log.error("%s failed to check its consistency:" % application, "%s" % res['Message'])
         return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
       
       ##Now we can create the step and add it to the workflow
@@ -285,7 +285,7 @@ class Job(DiracJob):
     if self.energy:
       self._addParameter(self.workflow, "Energy", "float", self.energy, "Energy used")
     return S_OK()
-
+  
   def _addSoftware( self, appName, appVersion ):
     """ Private method
     """

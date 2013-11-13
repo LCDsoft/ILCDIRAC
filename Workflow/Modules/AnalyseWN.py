@@ -28,6 +28,7 @@ class AnalyseWN(ModuleBase):
     """
     result = self.resolveInputVariables()
     if not result['OK']:
+      self.log.error("Failed to get the input parameters:", result['Message'])
       return result
 
     if not self.applicationLog:
@@ -38,7 +39,7 @@ class AnalyseWN(ModuleBase):
     try:
       info.append("Host is %s" % socket.gethostname())
     except:
-      info.append("Could not determien host")
+      info.append("Could not determine host")
       
     size = getDiskSpace()
     if size>0:
@@ -103,8 +104,11 @@ class AnalyseWN(ModuleBase):
         info.append("It uses %s MB of disk"% sha_size)
     
     
+    if (os.path.isdir("/cvmfs/ilc.cern.ch")):
+      info.append("Has CVMFS")
+    
     try:
-      of = file(self.applicationLog, "w")
+      of = open(self.applicationLog, "w")
       of.write("\n".join(info))
       of.close()
     except:

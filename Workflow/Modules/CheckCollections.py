@@ -35,8 +35,6 @@ class CheckCollections(ModuleBase):
     self.InputFile    = []
     self.collections  = None
 
-    print "%s initialized" % ( self.__str__() )
-
   def execute(self):
     """ Run the thing
     """
@@ -54,6 +52,7 @@ class CheckCollections(ModuleBase):
       result = S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     if not result['OK']:
+      self.log.error("Failed to resolve the input parameters:", self.result["Message"])
       return result
 
         # removeLibc
@@ -172,7 +171,6 @@ exit $$appstatus
       self.applicationLog = 'CheckCollections_%s_Run_%s.log' % ( self.applicationVersion, self.STEP_NUMBER )
 
     #
-    self.InputFile = self.InputFile.split(";")
     self.InputFile = [os.path.basename( myfile ) for myfile in self.InputFile]
     #
 

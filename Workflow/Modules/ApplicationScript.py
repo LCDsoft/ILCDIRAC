@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Run any application provided by the user. Is used when a specific environment is needed (e.g. ROOT).
@@ -8,9 +8,9 @@ Run any application provided by the user. Is used when a specific environment is
 
 @author: sposs
 '''
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
-import os, re, string, types
+import os, re, types, shutil
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -39,15 +39,24 @@ class ApplicationScript(ModuleBase):
 
     return S_OK()
 
-  def execute(self):
+  def applicationSpecificMoveBefore(self):
+    """ Make sure the user defined script is here
+    """
+    if self.script:
+      if os.path.exists(os.path.join(self.basedirectory, self.script)):
+        shutil.copy2(os.path.join(self.basedirectory, self.script), "./"+self.script)
+    return S_OK()
+
+  def runIt(self):
     """ Run the application in a controlled environment
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.script:
       self.result = S_ERROR('Script undefined.')
     if not self.applicationLog:
       self.applicationLog = '%s.log' % (os.path.basename(self.script))    
     if not self.result['OK']:
+      self.log.error("Failed with :", self.result['Message'])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -79,12 +88,12 @@ class ApplicationScript(ModuleBase):
     com.append(command)
     com.append('declare -x appstatus=$?')
     com.append('exit $appstatus')
-    finalCommand = string.join(com, ';')
+    finalCommand = ';'.join(com)
     
     self.stdError = ''    
     result = shellCall(0, finalCommand, callbackFunction = self.redirectLogOutput , bufferLimit = 20971520)
     if not result['OK']:
-      self.log.error(result)
+      self.log.error("Application failed :", result["Message"])
       return S_ERROR('Problem Executing Application')
 
     resultTuple = result['Value']

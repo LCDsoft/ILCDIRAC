@@ -1,3 +1,6 @@
+################################################################
+# $HeadURL$
+################################################################
 '''
 User Job class. Used to define (guess what?) user jobs!
 
@@ -15,6 +18,8 @@ from DIRAC import S_OK
 
 import string, types
 
+__RCSID__ = "$Id$"
+
 class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
@@ -22,7 +27,7 @@ class UserJob(Job):
     super(UserJob, self).__init__( script )
     self.type = 'User'
     self.diracinstance = None
-    self.usergroup = ['ilc_user','calice_user']
+    self.usergroup = ['ilc_user', 'calice_user']
     self.proxyinfo = getProxyInfo()
     
   def submit(self, diracinstance = None, mode = "wms"):
@@ -31,14 +36,14 @@ class UserJob(Job):
     """
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
-      self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
-      return self._reportError("Not allowed to submit a job, you need a %s proxy." % self.usergroup,
+      self.log.error("Not allowed to submit a job, you need one of %s proxies." % self.usergroup)
+      return self._reportError("Not allowed to submit a job, you need one of %s proxies." % self.usergroup,
                                self.__class__.__name__)
     if self.proxyinfo['Value'].has_key('group'):
       group = self.proxyinfo['Value']['group']
       if not group in self.usergroup:
-        self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
-        return self._reportError("Not allowed to submit job, you need a %s proxy." % self.usergroup,
+        self.log.error("Not allowed to submit a job, you need one of %s proxies." % self.usergroup)
+        return self._reportError("Not allowed to submit job, you need one of %s proxies." % self.usergroup,
                                  self.__class__.__name__)
     else:
       self.log.error("Could not determine group, you do not have the right proxy.")       
@@ -188,3 +193,5 @@ class UserJob(Job):
     
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
     return S_OK()
+  
+  

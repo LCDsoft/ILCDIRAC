@@ -1,5 +1,5 @@
 # $HeadURL$
-# $Id$
+
 """
 Installs properly ILD soft and SiD soft, and all dependencies
 
@@ -7,11 +7,12 @@ Installs properly ILD soft and SiD soft, and all dependencies
 
 @author: Stephane Poss and Przemyslaw Majewski
 """
-import os, string
+__RCSID__ = "$Id$"
+import os
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-import DIRAC 
+import DIRAC
 from ILCDIRAC.Core.Utilities.TARsoft   import TARinstall
-#from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall 
+#from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from DIRAC.Core.Utilities.Subprocess   import systemCall
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
@@ -20,13 +21,13 @@ from DIRAC                             import S_OK, S_ERROR
 natOS = NativeMachine()
 
 class CombinedSoftwareInstallation(object):
-  """ Combined means that it will try to install in the Shared area and in the LocalArea, 
-  depending on the user's rights 
+  """ Combined means that it will try to install in the Shared area and in the LocalArea,
+  depending on the user's rights
   """
   def __init__(self, argumentsDict):
     """ Standard constructor
     
-    Defines, from dictionary of job parameters passed, a set of members to hold e.g. the 
+    Defines, from dictionary of job parameters passed, a set of members to hold e.g. the
     applications and the system config.
     
     Also determines the SharedArea and LocalArea.
@@ -59,7 +60,7 @@ class CombinedSoftwareInstallation(object):
         tempapp = app
         app = []
         app.append(tempapp[0])
-        app.append(string.join(tempapp[1:], "."))
+        app.append(".".join(tempapp[1:]))
       self.apps.append(app)
 
     self.jobConfig = ''
@@ -100,7 +101,7 @@ class CombinedSoftwareInstallation(object):
 
     found_config = False
         
-    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (string.join(self.ceConfigs, ","), 
+    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (",".join(self.ceConfigs), 
                                                                                 self.jobConfig))
     res = self.ops.getSections('/AvailableTarBalls')
     if not res['OK']:
@@ -134,8 +135,14 @@ class CombinedSoftwareInstallation(object):
     areas.append(self.localArea)       
        
     
+    
+    
     for app in self.apps:
-      failed = False    
+      failed = False
+      res = CheckCVMFS(self.jobConfig, app)
+      if res['OK']:
+        DIRAC.gLogger.notice('Software %s is available on CVMFS, skipping' % ", ".join(app) )
+        continue
       for area in areas:
         DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' % (app[0], app[1], self.jobConfig, area))
         res = TARinstall(app, self.jobConfig, area)
@@ -158,6 +165,8 @@ class CombinedSoftwareInstallation(object):
     return DIRAC.S_OK()
 
 def listAreaDirectory(area):
+  """ List the content of the given area
+  """
   DIRAC.gLogger.info("Listing content of area %s :" % (area))
   res = systemCall( 5, ['ls', '-al', area] )
   if not res['OK']:
@@ -270,17 +279,52 @@ def LocalArea():
         localArea = ''
   return localArea
 
-def getSoftwareFolder(folder):
+def getSoftwareFolder(systemConfig, appname, appversion):
   """ 
   Discover location of a given folder, either the local or the shared area
   """
+  res = CheckCVMFS(systemConfig, [appname, appversion])
+  if res["OK"]:
+    return res
+  
+  ops = Operations()
+  app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(systemConfig, appname, appversion), '')
+  if not app_tar:
+    return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
+  if app_tar.count("gz"):
+    folder = app_tar.replace(".tgz","").replace(".tar.gz", "")
+  else:
+    folder = app_tar
+    
   localArea = LocalArea()
   sharedArea = SharedArea()
-  if os.path.exists('%s%s%s' % (localArea, os.sep, folder)):
+  if os.path.exists(os.path.join(localArea, folder)):
     mySoftwareRoot = localArea
-  elif os.path.exists('%s%s%s' % (sharedArea, os.sep, folder)):
+  elif os.path.exists(os.path.join(sharedArea, folder)):
     mySoftwareRoot = sharedArea
   else:
     return S_ERROR('Missing installation of %s!' % folder)
   mySoftDir = os.path.join(mySoftwareRoot, folder)
   return S_OK(mySoftDir)
+
+def getEnvironmentScript(systemConfig, appname, appversion, fcn_env):
+  """ Return the path to the environment script, either from CVMFS, or from the fcn_env function
+  """
+  res = CheckCVMFS(systemConfig, [appname, appversion])
+  if res["OK"]:
+    cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (systemConfig, appname, appversion),
+                                     "")
+    if cvmfsenv:
+      return S_OK(os.path.join(res["Value"], cvmfsenv))
+  #if CVMFS script is not here, the module produces its own.
+  return fcn_env(systemConfig, appname, appversion)
+
+def CheckCVMFS(sysconfig, app):
+  """ Check the existence of the CVMFS path
+  """
+  name, version = app
+  cvmfspath = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (sysconfig, name, version),"")
+  if cvmfspath and os.path.exists(cvmfspath):
+    return S_OK(cvmfspath)
+  
+  return S_ERROR('Missing CVMFS!')

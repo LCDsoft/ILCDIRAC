@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: svn+ssh://svn.cern.ch/reps/dirac/ILCDIRAC/trunk/ILCDIRAC/Workflow/Modules/LCIOConcatenate.py $
+# $HeadURL$
 #####################################################
 """
 Module to concatenate LCIO files
@@ -8,7 +8,7 @@ Module to concatenate LCIO files
 @since: Mar 09, 2012
 """
 
-__RCSID__ = "$Id: LCIOConcatenate.py 48402 2012-03-09 09:33:09Z sposs $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
@@ -63,7 +63,8 @@ class StdHepSplit(ModuleBase):
           self.InputFile.append(files)
       
     if self.step_commons.has_key('listoutput'):
-      self.listoutput = self.step_commons['listoutput'][0]
+      if len(self.step_commons['listoutput']):
+        self.listoutput = self.step_commons['listoutput'][0]
       
     return S_OK('Parameters resolved')
 
@@ -79,16 +80,19 @@ class StdHepSplit(ModuleBase):
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     
     if len(self.InputFile):
-      res = resolveIFpaths(self.InputFile)
+      res = resolveIFpaths(self.basedirectory, self.InputFile)
       if not res['OK']:
+        self.log.error("Cannot find input file")
         self.setApplicationStatus('StdHepSplit: missing input stdhep file')
         return S_ERROR('Missing stdhep file!')
       runonstdhep = res['Value'][0]
     else:
+      self.log.warn("No files found to split")
       return S_OK("No files found to process")
     # removeLibc
 
@@ -97,16 +101,18 @@ class StdHepSplit(ModuleBase):
     prefix = ''
     if self.OutputFile:
       prefix = self.OutputFile.split('.stdhep')[0]
+      
     else:
       prefix = "this_split"
+    #because we need to make sure the files end up in the base directory at the end
+    self.OutputFile = prefix
+    
     self.log.info("Will rename all files using '%s' as base." % prefix)
 
     # Setting up script
-    splitDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, "stdhepsplit", 
-                                                                                    self.applicationVersion), '')
-    splitDir = splitDir.replace(".tgz", "").replace(".tar.gz", "")
-    res = getSoftwareFolder(splitDir)
+    res = getSoftwareFolder(self.systemConfig, "stdhepsplit", self.applicationVersion)
     if not res['OK']:
+      self.log.error("Failed to find the software")
       self.setApplicationStatus('StdHepSplit: Could not find neither local area not shared area install')
       return res
     
@@ -199,9 +205,9 @@ exit $?
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []
-      for f in numberofeventsdict.keys():
+      for of in numberofeventsdict.keys():
         item = {}
-        item['outputFile'] = f
+        item['outputFile'] = of
         item['outputPath'] = self.listoutput['outputPath']
         item['outputDataSE'] = self.listoutput['outputDataSE']
         outputlist.append(item)
@@ -218,13 +224,15 @@ exit $?
         else:
           this_split_data = item
       path = os.path.dirname(this_split_data)
-      for f in numberofeventsdict.keys():
-        finalproddata.append(os.path.join(path, f))
+      for of in numberofeventsdict.keys():
+        finalproddata.append(os.path.join(path, of))
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
     if status == 2:
       self.log.info("Reached end of input file")
       status = 0
+      
+    self.listDir()  
     return self.finalStatusReport(status)
 

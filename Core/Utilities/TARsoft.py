@@ -48,13 +48,14 @@ def checkLockAge(lockname):
     last_touch = time.time()
     try:
       stat = os.stat(lockname)
-      last_touch = stat.st_atime
-    except Exception, x:
-      gLogger.warn("File not available: %s %s, assume removed" % (Exception, str(x))) 
+      last_touch = float(stat.st_atime)
+    except EnvironmentError, why:
+      gLogger.warn("File not available: %s, assume removed" % str(why)) 
       break
     loc_time = time.time()
-    if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
-      gLogger.info("File is %s seconds old" % loc_time-last_touch)
+    tdiff = loc_time-last_touch
+    if tdiff > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
+      gLogger.info("File is %s seconds old" % tdiff)
       overwrite = True
       res = clearLock(lockname)
       if res['OK']:
@@ -399,7 +400,7 @@ def check(app, area, res_from_install):
       found_lib_to_ignore = False
       for lib in getLibsToIgnore():
         if fin.count(lib):
-          found_lib_to_ignore
+          found_lib_to_ignore= True
       if found_lib_to_ignore:
         continue
       fin = os.path.join(basefolder, fin.replace("./",""))
@@ -442,7 +443,7 @@ def configure(app, area, res_from_check):
       os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib"
       
   if appName == "slic":
-    os.environ['SLIC_DIR'] = basefolder
+    os.environ['SLIC_DIR'] = os.path.join(os.getcwd(), basefolder)
     slicv = ''
     lcddv = ''
     xercesv = ''

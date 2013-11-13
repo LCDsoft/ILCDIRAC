@@ -5,11 +5,12 @@ Run Pythia, but only specific versions (the CDR ttbar ones)
 
 @author: Stephane Poss
 '''
+__RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, GenRandString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import GetNewLDLibs
-from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
+from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from DIRAC import gLogger, S_OK, S_ERROR
 
@@ -60,49 +61,49 @@ class PythiaAnalysis(ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error("Failed to resolve the input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'% (self.systemConfig, 
-                                                                       self.applicationName, 
-                                                                       self.applicationVersion), '')
-    appDir = appDir.replace(".tgz","").replace(".tar.gz","")
-
-    res = getSoftwareFolder(appDir)
+    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
     if not res['OK']:
-      self.setApplicationStatus('Pythia: Could not find neither local area not shared area install')
+      self.log.error('Failed finding the software area')
+      self.setApplicationStatus('Could not find neither local area not shared area install')
       return res
     myappDir = res['Value']
 
-    deptar = resolveDepsTar(self.systemConfig, self.applicationName, self.applicationVersion)[0]
-    depdir = deptar.replace(".tgz", "").replace(".tar.gz", "")
-    res = getSoftwareFolder(depdir)
+    deptar = resolveDeps(self.systemConfig, self.applicationName, self.applicationVersion)[0]
+    res = getSoftwareFolder(self.systemConfig, deptar["app"], deptar["version"])
     if not res['OK']:
+      self.log.error("Failed finding the dependency location")
       return res
     path = res['Value']
-    if not os.path.exists(path + "/%s.ep" % depdir):
+    if not os.path.exists("%s.ep" % path):
+      self.log.error('Could not find the lumi files!')
       return S_ERROR("Lumi files not found")
     
-    originpath = os.path.join(path, "/%s.ep" % depdir)
+    originpath = "%s.ep" % path
     randomName = '/tmp/LumiFile-' + GenRandString(8)
     try:
       os.mkdir(randomName)
-    except Exception, x:
-      return S_ERROR("Could not create temp dir: %s %s" % (Exception, x))
+    except EnvironmentError, x:
+      self.log.error("Failed setting up the temp directory")
+      return S_ERROR("Could not create temp dir: %s" % str(x))
     
     try:
-      os.symlink(originpath,"%s/%s.ep" % (randomName, depdir))
-    except Exception, x:
-      return S_ERROR("Cannot sym link lumi file: %s %s" % (Exception, x))
+      os.symlink(originpath,"%s/%s" % (randomName, os.path.basename(originpath)))
+    except EnvironmentError, why:
+      self.log.error('Failed setting up the sym link to lumi files')
+      return S_ERROR("Cannot sym link lumi file: %s %s" % str(why))
     #try :
     #  shutil.copy(originpath,"/tmp/")
     #except:
     #  return S_ERROR("Could not copy to /tmp")  
     #self.lumifile = path+"/%s.ep"%depdir
-    lumifile = "%s/%s" % (randomName, depdir)
+    lumifile = "%s/%s" % (randomName, os.path.basename(originpath).replace(".ep",""))
     ##Need to fetch the new LD_LIBRARY_PATH
     new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
     new_ld_lib_path = myappDir + "/lib:" + new_ld_lib_path
@@ -137,7 +138,7 @@ class PythiaAnalysis(ModuleBase):
     self.stdError = ''
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     if not self.result['OK']:
-      self.log.error('Something wrong during running: %s'% self.result['Message'])
+      self.log.error('Something wrong during running:', self.result['Message'])
       self.setApplicationStatus('Error during running %s'% self.applicationName)
       return S_ERROR('Failed to run %s' % self.applicationName)
 
@@ -155,7 +156,7 @@ class PythiaAnalysis(ModuleBase):
       base = "pythiaGen.lpt".split(".lpt")[0]
       try:
         os.rename("pythiaGen.lpt", base + self.STEP_NUMBER + ".lpt")
-      except:
+      except EnvironmentError:
         self.log.error("Could not rename, deleting")
         os.unlink("pythiaGen.lpt")
 

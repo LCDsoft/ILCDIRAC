@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Run SLIC
@@ -9,14 +9,14 @@ Run SLIC
 @author: Stephane Poss
 '''
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 
-import os, types, urllib, zipfile
+import os, types, urllib, zipfile, shutil
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile, GetNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
@@ -100,9 +100,20 @@ class SLICAnalysis(ModuleBase):
           
     return S_OK('Parameters resolved')
   
+  def applicationSpecificMoveBefore(self):
+    """ Handle the detector model
+    """
+    if os.path.exists(os.path.join(self.basedirectory, self.detectorModel+".zip")):
+      shutil.move(os.path.join(self.basedirectory, self.detectorModel+".zip"), "./"+self.detectorModel+".zip")
+    return
   
+  def applicationSpecificAfter(self):
+    """ Handle the detector model
+    """
+    shutil.move("./"+self.detectorModel+".zip", os.path.join(self.basedirectory, self.detectorModel+".zip"))
+    return
   
-  def execute(self):
+  def runIt(self):
     """
     Called by JobAgent
     
@@ -113,40 +124,25 @@ class SLICAnalysis(ModuleBase):
       - run SLIC on this mac File and catch the exit status
     @return: S_OK(), S_ERROR()
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
+    
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('SLIC should not proceed as previous step did not end properly')
     
-    if not os.environ.has_key('SLIC_DIR'):
-      self.log.error('SLIC_DIR not found, probably the software installation failed')
-      return S_ERROR('SLIC_DIR not found, probably the software installation failed')
-    if not os.environ.has_key('SLIC_VERSION'):
-      self.log.error('SLIC_VERSION not found, probably the software installation failed')
-      return S_ERROR('SLIC_VERSION not found, probably the software installation failed')
-    if not os.environ.has_key('LCDD_VERSION'):
-      self.log.error('LCDD_VERSION not found, probably the software installation failed')
-      return S_ERROR('LCDD_VERSION not found, probably the software installation failed')
-    #if not os.environ.has_key('XERCES_VERSION'):
-    #  self.log.error('XERCES_VERSION not found, probably the software installation failed')
-    #  return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
-
-
-    slicDir = os.environ['SLIC_DIR']
-    res = getSoftwareFolder(slicDir)
+    res = getEnvironmentScript(self.systemConfig, self.applicationName, self.applicationVersion, self.getEnvScript)
     if not res['OK']:
-      self.log.error('Directory %s was not found in either the local area or shared area' % (slicDir))
+      self.log.error("Could not obtain the environment script: ", res["Message"])
       return res
-    mySoftwareRoot = res['Value']
-    ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
-
+    env_script_path = res["Value"]
+    
     #retrieve detector model from web
     detector_urls = self.ops.getValue('/SLICweb/SLICDetectorModels', [''])
     if len(detector_urls[0]) < 1:
@@ -158,7 +154,7 @@ class SLICAnalysis(ModuleBase):
         try:
           urllib.urlretrieve("%s%s" % (detector_url, self.detectorModel + ".zip"), 
                                                  self.detectorModel + ".zip")
-        except:
+        except Exception:
           self.log.error("Download of detector model failed")
           continue
 
@@ -167,7 +163,7 @@ class SLICAnalysis(ModuleBase):
       return S_ERROR('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
     try:
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
-    except:
+    except Exception:
       os.unlink(self.detectorModel + ".zip")
       self.log.error('Failed to unzip detector model')
       return S_ERROR('Failed to unzip detector model')
@@ -176,7 +172,7 @@ class SLICAnalysis(ModuleBase):
     
     slicmac = 'slicmac.mac'
     if len(self.InputFile):
-      res = resolveIFpaths(self.InputFile)
+      res = resolveIFpaths(self.basedirectory, self.InputFile)
       if not res['OK']:
         self.log.error("Generator file not found")
         return res
@@ -192,6 +188,7 @@ class SLICAnalysis(ModuleBase):
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
+        self.log.error("Missing steering file")
         return S_ERROR("Could not find mac file")    
     ##Same as for mokka: using ParticleGun does not imply InputFile
     if not len(self.InputFile):
@@ -207,37 +204,18 @@ class SLICAnalysis(ModuleBase):
     if os.path.exists(scriptName): 
       os.remove(scriptName)
     script = open(scriptName, 'w')
-    script.write('#!/bin/sh \n')
+    script.write('#!/bin/bash \n')
     script.write('#####################################################################\n')
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
-    if os.environ.has_key('XERCES_VERSION'):
-      script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n' % (mySoftwareRoot, 
-                                                                              os.environ['XERCES_VERSION']))
-      if new_ld_lib_path:
-        script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n' % new_ld_lib_path)
-      else:
-        script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR\n')
-      
-    script.write('declare -x GEANT4_DATA_ROOT=%s/packages/geant4/data\n' % mySoftwareRoot)
-    script.write('declare -x G4LEVELGAMMADATA=$(ls -d $GEANT4_DATA_ROOT/PhotonEvaporation*)\n')
-    script.write('declare -x G4RADIOACTIVEDATA=$(ls -d $GEANT4_DATA_ROOT/RadioactiveDecay*)\n')
-    script.write('declare -x G4LEDATA=$(ls -d $GEANT4_DATA_ROOT/G4EMLOW*)\n')
-    script.write('declare -x G4NEUTRONHPDATA=$(ls -d $GEANT4_DATA_ROOT/G4NDL*)\n')
-    script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/%s\n' % (mySoftwareRoot, os.environ['LCDD_VERSION']))
-    script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n' % (mySoftwareRoot, 
-                                                                                      os.environ['SLIC_VERSION']))
-    script.write('declare -x MALLOC_CHECK_=0\n')
-    if os.path.exists("%s/lib" % (mySoftwareRoot)):
-      script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH\n' % (mySoftwareRoot))
+    script.write("source %s\n" % (env_script_path))
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
+    script.write('echo SLIC:\n')
+    script.write("which slic\n")
     script.write('echo =========\n')
-    comm = '%s/packages/slic/%s/bin/Linux-g++/slic -P $PARTICLE_TBL -m %s %s\n' % (mySoftwareRoot, 
-                                                                                os.environ['SLIC_VERSION'], 
-                                                                                slicmac,
-                                                                                self.extraCLIarguments)
-    print comm
+    comm = 'slic -P $PARTICLE_TBL -m %s %s\n' % (slicmac, self.extraCLIarguments)
+    self.log.info("Command:", comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
@@ -264,3 +242,58 @@ class SLICAnalysis(ModuleBase):
 
     return self.finalStatusReport(status)
 
+  def getEnvScript(self, sysconfig, appname, appversion):
+    """ This is called in case CVMFS is not there.
+    """
+    if not os.environ.has_key('SLIC_DIR'):
+      self.log.error('SLIC_DIR not found, probably the software installation failed')
+      return S_ERROR('SLIC_DIR not found, probably the software installation failed')
+    if not os.environ.has_key('SLIC_VERSION'):
+      self.log.error('SLIC_VERSION not found, probably the software installation failed')
+      return S_ERROR('SLIC_VERSION not found, probably the software installation failed')
+    if not os.environ.has_key('LCDD_VERSION'):
+      self.log.error('LCDD_VERSION not found, probably the software installation failed')
+      return S_ERROR('LCDD_VERSION not found, probably the software installation failed')
+    #if not os.environ.has_key('XERCES_VERSION'):
+    #  self.log.error('XERCES_VERSION not found, probably the software installation failed')
+    #  return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
+
+
+    ##Need to fetch the new LD_LIBRARY_PATH
+    new_ld_lib_path = GetNewLDLibs(sysconfig, appname, appversion)
+    #res = getSoftwareFolder(sysconfig, appname, appversion)
+    #if not res['OK']:
+    #  self.log.error('Directory %s was not found in either the local area or shared area' % (slicDir))
+    #  return res
+    mySoftwareRoot = os.environ['SLIC_DIR']
+    env_name = "SLICEnv.sh"
+    script = open(env_name,"w")
+    script.write("#/bin/sh\n")
+    script.write("######################\n")
+    script.write("## Env script for SLIC\n")
+    script.write("######################\n")
+    if os.environ.has_key('XERCES_VERSION'):
+      script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n' % (mySoftwareRoot, 
+                                                                              os.environ['XERCES_VERSION']))
+      if new_ld_lib_path:
+        script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR:%s\n' % new_ld_lib_path)
+      else:
+        script.write('declare -x LD_LIBRARY_PATH=$XERCES_LIB_DIR\n')
+      
+    script.write('declare -x GEANT4_DATA_ROOT=%s/packages/geant4/data\n' % mySoftwareRoot)
+    script.write('declare -x G4LEVELGAMMADATA=$(ls -d $GEANT4_DATA_ROOT/PhotonEvaporation*)\n')
+    script.write('declare -x G4RADIOACTIVEDATA=$(ls -d $GEANT4_DATA_ROOT/RadioactiveDecay*)\n')
+    script.write('declare -x G4LEDATA=$(ls -d $GEANT4_DATA_ROOT/G4EMLOW*)\n')
+    script.write('declare -x G4NEUTRONHPDATA=$(ls -d $GEANT4_DATA_ROOT/G4NDL*)\n')
+    script.write('declare -x GDML_SCHEMA_DIR=%s/packages/lcdd/%s\n' % (mySoftwareRoot, os.environ['LCDD_VERSION']))
+    script.write('declare -x PARTICLE_TBL=%s/packages/slic/%s/data/particle.tbl\n' % (mySoftwareRoot, 
+                                                                                      os.environ['SLIC_VERSION']))
+    script.write('declare -x MALLOC_CHECK_=0\n')
+    if os.path.exists("%s/lib" % (mySoftwareRoot)):
+      script.write('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH\n' % (mySoftwareRoot))
+    script.write('declare -x PATH=%s/packages/slic/%s/bin/Linux-g++/:$PATH\n' %(mySoftwareRoot, 
+                                                                                os.environ['SLIC_VERSION'])) 
+    script.close()
+    os.chmod(env_name, 0755)
+    return S_OK(os.path.abspath(env_name))
+  

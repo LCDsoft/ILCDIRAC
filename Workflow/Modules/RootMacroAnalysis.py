@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Module to run root macros
@@ -8,9 +8,9 @@ Module to run root macros
 
 @author: Stephane Poss
 '''
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
-import os
+import os, shutil
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -39,7 +39,12 @@ class RootMacroAnalysis(ModuleBase):
 
     return S_OK('Parameters resolved') 
   
-  def execute(self):
+  def applicationSpecificMoveBefore(self):
+    basemacropath = os.path.join(self.basedirectory, os.path.basename(self.macro))
+    if os.path.exists(basemacropath):
+      shutil.copy2(basemacropath, "./"+os.path.basename(self.macro))
+  
+  def runIt(self):
     """
     Called by Agent
     
@@ -48,12 +53,13 @@ class RootMacroAnalysis(ModuleBase):
       - check for presence of ROOTSYS variable
       
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
     
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -73,6 +79,7 @@ class RootMacroAnalysis(ModuleBase):
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
     if len(self.macro) < 1:
+      self.log.error('Macro file not defined, should not happen!')
       return S_ERROR("Macro file not defined")
      
     self.macro = os.path.basename(self.macro)

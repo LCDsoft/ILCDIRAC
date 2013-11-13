@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Get the overlay files
@@ -9,7 +9,7 @@ Get the overlay files
 @author: sposs
 '''
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
@@ -25,7 +25,7 @@ from math import ceil, modf
 
 from decimal import Decimal
 
-import os, time, random, string, subprocess, glob
+import os, time, random, subprocess, glob
 
 def allowedBkg( bkg, energy = None, detector = None, detectormodel = None, machine = 'clic_cdr' ):
   """ Check is supplied bkg is allowed
@@ -143,7 +143,7 @@ class OverlayInput (ModuleBase):
     """
     meta = {}
     if self.energy:
-        meta['Energy'] = str(int(self.energy))
+      meta['Energy'] = str(int(self.energy))
     meta['EvtType'] = self.BkgEvtType
     meta['Datatype'] = 'SIM'
     if self.detectormodel:
@@ -438,7 +438,7 @@ class OverlayInput (ModuleBase):
     ##Print the file list
     mylist = os.listdir(os.getcwd())
     self.log.info("List of Overlay files:")
-    self.log.info(string.join(mylist, "\n"))
+    self.log.info("\n".join(mylist))
     os.chdir(self.curdir)
     res = overlaymon.jobDone(self.site)
     if not res['OK']:
@@ -469,7 +469,8 @@ class OverlayInput (ModuleBase):
     script.write('###############################\n')
     script.write('# Dynamically generated scrip #\n')
     script.write('###############################\n')
-    script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
+    if 'X509_USER_PROXY' in os.environ:
+      script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
     script.write('declare -x STAGE_SVCCLASS=ilcdata\n')
     script.write('declare -x STAGE_HOST=castorpublic\n')
     script.write("xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
@@ -720,6 +721,7 @@ fi\n""" % (basename, lfile))
     """
     self.result = self.resolveInputVariables()
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
     if not self.applicationLog:
@@ -727,16 +729,18 @@ fi\n""" % (basename, lfile))
     self.applicationLog = os.path.join(os.getcwd(), self.applicationLog)
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('OverlayInput should not proceed as previous step did not end properly')
     self.setApplicationStatus('Starting up Overlay')
     res = self.__getFilesFromFC()
     if not res['OK']:
+      self.log.error("Failed to get the file list from the catalog:", res["Message"])
       self.setApplicationStatus('OverlayProcessor failed to get file list')
       return res
 
     self.lfns = res['Value']
     if not len(self.lfns):
+      self.log.error("No Overlay LFNs found")
       self.setApplicationStatus('OverlayProcessor got an empty list')
       return S_ERROR('OverlayProcessor got an empty list')
 
@@ -747,8 +751,9 @@ fi\n""" % (basename, lfile))
       os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
 
     if not res['OK']:
-      self.setApplicationStatus('OverlayProcessor failed to get files locally with message %s' % res['Message'])
-      return S_ERROR('OverlayProcessor failed to get files locally')
-    self.setApplicationStatus('Overlay processor finished getting all files successfully')
-    return S_OK('Overlay input finished successfully')
+      self.log.error("Overlay failed with", res['Message'])
+      self.setApplicationStatus('OverlayInput failed to get files locally with message %s' % res['Message'])
+      return S_ERROR('OverlayInput failed to get files locally')
+    self.setApplicationStatus('OverlayInput finished getting all files successfully')
+    return S_OK('OverlayInput finished successfully')
 

@@ -66,7 +66,7 @@ class RegisterOutputData( ModuleBase ):
     self.log.info('Initializing %s' % self.version)
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error(result['Message'])
+      self.log.error("failed to resolve input parameters:", result['Message'])
       return result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -123,6 +123,7 @@ class RegisterOutputData( ModuleBase ):
           res = self.filecatalog.addFileAncestors({ files : {'Ancestors' : self.InputData } })
           if not res['OK']:
             self.log.error('Registration of Ancestors for %s failed' % files)
+            self.log.error('Because of ', res['Message'])
             return res
 
     return S_OK('Output data metadata registered in catalog')

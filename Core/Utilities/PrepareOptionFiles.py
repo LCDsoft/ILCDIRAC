@@ -1,5 +1,4 @@
 # $HeadURL$
-# $Id$
 '''
 Provides a set of methods to prepare the option files needed by the ILC applications.
 
@@ -7,18 +6,20 @@ Provides a set of methods to prepare the option files needed by the ILC applicat
 @since: Jan 29, 2010
 '''
 
+__RCSID__ = "$Id$"
+
 from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
 from xml.etree.ElementTree                                import Element
 from xml.etree.ElementTree                                import Comment
 from xml.etree.ElementTree                                import tostring
-from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDepsTar
+from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
-import string, os
+import os
 
 def GetNewLDLibs(systemConfig, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
@@ -27,22 +28,23 @@ def GetNewLDLibs(systemConfig, application, applicationVersion):
   @param applicationVersion: version of the application considered
   @return: new LD_LIBRARY_PATH
   """
+  log = gLogger.getSubLogger("GetLDLibs")
+  log.verbose("Getting all lib folders")
   new_ld_lib_path = ""
-  deps = resolveDepsTar(systemConfig, application, applicationVersion)
+  deps = resolveDeps(systemConfig, application, applicationVersion)
   for dep in deps:
-    depfolder = dep.replace(".tgz","").replace(".tar.gz","")
-    res = getSoftwareFolder(depfolder)
+    res = getSoftwareFolder(systemConfig, dep["app"], dep['version'])
     if not res['OK']:
       continue
     basedepfolder = res['Value']
     if os.path.exists(os.path.join(basedepfolder, "lib")):
-      gLogger.verbose("Found lib folder in %s" % (basedepfolder))
+      log.verbose("Found lib folder in %s" % (basedepfolder))
       newlibdir = os.path.join(basedepfolder, "lib")
       new_ld_lib_path = newlibdir
       ####Remove the libc
       removeLibc(new_ld_lib_path)
     if os.path.exists(os.path.join(basedepfolder, "LDLibs")):
-      gLogger.verbose("Found lib folder in %s" % (depfolder))
+      log.verbose("Found lib folder in %s" % (basedepfolder))
       newlibdir = os.path.join(basedepfolder, "LDLibs")
       new_ld_lib_path = newlibdir
       ####Remove the libc
@@ -57,16 +59,17 @@ def GetNewLDLibs(systemConfig, application, applicationVersion):
 def GetNewPATH(systemConfig, application, applicationVersion):
   """ Same as L{GetNewLDLibs},but for the PATH
   """
+  log = gLogger.getSubLogger("GetPaths")
+  log.verbose("Getting all PATH folders")
   new_path = ""
-  deps = resolveDepsTar(systemConfig, application, applicationVersion)
+  deps = resolveDeps(systemConfig, application, applicationVersion)
   for dep in deps:
-    depfolder = dep.replace(".tgz", "").replace(".tar.gz", "")
-    res = getSoftwareFolder(depfolder)
+    res = getSoftwareFolder(systemConfig, dep['app'], dep['version'])
     if not res['OK']:
       continue
     depfolder = res['Value']
     if os.path.exists(os.path.join(depfolder, "bin")):
-      gLogger.verbose("Found bin folder in %s" % (depfolder))
+      log.verbose("Found bin folder in %s" % (depfolder))
       newpathdir = os.path.join(depfolder, "bin")
       new_path = newpathdir
   if os.environ.has_key("PATH"):
@@ -189,7 +192,7 @@ def PrepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
 
 def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
                         stdhepFile, mac, nbOfRuns, startFrom,
-                        randomseed, mcrunnumber, particle_tbl,
+                        randomseed, mcrunnumber,
                         processID='', debug = False, outputlcio = None, 
                         filemeta = {}):
   """Writes out a steering file for Mokka
@@ -234,23 +237,22 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
   for line in inputsteer:
     if not line.count("/Mokka/init/initialMacroFile"):
       if not line.count("/Mokka/init/BatchMode"):
-        if not line.count('/Mokka/init/PDGFile'):
-          if not line.count("/Mokka/init/randomSeed"):
-            if outputlcio:
-              if not line.count("lcioFilename"):
-                if detectormodel:
-                  if not line.count("/Mokka/init/detectorModel"):
-                    output.write(line)
-                  else:
-                    output.write(line)
-                else:
-                  output.write(line)
-            else:
+        if not line.count("/Mokka/init/randomSeed"):
+          if outputlcio:
+            if not line.count("lcioFilename"):
               if detectormodel:
                 if not line.count("/Mokka/init/detectorModel"):
                   output.write(line)
+                else:
+                  output.write(line)
               else:
                 output.write(line)
+          else:
+            if detectormodel:
+              if not line.count("/Mokka/init/detectorModel"):
+                output.write(line)
+            else:
+              output.write(line)
   if detectormodel:
     output.write("#Set detector model to value specified\n")
     output.write("/Mokka/init/detectorModel %s\n" % detectormodel)
@@ -260,9 +262,6 @@ def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
     output.write("/Mokka/init/printLevel 1\n")
   output.write("#Set batch mode to true\n")
   output.write("/Mokka/init/BatchMode true\n")
-  if particle_tbl:
-    output.write("#Set path to particle.tbl\n")
-    output.write('/Mokka/init/PDGFile %s\n' % particle_tbl)
   output.write("#Set mac file to the one created on the site\n")
   output.write("/Mokka/init/initialMacroFile %s\n" % macname)
   output.write("#Setting random seed\n")
@@ -322,7 +321,7 @@ def fixedXML(element):
   return fixed_element
 
 def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
-                   numberofevts, outputFile, outputREC, outputDST, debug):
+                   numberofevts, outputFile, outputREC, outputDST, basedir, debug):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
@@ -339,6 +338,8 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   @type outputREC: string
   @param outputDST: file name of DST
   @type outputDST: string
+  @param basedir: Base directory, needed for the overlay files resolution
+  @type basedir: string
   @param debug: set to True to use given mode, otherwise set verbosity to SILENT
   @type debug: bool
   @return: S_OK()
@@ -448,13 +449,13 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               if subparam.attrib['value'] == '0':
                 overlay = False          
         if overlay: 
-          files = getOverlayFiles()
+          files = getOverlayFiles( basedir )
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
               if subparam.attrib['name'] == "BackgroundFileNames":
-                subparam.text = string.join(files,"\n")
+                subparam.text = "\n".join(files)
                 com = Comment("Overlay files changed")
                 param.insert(0, com)
       if param.attrib['name'].lower().count('bgoverlay'):
@@ -469,13 +470,13 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               if subparam.text == '0':
                 overlay = False          
         if overlay: 
-          files = getOverlayFiles(bkg_Type)
+          files = getOverlayFiles(basedir, bkg_Type)
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
               if subparam.attrib['name'] == "InputFileNames":
-                subparam.text = string.join(files,"\n")
+                subparam.text = "\n".join(files)
                 com = Comment("Overlay files changed")
                 param.insert(0, com)
   
@@ -540,7 +541,7 @@ def PrepareMacFile(inputmac, outputmac, stdhep, nbevts,
                   #output.write(line)
                   listtext.append(line)
 
-  finaltext = string.join(listtext, "\n")
+  finaltext = "\n".join(listtext)
   finaltext += "\n"
   if detector:
     output.write("/lcdd/url %s.lcdd\n" % detector)
@@ -559,9 +560,9 @@ def PrepareMacFile(inputmac, outputmac, stdhep, nbevts,
   return S_OK(True)
 
 def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
-                     trackingstrategy, inputslcio, jars = None,
+                     trackingstrategy, inputslcio, basedir, jars = None,
                      cachedir = None, outputFile = None,
-                     outputRECFile = None,outputDSTFile = None,
+                     outputRECFile = None, outputDSTFile = None,
                      debug = False):
   """Writes out a lcsim file for LCSIM
   
@@ -732,11 +733,11 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
           if not res['OK']:
             return res
         driver.remove(driver.find('overlayFiles'))
-        files = getOverlayFiles(bkg_Type)
+        files = getOverlayFiles(basedir, bkg_Type)
         if not len(files):
           return S_ERROR('Could not find any overlay files')
         overlay = Element('overlayFiles')
-        overlay.text = string.join(files,"\n")
+        overlay.text = "\n".join(files)
         driver.append(overlay)
   ##Take care of the output files
   writerfound = False

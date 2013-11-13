@@ -16,7 +16,7 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
-from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDepsTar
+from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFile
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFileTemplate, GetNewLDLibs
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
@@ -57,7 +57,8 @@ class WhizardAnalysis(ModuleBase):
     self.Model = ''
     self.genmodel = GeneratorModels()
     self.eventstring = ['! ', 'Fatal error:', 'PYSTOP', 'No matrix element available',
-                        'Floating point exception', 'Event generation finished.', " n_events","luminosity", "  sum            "]
+                        'Floating point exception', 'Event generation finished.', " n_events","luminosity", 
+                        "  sum            "]
     self.excludeAllButEventString = False
     self.steeringparameters = ''
     self.options = None
@@ -193,7 +194,7 @@ class WhizardAnalysis(ModuleBase):
                                             int(self.workflow_commons["JOB_ID"]))        
     return S_OK()
 
-  def execute(self):
+  def runIt(self):
     """ Called by Agent
     
     Executes the following
@@ -207,12 +208,13 @@ class WhizardAnalysis(ModuleBase):
       
     @return: S_OK(), S_ERROR()
     """
-    self.result = self.resolveInputVariables()
+    self.result = S_OK()
     if not self.systemConfig:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -222,14 +224,7 @@ class WhizardAnalysis(ModuleBase):
     #if self.debug:
     #  self.excludeAllButEventString = False
 
-    whizardDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(self.systemConfig, self.applicationName, 
-                                                                          self.applicationVersion), '')
-    if not whizardDir:
-      self.log.error('Could not get info from CS')
-      self.setApplicationStatus('Failed finding info from CS')
-      return S_ERROR('Failed finding info from CS')
-    whizardDir = whizardDir.replace(".tgz", "").replace(".tar.gz", "")
-    res = getSoftwareFolder(whizardDir)
+    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error("Failed getting software folder", res['Message'])
       self.setApplicationStatus('Failed finding software')
@@ -244,20 +239,19 @@ class WhizardAnalysis(ModuleBase):
     #Don't forget to prepend the application's libs
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
-    deps = resolveDepsTar(self.systemConfig, self.applicationName, self.applicationVersion)
+    deps = resolveDeps(self.systemConfig, self.applicationName, self.applicationVersion)
     path_to_beam_spectra = ""
     path_to_gridfiles = ""
     for dep in deps:
-      depfolder = dep.replace(".tgz", "").replace(".tar.gz", "")
-      res = getSoftwareFolder(depfolder)
+      res = getSoftwareFolder(self.systemConfig, dep[ "app" ], dep['version'])
       if not res['OK']:
         self.log.error("Failed getting software folder", res['Message'])
         self.setApplicationStatus('Failed finding software')
         return res
       depfolder = res['Value']
-      if depfolder.count("beam_spectra"):
+      if dep["app"] == "beam_spectra":
         path_to_beam_spectra = depfolder
-      elif depfolder.count("gridfiles"):
+      elif dep["app"] == "gridfiles":
         path_to_gridfiles = depfolder
 
     ##Env variables needed to run whizard: avoids hard coded locations
@@ -278,7 +272,8 @@ class WhizardAnalysis(ModuleBase):
       tmp_list_of_gridfiles = [os.path.join(path_to_gridfiles, item) for item in os.listdir(path_to_gridfiles)]
       gridfilesfound = False
       for path in tmp_list_of_gridfiles:
-        if os.path.isdir(path) and path.count(str(self.energy)): #Here look for a sub directory for the energy related grid files
+        if os.path.isdir(path) and path.count(str(self.energy)): 
+          #Here look for a sub directory for the energy related grid files
           list_of_gridfiles = [os.path.join(path, item) for item in os.listdir(path)]
           gridfilesfound = True
           self.log.info('Found grid files specific for energy %s' % self.energy)
@@ -308,7 +303,7 @@ class WhizardAnalysis(ModuleBase):
       try:
         shutil.copy("%s/%s" % (mySoftDir, whizardin), "./whizardnew.in")
         self.SteeringFile = "whizardnew.in"
-      except:
+      except EnvironmentError:
         self.log.error("Could not copy %s from %s" % (whizardin, mySoftDir))
         self.setApplicationStatus('Failed getting whizard.in file')
         return S_ERROR("Failed to obtain %s" % whizardin)
@@ -335,7 +330,7 @@ class WhizardAnalysis(ModuleBase):
           else:
             self.log.warn("No file found attached to model %s" % self.Model)
         else:
-          self.log.error("Model undefined:",self.Model)
+          self.log.error("Model undefined:", self.Model)
           self.setApplicationStatus("Model undefined")
           return S_ERROR("No Model %s defined" % self.Model)
     else:
@@ -391,7 +386,7 @@ class WhizardAnalysis(ModuleBase):
         script.write('cp %s ./\n' % (gridfile))
     script.write('cp %s/whizard.prc ./\n' % mySoftDir)
     if self.genlevelcuts:
-      res = self.makeWhizardDotCut1(self.genlevelcuts)
+      res = self.makeWhizardDotCut1()
       if not res['OK']:
         script.close()
         self.log.error("Could not create the cut1 file")
@@ -409,7 +404,7 @@ class WhizardAnalysis(ModuleBase):
       comm = 'whizard --simulation_input \'write_events_file = \"%s\"\'' % (outputfilename)
     else:
       comm = 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' ' % (self.evttype, 
-                                                                                                                        outputfilename)
+                                                                                                                    outputfilename)
     comm = "%s %s %s\n" % (comm, self.extraCLIarguments, extracmd)
     self.log.info("Will run %s" % comm)
     script.write(comm)
@@ -519,10 +514,10 @@ class WhizardAnalysis(ModuleBase):
           if len(ofnames) > 1:
             basename = self.OutputFile.split(".stdhep")[0]
             i = 0
-            for f in ofnames:
+            for of in ofnames:
               i += 1
               name = basename + "_" + str(i) + ".stdhep"
-              os.rename(f, name)
+              os.rename(of, name)
           else:
             os.rename(outputfilename + ".001.stdhep", self.OutputFile)    
         else:
@@ -544,15 +539,15 @@ class WhizardAnalysis(ModuleBase):
       self.setApplicationStatus(messageout)
     return S_OK( { "OutputFile": self.OutputFile } )
 
-  def makeWhizardDotCut1(self, cutdict):
+  def makeWhizardDotCut1(self):
     """ When users need whizard cuts, this is called to prepare the file
     @return: S_OK()
     """
-    cutf = file("whizard.cut1","w")
-    for key, values in cutdict.items():
-      cutf.write("process %s\n"%key)
+    cutf = open("whizard.cut1","w")
+    for key, values in self.genlevelcuts.items():
+      cutf.write("process %s\n" % key)
       for val in values:
-        cutf.write("  %s\n"%val)
+        cutf.write("  %s\n" % val)
     cutf.close()
     return S_OK()
     

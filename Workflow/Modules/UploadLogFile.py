@@ -1,5 +1,5 @@
 ########################################################################
-# $HeadURL: $
+# $HeadURL$
 ########################################################################
 """ 
 UploadLogFile module is used to upload the files present in the working
@@ -9,7 +9,7 @@ directory.
 @since: Sep 01, 2010
 """
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
@@ -22,7 +22,7 @@ from ILCDIRAC.Core.Utilities.ProductionData               import getLogPath
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
-import os, shutil, glob, string, random, tarfile
+import os, shutil, glob, random, tarfile
 
 class UploadLogFile(ModuleBase):
   """ Handle log file uploads in the production jobs
@@ -120,8 +120,10 @@ class UploadLogFile(ModuleBase):
     """
     self.log.info('Initializing %s' % self.version)
     # Add global reporting tool
-    self.resolveInputVariables()
-
+    res = self.resolveInputVariables()
+    if not res['OK']:
+      self.log.error("Failed to resolve input parameters:", res['Message'])
+      
     res = shellCall(0,'ls -al')
     if res['OK'] and res['Value'][0] == 0:
       self.log.info('The contents of the working directory...')
@@ -154,7 +156,7 @@ class UploadLogFile(ModuleBase):
       return S_OK()#because if the logs are lost, it's not the end of the world.
     selectedFiles = res['Value']
     self.log.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles), 
-                                                                             string.join(selectedFiles, '\n')))
+                                                                             "\n".join(selectedFiles)))
 
     #########################################
     # Create a temporary directory containing these files
@@ -242,7 +244,7 @@ class UploadLogFile(ModuleBase):
 
     random.shuffle(self.failoverSEs)
     self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, 
-                                                                               string.join(self.failoverSEs, ', ')))
+                                                                               ', '.join(self.failoverSEs )))
     result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath, 
                                                       self.failoverSEs, fileGUID=None, 
                                                       fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
