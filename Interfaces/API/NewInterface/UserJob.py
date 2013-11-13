@@ -16,7 +16,7 @@ from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
 from DIRAC import S_OK
 
-import string, types
+import types
 
 __RCSID__ = "$Id$"
 
@@ -79,7 +79,7 @@ class UserJob(Job):
       #inputData = map( lambda x: 'LFN:' + x, lfns )
       inputData = lfns #because we don't need the LFN: for inputData, and it breaks the 
       #resolution of the metadata in the InputFilesUtilities
-      inputDataStr = string.join( inputData, ';' )
+      inputDataStr = ';'.join( inputData )
       description = 'List of input data specified by LFNs'
       self._addParameter( self.workflow, 'InputData', 'JDL', inputDataStr, description )
     elif type( lfns ) == type( ' ' ):  #single LFN
@@ -124,7 +124,7 @@ class UserJob(Job):
     """    
     kwargs = {'lfns' : lfns, 'OutputSE' : OutputSE, 'OutputPath' : OutputPath}
     if type(lfns) == list and len(lfns):
-      outputDataStr = string.join(lfns, ';')
+      outputDataStr = ';'.join(lfns)
       description = 'List of output data files'
       self._addParameter(self.workflow, 'UserOutputData', 'JDL', outputDataStr, description)
     elif type(lfns) == type(" "):
@@ -173,7 +173,7 @@ class UserJob(Job):
 
     """
     if type( files ) == list and len( files ):
-      fileList = string.join( files, ";" )
+      fileList = ";".join( files )
       description = 'Output sandbox file list'
       self._addParameter( self.workflow, 'OutputSandbox', 'JDL', fileList, description )
     elif type( files ) == type( " " ):
