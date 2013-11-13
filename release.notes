@@ -1,3 +1,11 @@
+[v20r1p0]
+
+* all: 
+CHANGE: merge CVMFS branch with trunk, implement the changes in v20r0pX
+
+* ILCTransformationSystem
+NEW: TarTheLogs agent that takes care of tarring and putting on castor production logs for stopped prods
+
 [v20r0p7]
 
 * Core:
