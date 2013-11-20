@@ -1,3 +1,15 @@
+[v20r1p2]
+
+* Core: 
+NEW: fullCopy utility (first try)
+
+* Interfaces:
+NEW: setRequired method for the applications
+
+* Workflow:
+NEW: Handle the Required
+FIX: adapt more to the Failover client
+
 [v20r1p1]
 
 * Workflow:
