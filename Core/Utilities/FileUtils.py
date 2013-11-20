@@ -4,6 +4,8 @@ Several file utilities
 @site: Mar 13, 2013
 @author: sposs
 '''
+__RCSID__ = "$Id$"
+
 import os, shutil
 from DIRAC import S_OK, S_ERROR, gLogger
 
@@ -26,23 +28,24 @@ def upload(path, appTar):
     final_path = "/afs/cern.ch/eng/clic/data/software/"
     try:
       shutil.copy(appTar,"%s%s" % (final_path, os.path.basename(appTar)))
-    except Exception, x:
+    except EnvironmentError, x:
       gLogger.error("Could not copy because %s" % x)
       return S_ERROR("Could not copy because %s" % x)
   elif path.find("http://") > -1:
-    gLogger.error("path %s was not foreseen, location not known, upload to location yourself, and publish in CS manually" % path)
+    gLogger.error("Path %s was not foreseen!" % path)
+    gLogger.error("Location not known, upload to location yourself, and publish in CS manually")
     return S_ERROR()
   else:
     lfnpath = "%s%s" % (path, os.path.basename(appTar))
-    res = rm.putAndRegister(lfnpath, appTar, ops.getValue('Software/BaseStorageElement',"CERN-SRM"))
+    res = rm.putAndRegister(lfnpath, appTar, ops.getValue('Software/BaseStorageElement', "CERN-SRM"))
     if not res['OK']:
       return res
     request = RequestContainer()
     request.setCreationTime()
     requestClient = RequestClient()
-    request.setRequestName('copy_%s' % os.path.basename(appTar).replace(".tgz","").replace(".tar.gz",""))
+    request.setRequestName('copy_%s' % os.path.basename(appTar).replace(".tgz", "").replace(".tar.gz", ""))
     request.setSourceComponent('ReplicateILCSoft')
-    copies_at = ops.getValue('Software/CopiesAt',[])
+    copies_at = ops.getValue('Software/CopiesAt', [])
     index_copy = 0
     for copies in copies_at:
       res = request.addSubRequest({'Attributes':{'Operation' : 'replicateAndRegister',
@@ -60,5 +63,24 @@ def upload(path, appTar):
       if not res['OK']:
         gLogger.error('Could not set replication request %s' % res['Message'])
       return S_OK('Application uploaded')
+  return S_OK()
+
+def fullCopy(src, dst):
+  """ Copy the full path from src to dst, creates missing directories if needed
+  """
+  
+  if not dst.count(os.sep):
+    if os.path.isfile(src):
+      try:
+        shutil.copy2(src, dst)
+      except EnvironmentError, why:
+        return S_ERROR(str(why))
+    else:
+      try:
+        shutil.copytree(src, dst)
+      except EnvironmentError, why:
+        return S_ERROR(str(why))
+  else:
+    gLogger.error("The file %s cannot be copied, will be ignored" % dst)
   return S_OK()
 
