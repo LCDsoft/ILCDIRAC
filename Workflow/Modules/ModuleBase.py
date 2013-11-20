@@ -540,6 +540,24 @@ class ModuleBase(object):
       except EnvironmentError, why:
         self.log.error("Failed to get the lib directory:", str(why))
     
+    if "Required" in self.step_commons:
+      reqs = self.step_commons["Required"].rstrip(";").split(";")
+      for reqitem in reqs:
+        if os.path.exists(reqitem):
+          #file or dir is already here
+          continue
+        if os.path.exists(os.path.join(self.basedirectory, reqitem)):
+          try:
+            if os.path.isdir(os.path.join(self.basedirectory, reqitem)):
+              shutil.copytree(os.path.join(self.basedirectory, reqitem), reqitem)
+            else:
+              shutil.copy2(os.path.join(self.basedirectory, reqitem), reqitem)
+          except EnvironmentError, why:
+            self.log.error("Failed to get %s:" % reqitem, str(why))
+        else:
+          self.log.error("Missing file or folder in base directory: ", reqitem)
+          return S_ERROR("Missing item %s in base directory" % reqitem)
+    
     try:
       self.applicationSpecificMoveBefore()    
     except EnvironmentError, e:
