@@ -13,7 +13,7 @@ __RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
+
 from DIRAC.Core.Security.ProxyInfo                         import getProxyInfo
 
 from DIRAC.Core.Utilities                                  import List
@@ -81,14 +81,6 @@ class UserJobFinalization(ModuleBase):
       self.log.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
-    if self.workflow_commons.has_key('Request'):
-      self.request = self.workflow_commons['Request']
-    else:
-      self.request = RequestContainer()
-      self.request.setRequestName('job_%s_request.xml' % self.jobID)
-      self.request.setJobID(self.jobID)
-      self.request.setSourceComponent("Job_%s" % self.jobID)
-
     #Use LHCb utility for local running via dirac-jobexec
     if self.workflow_commons.has_key('UserOutputData'):
       self.userOutputData = self.workflow_commons['UserOutputData']
@@ -136,6 +128,10 @@ class UserJobFinalization(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], 
                                                                    self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
+    
+    self.request.RequestName = 'job_%d_request.xml' % self.jobID
+    self.request.JobID = self.jobID
+    self.request.SourceComponent = "Job_%d" % self.jobID    
     
     if not self.userOutputData:
       self.log.info('No user output data is specified for this job, nothing to do')
@@ -306,13 +302,7 @@ class UserJobFinalization(ModuleBase):
       report = ', '.join( uploaded )
       self.jobReport.setJobParameter( 'UploadedOutputData', report )
 
-    #Now after all operations, retrieve potentially modified request object
-    result = failoverTransfer.getRequestObject()
-    if not result['OK']:
-      self.log.error(result)
-      return S_ERROR('Could Not Retrieve Modified Request')
-
-    self.request = result['Value']
+    self.request = failoverTransfer.request
 
     #If some or all of the files failed to be saved to failover
     if cleanUp:
@@ -332,31 +322,7 @@ class UserJobFinalization(ModuleBase):
         at least one replica:\n%s' % (result))
 
     self.workflow_commons['Request'] = self.request
-    
-    #Now must ensure if any pending requests are generated that these are propagated to the job wrapper
-    reportRequest = None
-    if self.jobReport:
-      result = self.jobReport.generateRequest()
-      if not result['OK']:
-        self.log.warn('Could not generate request for job report with result:\n%s' % (result))
-      else:
-        reportRequest = result['Value']
-    if reportRequest:
-      self.log.info('Populating request with job report information')
-      self.request.update(reportRequest)
-    
-    if not self.request.isEmpty()['Value']:
-      request_string = self.request.toXML()['Value']
-      # Write out the request string
-      fname = 'user_job_%s_request.xml' % (self.jobID)
-      xmlfile = open(fname, 'w')
-      xmlfile.write(request_string)
-      xmlfile.close()
-      self.log.info('Creating failover request for deferred operations for job %s:' % self.jobID)
-      result = self.request.getDigest()
-      if result['OK']:
-        digest = result['Value']
-        self.log.info(digest)
+    self.generateFailoverFile()    
     
     self.setApplicationStatus('Job Finished Successfully')
     return S_OK('Output data uploaded')

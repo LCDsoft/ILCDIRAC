@@ -20,9 +20,13 @@ from DIRAC.Core.Utilities.Adler                           import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+from DIRAC.RequestManagementSystem.Client.Request         import Request
+from DIRAC.RequestManagementSystem.private.RequestValidator   import gRequestValidator
+
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from ILCDIRAC.Core.Utilities.FileUtils                    import fullCopy
 
 import os, string, sys, re, types, urllib, glob
 from random import choice
@@ -83,7 +87,9 @@ class ModuleBase(object):
     self.workflowStatus = S_OK()
     self.stepStatus = S_OK()
     self.isProdJob = False
-    
+    self.production_id = 0
+    self.prod_job_id = 0
+    self.request = None
     self.basedirectory = os.getcwd()
     
 
@@ -96,7 +102,7 @@ class ModuleBase(object):
 
     self.log.verbose('setJobApplicationStatus(%s,%s)' %(self.jobID, status))
 
-    if self.workflow_commons.has_key('JobReport'):
+    if self.workflow_commons.has_key('JobReport'):#this should ALWAYS be true
       self.jobReport  = self.workflow_commons['JobReport']
 
     if not self.jobReport:
@@ -344,6 +350,17 @@ class ModuleBase(object):
           return S_ERROR('File %s has missing %s' % (fileName, key))
 
     return S_OK(final)
+
+  def _getRequestContainer( self ):
+    """ just return the Request reporter (object)
+    """
+
+    if self.workflow_commons.has_key( 'Request' ):
+      return self.workflow_commons['Request']
+    else:
+      request = Request()
+      self.workflow_commons['Request'] = request
+      return request
   
   def resolveInputVariables(self):
     """ Common utility for all sub classes, resolve the workflow parameters 
@@ -351,8 +368,12 @@ class ModuleBase(object):
     """
     self.log.verbose("Workflow commons:", self.workflow_commons)
     self.log.verbose("Step commons:", self.step_commons)
+    
+    self.request = self._getRequestContainer()
+    self.prod_job_id = int(self.workflow_commons["JOB_ID"])
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
+        self.production_id = int(self.workflow_commons["PRODUCTION_ID"])
         self.isProdJob = True
         
     if self.workflow_commons.has_key('SystemConfig'):
@@ -547,14 +568,10 @@ class ModuleBase(object):
           #file or dir is already here
           continue
         if os.path.exists(os.path.join(self.basedirectory, reqitem)):
-          try:
-            if os.path.isdir(os.path.join(self.basedirectory, reqitem)):
-              shutil.copytree(os.path.join(self.basedirectory, reqitem), reqitem)
-            else:
-              shutil.copy2(os.path.join(self.basedirectory, reqitem), reqitem)
-          except EnvironmentError, why:
-            self.log.error("Failed to copy %s:" % reqitem, str(why))
-            return S_ERROR("Failed to copy %s" % reqitem)
+          res = fullCopy(os.path.join(self.basedirectory, reqitem), "./"+reqitem)
+          if not res['OK']:
+            self.log.error("Failed to copy %s: " % reqitem, res['Message'])
+            return res
         else:
           self.log.error("Missing file or folder in base directory: ", reqitem)
           return S_ERROR("Missing item %s in base directory" % reqitem)
@@ -653,6 +670,55 @@ class ModuleBase(object):
       self.setApplicationStatus('%s %s Successful' % (self.applicationName, self.applicationVersion))
     return S_OK(message)    
 
+  #############################################################################
+
+  def generateFailoverFile( self ):
+    """ Retrieve the accumulated reporting request, and produce a JSON file that is consumed by the JobWrapper
+    """
+    reportRequest = None
+    result = self.jobReport.generateForwardDISET()
+    if not result['OK']:
+      self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( result ) )
+    else:
+      reportRequest = result['Value']
+    if reportRequest:
+      self.log.info( "Populating request with job report information" )
+      self.request.addOperation( reportRequest )
+
+    accountingReport = None
+    if self.workflow_commons.has_key( 'AccountingReport' ):
+      accountingReport = self.workflow_commons['AccountingReport']
+    if accountingReport:
+      result = accountingReport.commit()
+      if not result['OK']:
+        self.log.error( "!!! Both accounting and RequestDB are down? !!!" )
+        return result
+
+    if len( self.request ):
+      isValid = gRequestValidator.validate( self.request )
+      if not isValid['OK']:
+        raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
+      else:
+        requestJSON = self.request.toJSON()
+        if requestJSON['OK']:
+          self.log.info( "Creating failover request for deferred operations for job %d" % self.jobID )
+          request_string = str( requestJSON['Value'] )
+          self.log.debug( request_string )
+          # Write out the request string
+          fname = '%s_%s_request.json' % ( self.production_id, self.prod_job_id )
+          jsonFile = open( fname, 'w' )
+          jsonFile.write( request_string )
+          jsonFile.close()
+          self.log.info( "Created file containing failover request %s" % fname )
+          result = self.request.getDigest()
+          if result['OK']:
+            self.log.info( "Digest of the request: %s" % result['Value'] )
+          else:
+            self.log.error( "No digest? That's not sooo important, anyway: %s" % result['Message'] )
+        else:
+          raise RuntimeError( requestJSON['Message'] )
+
+
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
     """
@@ -681,5 +747,5 @@ class ModuleBase(object):
       else:
         self.log.error("Application Log file not defined")
     if fd == 1:
-      self.stdError += message
+      self.stdError += message      
         

@@ -12,7 +12,6 @@ defined in the production workflow.
 __RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
@@ -73,14 +72,6 @@ class UploadOutputData(ModuleBase):
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
-
-    if self.workflow_commons.has_key('Request'):
-      self.request = self.workflow_commons['Request']
-    else:
-      self.request = RequestContainer()
-      self.request.setRequestName('job_%s_request.xml' % self.jobID)
-      self.request.setJobID(self.jobID)
-      self.request.setSourceComponent("Job_%s" % self.jobID)
 
     ##This is the thing that is used to establish the list of outpufiles to treat:
     ## Make sure that all that is in the : "listoutput" and also in the ProductionData
@@ -307,13 +298,7 @@ class UploadOutputData(ModuleBase):
 
     os.remove("DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK") #cleanup the mess
 
-    #Now after all operations, retrieve potentially modified request object
-    result = failoverTransfer.getRequestObject()
-    if not result['OK']:
-      self.log.error(result)
-      return S_ERROR('Could not retrieve modified request')
-
-    self.request = result['Value']
+    self.request = failoverTransfer.request
 
     #If some or all of the files failed to be saved to failover
     if cleanUp:
