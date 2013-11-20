@@ -87,9 +87,9 @@ class FailoverRequest(ModuleBase):
       self.log.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
 
-    self.request.RequestName = 'job_%d_request.xml' % self.jobID
+    self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
     self.request.JobID = self.jobID
-    self.request.SourceComponent = "Job_%d" % self.jobID
+    self.request.SourceComponent = "Job_%d" % int(self.jobID)
 
     if not self.fileReport:
       self.fileReport =  FileReport('Transformation/TransformationManager')

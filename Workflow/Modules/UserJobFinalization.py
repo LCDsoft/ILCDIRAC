@@ -129,9 +129,9 @@ class UserJobFinalization(ModuleBase):
                                                                    self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
     
-    self.request.RequestName = 'job_%d_request.xml' % self.jobID
+    self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
     self.request.JobID = self.jobID
-    self.request.SourceComponent = "Job_%d" % self.jobID    
+    self.request.SourceComponent = "Job_%d" % int(self.jobID)
     
     if not self.userOutputData:
       self.log.info('No user output data is specified for this job, nothing to do')
