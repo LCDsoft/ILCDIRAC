@@ -282,9 +282,14 @@ class MokkaAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('echo Content of mokka.steer:\n')
     script.write('cat mokka.steer\n')
-    script.write('echo =============================\n')
-    script.write('echo Content of mokkamac.mac:\n')
-    script.write('cat mokkamac.mac\n')
+    script.write("""
+if [ -e "./mokkamac.mac" ]
+then
+  echo =============================
+  echo Content of mokkamac.mac:
+  cat mokkamac.mac
+fi
+""")
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
