@@ -133,6 +133,15 @@ class MokkaAnalysis(ModuleBase):
           self.InputFile.append(files)
           break
     return S_OK('Parameters resolved')
+  
+  def applicationSpecificMoveBefore(self):
+    """ Need to copy the macFile if defined.
+    """
+    if not self.macFile:
+      return
+    macfile = os.path.join(self.basedirectory, os.path.basename(self.macFile))
+    if os.path.exists(macfile):
+      shutil.copy2(macfile, "./"+os.path.basename(self.macFile))
     
   def runIt(self):
     """ Called by ModuleBase
@@ -290,6 +299,8 @@ then
   cat mokkamac.mac
 fi
 """)
+    if self.macFile:
+      script.write("cat %s\n" % os.path.basename(self.macFile))
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
