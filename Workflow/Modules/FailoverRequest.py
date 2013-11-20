@@ -65,14 +65,6 @@ class FailoverRequest(ModuleBase):
     if self.workflow_commons.has_key('FileReport'):
       self.fileReport = self.workflow_commons['FileReport']
 
-    if self.workflow_commons.has_key('Request'):
-      self.request = self.workflow_commons['Request']
-    if not self.request:
-      self.request = RequestContainer()
-      self.request.setRequestName('job_%s_request.xml' % self.jobID)
-      self.request.setJobID(self.jobID)
-      self.request.setSourceComponent("Job_%s" % self.jobID)
-
     if self.workflow_commons.has_key('PRODUCTION_ID'):
       self.productionID = self.workflow_commons['PRODUCTION_ID']
 
@@ -90,6 +82,14 @@ class FailoverRequest(ModuleBase):
     if not result['OK']:
       self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
+
+    if not self.enable:
+      self.log.info('Module is disabled by control flag')
+      return S_OK('Module is disabled by control flag')
+
+    self.request.RequestName = 'job_%d_request.xml' % self.jobID
+    self.request.JobID = self.jobID
+    self.request.SourceComponent = "Job_%d" % self.jobID
 
     if not self.fileReport:
       self.fileReport =  FileReport('Transformation/TransformationManager')
@@ -119,70 +119,24 @@ class FailoverRequest(ModuleBase):
     result = self.fileReport.commit()
     if not result['OK']:
       self.log.error('Failed to report file status to ProductionDB, request will be generated', result['Message'])
+      result = self.fileReport.generateForwardDISET()
+      if not result['OK']:
+        self.log.warn( "Could not generate Operation for file report with result:\n%s" % ( result['Value'] ) )
+      else:
+        if result['Value'] is None:
+          self.log.info( "Files correctly reported to TransformationDB" )
+        else:
+          result = self.request.addOperation( result['Value'] )
     else:
       self.log.info('Status of files have been properly updated in the ProcessingDB')
 
     # Must ensure that the local job report instance is used to report the final status
     # in case of failure and a subsequent failover operation
     if self.workflowStatus['OK'] and self.stepStatus['OK']: 
-      if not self.jobReport:
-        self.jobReport = JobReport(int(self.jobID))
-      jobStatus = self.jobReport.setApplicationStatus('Job Finished Successfully')
-      if not jobStatus['OK']:
-        self.log.warn(jobStatus['Message'])
+      self.jobReport.setApplicationStatus('Job Finished Successfully')
+      
+    self.generateFailoverFile()
 
-    # Retrieve the accumulated reporting request
-    reportRequest = None
-    if self.jobReport:
-      result = self.jobReport.generateRequest()
-      if not result['OK']:
-        self.log.warn('Could not generate request for job report with result:\n%s' % (result))
-      else:
-        reportRequest = result['Value']
-    if reportRequest:
-      self.log.info('Populating request with job report information')
-      self.request.update(reportRequest)
-
-    fileReportRequest = None
-    if self.fileReport:
-      result = self.fileReport.generateRequest()
-      if not result['OK']:
-        self.log.warn('Could not generate request for file report with result:\n%s' % (result))
-      else:
-        fileReportRequest = result['Value']
-    if fileReportRequest:
-      self.log.info('Populating request with file report information')
-      result = self.request.update(fileReportRequest)
-
-    accountingReport = None
-    if self.workflow_commons.has_key('AccountingReport'):
-      accountingReport = self.workflow_commons['AccountingReport']
-    if accountingReport:
-      result = accountingReport.commit()
-      if not result['OK']:
-        self.log.info('Populating request with accounting report information')
-        self.request.setDISETRequest(result['rpcStub'])
-
-    if self.request.isEmpty()['Value']:
-      self.log.info('Request is empty, nothing to do.')
-      return self.finalize()
-
-    request_string = self.request.toXML()['Value']
-    self.log.debug(request_string)
-    # Write out the request string
-    fname = '%s_%s_request.xml' % (self.productionID, self.prodJobID)
-    xmlfile = open(fname, 'w')
-    xmlfile.write(request_string)
-    xmlfile.close()
-    self.log.info('Creating failover request for deferred operations for job %s:' % self.jobID)
-    result = self.request.getDigest()
-    if result['OK']:
-      digest = result['Value']
-      self.log.info(digest)
-
-    if not self.enable:
-      self.log.info('Module is disabled by control flag')
-      return S_OK('Module is disabled by control flag')
 
     return self.finalize()
 
