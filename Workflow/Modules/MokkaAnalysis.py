@@ -291,18 +291,16 @@ class MokkaAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('echo Content of mokka.steer:\n')
     script.write('cat mokka.steer\n')
-    script.write("""
-if [ -e "./mokkamac.mac" ]
-then
-  echo =============================
-  echo Content of mokkamac.mac:
-  cat mokkamac.mac
-fi
-""")
     if self.macFile:
       script.write('echo =============================\n')
       script.write('echo Content of %s\n' % os.path.basename(self.macFile))
       script.write("cat %s\n" % os.path.basename(self.macFile))
+    elif os.path.exists("./mokkamac.mac"):
+      script.write("""
+echo =============================
+echo Content of mokkamac.mac:
+cat mokkamac.mac
+""")
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
