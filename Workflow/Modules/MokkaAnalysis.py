@@ -352,7 +352,7 @@ if [ -d "${MOKKATARBALL}" ]
 then
    declare -x PARTICLETBL=$MOKKATARBALL/ConfigFiles/particle.tbl
 fi
-cat "/Mokka/init/PDGFile $PARTICLETBL" >> %s
+echo "/Mokka/init/PDGFile $PARTICLETBL" >> %s
 \n"""% mokkasteer)
 
     ##Now run Mokka
