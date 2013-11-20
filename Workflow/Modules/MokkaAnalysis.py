@@ -300,6 +300,8 @@ then
 fi
 """)
     if self.macFile:
+      script.write('echo =============================\n')
+      script.write('echo Content of %s\n' % os.path.basename(self.macFile))
       script.write("cat %s\n" % os.path.basename(self.macFile))
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
