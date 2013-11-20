@@ -553,7 +553,8 @@ class ModuleBase(object):
             else:
               shutil.copy2(os.path.join(self.basedirectory, reqitem), reqitem)
           except EnvironmentError, why:
-            self.log.error("Failed to get %s:" % reqitem, str(why))
+            self.log.error("Failed to copy %s:" % reqitem, str(why))
+            return S_ERROR("Failed to copy %s" % reqitem)
         else:
           self.log.error("Missing file or folder in base directory: ", reqitem)
           return S_ERROR("Missing item %s in base directory" % reqitem)
