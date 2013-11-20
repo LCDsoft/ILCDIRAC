@@ -308,7 +308,7 @@ class MarlinAnalysis(ModuleBase):
         except:
           pass
       
-    marlindll = "%s%s" % (":".join(temp), userlib) #Here we concatenate the default MarlinDLL with the user's stuff
+    marlindll = "%s:%s" % (":".join(temp), userlib) #Here we concatenate the default MarlinDLL with the user's stuff
     finallist = []
     items = marlindll.split(":")
     #Care for user defined list of processors, useful when someone does not want to run the full reco
