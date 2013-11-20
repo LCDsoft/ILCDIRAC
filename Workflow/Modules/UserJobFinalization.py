@@ -257,7 +257,7 @@ class UserJobFinalization(ModuleBase):
         self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
                                                                                    ', '.join(metadata['resolvedSE'])))
         result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], metadata['lfn'],
-                                                          metadata['resolvedSE'], fileGUID = metadata['guid'], 
+                                                          metadata['resolvedSE'], fileMetaDict = metadata, 
                                                           fileCatalog = self.userFileCatalog)
         if not result['OK']:
           self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
@@ -286,9 +286,12 @@ class UserJobFinalization(ModuleBase):
       random.shuffle(self.failoverSEs)
       targetSE = metadata['resolvedSE'][0]
       metadata['resolvedSE'] = self.failoverSEs
-      result = failoverTransfer.transferAndRegisterFileFailover(fileName, metadata['localpath'], metadata['lfn'],
-                                                                targetSE, metadata['resolvedSE'], 
-                                                                fileGUID = metadata['guid'], 
+      result = failoverTransfer.transferAndRegisterFileFailover(fileName,
+                                                                metadata['localpath'],
+                                                                metadata['lfn'],
+                                                                targetSE,
+                                                                self.failoverSEs,
+                                                                fileMetaDict = metadata,
                                                                 fileCatalog = self.userFileCatalog)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))

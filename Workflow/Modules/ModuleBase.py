@@ -320,7 +320,7 @@ class ModuleBase(object):
     #  self.log.info('GUIDs found for all specified POOL files: %s' %(string.join(candidateFiles.keys(),', ')))
 
     for pfn, guid in pfnGUID['Value'].items():
-      candidateFiles[pfn]['guid'] = guid
+      candidateFiles[pfn]['GUID'] = guid
 
     #Get all additional metadata about the file necessary for requests
     final = {}
@@ -329,7 +329,7 @@ class ModuleBase(object):
       fileDict['LFN'] = metadata['lfn']
       fileDict['Size'] = os.path.getsize(fileName)
       fileDict['Addler'] = fileAdler(fileName)
-      fileDict['GUID'] = metadata['guid']
+      fileDict['GUID'] = metadata['GUID']
       fileDict['Status'] = "Waiting"   
       
       final[fileName] = metadata
@@ -337,7 +337,7 @@ class ModuleBase(object):
       final[fileName]['localpath'] = '%s/%s' % (os.getcwd(), fileName)  
 
     #Sanity check all final candidate metadata keys are present (return S_ERROR if not)
-    mandatoryKeys = ['guid', 'filedict'] #filedict is used for requests (this method adds guid and filedict)
+    mandatoryKeys = ['GUID', 'filedict'] #filedict is used for requests (this method adds guid and filedict)
     for fileName, metadata in final.items():
       for key in mandatoryKeys:
         if not metadata.has_key(key):

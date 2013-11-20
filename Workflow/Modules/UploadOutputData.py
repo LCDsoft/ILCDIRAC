@@ -255,7 +255,7 @@ class UploadOutputData(ModuleBase):
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self.request)
 
-    self.catalogs= self.ops.getValue('Production/%s/Catalogs' % self.experiment,
+    self.catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment,
                                      ['FileCatalog', 'LcgFileCatalog'])
 
 
@@ -266,9 +266,12 @@ class UploadOutputData(ModuleBase):
       for fileName, metadata in final.items():
         self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
                                                                                    ', '.join(metadata['resolvedSE'])))
-        result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], 
-                                                          metadata['lfn'], metadata['resolvedSE'], 
-                                                          fileGUID = metadata['guid'], fileCatalog = self.catalogs)
+        result = failoverTransfer.transferAndRegisterFile(fileName, 
+                                                          metadata['localpath'], 
+                                                          metadata['lfn'], 
+                                                          metadata['resolvedSE'], 
+                                                          fileMetaDict = metadata, 
+                                                          fileCatalog = self.catalogs)
         if not result['OK']:
           self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
           failover[fileName] = metadata
@@ -290,9 +293,13 @@ class UploadOutputData(ModuleBase):
         pass
       random.shuffle(failovers)
       metadata['resolvedSE'] = failovers
-      result = failoverTransfer.transferAndRegisterFileFailover(fileName, metadata['localpath'],
-                                                                metadata['lfn'], targetSE, metadata['resolvedSE'],
-                                                                fileGUID = metadata['guid'], fileCatalog = self.catalogs)
+      result = failoverTransfer.transferAndRegisterFileFailover(fileName, 
+                                                                metadata['localpath'],
+                                                                metadata['lfn'], 
+                                                                targetSE, 
+                                                                metadata['resolvedSE'],
+                                                                fileMetaDict = metadata, 
+                                                                fileCatalog = self.catalogs)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
