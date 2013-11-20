@@ -18,6 +18,7 @@ from DIRAC                                                import S_OK, S_ERROR, 
 from DIRAC.Core.Security.ProxyInfo                        import getProxyInfoAsString
 from DIRAC.Core.Utilities.Adler                           import fileAdler
 from DIRAC.TransformationSystem.Client.FileReport         import FileReport
+from DIRAC.WorkloadManagementSystem.Client.JobReport      import JobReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC.RequestManagementSystem.Client.Request         import Request
@@ -361,6 +362,18 @@ class ModuleBase(object):
       request = Request()
       self.workflow_commons['Request'] = request
       return request
+  #############################################################################
+
+  def _getJobReporter( self ):
+    """ just return the job reporter (object, always defined by dirac-jobexec)
+    """
+
+    if self.workflow_commons.has_key( 'JobReport' ):
+      return self.workflow_commons['JobReport']
+    else:
+      jobReport = JobReport( self.jobID )
+      self.workflow_commons['JobReport'] = jobReport
+      return jobReport
   
   def resolveInputVariables(self):
     """ Common utility for all sub classes, resolve the workflow parameters 
@@ -370,6 +383,8 @@ class ModuleBase(object):
     self.log.verbose("Step commons:", self.step_commons)
     
     self.request = self._getRequestContainer()
+    self.jobReport = self._getJobReporter()
+    
     self.prod_job_id = int(self.workflow_commons["JOB_ID"])
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
