@@ -57,7 +57,10 @@ class LCApplication(LCUtilityApplication):
       inputlist = ";".join(inputlist)
     if type(inputlist) not in StringTypes:
       return self._reportError("inputlist must be of type List or String" )
-    
+    items = inputlist.split(";")
+    for item in items:
+      if item.count("/"):
+        return self._reportError("The required item %s includes a /. This is not supported yet." % item)
     self.Required = inputlist
     return S_OK()
   
