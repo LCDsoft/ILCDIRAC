@@ -536,7 +536,7 @@ class ModuleBase(object):
     
     if os.path.isdir(os.path.join(self.basedirectory, 'lib')):
       try:
-        shutil.copy2(os.path.join(self.basedirectory, 'lib'), './lib')
+        shutil.copytree(os.path.join(self.basedirectory, 'lib'), './lib')
       except EnvironmentError, why:
         self.log.error("Failed to get the lib directory:", str(why))
     
