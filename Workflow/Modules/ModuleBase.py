@@ -579,6 +579,8 @@ class ModuleBase(object):
     if "Required" in self.step_commons:
       reqs = self.step_commons["Required"].rstrip(";").split(";")
       for reqitem in reqs:
+        if not reqitem:
+          continue
         if os.path.exists(reqitem):
           #file or dir is already here
           continue
