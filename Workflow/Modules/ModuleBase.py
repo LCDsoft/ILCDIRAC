@@ -589,6 +589,8 @@ class ModuleBase(object):
         if not res['OK']:
           self.log.error("Failed to copy %s: " % reqitem, res['Message'])
           return res
+        self.log.verbose("Copied to local directory", reqitem)
+        
 
     
     try:
