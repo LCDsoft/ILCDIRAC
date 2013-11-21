@@ -1,3 +1,11 @@
+[v20r1p10]
+
+* Core:
+FIX: small problem in fullCopy
+
+* ModuleBase:
+CHANGE: leave the fullCopy decide if the file is here of not.
+
 [v20r1p9]
 
 * Core:
