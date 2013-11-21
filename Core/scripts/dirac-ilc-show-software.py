@@ -24,7 +24,7 @@ if __name__=="__main__":
       for vers in  versions['Value']:
         gLogger.notice("     * %s" % vers)
         depsb = gConfig.getSections(base + "/" + platform + "/" + app + "/" + vers)
-        if len(depsb['Value']):
+        if 'Dependencies' in depsb['Value']:
           gLogger.notice("       Depends on")
           deps = gConfig.getSections(base + "/" + platform + "/" + app + "/" + vers + "/Dependencies")
           for dep in deps['Value']:
