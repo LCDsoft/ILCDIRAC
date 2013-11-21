@@ -1,3 +1,8 @@
+[v20r1p8]
+
+* ModuleBase:
+FIX: in case there are no required items.
+
 [v20r1p7]
 
 * Core
