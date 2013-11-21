@@ -69,18 +69,16 @@ def fullCopy(src, dst):
   """ Copy the full path from src to dst, creates missing directories if needed
   """
   
-  if not dst.count(os.sep):
-    if os.path.isfile(src):
-      try:
-        shutil.copy2(src, dst)
-      except EnvironmentError, why:
-        return S_ERROR(str(why))
-    else:
-      try:
-        shutil.copytree(src, dst)
-      except EnvironmentError, why:
-        return S_ERROR(str(why))
+  if os.path.isfile(src):
+    try:
+      shutil.copy2(src, dst)
+    except EnvironmentError, why:
+      return S_ERROR(str(why))
   else:
-    gLogger.error("The file %s cannot be copied, will be ignored" % dst)
+    try:
+      shutil.copytree(src, dst)
+    except EnvironmentError, why:
+      return S_ERROR(str(why))
+  
   return S_OK()
 
