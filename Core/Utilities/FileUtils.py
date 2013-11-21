@@ -83,7 +83,7 @@ def fullCopy(srcdir, dstdir, item):
     return S_ERROR("No items found!")
   
   for item in items:
-    item = item.lstrip(srcdir).lstrip("/")
+    item = item.replace(srcdir,"").lstrip("/")
     dst = os.path.join(dstdir, item)
 
     try:
