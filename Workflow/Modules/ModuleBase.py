@@ -91,6 +91,7 @@ class ModuleBase(object):
     self.production_id = 0
     self.prod_job_id = 0
     self.request = None
+    self.jobReport = None
     self.basedirectory = os.getcwd()
     
 
@@ -585,7 +586,7 @@ class ModuleBase(object):
           #file or dir is already here
           continue
         if os.path.exists(os.path.join(self.basedirectory, reqitem)):
-          res = fullCopy(os.path.join(self.basedirectory, reqitem), "./"+reqitem)
+          res = fullCopy(self.basedirectory, "./", reqitem)
           if not res['OK']:
             self.log.error("Failed to copy %s: " % reqitem, res['Message'])
             return res

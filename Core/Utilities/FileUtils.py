@@ -6,7 +6,9 @@ Several file utilities
 '''
 __RCSID__ = "$Id$"
 
-import os, shutil
+import os, shutil, glob
+from distutils import dir_util, errors
+
 from DIRAC import S_OK, S_ERROR, gLogger
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
@@ -65,20 +67,34 @@ def upload(path, appTar):
       return S_OK('Application uploaded')
   return S_OK()
 
-def fullCopy(src, dst):
-  """ Copy the full path from src to dst, creates missing directories if needed
+def fullCopy(srcdir, dstdir, item):
+  """ Copy the item from srcdir to dstdir, creates missing directories if needed
   """
-  
-  if os.path.isfile(src):
+  item = item.lstrip("/").rstrip("/")
+  srcdir = srcdir.rstrip("/")
+  dstdir = dstdir.rstrip("/")
+  src = os.path.join(srcdir, item)
+  items = glob.glob(src)
+  if not items:
+    return S_ERROR("No items found!")
+  for item in items:
+    item = item.lstrip(srcdir).lstrip("/")
+    dst = os.path.join(dstdir, item)
+
     try:
-      shutil.copy2(src, dst)
-    except EnvironmentError, why:
+      dir_util.create_tree(dstdir, [item])
+    except errors.DistutilsFileError, why:
       return S_ERROR(str(why))
-  else:
-    try:
-      shutil.copytree(src, dst)
-    except EnvironmentError, why:
-      return S_ERROR(str(why))
-  
+    
+    if os.path.isfile(os.path.join(srcdir, item)):
+      try:
+        shutil.copy2(os.path.join(srcdir, item), dst)
+      except EnvironmentError, why:
+        return S_ERROR(str(why))
+    else:
+      try:
+        shutil.copytree(os.path.join(srcdir, item), dst)
+      except EnvironmentError, why:
+        return S_ERROR(str(why))
   return S_OK()
 
