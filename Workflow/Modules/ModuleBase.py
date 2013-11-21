@@ -74,7 +74,7 @@ class ModuleBase(object):
     self.stdError = ''
     self.debug = False
     self.extraCLIarguments = ""
-    self.jobID = None
+    self.jobID = 0
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
     self.eventstring = ['']
