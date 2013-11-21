@@ -585,14 +585,11 @@ class ModuleBase(object):
         if os.path.exists(reqitem):
           #file or dir is already here
           continue
-        if os.path.exists(os.path.join(self.basedirectory, reqitem)):
-          res = fullCopy(self.basedirectory, "./", reqitem)
-          if not res['OK']:
-            self.log.error("Failed to copy %s: " % reqitem, res['Message'])
-            return res
-        else:
-          self.log.error("Missing file or folder in base directory: ", reqitem)
-          return S_ERROR("Missing item %s in base directory" % reqitem)
+        res = fullCopy(self.basedirectory, "./", reqitem)
+        if not res['OK']:
+          self.log.error("Failed to copy %s: " % reqitem, res['Message'])
+          return res
+
     
     try:
       self.applicationSpecificMoveBefore()    
