@@ -3,6 +3,9 @@
 * Core
 FIX: the fullCopy utility needs more work.
 
+* Scripts
+FIX: dirac-ilc-show-software: If an application has additional sections (AdditionalEnvVar) but no Dependencies dirac-ilc-show-software would crash.
+
 [v20r1p6]
 
 * MarlinAnalysis
