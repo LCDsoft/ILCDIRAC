@@ -54,24 +54,25 @@ class TarTheProdLogsAgent( AgentModule ):
     """Sets defaults
     """
     self.am_setModuleParam("shifterProxy", "ProductionManager")
+
     self.basepath = self.am_getOption("BasePath", "")
     if not self.basepath:
       return S_ERROR("Missing mandatory option BasePath")
-    self.baselogpath = self.am_getOption("BaseLogPath", "")
-    if not self.basepath:
-      return S_ERROR("Missing mandatory option BaseLogpath")
 
+    self.baselogpath = self.am_getOption("BaseLogPath", "")
+    if not self.baselogpath:
+      return S_ERROR("Missing mandatory option BaseLogPath")
 
     self.ops = Operations()
+
     dest_se = self.ops.getValue("Transformations/ArchiveSE", "")
     if not dest_se:
-      return S_ERROR("Archival SE option not defined")
-    
+      return S_ERROR("Missing mandatory option ArchiveSE")
     self.storageElement = StorageElement( dest_se )
     
     baselfn = self.ops.getValue("Transformations/BaseLogLFN", "")
     if not baselfn:
-      return S_ERROR("Missing mandatory BaseLogLFN option")
+      return S_ERROR("Missing mandatory option Transformations/BaseLogLFN")
     self.baselfn = baselfn
     
     self.transclient = TransformationClient()
@@ -225,6 +226,7 @@ class TarTheProdLogsAgent( AgentModule ):
     
     if pfn in res['Value']["Successful"]:
       #the file is on the storage, make a new one
+      #AS: What if _2.tgz already exists?
       tarballname = os.path.basename(tarballpath)
       pfn = final_pfn_path + "/" + tarballname.rstrip(".tgz") + "_2.tgz" 
     
