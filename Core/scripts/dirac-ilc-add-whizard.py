@@ -289,7 +289,8 @@ if __name__=="__main__":
   gLogger.notice("Preparing Tarball")
 
   ##Make a folder in the current directory of the user to store the whizard libraries, executable et al.
-  localWhizardFolder = os.path.join(startDir,("whizard" + whizard_version))
+  localWhizardFolderRel = ("whizard" + whizard_version) # relative path
+  localWhizardFolder = os.path.join(startDir, localWhizardFolderRel)
 
   if not os.path.exists(localWhizardFolder):
     os.makedirs(localWhizardFolder)
@@ -319,7 +320,7 @@ if __name__=="__main__":
   gLogger.notice("Creating Tarball...")
   appTar = localWhizardFolder + ".tgz"
   myappTar = tarfile.open(appTar, "w:gz")
-  myappTar.add(localWhizardFolder)
+  myappTar.add(localWhizardFolderRel)
   myappTar.close()
   
   md5sum = md5.md5(open( appTar, 'r' ).read()).hexdigest()
