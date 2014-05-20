@@ -47,7 +47,7 @@ class GetSRMFile(ModuleBase):
       return S_OK('Workflow status is not OK')
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error("FFailed to resolve input parameters:", result["Message"])
+      self.log.error("Failed to resolve input parameters:", result["Message"])
       return result
     if not self.srmfiles:
       self.log.error('Files txt where not found correctly: %s' % self.srmfiles)

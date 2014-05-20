@@ -12,7 +12,7 @@ Run SLIC
 __RCSID__ = "$Id$"
 
 
-import os, types, urllib, zipfile, shutil
+import os, types, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
@@ -100,18 +100,7 @@ class SLICAnalysis(ModuleBase):
           
     return S_OK('Parameters resolved')
   
-  def applicationSpecificMoveBefore(self):
-    """ Handle the detector model
-    """
-    if os.path.exists(os.path.join(self.basedirectory, self.detectorModel+".zip")):
-      shutil.move(os.path.join(self.basedirectory, self.detectorModel+".zip"), "./"+self.detectorModel+".zip")
-    return
   
-  def applicationSpecificAfter(self):
-    """ Handle the detector model
-    """
-    shutil.move("./"+self.detectorModel+".zip", os.path.join(self.basedirectory, self.detectorModel+".zip"))
-    return
   
   def runIt(self):
     """
@@ -172,7 +161,7 @@ class SLICAnalysis(ModuleBase):
     
     slicmac = 'slicmac.mac'
     if len(self.InputFile):
-      res = resolveIFpaths(self.basedirectory, self.InputFile)
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.log.error("Generator file not found")
         return res

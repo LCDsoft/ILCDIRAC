@@ -127,28 +127,7 @@ class MarlinAnalysis(ModuleBase):
           self.InputFile.append(files)
             
     return S_OK('Parameters resolved')
-  
-  def applicationSpecificMoveBefore(self):
-    """ Get the gearfile from the common dir if not here
-    """
-    if self.inputGEAR:
-      res = resolveIFpaths(self.basedirectory, [self.inputGEAR])
-      if not res["OK"]:
-        self.log.error("Failed locating the gear file")
-        return
-      self.inputGEAR = res['Value'][0]
-      shutil.copy2(self.inputGEAR, "./"+os.path.basename(self.inputGEAR))
-
-    return
-  
-  def applicationSpecificMoveAfter(self):  
-    """ Send back to the base dir the dst and rec files
-    """
-    for of in glob.glob("*.slcio"):
-      shutil.move("./"+of, os.path.join(self.basedirectory, of))
       
-    return
-  
   def runIt(self):
     """
     Called by Agent
@@ -223,7 +202,7 @@ class MarlinAnalysis(ModuleBase):
     
     res = PrepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio, 
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
-                         self.basedirectory, self.debug)
+                         self.debug)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
@@ -407,7 +386,7 @@ fi
     """
     if self.ignoremissingInput:
       return S_OK("")
-    res = resolveIFpaths(self.basedirectory, self.InputFile)
+    res = resolveIFpaths(self.InputFile)
     if not res['OK']:
       self.setApplicationStatus('%s: missing slcio file' % self.applicationName)
       return S_ERROR('Missing slcio file!')

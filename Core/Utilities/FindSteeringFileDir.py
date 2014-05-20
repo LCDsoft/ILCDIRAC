@@ -28,7 +28,7 @@ def getSteeringFileDirName(systemConfig, application, applicationVersion):
   return getSteeringFileDir(systemConfig, version)
 
 def getSteeringFileDir(systemConfig, version):
-  """Return directly the directory, without passing by the depedancy resolution
+  """Return directly the directory, without passing by the dependency resolution
   """
   res = CheckCVMFS(systemConfig, ['steeringfiles', version])
   if res['OK']:
@@ -38,8 +38,8 @@ def getSteeringFileDir(systemConfig, version):
   if not res['OK']:
     return res
   mySoftDir = res['Value']
-  res = check('steeringfiles.%s' % version, '.', [mySoftDir])
   ##check that all the files are there: software is not corrupted.
+  res = check('steeringfiles.%s' % version, '.', [mySoftDir])
   if not res['OK']:
     return res
   return S_OK(mySoftDir)

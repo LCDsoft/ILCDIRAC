@@ -321,7 +321,7 @@ def fixedXML(element):
   return fixed_element
 
 def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
-                   numberofevts, outputFile, outputREC, outputDST, basedir, debug):
+                   numberofevts, outputFile, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
@@ -338,8 +338,6 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   @type outputREC: string
   @param outputDST: file name of DST
   @type outputDST: string
-  @param basedir: Base directory, needed for the overlay files resolution
-  @type basedir: string
   @param debug: set to True to use given mode, otherwise set verbosity to SILENT
   @type debug: bool
   @return: S_OK()
@@ -449,7 +447,7 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               if subparam.attrib['value'] == '0':
                 overlay = False          
         if overlay: 
-          files = getOverlayFiles( basedir )
+          files = getOverlayFiles()
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
@@ -470,7 +468,7 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               if subparam.text == '0':
                 overlay = False          
         if overlay: 
-          files = getOverlayFiles(basedir, bkg_Type)
+          files = getOverlayFiles(bkg_Type)
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
@@ -560,7 +558,7 @@ def PrepareMacFile(inputmac, outputmac, stdhep, nbevts,
   return S_OK(True)
 
 def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
-                     trackingstrategy, inputslcio, basedir, jars = None,
+                     trackingstrategy, inputslcio, jars = None,
                      cachedir = None, outputFile = None,
                      outputRECFile = None, outputDSTFile = None,
                      debug = False):
@@ -733,7 +731,7 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
           if not res['OK']:
             return res
         driver.remove(driver.find('overlayFiles'))
-        files = getOverlayFiles(basedir, bkg_Type)
+        files = getOverlayFiles(bkg_Type)
         if not len(files):
           return S_ERROR('Could not find any overlay files')
         overlay = Element('overlayFiles')

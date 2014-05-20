@@ -60,21 +60,6 @@ class StdHepCut(ModuleBase):
       self.SteeringFile = "cuts_local.txt"
     return S_OK()
 
-  def applicationSpecificMoveBefore(self):
-    """ Handle the outputfile name
-    """
-    if not self.OutputFile:
-      dircont = os.listdir("./")
-      for myfile in dircont:
-        if myfile.count(".stdhep"):
-          self.OutputFile = myfile.rstrip(".stdhep") + "_reduced.stdhep"
-          break
-      if not self.OutputFile:
-        self.log.error("Could not find suitable file name for output")
-        return 
-   
-    return 
-
   def runIt(self):
     """ Called from Workflow
     """ 

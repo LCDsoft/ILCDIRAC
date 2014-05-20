@@ -27,8 +27,6 @@ class LCApplication(LCUtilityApplication):
     self.Energy = 0
     self.steeringFileVersion = ""
     self.ForgetAboutInput = False
-    self.Required = ""
-    
     self._importLocation = "ILCDIRAC.Workflow.Modules"
 
     
@@ -47,23 +45,6 @@ class LCApplication(LCUtilityApplication):
     
     return S_OK()
   
-  def setRequired(self, inputlist):
-    """ Require the specified files/directories to run. Make sure they are in the run directory.
-    
-    @param inputlist: list of items that are required to run the application. Ex: data and NNets for LCFI.
-    @type inputlist: string or list
-    """
-    if type(inputlist) == ListType:
-      inputlist = ";".join(inputlist)
-    if type(inputlist) not in StringTypes:
-      return self._reportError("inputlist must be of type List or String" )
-    items = inputlist.split(";")
-    for item in items:
-      if item.count("/"):
-        return self._reportError("The required item %s includes a /. This is not supported yet." % item)
-    self.Required = inputlist
-    return S_OK()
-  
   def _getSpecificAppParameters(self, stepdef):
     """ Overload of Application._getSpecificAppParameter
     """
@@ -72,8 +53,6 @@ class LCApplication(LCUtilityApplication):
     if self.steeringFileVersion:
       stepdef.addParameter(Parameter("SteeringFileVers", "", "string", "", "",  False, False, 
                                      "SteeringFile version to use"))
-    stepdef.addParameter(Parameter("Required", "", "string", "", "",  False, False, 
-                                   "Required files or directories"))
     return S_OK()
   
   def _setSpecificAppParameters(self, stepinst):
@@ -84,8 +63,6 @@ class LCApplication(LCUtilityApplication):
     if self.steeringFileVersion:
       stepinst.setValue("SteeringFileVers", self.steeringFileVersion)
       
-    stepinst.setValue( "Required",          self.Required)
-  
     return S_OK()
   
   def _doSomethingWithJob(self):

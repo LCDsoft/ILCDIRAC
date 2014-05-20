@@ -111,16 +111,6 @@ class LCSIMAnalysis(ModuleBase):
     self.log.info("Input files to treat %s" % self.InputFile)      
     return S_OK('Parameters resolved')
 
-  def applicationSpecificMoveBefore(self):
-    """ Handle the tracking strategy
-    """
-    if self.trackingstrategy:
-      if os.path.exists(os.path.join(self.basedirectory, os.path.basename(self.trackingstrategy))):
-        shutil.copy2(os.path.join(self.basedirectory, os.path.basename(self.trackingstrategy)), 
-                     "./"+os.path.basename(self.trackingstrategy))
-
-    return
-
   def runIt(self):
     """
     Called by JobAgent
@@ -157,7 +147,7 @@ class LCSIMAnalysis(ModuleBase):
 
     runonslcio = []
     if len(self.InputFile):
-      res = resolveIFpaths(self.basedirectory, self.InputFile)
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.setApplicationStatus('LCSIM: missing input slcio file')
         return S_ERROR('Missing slcio file!')
@@ -223,7 +213,7 @@ class LCSIMAnalysis(ModuleBase):
     
     lcsimfile = "job_%s.lcsim" % self.STEP_NUMBER
     res = PrepareLCSIMFile(self.SteeringFile, lcsimfile, self.NumberOfEvents, 
-                           self.trackingstrategy, runonslcio, self.basedirectory, jars, cachedir,
+                           self.trackingstrategy, runonslcio, jars, cachedir,
                            self.OutputFile, self.outputREC, self.outputDST, self.debug)
     if not res['OK']:
       self.log.error("Could not treat input lcsim file because %s" % res['Message'])

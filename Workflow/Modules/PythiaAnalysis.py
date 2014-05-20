@@ -71,7 +71,7 @@ class PythiaAnalysis(ModuleBase):
     res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error('Failed finding the software area')
-      self.setApplicationStatus('Could not find neither local area not shared area install')
+      self.setApplicationStatus('Could find neither local area nor shared area install')
       return res
     myappDir = res['Value']
 

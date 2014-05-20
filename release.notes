@@ -1,3 +1,24 @@
+[v21r0p0]
+
+* General
+  Kept changes to RCSID and HeadURL and whitespace for pylint, tried to exclude everything related to (Set)Required
+
+* Interfaces 
+  COPIED: LCApplication class, between Application and Applications. Allows the definition of the steering files per application 
+  COPIED: LCUtilityApplication: Needed for the steeringfiles handling Refactoring of Application classes
+
+* Scripts
+  FIX: dirac-ilc-show-software: If an application has additional sections (AdditionalEnvVar) but no Dependencies dirac-ilc-show-software would crash.
+  FIX: dirac-ild-add-whizard: Fix passing full path to the tar call instead of the relative path
+
+* Core
+  COPIED: Include functionality for CVMFS (S.Poss)
+
+* Workflow
+
+  NEW: StdHepCut: Allowing to specify cuts inline (S.Poss)
+
+
 [v20r1p10]
 
 * Core:

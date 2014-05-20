@@ -1,5 +1,5 @@
 #####################################################
-# $HeadURL: $
+# $HeadURL$
 #####################################################
 '''
 Dummy module that prints out the workflow parameters
@@ -8,7 +8,7 @@ Dummy module that prints out the workflow parameters
 
 @author: sposs
 '''
-__RCSID__ = "$Id: $"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger

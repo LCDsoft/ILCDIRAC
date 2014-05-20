@@ -10,7 +10,7 @@ Run SLICPandora
 '''
 __RCSID__ = "$Id$"
 
-import os, urllib, zipfile, types, shutil
+import os, urllib, zipfile, types
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
@@ -81,17 +81,6 @@ class SLICPandoraAnalysis (ModuleBase):
            
     return S_OK('Parameters resolved')
   
-  def applicationSpecificMoveBefore(self):
-    """ Overload of ModuleBase, for the detector model
-    """
-    if os.path.exists(os.path.join(self.basedirectory, os.path.basename(self.detectorxml))):
-      shutil.copy2(os.path.join(self.basedirectory, os.path.basename(self.detectorxml)), 
-                   os.path.basename(self.detectorxml))
-
-    detmodel = os.path.basename(self.detectorxml).replace("_pandora.xml", ".zip")  
-    if os.path.exists(os.path.join(self.basedirectory, detmodel)):
-      shutil.copy2(os.path.join(self.basedirectory, detmodel), "./"+detmodel)
-    return
   
   
   def runIt(self):
@@ -117,7 +106,7 @@ class SLICPandoraAnalysis (ModuleBase):
       return res
     env_script_path = res["Value"]
     
-    res = resolveIFpaths(self.basedirectory, self.InputFile)
+    res = resolveIFpaths(self.InputFile)
     if not res['OK']:
       self.log.error('Could not find input files')
       self.setApplicationStatus('SLICPandora: missing slcio file')

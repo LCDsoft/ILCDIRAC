@@ -85,7 +85,7 @@ class StdHepSplit(ModuleBase):
 
     
     if len(self.InputFile):
-      res = resolveIFpaths(self.basedirectory, self.InputFile)
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.log.error("Cannot find input file")
         self.setApplicationStatus('StdHepSplit: missing input stdhep file')

@@ -2,7 +2,7 @@
 Remove input data (used in case of merging
 """
 
-__RCSID__ = "$Id:  $"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer

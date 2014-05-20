@@ -84,7 +84,7 @@ class LCIOSplit(ModuleBase):
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     if len(self.InputFile):
-      res = resolveIFpaths(self.basedirectory, self.InputFile)
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.log.error("Missing slcio file!")
         self.setApplicationStatus('LCIOSplit: missing input slcio file')

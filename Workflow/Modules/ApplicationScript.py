@@ -39,15 +39,6 @@ class ApplicationScript(ModuleBase):
 
     return S_OK()
 
-  def applicationSpecificMoveBefore(self):
-    """ Make sure the user defined script is here
-    """
-    if self.script:
-      self.script = os.path.basename(self.script)
-      if os.path.exists(os.path.join(self.basedirectory, self.script)):
-        shutil.copy2(os.path.join(self.basedirectory, self.script), "./"+self.script)
-    return S_OK()
-
   def runIt(self):
     """ Run the application in a controlled environment
     """

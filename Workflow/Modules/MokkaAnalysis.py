@@ -133,15 +133,6 @@ class MokkaAnalysis(ModuleBase):
           self.InputFile.append(files)
           break
     return S_OK('Parameters resolved')
-  
-  def applicationSpecificMoveBefore(self):
-    """ Need to copy the macFile if defined.
-    """
-    if not self.macFile:
-      return
-    macfile = os.path.join(self.basedirectory, os.path.basename(self.macFile))
-    if os.path.exists(macfile):
-      shutil.copy2(macfile, "./"+os.path.basename(self.macFile))
     
   def runIt(self):
     """ Called by ModuleBase
@@ -223,7 +214,7 @@ class MokkaAnalysis(ModuleBase):
     #first, I need to take the stdhep file, find its path (possible LFN)      
     if len(self.InputFile) > 0:
       #self.InputFile = os.path.basename(self.InputFile)
-      res = resolveIFpaths(self.basedirectory, self.InputFile)
+      res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.log.error("Generator file not found")
         #result = sqlwrapper.mysqlCleanUp()

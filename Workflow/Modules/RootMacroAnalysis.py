@@ -39,11 +39,6 @@ class RootMacroAnalysis(ModuleBase):
 
     return S_OK('Parameters resolved') 
   
-  def applicationSpecificMoveBefore(self):
-    basemacropath = os.path.join(self.basedirectory, os.path.basename(self.macro))
-    if os.path.exists(basemacropath):
-      shutil.copy2(basemacropath, "./"+os.path.basename(self.macro))
-  
   def runIt(self):
     """
     Called by Agent

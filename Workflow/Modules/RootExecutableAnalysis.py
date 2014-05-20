@@ -10,7 +10,7 @@ Module to run root executables
 '''
 __RCSID__ = "$Id$"
 
-import os, shutil
+import os
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -37,11 +37,6 @@ class RootExecutableAnalysis(ModuleBase):
       return S_ERROR("Script no defined")
     
     return S_OK('Parameters resolved') 
-  
-  def applicationSpecificMoveBefore(self):
-    basescriptpath = os.path.join(self.basedirectory, os.path.basename(self.script))
-    if os.path.exists(basescriptpath):
-      shutil.copy2(basescriptpath, "./"+os.path.basename(self.script))
   
   def runIt(self):
     """

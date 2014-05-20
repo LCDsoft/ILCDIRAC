@@ -29,9 +29,9 @@ def getProdFilename(filename, prodID, jobID):
     outfile = name[0] + "_" + str(prodID) + "_" + str(jobID) + ".root"
   return outfile
 
-def resolveIFpaths(basedir, inputfiles):
-  """ Try to find out in which sub-directory are each file. In the future, should be useless if 
-  PoolXMLCatalog can be used. 
+def resolveIFpaths(inputfiles):
+  """ Try to find out in which sub-directory are each file. In the future, should be useless if
+  PoolXMLCatalog can be used.
   """
   log = gLogger.getSubLogger("ResolveInputFiles")
   listoffiles = []
@@ -41,25 +41,24 @@ def resolveIFpaths(basedir, inputfiles):
       continue
     listoffiles.append(os.path.basename(myfile))
     string += "%s\n" % os.path.basename(myfile)
-  string = string.rstrip()  
+  string = string.rstrip()
   log.info(string)
 
   listofpaths = []
   listofdirs = []
-  for mydir in os.listdir(basedir):
-    if os.path.isdir( os.path.join(basedir, mydir) ):
-      listofdirs.append( os.path.join(basedir, mydir) )
-      
+  for mydir in os.listdir(os.getcwd()):
+    if os.path.isdir(mydir):
+      listofdirs.append(mydir)
   filesnotfound = []
   for infile in listoffiles:
     filefound = False
-    if os.path.exists(os.path.join(basedir, infile)):
-      listofpaths.append(os.path.join(basedir, infile) )
+    if os.path.exists(os.path.join(os.getcwd(), infile)):
+      listofpaths.append(os.path.join(os.getcwd(), infile))
       filefound = True
     else:
       for mydir in listofdirs:
-        if os.path.exists(os.path.join(basedir, mydir, infile)):
-          listofpaths.append(os.path.join(basedir, mydir, infile))
+        if os.path.exists( os.path.join(os.getcwd(), mydir, infile)):
+          listofpaths.append( os.path.join( os.getcwd(), mydir, infile))
           listofdirs.remove(mydir)
           filefound = True
           break
