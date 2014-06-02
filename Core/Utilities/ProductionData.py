@@ -86,8 +86,7 @@ def constructProductionLFNs(paramDict):
   for fileTuple in fileTupleList:
     #lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8))
     lfn = fileTuple[0] + "/" + str(productionID).zfill(8) + "/" + str(int(jobID)/1000).zfill(3) + "/" + fileTuple[1]
-    if lfn.count('//'):
-      lfn = lfn.replace('//','/')
+    lfn = cleanUpLFN(lfn)
     outputData.append(lfn)
     #bkLFNs.append(lfn)
     if debugRoot:
@@ -103,7 +102,9 @@ def constructProductionLFNs(paramDict):
   #TODO adjust for ILD
   logPath = logPathtemp + "/" + str(productionID).zfill(8) + "/LOG"
   logFilePath = ['%s/%s' % (logPath, str(int(jobID)/1000).zfill(3))]
+  logFilePath = cleanUpLFN (logFilePath)
   logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3))]
+  logTargetPath = cleanUpLFN(logTargetPath)
   #[ aside, why does makeProductionPath not append the jobID itself ????
   #  this is really only used in one place since the logTargetPath is just written to a text file (should be reviewed)... ]
 
@@ -274,8 +275,7 @@ def _getLFNRoot(lfn, lfnprefix='', lfnpostfix=0):
   #  else:
   #    break
   
-  if re.search('//', LFN_ROOT):
-    LFN_ROOT = LFN_ROOT.replace('//', '/')
+  LFN_ROOT = cleanUpLFN(LFN_ROOT)
        
   if lfnprefix.lower() in ('test', 'debug'):
     tmpLfnRoot = LFN_ROOT.split("/")
@@ -287,5 +287,13 @@ def _getLFNRoot(lfn, lfnprefix='', lfnpostfix=0):
     LFN_ROOT = string.join(tmpLfnRoot, os.path.sep)
 
   return LFN_ROOT
-        
+
+
+def cleanUpLFN( lfn ):
+  """ Normalise LFNs
+  """
+  while lfn.count('//'):
+    lfn = lfn.replace('//','/')
+  return lfn
+
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
