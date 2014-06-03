@@ -1,3 +1,11 @@
+[v19r1p15]
+
+* Core
+
+FIX: dirac-ilc-show-software would crash for applications with AdditionalEnvVar but without dependencies
+FIX: dirac-ilc-add-whizard produced a wrong tarball structure
+FIX: ILDProduction: Too many slashes in the LFNs, cleanup of ProcessList Module
+
 [v19r1p14]
 
 * Core:
