@@ -7,6 +7,7 @@ Created on Sep 21, 2010
 @author: sposs
 '''
 
+from DIRAC import gConfig, gLogger, exit as dexit
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK,S_ERROR
 import os, tarfile, shutil, sys, string
@@ -54,62 +55,61 @@ def redirectLogOutput(fd, message):
 def readPRCFile(prc):
   """ Read the prc file to create the process description
   """
-  list = {}
-  myprc = file(prc)
-  model = ""
-  for process in myprc:
-    process = process.rstrip()
-    if not len(process):
-      continue
-    if process[0] == "#":
-      continue
-    elems = process.split()
-    if elems[0] == "alias":
-      continue
-    elif elems[0] == "model":
-      model = elems[1]
-    elif not elems[0] == "model":
-      list[elems[0]] = {}
-      list[elems[0]]['Detail'] = string.join(elems[1:3], "->")
-      list[elems[0]]['Generator'] = elems[3]
-      list[elems[0]]['Restrictions'] = "none"
-      if len(elems) > 4:
-        list[elems[0]]['Restrictions'] = string.join(elems[4:], " ")
-      list[elems[0]]['Model'] = model
-      list[elems[0]]['InFile'] = "whizard.template.in"
-    else:
-      continue
-  
-  return list
+  myPRCList = {}
+  with open(prc) as myprc:
+    model = ""
+    for process in myprc:
+      process = process.rstrip()
+      if not len(process):
+        continue
+      if process[0] == "#":
+        continue
+      elems = process.split()
+      if elems[0] == "alias":
+        continue
+      elif elems[0] == "model":
+        model = elems[1]
+      elif not elems[0] == "model":
+        myPRCList[elems[0]] = {}
+        myPRCList[elems[0]]['Detail'] = string.join(elems[1:3], "->")
+        myPRCList[elems[0]]['Generator'] = elems[3]
+        myPRCList[elems[0]]['Restrictions'] = "none"
+        if len(elems) > 4:
+          myPRCList[elems[0]]['Restrictions'] = string.join(elems[4:], " ")
+        myPRCList[elems[0]]['Model'] = model
+        myPRCList[elems[0]]['InFile'] = "whizard.template.in"
+      else:
+        continue
+    return myPRCList
 
 def getDetailsFromPRC(prc, processin):
   """ Get the process details from the prc file
   """
   details = {}
-  myprc = file(prc)
-  model = ""
-  for process in myprc:
-    process = process.rstrip()
-    if not len(process):
-      continue
-    elems = process.split()
-    if process[0] == "#":
-      continue
-    elif elems[0] == "model":
-      model = elems[1]
-    elif not elems[0] == "model":
-      if elems[0] == processin:
-        details['Model'] = model
-        details['Generator'] = elems[3]
-        details['Restrictions'] = "none"
-        if len(elems) > 4:
-          details['Restrictions'] = string.join(elems[4:], " ")
-        break
+  with open(prc) as myprc:
+    model = ""
+    for process in myprc:
+      process = process.rstrip()
+      if not len(process):
+        continue
+      elems = process.split()
+      if process[0] == "#":
+        continue
+      elif elems[0] == "model":
+        model = elems[1]
+      elif not elems[0] == "model":
+        if elems[0] == processin:
+          details['Model'] = model
+          details['Generator'] = elems[3]
+          details['Restrictions'] = "none"
+          if len(elems) > 4:
+            details['Restrictions'] = string.join(elems[4:], " ")
+          break
   return details
 
 
-"""Find the version of the gfortran compiler"""
 def checkGFortranVersion():
+  """Find the version of the gfortran compiler"""
   p = subprocess.Popen(['gfortran', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = p.communicate()
   if out.find("4.4") > -1:
@@ -117,8 +117,8 @@ def checkGFortranVersion():
   return S_ERROR("Wrong gFortran version")
 
 
-"""Check the version of the operating system compiler"""
 def checkSLCVersion():
+  """Check the version of the operating system compiler"""
   p = subprocess.Popen(['cat', '/etc/issue'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = p.communicate()
   if out.find("release 5") > -1:
@@ -126,8 +126,8 @@ def checkSLCVersion():
   return S_ERROR("Wrong Operating System")
 
 
-"""Get List of Libraries for library or executable"""
 def getListOfLibraries(pathName):
+  """Get List of Libraries for library or executable"""
   listOfLibraries = []
   p = subprocess.Popen(['ldd', pathName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = p.communicate()
@@ -141,8 +141,7 @@ def getListOfLibraries(pathName):
   return listOfLibraries
 
 
-if __name__=="__main__":
-  from DIRAC import gConfig, gLogger, exit as dexit
+def doTheWhizardInstallation():
 
   res = checkSLCVersion()
   if res != S_OK:
@@ -389,6 +388,7 @@ if __name__=="__main__":
         if not res['OK']:
           gLogger.error("Upload to %s failed" % tarballurl['Value'])
           dexit(255)
+
     result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                     md5sum)
           
@@ -397,6 +397,7 @@ if __name__=="__main__":
                                                                                        appName.lower(),
                                                                                        appVersion),
                                     beam_spectra_version)
+
   gLogger.verbose("Done uploading the tar ball")
   
   os.remove(appTar)
@@ -418,4 +419,8 @@ if __name__=="__main__":
     result = diracAdmin.csCommitChanges(False)
     gLogger.verbose(result)
   gLogger.notice('All done OK!')
+  dexit(0)
+
+if __name__=="__main__":
+  doTheWhizardInstallation()
   dexit(0)

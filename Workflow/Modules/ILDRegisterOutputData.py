@@ -81,36 +81,36 @@ class ILDRegisterOutputData(ModuleBase):
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         meta.update(nbevts) 
         
-      if ['CrossSection'] in self.inputdataMeta:
+      if 'CrossSection' in self.inputdataMeta:
         xsec = {'CrossSection':self.inputdataMeta['CrossSection']}
         meta.update(xsec)
         
-      if ['CrossSectionError'] in self.inputdataMeta:
+      if 'CrossSectionError' in self.inputdataMeta:
         xsec = {'CrossSectionError':self.inputdataMeta['CrossSectionError']}
         meta.update(xsec)
         
-      if ['GenProcessID'] in self.inputdataMeta:
+      if 'GenProcessID' in self.inputdataMeta:
         fmeta = {'GenProcessID':self.inputdataMeta['GenProcessID']}
         meta.update(fmeta)
         
-      if ['GenProcessType'] in self.inputdataMeta:
+      if 'GenProcessType' in self.inputdataMeta:
         fmeta = {'GenProcessType':self.inputdataMeta['GenProcessType']}
         meta.update(fmeta)
         
-      if ['GenProcessName'] in self.inputdataMeta:
+      if 'GenProcessName' in self.inputdataMeta:
         fmeta = {'GenProcessName':self.inputdataMeta['GenProcessName']}
         meta.update(fmeta)
         
-      if ['Luminosity'] in self.inputdataMeta:
+      if 'Luminosity' in self.inputdataMeta:
         fmeta = {'Luminosity':self.inputdataMeta['Luminosity']}
         meta.update(fmeta)
         
-      if ['BeamParticle1'] in self.inputdataMeta:
+      if 'BeamParticle1' in self.inputdataMeta:
         fmeta = {'BeamParticle1':self.inputdataMeta['BeamParticle1'],
                  'BeamParticle2':self.inputdataMeta['BeamParticle2']}
         meta.update(fmeta)
         
-      if ['PolarizationB1'] in self.inputdataMeta:
+      if 'PolarizationB1' in self.inputdataMeta:
         fmeta = {'PolarizationB1':self.inputdataMeta['PolarizationB1'],
                  'PolarizationB2':self.inputdataMeta['PolarizationB2']}
         meta.update(fmeta)

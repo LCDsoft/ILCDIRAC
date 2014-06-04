@@ -101,10 +101,8 @@ def constructProductionLFNs(paramDict):
   #logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
   #TODO adjust for ILD
   logPath = logPathtemp + "/" + str(productionID).zfill(8) + "/LOG"
-  logFilePath = ['%s/%s' % (logPath, str(int(jobID)/1000).zfill(3))]
-  logFilePath = cleanUpLFN (logFilePath)
-  logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3))]
-  logTargetPath = cleanUpLFN(logTargetPath)
+  logFilePath = [cleanUpLFN('%s/%s' % (logPath, str(int(jobID)/1000).zfill(3)))]
+  logTargetPath = [cleanUpLFN('%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3)))]
   #[ aside, why does makeProductionPath not append the jobID itself ????
   #  this is really only used in one place since the logTargetPath is just written to a text file (should be reviewed)... ]
 
