@@ -1,3 +1,9 @@
+[v19r1p16]
+
+* Core
+
+FIX: dirac-architecture allow for CentOS release 6
+
 [v19r1p15]
 
 * Core
