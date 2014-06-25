@@ -24,7 +24,7 @@ from DIRAC.Resources.Storage.StorageElement                     import StorageEl
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
-import os, tarfile
+import os, tarfile, subprocess
 
 __RCSID__ = "$Id$"
 
@@ -88,7 +88,7 @@ class TarTheProdLogsAgent( AgentModule ):
       self.log.error("Failed to clean up previous run:", res["Message"])
       return res
     
-    res = self.getDirectoriesAndFiles()
+    res = self.getDirectories()
     if not res["OK"]:
       return res
     
@@ -107,7 +107,7 @@ class TarTheProdLogsAgent( AgentModule ):
       res = self.createTarBallAndCleanTheLogs(prod, files)
       if not res["OK"]:
         self.log.error("Could not get the tar ball:", res["Message"])
-        continue 
+        continue
       
       tarBall = res["Value"]
       res = self.uploadToStorage(prod, tarBall)
@@ -148,17 +148,16 @@ class TarTheProdLogsAgent( AgentModule ):
             
     return S_OK()
   
-  def getDirectoriesAndFiles(self):
+  def getDirectories(self):
     """ List the directories below the base
     """
     final_dirs = {}
     for root, dirs, files in os.walk(self.baselogpath):
-      if root.count("software"):
-        continue
-      if not len(files):
-        continue
-      final_dirs[root] = files
-        
+      if root.split("/")[-1] == "LOG" and len(dirs) > 1:
+        logDirs = sorted(dirs) ## sort them so we can remove the last one
+        del logDirs[-1]
+        final_dirs[root]=logDirs
+
     return S_OK(final_dirs)
 
   def getProductionIDs(self, directories_and_files):
@@ -241,7 +240,7 @@ class TarTheProdLogsAgent( AgentModule ):
       self.log.error( "putFile", res['Message'] )
       
     return S_OK()
-  
+
   def createTarBallAndCleanTheLogs(self, prod, prodFiles):
     """ Create and return the path to the tar ball containing all the prod files
     The file name contains the first and last taskID included. Allows easy finding of
@@ -257,8 +256,35 @@ class TarTheProdLogsAgent( AgentModule ):
       tarFile.close()
       for fd in prodFiles:
         os.remove( fd )
-    except Exception as e:
+    except Exception, e:
       return S_ERROR("Failed with %s" % str(e))
     return S_OK(name)
+
+
+  def tarTheFolders(self, listOfFolders, outputFileName ):
+    """ make a tarBall out of the list of folders"""
+    cmd = ['tar','cjf',outputFileName, '--remove-files']
+    cmd = cmd + listOfFolders
+    print "Creating",outputFileName
+    result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    outAndErr = result.communicate()
+    self.log.error( "Error from Tar\n%s" %outAndErr[1])
+
+  def removeEmptyFolders(self, basefolder):
+    """removes the empty folders below basefolder"""
+    cmd = ['find', basefolder, '-type','d', '-empty' ,'-print', '-delete']
+    result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = result.communicate()
+    print "Removed folders\n", out
+    if len (err):
+      self.log.error("Errors in find\n",err)
+
 #################################################################"  
-  
+
+  def getLogFolders(self, logDirs):
+    """Returns the first and last logFolder, or just one if there is only that
+    """
+    if len(logDirs) == 1:
+      return logDirs
+    else:
+      return [logDirs[0], logDirs[-1]]
