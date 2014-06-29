@@ -130,6 +130,10 @@ def guessPlatform() :
                    string.find(lines, " 5") != -1 ) :
               opSys = os.uname()[-1] + "-slc5-"
               newSchema = True
+            elif ( string.find(lines, "CentOS") != -1 and
+                   string.find(lines, " 6") != -1 ) :
+              opSys = os.uname()[-1] + "-slc6-"
+              newSchema = True
             elif ( string.find(lines, "Red Hat Enterprise") != -1 and
                    string.find(lines, " 5") != -1 ) :
               opSys = os.uname()[-1] + "-slc5-"
@@ -219,16 +223,16 @@ if __name__ == "__main__" :
         print "ERROR"
     else:
         if newSchema:
-    	   arch = osStr+comStr+'-opt'
-    	else:
-    	   arch = osStr+'_'+comStr
-    	if len(sys.argv) > 1:
-    		if sys.argv[1] == 'python':
-    		 	baseDir = os.path.realpath( os.path.dirname( __file__ ) + "/../%s/bin/" % arch  )
-    		 	for pyStr in ( 'python2.4', 'python2.5', 'python' ):
-    		 		pythonLocation = '%s/%s' % ( baseDir, pyStr )
-    		 		if os.path.isfile( pythonLocation ):
-    		 			print pythonLocation
-    		 			break
-    	else:
-        	print arch
+           arch = osStr+comStr+'-opt'
+        else:
+           arch = osStr+'_'+comStr
+        if len(sys.argv) > 1:
+            if sys.argv[1] == 'python':
+                baseDir = os.path.realpath( os.path.dirname( __file__ ) + "/../%s/bin/" % arch  )
+                for pyStr in ( 'python2.4', 'python2.5', 'python' ):
+                    pythonLocation = '%s/%s' % ( baseDir, pyStr )
+                    if os.path.isfile( pythonLocation ):
+                        print pythonLocation
+                        break
+        else:
+            print arch

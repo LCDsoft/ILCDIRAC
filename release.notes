@@ -160,6 +160,12 @@ CHANGE: drop the Particle.tbl from the mokka steering file, put it in command li
 CHANGE: ILCSoft modules (Mokka, Marlin, SLIC, SLICPandora) now uses environment variables
 CHANGE: Mokka: drop the SQLWrapper (finally)
 
+[v19r1p16]
+
+* Core
+
+FIX: dirac-architecture allow for CentOS release 6
+
 [v19r1p15]
 
 * Core
