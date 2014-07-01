@@ -8,16 +8,20 @@
   COPIED: LCUtilityApplication: Needed for the steeringfiles handling Refactoring of Application classes
 
 * Scripts
-  FIX: dirac-ilc-show-software: If an application has additional sections (AdditionalEnvVar) but no Dependencies dirac-ilc-show-software would crash.
-  FIX: dirac-ild-add-whizard: Fix passing full path to the tar call instead of the relative path
-
+FIX: dirac-ilc-show-software: If an application has additional sections (AdditionalEnvVar) but no Dependencies dirac-ilc-show-software would crash.
+FIX: dirac-ilc-add-whizard: Fix passing full path to the tar call instead of the relative path
+FIX: dirac-ilc-add-software: cleanup
 * Core
-  COPIED: Include functionality for CVMFS (S.Poss)
-
+COPIED: Include functionality for CVMFS (S.Poss)
+  
 * Workflow
 
-  NEW: StdHepCut: Allowing to specify cuts inline (S.Poss)
+NEW: StdHepCut: Allowing to specify cuts inline (S.Poss)
+DELETE: HandleProdOutputData, was not used
 
+* ILCTransformationSystem
+  
+FIX: Cleanup of DataRecoveryAgent
 
 [v20r1p10]
 
