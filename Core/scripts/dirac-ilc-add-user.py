@@ -34,6 +34,7 @@ class Params(object):
     self.certCN = ''
     self.email = ''
     self.cernid = ''
+    self.external = False
   def setUName(self,opt):
     self.uname = opt
     return S_OK()
@@ -54,6 +55,9 @@ class Params(object):
   def setCERNID(self,opt):
     self.cernid = opt
     return S_OK()
+  def setExternal(self,opt):
+    self.external = True
+    return S_OK()
   def registerSwitches(self):
     Script.registerSwitch("U:", "UserName=", "DIRAC user name", self.setUName)
     Script.registerSwitch("G:","Groups=","DIRAC groups in which to add the new user, comma separated", self.setGroup)
@@ -61,6 +65,7 @@ class Params(object):
     Script.registerSwitch("C:","CN=","user CN (or CA)",self.setCN)
     Script.registerSwitch("E:","Email=","User mail",self.setEmail)
     Script.registerSwitch("","CCID=","CERN CC user ID (if any)", self.setCERNID)
+    Script.registerSwitch("X:", "external", "set if user is external, no checking of the PhoneBook", self.setExternal)
     Script.setUsageMessage("""%s -U <username> -G <ilc_user,private_pilot,...> -D"<DN>" -C"<CN>" -E <email>""" % Script.scriptName)
 
 def addUserToCS(clip, userProps):
@@ -138,7 +143,7 @@ def addUserToEgroup(clip):
     dexit(1)
   try:
     client = Client(url=url, username=login, password=pwd)
-    print client
+    #print client
   except suds.transport.TransportError, exc:
     gLogger.error("Failed to get the WSDL client:%s" %exc)
     gLogger.error("User registration in e-group must be done manually")
@@ -146,9 +151,15 @@ def addUserToEgroup(clip):
   except:
     gLogger.error("Something unexpected happened with the suds client, aborting")
     return
-    
-  user = getUserInfoFromPhonebook(client, clip)
-  userl = [user]
+  
+  if clip.external:
+    sudsUser = client.factory.create("ns0:MemberType")
+    sudsUser['Type'] = 'External'
+    sudsUser['Email'] = clip.email
+    userl = [sudsUser]
+  else:
+    user = getUserInfoFromPhonebook(client, clip)
+    userl = [user]
   res = client.service.AddEgroupMembers('ilc-dirac',False, userl)
   if hasattr(res, 'warnings'):
     print res.warnings
@@ -208,14 +219,17 @@ def addUser():
   if not ( clip.certCN and clip.groups and clip.certDN and clip.uname):
     gLogger.error("Username, DN, CN, and groups have to be given")
     Script.showHelp()
+  print "Add User to Egroup"
   addUserToEgroup(clip)
   if not clip.email:
     gLogger.fatal("No email defined and not found in phonebook, you have to provide it: -E<email>")
     dexit(1)
   userProps = {'DN': clip.certDN, 'Email': clip.email, 'CN': clip.certCN, 'Groups': clip.groups}
+  print "Add User to CS"
   addUserToCS(clip, userProps)
+  print "Add User to FC"
   addUserToFC(clip)
-
+  print "Done"
 if __name__=="__main__":
   addUser()
   dexit(0)
