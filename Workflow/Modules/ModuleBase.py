@@ -383,7 +383,7 @@ class ModuleBase(object):
     self.request = self._getRequestContainer()
     self.jobReport = self._getJobReporter()
     
-    self.prod_job_id = int(self.workflow_commons["JOB_ID"])
+    self.prod_job_id = int(self.workflow_commons.get("JOB_ID", self.prod_job_id))
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
         self.production_id = int(self.workflow_commons["PRODUCTION_ID"])
