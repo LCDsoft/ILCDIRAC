@@ -7,7 +7,7 @@ Run Pythia, but only specific versions (the CDR ttbar ones)
 '''
 __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, GenRandString
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import GetNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
@@ -86,7 +86,7 @@ class PythiaAnalysis(ModuleBase):
       return S_ERROR("Lumi files not found")
     
     originpath = "%s.ep" % path
-    randomName = '/tmp/LumiFile-' + GenRandString(8)
+    randomName = '/tmp/LumiFile-' + generateRandomString(8)
     try:
       os.mkdir(randomName)
     except EnvironmentError, x:
