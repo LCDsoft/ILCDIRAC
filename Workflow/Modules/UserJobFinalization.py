@@ -68,11 +68,10 @@ class UserJobFinalization(ModuleBase):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
         self.enable = False
 
-    if self.step_commons.has_key('TestFailover'):
-      self.enable = self.step_commons['TestFailover']
-      if not type(self.failoverTest) == type(True):
-        self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
-        self.failoverTest = False
+    self.failoverTest = self.step_commons.get('TestFailover', self.failoverTest)
+    if not type(self.failoverTest) == type(True):
+      self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
+      self.failoverTest = False
 
     if os.environ.has_key('JOBID'):
       self.jobID = os.environ['JOBID']
