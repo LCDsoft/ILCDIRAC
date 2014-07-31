@@ -137,7 +137,7 @@ def tarMd5Check(app_tar_base, md5sum ):
     return S_ERROR("Hash does not correspond")
   return S_OK()
 
-def TARinstall(app, config, area):
+def tarInstall(app, config, area):
   """ For the specified app, install all dependencies
   """
   curdir = os.getcwd()
