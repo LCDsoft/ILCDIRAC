@@ -6,15 +6,17 @@ Created on Mar 20, 2013
 '''
 
 from DIRAC import gLogger
+from types import ListType, DictType
+from DIRAC.Core.Utilities import uniqueElements
+from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
 def createQueryDict(argss):
   """
   Create a proper dictionary, stolen from FC CLI
   """  
-  from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   
-  fc = FileCatalogClient()
-  result = fc.getMetadataFields()
+  fileCatClient = FileCatalogClient()
+  result = fileCatClient.getMetadataFields()
 
   if not result['OK']:
     gLogger.error("Failed checking for metadata fields")
@@ -120,8 +122,11 @@ def createQueryDict(argss):
   
   return metaDict
 
-if __name__ == '__main__':
+def findInFC():
+  """Find something in the FileCatalog"""
   from DIRAC.Core.Base import Script
+  from DIRAC import exit as dexit
+
   Script.parseCommandLine()
   Script.setUsageMessage(  "%s path meta1=A meta2=B etc." % Script.scriptName)
 
@@ -131,21 +136,19 @@ if __name__ == '__main__':
     Script.showHelp()
     dexit(1)
     
-  from DIRAC import gLogger, exit as dexit
   path = args[0]
   if path == '.':
     path = '/'
   gLogger.verbose("Path:", path)
   metaQuery = args[1:]
-  metaDict = createQueryDict(metaQuery)
-  gLogger.verbose("Query:",str(metaDict))
-  if not metaDict:
+  metaDataDict = createQueryDict(metaQuery)
+  gLogger.verbose("Query:",str(metaDataDict))
+  if not metaDataDict:
     gLogger.info("No query")
     dexit(1)
-  from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   
   fc = FileCatalogClient()
-  res = fc.findFilesByMetadata(metaDict, path)
+  res = fc.findFilesByMetadata(metaDataDict, path)
   if not res['OK']:
     gLogger.error(res['Message'])
     dexit(1)
@@ -154,3 +157,6 @@ if __name__ == '__main__':
   for files in res['Value']:
     print files
   dexit(0)
+
+if __name__ == '__main__':
+  findInFC()
