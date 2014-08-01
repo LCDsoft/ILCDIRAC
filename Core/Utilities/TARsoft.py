@@ -434,14 +434,12 @@ def configure(app, area, res_from_check):
   appName = app[0].lower()
   ### Set env variables  
   basefolder = res_from_check[0]
-  removeLibc(os.path.join(os.getcwd(), basefolder) + "/LDLibs")
-  if os.path.isdir(os.path.join(os.getcwd(), basefolder) + "/lib"):
-    removeLibc(os.path.join(os.getcwd(), basefolder) + "/lib")
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib:" + os.environ['LD_LIBRARY_PATH']
-    else:
-      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib"
-      
+  removeLibc( os.path.join( os.getcwd(), basefolder, "LDLibs" ) )
+  libFolder = os.path.join( os.getcwd(), basefolder, "lib" )
+  if os.path.isdir( libFolder ):
+    removeLibc( os.path.join( libFolder ) )
+    addFolderToLdLibraryPath( libFolder )
+
   if appName == "slic":
     os.environ['SLIC_DIR'] = os.path.join(os.getcwd(), basefolder)
     slicv = ''
@@ -552,3 +550,13 @@ def checkJava():
     gLogger.error("Java was not found on this machine, cannot proceed")
     return S_ERROR("Java was not found on this machine, cannot proceed")
   return S_OK()
+
+def addFolderToLdLibraryPath(folder):
+  """insert folder to os.environ variables"""
+  if 'LD_LIBRARY_PATH' in os.environ:
+    os.environ['LD_LIBRARY_PATH'] = ":".join( ( folder, os.environ['LD_LIBRARY_PATH'] ) )
+  else:
+    os.environ['LD_LIBRARY_PATH'] = folder
+
+
+
