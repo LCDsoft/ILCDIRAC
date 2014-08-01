@@ -152,5 +152,5 @@ if __name__ == '__main__':
   if not res['Value']:
     gLogger.notice("No files found")
   for files in res['Value']:
-    gLogger.notice(files)
+    print files
   dexit(0)
