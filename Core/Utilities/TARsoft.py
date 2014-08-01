@@ -7,6 +7,8 @@ Also installs all dependencies for the applications
 
 @author: Stephane Poss
 '''
+__RCSID__ = None
+
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc, getLibsToIgnore
@@ -17,7 +19,7 @@ import os, urllib, tarfile, subprocess, shutil, time
 from tarfile import TarError
 try:
   import hashlib as md5
-except:
+except ImportError:
   import md5
 
 def createLock(lockname):
@@ -37,7 +39,7 @@ def checkLockAge(lockname):
   """
   overwrite = False
   count = 0
-  while (1):
+  while True:
     if not os.path.exists(lockname):
       break
     count += 1
@@ -48,14 +50,13 @@ def checkLockAge(lockname):
     last_touch = time.time()
     try:
       stat = os.stat(lockname)
-      last_touch = float(stat.st_atime)
-    except EnvironmentError, why:
-      gLogger.warn("File not available: %s, assume removed" % str(why)) 
+      last_touch = stat.st_atime
+    except OSError as x:
+      gLogger.warn("File not available: %s %s, assume removed" % (OSError, str(x))) 
       break
     loc_time = time.time()
-    tdiff = loc_time-last_touch
-    if tdiff > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
-      gLogger.info("File is %s seconds old" % tdiff)
+    if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
+      gLogger.info("File is %s seconds old" % loc_time-last_touch)
       overwrite = True
       res = clearLock(lockname)
       if res['OK']:
@@ -86,8 +87,8 @@ def deleteOld(folder_name):
     if os.path.isdir(folder_name):
       try:
         shutil.rmtree(folder_name)
-      except Exception, x:
-        gLogger.error("Failed deleting %s because :" % (folder_name), "%s %s" % ( Exception, str(x)))
+      except OSError as x:
+        gLogger.error("Failed deleting %s because :" % (folder_name), "%s %s" % ( OSError, str(x)))
     else:
       try:
         os.remove(folder_name)
@@ -97,26 +98,26 @@ def deleteOld(folder_name):
     gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name) 
   return S_OK()
 
-def downloadFile(TarBallURL, app_tar, folder_name):
+def downloadFile(tarballURL, app_tar, folder_name):
   """ Get the file locally.
   """
   #need to make sure the url ends with /, other wise concatenation below returns bad url
-  if TarBallURL[-1] != "/":
-    TarBallURL += "/"
+  if tarballURL[-1] != "/":
+    tarballURL += "/"
 
   app_tar_base = os.path.basename(app_tar)
-  if TarBallURL.find("http://")>-1:
+  if tarballURL.find("http://")>-1:
     try :
       gLogger.debug("Downloading software", '%s' % (folder_name))
       #Copy the file locally, don't try to read from remote, soooo slow
       #Use string conversion %s%s to set the address, makes the system more stable
-      urllib.urlretrieve("%s%s" % (TarBallURL, app_tar), app_tar_base)
-    except:
-      gLogger.exception()
-      return S_ERROR('Exception during url retrieve')
+      urllib.urlretrieve("%s%s" % (tarballURL, app_tar), app_tar_base)
+    except IOError as err:
+      gLogger.exception(str(err))
+      return S_ERROR('Exception during url retrieve: %s' % str(err))
   else:
     rm = ReplicaManager()
-    resget = rm.getFile("%s%s" % (TarBallURL, app_tar))
+    resget = rm.getFile("%s%s" % (tarballURL, app_tar))
     if not resget['OK']:
       gLogger.error("File could not be downloaded from the grid")
       return resget
@@ -128,9 +129,10 @@ def tarMd5Check(app_tar_base, md5sum ):
   ##Tar ball is obtained, need to check its md5 sum
   tar_ball_md5 = ''
   try:
-    tar_ball_md5 = md5.md5(file(app_tar_base).read()).hexdigest()
-  except:
-    gLogger.error("Failed to get tar ball md5, try without")
+    with open(app_tar_base) as myFile:
+      tar_ball_md5 = md5.md5(myFile.read()).hexdigest()
+  except IOError:
+    gLogger.warn("Failed to get tar ball md5, try without")
     md5sum = ''
   if md5sum and md5sum != tar_ball_md5:
     gLogger.error('Hash does not correspond, found %s, expected %s, cannot continue' % (tar_ball_md5, md5sum))
@@ -143,12 +145,10 @@ def tarInstall(app, config, area):
   curdir = os.getcwd()
   appName    = app[0].lower()
   appVersion = app[1]
+
   deps = resolveDeps(config, appName, appVersion)
-  
   for dep in deps:
-    depapp = []
-    depapp.append(dep["app"])
-    depapp.append(dep["version"])
+    depapp = [ dep["app"], dep["version"] ]
     gLogger.info("Installing dependency %s %s" % (dep["app"], dep["version"]))
     
     res = getTarBallLocation(depapp, config, area)
@@ -241,14 +241,14 @@ def getTarBallLocation(app, config, area):
     gLogger.error('Could not find tar ball for %s %s'%(appName, appVersion))
     return S_ERROR('Could not find tar ball for %s %s'%(appName, appVersion))
   
-  TarBallURL = ops.getValue('/AvailableTarBalls/%s/%s/TarBallURL' % (config, appName), '')
-  if not TarBallURL:
-    gLogger.error('Could not find TarBallURL in CS for %s %s' % (appName, appVersion))
-    return S_ERROR('Could not find TarBallURL in CS')
+  tarballURL = ops.getValue('/AvailableTarBalls/%s/%s/tarballURL' % (config, appName), '')
+  if not tarballURL:
+    gLogger.error('Could not find tarballURL in CS for %s %s' % (appName, appVersion))
+    return S_ERROR('Could not find tarballURL in CS')
 
-  return S_OK([app_tar, TarBallURL, overwrite, md5sum])
+  return S_OK([app_tar, tarballURL, overwrite, md5sum])
 
-def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
+def install(app, app_tar, tarballURL, overwrite, md5sum, area):
   """ Install the software
   """
   appName    = app[0]
@@ -274,9 +274,9 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
     gLogger.error("Something uncool happened with the lock, will kill installation")
     gLogger.error("Message: %s" % res['Message'])
     return S_ERROR("Failed lock checks")
-  if res.has_key('Value'):
-    if res['Value']: #this means the lock file was very old, meaning that the installation failed elsewhere
-      overwrite = True
+
+  if 'Value' in res and res['Value']: #this means the lock file was very old, meaning that the installation failed elsewhere
+    overwrite = True
 
   #Check if the application is here and not to be overwritten
   if os.path.exists(folder_name):
@@ -310,7 +310,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
   ## Now we can get the files and unpack them
     
   ## Downloading file from url
-  res = downloadFile(TarBallURL, app_tar, folder_name)
+  res = downloadFile(tarballURL, app_tar, folder_name)
   if not res['OK']:
     clearLock(lockname)
     return res
@@ -334,7 +334,7 @@ def install(app, app_tar, TarBallURL, overwrite, md5sum, area):
     if not res['OK']:#should be always OK for the time being
       clearLock(lockname)
       return res
-    res = downloadFile(TarBallURL, app_tar, folder_name)
+    res = downloadFile(tarballURL, app_tar, folder_name)
     if not res['OK']:
       clearLock(lockname)
       return res
@@ -396,11 +396,12 @@ def check(app, area, res_from_install):
     for line in md5file:
       line = line.rstrip()
       md5sum, fin = line.split()
-      if fin=='-' or fin.count("md5_checksum.md5"): continue
+      if fin=='-' or fin.count("md5_checksum.md5"):
+        continue
       found_lib_to_ignore = False
       for lib in getLibsToIgnore():
         if fin.count(lib):
-          found_lib_to_ignore= True
+          found_lib_to_ignore = True
       if found_lib_to_ignore:
         continue
       fin = os.path.join(basefolder, fin.replace("./",""))
