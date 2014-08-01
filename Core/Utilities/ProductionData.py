@@ -1,6 +1,3 @@
-########################################################################
-# $Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $
-########################################################################
 """ 
 Utility to construct production LFNs from workflow parameters
 according to LHCb conventions.
@@ -9,11 +6,12 @@ according to LHCb conventions.
 @since: Jun 16, 2010
 """
 
-__RCSID__ = "$Id: ProductionData.py 24499 2010-04-27 15:52:43Z paterson $"
+__RCSID__ = ""
 
 import string, re, os, types, datetime
 
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames import getProdFilename
+from ILCDIRAC.Core.Utilities.LFNPathUtilities import cleanUpLFNPath
 from DIRAC.Core.Security.ProxyInfo import getVOfromProxyGroup
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC import S_OK, S_ERROR, gLogger
@@ -25,11 +23,10 @@ def constructProductionLFNs(paramDict):
       LFN construction is tidied.  This works using the workflow commons for
       on the fly construction.
   """
-  keys = ['PRODUCTION_ID', 'JOB_ID', 'outputList']
-  for k in keys:
-    if not paramDict.has_key(k):
-      return S_ERROR('%s not defined' % k)
-
+  result = checkForMandatoryKeys(paramDict, ['PRODUCTION_ID', 'JOB_ID', 'outputList'])
+  if not result['OK']:
+    return result
+  
   productionID = paramDict['PRODUCTION_ID']
   jobID = paramDict['JOB_ID']
 #  wfMode = paramDict['dataType']
@@ -67,15 +64,15 @@ def constructProductionLFNs(paramDict):
 
   debugRoot = ''
   #if inputData:
-  #  gLogger.verbose('Making LFN_ROOT for job with inputdata: %s' %(inputData))
+  #  gLogger.verbose('Making lfnRootPath for job with inputdata: %s' %(inputData))
   #  lfnRoot = _getLFNRoot(inputData,wfLfnpostfix)
   #  debugRoot= _getLFNRoot('','debug',wfLfnpostfix)   
   #else:
   #  lfnRoot = _getLFNRoot('',wfLfnprefix,wfLfnpostfix)
-  #  gLogger.verbose('LFN_ROOT is: %s' %(lfnRoot))
+  #  gLogger.verbose('lfnRootPath is: %s' %(lfnRoot))
   #  debugRoot= _getLFNRoot('','debug',wfLfnpostfix)
   #lfnRoot = 
-  #gLogger.verbose('LFN_ROOT is: %s' %(lfnRoot))
+  #gLogger.verbose('lfnRootPath is: %s' %(lfnRoot))
   #if not lfnRoot:
   #  return S_ERROR('LFN root could not be constructed')
 
@@ -86,7 +83,7 @@ def constructProductionLFNs(paramDict):
   for fileTuple in fileTupleList:
     #lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8))
     lfn = fileTuple[0] + "/" + str(productionID).zfill(8) + "/" + str(int(jobID)/1000).zfill(3) + "/" + fileTuple[1]
-    lfn = cleanUpLFN(lfn)
+    lfn = cleanUpLFNPath(lfn)
     outputData.append(lfn)
     #bkLFNs.append(lfn)
     if debugRoot:
@@ -101,8 +98,8 @@ def constructProductionLFNs(paramDict):
   #logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
   #TODO adjust for ILD
   logPath = logPathtemp + "/" + str(productionID).zfill(8) + "/LOG"
-  logFilePath = [cleanUpLFN('%s/%s' % (logPath, str(int(jobID)/1000).zfill(3)))]
-  logTargetPath = [cleanUpLFN('%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3)))]
+  logFilePath = [cleanUpLFNPath('%s/%s' % (logPath, str(int(jobID)/1000).zfill(3)))]
+  logTargetPath = [cleanUpLFNPath('%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3)))]
   #[ aside, why does makeProductionPath not append the jobID itself ????
   #  this is really only used in one place since the logTargetPath is just written to a text file (should be reviewed)... ]
 
@@ -139,16 +136,15 @@ def constructProductionLFNs(paramDict):
 def getLogPath(paramDict):
   """ Can construct log file paths even if job fails e.g. no output files available.
   """
-  keys = ['PRODUCTION_ID', 'JOB_ID', 'LogFilePath']
-  for k in keys:
-    if not paramDict.has_key(k):
-      return S_ERROR('%s not defined' % k)
+  result = checkForMandatoryKeys(paramDict, ['PRODUCTION_ID', 'JOB_ID', 'LogFilePath'])
+  if not result['OK']:
+    return result
 
   productionID = paramDict['PRODUCTION_ID']
   jobID = paramDict['JOB_ID']
   #need to built logPath from logFilePath, as it's not there, and must be as in method above
   logPathtemp = paramDict['LogFilePath'].split("/")
-  logPath = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
+  logPath = os.path.join(*logPathtemp[0:-1])
   logFilePath = paramDict['LogFilePath']
   logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)/1000).zfill(3))]
   #Get log file path - unique for all modules
@@ -215,83 +211,75 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
   return S_OK(outputData)
 
 #############################################################################
-def _makeProductionPath(JOB_ID, LFN_ROOT, typeName, mode, prodstring, log = False):
-  """ Constructs the path in the logical name space where the output
-      data for the given production will go. In
-  """
-  result = LFN_ROOT + '/' + typeName.upper() + '/' + prodstring + '/'
-  if log:
-    try:
-      jobid = int(JOB_ID)
-      jobindex = string.zfill(jobid/10000, 4)
-    except:
-      jobindex = '0000'
-    result += jobindex
-
-  return result
+# def _makeProductionPath(JOB_ID, LFN_ROOT, typeName, mode, prodstring, log = False):
+#   """ Constructs the path in the logical name space where the output
+#       data for the given production will go. In
+#   """
+#   result = LFN_ROOT + '/' + typeName.upper() + '/' + prodstring + '/'
+#   if log:
+#     try:
+#       jobid = int(JOB_ID)
+#       jobindex = string.zfill(jobid/10000, 4)
+#     except:
+#       jobindex = '0000'
+#     result += jobindex
+#   return result
 
 #############################################################################
-def _makeProductionLfn(JOB_ID, LFN_ROOT, filetuple, mode, prodstring):
-  """ Constructs the logical file name according to LHCb conventions.
-      Returns the lfn without 'lfn:' prepended.
-  """
-  gLogger.debug('Making production LFN for JOB_ID %s, LFN_ROOT %s, mode %s, prodstring %s for\n%s' %(JOB_ID, LFN_ROOT, mode, prodstring, str(filetuple)))
-  try:
-    jobid = int(JOB_ID)
-    jobindex = string.zfill(jobid/10000, 4)
-  except:
-    jobindex = '0000'
-
-  fname = filetuple[0]
-  if re.search('lfn:', fname) or re.search('LFN:', fname):
-    return fname.replace('lfn:', '').replace('LFN:', '')
-  
-  return LFN_ROOT + '/' + filetuple[1].upper() + '/' + prodstring + '/' + jobindex + '/' + filetuple[0]
+# def _makeProductionLfn(JOB_ID, LFN_ROOT, filetuple, mode, prodstring):
+#   """ Constructs the logical file name according to LHCb conventions.
+#       Returns the lfn without 'lfn:' prepended.
+#   """
+#   gLogger.debug('Making production LFN for JOB_ID %s, LFN_ROOT %s, mode %s, prodstring %s for\n%s' %(JOB_ID, LFN_ROOT, mode, prodstring, str(filetuple)))
+#   try:
+#     jobid = int(JOB_ID)
+#     jobindex = string.zfill(jobid/10000, 4)
+#   except:
+#     jobindex = '0000'
+#   fname = filetuple[0]
+#   if re.search('lfn:', fname) or re.search('LFN:', fname):
+#     return fname.replace('lfn:', '').replace('LFN:', '')
+#   return LFN_ROOT + '/' + filetuple[1].upper() + '/' + prodstring + '/' + jobindex + '/' + filetuple[0]
       
-#############################################################################
-def _getLFNRoot(lfn, lfnprefix='', lfnpostfix=0):
-  """
-  return the root path of a given lfn
-
-  eg : /ilc/data/CCRC08/00009909 = getLFNRoot(/lhcb/data/CCRC08/00009909/DST/0000/00009909_00003456_2.dst)
-  eg : /ilc/prod/<year>/  = getLFNRoot(None)
-  """
-  #dataTypes = gConfig.getValue('/Operations/Bookkeeping/FileTypes',[])
-  #gLogger.verbose('DataTypes retrieved from /Operations/Bookkeeping/FileTypes are:\n%s' %(string.join(dataTypes,', ')))
-  LFN_ROOT = ''  
-  gLogger.verbose('wf lfn: %s, prefix: %s, postfix: %s' % (lfn, lfnprefix, lfnpostfix))
-  if not lfn:
-    LFN_ROOT = '/ilc/%s/%s' % (lfnprefix, lfnpostfix)
-    gLogger.verbose('LFN_ROOT will be %s' % (LFN_ROOT))
-    return LFN_ROOT
-  
-  lfn = [fname.replace(' ', '').replace('LFN:', '') for fname in lfn.split(';')]
-  lfnroot = lfn[0].split('/')
-  for part in lfnroot:
-  #  if not part in dataTypes:
-    LFN_ROOT += '/%s' % (part)  
-  #  else:
-  #    break
-  
-  LFN_ROOT = cleanUpLFN(LFN_ROOT)
-       
-  if lfnprefix.lower() in ('test', 'debug'):
-    tmpLfnRoot = LFN_ROOT.split("/")
-    if len(tmpLfnRoot) > 2:
-      tmpLfnRoot[2] = lfnprefix
-    else:
-      tmpLfnRoot[-1] = lfnprefix
-    
-    LFN_ROOT = string.join(tmpLfnRoot, os.path.sep)
-
-  return LFN_ROOT
+# #############################################################################
+# def _getLFNRoot(lfn, lfnprefix='', lfnpostfix=0):
+#   """
+#   return the root path of a given lfn
+#   eg : /ilc/data/CCRC08/00009909 = getLFNRoot(/lhcb/data/CCRC08/00009909/DST/0000/00009909_00003456_2.dst)
+#   eg : /ilc/prod/<year>/  = getLFNRoot(None)
+#   """
+#   #dataTypes = gConfig.getValue('/Operations/Bookkeeping/FileTypes',[])
+#   #gLogger.verbose('DataTypes retrieved from /Operations/Bookkeeping/FileTypes are:\n%s' %(string.join(dataTypes,', ')))
+#   LFN_ROOT = ''  
+#   gLogger.verbose('wf lfn: %s, prefix: %s, postfix: %s' % (lfn, lfnprefix, lfnpostfix))
+#   if not lfn:
+#     LFN_ROOT = '/ilc/%s/%s' % (lfnprefix, lfnpostfix)
+#     gLogger.verbose('LFN_ROOT will be %s' % (LFN_ROOT))
+#     return LFN_ROOT
+#   lfn = [fname.replace(' ', '').replace('LFN:', '') for fname in lfn.split(';')]
+#   lfnroot = lfn[0].split('/')
+#   for part in lfnroot:
+#   #  if not part in dataTypes:
+#     LFN_ROOT += '/%s' % (part)  
+#   #  else:
+#   #    break
+#   LFN_ROOT = cleanUpLFN(LFN_ROOT)
+#   if lfnprefix.lower() in ('test', 'debug'):
+#     tmpLfnRoot = LFN_ROOT.split("/")
+#     if len(tmpLfnRoot) > 2:
+#       tmpLfnRoot[2] = lfnprefix
+#     else:
+#       tmpLfnRoot[-1] = lfnprefix
+#     LFN_ROOT = string.join(tmpLfnRoot, os.path.sep)
+#   return LFN_ROOT
 
 
-def cleanUpLFN( lfn ):
-  """ Normalise LFNs
-  """
-  while lfn.count('//'):
-    lfn = lfn.replace('//','/')
-  return lfn
+
+def checkForMandatoryKeys(paramDict, keys):
+  """checks for Mandatory Keys in the paramdict"""
+  for k in keys:
+    if not k in paramDict:
+      return S_ERROR('%s not defined' % k)
+  return S_OK
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
