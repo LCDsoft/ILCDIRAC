@@ -377,11 +377,7 @@ def configure(app, area, res_from_check):
   elif appName == "root":
     configureRoot(basefolder)
   elif appName == 'java':
-    os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/bin:" + os.environ['PATH']
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib:" + os.environ['LD_LIBRARY_PATH']
-    else:
-      os.environ['LD_LIBRARY_PATH'] = os.path.join(os.getcwd(), basefolder) + "/lib"
+    configureJava(basefolder)
   elif appName == "lcio":
     os.environ['LCIO'] = os.path.join(os.getcwd(), basefolder)
     os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/bin:" + os.environ['PATH']
@@ -437,14 +433,13 @@ def CanWrite(area):
     os.chdir(curdir)
   return True
     
-
 def checkJava():
-  """ Check if JAVA is availalbe locally.
+  """ Check if JAVA is available locally.
   """
   args = ['java', "-Xmx1536m", "-Xms256m", "-version"]
   try:
-    p = subprocess.check_call(args)
-    if p:
+    res = subprocess.check_call(args)
+    if res:
       return S_ERROR("Something is wrong with Java")
   except:
     gLogger.error("Java was not found on this machine, cannot proceed")
@@ -492,6 +487,13 @@ def configureRoot(basefolder):
   addFolderToLdLibraryPath( rootLibFolder )
   os.environ['PATH'] = ":".join ( ( rootBinFolder , os.environ['PATH'] ) )
   os.environ['PYTHONPATH'] = ":".join( ( rootLibFolder, os.environ["PYTHONPATH"]) )
+
+def configureJava(basefolder):
+  """sets the environment variables for java"""
+  binFolder = os.path.join(os.getcwd(), basefolder, "bin")
+  libFolder = os.path.join(os.getcwd(), basefolder, "lib")
+  os.environ['PATH'] = ":".join( ( binFolder, os.environ['PATH'] ) )
+  addFolderToLdLibraryPath( libFolder )
 
 def addFolderToLdLibraryPath(folder):
   """insert folder to os.environ variables"""
