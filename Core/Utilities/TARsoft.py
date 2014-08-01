@@ -375,16 +375,7 @@ def configure(app, area, res_from_check):
   if appName == "slic":
     configureSlic(basefolder)
   elif appName == "root":
-    #members = app_tar_to_untar.getmembers()
-    #fileexample = members[0].name
-    #fileexample.split("/")[0]
-    os.environ['ROOTSYS'] = os.path.join(os.getcwd(), basefolder)
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      os.environ['LD_LIBRARY_PATH'] = os.environ['ROOTSYS'] + "/lib:" + os.environ['LD_LIBRARY_PATH']
-    else:
-      os.environ['LD_LIBRARY_PATH'] = os.environ['ROOTSYS'] + "/lib"
-    os.environ['PATH'] = os.environ['ROOTSYS'] + "/bin:" + os.environ['PATH']
-    os.environ['PYTHONPATH'] = os.environ['ROOTSYS'] + "/lib:" + os.environ["PYTHONPATH"]
+    configureRoot(basefolder)
   elif appName == 'java':
     os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/bin:" + os.environ['PATH']
     if os.environ.has_key('LD_LIBRARY_PATH'):
@@ -488,6 +479,19 @@ def configureSlic(basefolder):
     os.environ['XERCES_VERSION'] = xercesv
   if lcddv:
     os.environ['LCDD_VERSION'] = lcddv
+
+def configureRoot(basefolder):
+  """Sets environment variables for root"""
+  #members = app_tar_to_untar.getmembers()
+  #fileexample = members[0].name
+  #fileexample.split("/")[0]
+  rootFolder = os.path.join( os.getcwd(), basefolder )
+  rootLibFolder = os.path.join( rootFolder, "lib" )
+  rootBinFolder = os.path.join( rootFolder, "bin" )
+  os.environ['ROOTSYS'] = rootFolder
+  addFolderToLdLibraryPath( rootLibFolder )
+  os.environ['PATH'] = ":".join ( ( rootBinFolder , os.environ['PATH'] ) )
+  os.environ['PYTHONPATH'] = ":".join( ( rootLibFolder, os.environ["PYTHONPATH"]) )
 
 def addFolderToLdLibraryPath(folder):
   """insert folder to os.environ variables"""
