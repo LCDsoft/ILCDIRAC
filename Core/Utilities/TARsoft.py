@@ -373,30 +373,7 @@ def configure(app, area, res_from_check):
     addFolderToLdLibraryPath( libFolder )
 
   if appName == "slic":
-    os.environ['SLIC_DIR'] = os.path.join(os.getcwd(), basefolder)
-    slicv = ''
-    lcddv = ''
-    xercesv = ''
-    try:
-      slicv = os.listdir(os.path.join(basefolder, 'packages/slic/'))[0]
-      lcddv = os.listdir(os.path.join(basefolder, 'packages/lcdd/'))[0]
-      if os.path.exists(os.path.join(basefolder, 'packages/xerces/')):
-        xercesv = os.listdir(os.path.join(basefolder, 'packages/xerces/'))[0]
-    except:
-      return S_ERROR("Could not resolve slic env variables, folder content does not match usual pattern")
-    #for mem in members:
-    #  if mem.name.find('/packages/slic/')>0:
-    #    slicv = mem.name.split("/")[3]
-    #  if mem.name.find('/packages/lcdd/')>0:
-    #    lcddv = mem.name.split("/")[3]
-    #  if mem.name.find('/packages/xerces/')>0:
-    #    xercesv = mem.name.split("/")[3]
-    if slicv:
-      os.environ['SLIC_VERSION'] = slicv
-    if xercesv:
-      os.environ['XERCES_VERSION'] = xercesv
-    if lcddv:
-      os.environ['LCDD_VERSION'] = lcddv
+    configureSlic(basefolder)
   elif appName == "root":
     #members = app_tar_to_untar.getmembers()
     #fileexample = members[0].name
@@ -482,6 +459,35 @@ def checkJava():
     gLogger.error("Java was not found on this machine, cannot proceed")
     return S_ERROR("Java was not found on this machine, cannot proceed")
   return S_OK()
+
+
+
+def configureSlic(basefolder):
+  """sets environment variables for SLIC"""
+  os.environ['SLIC_DIR'] = basefolder
+  slicv = ''
+  lcddv = ''
+  xercesv = ''
+  try:
+    slicv = os.listdir(os.path.join(basefolder, 'packages/slic/'))[0]
+    lcddv = os.listdir(os.path.join(basefolder, 'packages/lcdd/'))[0]
+    if os.path.exists(os.path.join(basefolder, 'packages/xerces/')):
+      xercesv = os.listdir(os.path.join(basefolder, 'packages/xerces/'))[0]
+  except OSError:
+    return S_ERROR("Could not resolve slic env variables, folder content does not match usual pattern")
+  #for mem in members:
+  #  if mem.name.find('/packages/slic/')>0:
+  #    slicv = mem.name.split("/")[3]
+  #  if mem.name.find('/packages/lcdd/')>0:
+  #    lcddv = mem.name.split("/")[3]
+  #  if mem.name.find('/packages/xerces/')>0:
+  #    xercesv = mem.name.split("/")[3]
+  if slicv:
+    os.environ['SLIC_VERSION'] = slicv
+  if xercesv:
+    os.environ['XERCES_VERSION'] = xercesv
+  if lcddv:
+    os.environ['LCDD_VERSION'] = lcddv
 
 def addFolderToLdLibraryPath(folder):
   """insert folder to os.environ variables"""
