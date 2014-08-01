@@ -146,29 +146,7 @@ class UserJobFinalization(ModuleBase):
 
     userOutputLFNs = []
     if self.userOutputData:
-      self.log.info('Constructing user output LFN(s) for %s' % (', '.join(self.userOutputData)))
-      if not self.jobID:
-        self.jobID = 12345
-      owner = ''
-      if 'Owner' in self.workflow_commons:
-        owner = self.workflow_commons['Owner']
-      else:
-        res = self.getCurrentOwner()
-        if not res['OK']:
-          self.log.error('Could not find proxy')
-          return S_ERROR('Could not obtain owner from proxy')
-        owner = res['Value']
-      vo = ''
-      if self.workflow_commons.has_key('VO'):
-        vo = self.workflow_commons['VO']
-      else:
-        res = self.getCurrentVO()
-        if not res['OK']:
-          self.log.error('Failed finding the VO')
-          return S_ERROR('Could not obtain VO from proxy')
-        vo = res['Value']
-      
-      result = constructUserLFNs(int(self.jobID), vo, owner, self.userOutputData, self.userOutputPath)
+      result = self.constructOutputLFNs()
       if not result['OK']:
         self.log.error('Could not create user LFNs', result['Message'])
         return result
@@ -353,5 +331,34 @@ class UserJobFinalization(ModuleBase):
     group = result['Value']['group']
     vo = group.split("_")[0]
     return S_OK(vo)
+
+
+  def constructOutputLFNs(self):
+    """Returns a list of the outputDataLFNs"""
+    self.log.info('Constructing user output LFN(s) for %s' % (', '.join(self.userOutputData)))
+    if not self.jobID:
+      self.jobID = 12345
+    owner = self.workflow_commons.get('Owner', '')
+    if not owner:
+      res = self.getCurrentOwner()
+      if not res['OK']:
+        self.log.error('Could not find proxy')
+        return S_ERROR('Could not obtain owner from proxy')
+      owner = res['Value']
+
+    vo = self.workflow_commons.get('VO', '')
+    if not vo:
+      res = self.getCurrentVO()
+      if not res['OK']:
+        self.log.error('Failed finding the VO')
+        return S_ERROR('Could not obtain VO from proxy')
+      vo = res['Value']
+
+    result = constructUserLFNs(int(self.jobID), vo, owner, self.userOutputData, self.userOutputPath)
+    if not result['OK']:
+      self.log.error('Could not create user LFNs', result['Message'])
+      return result
+
+    return result
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
