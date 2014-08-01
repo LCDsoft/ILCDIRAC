@@ -411,26 +411,6 @@ def remove():
   """ For the moment, this is done in L{RemoveSoft}
   """
   pass
-
-def CanWrite(area):
-  """ Check if user is allowed to write in the area
-  """
-  curdir = os.getcwd()
-  os.chdir(area)
-  try:
-    f = open("testfile.txt","w")
-    f.write("Testing writing\n")
-    f.close()
-    os.remove("testfile.txt")
-  except IOError as ioe:
-    gLogger.error('Problem trying to write in area %s: %s' % (area, str(ioe)))
-    return False
-  except OSError as ose:
-    gLogger.error('Problem removing from area %s: %s' % (area, str(ose)))
-    return False
-  finally:
-    os.chdir(curdir)
-  return True
     
 def checkJava():
   """ Check if JAVA is available locally.
