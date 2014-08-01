@@ -15,7 +15,7 @@ Called by Job Agent.
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase, GenRandString
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareSteeringFile, GetNewLDLibs
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
@@ -183,7 +183,7 @@ class MokkaAnalysis(ModuleBase):
     
 
     ####Setup MySQL instance      
-    MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + GenRandString(8)
+    MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + generateRandomString(8)
       
     #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
 #     sqlwrapper = SQLWrapper(mySoftwareRoot, MokkaDBrandomName)#mySoftwareRoot)

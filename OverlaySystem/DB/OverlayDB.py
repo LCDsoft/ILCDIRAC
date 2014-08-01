@@ -1,16 +1,14 @@
-###########################################################################
-# $HeadURL: $
-###########################################################################
-
 """ DB for Overlay System
 """
-__RCSID__ = " $Id: $ "
+__RCSID__ = None
 
 from DIRAC                                                             import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.DB                                                import DB
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 class OverlayDB ( DB ):
+  """ DB for OverlaySystem
+  """
   def __init__( self, maxQueueSize = 10 ):
     """ 
     """
@@ -18,12 +16,12 @@ class OverlayDB ( DB ):
     self.dbname = 'OverlayDB'
     self.logger = gLogger.getSubLogger('OverlayDB')
     DB.__init__( self, self.dbname, 'Overlay/OverlayDB', maxQueueSize  )
-    self._createTables( { "OverlayData" : { 'Fields' : { 'Site' : "VARCHAR(256) UNIQUE NOT NULL",
-                                                          'NumberOfJobs' : "INTEGER DEFAULT 0"
+    self._createTables( { "OverlayData" : { 'Fields' : { 'Site' : "VARCHAR(255) UNIQUE NOT NULL",
+                                                         'NumberOfJobs' : "INTEGER DEFAULT 0"
                                                        },
-                                             'PrimaryKey' : 'Site',
-                                             'Indexes': {'Index':['Site']}
-                                           }
+                                            'PrimaryKey' : 'Site',
+                                            'Indexes': {'Index':['Site']}
+                                          }
                         }
                       )
     limits = self.ops.getValue("/Overlay/MaxConcurrentRunning", 200)
@@ -51,7 +49,7 @@ class OverlayDB ( DB ):
     return connection
   
   def _checkSite(self, site, connection = False ):
-    """ Check the number of jos running at a given site.
+    """ Check the number of jobs running at a given site.
     """
     connection = self.__getConnection( connection )
     
@@ -109,10 +107,10 @@ class OverlayDB ( DB ):
     """
     connection = self.__getConnection( connection )
     for site, nbjobs in sitedict.items():
-      req = "UPDATE OverlayData SET NumberOfJobs=%s WHERE Site='%s';" % (int(nbjobs), site)
+      req = "UPDATE OverlayData SET NumberOfJobs=%i WHERE Site='%s';" % (int(nbjobs), site)
       res = self._update( req, connection )
       if not res['OK']:
-        return S_ERROR("Could not set nb of jobs at site %s" % site)
+        return S_ERROR("Could not set number of jobs at site %s" % site)
       
     return S_OK()
 ### Useful methods for the users

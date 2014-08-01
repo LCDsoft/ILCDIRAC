@@ -33,7 +33,7 @@ def getDestinationSEList(outputSE, site, outputmode='Any'):
     gLogger.info('Found associated SE for site %s' % (alias_se))
     return S_OK(alias_se)
 
-  localSEs = getSEsForSite(site)
+  localSEs = getSEsForSite(site)['Value']
   gLogger.verbose('Local SE list is: %s' % (localSEs))
   groupSEs = gConfig.getValue('/Resources/StorageElementGroups/' + outputSE, [])
   gLogger.verbose('Group SE list is: %s' % (groupSEs))

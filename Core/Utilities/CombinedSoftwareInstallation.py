@@ -11,7 +11,7 @@ __RCSID__ = "$Id$"
 import os
 #from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
-from ILCDIRAC.Core.Utilities.TARsoft   import TARinstall
+from ILCDIRAC.Core.Utilities.TARsoft   import tarInstall
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from DIRAC.Core.Utilities.Subprocess   import systemCall
@@ -145,7 +145,7 @@ class CombinedSoftwareInstallation(object):
         continue
       for area in areas:
         DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' % (app[0], app[1], self.jobConfig, area))
-        res = TARinstall(app, self.jobConfig, area)
+        res = tarInstall(app, self.jobConfig, area)
         if not res['OK']:
           DIRAC.gLogger.error('Failed to install software in %s: %s' % (area, res['Message']), 
                               '%s_%s' % (app[0], app[1]))

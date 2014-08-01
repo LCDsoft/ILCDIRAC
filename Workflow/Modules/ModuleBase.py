@@ -1,8 +1,8 @@
 #####################################################
 # $HeadURL$
 #####################################################
-""" 
-Base class for ILC workflow modules. 
+"""
+Base class for ILC workflow modules.
 
 Stolen by S. Poss from LHCbSystem.Workflow.Modules
 
@@ -31,10 +31,10 @@ from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfeven
 import os, string, sys, re, types, urllib
 from random import choice
 
-def GenRandString(length=8, chars = string.letters + string.digits):
+def generateRandomString(length=8, chars = string.letters + string.digits):
   """Return random string of 8 chars, used by Pythia and Mokka
   """
-  return ''.join([choice(chars) for i in range(length)])
+  return ''.join([choice(chars) for _ in xrange(length)])
 
 class ModuleBase(object):
   """ Base class of the ILCDIRAC modules. Several common utilities are defined here.
@@ -73,9 +73,7 @@ class ModuleBase(object):
     self.stdError = ''
     self.debug = False
     self.extraCLIarguments = ""
-    self.jobID = 0
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
+    self.jobID = os.environ.get("JOBID", 0)
     self.eventstring = ['']
     self.excludeAllButEventString = False
     self.ignoreapperrors = False
@@ -101,8 +99,7 @@ class ModuleBase(object):
 
     self.log.verbose('setJobApplicationStatus(%s,%s)' %(self.jobID, status))
 
-    if self.workflow_commons.has_key('JobReport'):#this should ALWAYS be true
-      self.jobReport  = self.workflow_commons['JobReport']
+    self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
     if not self.jobReport:
       return S_OK('No reporting tool given')
@@ -119,8 +116,7 @@ class ModuleBase(object):
     if not self.jobID:
       return S_OK('JobID not defined') # e.g. running locally prior to submission
 
-    if self.workflow_commons.has_key('JobReport'):
-      self.jobReport = self.workflow_commons['JobReport']
+    self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
     if not self.jobReport:
       return S_OK('No reporting tool given')
@@ -134,7 +130,7 @@ class ModuleBase(object):
   #############################################################################
   def setJobParameter(self, name, value, sendFlag = True):
     """Wraps around setJobParameter of state update client
-    @param name: job parameter 
+    @param name: job parameter
     @param value: value of the job parameter
     @param sendFlag: passed to setJobParameter
     @return: S_OK(), S_ERROR()
@@ -144,8 +140,7 @@ class ModuleBase(object):
 
     self.log.verbose('setJobParameter(%s,%s,%s)' % (self.jobID, name, value))
 
-    if self.workflow_commons.has_key('JobReport'):
-      self.jobReport = self.workflow_commons['JobReport']
+    self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
     if not self.jobReport:
       return S_OK('No reporting tool given')
@@ -162,8 +157,7 @@ class ModuleBase(object):
     if not self.jobID:
       return S_OK('JobID not defined') # e.g. running locally prior to submission
 
-    if self.workflow_commons.has_key('JobReport'):
-      self.jobReport = self.workflow_commons['JobReport']
+    self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
     if not self.jobReport:
       return S_OK('No reporting tool given')
@@ -177,7 +171,7 @@ class ModuleBase(object):
   #############################################################################
   def setFileStatus(self, production, lfn, status):
     """ Set the file status for the given production in the Production Database
-    
+
     @param production: production ID
     @param lfn: logical file name of the file that needs status change
     @param status: status to set
@@ -185,11 +179,7 @@ class ModuleBase(object):
     """
     self.log.verbose('setFileStatus(%s,%s,%s)' %(production, lfn, status))
 
-    if not self.workflow_commons.has_key('FileReport'):
-      fileReport = FileReport('Transformation/TransformationManager')
-      self.workflow_commons['FileReport'] = fileReport
-
-    fileReport = self.workflow_commons['FileReport']
+    fileReport = self.workflow_commons.setdefault('FileReport', FileReport('Transformation/TransformationManager') )
     result = fileReport.setFileStatus(production, lfn, status)
     if not result['OK']:
       self.log.warn(result['Message'])
@@ -228,19 +218,19 @@ class ModuleBase(object):
   #############################################################################
   def getCandidateFiles(self, outputList, outputLFNs, fileMask):
     """ Returns list of candidate files to upload, check if some outputs are missing.
-        
+
       @param outputList: has the following structure:
-      [ ('outputDataType':'','outputDataSE':'','outputDataName':'') , (...) ] 
-          
+      [ ('outputDataType':'','outputDataSE':'','outputDataName':'') , (...) ]
+
       @param outputLFNs: list of output LFNs for the job
-        
+
       @param fileMask:  output file extensions to restrict the outputs to
-        
+
       @return: dictionary containing type, SE and LFN for files restricted by mask
     """
     fileInfo = {}
     for outputFile in outputList:
-      if outputFile.has_key('outputFile') and outputFile.has_key('outputDataSE') and outputFile.has_key('outputPath'):
+      if 'outputFile' and 'outputDataSE' and 'outputPath' in outputFile:
         fname = outputFile['outputFile']
         fileSE = outputFile['outputDataSE']
         filePath = outputFile['outputPath']
@@ -258,7 +248,7 @@ class ModuleBase(object):
         if len(lfn)>256+127:
           self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload.')
           return S_ERROR('LFN too long')
-        
+
     #Check that the list of output files were produced
     for fileName, metadata in fileInfo.items():
       if not os.path.exists(fileName):
@@ -282,24 +272,23 @@ class ModuleBase(object):
     #  candidateFiles = fileInfo
     #else:
       #do not apply mask to files
-      
+
     candidateFiles = fileInfo
     #Sanity check all final candidate metadata keys are present (return S_ERROR if not)
     mandatoryKeys = ['path', 'workflowSE', 'lfn'] #filedict is used for requests
     for fileName, metadata in candidateFiles.items():
       for key in mandatoryKeys:
-        if not metadata.has_key(key):
+        if not key in metadata:
           return S_ERROR('File %s has missing %s' % (fileName, key))
-    
-    return S_OK(candidateFiles)  
+    return S_OK(candidateFiles)
 
   #############################################################################
   def getFileMetadata(self, candidateFiles):
     """Returns the candidate file dictionary with associated metadata.
-    
+
     @param candidateFiles: The input candidate files dictionary has the structure:
     {'lfn':'','path':'','workflowSE':''}
-       
+
     This also assumes the files are in the current working directory.
     @return: File Metadata
     """
@@ -335,17 +324,17 @@ class ModuleBase(object):
       fileDict['Size'] = os.path.getsize(fileName)
       fileDict['Addler'] = fileAdler(fileName)
       fileDict['GUID'] = metadata['GUID']
-      fileDict['Status'] = "Waiting"   
-      
+      fileDict['Status'] = "Waiting"
+
       final[fileName] = metadata
       final[fileName]['filedict'] = fileDict
-      final[fileName]['localpath'] = '%s/%s' % (os.getcwd(), fileName)  
+      final[fileName]['localpath'] = '%s/%s' % (os.getcwd(), fileName)
 
     #Sanity check all final candidate metadata keys are present (return S_ERROR if not)
     mandatoryKeys = ['GUID', 'filedict'] #filedict is used for requests (this method adds guid and filedict)
     for fileName, metadata in final.items():
       for key in mandatoryKeys:
-        if not metadata.has_key(key):
+        if not key in metadata:
           return S_ERROR('File %s has missing %s' % (fileName, key))
 
     return S_OK(final)
@@ -353,79 +342,59 @@ class ModuleBase(object):
   def _getRequestContainer( self ):
     """ just return the Request reporter (object)
     """
-
-    if self.workflow_commons.has_key( 'Request' ):
-      return self.workflow_commons['Request']
-    else:
-      request = Request()
-      self.workflow_commons['Request'] = request
-      return request
+    if not 'Request' in self.workflow_commons:
+      self.workflow_commons['Request'] = Request()
+    return self.workflow_commons['Request']
   #############################################################################
 
   def _getJobReporter( self ):
     """ just return the job reporter (object, always defined by dirac-jobexec)
     """
 
-    if self.workflow_commons.has_key( 'JobReport' ):
-      return self.workflow_commons['JobReport']
-    else:
-      jobReport = JobReport( self.jobID )
-      self.workflow_commons['JobReport'] = jobReport
-      return jobReport
-  
+    if not 'JobReport' in self.workflow_commons:
+      self.workflow_commons['JobReport'] = JobReport( self.jobID )
+    return self.workflow_commons['JobReport']
+
+
   def resolveInputVariables(self):
-    """ Common utility for all sub classes, resolve the workflow parameters 
-    for the current step. Module parameters are resolved directly. 
+    """ Common utility for all sub classes, resolve the workflow parameters
+    for the current step. Module parameters are resolved directly.
     """
-    self.log.verbose("Workflow commons:", self.workflow_commons)
-    self.log.verbose("Step commons:", self.step_commons)
-    
+
     self.request = self._getRequestContainer()
     self.jobReport = self._getJobReporter()
-    
-    self.prod_job_id = int(self.workflow_commons["JOB_ID"])
-    if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
-        self.production_id = int(self.workflow_commons["PRODUCTION_ID"])
-        self.isProdJob = True
-        
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-      
-    if self.workflow_commons.has_key('IgnoreAppError'):
-      self.ignoreapperrors = self.workflow_commons['IgnoreAppError']
-      
-    if self.step_commons.has_key('applicationName'):
-      self.applicationName = self.step_commons['applicationName']
-      
-    if self.step_commons.has_key('applicationVersion'):
-      self.applicationVersion = self.step_commons['applicationVersion']
-      
-    if self.step_commons.has_key('applicationLog'):
-      self.applicationLog = self.step_commons['applicationLog']
-    
-    if self.step_commons.has_key('ExtraCLIArguments'):
-      self.extraCLIarguments = urllib.unquote(self.step_commons['ExtraCLIArguments']) 
-      
-    if self.step_commons.has_key('SteeringFile'):
-      self.SteeringFile = self.step_commons['SteeringFile']
-      
-    if self.workflow_commons.has_key('JobType'):
-      self.jobType = self.workflow_commons['JobType']
-      
-    if self.workflow_commons.has_key('Energy'):
-      self.energy = self.workflow_commons['Energy']
 
-    if self.workflow_commons.has_key('NbOfEvts'):
-      if self.workflow_commons['NbOfEvts'] > 0:
-        self.NumberOfEvents = self.workflow_commons['NbOfEvts']
+    self.prod_job_id = int(self.workflow_commons.get("JOB_ID", self.prod_job_id))
+    if self.workflow_commons.get("IS_PROD", False):
+      self.production_id = int(self.workflow_commons["PRODUCTION_ID"])
+      self.isProdJob = True
 
-    if 'StartFrom' in self.workflow_commons:
-      if self.workflow_commons['StartFrom'] > 0:
-        self.WorkflowStartFrom = self.workflow_commons['StartFrom']
+    self.systemConfig = self.workflow_commons.get('SystemConfig', self.systemConfig)
 
-    if self.step_commons.has_key('InputFile'):
-      ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string 
+    self.ignoreapperrors = self.workflow_commons.get('IgnoreAppError', self.ignoreapperrors)
+
+    self.applicationName = self.step_commons.get('applicationName', self.applicationName)
+
+    self.applicationVersion = self.step_commons.get('applicationVersion', self.applicationVersion)
+
+    self.applicationLog = self.step_commons.get('applicationLog', self.applicationLog)
+
+    self.extraCLIarguments = urllib.unquote(self.step_commons.get('ExtraCLIArguments', self.extraCLIarguments))
+
+    self.SteeringFile = self.step_commons.get('SteeringFile', self.SteeringFile)
+
+    self.jobType = self.workflow_commons.get('JobType', self.jobType)
+
+    self.energy = self.workflow_commons.get('Energy', self.energy)
+
+    if 'NbOfEvts' in self.workflow_commons and self.workflow_commons['NbOfEvts'] > 0:
+      self.NumberOfEvents = self.workflow_commons['NbOfEvts']
+
+    if 'StartFrom' in self.workflow_commons and self.workflow_commons['StartFrom'] > 0:
+      self.WorkflowStartFrom = self.workflow_commons['StartFrom']
+
+    if 'InputFile' in self.step_commons:
+      ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string
       inputf = self.step_commons['InputFile']
       if not type(inputf) == types.ListType:
         if len(inputf):
@@ -433,44 +402,41 @@ class ModuleBase(object):
         else:
           inputf = []
       self.InputFile = inputf
-    
-    if self.step_commons.has_key('ForgetInput'):
-      self.ignoremissingInput = self.step_commons['ForgetInput']
-            
-    if self.workflow_commons.has_key('InputData'):
+
+    self.ignoremissingInput = self.step_commons.get('ForgetInput', self.ignoremissingInput)
+
+    if 'InputData' in self.workflow_commons:
       inputdata = self.workflow_commons['InputData']
       if not type(inputdata) == types.ListType:
         if len(inputdata):
           self.InputData = inputdata.split(";")
           self.InputData = [x.replace("LFN:","") for x in self.InputData]
-      
-    if self.workflow_commons.has_key('ParametricInputData'):
+
+    if 'ParametricInputData' in self.workflow_commons:
       paramdata = self.workflow_commons['ParametricInputData']
       if not type(paramdata) == types.ListType:
         if len(paramdata):
           self.InputData = paramdata.split(";")
 
+    #only if OutputFile is not set
     if not self.OutputFile:
-      if self.step_commons.has_key("OutputFile"):
-        self.OutputFile = self.step_commons["OutputFile"]
+      self.OutputFile = self.step_commons.get("OutputFile", '')
 
     #Next is also a module parameter, should be already set
-    if self.step_commons.has_key('debug'):
-      self.debug = self.step_commons['debug']
+    self.debug = self.step_commons.get('debug', self.debug)
 
-          
     if self.InputData:
       res = getNumberOfevents(self.InputData)
       self.inputdataMeta.update(res['AdditionalMeta'])
       if res["nbevts"]:
         if self.NumberOfEvents > res['nbevts'] or self.NumberOfEvents == 0:
           self.NumberOfEvents = res['nbevts']
-        
+
     res = self.applicationSpecificInputs()
     if not res['OK']:
       return res
     return S_OK('Parameters resolved')
-  
+
   def applicationSpecificInputs(self):
     """ Method overwritten by sub classes. Called from the above.
     """
@@ -523,7 +489,7 @@ class ModuleBase(object):
       self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
       res = getSteeringFileDir(self.systemConfig, steeringfilevers)
       if not res['OK']:
-        self.log.error("Cannot find the steering file directory: %s" % steeringfilevers, 
+        self.log.error("Cannot find the steering file directory: %s" % steeringfilevers,
                        res['Message'])
         return S_ERROR("Failed to locate steering files %s" % steeringfilevers)
       path = res['Value']
@@ -538,7 +504,7 @@ class ModuleBase(object):
             shutil.copytree(os.path.join(path, f), "./"+f)
           else:
             shutil.copy2(os.path.join(path, f), "./"+f)
-        except EnvironmentError, why:
+        except EnvironmentError as why:
           self.log.error('Could not copy %s here because :' % f, str(why) )
 
     if 'ILDConfigPackage' in self.workflow_commons:
@@ -560,7 +526,7 @@ class ModuleBase(object):
             shutil.copytree(os.path.join(path, f), "./"+f)
           else:
             shutil.copy2(os.path.join(path, f), "./"+f)
-        except EnvironmentError, why:
+        except EnvironmentError as why:
           self.log.error('Could not copy %s here because %s!' % (f, str(why)))
 
 
@@ -602,7 +568,7 @@ class ModuleBase(object):
     appres = self.runIt()
     if not appres["OK"]:
       self.log.error("Somehow the application did not exit properly")
-    
+
     ##Try to move things back to the base directory
     # if self.OutputFile:
     #   for ofile in glob.glob("*"+self.OutputFile+"*"):
@@ -645,15 +611,15 @@ class ModuleBase(object):
     #self.log.verbose("We are now back to ", self.basedirectory)
 
     self.listDir()
-    
+
     return appres
-  
+
   def listDir(self):
     """ List the current directories content
     """
     ldir = os.listdir(os.getcwd())
     self.log.verbose("Base directory content:", "\n".join(ldir))
-  
+
   def runIt(self):
     """ Dummy call, needs to be overwritten by the actual applications
     """
@@ -681,9 +647,9 @@ class ModuleBase(object):
       self.log.error(message)
       if not self.ignoreapperrors:
         return S_ERROR(message)
-    else: 
+    else:
       self.setApplicationStatus('%s %s Successful' % (self.applicationName, self.applicationVersion))
-    return S_OK(message)    
+    return S_OK(message)
 
   #############################################################################
 
@@ -700,9 +666,7 @@ class ModuleBase(object):
       self.log.info( "Populating request with job report information" )
       self.request.addOperation( reportRequest )
 
-    accountingReport = None
-    if self.workflow_commons.has_key( 'AccountingReport' ):
-      accountingReport = self.workflow_commons['AccountingReport']
+    accountingReport = self.workflow_commons.get( 'AccountingReport', None)
     if accountingReport:
       result = accountingReport.commit()
       if not result['OK']:
@@ -741,18 +705,18 @@ class ModuleBase(object):
     if message:
       if type(self.eventstring) == type(' '):
         self.eventstring = [self.eventstring]
-      if len(self.eventstring): 
+      if len(self.eventstring):
         if len(self.eventstring[0]):
           for mystring in self.eventstring:
             if re.search(mystring, message):
-              print message 
+              print message
       else:
         print message
       if self.applicationLog:
         log = open(self.applicationLog, 'a')
         if self.excludeAllButEventString:
-          if len(self.eventstring): 
-            if len(self.eventstring[0]):  
+          if len(self.eventstring):
+            if len(self.eventstring[0]):
               for mystring in self.eventstring:
                 if re.search(mystring, message):
                   log.write(message+'\n')
@@ -762,5 +726,4 @@ class ModuleBase(object):
       else:
         self.log.error("Application Log file not defined")
     if fd == 1:
-      self.stdError += message      
-        
+      self.stdError += message

@@ -10,12 +10,11 @@ Created on Sep 21, 2010
 from DIRAC import gConfig, gLogger, exit as dexit
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK,S_ERROR
-import os, tarfile, shutil, sys, string
-import subprocess
+import os, tarfile, shutil, sys, subprocess
 
 try:
   import hashlib as md5
-except:
+except ImportError:
   import md5
 
 class Params(object):
@@ -43,8 +42,8 @@ class Params(object):
     Script.registerSwitch("V:", "Version=", "Whizard version", self.setVersion)
     Script.registerSwitch('b:', 'BeamSpectra=', 'Beam spectra version', self.setBeamSpectra)
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
-                                        '\nUsage:',
-                                        '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
+                                         '\nUsage:',
+                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
 
 def redirectLogOutput(fd, message):
   """ Needed to catch the log output of the shellCall below
@@ -71,11 +70,11 @@ def readPRCFile(prc):
         model = elems[1]
       elif not elems[0] == "model":
         myPRCList[elems[0]] = {}
-        myPRCList[elems[0]]['Detail'] = string.join(elems[1:3], "->")
+        myPRCList[elems[0]]['Detail'] = "->".join(elems[1:3])
         myPRCList[elems[0]]['Generator'] = elems[3]
         myPRCList[elems[0]]['Restrictions'] = "none"
         if len(elems) > 4:
-          myPRCList[elems[0]]['Restrictions'] = string.join(elems[4:], " ")
+          myPRCList[elems[0]]['Restrictions'] = " ".join(elems[4:])
         myPRCList[elems[0]]['Model'] = model
         myPRCList[elems[0]]['InFile'] = "whizard.template.in"
       else:
@@ -103,7 +102,7 @@ def getDetailsFromPRC(prc, processin):
           details['Generator'] = elems[3]
           details['Restrictions'] = "none"
           if len(elems) > 4:
-            details['Restrictions'] = string.join(elems[4:], " ")
+            details['Restrictions'] = " ".join(elems[4:])
           break
   return details
 
@@ -142,7 +141,10 @@ def getListOfLibraries(pathName):
 
 
 def doTheWhizardInstallation():
+  """Do the instalation for new whizard version Copy libraries, create tarball,
+  upload processList file add entry in configuration system
 
+  """
   res = checkSLCVersion()
   if res != S_OK:
     gLogger.error(res['Message'])
@@ -167,7 +169,6 @@ def doTheWhizardInstallation():
     Script.showHelp()
     dexit(2)
   
-  from DIRAC.Core.Utilities.Subprocess                         import shellCall
   from ILCDIRAC.Core.Utilities.ProcessList                     import ProcessList
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations 
   from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
@@ -223,7 +224,7 @@ def doTheWhizardInstallation():
     dexit(2)
 
   whizmdl_here = folderlist.count("whizard.mdl")
-  if whizprc_here == 0:
+  if whizmdl_here == 0:
     gLogger.error("whizard.mdl not found in %s, please check" % whizardResultFolder)
     os.chdir(startDir)
     dexit(2)
@@ -304,8 +305,7 @@ def doTheWhizardInstallation():
   for lib in whizardLibraries:
     copyLibsCall.append(lib)
   copyLibsCall.append(localWhizardLibFolder)
-  p = subprocess.Popen(copyLibsCall, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.communicate()
+  subprocess.Popen(copyLibsCall, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
   for fileName in folderlist:
     shutil.copy(fileName, localWhizardFolder)
@@ -332,7 +332,7 @@ def doTheWhizardInstallation():
   av_platforms = gConfig.getSections(softwareSection, [])
   if av_platforms['OK']:
     if not platform in av_platforms['Value']:
-      gLogger.error("Platform %s unknown, available are %s." % (platform, string.join(av_platforms['Value'], ", ")))
+      gLogger.error("Platform %s unknown, available are %s." % (platform, ", ".join(av_platforms['Value'])))
       gLogger.error("If yours is missing add it in CS")
       dexit(255)
   else:
