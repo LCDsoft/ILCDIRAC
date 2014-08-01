@@ -150,80 +150,11 @@ def tarInstall(app, config, area):
   for dep in deps:
     depapp = [ dep["app"], dep["version"] ]
     gLogger.info("Installing dependency %s %s" % (dep["app"], dep["version"]))
-    
-    res = getTarBallLocation(depapp, config, area)
+    res = installPackage(depapp, config, area, curdir)
     if not res['OK']:
-      gLogger.error("Could not install dependency %s %s: %s" % (dep["app"], dep["version"], res['Message']))
-      return S_ERROR('Failed to install software')
-    res_from_getTarBall = res['Value']
-    app_tar = res_from_getTarBall[0]
-    TarBallURL = res_from_getTarBall[1]
-    overwrite = res_from_getTarBall[2]
-    md5sum = res_from_getTarBall[3]
-    
-    res = install(depapp, app_tar, TarBallURL, overwrite, md5sum, area)
-    os.chdir(curdir)
-    if not res['OK']:
-      gLogger.error("Could not install dependency %s %s: %s" % (dep["app"], dep["version"], res['Message']))
-      return S_ERROR('Failed to install software')
-    res_from_install = res['Value']
-    
-    res = check(depapp, area, res_from_install)
-    os.chdir(curdir)
-    if not res['OK']:
-      gLogger.error("Failed to check dependency %s %s" % (dep["app"], dep["version"]))
-      return S_ERROR('Failed to check integrity of software')
-    res_from_check = res['Value']
-    
-    res = configure(depapp, area, res_from_check)
-    os.chdir(curdir)
-    if not res['OK']:
-      gLogger.error("Failed to configure dependency %s %s" % (dep["app"], dep["version"]))
-      return S_ERROR('Failed to configure software')
-    
-    res = clean(area, res_from_install)
-    if not res['OK']:
-      gLogger.error("Failed to clean useless tar balls, deal with it: %s %s" % (dep["app"], dep["version"]))
-      
-    os.chdir(curdir)
-    gLogger.notice("Successfully installed %s %s in %s" % (dep["app"], dep["version"], area))
-    
-  res = getTarBallLocation(app, config, area)
-  if not res['OK']:
-    gLogger.error("Could not install dependency %s %s: %s" % (appName, appVersion, res['Message']))
-    return S_ERROR('Failed to install software')
-  res_from_getTarBall = res['Value']
-  app_tar = res_from_getTarBall[0]
-  TarBallURL = res_from_getTarBall[1]
-  overwrite = res_from_getTarBall[2]
-  md5sum = res_from_getTarBall[3]
+      return res
 
-  res = install(app, app_tar, TarBallURL, overwrite, md5sum, area)
-  os.chdir(curdir)
-  if not res['OK']:
-    gLogger.error("Could not install software %s %s: %s" % (appName, appVersion, res['Message']))
-    return S_ERROR('Failed to install software')
-  res_from_install = res['Value']
-  
-  res = check(app, area, res_from_install)
-  os.chdir(curdir)
-  if not res['OK']:
-    gLogger.error("Failed to check software %s %s" % (appName, appVersion))
-    return S_ERROR('Failed to check integrity of software')
-  res_from_check = res['Value']
-    
-  res = configure(app, area, res_from_check)
-  os.chdir(curdir)
-  if not res['OK']:
-    gLogger.error("Failed to configure software %s %s" % (appName, appVersion))
-    return S_ERROR('Failed to configure software')
-  
-  res = clean(area, res_from_install)
-  os.chdir(curdir)
-  if not res['OK']:
-    gLogger.error("Failed to clean useless tar balls, deal with it")
-    return S_OK()
-  gLogger.notice("Successfully installed %s %s in %s" % (appName, appVersion, area))
+  res = installPackage(app, config, area, curdir)
   return res
 
 def getTarBallLocation(app, config, area):
@@ -561,3 +492,41 @@ def addFolderToLdLibraryPath(folder):
 
 
 
+def installPackage(app, config, area, curdir):
+  """Installs the package app"""
+  appName = app[0]
+  appVersion = app[1]
+  res = getTarBallLocation(app, config, area)
+  if not res['OK']:
+    gLogger.error("Could not install software/dependency %s %s: %s" % (appName, appVersion, res['Message']))
+    return S_ERROR('Failed to install software')
+  app_tar, tarballURL, overwrite, md5sum = res['Value']
+
+  res = install(app, app_tar, tarballURL, overwrite, md5sum, area)
+  os.chdir(curdir)
+  if not res['OK']:
+    gLogger.error("Could not install software/dependency %s %s: %s" % (appName,appVersion, res['Message']))
+    return S_ERROR('Failed to install software')
+  res_from_install = res['Value']
+
+  res = check(app, area, res_from_install)
+  os.chdir(curdir)
+  if not res['OK']:
+    gLogger.error("Failed to check software/dependency %s %s" % (appName,appVersion))
+    return S_ERROR('Failed to check integrity of software')
+  res_from_check = res['Value']
+
+  res = configure(app, area, res_from_check)
+  os.chdir(curdir)
+  if not res['OK']:
+    gLogger.error("Failed to configure software/dependency %s %s" % (appName,appVersion))
+    return S_ERROR('Failed to configure software')
+
+  res = clean(area, res_from_install)
+  os.chdir(curdir)
+  if not res['OK']:
+    gLogger.error("Failed to clean useless tar balls, deal with it: %s %s" % (appName,appVersion))
+
+  os.chdir(curdir)
+  gLogger.notice("Successfully installed %s %s in %s" % (appName,appVersion, area))
+  return S_OK
