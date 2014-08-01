@@ -47,8 +47,8 @@ def createQueryDict(argss):
       value = value.replace(contMode,'')
       contMode = False  
     
-    if value[0] == '"' or value[0] == "'":
-      if value[-1] != '"' and value != "'":
+    if value[0] in ['"', "'"]:
+      if value[-1] not in ['"', "'"]:
         contMode = value[0]
         continue 
     
