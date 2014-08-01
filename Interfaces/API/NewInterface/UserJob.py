@@ -102,7 +102,7 @@ class UserJob(Job):
     return S_OK()
 
   #############################################################################
-  def setOutputData(self, lfns, OutputPath = '', OutputSE = ['']):
+  def setOutputData(self, lfns, OutputPath = '', OutputSE = ''):
     """Helper function, used in preference to Job.setOutputData() for ILC.
 
        For specifying output data to be registered in Grid storage.  If a list
