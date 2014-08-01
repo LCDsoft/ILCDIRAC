@@ -1,26 +1,23 @@
-########################################################################
-# $HeadURL$
-########################################################################
-
 """
-SID DBD specific production job utility
+ILD DBD specific production job utility
 
 @author: S. Poss
 @since: Jul 01, 2012
 """
 
-__RCSID__ = "$Id$"
-
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
-
+from ILCDIRAC.Core.Utilities.LFNPathUtilities import joinPathForMetaData
 import types, string
 from decimal import Decimal
 
-
+#pylint: disable=W0311
+#pylint: disable=R0902
+#pylint: disable=R0904
 class ILDProductionJob( ProductionJob ):
+    """ILD Production Jobs definition"""
     def __init__( self ):
         super( ILDProductionJob, self ).__init__()
         self.machine = 'ilc'
@@ -31,7 +28,7 @@ class ILDProductionJob( ProductionJob ):
         self.detector = ''
         self.compatmeta = {}
         self.processID = 0
-        
+        self.evtclass = ''
     def setILDConfig( self, Version ):
         """ This is because in the ProductionJob, it's called Config
         """
@@ -52,7 +49,7 @@ class ILDProductionJob( ProductionJob ):
             for meta in metaFCkeys:
                 if meta != key:
                     if meta.lower() == key.lower():
-                        return self._reportError( "Key syntax error %s, should be %s" % ( key, meta ), name='SIDProduction' )
+                        return self._reportError( "Key syntax error %s, should be %s" % ( key, meta ), name='ILDProduction' )
             if not metaFCkeys.count( key ):
                 return self._reportError( "Key %s not found in metadata keys, allowed are %s" % ( key, metaFCkeys ) )
         # if not metadata.has_key("ProdID"):
@@ -349,28 +346,30 @@ class ILDProductionJob( ProductionJob ):
             else:
                 detectormeta = self.detector.rstrip( "/" )
             
-        path = self.basepath        
         # ##Need to resolve file names and paths
         # TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
         if hasattr( application, "setOutputRecFile" ) and not application.willBeCut:
-            path = self.basepath + 'rec/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/" + self.detector + softwarepath
-            self.finalMetaDict[self.basepath + 'rec/' + energypath + self.evtclass] = {"EvtClass" : evtclassmeta}
-            self.finalMetaDict[self.basepath + 'rec/' + energypath + self.evtclass + self.evttype] = {"EvtType" : evttypemeta}
-            self.finalMetaDict[self.basepath + 'rec/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/"] = {'ProcessID': self.processID}
-            self.finalMetaDict[self.basepath + 'rec/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/" + self.detector] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[self.basepath + 'rec/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/" + self.detector + softwarepath] = {"SoftwareTag" : softwaremeta}
+            metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath, self.evtclass)
+            self.finalMetaDict[ metaBasePathRec ] = {"EvtClass" : evtclassmeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype )] = {"EvtType" : evttypemeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ))] = {'ProcessID': self.processID}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
             fname = self.basename + "_rec.slcio"
-            application.setOutputRecFile( fname, path )    
-            self.finalpaths.append( path )
-            path = self.basepath + 'dst/' + energypath + self.evtclass + str( self.processID ) + "/" + self.detector + softwarepath
-            self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass] = {"EvtClass" : evtclassmeta}
-            self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass + self.evttype] = {"EvtType" : evttypemeta}
-            self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/"] = {'ProcessID': self.processID}
-            self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/" + self.detector] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/" + self.detector + softwarepath] = {"SoftwareTag" : softwaremeta}
+            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
+            application.setOutputRecFile( fname, pathRec )
+            self.finalpaths.append( pathRec )
+
+            metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath, self.evtclass)
+            self.finalMetaDict[ metaBasePathDst ] = {"EvtClass" : evtclassmeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype )] = {"EvtType" : evttypemeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ))] = {'ProcessID': self.processID}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ), self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
             fname = self.basename + "_dst.slcio"
-            application.setOutputDstFile( fname, path )    
-            self.finalpaths.append( path )
+            pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
+            application.setOutputDstFile( fname, pathDst )
+            self.finalpaths.append( pathDst )
         elif hasattr( application, "OutputFile" ) and hasattr( application, 'datatype' ) and ( not application.OutputFile ) and ( not application.willBeCut ):
             if ( not application.datatype ) and self.datatype:
                 application.datatype = self.datatype
