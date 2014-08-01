@@ -379,11 +379,10 @@ def configure(app, area, res_from_check):
   elif appName == 'java':
     configureJava(basefolder)
   elif appName == "lcio":
-    os.environ['LCIO'] = os.path.join(os.getcwd(), basefolder)
-    os.environ['PATH'] = os.path.join(os.getcwd(), basefolder) + "/bin:" + os.environ['PATH']
     res = checkJava()
     if not res['OK']:
       return res
+    configureLCIO(basefolder)
   elif appName in ["lcsim",'stdhepcutjava']:
     res = checkJava()
     if not res['OK']:
@@ -494,6 +493,13 @@ def configureJava(basefolder):
   libFolder = os.path.join(os.getcwd(), basefolder, "lib")
   os.environ['PATH'] = ":".join( ( binFolder, os.environ['PATH'] ) )
   addFolderToLdLibraryPath( libFolder )
+
+def configureLCIO(basefolder):
+  """sets the environment variables for LCIO"""
+  lcioFolder = os.path.join( os.getcwd(), basefolder )
+  os.environ['LCIO'] = lcioFolder
+  os.environ['PATH'] = ":".join( ( os.path.join( lcioFolder, "bin" ), os.environ['PATH'] ) )
+
 
 def addFolderToLdLibraryPath(folder):
   """insert folder to os.environ variables"""
