@@ -85,7 +85,7 @@ class ModuleBase(object):
     self.workflowStatus = S_OK()
     self.stepStatus = S_OK()
     self.isProdJob = False
-    self.production_id = 0
+    self.productionID = 0
     self.prod_job_id = 0
     self.request = None
     self.jobReport = None
@@ -366,7 +366,7 @@ class ModuleBase(object):
 
     self.prod_job_id = int(self.workflow_commons.get("JOB_ID", self.prod_job_id))
     if self.workflow_commons.get("IS_PROD", False):
-      self.production_id = int(self.workflow_commons["PRODUCTION_ID"])
+      self.productionID = int(self.workflow_commons["PRODUCTION_ID"])
       self.isProdJob = True
 
     self.systemConfig = self.workflow_commons.get('SystemConfig', self.systemConfig)
@@ -684,7 +684,7 @@ class ModuleBase(object):
           request_string = str( requestJSON['Value'] )
           self.log.debug( request_string )
           # Write out the request string
-          fname = '%s_%s_request.json' % ( self.production_id, self.prod_job_id )
+          fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
           jsonFile = open( fname, 'w' )
           jsonFile.write( request_string )
           jsonFile.close()

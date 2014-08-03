@@ -34,8 +34,8 @@ class UploadLogFile(ModuleBase):
     super(UploadLogFile, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('UploadLogFile')
-    self.PRODUCTION_ID = None
-    self.JOB_ID = None
+    self.productionID = None
+    self.jobID = None
     self.workflow_commons = None
     self.request = None
     self.logFilePath = ""
@@ -132,8 +132,8 @@ class UploadLogFile(ModuleBase):
       self.log.error('Failed to list the log directory', str(res['Value'][2]))
 
     self.log.info('Job root is found to be %s' % (self.root))
-    self.log.info('PRODUCTION_ID = %s, JOB_ID = %s '  % (self.PRODUCTION_ID, self.JOB_ID))
-    self.logdir = os.path.realpath('./job/log/%s/%s' % (self.PRODUCTION_ID, self.JOB_ID))
+    self.log.info('PRODUCTION_ID = %s, JOB_ID = %s '  % (self.productionID, self.jobID))
+    self.logdir = os.path.realpath('./job/log/%s/%s' % (self.productionID, self.jobID))
     self.log.info('Selected log files will be temporarily stored in %s' % self.logdir)
 
     res = self.finalize()
@@ -380,8 +380,8 @@ class UploadLogFile(ModuleBase):
   def __createLogIndex(self, selectedFiles):
     """ Create a log index page for browsing the log files.
     """
-    productionID = self.PRODUCTION_ID
-    prodJobID = self.JOB_ID
+    productionID = self.productionID
+    prodJobID = self.jobID
     wmsJobID = self.jobID
     logFilePath = self.logFilePath
 

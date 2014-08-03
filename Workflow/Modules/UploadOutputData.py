@@ -43,7 +43,7 @@ class UploadOutputData(ModuleBase):
     self.outputMode = 'Any' #or 'Local' for reco case
     self.outputList = []
     self.request = None
-    self.PRODUCTION_ID = ""
+    self.productionID = 0
     self.prodOutputLFNs = []
     self.experiment = "CLIC"
 
@@ -64,10 +64,10 @@ class UploadOutputData(ModuleBase):
         self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
         self.failoverTest = False
 
-    if self.workflow_commons.has_key("PRODUCTION_ID"):
-      self.PRODUCTION_ID = self.workflow_commons["PRODUCTION_ID"]
+    self.productionID = self.workflow_commons.get("PRODUCTION_ID", self.productionID)
 
-    if os.environ.has_key('JOBID'):
+    self.jobID = os.environ.get('JOBID', self.jobID)
+    if self.jobID:
       self.log.verbose('Found WMS JobID = %s' % self.jobID)
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')
