@@ -553,18 +553,16 @@ class Application(object):
     for argName, argType in argNamesAndTypes.iteritems():
 
       if not args.has_key(argName):
-        self._reportError(
-          'Method does not contain argument \'%s\'' % argName,
-          __name__,
-          **self._getArgsDict( 1 )
-        )
+        self._reportError( 'Method does not contain argument \'%s\'' % argName,
+                           __name__,
+                           **self._getArgsDict( 1 )
+                         )
 
       if not isinstance( args[argName], argType):
-        self._reportError(
-          'Argument \'%s\' is not of type %s' % ( argName, argType ),
-          __name__,
-          **self._getArgsDict( 1 )
-        )
+        self._reportError( 'Argument \'%s\' is not of type %s' % ( argName, argType ),
+                           __name__,
+                           **self._getArgsDict( 1 )
+                         )
 
   def _getArgsDict( self, level = 0 ):
     """ Private method
