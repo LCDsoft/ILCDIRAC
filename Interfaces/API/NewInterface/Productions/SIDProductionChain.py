@@ -4,6 +4,8 @@ Created on Feb 8, 2012
 @author: Stephane Poss
 '''
 
+__RCSID__ = None
+
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -172,8 +174,8 @@ if activesplitstdhep and meta:
   pstdhepsplit.setProdType('Split')
   res = pstdhepsplit.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pstdhepsplit.setOutputSE("CERN-SRM")
   wname = process+"_"+str(energy)+"_split"
   wname += additional_name  
@@ -183,8 +185,8 @@ if activesplitstdhep and meta:
   #Add the application
   res = pstdhepsplit.append(stdhepsplit)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pstdhepsplit.addFinalization(True,True,True,True)
   descrp = "Splitting stdhep files"
   if additional_name:  
@@ -193,11 +195,11 @@ if activesplitstdhep and meta:
   
   res = pstdhepsplit.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = pstdhepsplit.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   #As before: get the metadata for this production to input into the next
   meta = pstdhepsplit.getMetadata()
   
@@ -210,8 +212,8 @@ if sid_sim and meta:
   psl.setProdType('MCSimulation')
   res = psl.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psl.setOutputSE("CERN-SRM")
   wname = process+"_"+str(energy)+"_sid_sim"
   wname += additional_name  
@@ -220,8 +222,8 @@ if sid_sim and meta:
   #Add the application
   res = psl.append(slic)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psl.addFinalization(True,True,True,True)
   descrp = "CLIC_SID_CDR model"
   if additional_name:  
@@ -230,11 +232,11 @@ if sid_sim and meta:
 
   res = psl.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = psl.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   #As before: get the metadata for this production to input into the next
   meta = psl.getMetadata()
 
@@ -248,8 +250,8 @@ if activesplit and meta:
   psplit.setDestination("LCG.CERN.ch")
   res = psplit.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psplit.setOutputSE("CERN-SRM")
   wname = process+"_"+str(energy)+"_split"
   wname += additional_name  
@@ -259,8 +261,8 @@ if activesplit and meta:
   #Add the application
   res = psplit.append(split)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psplit.addFinalization(True,True,True,True)
   descrp = "Splitting slcio files"
   if additional_name:  
@@ -269,11 +271,11 @@ if activesplit and meta:
   
   res = psplit.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = psplit.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   #As before: get the metadata for this production to input into the next
   meta = psplit.getMetadata()
   
@@ -288,8 +290,8 @@ if sid_rec and meta:
   psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
   res = psidrec.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psidrec.setOutputSE("CERN-SRM")
   wname = process+"_"+str(energy)+"_sid_rec"
   wname += additional_name  
@@ -297,16 +299,16 @@ if sid_rec and meta:
   psidrec.setProdGroup(analysis+"_"+str(energy))
   res = psidrec.append(lcsim_prepandora)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   res = psidrec.append(slicpandora)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   res = psidrec.append(lcsim_postpandora)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psidrec.addFinalization(True,True,True,True)
   descrp = "CLIC_SID_CDR, No overlay"
   if additional_name:  
@@ -315,11 +317,11 @@ if sid_rec and meta:
   
   res = psidrec.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = psidrec.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
 
 if sid_rec_ov and meta:
   #######################
@@ -330,8 +332,8 @@ if sid_rec_ov and meta:
   psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
   res = psidreco.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psidreco.setOutputSE("CERN-SRM")
   wname = process+"_"+str(energy)+"_sid_rec_overlay"
   wname += additional_name  
@@ -339,24 +341,24 @@ if sid_rec_ov and meta:
   psidreco.setProdGroup(analysis+"_"+str(energy))
   res = psidreco.append(overlay_sid_gg)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   res = psidreco.append(overlay_sid_pairs)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   res = psidreco.append(lcsim_prepandora_ov)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   res = psidreco.append(slicpandora_ov)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   res = psidreco.append(lcsim_postpandora_ov)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psidreco.addFinalization(True,True,True,True)
   descrp = "CLIC_SID_CDR, overlay"
   if additional_name:  
@@ -365,10 +367,10 @@ if sid_rec_ov and meta:
   
   res = psidreco.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = psidreco.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
     
 ##In principle nothing else is needed.
