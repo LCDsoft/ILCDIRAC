@@ -104,13 +104,12 @@ class UploadLogFile(ModuleBase):
     else:
       self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
 
-    if self.workflow_commons.has_key('Request'):
-      self.request = self.workflow_commons['Request']
-    else:
+    self.request = self.workflow_commons.get('Request', None)
+    if not self.request:
       self.request = RequestContainer()
-      self.request.setRequestName('job_%s_request.xml' % self.jobID)
-      self.request.setJobID(self.jobID)
-      self.request.setSourceComponent("Job_%s" % self.jobID)
+      self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
+      self.request.JobID = self.jobID
+      self.request.SourceComponent = "Job_%d" % int(self.jobID)
 
     return S_OK('Parameters resolved')
 
@@ -246,7 +245,7 @@ class UploadLogFile(ModuleBase):
     self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, 
                                                                                ', '.join(self.failoverSEs )))
     result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath, 
-                                                      self.failoverSEs, fileGUID=None, 
+                                                      self.failoverSEs, fileMetaDict = { "GUID": None },
                                                       fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
     if not result['OK']:
       self.log.error('Failed to upload logs to all destinations')
@@ -254,12 +253,7 @@ class UploadLogFile(ModuleBase):
       return S_OK() #because if the logs are lost, it's not the end of the world.
     
     #Now after all operations, retrieve potentially modified request object
-    result = failoverTransfer.getRequestObject()
-    if not result['OK']:
-      self.log.error(result)
-      return S_ERROR('Could not retrieve modified request')
-
-    self.request = result['Value']    
+    self.request = failoverTransfer.request
     res = self.createLogUploadRequest(self.logSE, self.logLFNPath)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
@@ -347,16 +341,18 @@ class UploadLogFile(ModuleBase):
     """ Set a request to upload job log files from the output sandbox
     """
     self.log.info('Setting log upload request for %s at %s' %(targetSE, logFileLFN))
+    #FIXME: addSubRequest is gone
     res = self.request.addSubRequest({'Attributes':{'Operation':'uploadLogFiles',
                                                     'TargetSE':targetSE,
                                                     'ExecutionOrder':0}},
-                                         'logupload')
+                                     'logupload')
     if not res['OK']:
       return res
     index = res['Value']
     fileDict = {}
     fileDict['Status'] = 'Waiting'
     fileDict['LFN'] = logFileLFN
+    #FIXME: setSubRequestFiles is gone too
     self.request.setSubRequestFiles(index, 'logupload', [fileDict])
     return S_OK()
 
