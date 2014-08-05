@@ -12,7 +12,7 @@ from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransf
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations   import Operations
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC

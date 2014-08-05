@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 """ 
 UploadLogFile module is used to upload the files present in the working
 directory.
@@ -49,8 +46,8 @@ class UploadLogFile(ModuleBase):
     self.logExtensions = []
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
     self.diracLogo = self.ops.getValue('/SAM/LogoURL', 
-                                      'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
-    self.rm = ReplicaManager()
+                                       'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
+    self.repMan = ReplicaManager()
 
     self.experiment = 'CLIC'
     self.enable = True
@@ -59,30 +56,28 @@ class UploadLogFile(ModuleBase):
 
 ######################################################################
   def applicationSpecificInputs(self):
+    """resolves the module parameters"""
 
-    if self.step_commons.has_key('Enable'):
-      self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
-        self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
-        self.enable = False
+    self.enable = self.step_commons.get('Enable', self.enable)
+    if not type(self.enable) == type(True):
+      self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
+      self.enable = False
 
-    if self.step_commons.has_key('TestFailover'):
-      self.enable = self.step_commons['TestFailover']
-      if not type(self.failoverTest) == type(True):
-        self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
-        self.failoverTest = False
+    self.failoverTest = self.step_commons.get('TestFailover', self.failoverTest)
+    if not type(self.failoverTest) == type(True):
+      self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
+      self.failoverTest = False
 
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
+    self.jobID = os.environ.get('JOBID', self.jobID)
+    if self.jobID != 0:
       self.log.verbose('Found WMS JobID = %s' % self.jobID)
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
-    if self.workflow_commons.has_key('LogFilePath') and self.workflow_commons.has_key('LogTargetPath'):
-      self.logFilePath = self.workflow_commons['LogFilePath']
-      self.logLFNPath = self.workflow_commons['LogTargetPath']
-    else:
+    self.logFilePath = self.workflow_commons.get('LogFilePath', self.logFilePath)
+    self.logLFNPath = self.workflow_commons.get('LogTargetPath', self.logLFNPath)
+    if not (self.logFilePath and self.logLFNPath):
       self.log.info('LogFilePath parameter not found, creating on the fly')
       result = getLogPath(self.workflow_commons)
       if not result['OK']:
@@ -185,8 +180,8 @@ class UploadLogFile(ModuleBase):
     res = S_ERROR()
     if not self.failoverTest:
       self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE))
-      res = self.rm.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) }, 
-                                        self.logSE, singleDirectory = True)
+      res = self.repMan.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) },
+                                            self.logSE, singleDirectory = True)
       self.log.verbose(res)
       if res['OK']:
         self.log.info('Successfully upload log directory to %s' % self.logSE)
@@ -289,7 +284,7 @@ class UploadLogFile(ModuleBase):
         else:
           self.log.error('Log file found to be greater than maximum of %s bytes' % self.logSizeLimit, candidate)
       return S_OK(selectedFiles)
-    except Exception, x:
+    except OSError as x:
       self.log.exception('Exception while determining files to save.', '', str(x))
       return S_ERROR('Could not determine log files')
 
@@ -302,21 +297,21 @@ class UploadLogFile(ModuleBase):
     try:
       if not os.path.exists(self.logdir):
         os.makedirs(self.logdir)
-    except Exception, x:
+    except OSError as x:
       self.log.exception('Exception while trying to create directory.', self.logdir, str(x))
       return S_ERROR()
     # Set proper permissions
     self.log.info('Changing log directory permissions to 0755')
     try:
       os.chmod(self.logdir, 0755)
-    except Exception, x:
+    except OSError as x:
       self.log.error('Could not set logdir permissions to 0755:', '%s (%s)' % ( self.logdir, str(x) ) )
     # Populate the temporary directory
     try:
       for myfile in selectedFiles:
         destinationFile = '%s/%s' % (self.logdir, os.path.basename(myfile))
         shutil.copy(myfile, destinationFile)
-    except Exception, x:
+    except OSError as x:
       self.log.exception('Exception while trying to copy file.', myfile, str(x))
       self.log.info('File %s will be skipped and can be considered lost.' % myfile)
 
@@ -357,7 +352,7 @@ class UploadLogFile(ModuleBase):
         if not os.path.islink('%s/%s' % (logDir, toChange)):
           self.log.debug('Changing permissions of %s/%s to 0755' % (logDir, toChange))
           os.chmod('%s/%s' % (logDir, toChange), 0755)
-    except Exception, x:
+    except OSError as x:
       self.log.error('Problem changing shared area permissions', str(x))
       return S_ERROR(x)
 
@@ -370,7 +365,7 @@ class UploadLogFile(ModuleBase):
     productionID = self.productionID
     prodJobID = self.jobID
     wmsJobID = self.jobID
-    logFilePath = self.logFilePath
+    #logFilePath = self.logFilePath
 
     targetFile = '%s/index.html' % (self.logdir)
     fopen = open(targetFile, 'w')
@@ -397,10 +392,10 @@ class UploadLogFile(ModuleBase):
     check = ['SystemConfig', 'SoftwarePackages', 'BannedSites', 'LogLevel',
              'JobType', 'MaxCPUTime', 'ProductionOutputData', 'LogFilePath', 'InputData', 'InputSandbox']
     params = {}
-    for n, v in self.workflow_commons.items():
+    for parameter, value in self.workflow_commons.iteritems():
       for item in check:
-        if n == item and v:
-          params[n] = str(v)
+        if parameter == item and value:
+          params[parameter] = str(value)
 
     finalKeys = params.keys()
     finalKeys.sort()

@@ -54,7 +54,7 @@ class LCIOSplit(ModuleBase):
               self.OutputFile = os.path.basename(obj)
         else:
           self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))
+                                            int(self.workflow_commons["JOB_ID"]))
           
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
@@ -152,12 +152,11 @@ exit $?
     self.setApplicationStatus( 'LCIOSplit %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
-    self.result = shellCall(
-                            0,
-                            command,
-                            callbackFunction = self.redirectLogOutput,
-                            bufferLimit = 20971520
-                            )
+    self.result = shellCall( 0,
+                             command,
+                             callbackFunction = self.redirectLogOutput,
+                             bufferLimit = 20971520
+                           )
 
         # Check results
 
@@ -196,9 +195,9 @@ exit $?
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []
-      for f in numberofeventsdict.keys():
+      for fileName in numberofeventsdict.keys():
         item = {}
-        item['outputFile'] = f
+        item['outputFile'] = fileName
         item['outputPath'] = self.listoutput['outputPath']
         item['outputDataSE'] = self.listoutput['outputDataSE']
         outputlist.append(item)
@@ -215,8 +214,8 @@ exit $?
         else:
           this_split_data = item
       path = os.path.dirname(this_split_data)
-      for f in numberofeventsdict.keys():
-        finalproddata.append(os.path.join(path, f))
+      for fileName in numberofeventsdict.keys():
+        finalproddata.append(os.path.join(path, fileName))
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
