@@ -29,10 +29,10 @@ class ILDProductionJob( ProductionJob ):
         self.compatmeta = {}
         self.processID = 0
         self.evtclass = ''
-    def setILDConfig( self, Version ):
+    def setILDConfig( self, version ):
         """ This is because in the ProductionJob, it's called Config
         """
-        return self.setConfig( Version )
+        return self.setConfig( version )
         
     def setInputDataQuery( self, metadata ):
         """ Define the input data query needed, also get from the data the meta info requested to build the path
