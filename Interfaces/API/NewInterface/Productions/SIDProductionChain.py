@@ -118,7 +118,7 @@ if energy == 1000.:
   overlay_sid_gg.setGGToHadInt(4.1)##When running at 3TeV
 else:
   print "Overlay SID: No overlay parameters defined for this energy"  
-overlay_sid_gg.setDetectorType("sidloi3")#DO NOT TOUCH THIS
+overlay_sid_gg.setDetectorModel("sidloi3")#DO NOT TOUCH THIS
 
 overlay_sid_pairs = OverlayInput()
 overlay_sid_pairs.setBkgEvtType("pairs")#DO NOT TOUCH THIS
@@ -128,7 +128,7 @@ if energy == 1000.:
   overlay_sid_pairs.setGGToHadInt(1)##When running at 3TeV
 else:
   print "Overlay SID: No overlay parameters defined for this energy"  
-overlay_sid_pairs.setDetectorType("sidloi3")#DO NOT TOUCH THIS
+overlay_sid_pairs.setDetectorModel("sidloi3")#DO NOT TOUCH THIS
 
 
 lcsim_prepandora_ov = LCSIM()

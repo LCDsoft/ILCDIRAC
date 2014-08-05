@@ -180,7 +180,7 @@ lcsim_postpandora.setDetectorModel(detectorName)
 overlay = OverlayInput()
 overlay.setBXOverlay(60)
 overlay.setGGToHadInt(1.3)##When running at 1.4TeV
-overlay.setDetectorType("SID")
+overlay.setDetectorModel("CLIC_SID_CDR")
 overlay.setBkgEvtType("gghad")
 
 lcsim_prepandora_ov = LCSIM()

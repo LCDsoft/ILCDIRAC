@@ -71,7 +71,7 @@ mo.setSteeringFile("clic_ild_cdr.steer")
 overlay = OverlayInput()
 overlay.setBXOverlay(60)
 overlay.setGGToHadInt(1.3)##When running at 1.4TeV
-overlay.setDetectorType("ILD")
+overlay.setDetectorModel("CLIC_ILD_CDR")
 overlay.setBkgEvtType("gghad")
 
 ##Reconstruction
