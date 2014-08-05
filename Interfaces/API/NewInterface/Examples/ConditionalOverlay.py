@@ -27,7 +27,7 @@ ovi.setBXOverlay(300)
 ovi.setGGToHadInt(0.3)
 ovi.setNbSigEvtsPerJob(10)
 ovi.setBkgEvtType("gghad")
-ovi.setDetectorType("ILD")
+ovi.setDetectorModel("CLIC_ILD_CDR")
 
 overlay = [True,False]
 

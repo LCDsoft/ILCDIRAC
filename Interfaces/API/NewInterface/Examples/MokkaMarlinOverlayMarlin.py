@@ -42,7 +42,7 @@ for i in range(n_jobs):
   ov.setGGToHadInt(3.2)
   ov.setNbSigEvtsPerJob(n_evts_per_job)
   ov.setBkgEvtType("gghad")
-  ov.setDetectorType("ILD")
+  ov.setDetectorModel("CLIC_ILD_CDR")
 
   res = j.append(ov)
   if not res['OK']:
