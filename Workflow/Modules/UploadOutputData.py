@@ -39,7 +39,6 @@ class UploadOutputData(ModuleBase):
     self.outputDataFileMask = ''
     self.outputMode = 'Any' #or 'Local' for reco case
     self.outputList = []
-    self.request = None
     self.productionID = 0
     self.prodOutputLFNs = []
     self.experiment = "CLIC"
@@ -240,7 +239,7 @@ class UploadOutputData(ModuleBase):
     fopen.close()
     
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self.request)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
     self.catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment,
                                       ['FileCatalog', 'LcgFileCatalog'])
@@ -295,7 +294,7 @@ class UploadOutputData(ModuleBase):
 
     os.remove("DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK") #cleanup the mess
 
-    self.request = failoverTransfer.request
+    self.workflow_commons['Request'] = failoverTransfer.request
 
     #If some or all of the files failed to be saved to failover
     if cleanUp:
@@ -304,65 +303,25 @@ class UploadOutputData(ModuleBase):
         lfns.append(metadata['lfn'])
 
       result = self.__cleanUp(lfns)
-      self.workflow_commons['Request'] = self.request
       return S_ERROR('Failed to upload output data')
 
-#    #Can now register the successfully uploaded files in the BK
-#    if not performBKRegistration:
-#      self.log.info('There are no files to perform the BK registration for, all could be saved to failover')
-#    else:
-#      rm = ReplicaManager()
-#      result = rm.addCatalogFile(performBKRegistration,catalogs=['BookkeepingDB'])
-#      self.log.verbose(result)
-#      if not result['OK']:
-#        self.log.error(result)
-#        return S_ERROR('Could Not Perform BK Registration')
-#      if result['Value']['Failed']:
-#        for lfn,error in result['Value']['Failed'].items():
-#          self.log.info('BK registration for %s failed with message: "%s" setting failover request' %(lfn,error))
-#          result = self.request.addSubRequest({'Attributes':{'Operation':'registerFile','ExecutionOrder':0, 'Catalogue':'BookkeepingDB'}},'register')
-#          if not result['OK']:
-#            self.log.error('Could not set registerFile request:\n%s' %result)
-#            return S_ERROR('Could Not Set BK Registration Request')
-#          fileDict = {'LFN':lfn,'Status':'Waiting'}
-#          index = result['Value']
-#          self.request.setSubRequestFiles(index,'register',[fileDict])
-
-    self.workflow_commons['Request'] = self.request
     return S_OK('Output data uploaded')
 
   #############################################################################
   def __cleanUp(self, lfnList):
     """ Clean up uploaded data for the LFNs in the list
     """
+    typeList = ['RegisterFile', 'ReplicateAndRegister']
+    request = self._getRequestContainer()
 
-    # Clean up the current request
-    for req_type in ['transfer', 'register']:
-      for lfn in lfnList:
-        result = self.request.getNumSubRequests(req_type)
-        if result['OK']:
-          nreq = result['Value']
-          if nreq:
-            # Go through subrequests in reverse order in order not to spoil the numbering
-            ind_range = [0]
-            if nreq > 1:
-              ind_range = range(nreq-1, -1, -1)
-              for i in ind_range:
-                result = self.request.getSubRequestFiles(i, req_type)
-                if result['OK']:
-                  fileList = result['Value']
-                  if fileList[0]['LFN'] == lfn:
-                    result = self.request.removeSubRequest(i, req_type)
-  
+    #keep all the requests which are not in typeList or whose file is not in lfnList
+    request = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
+
+    #just in case put the request object back to common request
+    self.workflow_commons['Request'] = request
+
     # Set removal requests just in case
-    failoverTransfer = FailoverTransfer(self.request)
-    for lfn in lfnList:
-      failoverTransfer._setFileRemovalRequest(lfn)
-      #result = self.request.addSubRequest({'Attributes': {'Operation' : 'removeFile', 'TargetSE' : '',
-      #                                                    'ExecutionOrder' : 1}}, 'removal')
-      #index = result['Value']
-      #fileDict = {'LFN':lfn, 'PFN':'', 'Status':'Waiting'}
-      #self.request.setSubRequestFiles(index, 'removal', [fileDict])
+    self.addRemovalRequests(lfnList)
 
     return S_OK()
 

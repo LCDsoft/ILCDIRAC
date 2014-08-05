@@ -41,7 +41,6 @@ class UserJobFinalization(ModuleBase):
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     #List all parameters here
     self.userFileCatalog = self.ops.getValue('/UserJobs/Catalogs', ['FileCatalog'] )
-    self.request = None
     self.lastStep = False
     #Always allow any files specified by users
     self.outputDataFileMask = ''
@@ -120,10 +119,6 @@ class UserJobFinalization(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'],
                                                                    self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
-
-    self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
-    self.request.JobID = self.jobID
-    self.request.SourceComponent = "Job_%d" % int(self.jobID)
 
     if not self.userOutputData:
       self.log.info('No user output data is specified for this job, nothing to do')
@@ -206,7 +201,7 @@ class UserJobFinalization(ModuleBase):
       return S_OK('Module is disabled by control flag')
 
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self.request)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer)
 
     #One by one upload the files with failover if necessary
     replication = {}
@@ -266,11 +261,10 @@ class UserJobFinalization(ModuleBase):
       report = ', '.join( uploaded )
       self.jobReport.setJobParameter( 'UploadedOutputData', report )
 
-    self.request = failoverTransfer.request
+    self.workflow_commons['Request'] = failoverTransfer.request
 
     #If some or all of the files failed to be saved to failover
     if cleanUp:
-      self.workflow_commons['Request'] = self.request
       #Leave any uploaded files just in case it is useful for the user
       #do not try to replicate any files.
       return S_ERROR('Failed To Upload Output Data')
@@ -285,7 +279,6 @@ class UserJobFinalization(ModuleBase):
         self.log.info('Replication failed with below error but file already exists in Grid storage with \
         at least one replica:\n%s' % (result))
 
-    self.workflow_commons['Request'] = self.request
     self.generateFailoverFile()
 
     self.setApplicationStatus('Job Finished Successfully')

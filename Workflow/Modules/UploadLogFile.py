@@ -11,13 +11,16 @@ directory.
 
 __RCSID__ = "$Id$"
 
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.ProductionData               import getLogPath
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
+from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
+
+from DIRAC.RequestManagementSystem.Client.Operation        import Operation
+from DIRAC.RequestManagementSystem.Client.File             import File
+
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -37,7 +40,6 @@ class UploadLogFile(ModuleBase):
     self.productionID = None
     self.jobID = None
     self.workflow_commons = None
-    self.request = None
     self.logFilePath = ""
     self.logLFNPath = ""
     self.logdir = ''
@@ -104,13 +106,6 @@ class UploadLogFile(ModuleBase):
     else:
       self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
 
-    self.request = self.workflow_commons.get('Request', None)
-    if not self.request:
-      self.request = RequestContainer()
-      self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
-      self.request.JobID = self.jobID
-      self.request.SourceComponent = "Job_%d" % int(self.jobID)
-
     return S_OK('Parameters resolved')
 
 ######################################################################
@@ -136,7 +131,6 @@ class UploadLogFile(ModuleBase):
     self.log.info('Selected log files will be temporarily stored in %s' % self.logdir)
 
     res = self.finalize()
-    self.workflow_commons['Request'] = self.request
     return res
 
   #############################################################################
@@ -237,7 +231,7 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self.request)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer)
     ##determine the experiment
     self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
 
@@ -252,8 +246,6 @@ class UploadLogFile(ModuleBase):
       self.setApplicationStatus('Failed To Upload Logs')
       return S_OK() #because if the logs are lost, it's not the end of the world.
     
-    #Now after all operations, retrieve potentially modified request object
-    self.request = failoverTransfer.request
     res = self.createLogUploadRequest(self.logSE, self.logLFNPath)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
@@ -261,7 +253,8 @@ class UploadLogFile(ModuleBase):
     else:
       self.log.info('Successfully created failover request')
       
-    self.workflow_commons['Request'] = self.request    
+    #Now after all operations, retrieve potentially modified request object
+    self.workflow_commons['Request'] = failoverTransfer.request
     return S_OK()
 
   #############################################################################
@@ -339,21 +332,19 @@ class UploadLogFile(ModuleBase):
   #############################################################################
   def createLogUploadRequest(self, targetSE, logFileLFN):
     """ Set a request to upload job log files from the output sandbox
+        How does this thing get it logFiles from the output sandbox? Was this code ever actually run?
     """
     self.log.info('Setting log upload request for %s at %s' %(targetSE, logFileLFN))
-    #FIXME: addSubRequest is gone
-    res = self.request.addSubRequest({'Attributes':{'Operation':'uploadLogFiles',
-                                                    'TargetSE':targetSE,
-                                                    'ExecutionOrder':0}},
-                                     'logupload')
-    if not res['OK']:
-      return res
-    index = res['Value']
-    fileDict = {}
-    fileDict['Status'] = 'Waiting'
-    fileDict['LFN'] = logFileLFN
-    #FIXME: setSubRequestFiles is gone too
-    self.request.setSubRequestFiles(index, 'logupload', [fileDict])
+    upload = Operation()
+    upload.Type = "PutAndRegister"
+    upload.TargetSE = targetSE
+    upFile = File()
+    upFile.LFN = logFileLFN
+    upload.addFile(upFile)
+    request = self._getRequestContainer()
+    request.addOperation ( upload )
+
+    self.workflow_commons['Request'] = request
     return S_OK()
 
   #############################################################################
