@@ -256,7 +256,6 @@ class CLIParams( object ):
     self.testSlic = False
     self.testLCSIM = False
     self.testSlicPandora = False
-    self.testRequired = False
     self.testChain = False
     self.testall  = False
     
@@ -316,12 +315,6 @@ class CLIParams( object ):
     self.testSlicPandora = True
     return S_OK()
   
-  def setTestRequired(self, opt):
-    """ Test the setRequired functionality.
-    """
-    self.testRequired = True
-    return S_OK()
-  
   def setTestOverlay(self, opt):
     """ Test Overlay
     """
@@ -346,7 +339,6 @@ class CLIParams( object ):
     self.testSlic = True
     self.testLCSIM = True
     self.testSlicPandora = True
-    self.testRequired = True
     self.testChain = True
     self.testall = True
     return S_OK()
@@ -363,7 +355,6 @@ class CLIParams( object ):
     Script.registerSwitch("", "slicpandora", 'Test SLICPandora', self.setTestSlicPandora)
     Script.registerSwitch("", 'overlay', "Test the overlay", self.setTestOverlay)
     Script.registerSwitch("", 'inputdata', "Test the InputData resolution", self.setTestInputData)
-    Script.registerSwitch("", "required", "Test the setRequired functionality. With Marlin only", self.setTestRequired)
     Script.registerSwitch("", "utilities", "Test the utilities: cut, split, concatenate", self.setTestUtilities)
     Script.registerSwitch("", 'chain', 'Test the chaining of applications', self.setTestChain)
     Script.registerSwitch("a", "all", "Test them ALL!", self.setTestAll)
@@ -522,13 +513,6 @@ if __name__ == '__main__':
       ma.getInputFromApp(moma)
     else:
       ma.setNumberOfEvents(2)
-      
-    if clip.testRequired:
-      testfile = open("testfile.txt","w")
-      testfile.write("testing setRequired")
-      testfile.close()
-      jobma.setInputSandbox("testfile.txt")
-      ma.setRequired("testfile*")
       
     res = jobma.append(ma)
     if not res['OK']:
