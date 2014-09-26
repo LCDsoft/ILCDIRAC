@@ -245,7 +245,7 @@ class Job(DiracJob):
       res = application._resolveLinkedStepParameters(stepInstance)
       if not res['OK']:
         self.log.error("Failed to resolve linked parameters:", "%s" % res['Message'])
-        return S_ERROR("Failed to resolve linked parameters:", "%s" % res['Message'])
+        return S_ERROR("Failed to resolve linked parameters: %s" % res['Message'])
       #Now prevent overwriting of parameter values.
       application._addedtojob()
   
