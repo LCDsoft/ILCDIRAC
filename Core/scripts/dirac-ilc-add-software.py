@@ -4,19 +4,22 @@ Add specified software in CS. Allows not using the web interface, therefore redu
 
 Created on May 5, 2010
 '''
-import sys
+
+__RCSID__ = "$$"
+
 from DIRAC.Core.Base import Script
 
-from DIRAC import gConfig, S_OK, S_ERROR, exit as dexit
+from DIRAC import gConfig, S_OK, exit as dexit
 
 import os
 try:
   import hashlib as md5
-except:
+except ImportError:
   import md5
 
 
 class Params(object):
+  """Parameter object"""
   def __init__( self ):
     self.version = ''
     self.platform = 'x86_64-slc5-gcc43-opt'
@@ -51,11 +54,12 @@ class Params(object):
     Script.registerSwitch("T:", "TarBall=", "Tar ball location", self.setTarBall)
     Script.registerSwitch("C:", "Comment=", "Comment", self.setComment)
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
-                                        '\nUsage:',
-                                        '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
+                                         '\nUsage:',
+                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
 
 
-if __name__=="__main__":
+def addSoftware():
+  """uploads, registers, and sends email about new software package"""
   cliParams = Params()
   cliParams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = True )
@@ -114,7 +118,7 @@ if __name__=="__main__":
   av_apps = gConfig.getSections("%s/%s" % (softwareSection, platform), [])
   if not av_apps['OK']:
     gLogger.error("Could not find all applications available in CS")
-    DIRAC.exit(255)
+    dexit(255)
 
   if appName.lower() in av_apps['Value']:
     versions = gConfig.getSections("%s/%s/%s" % (softwareSection, platform, appName.lower()), [])
@@ -126,19 +130,26 @@ if __name__=="__main__":
       dexit(0)
     else:
       result = diracAdmin.csSetOption("%s/%s/%s/%s/TarBall" % (softwareSection, platform, appName.lower(),
-                                                             appVersion), appTar_name)
+                                                               appVersion), appTar_name)
       if result['OK']:
         modifiedCS = True
         tarballurl = gConfig.getOption("%s/%s/%s/TarBallURL" % (softwareSection, platform, appName.lower()), "")
-        if len(tarballurl['Value']) > 0:
+        if tarballurl['OK'] and len(tarballurl['Value']) > 0:
           res = upload(tarballurl['Value'], appTar)
           if not res['OK']:
-            gLogger.error("Upload to %s failed" % tarballurl['Value'], res['Value'])
+            gLogger.error("Upload to %s failed" % tarballurl['Value'], res['Message'])
             dexit(255)
-      resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(),
-                                                               appVersion), md5sum)
+        else:
+          gLogger.error("No TarballURL found for application %s" % appName )
+          dexit(255)
+
+      ## Set MD5SUM in CS
+      result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(),
+                                                              appVersion), md5sum)
       if result['OK']:
         modifiedCS = True
+
+      ## Set comment in CS
       result = diracAdmin.csSetOptionComment("%s/%s/%s/%s/TarBall"%(softwareSection, platform,
                                                                     appName.lower(), appVersion), comment)
       if not result['OK']:
@@ -150,12 +161,15 @@ if __name__=="__main__":
     if result['OK']:  
       modifiedCS = True
       tarballurl = gConfig.getOption("%s/%s/%s/TarBallURL" % (softwareSection, platform, appName.lower()), "")
+      if not tarballurl['OK']:
+        gLogger.error('TarBallURL for application %s not defined' % appName)
+        dexit(255)
       if len(tarballurl['Value']) > 0:
         res = upload(tarballurl['Value'], appTar)
         if not res['OK']:
-          gLogger.error("Upload to %s failed" % tarballurl['Value'], res['Value'])
+          gLogger.error("Upload to %s failed" % tarballurl['Value'], res['Message'])
           dexit(255)
-    resutl = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),   
+    result = diracAdmin.csSetOption("%s/%s/%s/%s/Md5Sum" % (softwareSection, platform, appName.lower(), appVersion),
                                     md5sum)
     if result['OK']:
       modifiedCS = True
@@ -176,7 +190,7 @@ if __name__=="__main__":
       gLogger.info('Sending mail for software installation %s' % (mailadress))
       res = getProxyInfo()
       if not res['OK']:
-        sender = 'stephane.poss@cern.ch'
+        sender = 'ilcdirac-admin@cern.ch'
       else:
         #sender = res['Value']['']
         if 'username' in res['Value']:
@@ -191,3 +205,6 @@ if __name__=="__main__":
 
   gLogger.notice("All done!")
   dexit(0)
+
+if __name__=="__main__":
+  addSoftware()
