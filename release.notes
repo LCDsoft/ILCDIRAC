@@ -153,6 +153,8 @@ CHANGE: few pylint compliance things
 
 *Workflow:
 FIX: MokkaAnalysis call back to the getEnvScript missing
+FIX: createMarlinTarBall: better handling of RPATH in libraries
+FIX: ILCDIRAC-267: ILDProductionJob: add evtType to dst-file path
 
 [v20r0p0]
 
@@ -163,6 +165,13 @@ CHANGE: drop the Particle.tbl from the mokka steering file, put it in command li
 *Workflow:
 CHANGE: ILCSoft modules (Mokka, Marlin, SLIC, SLICPandora) now uses environment variables
 CHANGE: Mokka: drop the SQLWrapper (finally)
+
+[v19r1p18]
+
+* Core
+
+FIX: dirac-ilc-add-software: rewrite, some bug fixes
+FIX: dirac-ilc-get-prod-log: beautification
 
 [v19r1p17]
 
