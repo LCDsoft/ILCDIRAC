@@ -22,7 +22,6 @@ class RemoveInputData(ModuleBase):
       if not type(self.enable) == type(True):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
         self.enable = False
-
     return S_OK('Parameters resolved') 
   
   def execute(self):
@@ -58,7 +57,6 @@ class RemoveInputData(ModuleBase):
       for lfn in failover:
         self.__setFileRemovalRequest( lfn )
 
-
       return S_OK( 'Input Data Removed' )
     except Exception, e:
       self.log.exception( e )
@@ -71,5 +69,3 @@ class RemoveInputData(ModuleBase):
     """
     self.log.info( 'Setting file removal request for %s' % lfn )
     self.addRemovalRequests([lfn])
-
-  

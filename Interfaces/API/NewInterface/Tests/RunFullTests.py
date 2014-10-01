@@ -256,7 +256,6 @@ class CLIParams( object ):
     self.testSlic = False
     self.testLCSIM = False
     self.testSlicPandora = False
-    self.testRequired = False
     self.testChain = False
     self.testall  = False
     
@@ -340,7 +339,6 @@ class CLIParams( object ):
     self.testSlic = True
     self.testLCSIM = True
     self.testSlicPandora = True
-    self.testRequired = True
     self.testChain = True
     self.testall = True
     return S_OK()

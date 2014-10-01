@@ -358,7 +358,7 @@ class ILDProductionJob( ProductionJob ):
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
             fname = self.basename + "_rec.slcio"
-            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
+n            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
             application.setOutputRecFile( fname, pathRec )
             self.finalpaths.append( pathRec )
 

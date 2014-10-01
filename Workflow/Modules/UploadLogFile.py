@@ -18,7 +18,6 @@ from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
 from DIRAC.RequestManagementSystem.Client.Operation        import Operation
 from DIRAC.RequestManagementSystem.Client.File             import File
 
-
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
 
@@ -241,6 +240,8 @@ class UploadLogFile(ModuleBase):
       self.setApplicationStatus('Failed To Upload Logs')
       return S_OK() #because if the logs are lost, it's not the end of the world.
     
+    #Now after all operations, retrieve potentially modified request object
+    self.workflow_commons['Request'] = failoverTransfer.request
     res = self.createLogUploadRequest(self.logSE, self.logLFNPath)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
@@ -248,8 +249,6 @@ class UploadLogFile(ModuleBase):
     else:
       self.log.info('Successfully created failover request')
       
-    #Now after all operations, retrieve potentially modified request object
-    self.workflow_commons['Request'] = failoverTransfer.request
     return S_OK()
 
   #############################################################################

@@ -365,7 +365,9 @@ class ModuleBase(object):
     """ Common utility for all sub classes, resolve the workflow parameters
     for the current step. Module parameters are resolved directly.
     """
-
+    self.log.verbose("Workflow commons:", self.workflow_commons)
+    self.log.verbose("Step commons:", self.step_commons)
+    
     self.jobReport = self._getJobReporter()
 
     self.prod_job_id = int(self.workflow_commons.get("JOB_ID", self.prod_job_id))
@@ -664,6 +666,7 @@ class ModuleBase(object):
     
     reportRequest = None
     result = self.jobReport.generateForwardDISET()
+    request = self._getRequestContainer()
     if not result['OK']:
       self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( result ) )
     else:
@@ -744,5 +747,4 @@ class ModuleBase(object):
       rmFile.LFN = lfn
       remove.addFile( rmFile )
       request.addOperation( remove )
-  
     self.workflow_commons['Request'] = request

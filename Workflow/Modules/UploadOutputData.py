@@ -241,8 +241,8 @@ class UploadOutputData(ModuleBase):
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
-    self.catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment,
-                                      ['FileCatalog', 'LcgFileCatalog'])
+    catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment,
+                                 ['FileCatalog', 'LcgFileCatalog'])
 
 
 
@@ -257,7 +257,7 @@ class UploadOutputData(ModuleBase):
                                                           metadata['lfn'], 
                                                           metadata['resolvedSE'], 
                                                           fileMetaDict = metadata, 
-                                                          fileCatalog = self.catalogs)
+                                                          fileCatalog = catalogs)
         if not result['OK']:
           self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
           failover[fileName] = metadata
@@ -286,7 +286,7 @@ class UploadOutputData(ModuleBase):
                                                                 targetSE, 
                                                                 metadata['resolvedSE'],
                                                                 fileMetaDict = metadata, 
-                                                                fileCatalog = self.catalogs)
+                                                                fileCatalog = catalogs)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
