@@ -3,6 +3,7 @@
 programname=Marlin
 source /afs/cern.ch/eng/clic/software/DIRAC/bashrc
 platform=`dirac-architecture`
+platform='x86_64-slc5-gcc43-opt'
 
 if [ $# -eq 0 ]; then
     echo "Please Specify the version of the tarball e.g. 0108 and comment e.g. \"added new processor\""
@@ -45,11 +46,6 @@ YESNO=""
     ##Dealing with the libraries for Marlin
 #	ldd $marlinExe | grep "=>" | sed 's/.*=>/rsync -avL /g' | sed 's/(.*)/$directoryname\/LDLibs/g'  > lddLog.sh
 #	source lddLog.sh
-	readelf -d $marlinExe | grep RPATH
-	if [ $? == 0 ]; then
-	    echo "FOUND RPATH Aborting!!"
-	    exit 1
-	fi
 	string1=$(ldd $marlinExe | grep "=>" | sed 's/.*=>//g' | sed "s/(.*)//g")
 	string=""
 	for file in $string1; do
@@ -65,13 +61,7 @@ YESNO=""
 		fi #DO NOT USE PANDORAPFANEW.SO!!!
 #		ldd  $marlinLib  | grep "=>" | sed 's/.*=>/rsync -avL /g' | sed 's/(.*)/$directoryname\/LDLibs/g' > lddLog.sh
 #		source lddLog.sh
-		#check for RPATH in our MARLIN_DLL files
-		echo "Checking for RPATH"
-		readelf -d $marlinLib | grep RPATH
-		if [ $? == 0 ]; then
-		    echo "FOUND RPATH Aborting!!"
-		    exit 1
-		fi
+
 		string1=$(ldd $marlinLib | grep "=>" | sed 's/.*=>//g' | sed "s/(.*)//g")
 		string=""
 		for file in $string1; do
@@ -87,11 +77,7 @@ YESNO=""
     ## Copying needed libraries for the processorfiles
 #		ldd $( find $( echo $LD_LIBRARY_PATH | sed s/":"/"\n"/g )  -name $marlinLib ) | grep "=>" | sed 's/.*=>/rsync -avL /g' | sed 's/(.*)/$directoryname\/LDLibs/g' > lddLog.sh
 #		source lddLog.sh
-		readelf -d $( find $( echo $LD_LIBRARY_PATH | sed s/":"/"\n"/g )  -name $marlinLib ) | grep RPATH
-		if [ $? == 0 ]; then
-		    echo "FOUND RPATH Aborting!!"
-		    exit 1
-		fi
+
 		string1=$( ldd $( find $( echo $LD_LIBRARY_PATH | sed s/":"/"\n"/g )  -name $marlinLib ) | grep "=>" | sed 's/.*=>//g' | sed "s/(.*)//g" )
 		string=""
 #		echo "STRING1 $string1"
@@ -106,6 +92,35 @@ YESNO=""
 	python $DIRAC/ILCDIRAC/Core/Utilities/PrepareLibs.py $directoryname/LDLibs
 	rsync --exclude '.svn' -av ${ROOTSYS}/lib ${ROOTSYS}/etc ${ROOTSYS}/bin  $directoryname/ROOT
 
+
+	##Drop rpath
+	chrpath -d $directoryname/Executable/${programname}
+	readelf -d $directoryname/Executable/${programname} | grep RPATH
+	if [ $? == 0 ]; then
+	    echo "FOUND RPATH Aborting!!"
+	    exit 1
+	fi
+
+	for file in $( ls $directoryname/LDLibs/*.so ); do
+	    chrpath -d $file
+	    readelf -d $file | grep RPATH
+	    if [ $? == 0 ]; then
+		echo "FOUND RPATH Aborting!!"
+		exit 1
+	    fi
+	done
+
+	for file in $( ls $directoryname/MARLIN_DLL/*.so ); do
+	    chrpath -d $file
+	    readelf -d $file | grep RPATH
+	    if [ $? == 0 ]; then
+		echo "FOUND RPATH Aborting!!"
+		exit 1
+	    fi
+	done
+
+
+
         #Now we replace all processor libraries in LD_LIBS with links to the Libraries in the MARLIN_DLL folder
 	cd $directoryname/LDLibs
 	for file in $(ls --color=never *.so.*); do ls ../MARLIN_DLL/${file%.so.*}.so &> /dev/null && ln -sf ../MARLIN_DLL/${file%.so.*}.so $file ; done
@@ -115,7 +130,8 @@ YESNO=""
 
 	echo -e "**** Computing checksum, can be slow ****"
         cd $directoryname
-        find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5
+        find . -type f -print0 | xargs -0 md5sum > md5_checksum.md5.tmp
+	cat md5_checksum.md5.tmp | grep -v md5_checksum.md5 > md5_checksum.md5
         cd ..
 
 	echo -e "**** Creating Tarball, this might take some time ****"

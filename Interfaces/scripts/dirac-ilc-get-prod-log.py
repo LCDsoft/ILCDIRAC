@@ -6,11 +6,13 @@ Created on Mar 21, 2013
 
 @author: stephane
 '''
+__RCSID__ = "$$"
+
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, exit as dexit
-from DIRAC.Core.Utilities import PromptUser
 
 class Params(object):
+  """Parameter object"""
   def __init__(self):
     self.logD = ''
     self.logF = ''
@@ -25,20 +27,21 @@ class Params(object):
     self.outputdir = opt
     return S_OK()
   def registerSwitch(self):
+    """registers switches"""
     Script.registerSwitch('D:', 'LogFileDir=', 'Production log dir to download', self.setLogFileD)
     Script.registerSwitch('F:', 'LogFile=', 'Production log to download', self.setLogFileF)
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
-if __name__ == '__main__':
+def getProdLogs():
+  """get production log files from LogSE"""
   clip = Params()
   clip.registerSwitch()
   Script.parseCommandLine()
   if not clip.logF and not clip.logD:
     Script.showHelp()
     dexit(1)
-  from DIRAC import gConfig
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
   ops = Operations()
   storageElementName = ops.getValue('/LogStorage/LogSE', 'LogSE')
@@ -62,4 +65,7 @@ if __name__ == '__main__':
     if not res['OK']:
       gLogger.error(res['Message'])
       dexit(1)
-  
+
+
+if __name__ == '__main__':
+  getProdLogs()

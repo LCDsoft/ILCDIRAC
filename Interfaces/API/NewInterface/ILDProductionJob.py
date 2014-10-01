@@ -19,7 +19,7 @@ from DIRAC import S_OK, S_ERROR
 import types, string
 from decimal import Decimal
 
-
+#pylint: disable=W0311
 class ILDProductionJob( ProductionJob ):
     def __init__( self ):
         super( ILDProductionJob, self ).__init__()
@@ -362,7 +362,7 @@ class ILDProductionJob( ProductionJob ):
             fname = self.basename + "_rec.slcio"
             application.setOutputRecFile( fname, path )    
             self.finalpaths.append( path )
-            path = self.basepath + 'dst/' + energypath + self.evtclass + str( self.processID ) + "/" + self.detector + softwarepath
+            path = self.basepath + 'dst/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/" + self.detector + softwarepath
             self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass] = {"EvtClass" : evtclassmeta}
             self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass + self.evttype] = {"EvtType" : evttypemeta}
             self.finalMetaDict[self.basepath + 'dst/' + energypath + self.evtclass + self.evttype + str( self.processID ) + "/"] = {'ProcessID': self.processID}
