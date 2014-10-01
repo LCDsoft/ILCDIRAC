@@ -49,6 +49,9 @@ class SQLWrapper:
     #mysqld threading
     self.bufferLimit = 10485760   
     self.maxPeekLines = 20
+
+    self.exeEnv=''
+    self.mysqldPID = -1
     
   def setDBpath(self, dbpath, dumpfile = ''):
     """ Look for the DB to use.
