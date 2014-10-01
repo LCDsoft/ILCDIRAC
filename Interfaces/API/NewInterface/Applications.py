@@ -90,9 +90,7 @@ class GenericApplication(Application):
     @param script: Script to run on. Can be shell or python. Can be local file or LFN.
     @type script: string
     """
-    self._checkArgs( {
-        'script' : types.StringTypes
-      } )
+    self._checkArgs( { 'script' : types.StringTypes } )
     if os.path.exists(script) or script.lower().count("lfn:"):
       self.inputSB.append(script)
     self.Script = script
@@ -105,9 +103,7 @@ class GenericApplication(Application):
     @type args: string
     
     """
-    self._checkArgs( {
-        'args' : types.StringTypes
-      } )  
+    self._checkArgs( { 'args' : types.StringTypes } )
     self.Arguments = args
     return S_OK()
       
@@ -121,9 +117,7 @@ class GenericApplication(Application):
     
     """  
     #check that dict has proper structure
-    self._checkArgs( {
-        'appdict' : types.DictType
-      } )
+    self._checkArgs( { 'appdict' : types.DictType } )
     
     self.dependencies.update(appdict)
     return S_OK()
@@ -242,8 +236,8 @@ class GetSRMFile(LCUtilityApplication):
     ##For the getInputFromApp to work, we nedd to tell the application about the expected OutputFile
     flist = ''
     for fdict in self.Files:
-      f = fdict['file']
-      bname = f.split("/")[-1]
+      filePath = fdict['file']
+      bname = filePath.split("/")[-1]
       flist += bname+";"
       
     self.setOutputFile(flist.rstrip(";"))
@@ -291,9 +285,7 @@ class _Root(Application):
     @type args: string
     
     """
-    self._checkArgs( {
-        'args' : types.StringTypes
-      } )  
+    self._checkArgs( { 'args' : types.StringTypes } )
     self.Arguments = args
     return S_OK()
       
@@ -380,9 +372,7 @@ class RootScript(_Root):
     @param executable: Script to run on. Can be shell or root executable. Must be a local file.
     @type executable: string
     """
-    self._checkArgs( {
-        'executable' : types.StringTypes
-      } )
+    self._checkArgs( { 'executable' : types.StringTypes } )
 
     self.Script = executable
     if os.path.exists(executable) or executable.lower().count("lfn:"):
@@ -419,9 +409,7 @@ class RootMacro(_Root):
     @param macro: Macro to run on. Must be a local C file.
     @type macro: string
     """
-    self._checkArgs( {
-        'macro' : types.StringTypes
-      } )
+    self._checkArgs( { 'macro' : types.StringTypes } )
 
     self.Script = macro
     if os.path.exists(macro) or macro.lower().count("lfn:"):
@@ -476,7 +464,7 @@ class Whizard(Application):
     self.appname = 'whizard'
     self.datatype = 'gen'
     self._paramsToExclude.extend( [ '_optionsdictstr', '_genlevelcutsstr', '_leshouchesfiles', '_generatormodels',
-                                  '_allowedparams', '_wo','_processlist' ] )
+                                    '_allowedparams', '_wo','_processlist' ] )
   
   def getPDict(self):
     """ Provide predefined parameter dictionary
@@ -489,9 +477,7 @@ class Whizard(Application):
     @param evttype: Process to generate
     @type evttype: string
     """
-    self._checkArgs( {
-        'evttype' : types.StringTypes
-      } )
+    self._checkArgs( { 'evttype' : types.StringTypes } )
     if self.addedtojob:
       self._log.error("Cannot modify this attribute once application has been added to Job")
       return S_ERROR("Cannot modify")
@@ -501,9 +487,7 @@ class Whizard(Application):
     """ When producing multiple process in one job, it is needed to define this for the output file name.
     It's mandatory to use the L{setFullParameterDict} method when using this.
     """
-    self._checkArgs( {
-        'globalname' : types.StringTypes
-      } )
+    self._checkArgs( { 'globalname' : types.StringTypes } )
     self.GlobalEvtType = globalname
 
   def setLuminosity(self, lumi):
@@ -512,9 +496,7 @@ class Whizard(Application):
     @param lumi: Luminosity to generate. Not available if cross section is not known a priori. Use with care.
     @type lumi: float
     """
-    self._checkArgs( {
-        'lumi' : types.FloatType
-      } )    
+    self._checkArgs( { 'lumi' : types.FloatType } )
     self.Luminosity = lumi
 
   def setRandomSeed(self, RandomSeed):
@@ -523,9 +505,7 @@ class Whizard(Application):
     @param RandomSeed: Seed to use during integration and generation. 
     @type RandomSeed: int
     """
-    self._checkArgs( {
-        'RandomSeed' : types.IntType
-      } )
+    self._checkArgs( { 'RandomSeed' : types.IntType } )
 
     self.RandomSeed = RandomSeed
   
@@ -535,10 +515,7 @@ class Whizard(Application):
     @param paramdict: Dictionary of parameters for the whizard templates. Most parameters are set on the fly.
     @type paramdict: dict
     """
-    self._checkArgs( {
-        'paramdict' : types.DictType
-      } )
-
+    self._checkArgs( { 'paramdict' : types.DictType } )
     self.ParameterDict = paramdict
 
   def setGeneratorLevelCuts(self, cutsdict):
@@ -551,9 +528,7 @@ class Whizard(Application):
     @param cutsdict: Dictionary of cuts
     @type cutsdict: dict
     """
-    self._checkArgs( {
-        'cutsdict' : types.DictType
-      } )
+    self._checkArgs( { 'cutsdict' : types.DictType } )
     self.GeneratorLevelCuts = cutsdict
 
   def setFullParameterDict(self, pdict):
@@ -581,9 +556,7 @@ class Whizard(Application):
     @param pdict: Dictionnary of parameters
     @type pdict: dict
     """
-    self._checkArgs( {
-        'pdict' : types.DictType
-      } )
+    self._checkArgs( { 'pdict' : types.DictType } )
 
     self.FullParameterDict = pdict
     #self._wo.changeAndReturn(dict)
@@ -594,9 +567,7 @@ class Whizard(Application):
     @param model: Model to use for generation. Predefined list available in GeneratorModels class.
     @type model: string
     """  
-    self._checkArgs( {
-        'model' : types.StringTypes
-      } )
+    self._checkArgs( { 'model' : types.StringTypes } )
 
     self.Model = model
   
@@ -618,9 +589,7 @@ class Whizard(Application):
     @param index: Index to use for generation
     @type index: string
     """  
-    self._checkArgs( {
-        'index' : types.StringTypes
-      } )
+    self._checkArgs( { 'index' : types.StringTypes } )
 
     self.JobIndex = index
   
@@ -991,9 +960,7 @@ class PostGenSelection(LCUtilityApplication):
     @type NbEvtsToKeep: int
     
     """  
-    self._checkArgs( {
-        'NbEvtsToKeep' : types.IntType
-      } )
+    self._checkArgs( { 'NbEvtsToKeep' : types.IntType } )
     
     self.NbEvtsToKeep = NbEvtsToKeep
     return S_OK()
@@ -1082,9 +1049,7 @@ class StdhepCut(Application):
     @param nbevts: Maximum number of events passing cuts to write
     @type nbevts: int
     """
-    self._checkArgs( {
-        'nbevts' : types.IntType
-      } )
+    self._checkArgs( { 'nbevts' : types.IntType } )
     self.MaxNbEvts = nbevts
     
   def setNbEvtsPerFile(self, nbevts):
@@ -1093,9 +1058,7 @@ class StdhepCut(Application):
     @param nbevts: Number of events to keep in each file.
     @type nbevts: int
     """
-    self._checkArgs( {
-        'nbevts' : types.IntType
-      } )
+    self._checkArgs( { 'nbevts' : types.IntType } )
     self.NbEvtsPerFile = nbevts  
 
   def setSelectionEfficiency(self, efficiency):
@@ -1104,9 +1067,7 @@ class StdhepCut(Application):
     @param efficiency: Cut efficiency
     @type efficiency: float
     """
-    self._checkArgs( {
-        'efficiency' : types.FloatType
-      } )
+    self._checkArgs( { 'efficiency' : types.FloatType } )
     self.SelectionEfficiency = efficiency
 
   def setInlineCuts(self, cutsstring):
@@ -1114,9 +1075,7 @@ class StdhepCut(Application):
     @param cutsstring: Cut string. Can be multiline
     @type cutsstring: string
     """
-    self._checkArgs( {
-        'cutsstring' : types.StringTypes
-      } )
+    self._checkArgs( { 'cutsstring' : types.StringTypes } )
     
     self.InlineCuts = ";".join([cut.rstrip().lstrip() for cut in cutsstring.rstrip().lstrip().split("\n")])
 
@@ -1273,9 +1232,7 @@ class Mokka(Application):
     @param RandomSeed: Seed to use during integration and generation. Default is Job ID.
     @type RandomSeed: int
     """
-    self._checkArgs( {
-        'RandomSeed' : types.IntType
-      } )
+    self._checkArgs( { 'RandomSeed' : types.IntType } )
 
     self.RandomSeed = RandomSeed    
     
@@ -1285,9 +1242,7 @@ class Mokka(Application):
     @param runnumber: mcRunNumber parameter of Mokka
     @type runnumber: int
     """
-    self._checkArgs( {
-        'runnumber' : types.IntType
-      } )
+    self._checkArgs( { 'runnumber' : types.IntType } )
 
     self.mcRunNumber = runnumber    
     
@@ -1297,9 +1252,7 @@ class Mokka(Application):
     @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
     @type detectorModel: string
     """
-    self._checkArgs( {
-        'detectorModel' : types.StringTypes
-      } )
+    self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
     self.DetectorModel = detectorModel    
     
@@ -1309,9 +1262,7 @@ class Mokka(Application):
     @param macfile: Mac file for Mokka
     @type macfile: string
     """
-    self._checkArgs( {
-        'macfile' : types.StringTypes
-      } )
+    self._checkArgs( { 'macfile' : types.StringTypes } )
     self.MacFile = macfile  
     if os.path.exists(macfile) or macfile.lower().count("lfn:"):
       self.inputSB.append(macfile)
@@ -1327,9 +1278,7 @@ class Mokka(Application):
     @param startfrom: from how mokka start to read the input file
     @type startfrom: int
     """
-    self._checkArgs( {
-        'startfrom' : types.IntType
-      } )
+    self._checkArgs( { 'startfrom' : types.IntType } )
     self.StartFrom = startfrom  
     
     
@@ -1339,9 +1288,7 @@ class Mokka(Application):
     @param processID: ID's process
     @type processID: string
     """
-    self._checkArgs( {
-        'processID' : types.StringTypes
-      } )
+    self._checkArgs( { 'processID' : types.StringTypes } )
     self.ProcessID = processID
     
     
@@ -1351,9 +1298,7 @@ class Mokka(Application):
     @param dbSlice: data base used by mokka
     @type dbSlice: string
     """
-    self._checkArgs( {
-        'dbSlice' : types.StringTypes
-      } )
+    self._checkArgs( { 'dbSlice' : types.StringTypes } )
     self.DbSlice = dbSlice
     if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
       self.inputSB.append(dbSlice)
@@ -1483,9 +1428,7 @@ class SLIC(Application):
     @param RandomSeed: Seed to use during simulation. 
     @type RandomSeed: int
     """
-    self._checkArgs( {
-        'RandomSeed' : types.IntType
-      } )
+    self._checkArgs( { 'RandomSeed' : types.IntType } )
 
     self.RandomSeed = RandomSeed    
     
@@ -1495,9 +1438,7 @@ class SLIC(Application):
     @param detectorModel: Detector Model to use for Slic simulation. Default is ??????
     @type detectorModel: string
     """
-    self._checkArgs( {
-        'detectorModel' : types.StringTypes
-      } )
+    self._checkArgs( { 'detectorModel' : types.StringTypes } )
     if detectorModel.lower().count("lfn:"):
       self.inputSB.append(detectorModel)
     elif detectorModel.lower().count(".zip"):
@@ -1516,9 +1457,7 @@ class SLIC(Application):
     @param startfrom: from how slic start to read the input file
     @type startfrom: int
     """
-    self._checkArgs( {
-        'startfrom' : types.IntType
-      } )
+    self._checkArgs( { 'startfrom' : types.IntType } )
     self.StartFrom = startfrom  
     
     
@@ -1631,9 +1570,7 @@ class OverlayInput(LCUtilityApplication):
   def setMachine(self, machine):
     """ Define the machine to use, clic_cdr or ilc_dbd
     """
-    self._checkArgs( {
-        'machine' : types.StringTypes
-      } )
+    self._checkArgs( { 'machine' : types.StringTypes } )
     self.Machine = machine
 
   def setProdID(self, pid):
@@ -1651,9 +1588,7 @@ class OverlayInput(LCUtilityApplication):
     @param bxoverlay: Bunch crossings to overlay.
     @type bxoverlay: float
     """
-    self._checkArgs( {
-        'bxoverlay' : types.IntType
-      } )
+    self._checkArgs( { 'bxoverlay' : types.IntType } )
     self.BXOverlay = bxoverlay
     return S_OK()
     
@@ -1676,9 +1611,7 @@ class OverlayInput(LCUtilityApplication):
     @type ggtohadint: float
     
     """
-    self._checkArgs( {
-        'ggtohadint' : types.FloatType
-      } )  
+    self._checkArgs( { 'ggtohadint' : types.FloatType } )
     self.GGToHadInt = ggtohadint
     return S_OK()
   
@@ -1702,9 +1635,7 @@ class OverlayInput(LCUtilityApplication):
     @type nbsigevtsperjob: int
     
     """  
-    self._checkArgs( {
-        'nbsigevtsperjob' : types.IntType
-      } )
+    self._checkArgs( { 'nbsigevtsperjob' : types.IntType } )
     
     self.NbSigEvtsPerJob = nbsigevtsperjob
     return S_OK()
@@ -1717,9 +1648,7 @@ class OverlayInput(LCUtilityApplication):
     @type detectormodel: string
     
     """  
-    self._checkArgs( {
-        'detectormodel' : types.StringTypes
-      } )
+    self._checkArgs( { 'detectormodel' : types.StringTypes } )
     
     self.DetectorModel = detectormodel
     return S_OK()
@@ -1732,9 +1661,7 @@ class OverlayInput(LCUtilityApplication):
     @type BkgEvtType: string
     
     """  
-    self._checkArgs( {
-        'BkgEvtType' : types.StringTypes
-      } )
+    self._checkArgs( { 'BkgEvtType' : types.StringTypes } )
     
     self.BkgEvtType = BkgEvtType
     return S_OK()
@@ -1901,9 +1828,7 @@ class Marlin(Application):
     @param GearFile: input gear file for Marlin reconstrcutor
     @type GearFile: string
     """
-    self._checkArgs( {
-        'GearFile' : types.StringTypes
-      } )
+    self._checkArgs( { 'GearFile' : types.StringTypes } )
 
     self.GearFile = GearFile
     if os.path.exists(GearFile) or GearFile.lower().count("lfn:"):
@@ -1918,9 +1843,7 @@ class Marlin(Application):
     you want to keep the file on the grid.
     @type path: string
     """
-    self._checkArgs( {
-        'outputRecFile' : types.StringTypes
-      } )
+    self._checkArgs( { 'outputRecFile' : types.StringTypes } )
     self.OutputRecFile = outputRecFile
     self.prodparameters[self.OutputRecFile] = {}
     self.prodparameters[self.OutputRecFile]['datatype'] = 'REC'
@@ -1936,9 +1859,7 @@ class Marlin(Application):
     you want to keep the file on the grid.
     @type path: string
     """
-    self._checkArgs( {
-        'outputDstFile' : types.StringTypes
-      } )
+    self._checkArgs( { 'outputDstFile' : types.StringTypes } )
     self.OutputDstFile = outputDstFile
     self.prodparameters[self.OutputDstFile] = {}
     self.prodparameters[self.OutputDstFile]['datatype'] = 'DST'
@@ -1955,9 +1876,7 @@ class Marlin(Application):
     @param processorlist: list of processors to use
     @type processorlist: list
     """
-    self._checkArgs( {
-        'processorlist' : types.ListType
-      } )
+    self._checkArgs( { 'processorlist' : types.ListType } )
     self.ProcessorsToUse = processorlist
     
   def setProcessorsToExclude(self, processorlist):
@@ -1970,9 +1889,7 @@ class Marlin(Application):
     @param processorlist: list of processors to exclude
     @type processorlist: list
     """
-    self._checkArgs( {
-        'processorlist' : types.ListType
-      } )
+    self._checkArgs( { 'processorlist' : types.ListType } )
     self.ProcessorsToExclude = processorlist
       
   def _userjobmodules(self, stepdefinition):
@@ -2110,9 +2027,7 @@ class LCSIM(Application):
     you want to keep the file on the grid.
     @type path: string
     """
-    self._checkArgs( {
-        'outputRecFile' : types.StringTypes
-                       } )
+    self._checkArgs( { 'outputRecFile' : types.StringTypes } )
     self.OutputRecFile = outputRecFile
     self.prodparameters[self.OutputRecFile] = {}
     self.prodparameters[self.OutputRecFile]['datatype'] = 'REC'
@@ -2128,9 +2043,7 @@ class LCSIM(Application):
     to keep the file on the grid.
     @type path: string
     """
-    self._checkArgs( {
-        'outputDstFile' : types.StringTypes
-      } )
+    self._checkArgs( { 'outputDstFile' : types.StringTypes } )
     self.OutputDstFile = outputDstFile 
     self.prodparameters[self.OutputDstFile] = {}
     self.prodparameters[self.OutputDstFile]['datatype'] = 'DST'
@@ -2143,9 +2056,7 @@ class LCSIM(Application):
     @param alias: Path to the alias.properties file name that will be used
     @type alias: string
     """
-    self._checkArgs( {
-        'alias' : types.StringTypes
-      } )
+    self._checkArgs( { 'alias' : types.StringTypes } )
 
     self.AliasProperties = alias     
     if os.path.exists(alias) or alias.lower().count("lfn:"):
@@ -2157,9 +2068,7 @@ class LCSIM(Application):
     @param model: name, zip file, or lfn that points to the detector model
     @type model: string
     """
-    self._checkArgs( {
-        'model' : types.StringTypes
-      } )    
+    self._checkArgs( { 'model' : types.StringTypes } )
     self.DetectorModel = model
     if os.path.exists(model) or model.lower().count("lfn:"):
       self.inputSB.append(model)
@@ -2171,9 +2080,7 @@ class LCSIM(Application):
     in the steering file
     @type trackingstrategy: string
     """
-    self._checkArgs( {
-        'trackingstrategy' : types.StringTypes
-      } )  
+    self._checkArgs( { 'trackingstrategy' : types.StringTypes } )
     self.TrackingStrategy = trackingstrategy
     if os.path.exists(self.TrackingStrategy) or self.TrackingStrategy.lower().count('lfn:'):
       self.inputSB.append(self.TrackingStrategy)
@@ -2184,9 +2091,7 @@ class LCSIM(Application):
     @param extraparams: Command line parameters to pass to java
     @type extraparams: string
     """
-    self._checkArgs( {
-        'extraparams' : types.StringTypes
-      } )
+    self._checkArgs( { 'extraparams' : types.StringTypes } )
 
     self.ExtraParams = extraparams     
     
@@ -2336,9 +2241,7 @@ class SLICPandora(Application):
     @param detectorModel: Detector Model to use for SlicPandora simulation. 
     @type detectorModel: string
     """
-    self._checkArgs( {
-        'detectorModel' : types.StringTypes
-      } )
+    self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
     self.DetectorModel = detectorModel    
     if os.path.exists(detectorModel) or detectorModel.lower().count("lfn:"):
@@ -2350,9 +2253,7 @@ class SLICPandora(Application):
     @param startfrom: from how slicpandora start to read the input file
     @type startfrom: int
     """
-    self._checkArgs( {
-        'startfrom' : types.IntType
-      } )
+    self._checkArgs( { 'startfrom' : types.IntType } )
     self.StartFrom = startfrom     
     
   def setPandoraSettings(self, pandoraSettings):
@@ -2361,9 +2262,7 @@ class SLICPandora(Application):
     @param pandoraSettings: path where pandora settings are
     @type pandoraSettings: string
     """
-    self._checkArgs( {
-        'pandoraSettings' : types.StringTypes
-      } )
+    self._checkArgs( { 'pandoraSettings' : types.StringTypes } )
     self.PandoraSettings = pandoraSettings  
     if os.path.exists(pandoraSettings) or pandoraSettings.lower().count("lfn:"):
       self.inputSB.append(pandoraSettings)    
@@ -2470,9 +2369,7 @@ class CheckCollections(LCUtilityApplication):
     @type CollectionList: list
     
     """  
-    self._checkArgs( {
-        'CollectionList' : types.ListType
-      } )
+    self._checkArgs( { 'CollectionList' : types.ListType } )
     
     self.Collections = CollectionList
     return S_OK()
@@ -2620,9 +2517,7 @@ class SLCIOSplit(LCUtilityApplication):
   def setNumberOfEventsPerFile(self, numberofevents):
     """ Number of events to have in each file
     """
-    self._checkArgs( {
-        'numberofevents' : types.IntType
-      } )
+    self._checkArgs( { 'numberofevents' : types.IntType } )
     self.NumberOfEventsPerFile = numberofevents
 
   
@@ -2714,9 +2609,7 @@ class StdHepSplit(LCUtilityApplication):
   def setNumberOfEventsPerFile(self, numberofevents):
     """ Number of events to have in each file
     """
-    self._checkArgs( {
-        'numberofevents' : types.IntType
-      } )
+    self._checkArgs( { 'numberofevents' : types.IntType } )
     self.NumberOfEventsPerFile = numberofevents
 
   
@@ -2798,8 +2691,7 @@ class Tomato(Application):
 
     self.LibTomato = ''
     super(Tomato, self).__init__( paramdict )
-    if not self.Version:
-      self.Version = 'HEAD'
+    self.Version = self.Version if self.Version else 'HEAD'
     self._modulename = "TomatoAnalysis"
     self.appname = 'tomato'
     self._moduledescription = 'Helper Application over Marlin reconstruction'
@@ -2811,9 +2703,7 @@ class Tomato(Application):
     @type libTomato: string
     
     """  
-    self._checkArgs( {
-        'libTomato' : types.StringTypes
-      } )
+    self._checkArgs( { 'libTomato' : types.StringTypes } )
     
     self.LibTomato = libTomato
     return S_OK()

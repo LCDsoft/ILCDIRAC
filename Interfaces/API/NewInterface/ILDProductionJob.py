@@ -5,6 +5,8 @@ ILD DBD specific production job utility
 @since: Jul 01, 2012
 """
 
+__RCSID__ = "$$"
+
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
@@ -29,10 +31,10 @@ class ILDProductionJob( ProductionJob ):
         self.compatmeta = {}
         self.processID = 0
         self.evtclass = ''
-    def setILDConfig( self, Version ):
+    def setILDConfig( self, version ):
         """ This is because in the ProductionJob, it's called Config
         """
-        return self.setConfig( Version )
+        return self.setConfig( version )
         
     def setInputDataQuery( self, metadata ):
         """ Define the input data query needed, also get from the data the meta info requested to build the path
@@ -356,7 +358,7 @@ class ILDProductionJob( ProductionJob ):
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
             fname = self.basename + "_rec.slcio"
-            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
+n            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
             application.setOutputRecFile( fname, pathRec )
             self.finalpaths.append( pathRec )
 

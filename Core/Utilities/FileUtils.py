@@ -12,9 +12,14 @@ from distutils import dir_util, errors
 from DIRAC import S_OK, S_ERROR, gLogger
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
-from DIRAC.RequestManagementSystem.Client.RequestClient    import RequestClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations   import Operations 
+
+from DIRAC.RequestManagementSystem.Client.Request           import Request
+from DIRAC.RequestManagementSystem.Client.Operation         import Operation
+from DIRAC.RequestManagementSystem.Client.Operation         import File
+from DIRAC.RequestManagementSystem.private.RequestValidator import gRequestValidator
+from DIRAC.RequestManagementSystem.Client.ReqClient         import ReqClient
+
 
 def upload(path, appTar):
   """ Upload software tar ball to storage
@@ -42,28 +47,29 @@ def upload(path, appTar):
     res = rm.putAndRegister(lfnpath, appTar, ops.getValue('Software/BaseStorageElement', "CERN-SRM"))
     if not res['OK']:
       return res
-    request = RequestContainer()
-    request.setCreationTime()
-    requestClient = RequestClient()
-    request.setRequestName('copy_%s' % os.path.basename(appTar).replace(".tgz", "").replace(".tar.gz", ""))
-    request.setSourceComponent('ReplicateILCSoft')
+    request = Request()
+    requestClient = ReqClient()
+    request.RequestName = 'copy_%s' % os.path.basename(appTar).replace(".tgz", "").replace(".tar.gz", "")
+    request.SourceComponent = 'ReplicateILCSoft'
     copies_at = ops.getValue('Software/CopiesAt', [])
-    index_copy = 0
     for copies in copies_at:
-      res = request.addSubRequest({'Attributes':{'Operation' : 'replicateAndRegister',
-                                                 'TargetSE' : copies,
-                                                 'ExecutionOrder' : index_copy},
-                                   'Files':[{'LFN':lfnpath}]},
-                                   'transfer')
-      #res = rm.replicateAndRegister("%s%s"%(path,appTar),"IN2P3-SRM")
-      if not res['OK']:
-        return res
-      index_copy += 1
-    requestxml = request.toXML()['Value']
+      transfer = Operation()
+      transfer.Type = "ReplicateAndRegister"
+      transfer.TargetSET = copies
+      trFile = File()
+      trFile.lfn = lfnpath
+      trFile.GUID = ""
+      transfer.addFile(trFile)
+      request.addOperation(transfer)
+
+    res = gRequestValidator.validate(request)
+    if not res['OK']:
+      return res
+
     if copies_at:
-      res = requestClient.setRequest(request.getRequestName()['Value'], requestxml)
+      res = requestClient.putRequest(request)
       if not res['OK']:
-        gLogger.error('Could not set replication request %s' % res['Message'])
+        gLogger.error('Could not set replication request', res['Message'])
       return S_OK('Application uploaded')
   return S_OK()
 

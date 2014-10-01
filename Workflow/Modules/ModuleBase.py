@@ -28,6 +28,9 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFold
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 
+from DIRAC.RequestManagementSystem.Client.Operation       import Operation
+from DIRAC.RequestManagementSystem.Client.File            import File
+
 import os, string, sys, re, types, urllib
 from random import choice
 
@@ -85,9 +88,8 @@ class ModuleBase(object):
     self.workflowStatus = S_OK()
     self.stepStatus = S_OK()
     self.isProdJob = False
-    self.production_id = 0
+    self.productionID = 0
     self.prod_job_id = 0
-    self.request = None
     self.jobReport = None
 
   #############################################################################
@@ -344,6 +346,9 @@ class ModuleBase(object):
     """
     if not 'Request' in self.workflow_commons:
       self.workflow_commons['Request'] = Request()
+      self.workflow_commons['Request'].RequestName = 'job_%d_request.xml' % int(self.jobID)
+      self.workflow_commons['Request'].JobID = self.jobID
+      self.workflow_commons['Request'].SourceComponent = "Job_%d" % int(self.jobID)
     return self.workflow_commons['Request']
   #############################################################################
 
@@ -360,13 +365,14 @@ class ModuleBase(object):
     """ Common utility for all sub classes, resolve the workflow parameters
     for the current step. Module parameters are resolved directly.
     """
-
-    self.request = self._getRequestContainer()
+    self.log.verbose("Workflow commons:", self.workflow_commons)
+    self.log.verbose("Step commons:", self.step_commons)
+    
     self.jobReport = self._getJobReporter()
 
     self.prod_job_id = int(self.workflow_commons.get("JOB_ID", self.prod_job_id))
     if self.workflow_commons.get("IS_PROD", False):
-      self.production_id = int(self.workflow_commons["PRODUCTION_ID"])
+      self.productionID = int(self.workflow_commons["PRODUCTION_ID"])
       self.isProdJob = True
 
     self.systemConfig = self.workflow_commons.get('SystemConfig', self.systemConfig)
@@ -656,15 +662,18 @@ class ModuleBase(object):
   def generateFailoverFile( self ):
     """ Retrieve the accumulated reporting request, and produce a JSON file that is consumed by the JobWrapper
     """
+    request = self._getRequestContainer()
+    
     reportRequest = None
     result = self.jobReport.generateForwardDISET()
+    request = self._getRequestContainer()
     if not result['OK']:
       self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( result ) )
     else:
       reportRequest = result['Value']
     if reportRequest:
       self.log.info( "Populating request with job report information" )
-      self.request.addOperation( reportRequest )
+      request.addOperation( reportRequest )
 
     accountingReport = self.workflow_commons.get( 'AccountingReport', None)
     if accountingReport:
@@ -673,23 +682,23 @@ class ModuleBase(object):
         self.log.error( "!!! Both accounting and RequestDB are down? !!!" )
         return result
 
-    if len( self.request ):
-      isValid = gRequestValidator.validate( self.request )
+    if len( request ):
+      isValid = gRequestValidator.validate( request )
       if not isValid['OK']:
         raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
       else:
-        requestJSON = self.request.toJSON()
+        requestJSON = request.toJSON()
         if requestJSON['OK']:
           self.log.info( "Creating failover request for deferred operations for job %d" % self.jobID )
           request_string = str( requestJSON['Value'] )
           self.log.debug( request_string )
           # Write out the request string
-          fname = '%s_%s_request.json' % ( self.production_id, self.prod_job_id )
+          fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
           jsonFile = open( fname, 'w' )
           jsonFile.write( request_string )
           jsonFile.close()
           self.log.info( "Created file containing failover request %s" % fname )
-          result = self.request.getDigest()
+          result = request.getDigest()
           if result['OK']:
             self.log.info( "Digest of the request: %s" % result['Value'] )
           else:
@@ -727,3 +736,15 @@ class ModuleBase(object):
         self.log.error("Application Log file not defined")
     if fd == 1:
       self.stdError += message
+
+  def addRemovalRequests(self, lfnList):
+    """Create removalRequests for lfns in lfnList and add it to the common request"""
+    request = self._getRequestContainer()
+    for lfn in lfnList:
+      remove = Operation()
+      remove.Type = "RemoveFile"
+      rmFile = File()
+      rmFile.LFN = lfn
+      remove.addFile( rmFile )
+      request.addOperation( remove )
+    self.workflow_commons['Request'] = request

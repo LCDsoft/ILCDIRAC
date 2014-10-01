@@ -13,9 +13,7 @@ the end of a job.
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.TransformationSystem.Client.FileReport          import FileReport
-from DIRAC.WorkloadManagementSystem.Client.JobReport       import JobReport
 from DIRAC                                                 import S_OK, S_ERROR, gLogger
 
 import os
@@ -38,7 +36,6 @@ class FailoverRequest(ModuleBase):
     #Workflow parameters
     self.jobReport  = None
     self.fileReport = None
-    self.request = None
     self.jobType = ''
 
   #############################################################################
@@ -87,10 +84,6 @@ class FailoverRequest(ModuleBase):
       self.log.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
 
-    self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
-    self.request.JobID = self.jobID
-    self.request.SourceComponent = "Job_%d" % int(self.jobID)
-
     if not self.fileReport:
       self.fileReport =  FileReport('Transformation/TransformationManager')
 
@@ -116,19 +109,21 @@ class FailoverRequest(ModuleBase):
         self.log.info('Setting status to "Processed" for: %s' % (lfn))
         self.fileReport.setFileStatus(int(self.productionID), lfn, 'Processed')  
 
-    result = self.fileReport.commit()
-    if not result['OK']:
-      self.log.error('Failed to report file status to ProductionDB, request will be generated', result['Message'])
-      result = self.fileReport.generateForwardDISET()
-      if not result['OK']:
-        self.log.warn( "Could not generate Operation for file report with result:\n%s" % ( result['Value'] ) )
+    fileReportCommitResult = self.fileReport.commit()
+    if fileReportCommitResult['OK']:
+      self.log.info('Status of files have been properly updated in the ProcessingDB')
+    else:
+      self.log.error('Failed to report file status to ProductionDB, request will be generated', fileReportCommitResult['Message'])
+      disetResult = self.fileReport.generateForwardDISET()
+      if not disetResult['OK']:
+        self.log.warn( "Could not generate Operation for file report with result:\n%s" % disetResult['Value'] )
       else:
-        if result['Value'] is None:
+        if disetResult['Value'] is None:
           self.log.info( "Files correctly reported to TransformationDB" )
         else:
-          result = self.request.addOperation( result['Value'] )
-    else:
-      self.log.info('Status of files have been properly updated in the ProcessingDB')
+          request = self._getRequestContainer()
+          request.addOperation( disetResult['Value'] )
+          self.workflow_commons['Request'] = request
 
     # Must ensure that the local job report instance is used to report the final status
     # in case of failure and a subsequent failover operation

@@ -1,13 +1,9 @@
-########################################################################
-# $HeadURL:  $
-########################################################################
-
 """ The Download Input Data module wraps around the Replica Management
     components to provide access to datasets by available site protocols as
     defined in the CS for the VO.
 """
 
-__RCSID__ = "$Id: $"
+__RCSID__ = "$$"
 
 from DIRAC.Core.DISET.RPCClient                                     import RPCClient
 from DIRAC.DataManagementSystem.Client.ReplicaManager               import ReplicaManager
@@ -19,7 +15,7 @@ import os, tempfile, random
 
 COMPONENT_NAME = 'ILCDownloadInputData'
 
-class ILCDownloadInputData:
+class ILCDownloadInputData(object):
   """
    retrieve InputData LFN from localSEs (if available) or from elsewhere.
   """
@@ -209,7 +205,7 @@ class ILCDownloadInputData:
       return S_ERROR( msg )
 
   #############################################################################
-  def __getLFN( self, lfn, pfn, se, size, guid ):
+  def __getLFN( self, lfn, pfn, se, dummy_size, guid ):
     """ Download a local copy of a single LFN from the specified Storage Element.
         This is used as a last resort to attempt to retrieve the file.  The Replica
         Manager will perform an LFC lookup to refresh the stored result.
@@ -240,7 +236,7 @@ class ILCDownloadInputData:
       return S_ERROR( 'OK download result but file missing in current directory' )
 
   #############################################################################
-  def __getPFN( self, pfn, se, size, guid ):
+  def __getPFN( self, pfn, se, dummy_size, guid ):
     """ Download a local copy of a single PFN from the specified Storage Element.
     """
     if not pfn:

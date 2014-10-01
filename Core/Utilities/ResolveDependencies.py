@@ -8,6 +8,8 @@ Works recursively
 @author: Stephane Poss
 '''
 
+__RCSID__ = "$$"
+
 from DIRAC import gLogger
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
@@ -31,7 +33,7 @@ def resolveDeps(sysconfig, appli, appversion):
   if deps['OK']:
     for dep in deps['Value']:
       vers = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/%s/version' % (sysconfig, appli, 
-                                                                                    appversion, dep), '')
+                                                                                   appversion, dep), '')
       depvers = ''
       if vers:
         depvers = vers

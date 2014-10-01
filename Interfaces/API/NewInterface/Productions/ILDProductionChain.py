@@ -4,6 +4,8 @@ Created on Mar 26, 2012
 @author: Stephane Poss
 '''
 
+__RCSID__ = None
+
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -130,8 +132,8 @@ if activesplitstdhep and meta:
   pstdhepsplit.setProdType('Split')
   res = pstdhepsplit.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pstdhepsplit.setOutputSE("DESY-SRM")
   wname = process+"_"+str(energy)+"_split"
   wname += additional_name  
@@ -141,8 +143,8 @@ if activesplitstdhep and meta:
   #Add the application
   res = pstdhepsplit.append(stdhepsplit)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pstdhepsplit.addFinalization(True,True,True,True)
   descrp = "Splitting stdhep files"
   if additional_name:  
@@ -151,11 +153,11 @@ if activesplitstdhep and meta:
   
   res = pstdhepsplit.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = pstdhepsplit.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   #As before: get the metadata for this production to input into the next
   meta = pstdhepsplit.getMetadata()
   
@@ -170,8 +172,8 @@ if ild_sim and meta:
   pmo.setProdType('MCSimulation')
   res = pmo.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pmo.setOutputSE("DESY-SRM")
   wname = process+"_"+str(energy)+"_ild_sim"
   wname += additional_name  
@@ -180,8 +182,8 @@ if ild_sim and meta:
   #Add the application
   res = pmo.append(mo)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pmo.addFinalization(True,True,True,True)
   descrp = "%s model" % detectorModel
   
@@ -190,11 +192,11 @@ if ild_sim and meta:
   pmo.setDescription(descrp)
   res = pmo.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = pmo.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pmo.setNbOfTasks(nbtasks)    
   #As before: get the metadata for this production to input into the next
   meta = pmo.getMetadata()
@@ -211,8 +213,8 @@ if activesplit and meta:
   psplit.setDestination("LCG.CERN.ch") #this is because we can do it there.
   res = psplit.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psplit.setOutputSE("CERN-SRM")#this is because we can do it there.
   wname = process+"_"+str(energy)+"_split"
   wname += additional_name  
@@ -222,8 +224,8 @@ if activesplit and meta:
   #Add the application
   res = psplit.append(split)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   psplit.addFinalization(True,True,True,True)
   descrp = "Splitting slcio files"
   if additional_name:  
@@ -232,11 +234,11 @@ if activesplit and meta:
   
   res = psplit.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = psplit.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   #As before: get the metadata for this production to input into the next
   meta = psplit.getMetadata()
   
@@ -250,8 +252,8 @@ if ild_rec and meta:
   pma.setProdType('MCReconstruction')
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pma.setOutputSE("DESY-SRM")
   wname = process+"_"+str(energy)+"_ild_rec"
   wname += additional_name  
@@ -261,8 +263,8 @@ if ild_rec and meta:
   #Add the application
   res = pma.append(ma)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pma.addFinalization(True,True,True,True)
   descrp = "%s, No overlay" % detectorModel
   if additional_name:  
@@ -271,11 +273,11 @@ if ild_rec and meta:
   
   res = pma.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = pma.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
 
 if ild_rec_ov and meta:
   #######################
@@ -286,8 +288,8 @@ if ild_rec_ov and meta:
   pmao.setProdType('MCReconstruction_Overlay')
   res = pmao.setInputDataQuery(meta)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pmao.setOutputSE("DESY-SRM")
   wname = process+"_"+str(energy)+"_ild_rec_overlay"
   wname += additional_name  
@@ -297,13 +299,13 @@ if ild_rec_ov and meta:
   #Add the application
   res = pmao.append(overlay)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   #Add the application
   res = pmao.append(mao)
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
   pmao.addFinalization(True,True,True,True)
   descrp = "%s, Overlay" % detectorModel
   
@@ -312,11 +314,11 @@ if ild_rec_ov and meta:
   pmao.setDescription( descrp ) 
   res = pmao.createProduction()
   if not res['OK']:
-      print res['Message']
+    print res['Message']
   res = pmao.finalizeProd()
   if not res['OK']:
-      print res['Message']
-      exit(1)
+    print res['Message']
+    exit(1)
 
     
 ##In principle nothing else is needed.

@@ -8,7 +8,7 @@ Created on Feb 10, 2012
 @since: Feb 10, 2012
 '''
 
-__RCSID__ = "$Id$"
+__RCSID__ = "$$"
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, CheckCVMFS
@@ -20,8 +20,8 @@ def getSteeringFileDirName(systemConfig, application, applicationVersion):
   """
   ops = Operations()
   version = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (systemConfig, 
-                                                                                            application,
-                                                                                            applicationVersion), '')
+                                                                                             application,
+                                                                                             applicationVersion), '')
   if not version: 
     return S_ERROR("Could not find attached SteeringFile version")
   

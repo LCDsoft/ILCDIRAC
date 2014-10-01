@@ -15,6 +15,9 @@ from DIRAC import S_OK
 
 import types
 
+__RCSID__ = None
+#pylint: disable=R0904
+#pylint: disable=W0142
 class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
@@ -180,13 +183,13 @@ class UserJob(Job):
 
     return S_OK()
     
-  def setILDConfig(self,Version):
+  def setILDConfig(self,version):
     """ Define the Configuration package to obtain
     """
     appName = 'ILDConfig'
-    self._addSoftware(appName.lower(), Version)
+    self._addSoftware(appName.lower(), version)
     
-    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
+    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()
   
   

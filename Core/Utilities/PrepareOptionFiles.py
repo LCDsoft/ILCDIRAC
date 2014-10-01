@@ -689,7 +689,7 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       eventmarker.append(eventInterval)
       drivers.append(eventmarker)
       execut = tree.find("execute")
-      if(execut):
+      if execut:
         evtmarkattrib = {}
         evtmarkattrib['name'] = "evtMarker"
         evtmark = Element("driver", evtmarkattrib)
@@ -777,7 +777,7 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     output.append(outputelem)
     drivers.append(output)
     execut = tree.find("execute")
-    if(execut):
+    if execut:
       outputattrib = {}
       outputattrib['name'] = "Writer"
       outputmark = Element("driver", outputattrib)

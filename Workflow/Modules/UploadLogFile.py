@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 """ 
 UploadLogFile module is used to upload the files present in the working
 directory.
@@ -11,13 +8,15 @@ directory.
 
 __RCSID__ = "$Id$"
 
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.ProductionData               import getLogPath
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
+from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
+
+from DIRAC.RequestManagementSystem.Client.Operation        import Operation
+from DIRAC.RequestManagementSystem.Client.File             import File
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -34,10 +33,9 @@ class UploadLogFile(ModuleBase):
     super(UploadLogFile, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('UploadLogFile')
-    self.PRODUCTION_ID = None
-    self.JOB_ID = None
+    self.productionID = None
+    self.jobID = None
     self.workflow_commons = None
-    self.request = None
     self.logFilePath = ""
     self.logLFNPath = ""
     self.logdir = ''
@@ -47,8 +45,8 @@ class UploadLogFile(ModuleBase):
     self.logExtensions = []
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
     self.diracLogo = self.ops.getValue('/SAM/LogoURL', 
-                                      'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
-    self.rm = ReplicaManager()
+                                       'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
+    self.repMan = ReplicaManager()
 
     self.experiment = 'CLIC'
     self.enable = True
@@ -57,30 +55,28 @@ class UploadLogFile(ModuleBase):
 
 ######################################################################
   def applicationSpecificInputs(self):
+    """resolves the module parameters"""
 
-    if self.step_commons.has_key('Enable'):
-      self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
-        self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
-        self.enable = False
+    self.enable = self.step_commons.get('Enable', self.enable)
+    if not type(self.enable) == type(True):
+      self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
+      self.enable = False
 
-    if self.step_commons.has_key('TestFailover'):
-      self.enable = self.step_commons['TestFailover']
-      if not type(self.failoverTest) == type(True):
-        self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
-        self.failoverTest = False
+    self.failoverTest = self.step_commons.get('TestFailover', self.failoverTest)
+    if not type(self.failoverTest) == type(True):
+      self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
+      self.failoverTest = False
 
-    if os.environ.has_key('JOBID'):
-      self.jobID = os.environ['JOBID']
+    self.jobID = os.environ.get('JOBID', self.jobID)
+    if self.jobID != 0:
       self.log.verbose('Found WMS JobID = %s' % self.jobID)
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
-    if self.workflow_commons.has_key('LogFilePath') and self.workflow_commons.has_key('LogTargetPath'):
-      self.logFilePath = self.workflow_commons['LogFilePath']
-      self.logLFNPath = self.workflow_commons['LogTargetPath']
-    else:
+    self.logFilePath = self.workflow_commons.get('LogFilePath', self.logFilePath)
+    self.logLFNPath = self.workflow_commons.get('LogTargetPath', self.logLFNPath)
+    if not (self.logFilePath and self.logLFNPath):
       self.log.info('LogFilePath parameter not found, creating on the fly')
       result = getLogPath(self.workflow_commons)
       if not result['OK']:
@@ -104,14 +100,6 @@ class UploadLogFile(ModuleBase):
     else:
       self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
 
-    if self.workflow_commons.has_key('Request'):
-      self.request = self.workflow_commons['Request']
-    else:
-      self.request = RequestContainer()
-      self.request.setRequestName('job_%s_request.xml' % self.jobID)
-      self.request.setJobID(self.jobID)
-      self.request.setSourceComponent("Job_%s" % self.jobID)
-
     return S_OK('Parameters resolved')
 
 ######################################################################
@@ -132,12 +120,11 @@ class UploadLogFile(ModuleBase):
       self.log.error('Failed to list the log directory', str(res['Value'][2]))
 
     self.log.info('Job root is found to be %s' % (self.root))
-    self.log.info('PRODUCTION_ID = %s, JOB_ID = %s '  % (self.PRODUCTION_ID, self.JOB_ID))
-    self.logdir = os.path.realpath('./job/log/%s/%s' % (self.PRODUCTION_ID, self.JOB_ID))
+    self.log.info('PRODUCTION_ID = %s, JOB_ID = %s '  % (self.productionID, self.jobID))
+    self.logdir = os.path.realpath('./job/log/%s/%s' % (self.productionID, self.jobID))
     self.log.info('Selected log files will be temporarily stored in %s' % self.logdir)
 
     res = self.finalize()
-    self.workflow_commons['Request'] = self.request
     return res
 
   #############################################################################
@@ -192,8 +179,8 @@ class UploadLogFile(ModuleBase):
     res = S_ERROR()
     if not self.failoverTest:
       self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE))
-      res = self.rm.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) }, 
-                                        self.logSE, singleDirectory = True)
+      res = self.repMan.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) },
+                                            self.logSE, singleDirectory = True)
       self.log.verbose(res)
       if res['OK']:
         self.log.info('Successfully upload log directory to %s' % self.logSE)
@@ -238,7 +225,7 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self.request)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer())
     ##determine the experiment
     self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
 
@@ -246,7 +233,7 @@ class UploadLogFile(ModuleBase):
     self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, 
                                                                                ', '.join(self.failoverSEs )))
     result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath, 
-                                                      self.failoverSEs, fileGUID=None, 
+                                                      self.failoverSEs, fileMetaDict = { "GUID": None },
                                                       fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
     if not result['OK']:
       self.log.error('Failed to upload logs to all destinations')
@@ -254,12 +241,7 @@ class UploadLogFile(ModuleBase):
       return S_OK() #because if the logs are lost, it's not the end of the world.
     
     #Now after all operations, retrieve potentially modified request object
-    result = failoverTransfer.getRequestObject()
-    if not result['OK']:
-      self.log.error(result)
-      return S_ERROR('Could not retrieve modified request')
-
-    self.request = result['Value']    
+    self.workflow_commons['Request'] = failoverTransfer.request
     res = self.createLogUploadRequest(self.logSE, self.logLFNPath)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
@@ -267,7 +249,6 @@ class UploadLogFile(ModuleBase):
     else:
       self.log.info('Successfully created failover request')
       
-    self.workflow_commons['Request'] = self.request    
     return S_OK()
 
   #############################################################################
@@ -302,7 +283,7 @@ class UploadLogFile(ModuleBase):
         else:
           self.log.error('Log file found to be greater than maximum of %s bytes' % self.logSizeLimit, candidate)
       return S_OK(selectedFiles)
-    except Exception, x:
+    except OSError as x:
       self.log.exception('Exception while determining files to save.', '', str(x))
       return S_ERROR('Could not determine log files')
 
@@ -315,21 +296,21 @@ class UploadLogFile(ModuleBase):
     try:
       if not os.path.exists(self.logdir):
         os.makedirs(self.logdir)
-    except Exception, x:
+    except OSError as x:
       self.log.exception('Exception while trying to create directory.', self.logdir, str(x))
       return S_ERROR()
     # Set proper permissions
     self.log.info('Changing log directory permissions to 0755')
     try:
       os.chmod(self.logdir, 0755)
-    except Exception, x:
+    except OSError as x:
       self.log.error('Could not set logdir permissions to 0755:', '%s (%s)' % ( self.logdir, str(x) ) )
     # Populate the temporary directory
     try:
       for myfile in selectedFiles:
         destinationFile = '%s/%s' % (self.logdir, os.path.basename(myfile))
         shutil.copy(myfile, destinationFile)
-    except Exception, x:
+    except OSError as x:
       self.log.exception('Exception while trying to copy file.', myfile, str(x))
       self.log.info('File %s will be skipped and can be considered lost.' % myfile)
 
@@ -345,19 +326,19 @@ class UploadLogFile(ModuleBase):
   #############################################################################
   def createLogUploadRequest(self, targetSE, logFileLFN):
     """ Set a request to upload job log files from the output sandbox
+        How does this thing get it logFiles from the output sandbox? Was this code ever actually run?
     """
     self.log.info('Setting log upload request for %s at %s' %(targetSE, logFileLFN))
-    res = self.request.addSubRequest({'Attributes':{'Operation':'uploadLogFiles',
-                                                    'TargetSE':targetSE,
-                                                    'ExecutionOrder':0}},
-                                         'logupload')
-    if not res['OK']:
-      return res
-    index = res['Value']
-    fileDict = {}
-    fileDict['Status'] = 'Waiting'
-    fileDict['LFN'] = logFileLFN
-    self.request.setSubRequestFiles(index, 'logupload', [fileDict])
+    upload = Operation()
+    upload.Type = "PutAndRegister"
+    upload.TargetSE = targetSE
+    upFile = File()
+    upFile.LFN = logFileLFN
+    upload.addFile(upFile)
+    request = self._getRequestContainer()
+    request.addOperation ( upload )
+
+    self.workflow_commons['Request'] = request
     return S_OK()
 
   #############################################################################
@@ -370,7 +351,7 @@ class UploadLogFile(ModuleBase):
         if not os.path.islink('%s/%s' % (logDir, toChange)):
           self.log.debug('Changing permissions of %s/%s to 0755' % (logDir, toChange))
           os.chmod('%s/%s' % (logDir, toChange), 0755)
-    except Exception, x:
+    except OSError as x:
       self.log.error('Problem changing shared area permissions', str(x))
       return S_ERROR(x)
 
@@ -380,10 +361,10 @@ class UploadLogFile(ModuleBase):
   def __createLogIndex(self, selectedFiles):
     """ Create a log index page for browsing the log files.
     """
-    productionID = self.PRODUCTION_ID
-    prodJobID = self.JOB_ID
+    productionID = self.productionID
+    prodJobID = self.jobID
     wmsJobID = self.jobID
-    logFilePath = self.logFilePath
+    #logFilePath = self.logFilePath
 
     targetFile = '%s/index.html' % (self.logdir)
     fopen = open(targetFile, 'w')
@@ -410,10 +391,10 @@ class UploadLogFile(ModuleBase):
     check = ['SystemConfig', 'SoftwarePackages', 'BannedSites', 'LogLevel',
              'JobType', 'MaxCPUTime', 'ProductionOutputData', 'LogFilePath', 'InputData', 'InputSandbox']
     params = {}
-    for n, v in self.workflow_commons.items():
+    for parameter, value in self.workflow_commons.iteritems():
       for item in check:
-        if n == item and v:
-          params[n] = str(v)
+        if parameter == item and value:
+          params[parameter] = str(value)
 
     finalKeys = params.keys()
     finalKeys.sort()

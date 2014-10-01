@@ -23,10 +23,12 @@ class ProductionSummaryAgent( AgentModule ):
   def initialize(self):
     self.pollingTime = self.am_getOption('PollingTime', 86400)
     gMonitor.registerActivity("Iteration", "Agent Loops", AGENT_NAME, "Loops/min", gMonitor.OP_SUM)
-    self.transClient = TransformationClient('TransformationDB')
-    self.fc = FileCatalogClient()
+    #self.transClient = TransformationClient('TransformationDB')
+    self.transClient = TransformationClient()
+    self.fcc = FileCatalogClient()
     return S_OK()
 
   ##############################################################################
   def execute(self):
+    """Do something"""
     return S_OK()

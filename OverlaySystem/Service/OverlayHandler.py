@@ -1,10 +1,6 @@
-###########################################################################
-# $HeadURL: $
-###########################################################################
-
 """ Services for Overlay System
 """
-__RCSID__ = " $Id: $ "
+__RCSID__ = "$$"
 
 from DIRAC                                              import S_OK
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler

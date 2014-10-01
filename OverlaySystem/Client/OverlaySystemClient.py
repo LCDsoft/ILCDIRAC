@@ -3,6 +3,9 @@ Created on Jul 25, 2011
 
 @author: Stephane Poss
 '''
+
+__RCSID__ = "$$"
+
 from DIRAC.Core.Base.Client                               import Client
 
 class OverlaySystemClient (Client):
@@ -11,4 +14,4 @@ class OverlaySystemClient (Client):
   def __init__(self, **kwargs ):
     Client.__init__(self, **kwargs )
     self.setServer("Overlay/Overlay")
-    
+

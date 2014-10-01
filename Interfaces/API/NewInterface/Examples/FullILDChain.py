@@ -41,7 +41,7 @@ if not res['OK']:
 
 
 ov = OverlayInput()
-ov.setDetectorType("ILD")
+ov.setDetectorModel("CLIC_ILD_CDR")
 ov.setBXOverlay(60)
 ov.setGGToHadInt(3.2)
 ov.setNbSigEvtsPerJob(1)

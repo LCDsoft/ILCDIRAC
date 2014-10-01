@@ -5,7 +5,6 @@ Remove input data (used in case of merging
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
-from DIRAC.RequestManagementSystem.Client.RequestContainer import RequestContainer
 from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 from DIRAC import S_OK, S_ERROR, gLogger
 
@@ -23,15 +22,6 @@ class RemoveInputData(ModuleBase):
       if not type(self.enable) == type(True):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
         self.enable = False
-        
-    if 'Request' in self.workflow_commons:
-      self.request = self.workflow_commons['Request']
-    else:
-      self.request = RequestContainer()
-      self.request.setRequestName('job_%s_request.xml' % self.jobID)
-      self.request.setJobID(self.jobID)
-      self.request.setSourceComponent("Job_%s" % self.jobID)
-
     return S_OK('Parameters resolved') 
   
   def execute(self):
@@ -67,8 +57,6 @@ class RemoveInputData(ModuleBase):
       for lfn in failover:
         self.__setFileRemovalRequest( lfn )
 
-      self.workflow_commons['Request'] = self.request
-
       return S_OK( 'Input Data Removed' )
     except Exception, e:
       self.log.exception( e )
@@ -80,12 +68,4 @@ class RemoveInputData(ModuleBase):
     """ Sets a removal request for a file including all replicas.
     """
     self.log.info( 'Setting file removal request for %s' % lfn )
-    lastOperationOnFile = self.request._getLastOrder( lfn )
-    result = self.request.addSubRequest( {'Attributes':{'Operation':'removeFile',
-                                                       'TargetSE':'',
-                                                       'ExecutionOrder':lastOperationOnFile + 1}},
-                                         'removal' )
-    index = result['Value']
-    fileDict = {'LFN':lfn, 'Status':'Waiting'}
-    result = self.request.setSubRequestFiles( index, 'removal', [fileDict] )
-  
+    self.addRemovalRequests([lfn])

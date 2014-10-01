@@ -4,11 +4,13 @@ Created on Apr 22, 2010
 
 @author: Stephane Poss
 '''
+__RCSID__ = "$$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import exit as dexit
-
+from DIRAC import S_OK
 class Params(object):
+  """dummy"""
   def __init__(self):
     self.repo = ''
   def setRepo(self, optionVal):
@@ -20,7 +22,8 @@ class Params(object):
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
     
-if __name__=="__main":
+def createLFNList():
+  """create the LFnList"""
   cliparams = Params()
   cliparams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
@@ -41,3 +44,6 @@ if __name__=="__main":
     gLogger.notice('"LFN:%s",' % lfn)
   gLogger.notice("]")
   dexit(0)
+
+if __name__=="__main":
+  createLFNList()
