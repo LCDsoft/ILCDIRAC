@@ -125,7 +125,7 @@ class WhizardOptions(object):
 <!-- If nonempty, use the specified filename for writing grids instead of the default. The file extensions are appended to string. -->
 </write_grids_file>
 <write_all_grids type="T/F" value="F">
-<!-- Write, in addition, after each iteration the current grid to file whizard.grXXX, where XXX is the iteration number. -->
+<!-- Write, in addition, after each iteration the current grid to file whizard.grXX, where XX is the iteration number. -->
 </write_all_grids>
 <write_all_grids_file type="string" value="">
 <!-- If nonempty, use the specified filename for writing the extra grids instead of the default. The file extensions are appended to string. -->
@@ -387,7 +387,7 @@ class WhizardOptions(object):
 <!-- Whether to display the PYTHIA statistics summary after event generation is completed. -->
 </show_pythia_statistics>
 <write_logfile type="T/F" value="T">
-<!-- Whether to write the (process-specific) output file(s) whizard.XXX.out. -->
+<!-- Whether to write the (process-specific) output file(s) whizard.XX.out. -->
 </write_logfile>
 <write_logfile_file type="string" value="">
 <!-- Use this as the filename for the logfile. -->

@@ -10,7 +10,7 @@ __RCSID__ = " $Id: $ "
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
-class GeneratorModels():
+class GeneratorModels(object):
   """ Contains the list of known models
   """
   def __init__(self):

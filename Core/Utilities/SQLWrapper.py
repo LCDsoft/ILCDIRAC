@@ -1,5 +1,3 @@
-# $HeadURL$
-# $Id$
 '''
 Wrapper script to run mokka with a local database setup 
 
@@ -10,6 +8,8 @@ Called from ILCDIRAC.Workflow.Modules.MokkaAnalysis
 @author: Przemyslaw Majewski and Stephane Poss
 @since: Feb 1, 2010
 '''
+
+__RCSID__ = "$$"
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall, Subprocess
@@ -150,11 +150,11 @@ class SQLWrapper:
     self.exeEnv = dict( os.environ )
     
     safe_options = "--no-defaults --skip-networking --socket=%s/mysql.sock --datadir=%s --basedir=%s/mysql4grid --pid-file=%s/mysql.pid --log-error=%s --log=%s" % (self.MokkaTMPDir, 
-                                                                                                                                                                     self.MokkaDataDir, 
-                                                                                                                                                                     self.softDir,
-                                                                                                                                                                     self.MokkaTMPDir,
-                                                                                                                                                                     self.stdError,
-                                                                                                                                                                     self.applicationLog)
+                                                                                                                                                                    self.MokkaDataDir,
+                                                                                                                                                                    self.softDir,
+                                                                                                                                                                    self.MokkaTMPDir,
+                                                                                                                                                                    self.stdError,
+                                                                                                                                                                    self.applicationLog)
     comm = "mysql_install_db %s" % (safe_options) 
     self.log.verbose("Running %s" % comm)
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)

@@ -157,7 +157,7 @@ def tarInstall(app, config, area):
   res = installPackage(app, config, area, curdir)
   return res
 
-def getTarBallLocation(app, config, area):
+def getTarBallLocation(app, config, dummy_area):
   """ Get the tar ball location. 
   """
   ops = Operations()
@@ -300,7 +300,7 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
     if not len(dircontent):
       clearLock(lockname)
       return S_ERROR("Folder %s is empty, considering install as failed" % folder_name)
-  except:
+  except OSError:
     pass
   
   #Everything went fine, we try to clear the lock  
