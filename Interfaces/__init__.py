@@ -1,5 +1,3 @@
-# $HeadURL$
-# $Id$
 """
 ILC specific API plugins for DIRAC.
    
@@ -7,3 +5,5 @@ ILC specific API plugins for DIRAC.
 
 @since: Feb 08, 2010 
 """
+
+__RCSID__ = "$$"
