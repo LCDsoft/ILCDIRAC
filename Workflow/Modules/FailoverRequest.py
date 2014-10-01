@@ -38,7 +38,6 @@ class FailoverRequest(ModuleBase):
     #Workflow parameters
     self.jobReport  = None
     self.fileReport = None
-    self.request = None
     self.jobType = ''
 
   #############################################################################
@@ -87,10 +86,8 @@ class FailoverRequest(ModuleBase):
       self.log.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
 
-    self.request.RequestName = 'job_%d_request.xml' % int(self.jobID)
-    self.request.JobID = self.jobID
-    self.request.SourceComponent = "Job_%d" % int(self.jobID)
-
+    request = self._getRequestContainer()
+    
     if not self.fileReport:
       self.fileReport =  FileReport('Transformation/TransformationManager')
 
@@ -126,7 +123,7 @@ class FailoverRequest(ModuleBase):
         if result['Value'] is None:
           self.log.info( "Files correctly reported to TransformationDB" )
         else:
-          result = self.request.addOperation( result['Value'] )
+          result = request.addOperation( result['Value'] )
     else:
       self.log.info('Status of files have been properly updated in the ProcessingDB')
 

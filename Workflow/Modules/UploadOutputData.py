@@ -42,7 +42,6 @@ class UploadOutputData(ModuleBase):
     self.outputDataFileMask = ''
     self.outputMode = 'Any' #or 'Local' for reco case
     self.outputList = []
-    self.request = None
     self.PRODUCTION_ID = ""
     self.prodOutputLFNs = []
     self.experiment = "CLIC"
@@ -244,10 +243,10 @@ class UploadOutputData(ModuleBase):
     fopen.close()
     
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self.request)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
-    self.catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment,
-                                     ['FileCatalog', 'LcgFileCatalog'])
+    catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment,
+                                 ['FileCatalog', 'LcgFileCatalog'])
 
 
 
@@ -262,7 +261,7 @@ class UploadOutputData(ModuleBase):
                                                           metadata['lfn'], 
                                                           metadata['resolvedSE'], 
                                                           fileMetaDict = metadata, 
-                                                          fileCatalog = self.catalogs)
+                                                          fileCatalog = catalogs)
         if not result['OK']:
           self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
           failover[fileName] = metadata
@@ -290,7 +289,7 @@ class UploadOutputData(ModuleBase):
                                                                 targetSE, 
                                                                 metadata['resolvedSE'],
                                                                 fileMetaDict = metadata, 
-                                                                fileCatalog = self.catalogs)
+                                                                fileCatalog = catalogs)
       if not result['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
@@ -298,7 +297,7 @@ class UploadOutputData(ModuleBase):
 
     os.remove("DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK") #cleanup the mess
 
-    self.request = failoverTransfer.request
+    request = failoverTransfer.request
 
     #If some or all of the files failed to be saved to failover
     if cleanUp:
@@ -307,7 +306,7 @@ class UploadOutputData(ModuleBase):
         lfns.append(metadata['lfn'])
 
       result = self.__cleanUp(lfns)
-      self.workflow_commons['Request'] = self.request
+      self.workflow_commons['Request'] = request
       return S_ERROR('Failed to upload output data')
 
 #    #Can now register the successfully uploaded files in the BK
@@ -331,7 +330,7 @@ class UploadOutputData(ModuleBase):
 #          index = result['Value']
 #          self.request.setSubRequestFiles(index,'register',[fileDict])
 
-    self.workflow_commons['Request'] = self.request
+    self.workflow_commons['Request'] = request
     return S_OK('Output data uploaded')
 
   #############################################################################
@@ -339,30 +338,16 @@ class UploadOutputData(ModuleBase):
     """ Clean up uploaded data for the LFNs in the list
     """
     # Clean up the current request
-    for req_type in ['transfer', 'register']:
-      for lfn in lfnList:
-        result = self.request.getNumSubRequests(req_type)
-        if result['OK']:
-          nreq = result['Value']
-          if nreq:
-            # Go through subrequests in reverse order in order not to spoil the numbering
-            ind_range = [0]
-            if nreq > 1:
-              ind_range = range(nreq-1, -1, -1)
-            for i in ind_range:
-              result = self.request.getSubRequestFiles(i, req_type)
-              if result['OK']:
-                fileList = result['Value']
-                if fileList[0]['LFN'] == lfn:
-                  result = self.request.removeSubRequest(i, req_type)
+    request = self._getRequestContainer()
+    typeList = ['RegisterFile', 'ReplicateAndRegister']
+    
+    #keep all the requests which are not in typeList or whose file is not in lfnList
+    request = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
+    
+    self.addRemovalRequests(lfnList)
 
-    # Set removal requests just in case
-    for lfn in lfnList:
-      result = self.request.addSubRequest({'Attributes': {'Operation' : 'removeFile', 'TargetSE' : '',
-                                                          'ExecutionOrder' : 1}}, 'removal')
-      index = result['Value']
-      fileDict = {'LFN':lfn, 'PFN':'', 'Status':'Waiting'}
-      self.request.setSubRequestFiles(index, 'removal', [fileDict])
+    #just in case put the request object back to common request
+    self.workflow_commons['Request'] = request
 
     return S_OK()
 
