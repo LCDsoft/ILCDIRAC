@@ -201,7 +201,7 @@ class UserJobFinalization(ModuleBase):
       return S_OK('Module is disabled by control flag')
 
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self._getRequestContainer)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
     #One by one upload the files with failover if necessary
     replication = {}

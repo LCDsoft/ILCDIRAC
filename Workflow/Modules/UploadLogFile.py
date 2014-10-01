@@ -226,7 +226,7 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self._getRequestContainer)
+    failoverTransfer = FailoverTransfer(self._getRequestContainer())
     ##determine the experiment
     self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
 
