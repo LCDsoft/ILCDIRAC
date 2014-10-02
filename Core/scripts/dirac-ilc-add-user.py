@@ -110,7 +110,7 @@ def addUserToFC(clip):
       gLogger.error("NO VO for group", grp )
       continue
     bpath += voName+"/"
-    lfnprefix = gConfig.getValue("/Operations/%s/LFNUserPrefix" % voName, "")
+    lfnprefix = gConfig.getValue("/Operations/%s/Defaults/LFNUserPrefix" % voName, "")
     if lfnprefix:
       bpath += lfnprefix+"/"
     bpath += clip.uname[0]+"/"+clip.uname+"/"
