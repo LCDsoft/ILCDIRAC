@@ -1,3 +1,12 @@
+[v22r0p0]
+
+* Core: Based on Dirac v6r11p14: DO NOT USE
+
+
+[v21r5p2]
+
+FIX: dirac-ilc-add-user script
+
 [v21r5p1]
 
 Same as for v21r0p0, but using Dirac v6r10 instead of v6r9
