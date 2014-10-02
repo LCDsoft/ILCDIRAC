@@ -96,6 +96,7 @@ def addUserToFC(clip):
   """
   from DIRAC.ConfigurationSystem.Client.Helpers  import Registry
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+  from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
   fc = FileCatalogClient()
   res = fc.addUser(clip.uname)
   if not res['OK']:
@@ -110,7 +111,7 @@ def addUserToFC(clip):
       gLogger.error("NO VO for group", grp )
       continue
     bpath += voName+"/"
-    lfnprefix = gConfig.getValue("/Operations/%s/Defaults/LFNUserPrefix" % voName, "")
+    lfnprefix = Operations( vo = voName ).getValue("LFNUserPrefix")
     if lfnprefix:
       bpath += lfnprefix+"/"
     bpath += clip.uname[0]+"/"+clip.uname+"/"
