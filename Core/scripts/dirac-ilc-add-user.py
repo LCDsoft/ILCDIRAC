@@ -134,8 +134,8 @@ def addUserToFC(clip):
 
 def addUserToEgroup(clip):
   """Add user to e-group"""
-  login = gConfig.getValue("/Security/egroupAdmin",None).strip('"')
-  pwd = gConfig.getValue("/Security/egroupPass",None).strip('"')
+  login = gConfig.getValue("/Security/egroupAdmin","").strip('"')
+  pwd = gConfig.getValue("/Security/egroupPass","").strip('"')
   url = 'https://foundservices.cern.ch/ws/egroups/v1/EgroupsWebService/EgroupsWebService.wsdl'
   if not ( login and pwd ):
     gLogger.error("Missing configuration parameters: username or password for WSDL interactions")
