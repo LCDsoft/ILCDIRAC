@@ -110,7 +110,7 @@ def addUserToFC(clip):
       gLogger.error("NO VO for group", grp )
       continue
     bpath += voName+"/"
-    lfnprefix = gConfig.getValue("/Operations/%s/LFNUserPrefix" % voName, "")
+    lfnprefix = gConfig.getValue("/Operations/%s/Defaults/LFNUserPrefix" % voName, "")
     if lfnprefix:
       bpath += lfnprefix+"/"
     bpath += clip.uname[0]+"/"+clip.uname+"/"
@@ -134,8 +134,8 @@ def addUserToFC(clip):
 
 def addUserToEgroup(clip):
   """Add user to e-group"""
-  login = gConfig.getValue("/Security/egroupAdmin",None).strip('"')
-  pwd = gConfig.getValue("/Security/egroupPass",None).strip('"')
+  login = gConfig.getValue("/Security/egroupAdmin","").strip('"')
+  pwd = gConfig.getValue("/Security/egroupPass","").strip('"')
   url = 'https://foundservices.cern.ch/ws/egroups/v1/EgroupsWebService/EgroupsWebService.wsdl'
   if not ( login and pwd ):
     gLogger.error("Missing configuration parameters: username or password for WSDL interactions")
