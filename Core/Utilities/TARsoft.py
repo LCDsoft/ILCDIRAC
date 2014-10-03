@@ -342,7 +342,7 @@ def check(app, area, res_from_install):
       fmd5 = ''
       try:
         fmd5 = md5.md5(file(fin).read()).hexdigest()
-      except:
+      except IOError:
         gLogger.error("Failed to compute md5 sum")
         return S_ERROR("Failed to compute md5 sum")
       if md5sum != fmd5:
@@ -420,7 +420,7 @@ def checkJava():
     res = subprocess.check_call(args)
     if res:
       return S_ERROR("Something is wrong with Java")
-  except:
+  except CalledProcessError:
     gLogger.error("Java was not found on this machine, cannot proceed")
     return S_ERROR("Java was not found on this machine, cannot proceed")
   return S_OK()
