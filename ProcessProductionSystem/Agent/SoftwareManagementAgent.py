@@ -66,7 +66,7 @@ class SoftwareManagementAgent( AgentModule ):
       self.log.info('Will install %s %s at %s' % (softdict['AppName'], softdict['AppVersion'], softdict['Sites']))
       for site in softdict['Sites']:
         j = UserJob()
-        j.setSystemConfig(softdict['Platform'])
+        j.setPlatform(softdict['Platform'])
         j.dontPromptMe()
         j.setDestination(site)
         j.setJobGroup("Installation")

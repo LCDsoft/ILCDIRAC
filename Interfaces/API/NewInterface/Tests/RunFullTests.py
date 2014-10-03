@@ -39,7 +39,7 @@ def getJob():
   myjob.setCPUTime(30000)
   myjob.dontPromptMe()
   myjob.setLogLevel("VERBOSE")
-  myjob.setSystemConfig("x86_64-slc5-gcc43-opt")
+  myjob.setPlatform("x86_64-slc5-gcc43-opt")
   myjob.setOutputSandbox(["*.log","*.xml"])
   return myjob
 
