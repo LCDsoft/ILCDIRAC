@@ -14,6 +14,7 @@ from DIRAC import gLogger
 def joinPathForMetaData( *args ):
   """
   Returns path expected by MetaDataDictionaries, always ends with a slash
+  When paths are used for metadata, the ending "/" will be rstripped.
   """
   # if there is a lone slash in this list then the end result is only "/" so we remove them
   cleanedEntries = tuple( ent for ent in args if ent != "/")
