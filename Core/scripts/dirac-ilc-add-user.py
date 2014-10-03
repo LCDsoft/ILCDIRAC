@@ -114,7 +114,7 @@ def addUserToFC(clip):
     lfnprefix = Operations( vo = voName ).getValue("LFNUserPrefix")
     if lfnprefix:
       bpath += lfnprefix+"/"
-    bpath += clip.uname[0]+"/"+clip.uname+"/"
+    bpath += clip.uname[0]+"/"+clip.uname
 
     res = fc.createDirectory(bpath)
     if not res['OK']:
@@ -144,7 +144,7 @@ def addUserToEgroup(clip):
     dexit(1)
   try:
     client = Client(url=url, username=login, password=pwd)
-    #gLogger.info(client)
+    #gLogger.notice(client)
   except suds.transport.TransportError, exc:
     gLogger.error("Failed to get the WSDL client:%s" %exc)
     gLogger.error("User registration in e-group must be done manually")
@@ -163,7 +163,7 @@ def addUserToEgroup(clip):
     userl = [user]
   res = client.service.AddEgroupMembers('ilc-dirac',False, userl)
   if hasattr(res, 'warnings'):
-    gLogger.info(res.warnings)
+    gLogger.notice(res.warnings)
 
 
 def getUserInfoFromPhonebook(client, clip):
@@ -220,17 +220,17 @@ def addUser():
   if not ( clip.certCN and clip.groups and clip.certDN and clip.uname):
     gLogger.error("Username, DN, CN, and groups have to be given")
     Script.showHelp()
-  gLogger.info("Add User to Egroup")
+  gLogger.notice("Add User to Egroup")
   addUserToEgroup(clip)
   if not clip.email:
     gLogger.fatal("No email defined and not found in phonebook, you have to provide it: -E<email>")
     dexit(1)
   userProps = {'DN': clip.certDN, 'Email': clip.email, 'CN': clip.certCN, 'Groups': clip.groups}
-  gLogger.info("Add User to CS")
+  gLogger.notice("Add User to CS")
   addUserToCS(clip, userProps)
-  gLogger.info("Add User to FC")
+  gLogger.notice("Add User to FC")
   addUserToFC(clip)
-  gLogger.info("Done")
+  gLogger.notice("Done")
 if __name__=="__main__":
   addUser()
   dexit(0)
