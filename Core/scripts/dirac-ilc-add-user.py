@@ -55,7 +55,7 @@ class Params(object):
   def setCERNID(self,opt):
     self.cernid = opt
     return S_OK()
-  def setExternal(self,opt):
+  def setExternal(self,dummy_opt):
     self.external = True
     return S_OK()
   def registerSwitches(self):
@@ -65,7 +65,7 @@ class Params(object):
     Script.registerSwitch("C:","CN=","user CN (or CA)",self.setCN)
     Script.registerSwitch("E:","Email=","User mail",self.setEmail)
     Script.registerSwitch("","CCID=","CERN CC user ID (if any)", self.setCERNID)
-    Script.registerSwitch("X:", "external", "set if user is external, no checking of the PhoneBook", self.setExternal)
+    Script.registerSwitch("X", "external", "set if user is external, no checking of the PhoneBook", self.setExternal)
     Script.setUsageMessage("""%s -U <username> -G <ilc_user,private_pilot,...> -D"<DN>" -C"<CN>" -E <email>""" % Script.scriptName)
 
 def addUserToCS(clip, userProps):
