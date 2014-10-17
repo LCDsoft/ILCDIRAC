@@ -4,7 +4,7 @@ Created on Mar 21, 2013
 
 @author: stephane
 '''
-
+__RCSID__ = "$Id"
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR
 import os
@@ -27,7 +27,7 @@ class Params(object):
     self.software = 'whizard-1.95'
     self.fmeta = {}
     self.force = False
-    
+    self.energy = -1
   def setDir(self, opt):
     self.dir = opt
     return S_OK()
@@ -44,9 +44,8 @@ class Params(object):
     return S_OK()
 
   def setEnergy(self, opt):
-    self.energy = opt
     try:
-      energy = int(opt)
+      self.energy = int(opt)
     except ValueError:
       return S_ERROR("Energy should be unit less, only integers")
     return S_OK()
@@ -120,7 +119,7 @@ class Params(object):
       return S_ERROR("XSectionError must be float, unit less")
     return S_OK()
   
-  def setForce(self,opt):
+  def setForce(self,dummy_opt):
     self.force = True
     return S_OK()
   
@@ -145,7 +144,8 @@ class Params(object):
     Script.registerSwitch('f', 'force', "Do not stop for confirmation", self.setForce)
     Script.setUsageMessage('\n%s -P /some/path/ -E 1000 -M B1b_ws -I 35945 etc.\n' % Script.scriptName)  
   
-if __name__ == '__main__':
+def uploadGenFiles():
+  """uploads the generator files"""
   clip = Params()
   clip.registerSwitches()
   Script.parseCommandLine()
@@ -257,3 +257,6 @@ if __name__ == '__main__':
       gLogger.error("Failed setting the metadata to %s:" % f, res['Message'])
       
   dexit(0)
+
+if __name__ == '__main__':
+  uploadGenFiles()
