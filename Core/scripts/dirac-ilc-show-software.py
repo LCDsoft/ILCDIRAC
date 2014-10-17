@@ -6,9 +6,12 @@ Created on Dec 17, 2010
 
 @author: sposs
 '''
+__RCSID__ = "$Id$"
+
 from DIRAC.Core.Base import Script
 
-if __name__=="__main__":
+def showSoftware():
+  """Show available software"""
   Script.parseCommandLine()
   from DIRAC import gConfig, gLogger
   base = '/Operations/Defaults/AvailableTarBalls'
@@ -34,3 +37,5 @@ if __name__=="__main__":
       if not len(versions['Value']):
         gLogger.notice("      No version available")
 
+if __name__=="__main__":
+  showSoftware()
