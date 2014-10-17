@@ -1,9 +1,3 @@
-########################################################################
-# $Id: JobPathResolution.py 18700 2009-11-30 13:48:50Z paterson $
-# File :   JobPathResolution.py
-# Author : Stuart Paterson
-########################################################################
-
 """ The job path resolution module is a VO-specific plugin that
     allows to define VO job policy in a simple way.  This allows the
     inclusion of ILC specific WMS optimizers without compromising the
@@ -12,16 +6,17 @@
     The arguments dictionary from the JobPathAgent includes the ClassAd
     job description and therefore decisions are made based on the existence
     of JDL parameters.
+    @Author : Stuart Paterson
 """
 
-__RCSID__ = "$Id: JobPathResolution.py  2010-06-28 12:53:50Z sposs $"
+__RCSID__ = "$Id$"
 
 from DIRAC                                                 import S_OK, S_ERROR, gLogger
 
 COMPONENT_NAME = 'ILCJobPathResolution'
 
-class JobPathResolution:
-
+class JobPathResolution(object):
+  """VO Specific plugin for jobpath resolution"""
   #############################################################################
   def __init__(self, argumentsDict):
     """ Standard constructor
