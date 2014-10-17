@@ -159,7 +159,7 @@ class DiracILC(Dirac):
     if not res['OK']:
       return res
     
-    sysconf = job.systemConfig
+    platform = job.workflow.findParameter("Platform").getValue()
     apps = job.workflow.findParameter("SoftwarePackages")
     if apps:
       apps = apps.getValue()
@@ -167,7 +167,7 @@ class DiracILC(Dirac):
         app = appver.split(".")[0].lower()#first element
         vers = appver.split(".")[1:]#all the others
         vers = string.join(vers,".")
-        res = self._checkapp(sysconf, app, vers)
+        res = self._checkapp(platform, app, vers)
         if not res['OK']:
           return res
     outputpathparam = job.workflow.findParameter("UserOutputPath")
@@ -185,18 +185,18 @@ class DiracILC(Dirac):
 
     return S_OK()
   
-  def _checkapp(self, config, appName, appVersion):
+  def _checkapp(self, platform, appName, appVersion):
     """ Check availability of application in CS
-    @param config: System config
+    @param platform: System platform
     @param appName: Application name
     @param appVersion: Application version
     @return: S_OK() or S_ERROR()
     """
-    self.log.debug("Checking for software version in " + '/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion))
-    app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion),'')
+    self.log.debug("Checking for software version in " + '/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appName, appVersion))
+    app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appName, appVersion),'')
     if not app_version:
-      self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, config))
-      return S_ERROR("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, config))
+      self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
+      return S_ERROR("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
     return S_OK()
   
   def _checkoutputpath(self, path):

@@ -49,7 +49,6 @@ class ProductionJob(Job):
     self.ops = Operations()
     self.fc = FileCatalogClient()
     self.trc = TransformationClient()
-    self.systemConfig = self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.jobFileGroupSize = 1
@@ -91,7 +90,7 @@ class ProductionJob(Job):
   def __setDefaults(self):
     """Sets some default parameters.
     """
-    self.setPlatform(self.systemConfig)
+    self.setPlatform(self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt'))
     self.setCPUTime('300000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
