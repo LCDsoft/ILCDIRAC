@@ -1,7 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
-
 """
 This module contains the definition of the different applications that can
 be used to create jobs.
@@ -1559,6 +1555,7 @@ class OverlayInput(LCUtilityApplication):
     self.BkgEvtType = ''
     self.ProdID = 0
     self.Machine = 'clic_cdr'
+    self.DetectorModel = ''
     super(OverlayInput, self).__init__( paramdict )
     self.Version = '1'
     self._modulename = "OverlayInput"
