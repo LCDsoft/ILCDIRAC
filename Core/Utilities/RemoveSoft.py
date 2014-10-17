@@ -4,6 +4,7 @@ Module to remove software. Not used if using the ProcessProductionSystem
 @author: Stephane Poss
 @since: Jul 14, 2011
 '''
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
@@ -64,18 +65,18 @@ class RemoveSoft(object):
         if os.path.exists(dbloc):
           try:
             os.remove(dbloc)
-          except Exception, x:
+          except OSError as x:
             self.log.error("Could not delete SQL DB file : %s" % (str(x)))  
       if os.path.isdir(myappDir):
         try:
           shutil.rmtree(myappDir)
-        except Exception, x:
+        except OSError as x:
           self.log.error("Could not delete %s : %s" % (app, str(x)))  
           failed.append(app)
       else:
         try:
           os.remove(myappDir)
-        except Exception, x:
+        except OSError as x:
           self.log.error("Could not delete %s: %s" % (myappDir, str(x)))
         
     if len(failed):
