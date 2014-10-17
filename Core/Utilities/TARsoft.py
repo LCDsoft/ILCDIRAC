@@ -420,7 +420,7 @@ def checkJava():
     res = subprocess.check_call(args)
     if res:
       return S_ERROR("Something is wrong with Java")
-  except CalledProcessError:
+  except subprocess.CalledProcessError:
     gLogger.error("Java was not found on this machine, cannot proceed")
     return S_ERROR("Java was not found on this machine, cannot proceed")
   return S_OK()
