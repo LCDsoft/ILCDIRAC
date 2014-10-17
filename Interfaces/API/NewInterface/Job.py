@@ -32,7 +32,6 @@ class Job(DiracJob):
     self.inputsandbox = []
     self.outputsandbox = []
     self.check = True
-    self.systemConfig = ''
     self.stepnumber = 0
     self.steps = []
     self.nbevts = 0
@@ -43,7 +42,7 @@ class Job(DiracJob):
 
   def setSystemConfig(self, platform):
     """Deprecation warning for setSystemConfig"""
-    self.log.warn("""WARNING: setSystemConfig has been deprecated! use
+    self.log.error("""WARNING: setSystemConfig has been deprecated! use
 
                   setPlatform(platform)
 

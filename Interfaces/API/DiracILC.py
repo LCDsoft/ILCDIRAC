@@ -192,6 +192,7 @@ class DiracILC(Dirac):
     @param appVersion: Application version
     @return: S_OK() or S_ERROR()
     """
+    self.log.debug("Checking for software version in " + '/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion))
     app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(config, appName, appVersion),'')
     if not app_version:
       self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, config))
