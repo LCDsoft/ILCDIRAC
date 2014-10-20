@@ -280,6 +280,6 @@ def checkForMandatoryKeys(paramDict, keys):
   for k in keys:
     if not k in paramDict:
       return S_ERROR('%s not defined' % k)
-  return S_OK
+  return S_OK()
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

@@ -527,4 +527,4 @@ def installPackage(app, config, area, curdir):
 
   os.chdir(curdir)
   gLogger.notice("Successfully installed %s %s in %s" % (appName,appVersion, area))
-  return S_OK
+  return S_OK()
