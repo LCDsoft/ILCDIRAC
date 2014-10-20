@@ -85,8 +85,8 @@ def getDestinationSEList(outputSE, site, outputmode='Any'):
   for se in groupSEs:
     if se in localSEs:
       newSEList.append(se)
-  SEs = uniqueElements(newSEList + groupSEs)
-  gLogger.verbose('Found unique SEs: %s' % (SEs))
-  return S_OK(SEs)
+  uniqueSEs = uniqueElements(newSEList + groupSEs)
+  gLogger.verbose('Found unique SEs: %s' % (uniqueSEs))
+  return S_OK(uniqueSEs)
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
