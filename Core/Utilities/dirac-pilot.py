@@ -6,7 +6,7 @@
  It requires dirac-install script to be sitting in the same directory.
 """
 __RCSID__ = "$Id$"
-
+#pylint: disable=C0103
 import os
 import sys
 import getopt
@@ -43,7 +43,7 @@ except Exception, x:
   print x
   raise x
 
-class CliParams:
+class CliParams(object):
   """ Command line parameters
   """
   MAX_CYCLES = 100
@@ -94,7 +94,7 @@ def executeAndGetOutput( cmd ):
   try:
     import subprocess
     _p = subprocess.Popen( "%s" % cmd, shell = True, stdout = subprocess.PIPE,
-                          stderr = subprocess.PIPE, close_fds = True )
+                           stderr = subprocess.PIPE, close_fds = True )
     outData = _p.stdout.read().strip()
     returnCode = _p.wait()
   except ImportError:
@@ -578,7 +578,7 @@ logINFO( 'DiskSpace (MB) = %s' % diskSpace )
 
 if diskSpace < cliParams.minDiskSpace:
   logERROR( '%s MB < %s MB, not enough local disk space available, exiting'
-                  % ( diskSpace, cliParams.minDiskSpace ) )
+            % ( diskSpace, cliParams.minDiskSpace ) )
   sys.exit( 1 )
 
 #
@@ -601,8 +601,8 @@ if cliParams.flavour == 'LCG' or cliParams.flavour == 'gLite' :
         # os.system( "%s -f %s -o /LocalSite/CPUScalingFactor=%s" % ( cacheScript, cfgFile, queueNorm / 250. ) )
         # os.system( "%s -f %s -o /LocalSite/CPUNormalizationFactor=%s" % ( cacheScript, cfgFile, queueNorm / 250. ) )
         os.system( "%s -F -o /LocalSite/CPUScalingFactor=%s -o /LocalSite/CPUNormalizationFactor=%s" % ( configureScript,
-                                                                                                      queueNorm / 250.,
-                                                                                                      queueNorm / 250. ) )
+                                                                                                         queueNorm / 250.,
+                                                                                                         queueNorm / 250. ) )
     else:
       logERROR( 'Fail to get Normalization of the Queue' )
   else:
