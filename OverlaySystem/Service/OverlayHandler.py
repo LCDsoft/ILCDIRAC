@@ -1,6 +1,6 @@
 """ Services for Overlay System
 """
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC                                              import S_OK
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler

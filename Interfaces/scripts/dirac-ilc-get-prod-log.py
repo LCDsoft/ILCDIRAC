@@ -6,7 +6,7 @@ Created on Mar 21, 2013
 
 @author: stephane
 '''
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, exit as dexit

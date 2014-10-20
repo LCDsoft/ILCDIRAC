@@ -6,7 +6,7 @@ defined in the production workflow.
 @since: Sep 01, 2010
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList

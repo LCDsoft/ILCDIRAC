@@ -5,7 +5,7 @@
     of destination storage elements for uploading an output file.
 """
 
-__RCSID__ = "$Id: ResolveSE.py 21477 2010-02-16 14:06:06Z paterson $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.SiteSEMapping                   import getSEsForSite
 from DIRAC.Core.Utilities.List                            import uniqueElements

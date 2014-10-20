@@ -7,7 +7,7 @@ Also installs all dependencies for the applications
 
 @author: Stephane Poss
 '''
-__RCSID__ = None
+__RCSID__ = "$Id$"
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps

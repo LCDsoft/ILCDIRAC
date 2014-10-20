@@ -6,7 +6,7 @@ defined in the user workflow.
 @since: Sep 01, 2010
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer

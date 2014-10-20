@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 """ Module that converts stdhep files to slcio. Goes usually before Tomato
 
 @author: Ching Bon Lam

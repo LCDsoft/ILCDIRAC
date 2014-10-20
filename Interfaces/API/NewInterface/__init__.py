@@ -6,4 +6,4 @@ Here lies the new Interface for the moment
 @author: Stephane Poss
 
 '''
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"

@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL: svn+ssh://svn.cern.ch/reps/dirac/ILCDIRAC/trunk/ILCDIRAC/Workflow/Modules/LCIOConcatenate.py $
-#####################################################
 """
 Module to concatenate LCIO files
 
@@ -9,7 +6,7 @@ Module to concatenate LCIO files
 
 """
 
-__RCSID__ = "$Id: LCIOConcatenate.py 48402 2012-03-09 09:33:09Z sposs $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase

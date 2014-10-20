@@ -8,7 +8,7 @@ Works recursively
 @author: Stephane Poss
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC import gLogger
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations

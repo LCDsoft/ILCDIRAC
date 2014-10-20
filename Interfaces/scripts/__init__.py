@@ -3,4 +3,4 @@ Scripts in the interfaces module
 
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"

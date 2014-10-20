@@ -1,9 +1,4 @@
 #!/bin/env python
-##########################################################################################
-# $HeadURL$
-##########################################################################################
-
-
 '''
 Run many different applications as a test. Creates a temp directory and runs in there. 
 Stops at any error.

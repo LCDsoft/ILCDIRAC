@@ -9,7 +9,7 @@ Called from ILCDIRAC.Workflow.Modules.MokkaAnalysis
 @since: Feb 1, 2010
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall, Subprocess

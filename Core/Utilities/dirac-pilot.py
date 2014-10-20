@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# $HeadURL$
 """
  Perform initial sanity checks on WN, installs and configures DIRAC and runs
  Job Agent to execute pending workload on WMS.

@@ -5,7 +5,7 @@ Interface to the processlist.whiz that contains all the processes known to WHIZA
 @since: Sep 21, 2010
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC                    import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.CFG import CFG

@@ -1,7 +1,3 @@
-#####################################################################################
-# $HeadURL$
-#####################################################################################
-
 """ Linear Collider Application
 
 Allows setting the Steering File dependency, as well as other LC community things

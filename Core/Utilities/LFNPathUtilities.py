@@ -4,7 +4,7 @@ Utilities to deal with the normalisation of LFNs for various occasions
 @author: sailer
 """
 
-__RCSID__= "me"
+__RCSID__= "$Id$"
 
 # use posixpath because it always uses "/"
 import posixpath

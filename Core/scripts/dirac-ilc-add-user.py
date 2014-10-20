@@ -12,7 +12,7 @@ To figure out the commands available from WSDL:
 print client
 
 """
-__RCSID__ = None
+__RCSID__ = "$Id$"
 
 try:
   import suds

@@ -4,4 +4,4 @@ All modules are contained here
 @author: P. Majewski
 @since: Mar 22, 2010
 """
-__RCSID__ = "$ID$"
+__RCSID__ = "$Id$"
