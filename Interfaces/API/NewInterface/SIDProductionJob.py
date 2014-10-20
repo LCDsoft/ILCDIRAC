@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 """
 SID DBD specific production job utility
 
@@ -21,13 +18,14 @@ __RCSID__ = "$Id$"
 
 
 class SIDProductionJob(ProductionJob):
+  """Production Job for SID"""
   def __init__(self):
     super(SIDProductionJob, self).__init__()
     self.basepath = self.ops.getValue('/Production/ILC_SID/BasePath','/ilc/prod/ilc/sid/')
     self.polarization = ""
     self.machineparams = ''
     self.detector = ''
-    
+
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
     """
@@ -88,7 +86,7 @@ class SIDProductionJob(ProductionJob):
 
     if compatmeta.has_key("MachineParams"):
       if type(compatmeta["MachineParams"]) in types.StringTypes:
-        self.machineTuning = compatmeta["MachineParams"]
+        self.machineparams = compatmeta["MachineParams"]
       if type(compatmeta["MachineParams"]) == type([]):
         self.machineparams = compatmeta["MachineParams"][0]
     gendata = False    
