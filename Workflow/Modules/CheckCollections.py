@@ -44,7 +44,7 @@ class CheckCollections(ModuleBase):
 
     # Checks
 
-    if not self.systemConfig:
+    if not self.platform:
       result = S_ERROR( 'No ILC platform selected' )
 
     if not os.environ.has_key("LCIO"):

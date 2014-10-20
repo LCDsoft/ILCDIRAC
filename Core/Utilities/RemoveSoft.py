@@ -18,7 +18,7 @@ class RemoveSoft(object):
     self.softs = ''
     self.apps = []
     self.log = gLogger.getSubLogger( "RemoveSoft" )
-    self.systemConfig = ''
+    self.platform = ''
     self.step_commons = {}
     self.workflow_commons = {}
     self.ops = Operations()
@@ -26,14 +26,13 @@ class RemoveSoft(object):
   def execute(self):
     """ Look in folders (Shared Area and Local Area) and try ot remove the applications specified.
     """
-    if self.step_commons.has_key('Apps'):
-      self.softs = self.step_commons['Apps']
-    else:
-      return S_ERROR('Applications to remove were not defined')  
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-    else:
-      return S_ERROR('System Config not defined')
+    self.softs = self.step_commons.get('Apps', None)
+    if not self.softs:
+      return S_ERROR('Applications to remove were not defined')
+
+    self.platform = self.workflow_commons.get('Platform', None)
+    if not self.platform:
+      return S_ERROR('Platform, formerly known as SystemCOnfig not defined')
     
     self.softs.rstrip(";")
     self.apps = self.softs.split(';')
@@ -45,7 +44,7 @@ class RemoveSoft(object):
       
       appname = app.split(".")[0]
       appversion = app.split(".")[1]
-      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, appversion), '')
+      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.platform, appname, appversion), '')
       appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''
       localArea = LocalArea()

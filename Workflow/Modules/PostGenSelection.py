@@ -71,7 +71,7 @@ class PostGenSelection(ModuleBase):
     self.result = self.resolveInputVariables()
     if not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )  
     if not self.result['OK']:
       self.log.error("Failed to resolve input parameters:", self.result["Message"])
@@ -83,7 +83,7 @@ class PostGenSelection(ModuleBase):
 
     if not os.environ.has_key('ROOTSYS'):
       return S_OK('Root environment is not set') 
-    res = getSoftwareFolder(self.systemConfig, "postgensel", self.applicationVersion)
+    res = getSoftwareFolder(self.platform, "postgensel", self.applicationVersion)
     if not res['OK']:
       self.log.error("Failed finding the sofware")
       self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')      

@@ -72,7 +72,7 @@ class LCIOSplit(ModuleBase):
     """
     # Checks
     self.result = self.resolveInputVariables()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:

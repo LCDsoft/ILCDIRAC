@@ -72,7 +72,7 @@ class StdHepCut(ModuleBase):
       self.log.error("Output file name not specified")
       return S_ERROR("OutputFile name not specified")
 
-    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
+    res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error('Application %s was not found in either the local area or shared area' % self.applicationName)
       self.setApplicationStatus('%s: Could not find neither local area not shared area install' % self.applicationName)
@@ -82,7 +82,7 @@ class StdHepCut(ModuleBase):
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
       self.log.verbose('Getting the steering files directory')
-      res = getSteeringFileDirName(self.systemConfig, self.applicationName, self.applicationVersion)
+      res = getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
       if not res['OK']:
         self.log.error("Could not locate the steering file directory")
         return res
@@ -161,7 +161,7 @@ class StdHepCut(ModuleBase):
   def prepareScript(self, mySoftDir):
     """ Prepare the script
     """
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     if os.path.exists("./lib"):
       new_ld_lib_path = "./lib:" + new_ld_lib_path

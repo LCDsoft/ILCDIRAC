@@ -59,7 +59,7 @@ class ModuleBase(object):
 
     self.ops = Operations()
 
-    self.systemConfig = ''
+    self.platform = ''
     self.applicationLog = ''
     self.applicationVersion = ''
     self.applicationName = ''
@@ -375,7 +375,7 @@ class ModuleBase(object):
       self.productionID = int(self.workflow_commons["PRODUCTION_ID"])
       self.isProdJob = True
 
-    self.systemConfig = self.workflow_commons.get('SystemConfig', self.systemConfig)
+    self.platform = self.workflow_commons.get('Platform', self.platform)
 
     self.ignoreapperrors = self.workflow_commons.get('IgnoreAppError', self.ignoreapperrors)
 
@@ -493,7 +493,7 @@ class ModuleBase(object):
     if "SteeringFileVers" in self.step_commons:
       steeringfilevers = self.step_commons["SteeringFileVers"]
       self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
-      res = getSteeringFileDir(self.systemConfig, steeringfilevers)
+      res = getSteeringFileDir(self.platform, steeringfilevers)
       if not res['OK']:
         self.log.error("Cannot find the steering file directory: %s" % steeringfilevers,
                        res['Message'])
@@ -516,7 +516,7 @@ class ModuleBase(object):
     if 'ILDConfigPackage' in self.workflow_commons:
       config_dir = self.workflow_commons['ILDConfigPackage']
       #seems it's not on CVMFS, try local install then:
-      res = getSoftwareFolder(self.systemConfig, "ILDConfig", config_dir.replace("ILDConfig", ""))
+      res = getSoftwareFolder(self.platform, "ILDConfig", config_dir.replace("ILDConfig", ""))
       if not res['OK']:
         self.log.error("Cannot find %s" % config_dir, res['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)

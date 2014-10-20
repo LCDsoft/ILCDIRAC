@@ -87,7 +87,7 @@ class SLICPandoraAnalysis (ModuleBase):
     """ Called from ModuleBase
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -100,7 +100,7 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
     
     ###Get the env script
-    res = getEnvironmentScript(self.systemConfig, self.applicationName, self.applicationVersion, self.getEnvScript)
+    res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Failed to get the environment script:", res["Message"])
       return res

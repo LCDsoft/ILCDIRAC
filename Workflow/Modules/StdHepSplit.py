@@ -76,7 +76,7 @@ class StdHepSplit(ModuleBase):
     self.result = self.resolveInputVariables()
     # Checks
 
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
@@ -110,14 +110,14 @@ class StdHepSplit(ModuleBase):
     self.log.info("Will rename all files using '%s' as base." % prefix)
 
     # Setting up script
-    res = getSoftwareFolder(self.systemConfig, "stdhepsplit", self.applicationVersion)
+    res = getSoftwareFolder(self.platform, "stdhepsplit", self.applicationVersion)
     if not res['OK']:
       self.log.error("Failed to find the software")
       self.setApplicationStatus('StdHepSplit: Could not find neither local area not shared area install')
       return res
     
     mysplitDir = res['Value']
-    new_ld_lib = GetNewLDLibs(self.systemConfig, "stdhepsplit", self.applicationVersion)
+    new_ld_lib = GetNewLDLibs(self.platform, "stdhepsplit", self.applicationVersion)
     LD_LIBRARY_PATH = os.path.join(mysplitDir, "lib") + ":" + new_ld_lib
 
     

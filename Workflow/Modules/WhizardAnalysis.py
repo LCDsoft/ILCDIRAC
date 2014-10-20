@@ -209,7 +209,7 @@ class WhizardAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -224,7 +224,7 @@ class WhizardAnalysis(ModuleBase):
     #if self.debug:
     #  self.excludeAllButEventString = False
 
-    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
+    res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error("Failed getting software folder", res['Message'])
       self.setApplicationStatus('Failed finding software')
@@ -235,15 +235,15 @@ class WhizardAnalysis(ModuleBase):
     removeLibc(mySoftDir + "/lib")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     #Don't forget to prepend the application's libs
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
-    deps = resolveDeps(self.systemConfig, self.applicationName, self.applicationVersion)
+    deps = resolveDeps(self.platform, self.applicationName, self.applicationVersion)
     path_to_beam_spectra = ""
     path_to_gridfiles = ""
     for dep in deps:
-      res = getSoftwareFolder(self.systemConfig, dep[ "app" ], dep['version'])
+      res = getSoftwareFolder(self.platform, dep[ "app" ], dep['version'])
       if not res['OK']:
         self.log.error("Failed getting software folder", res['Message'])
         self.setApplicationStatus('Failed finding software')

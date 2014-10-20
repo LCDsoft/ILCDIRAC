@@ -21,7 +21,7 @@ class InstallSoftModule():
     self.appsToRemove = []
     self.appsToInstall  = []
     self.log = gLogger.getSubLogger( "InstallSoft" )
-    self.systemConfig = ''
+    self.platform = ''
 
     self.ppc = ProcessProdClient()
     #Those too are supposed to be set from the Workflow
@@ -37,9 +37,8 @@ class InstallSoftModule():
     if self.appsToRemoveStr:
       self.appsToRemove = self.appsToRemoveStr.split(';')
     
-    if self.workflow_commons.has_key('SystemConfig'):
-      self.systemConfig = self.workflow_commons['SystemConfig']
-    else:
+    self.platform = self.workflow_commons.get('Platform', None)
+    if not self.platform:
       return S_ERROR('System Config not defined')
     
 
@@ -53,8 +52,8 @@ class InstallSoftModule():
       appversion = app.split(".")[1]
       jobdict['AppName'] = appname
       jobdict['AppVersion'] = appversion
-      jobdict['Platform'] = self.systemConfig
-      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, appname, 
+      jobdict['Platform'] = self.platform
+      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.platform, appname,
                                                                           appversion), '')
       appDir = appDir.replace(".tgz","").replace(".tar.gz","")
       mySoftwareRoot = ''
@@ -76,8 +75,8 @@ class InstallSoftModule():
       appversion = app.split(".")[1]
       jobdict['AppName'] = appname
       jobdict['AppVersion'] = appversion
-      jobdict['Platform'] = self.systemConfig      
-      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.systemConfig, 
+      jobdict['Platform'] = self.platform
+      appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.platform,
                                                                           appname, appversion), '')
       appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''

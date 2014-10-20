@@ -54,7 +54,7 @@ class PythiaAnalysis(ModuleBase):
     """ Run the module
     """
     self.result = self.resolveInputVariables()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationName:
       self.result = S_ERROR("Pythia version name not given")  
@@ -68,15 +68,15 @@ class PythiaAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
+    res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error('Failed finding the software area')
       self.setApplicationStatus('Could find neither local area nor shared area install')
       return res
     myappDir = res['Value']
 
-    deptar = resolveDeps(self.systemConfig, self.applicationName, self.applicationVersion)[0]
-    res = getSoftwareFolder(self.systemConfig, deptar["app"], deptar["version"])
+    deptar = resolveDeps(self.platform, self.applicationName, self.applicationVersion)[0]
+    res = getSoftwareFolder(self.platform, deptar["app"], deptar["version"])
     if not res['OK']:
       self.log.error("Failed finding the dependency location")
       return res
@@ -105,7 +105,7 @@ class PythiaAnalysis(ModuleBase):
     #self.lumifile = path+"/%s.ep"%depdir
     lumifile = "%s/%s" % (randomName, os.path.basename(originpath).replace(".ep",""))
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     new_ld_lib_path = myappDir + "/lib:" + new_ld_lib_path
 
     scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)

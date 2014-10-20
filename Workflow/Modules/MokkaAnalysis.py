@@ -154,7 +154,7 @@ class MokkaAnalysis(ModuleBase):
 
     self.result = S_OK()
        
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -175,7 +175,7 @@ class MokkaAnalysis(ModuleBase):
       self.db_dump_name = "CLICMokkaDB.sql"
 
     
-    res = getEnvironmentScript(self.systemConfig, "mokka", self.applicationVersion, self.getEnvScript)
+    res = getEnvironmentScript(self.platform, "mokka", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Error getting the env script: ", res['Message'])
       return res
@@ -227,7 +227,7 @@ class MokkaAnalysis(ModuleBase):
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
       self.log.verbose("Steering file %s not found locally" % self.SteeringFile)
-      res =  getSteeringFileDirName(self.systemConfig, "mokka", self.applicationVersion)
+      res =  getSteeringFileDirName(self.platform, "mokka", self.applicationVersion)
       if not res['OK']:
         #result = sqlwrapper.mysqlCleanUp()
         self.log.error("Missing Steering file directory")
@@ -452,7 +452,7 @@ done
     
     mySoftwareRoot = os.sep.join(myMokkaDir.rstrip(os.sep).split(os.sep)[0:-1])
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, "mokka", self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.platform, "mokka", self.applicationVersion)
 
     ##Remove libc
     removeLibc(myMokkaDir)
@@ -494,7 +494,7 @@ done
 
     
     #### Do something with the additional environment variables
-    add_env = self.ops.getOptionsDict("/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (self.systemConfig, 
+    add_env = self.ops.getOptionsDict("/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (self.platform,
                                                                                         "mokka", 
                                                                                         self.applicationVersion))
     if add_env['OK']:

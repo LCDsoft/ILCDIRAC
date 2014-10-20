@@ -140,7 +140,7 @@ class MarlinAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -152,7 +152,7 @@ class MarlinAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    res = getEnvironmentScript(self.systemConfig, "marlin", self.applicationVersion, self.getEnvScript)
+    res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Failed to get the env script")
       return res
@@ -168,7 +168,7 @@ class MarlinAnalysis(ModuleBase):
     finalXML = "marlinxml_" + self.STEP_NUMBER + ".xml"
 
     steeringfiledirname = ''
-    res = getSteeringFileDirName(self.systemConfig, "marlin", self.applicationVersion)     
+    res = getSteeringFileDirName(self.platform, "marlin", self.applicationVersion)
     if res['OK']:
       steeringfiledirname = res['Value']
     else:

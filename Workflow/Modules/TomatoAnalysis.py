@@ -50,7 +50,7 @@ class TomatoAnalysis(MarlinAnalysis):
     """ Run the module
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -62,7 +62,7 @@ class TomatoAnalysis(MarlinAnalysis):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    res  = getEnvironmentScript(self.systemConfig, "tomato", self.applicationVersion, self.getEnvScript)
+    res  = getEnvironmentScript(self.platform, "tomato", self.applicationVersion, self.getEnvScript)
     if not res["OK"]:
       self.log.error("Failed to get the env for Tomato:", res["Message"])
       return res
