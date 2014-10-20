@@ -2,6 +2,11 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p2]
+
+* Core: Based on Dirac v6r11p17: DO NOT USE
+* FIX: Some bug fixes, now jobs are running locally
+
 [v22r0p1]
 
 * Core: Based on Dirac v6r11p17: DO NOT USE
