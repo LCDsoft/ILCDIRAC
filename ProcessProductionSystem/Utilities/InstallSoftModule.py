@@ -3,6 +3,7 @@ Created by S Poss
 
 May 2011
 """
+#pylint: skip-file
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea, listAreaDirectory
 
 from ILCDIRAC.ProcessProductionSystem.Client.ProcessProdClient import ProcessProdClient

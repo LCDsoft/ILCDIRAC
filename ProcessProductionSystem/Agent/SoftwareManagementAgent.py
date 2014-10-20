@@ -3,6 +3,7 @@ Created on Feb 17, 2012
 
 @author: Stephane Poss
 '''
+#pylint: skip-file
 __RCSID__ = "$ Id: $"
 
 from DIRAC                                                                import S_OK, gMonitor
