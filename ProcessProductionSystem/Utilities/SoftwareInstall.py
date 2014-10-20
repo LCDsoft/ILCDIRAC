@@ -3,6 +3,7 @@ Created on Feb 17, 2012
 
 @author: Stephane Poss
 '''
+#pylint: skip-file
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from DIRAC.Core.Workflow.Parameter import Parameter

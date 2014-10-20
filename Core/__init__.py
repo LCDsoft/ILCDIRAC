@@ -6,4 +6,4 @@ This contains the LCD specific Core.
 Created by S Poss, 2010/01/13
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"

@@ -9,7 +9,7 @@ Called from ILCDIRAC.Workflow.Modules.MokkaAnalysis
 @since: Feb 1, 2010
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall, Subprocess
@@ -33,6 +33,7 @@ class SQLWrapper:
     self.MokkaDumpFile = ""
       
     self.MokkaTMPDir = ''
+    self.MokkaDataDir = ''
     self.applicationLog = '%s/mysqllog' % (os.getcwd())
          
     self.stdError = '%s/mysql_errlog' % (os.getcwd())
@@ -56,7 +57,7 @@ class SQLWrapper:
   def setDBpath(self, dbpath, dumpfile = ''):
     """ Look for the DB to use.
     """
-    if(len(dumpfile) < 1):
+    if len(dumpfile) < 1:
       dumpfile = 'CLICMokkaDB.sql'
       path = "%s/%s" % (dbpath, dumpfile)
       self.MokkaDumpFile = path
@@ -78,18 +79,18 @@ class SQLWrapper:
     if not os.path.exists(self.mokkaDBroot):
       try :
         os.makedirs(self.mokkaDBroot)
-      except Exception, x:
+      except OSError as x:
         self.log.error("Could not create mokkaDBroot, exception %s." % (x))
         return S_ERROR("Could not create mokkaDBroot, exception %s." % (x))
     try:
       self.MokkaTMPDir = tempfile.mkdtemp('', 'TMP', self.mokkaDBroot)
-    except Exception, x:
+    except OSError as x:
       self.log.error("Exception error: %s" % (x))
       return S_ERROR("Exception error: %s" % (x))
     self.MokkaDataDir = os.path.join(self.initialDir, "data")
     try:
       os.mkdir(self.MokkaDataDir)
-    except Exception, x:
+    except OSError as x:
       self.log.error("Could not create data dir, exception %s" % (x))
       return S_ERROR("Could not create data dir, exception %s" % (x))  
     return S_OK()
@@ -270,12 +271,10 @@ done
     currentdir = os.getcwd()
     os.chdir(os.path.join(self.softDir, "mysql4grid"))
     self.log.verbose('clean up db')
-    MySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown" % (self.MokkaTMPDir, self.rootpass)
+    mySQLcleanUpComm = "mysqladmin --no-defaults -hlocalhost --socket=%s/mysql.sock -uroot -p%s shutdown" % (self.MokkaTMPDir, self.rootpass)
             
-    self.result = shellCall(0, MySQLcleanUpComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
-    
-    resultTuple = self.result['Value']
-
+    result = shellCall(0, mySQLcleanUpComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+    resultTuple = result['Value']
     status = resultTuple[0]
     self.log.info( "Status after the shutdown execution is %s" % str( status ) )
     ##kill mysql
@@ -293,7 +292,9 @@ while [ -n "$socket_grep" ] ; do
     sleep 1
 done 
 """ % (self.MokkaTMPDir)
-    self.result = shellCall(0, sleepComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+    
+    result = shellCall(0, sleepComm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+    resultTuple = result['Value']
 
     os.chdir(currentdir)
 
@@ -307,13 +308,14 @@ done
       self.log.info( "MySQL-cleanup execution completed successfully")
 
     #cleanup script also removes tmp
-    if (os.path.exists(self.MokkaTMPDir)):
+    if os.path.exists(self.MokkaTMPDir):
       try:
         self.log.verbose('Removing tmp dir')
         shutil.rmtree(self.mokkaDBroot, True)
         #shutil.rmtree(self.MokkaTMPDir,True)
         #shutil.rmtree(self.MokkaDataDir,True)
-      except OSError, (errno, strerror):
+      except OSError as err:
+        errno, strerror = err
         self.log.error("I/O error(%s): %s" % (errno, strerror))
         #return S_ERROR('Removing tmp dir failed')
 
@@ -359,12 +361,9 @@ class ExecutionThread( threading.Thread ):
 
   #############################################################################
   def run( self ):
-    # FIXME: why local intances of object variables are created?
-    cmd = self.cmd
-    spObject = self.spObject
     start = time.time()
     initialStat = os.times()
-    output = spObject.systemCall( cmd, env = self.exeEnv, callbackFunction = self.sendOutput, shell = True )
+    output = self.spObject.systemCall( self.cmd, env = self.exeEnv, callbackFunction = self.sendOutput, shell = True )
     EXECUTION_RESULT['Thread'] = output
     timing = time.time() - start
     EXECUTION_RESULT['Timing'] = timing

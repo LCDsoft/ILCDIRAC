@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 '''
 Production Job class. Used to define new productions. 
 
@@ -49,7 +46,6 @@ class ProductionJob(Job):
     self.ops = Operations()
     self.fc = FileCatalogClient()
     self.trc = TransformationClient()
-    self.systemConfig = self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt')
     self.defaultProdID = '12345'
     self.defaultProdJobID = '12345'
     self.jobFileGroupSize = 1
@@ -91,7 +87,7 @@ class ProductionJob(Job):
   def __setDefaults(self):
     """Sets some default parameters.
     """
-    self.setSystemConfig(self.systemConfig)
+    self.setPlatform(self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt'))
     self.setCPUTime('300000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
@@ -111,7 +107,7 @@ class ProductionJob(Job):
     if self.ops.getValue('%s/%s' % (self.csSection, name), ''):
       self.log.debug('Setting %s from CS defaults = %s' % (name, self.ops.getValue('%s/%s' % (self.csSection, name))))
       self._addParameter(self.workflow, name, parameterType, self.ops.getValue('%s/%s' % (self.csSection, name), 
-                                                                              'default'), description)
+                                                                               'default'), description)
     else:
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
@@ -761,28 +757,28 @@ class ProductionJob(Job):
       self.basename = self.evttype
     
     if not self.evttype[-1] == '/':
-      self.evttypepath = self.evttype + '/'  
+      evttypepath = self.evttype + '/'
     
     path = self.basepath  
     ###Need to resolve file names and paths
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
-      path = self.basepath + energypath + self.evttypepath + application.detectortype + "/REC"
-      self.finalMetaDict[self.basepath + energypath + self.evttypepath] = {"EvtType":self.evttype}
-      self.finalMetaDict[self.basepath + energypath + self.evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
-      self.finalMetaDict[self.basepath + energypath + self.evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
+      path = self.basepath + energypath + evttypepath + application.detectortype + "/REC"
+      self.finalMetaDict[self.basepath + energypath + evttypepath] = {"EvtType":self.evttype}
+      self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
+      self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
       self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
-      path = self.basepath + energypath + self.evttypepath + application.detectortype + "/DST"
-      self.finalMetaDict[self.basepath + energypath + self.evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
+      path = self.basepath + energypath + evttypepath + application.detectortype + "/DST"
+      self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
       fname = self.basename + "_dst.slcio"
       application.setOutputDstFile(fname, path)  
       self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
     elif hasattr(application, "OutputFile") and hasattr(application, 'datatype') and not application.OutputFile and not application.willBeCut:
-      path = self.basepath + energypath + self.evttypepath
-      self.finalMetaDict[path] = {"EvtType" : self.evttype}      
+      path = self.basepath + energypath + evttypepath
+      self.finalMetaDict[path] = {"EvtType" : self.evttype}
       if hasattr(application, "detectortype"):
         if application.detectortype:
           path += application.detectortype

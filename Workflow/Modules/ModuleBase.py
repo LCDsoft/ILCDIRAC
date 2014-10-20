@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 """
 Base class for ILC workflow modules.
 
@@ -59,7 +56,7 @@ class ModuleBase(object):
 
     self.ops = Operations()
 
-    self.systemConfig = ''
+    self.platform = ''
     self.applicationLog = ''
     self.applicationVersion = ''
     self.applicationName = ''
@@ -218,7 +215,7 @@ class ModuleBase(object):
 #    return S_OK()
 
   #############################################################################
-  def getCandidateFiles(self, outputList, outputLFNs, fileMask):
+  def getCandidateFiles(self, outputList, outputLFNs, dummy_fileMask):
     """ Returns list of candidate files to upload, check if some outputs are missing.
 
       @param outputList: has the following structure:
@@ -375,7 +372,7 @@ class ModuleBase(object):
       self.productionID = int(self.workflow_commons["PRODUCTION_ID"])
       self.isProdJob = True
 
-    self.systemConfig = self.workflow_commons.get('SystemConfig', self.systemConfig)
+    self.platform = self.workflow_commons.get('Platform', self.platform)
 
     self.ignoreapperrors = self.workflow_commons.get('IgnoreAppError', self.ignoreapperrors)
 
@@ -493,47 +490,47 @@ class ModuleBase(object):
     if "SteeringFileVers" in self.step_commons:
       steeringfilevers = self.step_commons["SteeringFileVers"]
       self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
-      res = getSteeringFileDir(self.systemConfig, steeringfilevers)
+      res = getSteeringFileDir(self.platform, steeringfilevers)
       if not res['OK']:
         self.log.error("Cannot find the steering file directory: %s" % steeringfilevers,
                        res['Message'])
         return S_ERROR("Failed to locate steering files %s" % steeringfilevers)
       path = res['Value']
       list_f = os.listdir(path)
-      for f in list_f:
-        if os.path.exists("./"+f):
+      for localFile in list_f:
+        if os.path.exists("./"+localFile):
           self.log.verbose("Found local file, don't overwrite")
           #Do not overwrite local files with the same name
           continue
         try:
-          if os.path.isdir(os.path.join(path, f)):
-            shutil.copytree(os.path.join(path, f), "./"+f)
+          if os.path.isdir(os.path.join(path, localFile)):
+            shutil.copytree(os.path.join(path, localFile), "./"+localFile)
           else:
-            shutil.copy2(os.path.join(path, f), "./"+f)
+            shutil.copy2(os.path.join(path, localFile), "./"+localFile)
         except EnvironmentError as why:
-          self.log.error('Could not copy %s here because :' % f, str(why) )
+          self.log.error('Could not copy %s here because :' % localFile, str(why) )
 
     if 'ILDConfigPackage' in self.workflow_commons:
       config_dir = self.workflow_commons['ILDConfigPackage']
       #seems it's not on CVMFS, try local install then:
-      res = getSoftwareFolder(self.systemConfig, "ILDConfig", config_dir.replace("ILDConfig", ""))
+      res = getSoftwareFolder(self.platform, "ILDConfig", config_dir.replace("ILDConfig", ""))
       if not res['OK']:
         self.log.error("Cannot find %s" % config_dir, res['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)
       path = res['Value']
       list_f = os.listdir(path)
-      for f in list_f:
-        if os.path.exists("./"+f):
+      for localFile in list_f:
+        if os.path.exists("./"+localFile):
           self.log.verbose("Found local file, don't overwrite")
           #Do not overwrite local files with the same name
           continue
         try:
-          if os.path.isdir(os.path.join(path, f)):
-            shutil.copytree(os.path.join(path, f), "./"+f)
+          if os.path.isdir(os.path.join(path, localFile)):
+            shutil.copytree(os.path.join(path, localFile), "./"+localFile)
           else:
-            shutil.copy2(os.path.join(path, f), "./"+f)
+            shutil.copy2(os.path.join(path, localFile), "./"+localFile)
         except EnvironmentError as why:
-          self.log.error('Could not copy %s here because %s!' % (f, str(why)))
+          self.log.error('Could not copy %s here because %s!' % (localFile, str(why)))
 
 
     if self.SteeringFile:

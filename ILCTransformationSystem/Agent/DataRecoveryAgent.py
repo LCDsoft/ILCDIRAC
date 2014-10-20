@@ -22,7 +22,7 @@ Data recovery agent: sets as unused files that are really undone.
     - Mark the recovered input file status as 'Unused' in the ProductionDB
 """
 
-__RCSID__   = "$Id: $"
+__RCSID__   = "$Id$"
 __VERSION__ = "$Revision: $"
 
 from DIRAC                                                     import gLogger, S_OK, S_ERROR
@@ -370,14 +370,8 @@ class DataRecoveryAgent( AgentModule ):
       failed = res['Value']['Failed'].keys()
       if len(success) and not len(failed):
         fileprocessed.append(filep)
-        
-    final_list_unused = files
-    for file_all in files:
-      if file_all in fileprocessed:
-        try:
-          final_list_unused.remove(file_all)
-        except:
-          self.log.warn("Item not in list anymore: %s", file_all)
+
+    final_list_unused = [ unusedFile for unusedFile in files if unusedFile not in fileprocessed ]
         
     result = {'filesprocessed' : fileprocessed, 'filesToMarkUnused' : final_list_unused}    
     return S_OK(result)

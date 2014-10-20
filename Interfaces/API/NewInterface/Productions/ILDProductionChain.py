@@ -4,7 +4,7 @@ Created on Mar 26, 2012
 @author: Stephane Poss
 '''
 
-__RCSID__ = None
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()

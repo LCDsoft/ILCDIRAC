@@ -1,15 +1,11 @@
-###########################################################################
-# $HeadURL: $
-###########################################################################
-
 """ ProcessDB for ProcessProduction System
 """
-__RCSID__ = " $Id: $ "
+__RCSID__ = "$Id$"
 
 from DIRAC                                                             import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.DB                                                import DB
 from DIRAC.Core.Utilities.List                                         import intListToString
-
+#pylint: skip-file
 class ProcessDB ( DB ):
   """ DB for the ProcessProductionSystem
   """

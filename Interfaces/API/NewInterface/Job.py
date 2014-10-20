@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 '''
 New Job class, for the new interface. This job class should not be used to create jobs. 
 Use L{UserJob} or L{ProductionJob}.
@@ -32,14 +29,24 @@ class Job(DiracJob):
     self.inputsandbox = []
     self.outputsandbox = []
     self.check = True
-    self.systemConfig = ''
     self.stepnumber = 0
     self.steps = []
     self.nbevts = 0
     self.energy = 0
     self.oktosubmit = False
-    self.setSystemConfig('x86_64-slc5-gcc43-opt')
-    
+    self.setPlatform('x86_64-slc5-gcc43-opt')
+
+
+  def setSystemConfig(self, platform):
+    """Deprecation warning for setSystemConfig"""
+    self.log.error("""WARNING: setSystemConfig has been deprecated! use
+
+                  setPlatform(platform)
+
+                  instead""")
+    self.setPlatform(platform)
+
+
   def setInputData(self, lfns):
     """ Overload method to cancel it
     """

@@ -5,7 +5,7 @@ ILD DBD specific production job utility
 @since: Jul 01, 2012
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Core.Workflow.Module import ModuleDefinition

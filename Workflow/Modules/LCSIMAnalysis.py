@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Run LCSIM
 
@@ -124,7 +121,7 @@ class LCSIMAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -137,13 +134,13 @@ class LCSIMAnalysis(ModuleBase):
       return S_OK('LCSIM should not proceed as previous step did not end properly')
     
     
-    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
+    res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error('LCSIM was not found in either the local area or shared area:', res['Message'])
       return res
     lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
 
     runonslcio = []
     if len(self.InputFile):
@@ -198,7 +195,7 @@ class LCSIMAnalysis(ModuleBase):
       if len(myfile):
         #file = os.path.basename(file)
         if not os.path.exists(myfile):
-          res =  getSteeringFileDirName(self.systemConfig, self.applicationName, self.applicationVersion)     
+          res =  getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
           if not res['OK']:
             self.log.error('Failed finding the steering file folder:', res["Message"])
             return res

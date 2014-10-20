@@ -6,6 +6,8 @@ Created on Apr 18, 2012
 
 @author: Stephane Poss
 '''
+#pylint: skip-file
+
 from DIRAC                                              import gLogger, gConfig, S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 from types import StringTypes

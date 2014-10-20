@@ -15,7 +15,7 @@ from DIRAC import S_OK
 
 import types
 
-__RCSID__ = None
+__RCSID__ = "$Id$"
 #pylint: disable=R0904
 #pylint: disable=W0142
 class UserJob(Job):

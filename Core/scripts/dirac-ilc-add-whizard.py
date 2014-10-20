@@ -7,6 +7,8 @@ Created on Sep 21, 2010
 @author: sposs
 '''
 
+__RCSID__ = "$Id$"
+
 from DIRAC import gConfig, gLogger, exit as dexit
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK,S_ERROR
@@ -45,7 +47,7 @@ class Params(object):
                                          '\nUsage:',
                                          '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
 
-def redirectLogOutput(fd, message):
+def redirectLogOutput(dummy_fd, message):
   """ Needed to catch the log output of the shellCall below
   """
   sys.stdout.flush()
@@ -109,27 +111,27 @@ def getDetailsFromPRC(prc, processin):
 
 def checkGFortranVersion():
   """Find the version of the gfortran compiler"""
-  p = subprocess.Popen(['gfortran', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.communicate()
+  proc = subprocess.Popen(['gfortran', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, dummy_err = proc.communicate()
   if out.find("4.4") > -1:
-    return S_OK
+    return S_OK()
   return S_ERROR("Wrong gFortran version")
 
 
 def checkSLCVersion():
   """Check the version of the operating system compiler"""
-  p = subprocess.Popen(['cat', '/etc/issue'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.communicate()
+  proc = subprocess.Popen(['cat', '/etc/issue'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, dummy_err = proc.communicate()
   if out.find("release 5") > -1:
-    return S_OK
+    return S_OK()
   return S_ERROR("Wrong Operating System")
 
 
 def getListOfLibraries(pathName):
   """Get List of Libraries for library or executable"""
   listOfLibraries = []
-  p = subprocess.Popen(['ldd', pathName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.communicate()
+  proc = subprocess.Popen(['ldd', pathName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, dummyerr = proc.communicate()
   for line in out.split("\n"):
     fields = line.split("=>")
     if len(fields) == 2:
@@ -146,12 +148,12 @@ def doTheWhizardInstallation():
 
   """
   res = checkSLCVersion()
-  if res != S_OK:
+  if not res['OK']:
     gLogger.error(res['Message'])
     dexit(1)
 
   res = checkGFortranVersion()
-  if res != S_OK:
+  if not res['OK']:
     gLogger.error(res['Message'])
     dexit(1)
 
@@ -312,7 +314,7 @@ def doTheWhizardInstallation():
 
   ##Get the list of md5 sums for all the files in the folder to be tarred
   os.chdir( localWhizardFolder )
-  subprocess.call(["find . -type f -exec md5sum {} > ../md5_checksum.md5 \; && mv ../md5_checksum.md5 ."], shell=True)
+  subprocess.call(["find . -type f -exec md5sum {} > ../md5_checksum.md5 \\; && mv ../md5_checksum.md5 ."], shell=True)
   os.chdir(startDir)
 
   ##Create the Tarball

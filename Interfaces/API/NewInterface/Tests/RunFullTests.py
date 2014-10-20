@@ -1,9 +1,4 @@
 #!/bin/env python
-##########################################################################################
-# $HeadURL$
-##########################################################################################
-
-
 '''
 Run many different applications as a test. Creates a temp directory and runs in there. 
 Stops at any error.
@@ -39,7 +34,7 @@ def getJob():
   myjob.setCPUTime(30000)
   myjob.dontPromptMe()
   myjob.setLogLevel("VERBOSE")
-  myjob.setSystemConfig("x86_64-slc5-gcc43-opt")
+  myjob.setPlatform("x86_64-slc5-gcc43-opt")
   myjob.setOutputSandbox(["*.log","*.xml"])
   return myjob
 

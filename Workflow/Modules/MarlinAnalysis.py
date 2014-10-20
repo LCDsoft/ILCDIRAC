@@ -1,7 +1,3 @@
-##############################################################
-# $HeadURL$
-##############################################################
-
 '''
 Run Marlin
 
@@ -140,7 +136,7 @@ class MarlinAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -152,7 +148,7 @@ class MarlinAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    res = getEnvironmentScript(self.systemConfig, "marlin", self.applicationVersion, self.getEnvScript)
+    res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Failed to get the env script")
       return res
@@ -168,7 +164,7 @@ class MarlinAnalysis(ModuleBase):
     finalXML = "marlinxml_" + self.STEP_NUMBER + ".xml"
 
     steeringfiledirname = ''
-    res = getSteeringFileDirName(self.systemConfig, "marlin", self.applicationVersion)     
+    res = getSteeringFileDirName(self.platform, "marlin", self.applicationVersion)
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
@@ -265,8 +261,8 @@ class MarlinAnalysis(ModuleBase):
     userlib = ""
     
     if os.path.exists("./lib/marlin_dll"):
-      for d in glob.glob("./lib/marlin_dll/*.so"):
-        userlib = userlib + d + ":" 
+      for library in glob.glob("./lib/marlin_dll/*.so"):
+        userlib = userlib + library + ":"
         
     userlib = userlib.rstrip(":")
     
@@ -284,7 +280,7 @@ class MarlinAnalysis(ModuleBase):
         self.log.verbose("Duplicated lib found, removing %s" % path1)
         try:
           temp.remove(path1)
-        except:
+        except EnvironmentError:
           pass
       
     marlindll = "%s:%s" % (":".join(temp), userlib) #Here we concatenate the default MarlinDLL with the user's stuff
@@ -357,7 +353,7 @@ fi
       script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
 
-    if (os.path.exists(inputxml)):
+    if os.path.exists(inputxml):
       #check
       script.write('Marlin -c %s %s\n' % (inputxml, self.extraCLIarguments))
       #real run
@@ -413,9 +409,9 @@ fi
     new_ld_lib_path = GetNewLDLibs(sysconfig, "marlin", appversion)
 
     marlindll = ""
-    if(os.path.exists("%s/MARLIN_DLL" % myMarlinDir)):
-      for d in os.listdir("%s/MARLIN_DLL" % myMarlinDir):
-        marlindll = marlindll + "%s/MARLIN_DLL/%s" % (myMarlinDir, d) + ":" 
+    if os.path.exists("%s/MARLIN_DLL" % myMarlinDir):
+      for library in os.listdir("%s/MARLIN_DLL" % myMarlinDir):
+        marlindll = marlindll + "%s/MARLIN_DLL/%s" % (myMarlinDir, library) + ":"
       marlindll = "%s" % (marlindll)
     else:
       self.log.error('MARLIN_DLL folder not found, cannot proceed')

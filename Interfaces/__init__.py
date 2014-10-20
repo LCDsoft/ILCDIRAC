@@ -6,4 +6,4 @@ ILC specific API plugins for DIRAC.
 @since: Feb 08, 2010 
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"

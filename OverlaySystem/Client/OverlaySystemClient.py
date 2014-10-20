@@ -4,7 +4,7 @@ Created on Jul 25, 2011
 @author: Stephane Poss
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base.Client                               import Client
 

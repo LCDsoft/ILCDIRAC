@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 """
 Module to concatenate LCIO files
 @author: Chiong Bon Lam
@@ -50,7 +47,7 @@ class LCIOConcatenate(ModuleBase):
             self.OutputFile = os.path.basename(obj)
       else:
         self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                              int(self.workflow_commons["JOB_ID"]))
+                                          int(self.workflow_commons["JOB_ID"]))
 
     return S_OK('Parameters resolved')
 
@@ -61,7 +58,7 @@ class LCIOConcatenate(ModuleBase):
     self.result = self.resolveInputVariables()
     # Checks
 
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
@@ -79,11 +76,11 @@ class LCIOConcatenate(ModuleBase):
     # Setting up script
 
     LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
-    if os.environ.has_key('LD_LIBRARY_PATH'):
+    if 'LD_LIBRARY_PATH' in os.environ:
       LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
     PATH = "$LCIO/bin"
-    if os.environ.has_key('PATH'):
+    if 'PATH' in os.environ:
       PATH += ":" + os.environ['PATH']
 
     scriptContent = """
@@ -131,12 +128,11 @@ exit $?
     self.setApplicationStatus( 'LCIOConcatenate %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
-    self.result = shellCall(
-                            0,
-                            command,
-                            callbackFunction = self.redirectLogOutput,
-                            bufferLimit = 20971520
-                            )
+    self.result = shellCall( 0,
+                             command,
+                             callbackFunction = self.redirectLogOutput,
+                             bufferLimit = 20971520
+                           )
 
         # Check results
 

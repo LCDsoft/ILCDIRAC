@@ -15,7 +15,7 @@ __date__ = '2009-07-28'
 __author__ = 'Philippe Lagadec'
 
 __RCSID__ = "$Id$"
-
+#pylint: skip-file
 #--- LICENSE ------------------------------------------------------------------
 
 # Copyright Philippe Lagadec - see http://www.decalage.info/contact for contact info

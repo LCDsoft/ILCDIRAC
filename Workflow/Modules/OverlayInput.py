@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Get the overlay files
 
@@ -73,8 +70,8 @@ class OverlayInput (ModuleBase):
     self.nbsigeventsperfile = 0
     self.nbinputsigfile = 1
     self.NbSigEvtsPerJob = 0
-    self.rm = ReplicaManager()
-    self.fc = FileCatalogClient()
+    self.repMan = ReplicaManager()
+    self.fcc = FileCatalogClient()
     self.site = DIRAC.siteName()
 
     self.machine = 'clic_cdr'
@@ -210,7 +207,7 @@ class OverlayInput (ModuleBase):
 #    elif   self.site == "LCG.IN2P3-CC.fr": ##but not this
 #      return self.__getFilesFromLyon(meta) ## nor this
     #else:
-    return self.fc.findFilesByMetadata(meta)
+    return self.fcc.findFilesByMetadata(meta)
 
   def __getFilesFromLyon(self, meta):
     """ List the files present at Lyon, not used.
@@ -390,7 +387,7 @@ class OverlayInput (ModuleBase):
             f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
             f.write('Dont look at cpu')
             f.close()
-          res = self.rm.getFile(self.lfns[fileindex])
+          res = self.repMan.getFile(self.lfns[fileindex])
           isDefault = True
 
         # Tue Jun 28 14:21:03 CEST 2011
@@ -398,7 +395,7 @@ class OverlayInput (ModuleBase):
 
         if (not res['OK']) and (not isDefault) and \
           (self.site in ['LCG.UKI-LT2-IC-HEP.uk', 'LCG.IN2P3-CC.fr', 'LCG.CERN.ch']):
-          res = self.rm.getFile(self.lfns[fileindex])
+          res = self.repMan.getFile(self.lfns[fileindex])
 
         if not res['OK']:
           self.log.warn('Could not obtain %s' % self.lfns[fileindex])

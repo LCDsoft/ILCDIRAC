@@ -5,7 +5,7 @@
     of destination storage elements for uploading an output file.
 """
 
-__RCSID__ = "$Id: ResolveSE.py 21477 2010-02-16 14:06:06Z paterson $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.SiteSEMapping                   import getSEsForSite
 from DIRAC.Core.Utilities.List                            import uniqueElements
@@ -85,8 +85,8 @@ def getDestinationSEList(outputSE, site, outputmode='Any'):
   for se in groupSEs:
     if se in localSEs:
       newSEList.append(se)
-  SEs = uniqueElements(newSEList + groupSEs)
-  gLogger.verbose('Found unique SEs: %s' % (SEs))
-  return S_OK(SEs)
+  uniqueSEs = uniqueElements(newSEList + groupSEs)
+  gLogger.verbose('Found unique SEs: %s' % (uniqueSEs))
+  return S_OK(uniqueSEs)
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

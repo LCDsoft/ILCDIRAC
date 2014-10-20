@@ -8,7 +8,7 @@ Created on Feb 10, 2012
 @since: Feb 10, 2012
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, CheckCVMFS

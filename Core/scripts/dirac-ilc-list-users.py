@@ -2,7 +2,7 @@
 """ List the VO members
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR, gLogger, exit as dexit
 from DIRAC.Core.Base import Script

@@ -1,5 +1,3 @@
-# $HeadURL$
-# $Id$
 ########################################################################
 # File :   InputDataResolution.py
 # Author : S Poss, based on S Paterson

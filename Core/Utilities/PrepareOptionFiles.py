@@ -1,4 +1,3 @@
-# $HeadURL$
 '''
 Provides a set of methods to prepare the option files needed by the ILC applications.
 

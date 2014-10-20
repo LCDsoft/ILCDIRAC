@@ -5,7 +5,7 @@ Add specified software in CS. Allows not using the web interface, therefore redu
 Created on May 5, 2010
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, gConfig, S_OK, exit as dexit

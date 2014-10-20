@@ -3,7 +3,8 @@ Created on Feb 17, 2012
 
 @author: Stephane Poss
 '''
-__RCSID__ = "$ Id: $"
+#pylint: skip-file
+__RCSID__ = "$Id$"
 
 from DIRAC                                                                import S_OK, gMonitor
 from DIRAC.Core.Base.AgentModule                                          import AgentModule
@@ -66,7 +67,7 @@ class SoftwareManagementAgent( AgentModule ):
       self.log.info('Will install %s %s at %s' % (softdict['AppName'], softdict['AppVersion'], softdict['Sites']))
       for site in softdict['Sites']:
         j = UserJob()
-        j.setSystemConfig(softdict['Platform'])
+        j.setPlatform(softdict['Platform'])
         j.dontPromptMe()
         j.setDestination(site)
         j.setJobGroup("Installation")

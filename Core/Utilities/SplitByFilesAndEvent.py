@@ -1,5 +1,3 @@
-# $HeadURL$
-# $Id$
 '''
 Try some fancy splitting, DO NOT USE
 
@@ -10,6 +8,8 @@ Created on Feb 10, 2010
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
 from DIRAC import S_OK, S_ERROR
@@ -34,7 +34,7 @@ def SplitByFilesAndEvents(listoffiles, evtsperjob):
   jdict = {}
   startfromevt = 0
   cur_events = 0
-  for event in range(total_evts):
+  for dummy_eventNumber in range(total_evts):
     cur_events +=1
     if not len(mylist):
       break
@@ -65,13 +65,12 @@ if __name__=="__main__":
   from DIRAC.Core.Base import Script
   Script.parseCommandLine()
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-  fc = FileCatalogClient()
 
-  res = fc.findFilesByMetadata({"ProdID":1978})
-  if not res['OK']:
-    print res['Message']
+  RES = FileCatalogClient().findFilesByMetadata({"ProdID":1978})
+  if not RES['OK']:
+    print RES['Message']
     exit(1)
-  lfns = res['Value']
-  lfns.sort()
-  res = SplitByFilesAndEvents(lfns,70)
-  print res['Value'][1]
+  LFNS = RES['Value']
+  LFNS.sort()
+  RES = SplitByFilesAndEvents(LFNS,70)
+  print RES['Value'][1]

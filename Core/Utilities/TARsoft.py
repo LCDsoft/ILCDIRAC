@@ -7,7 +7,7 @@ Also installs all dependencies for the applications
 
 @author: Stephane Poss
 '''
-__RCSID__ = None
+__RCSID__ = "$Id$"
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
@@ -167,12 +167,12 @@ def getTarBallLocation(app, config, dummy_area):
   app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (config, appName, appVersion), '')
   overwrite = ops.getValue('/AvailableTarBalls/%s/%s/%s/Overwrite' % (config, appName, appVersion), False)
   md5sum = ops.getValue('/AvailableTarBalls/%s/%s/%s/Md5Sum' % (config, appName, appVersion), '')
-
+  gLogger.info("Looking for application %s%s for config %s:" % (appName, appVersion, config) )
   if not app_tar:
     gLogger.error('Could not find tar ball for %s %s'%(appName, appVersion))
     return S_ERROR('Could not find tar ball for %s %s'%(appName, appVersion))
   
-  tarballURL = ops.getValue('/AvailableTarBalls/%s/%s/tarballURL' % (config, appName), '')
+  tarballURL = ops.getValue('/AvailableTarBalls/%s/%s/TarBallURL' % (config, appName), '')
   if not tarballURL:
     gLogger.error('Could not find tarballURL in CS for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find tarballURL in CS')
@@ -342,7 +342,7 @@ def check(app, area, res_from_install):
       fmd5 = ''
       try:
         fmd5 = md5.md5(file(fin).read()).hexdigest()
-      except:
+      except IOError:
         gLogger.error("Failed to compute md5 sum")
         return S_ERROR("Failed to compute md5 sum")
       if md5sum != fmd5:
@@ -420,7 +420,7 @@ def checkJava():
     res = subprocess.check_call(args)
     if res:
       return S_ERROR("Something is wrong with Java")
-  except:
+  except subprocess.CalledProcessError:
     gLogger.error("Java was not found on this machine, cannot proceed")
     return S_ERROR("Java was not found on this machine, cannot proceed")
   return S_OK()
@@ -527,4 +527,4 @@ def installPackage(app, config, area, curdir):
 
   os.chdir(curdir)
   gLogger.notice("Successfully installed %s %s in %s" % (appName,appVersion, area))
-  return S_OK
+  return S_OK()

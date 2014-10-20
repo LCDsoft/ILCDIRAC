@@ -3,7 +3,7 @@
     defined in the CS for the VO.
 """
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.DISET.RPCClient                                     import RPCClient
 from DIRAC.DataManagementSystem.Client.ReplicaManager               import ReplicaManager

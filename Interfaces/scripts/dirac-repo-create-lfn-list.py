@@ -4,7 +4,7 @@ Created on Apr 22, 2010
 
 @author: Stephane Poss
 '''
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import exit as dexit

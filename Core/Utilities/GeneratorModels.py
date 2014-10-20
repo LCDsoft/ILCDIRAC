@@ -1,12 +1,8 @@
-###########################################################################
-# $HeadURL: $
-###########################################################################
-
 """ Contains the list of models and their properties
 @author: S. Poss
 @since: Jul 07, 2011
 """
-__RCSID__ = " $Id: $ "
+__RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations

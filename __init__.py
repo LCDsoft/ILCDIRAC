@@ -1,16 +1,15 @@
-# $HeadURL$
-# $Id$
 """
 ILCDIRAC package, implements ILC/CLIC production and application specific stuff
 """
 from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
+__RCSID__ = "$Id$"
 # Define Version
 
 majorVersion = 22
 minorVersion = 0
-patchLevel   = 0
+patchLevel   = 2
 preVersion   = 0
     
 version      = "v%sr%s" % ( majorVersion, minorVersion )

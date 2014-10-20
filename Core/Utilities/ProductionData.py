@@ -6,7 +6,7 @@ according to LHCb conventions.
 @since: Jun 16, 2010
 """
 
-__RCSID__ = ""
+__RCSID__ = "$Id$"
 
 import string, re, os, types, datetime
 
@@ -280,6 +280,6 @@ def checkForMandatoryKeys(paramDict, keys):
   for k in keys:
     if not k in paramDict:
       return S_ERROR('%s not defined' % k)
-  return S_OK
+  return S_OK()
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

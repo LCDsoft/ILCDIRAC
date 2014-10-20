@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 '''
 Whizard analysis module.
 
@@ -49,7 +46,7 @@ class WhizardAnalysis(ModuleBase):
     self.RandomSeed = 0
     self.energy = 3000.
     self.getProcessInFile = False
-    self.rm = ReplicaManager()
+    self.repMan = ReplicaManager()
     self.processlist = None
     self.jobindex = None
     self.parameters = {}
@@ -82,7 +79,7 @@ class WhizardAnalysis(ModuleBase):
       return S_ERROR("No process list found")
     processlistloc = res
     if not os.path.exists(os.path.basename(processlistloc)):
-      res = self.rm.getFile(processlistloc)
+      res = self.repMan.getFile(processlistloc)
       if not res['OK']:
         self.log.error('Could not get processlist: %s' % res['Message'])
         return res
@@ -209,7 +206,7 @@ class WhizardAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -224,7 +221,7 @@ class WhizardAnalysis(ModuleBase):
     #if self.debug:
     #  self.excludeAllButEventString = False
 
-    res = getSoftwareFolder(self.systemConfig, self.applicationName, self.applicationVersion)
+    res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
       self.log.error("Failed getting software folder", res['Message'])
       self.setApplicationStatus('Failed finding software')
@@ -235,15 +232,15 @@ class WhizardAnalysis(ModuleBase):
     removeLibc(mySoftDir + "/lib")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.systemConfig, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     #Don't forget to prepend the application's libs
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
-    deps = resolveDeps(self.systemConfig, self.applicationName, self.applicationVersion)
+    deps = resolveDeps(self.platform, self.applicationName, self.applicationVersion)
     path_to_beam_spectra = ""
     path_to_gridfiles = ""
     for dep in deps:
-      res = getSoftwareFolder(self.systemConfig, dep[ "app" ], dep['version'])
+      res = getSoftwareFolder(self.platform, dep[ "app" ], dep['version'])
       if not res['OK']:
         self.log.error("Failed getting software folder", res['Message'])
         self.setApplicationStatus('Failed finding software')

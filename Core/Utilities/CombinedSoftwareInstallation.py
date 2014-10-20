@@ -1,5 +1,3 @@
-# $HeadURL$
-
 """
 Installs properly ILD soft and SiD soft, and all dependencies
 

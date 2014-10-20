@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Run SLIC
 
@@ -31,9 +28,8 @@ def unzip_file_into_dir(myfile, mydir):
     if name.endswith('/'):
       os.mkdir(os.path.join(mydir, name))
     else:
-      outfile = open(os.path.join(mydir, name), 'wb')
-      outfile.write(zfobj.read(name))
-      outfile.close()
+      with open(os.path.join(mydir, name), 'wb') as outfile:
+        outfile.write(zfobj.read(name))
       
 class SLICAnalysis(ModuleBase):
   """
@@ -114,7 +110,7 @@ class SLICAnalysis(ModuleBase):
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -126,7 +122,7 @@ class SLICAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('SLIC should not proceed as previous step did not end properly')
     
-    res = getEnvironmentScript(self.systemConfig, self.applicationName, self.applicationVersion, self.getEnvScript)
+    res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Could not obtain the environment script: ", res["Message"])
       return res
@@ -142,8 +138,8 @@ class SLICAnalysis(ModuleBase):
       for detector_url in detector_urls:
         try:
           urllib.urlretrieve("%s%s" % (detector_url, self.detectorModel + ".zip"), 
-                                                 self.detectorModel + ".zip")
-        except Exception:
+                             self.detectorModel + ".zip")
+        except IOError:
           self.log.error("Download of detector model failed")
           continue
 
@@ -152,7 +148,7 @@ class SLICAnalysis(ModuleBase):
       return S_ERROR('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
     try:
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
-    except Exception:
+    except (RuntimeError, OSError): #RuntimeError is for zipfile
       os.unlink(self.detectorModel + ".zip")
       self.log.error('Failed to unzip detector model')
       return S_ERROR('Failed to unzip detector model')
@@ -170,7 +166,7 @@ class SLICAnalysis(ModuleBase):
     if len(self.SteeringFile) > 0:
       self.SteeringFile = os.path.basename(self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        res = getSteeringFileDirName(self.systemConfig, self.applicationName, self.applicationVersion)     
+        res = getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
         if not res['OK']:
           self.log.error("Could not find where the steering files are")
         steeringfiledirname = res['Value']

@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL: svn+ssh://svn.cern.ch/reps/dirac/ILCDIRAC/trunk/ILCDIRAC/Workflow/Modules/RegisterOutputData.py $
-#####################################################
 '''
 ILD specific registration of file meta data
 
@@ -8,7 +5,7 @@ Created on Mar 21, 2013
 
 @author: sposs
 '''
-__RCSID__ = "$Id: ILDRegisterOutputData.py 44185 2011-10-24 08:17:07Z sposs $"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.Resources.Catalog.FileCatalogClient             import FileCatalogClient

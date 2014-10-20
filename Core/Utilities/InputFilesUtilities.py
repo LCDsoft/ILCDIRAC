@@ -5,7 +5,7 @@ For any input file, try to determine from the FC the number of events / luminosi
 @since: Nov 2, 2010
 '''
 
-__RCSID__ = "$$"
+__RCSID__ = "$Id$"
 
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 import os

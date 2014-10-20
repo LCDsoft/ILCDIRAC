@@ -5,9 +5,12 @@ Created on Feb 10, 2011
 
 @author: sposs
 '''
+
+__RCSID__ = "$Id$"
+
 from DIRAC import S_OK, S_ERROR
 from subprocess import call
-from DIRAC.Core.Security.Misc import getProxyInfo
+from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
 def getNewProxy(): 
   """ Get a new production proxy

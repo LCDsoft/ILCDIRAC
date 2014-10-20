@@ -1,6 +1,3 @@
-#####################################################################
-# $HeadURL: $
-#####################################################################
 '''
 Production Summary agent: writes out every day the production status 
 
@@ -8,7 +5,8 @@ Created on Apr 8, 2011
 
 @author: Stephane Poss
 '''
-__RCSID__ = "$ Id: $"
+#pylint: skip-file
+__RCSID__ = "$Id$"
 
 from DIRAC                                                                import S_OK, gMonitor
 from DIRAC.Core.Base.AgentModule                                          import AgentModule

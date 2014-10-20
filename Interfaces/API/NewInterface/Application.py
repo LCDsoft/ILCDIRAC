@@ -1,6 +1,3 @@
-########################################################################
-# $HeadURL$
-########################################################################
 '''
 Base application class. All applications inherit this class.
 
@@ -513,7 +510,7 @@ class Application(object):
     """
     self._job = job
     
-    self._systemconfig = job.systemConfig
+    self._systemconfig = job.workflow.findParameter("Platform").getValue()
     
     self._jobapps      = job.applicationlist
     

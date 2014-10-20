@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL: svn+ssh://svn.cern.ch/reps/dirac/ILCDIRAC/trunk/ILCDIRAC/Workflow/Modules/LCIOConcatenate.py $
-#####################################################
 """
 Module to concatenate LCIO files
 
@@ -9,7 +6,7 @@ Module to concatenate LCIO files
 
 """
 
-__RCSID__ = "$Id: LCIOConcatenate.py 48402 2012-03-09 09:33:09Z sposs $"
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
@@ -72,7 +69,7 @@ class LCIOSplit(ModuleBase):
     """
     # Checks
     self.result = self.resolveInputVariables()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
@@ -99,11 +96,11 @@ class LCIOSplit(ModuleBase):
     # Setting up script
 
     LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
-    if os.environ.has_key('LD_LIBRARY_PATH'):
+    if 'LD_LIBRARY_PATH' in os.environ:
       LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
     PATH = "$LCIO/bin"
-    if os.environ.has_key('PATH'):
+    if 'PATH' in os.environ:
       PATH += ":" + os.environ['PATH']
 
     scriptContent = """

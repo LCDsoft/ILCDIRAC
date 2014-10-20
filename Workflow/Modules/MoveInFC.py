@@ -6,7 +6,7 @@
 __RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
-from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename, resolveIFpaths
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import resolveIFpaths
 #from ILCDIRAC.Core.Utilities.InputFilesUtilities           import getNumberOfevents
 
 from DIRAC import gLogger, S_OK, S_ERROR
@@ -25,7 +25,7 @@ class MoveInFC(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MoveInFC" )
     self.applicationName = 'MoveInFC'
-    self.rm = ReplicaManager()
+    self.repMan = ReplicaManager()
     self.listoutput = {}
     self.outputpath = ''
     
@@ -79,7 +79,7 @@ class MoveInFC(ModuleBase):
       if not locname == inputfile:
         try:
           shutil.copy(inputfile, locname)
-        except:
+        except shutil.Error:
           self.log.error("Failed to copy file locally, will have to stop")
           return S_ERROR("Failed copy to local directory")
       localpaths.append(locname)
@@ -96,9 +96,9 @@ class MoveInFC(ModuleBase):
     #Update the listoutput
     if self.listoutput:
       outputlist = []
-      for f in localpaths:
+      for localFile in localpaths:
         item = {}
-        item['outputFile'] = f
+        item['outputFile'] = localFile
         item['outputPath'] = self.listoutput['outputPath']
         item['outputDataSE'] = self.listoutput['outputDataSE']
         outputlist.append(item)
@@ -121,7 +121,7 @@ class MoveInFC(ModuleBase):
       
     #Now remove them
     if self.enable:
-      res = self.rm.removeFile(lfns, force=True)
+      res = self.repMan.removeFile(lfns, force=True)
       if not res['OK']:
         self.log.error("Failed to remove the files")
         self.setApplicationStatus("Failed to remove the file")

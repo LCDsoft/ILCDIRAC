@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Module to run root executables
 
@@ -48,7 +45,7 @@ class RootExecutableAnalysis(ModuleBase):
       
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -93,8 +90,8 @@ class RootExecutableAnalysis(ModuleBase):
     else:
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
       
-    if(os.path.exists("./lib")):
-      if os.environ.has_key('LD_LIBRARY_PATH'):
+    if os.path.exists("./lib"):
+      if 'LD_LIBRARY_PATH' in os.environ:
         script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
       else:
         script.write('declare -x LD_LIBRARY_PATH=./lib\n')

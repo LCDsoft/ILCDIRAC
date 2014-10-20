@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 """
 Module to check the file contents
 @author: Ching Bon Lam
@@ -44,7 +41,7 @@ class CheckCollections(ModuleBase):
 
     # Checks
 
-    if not self.systemConfig:
+    if not self.platform:
       result = S_ERROR( 'No ILC platform selected' )
 
     if not os.environ.has_key("LCIO"):
@@ -62,11 +59,11 @@ class CheckCollections(ModuleBase):
     # Setting up script
 
     LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
-    if os.environ.has_key('LD_LIBRARY_PATH'):
+    if 'LD_LIBRARY_PATH' in os.environ:
       LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
     PATH = "$LCIO/bin"
-    if os.environ.has_key('PATH'):
+    if 'PATH' in os.environ:
       PATH += ":" + os.environ['PATH']
 
     scriptContent = Template('''
@@ -113,12 +110,11 @@ exit $$appstatus
 
 ''')
 
-    scriptContent = scriptContent.substitute(
-            LD_LIBRARY_PATH_ = LD_LIBRARY_PATH,
-            PATH_            = PATH,
-            files            = self.InputFile,
-            collections      = self.collections
-    )
+    scriptContent = scriptContent.substitute( LD_LIBRARY_PATH_ = LD_LIBRARY_PATH,
+                                              PATH_            = PATH,
+                                              files            = self.InputFile,
+                                              collections      = self.collections
+                                            )
 
     # Write script to file
 
@@ -146,12 +142,11 @@ exit $$appstatus
     self.setApplicationStatus( 'CheckCollections %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
-    self.result = shellCall(
-                            0,
-                            command,
-                            callbackFunction = self.redirectLogOutput,
-                            bufferLimit = 20971520
-    )
+    self.result = shellCall( 0,
+                             command,
+                             callbackFunction = self.redirectLogOutput,
+                             bufferLimit = 20971520
+                           )
 
     # Check results
 

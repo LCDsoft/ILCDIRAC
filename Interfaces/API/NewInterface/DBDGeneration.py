@@ -28,34 +28,34 @@ class DBDGeneration(ProductionJob):
       return S_ERROR("You need to have created the production before calling this")
     
     allowedkeys = ['process_id',
-#'process_names',
-'process_type',
-#'CM_energy_in_GeV',
-'program_name_version',
-'pythia_version',
-'stdhep_version',
-#'OS_version_build=2.6.18-238.5.1.el5;x86_64;GNU/Linux',
-#'OS_version_run=2.6.18-194.32.1.el5;x86_64;GNU/Linux'
-#'libc_version=glibc-2.5-49.el5_5.7.x86_64',
-#'fortran_version',
-'hadronisation_tune',
-'tau_decays',
-#'beam_particle1',
-#'beam_particle2',
-'polarization1',
-'polarization2',
-'luminosity',
-'cross_section_in_fb',
-'cross_section_error_in_fb',
-#'lumi_file',
-'file_type',
-#'total_number_of_events',
-#'number_of_files',
-#'file_names',
-#'number_of_events_in_files',
-'fileurl',
-#'logurl',
-'comment']
+                   #'process_names',
+                   'process_type',
+                   #'CM_energy_in_GeV',
+                   'program_name_version',
+                   'pythia_version',
+                   'stdhep_version',
+                   #'OS_version_build=2.6.18-238.5.1.el5;x86_64;GNU/Linux',
+                   #'OS_version_run=2.6.18-194.32.1.el5;x86_64;GNU/Linux'
+                   #'libc_version=glibc-2.5-49.el5_5.7.x86_64',
+                   #'fortran_version',
+                   'hadronisation_tune',
+                   'tau_decays',
+                   #'beam_particle1',
+                   #'beam_particle2',
+                   'polarization1',
+                   'polarization2',
+                   'luminosity',
+                   'cross_section_in_fb',
+                   'cross_section_error_in_fb',
+                   #'lumi_file',
+                   'file_type',
+                   #'total_number_of_events',
+                   #'number_of_files',
+                   #'file_names',
+                   #'number_of_events_in_files',
+                   'fileurl',
+                   #'logurl',
+                   'comment']
     
     inputdict = {}
     for key in catalogdict.keys():
@@ -113,29 +113,29 @@ class DBDGeneration(ProductionJob):
     @todo: Do the registration only once, instead of once for each job
 
     """
-    self.importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
+    importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
     dataUpload = ModuleDefinition('UploadOutputData')
     dataUpload.setDescription('Uploads the output data')
     self._addParameter(dataUpload,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadOutputData')
+    body = string.replace(importLine,'<MODULE>','UploadOutputData')
     dataUpload.setBody(body)
 
     failoverRequest = ModuleDefinition('FailoverRequest')
     failoverRequest.setDescription('Sends any failover requests')
     self._addParameter(failoverRequest,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','FailoverRequest')
+    body = string.replace(importLine,'<MODULE>','FailoverRequest')
     failoverRequest.setBody(body)
 
     registerdata = ModuleDefinition('DBDGenRegisterOutputData')
     registerdata.setDescription('Module to add in the metadata catalog the relevant info about the files')
     self._addParameter(registerdata,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','DBDGenRegisterOutputData')
+    body = string.replace(importLine,'<MODULE>','DBDGenRegisterOutputData')
     registerdata.setBody(body)
 
     logUpload = ModuleDefinition('UploadLogFile')
     logUpload.setDescription('Uploads the output log files')
     self._addParameter(logUpload,'enable','bool',False,'EnableFlag')
-    body = string.replace(self.importLine,'<MODULE>','UploadLogFile')
+    body = string.replace(importLine,'<MODULE>','UploadLogFile')
     logUpload.setBody(body)
 
     finalization = StepDefinition('Job_Finalization')

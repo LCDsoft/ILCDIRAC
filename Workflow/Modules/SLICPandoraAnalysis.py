@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Run SLICPandora
 
@@ -87,7 +84,7 @@ class SLICPandoraAnalysis (ModuleBase):
     """ Called from ModuleBase
     """
     self.result = S_OK()
-    if not self.systemConfig:
+    if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
@@ -100,7 +97,7 @@ class SLICPandoraAnalysis (ModuleBase):
       return S_OK('SLIC Pandora should not proceed as previous step did not end properly')
     
     ###Get the env script
-    res = getEnvironmentScript(self.systemConfig, self.applicationName, self.applicationVersion, self.getEnvScript)
+    res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Failed to get the environment script:", res["Message"])
       return res
@@ -118,7 +115,7 @@ class SLICPandoraAnalysis (ModuleBase):
       if os.path.exists(detmodel + ".zip"):
         try:
           unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
-        except:
+        except (RuntimeError, OSError):
           os.unlink(detmodel + ".zip") 
       if not os.path.exists(detmodel + ".zip"):  
         #retrieve detector model from web
@@ -130,13 +127,13 @@ class SLICPandoraAnalysis (ModuleBase):
         for detector_url in detector_urls:
           try:
             urllib.urlretrieve("%s%s"%(detector_url, detmodel + ".zip"), detmodel + ".zip")
-          except:
+          except IOError:
             self.log.error("Download of detector model failed")
             continue
           try:
             unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
             break
-          except:
+          except (RuntimeError, OSError):
             os.unlink(detmodel + ".zip")
             continue
       #if os.path.exists(detmodel): #and os.path.isdir(detmodel):
@@ -272,7 +269,7 @@ fi
     prefixpath = ""
     if os.path.exists("PandoraFrontend"):
       prefixpath = "."
-    elif (os.path.exists("%s/Executable/PandoraFrontend" % myslicPandoraDir)):
+    elif os.path.exists("%s/Executable/PandoraFrontend" % myslicPandoraDir):
       prefixpath ="%s/Executable" % myslicPandoraDir
     else:
       return S_ERROR("Missing PandoraFrontend binary")

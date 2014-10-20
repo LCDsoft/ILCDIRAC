@@ -1,17 +1,13 @@
-###########################################################################
-# $HeadURL: $
-###########################################################################
-
 """ Services for ProcessProduction System
 """
-__RCSID__ = " $Id: $ "
+__RCSID__ = "$Id$"
 
 from DIRAC                                              import S_OK, S_ERROR
 from DIRAC.Core.DISET.RequestHandler                    import RequestHandler
 from types import StringTypes, ListType, TupleType, LongType, IntType, DictType, BooleanType
 
 from ILCDIRAC.ProcessProductionSystem.DB.ProcessDB import ProcessDB
-
+#pylint: skip-file
 # This is a global instance of the ProcessDB class
 processDB = False
 
