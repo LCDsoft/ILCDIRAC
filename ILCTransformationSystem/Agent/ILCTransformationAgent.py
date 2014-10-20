@@ -19,7 +19,7 @@ class ILCTransformationAgent( TransformationAgent ):
     """
     TransformationAgent.__init__( self, *args, **kwargs )
   
-  def _getDataReplicasRM( self, transID, lfns, clients, active = True ):
+  def _getDataReplicasRM( self, transID, lfns, clients, active = True, ignoreMissing = False ):
     """ Get the replicas for the LFNs and check their statuses, using the replica manager
     """
     method = '_getDataReplicasRM'
