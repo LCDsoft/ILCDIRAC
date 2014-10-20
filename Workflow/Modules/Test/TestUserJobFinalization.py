@@ -1,7 +1,7 @@
 #!/usr/env python
 
 """Test user jobfinalization"""
-
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 from DIRAC import gLogger

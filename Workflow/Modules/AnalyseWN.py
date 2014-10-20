@@ -3,6 +3,7 @@
 
 @author: sposs
 '''
+__RCSID__ = "$Id$"
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import SharedArea
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.Core.Utilities.Os import getDiskSpace, getDirectorySize
@@ -38,7 +39,7 @@ class AnalyseWN(ModuleBase):
     info = []
     try:
       info.append("Host is %s" % socket.gethostname())
-    except:
+    except EnvironmentError:
       info.append("Could not determine host")
       
     size = getDiskSpace()
@@ -47,24 +48,22 @@ class AnalyseWN(ModuleBase):
       
     fileName = '/proc/cpuinfo'
     if os.path.exists( fileName ):
-      f = open( fileName, 'r' )
-      cpu = f.readlines()
-      f.close()
+      with open( fileName, 'r' ) as cpuInfoFile:
+        cpu = cpuInfoFile.readlines()
       nCPU = 0
       for line in cpu:
         if line.find( 'cpu MHz' ) == 0:
           nCPU += 1
           freq = line.split()[3]
         elif line.find( 'model name' ) == 0:
-          CPUmodel = line.split( ': ' )[1].strip()
-      info.append('CPU (model)    = %s' % CPUmodel)
+          cpuModel = line.split( ': ' )[1].strip()
+      info.append('CPU (model)    = %s' % cpuModel)
       info.append('CPU (MHz)      = %s x %s' % ( nCPU, freq ))
       
     fileName = '/proc/meminfo'
     if os.path.exists( fileName ):
-      f = open( fileName, 'r' )
-      mem = f.readlines()
-      f.close()
+      with open( fileName, 'r' ) as memInfoFile:
+        mem = memInfoFile.readlines()
       freeMem = 0
       for line in mem:
         if line.find( 'MemTotal:' ) == 0:
@@ -104,14 +103,14 @@ class AnalyseWN(ModuleBase):
         info.append("It uses %s MB of disk"% sha_size)
     
     
-    if (os.path.isdir("/cvmfs/ilc.cern.ch")):
+    if os.path.isdir("/cvmfs/ilc.cern.ch"):
       info.append("Has CVMFS")
     
     try:
       of = open(self.applicationLog, "w")
       of.write("\n".join(info))
       of.close()
-    except:
+    except OSError:
       self.log.error("Could not create the log file")
       return S_ERROR("Failed saving the site info")
     

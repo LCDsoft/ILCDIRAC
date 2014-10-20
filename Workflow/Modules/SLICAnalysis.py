@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Run SLIC
 
@@ -31,9 +28,8 @@ def unzip_file_into_dir(myfile, mydir):
     if name.endswith('/'):
       os.mkdir(os.path.join(mydir, name))
     else:
-      outfile = open(os.path.join(mydir, name), 'wb')
-      outfile.write(zfobj.read(name))
-      outfile.close()
+      with open(os.path.join(mydir, name), 'wb') as outfile:
+        outfile.write(zfobj.read(name))
       
 class SLICAnalysis(ModuleBase):
   """
@@ -142,8 +138,8 @@ class SLICAnalysis(ModuleBase):
       for detector_url in detector_urls:
         try:
           urllib.urlretrieve("%s%s" % (detector_url, self.detectorModel + ".zip"), 
-                                                 self.detectorModel + ".zip")
-        except Exception:
+                             self.detectorModel + ".zip")
+        except IOError:
           self.log.error("Download of detector model failed")
           continue
 
@@ -152,7 +148,7 @@ class SLICAnalysis(ModuleBase):
       return S_ERROR('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
     try:
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
-    except Exception:
+    except (RuntimeError, OSError): #RuntimeError is for zipfile
       os.unlink(self.detectorModel + ".zip")
       self.log.error('Failed to unzip detector model')
       return S_ERROR('Failed to unzip detector model')

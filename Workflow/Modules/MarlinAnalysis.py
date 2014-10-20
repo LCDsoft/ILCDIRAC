@@ -265,8 +265,8 @@ class MarlinAnalysis(ModuleBase):
     userlib = ""
     
     if os.path.exists("./lib/marlin_dll"):
-      for d in glob.glob("./lib/marlin_dll/*.so"):
-        userlib = userlib + d + ":" 
+      for library in glob.glob("./lib/marlin_dll/*.so"):
+        userlib = userlib + library + ":"
         
     userlib = userlib.rstrip(":")
     
@@ -284,7 +284,7 @@ class MarlinAnalysis(ModuleBase):
         self.log.verbose("Duplicated lib found, removing %s" % path1)
         try:
           temp.remove(path1)
-        except:
+        except EnvironmentError:
           pass
       
     marlindll = "%s:%s" % (":".join(temp), userlib) #Here we concatenate the default MarlinDLL with the user's stuff
@@ -357,7 +357,7 @@ fi
       script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
 
-    if (os.path.exists(inputxml)):
+    if os.path.exists(inputxml):
       #check
       script.write('Marlin -c %s %s\n' % (inputxml, self.extraCLIarguments))
       #real run
@@ -413,9 +413,9 @@ fi
     new_ld_lib_path = GetNewLDLibs(sysconfig, "marlin", appversion)
 
     marlindll = ""
-    if(os.path.exists("%s/MARLIN_DLL" % myMarlinDir)):
-      for d in os.listdir("%s/MARLIN_DLL" % myMarlinDir):
-        marlindll = marlindll + "%s/MARLIN_DLL/%s" % (myMarlinDir, d) + ":" 
+    if os.path.exists("%s/MARLIN_DLL" % myMarlinDir):
+      for library in os.listdir("%s/MARLIN_DLL" % myMarlinDir):
+        marlindll = marlindll + "%s/MARLIN_DLL/%s" % (myMarlinDir, library) + ":"
       marlindll = "%s" % (marlindll)
     else:
       self.log.error('MARLIN_DLL folder not found, cannot proceed')

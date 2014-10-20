@@ -5,6 +5,7 @@ Goes with DBDGeneration, not used
 
 @author: Stephane Poss
 '''
+__RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
@@ -20,7 +21,7 @@ class DBDGenRegisterOutputData(ModuleBase):
     self.log = gLogger.getSubLogger( "DBDGenRegisterOutputData" )
     self.commandTimeOut = 10 * 60
     self.enable = True
-    self.fc = FileCatalogClient()
+    self.fcc = FileCatalogClient()
     self.nbofevents = 0
     self.prodOutputLFNs = []
     
@@ -54,7 +55,7 @@ class DBDGenRegisterOutputData(ModuleBase):
       metadict['NumberOfEvents'] = self.nbofevents
       path = files
       
-      res = self.fc.setMetadata(files, metadict)
+      res = self.fcc.setMetadata(files, metadict)
       if not res['OK']:
         self.log.error("Could not register %s for %s"%(metadict, path))
         return res

@@ -13,15 +13,15 @@ class RemoveInputData(ModuleBase):
   """
   def __init__(self):
     super(RemoveInputData, self).__init__()
-    self.rm = ReplicaManager()
+    self.repMan = ReplicaManager()
     self.log = gLogger.getSubLogger( "RemoveInputData" )
-    
+    self.enable = True
+
   def applicationSpecificInputs(self):
-    if self.step_commons.has_key('Enable'):
-      self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
-        self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
-        self.enable = False
+    self.enable = self.step_commons.get('Enable', self.enable)
+    if not type(self.enable) == type(True):
+      self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
+      self.enable = False
     return S_OK('Parameters resolved') 
   
   def execute(self):
@@ -38,7 +38,7 @@ class RemoveInputData(ModuleBase):
       #Try to remove the file list with failover if necessary
       failover = []
       self.log.info( 'Attempting rm.removeFile("%s")' % ( self.InputData ) )
-      result = self.rm.removeFile( self.InputData )
+      result = self.repMan.removeFile( self.InputData )
       self.log.verbose( result )
       if not result['OK']:
         self.log.error( 'Could not remove files with message:\n"%s"\n\
@@ -58,7 +58,7 @@ class RemoveInputData(ModuleBase):
         self.__setFileRemovalRequest( lfn )
 
       return S_OK( 'Input Data Removed' )
-    except Exception, e:
+    except OSError as e:
       self.log.exception( e )
       return S_ERROR( e )
     

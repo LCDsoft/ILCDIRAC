@@ -1,6 +1,3 @@
-#####################################################
-# $HeadURL$
-#####################################################
 '''
 Run any application provided by the user. Is used when a specific environment is needed (e.g. ROOT).
 
@@ -10,7 +7,7 @@ Run any application provided by the user. Is used when a specific environment is
 '''
 __RCSID__ = "$Id$"
 
-import os, re, types, shutil
+import os, re, types
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -56,16 +53,16 @@ class ApplicationScript(ModuleBase):
       return S_OK('ApplicationScript should not proceed as previous step did not end properly')
 
     
-    Cmd = []
+    cmd = []
     if re.search('.py$', self.script):
-      Cmd.append('python')
-      Cmd.append(os.path.basename(self.script))
+      cmd.append('python')
+      cmd.append(os.path.basename(self.script))
     else:
-      Cmd.append("./" + os.path.basename(self.script))
-    Cmd.append(self.arguments)
-    Cmd.append(self.extraCLIarguments)
+      cmd.append("./" + os.path.basename(self.script))
+    cmd.append(self.arguments)
+    cmd.append(self.extraCLIarguments)
 
-    command = ' '.join(Cmd)
+    command = ' '.join(cmd)
     self.log.info( 'Command = %s' % (command))  #Really print here as this is useful to see
     
     com = []

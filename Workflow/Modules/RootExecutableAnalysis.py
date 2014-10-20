@@ -93,8 +93,8 @@ class RootExecutableAnalysis(ModuleBase):
     else:
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
       
-    if(os.path.exists("./lib")):
-      if os.environ.has_key('LD_LIBRARY_PATH'):
+    if os.path.exists("./lib"):
+      if 'LD_LIBRARY_PATH' in os.environ:
         script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
       else:
         script.write('declare -x LD_LIBRARY_PATH=./lib\n')

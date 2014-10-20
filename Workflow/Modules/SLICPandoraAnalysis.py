@@ -118,7 +118,7 @@ class SLICPandoraAnalysis (ModuleBase):
       if os.path.exists(detmodel + ".zip"):
         try:
           unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
-        except:
+        except (RuntimeError, OSError):
           os.unlink(detmodel + ".zip") 
       if not os.path.exists(detmodel + ".zip"):  
         #retrieve detector model from web
@@ -130,13 +130,13 @@ class SLICPandoraAnalysis (ModuleBase):
         for detector_url in detector_urls:
           try:
             urllib.urlretrieve("%s%s"%(detector_url, detmodel + ".zip"), detmodel + ".zip")
-          except:
+          except IOError:
             self.log.error("Download of detector model failed")
             continue
           try:
             unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
             break
-          except:
+          except (RuntimeError, OSError):
             os.unlink(detmodel + ".zip")
             continue
       #if os.path.exists(detmodel): #and os.path.isdir(detmodel):
@@ -272,7 +272,7 @@ fi
     prefixpath = ""
     if os.path.exists("PandoraFrontend"):
       prefixpath = "."
-    elif (os.path.exists("%s/Executable/PandoraFrontend" % myslicPandoraDir)):
+    elif os.path.exists("%s/Executable/PandoraFrontend" % myslicPandoraDir):
       prefixpath ="%s/Executable" % myslicPandoraDir
     else:
       return S_ERROR("Missing PandoraFrontend binary")

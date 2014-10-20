@@ -168,12 +168,11 @@ exit $?
     self.setApplicationStatus( 'StdHepSplit %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
-    self.result = shellCall(
-                            0,
-                            command,
-                            callbackFunction = self.redirectLogOutput,
-                            bufferLimit = 20971520
-                            )
+    self.result = shellCall( 0,
+                             command,
+                             callbackFunction = self.redirectLogOutput,
+                             bufferLimit = 20971520
+                           )
 
         # Check results
 

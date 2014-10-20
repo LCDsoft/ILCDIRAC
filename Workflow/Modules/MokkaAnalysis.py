@@ -277,7 +277,7 @@ class MokkaAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     script.write("source %s\n" % env_script_path)
-    if(os.path.exists("./lib")):
+    if os.path.exists("./lib"):
       script.write('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n' )
     script.write('echo =============================\n')
     script.write('echo Content of mokka.steer:\n')

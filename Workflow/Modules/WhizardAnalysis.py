@@ -49,7 +49,7 @@ class WhizardAnalysis(ModuleBase):
     self.RandomSeed = 0
     self.energy = 3000.
     self.getProcessInFile = False
-    self.rm = ReplicaManager()
+    self.repMan = ReplicaManager()
     self.processlist = None
     self.jobindex = None
     self.parameters = {}
@@ -82,7 +82,7 @@ class WhizardAnalysis(ModuleBase):
       return S_ERROR("No process list found")
     processlistloc = res
     if not os.path.exists(os.path.basename(processlistloc)):
-      res = self.rm.getFile(processlistloc)
+      res = self.repMan.getFile(processlistloc)
       if not res['OK']:
         self.log.error('Could not get processlist: %s' % res['Message'])
         return res

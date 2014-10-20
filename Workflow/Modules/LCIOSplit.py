@@ -99,11 +99,11 @@ class LCIOSplit(ModuleBase):
     # Setting up script
 
     LD_LIBRARY_PATH = os.path.join( "$LCIO", "lib" )
-    if os.environ.has_key('LD_LIBRARY_PATH'):
+    if 'LD_LIBRARY_PATH' in os.environ:
       LD_LIBRARY_PATH += ":" + os.environ['LD_LIBRARY_PATH']
 
     PATH = "$LCIO/bin"
-    if os.environ.has_key('PATH'):
+    if 'PATH' in os.environ:
       PATH += ":" + os.environ['PATH']
 
     scriptContent = """
