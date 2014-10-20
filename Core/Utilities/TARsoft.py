@@ -167,12 +167,12 @@ def getTarBallLocation(app, config, dummy_area):
   app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (config, appName, appVersion), '')
   overwrite = ops.getValue('/AvailableTarBalls/%s/%s/%s/Overwrite' % (config, appName, appVersion), False)
   md5sum = ops.getValue('/AvailableTarBalls/%s/%s/%s/Md5Sum' % (config, appName, appVersion), '')
-
+  gLogger.info("Looking for application %s%s for config %s:" % (appName, appVersion, config) )
   if not app_tar:
     gLogger.error('Could not find tar ball for %s %s'%(appName, appVersion))
     return S_ERROR('Could not find tar ball for %s %s'%(appName, appVersion))
   
-  tarballURL = ops.getValue('/AvailableTarBalls/%s/%s/tarballURL' % (config, appName), '')
+  tarballURL = ops.getValue('/AvailableTarBalls/%s/%s/TarBallURL' % (config, appName), '')
   if not tarballURL:
     gLogger.error('Could not find tarballURL in CS for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find tarballURL in CS')
