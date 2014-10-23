@@ -25,7 +25,7 @@ class OutputDataPolicy:
     
     job = Job(jobDescription)
     commons = job._getParameters()
-    code = job.createCode()
+    code = job.workflow.createCode()
     outputList = []
     for line in code.split("\n"):
       if line.count("listoutput"):
