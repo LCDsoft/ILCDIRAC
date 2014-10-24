@@ -13,7 +13,7 @@ class Params(object):
     self.outputdata = False
     self.repo = ''
     
-  def setOuputData(self, opt):
+  def setOuputData(self, dummy_opt):
     self.outputdata = True
     return S_OK()
   
