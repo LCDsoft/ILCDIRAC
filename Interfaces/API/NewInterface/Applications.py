@@ -1598,6 +1598,7 @@ class OverlayInput(Application):
     self.BkgEvtType = ''
     self.ProdID = 0
     self.Machine = 'clic_cdr'
+    self.useEnergyForFileLookup = True
     super(OverlayInput, self).__init__( paramdict )
     self.Version = '1'
     self._modulename = "OverlayInput"
@@ -1620,7 +1621,12 @@ class OverlayInput(Application):
     self._checkArgs( {'pid': types.IntType})
     self.ProdID = pid
     return S_OK()
-  
+
+  def setUseEnergyForFileLookup(self, useEnergyForFileLookup):
+    self._checkArgs( {'useEnergyForFileLookup': types.BooleanType } )
+    self.useEnergyForFileLookup = useEnergyForFileLookup
+    return S_OK()
+
   def setOverlayBXPerSigEvt( self, bxoverlay):
     """ Define number bunch crossings to overlay for each signal event. 
     This is used to determine the number of required overlay events.
@@ -1743,6 +1749,9 @@ class OverlayInput(Application):
                               "Detector type."))
     m1.addParameter(Parameter("machine",       "", "string", "", "", False, False, 
                               "machine: clic_cdr or ilc_dbd"))
+    m1.addParameter(Parameter("useEnergyForFileLookup", True, "bool", "", "", False, False,
+                              "useEnergy to look for background files: True or False"))
+
     m1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return m1
   
@@ -1756,6 +1765,7 @@ class OverlayInput(Application):
     moduleinstance.setValue('detectormodel',     self.DetectorModel)
     moduleinstance.setValue('debug',             self.Debug)
     moduleinstance.setValue('machine',           self.Machine  )
+    moduleinstance.setValue('useEnergyForFileLookup', self.useEnergyForFileLookup  )
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1801,7 +1811,7 @@ class OverlayInput(Application):
     """ Final check of consistency: the overlay files for the specifed energy must exist
     """
     if not self.Energy:
-      return  S_ERROR("Energy MUST be specified for the overlay")
+      return S_ERROR("Energy MUST be specified for the overlay")
 
     res = self._ops.getSections('/Overlay')
     if not res['OK']:
@@ -1827,8 +1837,7 @@ class OverlayInput(Application):
     
     if not self.DetectorModel in res['Value']:
       return S_ERROR("Detector model specified has no overlay data with that energy and machine")
-      
-    
+
     res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.DetectorModel, machine = self.Machine)  
     if not res['OK']:
       return res
