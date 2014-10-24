@@ -200,6 +200,16 @@ CHANGE: drop the Particle.tbl from the mokka steering file, put it in command li
 *Workflow:
 CHANGE: ILCSoft modules (Mokka, Marlin, SLIC, SLICPandora) now uses environment variables
 CHANGE: Mokka: drop the SQLWrapper (finally)
+[v19r1p19]
+
+* Interfaces
+
+NEW: OverlayInput: setUseEnergyForFileLookup (default True): 
+     Decide whether to use the Energy to find background files or not
+     Relates to ILCDIRAC-344
+
+* Workflow
+NEW: OverlayInput: useEnergyForFileLookup
 
 [v19r1p18]
 

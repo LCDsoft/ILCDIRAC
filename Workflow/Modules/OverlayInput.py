@@ -73,7 +73,7 @@ class OverlayInput (ModuleBase):
     self.repMan = ReplicaManager()
     self.fcc = FileCatalogClient()
     self.site = DIRAC.siteName()
-
+    self.useEnergyForFileLookup = True
     self.machine = 'clic_cdr'
 
   def applicationSpecificInputs(self):
@@ -124,6 +124,8 @@ class OverlayInput (ModuleBase):
     #if self.workflow_commons.has_key('Site'):
     #  self.site = self.workflow_commons['Site']
 
+    self.useEnergyForFileLookup = self.step_commons.get("useEnergyForFileLookup", self.useEnergyForFileLookup)
+
     if len(self.InputData):
       if self.NumberOfEvents:
         self.nbsigeventsperfile = self.NumberOfEvents
@@ -139,7 +141,7 @@ class OverlayInput (ModuleBase):
     """ Get the list of files from the FileCatalog.
     """
     meta = {}
-    if self.energy:
+    if self.energy and self.useEnergyForFileLookup:
       meta['Energy'] = str(int(self.energy))
     meta['EvtType'] = self.BkgEvtType
     meta['Datatype'] = 'SIM'
