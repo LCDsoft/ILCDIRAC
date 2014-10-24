@@ -1,3 +1,23 @@
+[v19r1p19]
+
+* Interfaces
+
+NEW: OverlayInput: setUseEnergyForFileLookup (default True): 
+     Decide whether to use the Energy to find background files or not
+     Relates to ILCDIRAC-344
+
+* Workflow
+NEW: OverlayInput: useEnergyForFileLookup
+
+[v19r1p18]
+
+* Core
+
+FIX: dirac-ilc-get-prod-log: Cleanup
+FIX: dirac-ilc-add-software: Cleanup
+FIX: ILDProductionJob
+
+
 [v19r1p17]
 
 * Core
