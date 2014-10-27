@@ -214,7 +214,7 @@ class TarTheProdLogsAgent( AgentModule ):
     if not res["OK"]:
       return res
     final_pfn_path = res["Value"]
-    
+    ##FIXME: Just use the LFN when calling isFile, because storageElement is bound to a certain SE
     pfn = final_pfn_path + "/" + os.path.basename(tarballpath)
     res = self.storageElement.isFile(final_pfn_path)
     if not res["OK"]:
