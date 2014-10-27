@@ -1,16 +1,19 @@
 #!/bin/env python
+"""Print information for productions"""
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, exit as dexit
 import pprint, types
 
+__RCSID__ = "$Id$"
+
 class Params(object):
   def __init__(self):
-    self.file = ""
+    self.filename = ""
     self.prodid = 0
-    
-  def setFile(self, opt):
-    self.file = opt
+
+  def setFilename(self, opt):
+    self.filename = opt
     return S_OK()
 
   def setProdID(self, opt):
@@ -19,153 +22,109 @@ class Params(object):
     except ValueError:
       return S_ERROR('Prod ID must be integer')
     return S_OK()
-  
-  def registerSwitch(self):
+
+  def registerSwitches(self):
     Script.registerSwitch('p:', "ProductionID=", "Production ID", self.setProdID)
-    Script.registerSwitch('f:', "File=", "File name", self.setFile)    
+    Script.registerSwitch('f:', "File=", "File name", self.setFilename)
     Script.setUsageMessage("%s -p 12345" % Script.scriptName)
 
 def createTransfoInfo(trans):
+  """creates information for Transformation"""
   info = []
-  info.append(" - It's a %s production" % trans['Type'])
-  info.append(" - It's described as %s" % trans["LongDescription"])
-  info.append(" - It's part of the %s group" % trans['TransformationGroup'])
-  info.append(" - Its status is currently %s" % trans["Status"])
-  info.append(" - It uses the %s plugin"%trans['Plugin'])
-  info.append(" - Its name is %s" % trans['TransformationName'])
-  info.append(" - It was created by %s" % trans['AuthorDN'])
-  if 'InputDataQuery' in trans:
-    info.append(' - Was input with %s ' % str(trans['InputDataQuery']))
+  parametersToShow = ['Type', 'LongDescription', 'TransformationGroup','Status',
+                      'Plugin', 'TransformationName', 'AuthorDN', 'InputDataQuery']
+  for key in parametersToShow:
+    if key in trans:
+      info.append ( "    %s: %s" % (key.ljust(len(max(parametersToShow, key=len))), trans[key]) )
   if 'AddParams' in trans:
     for key, val in trans['AddParams'].items():
-      if key == 'SWPackages':
-        info.append(" - Uses the software %s" % trans['AddParams']['SWPackages'].replace(";", ", "))
-      if key.lower().count("steeringfile"):
-        info.append(" - The steering file used for %s is %s" % (key.split("_")[0], trans['AddParams'][key]))
-      if key.lower().count("detectormodel"):
-        info.append(" - Detector model %s" % trans['AddParams'][key])
-      if key.lower().count('trackingstra'):
-        info.append(" - Tracking strategy %s" % trans['AddParams'][key])
+      if key in ['DetailedInfo', 'JobType', 'FCInputQuery', 'detectorType', 'NbInputFiles', 'nbevts', 'Energy']:
+        continue
+      if ".slcio" in key:
+        continue
       if key.count('whizardparams'):
         pp = pprint.PrettyPrinter(indent=4)
-        whizp = pp.pformat(eval(trans['AddParams'][key]))
+        whizp = pp.pformat(eval(val))
         info.append(" - Uses the following whizard parameters:")
         info.append("      %s" % whizp)
-  info.append('')
-  
+      else:
+        info.append("    %s: %s" %(key.ljust(len(max(trans['AddParams'], key=len))), val))
+
+  info.append("")
   return info
 
 def createFileInfo(fmeta):
+  """creates information for file"""
   from DIRAC.Core.Utilities import DEncode
   if 'ProdID' in fmeta:
     del fmeta['ProdID']
-  
-  info = []
-  
-  info.append(" - Machine %s" % fmeta['Machine'])
-  del fmeta['Machine']
-  info.append(" - Energy %sGeV"% fmeta['Energy'])
-  del fmeta['Energy']
-  if 'MachineParams' in fmeta:
-    info.append(' - The machine parameters are %s' % fmeta['MachineParams'])
-    del fmeta['MachineParams']
 
-  if 'EvtClass' in fmeta:
-    info.append(' - Is among the %s event class' % fmeta['EvtClass'])  
-    del fmeta['EvtClass']
-  if 'ProcessID' in fmeta:
-    info.append(' - Is the ProcessID %s' % str(fmeta['ProcessID']))
-    del fmeta['ProcessID']
-  elif 'GenProcessID' in fmeta:
-    info.append(' - Is the GenProcessID %s' % str(fmeta['GenProcessID']))
-    del fmeta['GenProcessID']
-  info.append(" - Is the %s event type" % fmeta["EvtType"])
-  del fmeta["EvtType"]
- 
-  if 'Polarisation' in fmeta:
-    info.append(" - Has %s polarisation" % fmeta['Polarisation'])
-    del fmeta["Polarisation"]
- 
-  if 'BeamParticle1' in fmeta:
-    info.append(" - Beam 1 particle is %s" % fmeta['BeamParticle1'])
-    info.append(" - Beam 2 particle is %s" % fmeta['BeamParticle2'])
-    del fmeta['BeamParticle1']
-    del fmeta['BeamParticle2']
- 
-  if 'PolarizationB1' in fmeta:
-    info.append(' - Has %s polarization for Beam 1 and %s for beam 2' % 
-                (fmeta['PolarizationB1'], fmeta['PolarizationB2']))
-    del fmeta['PolarizationB1']
-    del fmeta["PolarizationB2"]
- 
-  if 'Datatype' in fmeta:
-    if fmeta['Datatype'] == 'gen':
-      info.append(' - This is a generator level sample')
-    elif fmeta["Datatype"] == 'SIM':
-      info.append(" - This is a simulated sample")
-    elif fmeta['Datatype'] in ['REC', 'DST']:
-      info.append(' - This is a reconstructed sample')
-    else:
-      info.append(' - The datatype is unknown: %s' % fmeta['Datatype'])
-    del fmeta['Datatype']
-  
-  if "SWPackages" in fmeta:
-    info.append(" - Was produced with %s" % ", ".join(fmeta["SWPackages"].split(';')))
-    del fmeta["SWPackages"]
-  if "SoftwareTag" in fmeta:
-    info.append(' - Was produced with %s' % fmeta['SoftwareTag'])
-    del fmeta['SoftwareTag']
-  if 'ILDConfig' in fmeta:
-    info.append(' - Used the %s ILDConfig package' % fmeta["ILDConfig"])
-    del fmeta["ILDConfig"]
-  if 'DetectorModel' in fmeta:
-    info.append(" - Using the %s detector model" % fmeta['DetectorModel'])
-    del fmeta['DetectorModel']
-  if 'NumberOfEvents' in fmeta:
-    info.append(' - Has %s events or less per file' % fmeta['NumberOfEvents'])
-    del fmeta['NumberOfEvents']
-  if "CrossSection" in fmeta:
-    xsec = str(fmeta["CrossSection"])
-    del fmeta["CrossSection"]
-    if 'CrossSectionError' in fmeta:
-      xsec += " +/- "+str(fmeta["CrossSectionError"])
-      del fmeta["CrossSectionError"]
-    xsec += " fb" 
-    info.append(" - Cross section %s" % xsec)
+  info = []
+
+
+  parametersToShow = ['Machine', 'Energy', 'MachineParams', 'EvtClass', 'ProcessID', 'GenProcessID',
+                      'EvtType', 'Polarisation', 'BeamParticle1', 'BeamParticle2',
+                      'PolarisationB1', 'PolarisationB2','Datatype',
+                      'SWPackages', 'SoftwareTag', 'ILDConfig', 'DetectorModel', 'NumberOfEvents',
+                      'CrossSection'
+                     ]
+  datatypes = dict( gen = "Generator Sample", SIM = "Simulated Sample",
+                    REC="Reconstructed Sample", DST="Reconstructed Sample")
+  datatypes.setdefault("Unknown Datatype")
+  maxLength = len(max(parametersToShow, key=len))
+
+  for parameter in parametersToShow and parameter in fmeta:
+    value = fmeta[parameter]
+    if parameter == 'Datatype':
+      value = datatypes[value]
+
+    if parameter == 'Energy':
+      value += " GeV"
+
+    if parameter == 'CrossSection':
+      value = str(value) + " fb"
+      if 'CrossSectionError' in fmeta:
+        value += "+/-" + str(fmeta["CrossSectionError"]) + "fb"
+        del fmeta['CrossSectionError']
+
+    info.append("    %s: %s" % (parameter.ljust(maxLength), value))
+    del fmeta[parameter]
+
   if "AdditionalInfo" in fmeta:
     try:
-      dinfo = DEncode.decode(fmeta["AdditionalInfo"])   
-    except:
-      dinfo = eval(fmeta["AdditionalInfo"])  
-    info.append(" - There is some additional info:")    
+      dinfo = DEncode.decode(fmeta["AdditionalInfo"])
+    except Exception: ##cannot do anything else because decode raises base Exception
+      dinfo = eval(fmeta["AdditionalInfo"])
+    info.append(" - There is some additional info:")
     if type(dinfo) == types.TupleType:
       dinfo = dinfo[0]
     if type(dinfo) == types.DictType:
-        dictinfo = dinfo
-        if 'xsection' in dictinfo:
-          if 'sum' in dictinfo['xsection']:
-            if 'xsection' in dictinfo['xsection']['sum']:
-              xsec= str(dictinfo['xsection']['sum']['xsection'])
-              if 'err_xsection' in dictinfo['xsection']['sum']:
-                xsec += ' +/- %s' % dictinfo['xsection']['sum']['err_xsection']
-              xsec += "fb"  
-              info.append('    Cross section %s' % xsec)
-                
+      dictinfo = dinfo
+      if 'xsection' in dictinfo:
+        if 'sum' in dictinfo['xsection']:
+          if 'xsection' in dictinfo['xsection']['sum']:
+            xsec= str(dictinfo['xsection']['sum']['xsection'])
+            if 'err_xsection' in dictinfo['xsection']['sum']:
+              xsec += ' +/- %s' % dictinfo['xsection']['sum']['err_xsection']
+            xsec += "fb"
+            info.append('    Cross section %s' % xsec)
+
     else:
       info.append('    %s' % dinfo)
-          
+
     del fmeta["AdditionalInfo"]
+
   if 'Luminosity' in fmeta:
     info.append(' - Sample corresponds to a luminosity of %sfb'%fmeta["Luminosity"])
     del fmeta['Luminosity']
-    
+
   if 'Ancestors' in fmeta:
     if len(fmeta["Ancestors"]):
       info.append(" - Was produced from:")
       for anc in fmeta["Ancestors"]:
         info.append('    %s' % anc)
     del fmeta["Ancestors"]
-    
+
   if 'Descendants' in fmeta:
     if len(fmeta["Descendants"]):
       info.append(" - Gave the following files:")
@@ -178,32 +137,33 @@ def createFileInfo(fmeta):
     del fmeta['DetectorType']
 
   if fmeta:
-    info.append('Remaining metadata: %s' % str(fmeta))  
-    
-        
+    info.append('Remaining file metadata: %s' % str(fmeta))
+
+
   return info
-  
-if __name__ == "__main__":
+
+def getInfo():
+  """gets info about transformation"""
   clip = Params()
-  clip.registerSwitch()
+  clip.registerSwitches()
   Script.parseCommandLine()
-  
-  if not clip.prodid and not clip.file:
+
+  if not clip.prodid and not clip.filename:
     Script.showHelp()
     dexit(1)
-  
+
   from DIRAC import gLogger
   import os
-  
+
   from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-  tc = TransformationClient()  
+  tc = TransformationClient()
 
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   fc = FileCatalogClient()
   fmeta = {}
   trans = None
   info = []
-  
+
   if clip.prodid:
     res = tc.getTransformation(clip.prodid)
     if not res['OK']:
@@ -217,16 +177,17 @@ if __name__ == "__main__":
     if res['OK']:
       trans['AddParams'] = res['Value']
     #do something with transf
-    res = fc.findDirectoriesByMetadata({'ProdID':clip.prodid})
-    if res['OK']:
-      if len(res['Value'].values()):
-        gLogger.verbose("Found some directory matching the metadata")
-        for dirs in res['Value'].values():
+    res1 = fc.findDirectoriesByMetadata({'ProdID':clip.prodid})
+    if res1['OK']:
+      if len(res1['Value'].values()):
+        gLogger.verbose("Found %i directory matching the metadata" % len(res1['Value'].values()) )
+        for dirs in res1['Value'].values():
           res = fc.getDirectoryMetadata(dirs)
           if res['OK']:
             fmeta.update(res['Value'])
           else:
-            gLogger.warn("Failed to get dir metadata")
+            gLogger.error("Failed to get metadata for %s, SKIPPING" % dirs)
+            continue
           res = fc.listDirectory(dirs)
           if not res['OK']:
             continue
@@ -237,48 +198,49 @@ if __name__ == "__main__":
               if res['OK']:
                 fmeta.update(res['Value'])
                 break
-          
+
     #here we have trans and fmeta
     info.append("")
     info.append("Production %s has the following parameters:" % trans['TransformationID'])
     info.extend(createTransfoInfo(trans))
+
     if fmeta:
       info.append('The files created by this production have the following metadata:')
       info.extend(createFileInfo(fmeta))
       info.append("It's possible that some meta data was not brought back,")
-      info.append("in particular file level metadata, so check some individual files")  
-  
-  if clip.file:
-    f = clip.file
+      info.append("in particular file level metadata, so check some individual files")
+
+  if clip.filename:
     pid = ""
-    if f.count("/"):
-      fpath = os.path.dirname(f)
+    if clip.filename.count("/"):
+      fpath = os.path.dirname(clip.filename)
       res = fc.getDirectoryMetadata(fpath)
       if not res['OK']:
         gLogger.error(res['Message'])
         dexit(0)
       fmeta.update(res['Value'])
-      res = fc.getFileUserMetadata(f)
+      res = fc.getFileUserMetadata(clip.filename)
       if not res['OK']:
         gLogger.error(res['Message'])
         dexit(1)
       fmeta.update(res['Value'])
       if 'ProdID' in fmeta:
         pid = str(fmeta['ProdID'])
-      res = fc.getFileAncestors([f], 1) 
+      res = fc.getFileAncestors([clip.filename], 1)
       if res["OK"]:
-        for lfn,ancestorsDict in res['Value']['Successful'].items():
+        for dummy_lfn,ancestorsDict in res['Value']['Successful'].items():
           if ancestorsDict.keys():
             fmeta["Ancestors"] = ancestorsDict.keys()
-      res = fc.getFileDescendents([f], 1)
+      res = fc.getFileDescendents([clip.filename], 1)
       if res["OK"]:
-        for lfn,descendDict in res['Value']['Successful'].items():
+        for dummy_lfn,descendDict in res['Value']['Successful'].items():
           if descendDict.keys():
-            fmeta['Descendants'] = descendDict.keys()  
+            fmeta['Descendants'] = descendDict.keys()
     else:
-      ext = f.split(".")[-1]
+      ext = clip.filename.split(".")[-1]
       fitems = []
-      [fitems.extend(i.split('_')) for i in f.split('.')[:-1]]
+      for i in clip.filename.split('.')[:-1]:
+        fitems.extend(i.split('_'))
       pid = ''
       if ext == 'stdhep':
         pid = fitems[fitems.index('gen')+1]
@@ -308,18 +270,18 @@ if __name__ == "__main__":
         fpath = "/".join(dir_ex.split('/')[:-2])+"/"+pid.zfill(8)+"/"+last_folder+"/"
       else:
         gLogger.error('Path does not follow conventions, will not get file family')
-      
+
       if fpath:
-        fpath += f
-        res = fc.getFileAncestors([fpath], 1) 
+        fpath += clip.filename
+        res = fc.getFileAncestors([fpath], 1)
         if res["OK"]:
-          for lfn,ancestorsDict in res['Value']['Successful'].items():
+          for dummy_lfn,ancestorsDict in res['Value']['Successful'].items():
             fmeta["Ancestors"] = ancestorsDict.keys()
         res = fc.getFileDescendents([fpath], 1)
         if res["OK"]:
-          for lfn,descendDict in res['Value']['Successful'].items():
+          for dummy_lfn,descendDict in res['Value']['Successful'].items():
             fmeta['Descendants'] = descendDict.keys()
-              
+
       res = fc.getDirectoryMetadata(dir_ex)
       if not res['OK']:
         gLogger.error(res['Message'])
@@ -339,12 +301,15 @@ if __name__ == "__main__":
         trans['AddParams'] = res['Value']
     info.append("")
     info.append("Input file has the following properties:")
-    info.extend(createFileInfo(fmeta))  
+    info.extend(createFileInfo(fmeta))
     info.append("")
     info.append('It was created with the production %s:' % pid)
     if trans:
       info.extend(createTransfoInfo(trans))
-        
+
   gLogger.notice("\n".join(info))
-      
+
   dexit(0)
+
+if __name__ == "__main__":
+  getInfo()

@@ -4,7 +4,7 @@ Created on Mar 20, 2013
 
 @author: stephane
 '''
-
+__RCSID__ = "$Id$"
 from DIRAC import gLogger
 from types import ListType, DictType
 from DIRAC.Core.Utilities import uniqueElements

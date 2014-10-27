@@ -1,7 +1,7 @@
+"""ILCDirac version of the Transformation Agent"""
 __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.ThreadSafe                                import Synchronizer
 from DIRAC.TransformationSystem.Agent.TransformationAgent           import TransformationAgent
-from DIRAC.Core.Utilities.List                                      import breakListIntoChunks
 
 
 from DIRAC import S_OK
@@ -29,11 +29,11 @@ class ILCTransformationAgent( TransformationAgent ):
                       method = method, transID = transID )
     
     fdict = {}
-    for f in lfns:
-      lfn = f.split(":")[0]
+    for lfnName in lfns:
+      lfn = lfnName.split(":")[0]
       if not lfn in fdict:
         fdict[lfn] = []
-      fdict[lfn].append(f)
+      fdict[lfn].append(lfnName)
       
     if active:
       res = clients['ReplicaManager'].getActiveReplicas( fdict.keys() )
@@ -47,7 +47,7 @@ class ILCTransformationAgent( TransformationAgent ):
     for lfn in lfns:
       dataReplicas[lfn] = []
     self._logInfo( "Replica results for %d files obtained in %.2f seconds" % ( len( lfns ), time.time() - startTime ),
-                    method = method, transID = transID )
+                   method = method, transID = transID )
     #If files are neither Successful nor Failed, they are set problematic in the FC
     problematicLfns = [lfn for lfn in fdict.keys() if lfn not in replicas['Successful'] and lfn not in replicas['Failed']]
     if problematicLfns:
@@ -61,15 +61,15 @@ class ILCTransformationAgent( TransformationAgent ):
       ses = replicaDict.keys()
       for se in ses:
         #### This should definitely be included in the SE definition (i.e. not used for transformations)
-        for f in fdict[lfn]:
-          dataReplicas[f].append( se )
+        for filename in fdict[lfn]:
+          dataReplicas[filename].append( se )
     # Make sure that file missing from the catalog are marked in the transformation DB.
     missingLfns = []
     for lfn, reason in replicas['Failed'].items():
       if re.search( "No such file or directory", reason ):
         self._logVerbose( "%s not found in the catalog." % lfn, method = method, transID = transID )
-        for f in fdict[lfn]:
-          missingLfns.append( f )
+        for filename in fdict[lfn]:
+          missingLfns.append( filename )
     if missingLfns:
       self._logInfo( "%d files not found in the catalog" % len( missingLfns ) )
       res = clients['TransformationClient'].setFileStatusForTransformation( transID, 'MissingInFC', missingLfns )

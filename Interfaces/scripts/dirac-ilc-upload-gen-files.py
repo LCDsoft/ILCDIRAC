@@ -4,24 +4,24 @@ Created on Mar 21, 2013
 
 @author: stephane
 '''
-__RCSID__ = "$Id"
+__RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR
 import os
 
-mandatory_keys = ['GenProcessID','GenProcessName','NumberOfEvents','BeamParticle1','BeamParticle2',
+MANDATORY_KEYS = ['GenProcessID','GenProcessName','NumberOfEvents','BeamParticle1','BeamParticle2',
                   'PolarizationB1','PolarizationB2', 'ProgramNameVersion','CrossSection','CrossSectionError']
 
 class Params(object):
   def __init__(self):
     self.dir = ''
-    self.se = ''
+    self.storageElement = ''
     self.machineParams = 'B1b_ws'
     self.evtclass = ''
     self.evttype = ''
     self.lumi = 0.0
-    self.p1 = 'e'
-    self.p2 = 'p'
+    self.particle1 = 'e'
+    self.particle2 = 'p'
     self.pol1 = ''
     self.pol2 = ''
     self.software = 'whizard-1.95'
@@ -36,7 +36,7 @@ class Params(object):
     if opt.count(","):
       return S_ERROR('Cannot use a list of storage elements (yet)')
     else:  
-      self.se = opt
+      self.storageElement = opt
     return S_OK()
   
   def setMachineParams(self, opt):
@@ -77,20 +77,20 @@ class Params(object):
   def setBeamP1(self, opt):
     self.fmeta['BeamParticle1'] = opt
     if opt=='e1':
-      self.p1 = 'e'
+      self.particle1 = 'e'
     elif opt == 'E1':
-      self.p1 = 'p'
+      self.particle1 = 'p'
     else:
-      self.p1 = opt
+      self.particle1 = opt
     return S_OK()
   def setBeamP2(self,opt):
     self.fmeta['BeamParticle2'] = opt
     if opt=='e1':
-      self.p2 = 'e'
+      self.particle2 = 'e'
     elif opt == 'E1':
-      self.p2 = 'p'
+      self.particle2 = 'p'
     else:
-      self.p2 = opt
+      self.particle2 = opt
     return S_OK()
   def setPol1(self,opt):
     self.fmeta['PolarizationB1'] = opt
@@ -157,12 +157,12 @@ def uploadGenFiles():
     gLogger.error('You need to set the path')
     Script.showHelp()
     dexit(1)
-  if not clip.se:
+  if not clip.storageElement:
     gLogger.error('You need a storage element')
     Script.showHelp()
     dexit(1)
   
-  for key in mandatory_keys:
+  for key in MANDATORY_KEYS:
     if not key in clip.fmeta:
       gLogger.error("All meta data not defined, please check")
       Script.showHelp()
@@ -172,9 +172,9 @@ def uploadGenFiles():
   flist = []
   if os.path.isdir(clip.dir):
     flistd = os.listdir(clip.dir)
-    for f in flistd:
-      if f.count(".stdhep"):
-        flist.append( os.path.join(clip.dir, f) )
+    for filename in flistd:
+      if filename.count(".stdhep"):
+        flist.append( os.path.join(clip.dir, filename) )
   elif os.path.isfile(clip.dir):
     flist.append(clip.dir)
   else:
@@ -209,8 +209,8 @@ def uploadGenFiles():
   dirmeta.append({'path':os.path.join(basepath, 'generated', clip.energy+"-"+clip.machineParams, clip.evtclass), 'meta':{'EvtClass':clip.evtclass }})
   dirmeta.append({'path':finalpath, 'meta': {'EvtType':clip.evttype ,'Luminosity':clip.lumi, 'ProcessID': clip.fmeta['GenProcessID']} })
   
-  final_fname_base = 'E'+clip.energy+"-"+clip.machineParams+".P"+clip.fmeta['GenProcessName']+".G"+clip.fmeta['ProgramNameVersion'] + "."+clip.p1+clip.pol1+"."+clip.p2+clip.pol2+".I"+str(clip.fmeta['GenProcessID'])
-  gLogger.notice("Final file name(s) will be %s where XXX will be replaced by file number, and ext by the input file extension" % (final_fname_base+".XXX.ext") )
+  final_fname_base = 'E'+clip.energy+"-"+clip.machineParams+".P"+clip.fmeta['GenProcessName']+".G"+clip.fmeta['ProgramNameVersion'] + "."+clip.particle1+clip.pol1+"."+clip.particle2+clip.pol2+".I"+str(clip.fmeta['GenProcessID'])
+  gLogger.notice("Final file name(s) will be %s where XX will be replaced by file number, and ext by the input file extension" % (final_fname_base+".XX.ext") )
   if not clip.force:
     res = promptUser('Continue?', ['y','n'], 'n')
     if not res['OK']:
@@ -235,11 +235,11 @@ def uploadGenFiles():
       gLogger.error("Failed to set meta data %s to %s" %(pathdict['meta'], pathdict['path']))
 
   rm = ReplicaManager()
-  for f in flist:
-    fnum = f.split(".")[-2]
-    fext = f.split(".")[-1]
+  for filename in flist:
+    fnum = filename.split(".")[-2]
+    fext = filename.split(".")[-1]
     final_fname = final_fname_base + '.' + fnum + "." + fext
-    gLogger.notice("Uploading %s to" % f, finalpath+"/"+final_fname)
+    gLogger.notice("Uploading %s to" % filename, finalpath+"/"+final_fname)
     if not clip.force:
       res = promptUser('Continue?', ['y','n'], 'n')
       if not res['OK']:
@@ -248,13 +248,13 @@ def uploadGenFiles():
       if not res['Value'].lower()=='y':
         break    
 
-    res = rm.putAndRegister(finalpath+"/"+final_fname, f, clip.se)
+    res = rm.putAndRegister(finalpath+"/"+final_fname, filename, clip.storageElement)
     if not res['OK']:
-      gLogger.error("Failed to upload %s:" % f, res['Message'])
+      gLogger.error("Failed to upload %s:" % filename, res['Message'])
       continue
     res = fc.setMetadata(finalpath+"/"+final_fname, clip.fmeta)
     if not res['OK']:
-      gLogger.error("Failed setting the metadata to %s:" % f, res['Message'])
+      gLogger.error("Failed setting the metadata to %s:" % filename, res['Message'])
       
   dexit(0)
 

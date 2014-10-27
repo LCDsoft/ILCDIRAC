@@ -1,5 +1,6 @@
 #!/bin/env python
-
+""" submit jobs to all sites and checks the worker nodes for functionality"""
+__RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK
 
@@ -16,14 +17,15 @@ class Params(object):
     self.ce = opt
     return S_OK()
   
-  def registerswitches(self):
+  def registerSwitches(self):
     Script.registerSwitch("S:", "Site=", "Site to probe", self.setSite)
     Script.registerSwitch("C:", "CE=","Computing Element to probe", self.setCE)
     Script.setUsageMessage("%s --Site LCG.CERN.ch" % Script.scriptName)
     
-if __name__=="__main__":
-  cli = Params()
-  cli.registerswitches()
+def testAndProbeSites():
+  """submits jobs to test sites"""
+  clip = Params()
+  clip.registerSwitches()
   Script.parseCommandLine()
   
   from DIRAC import gLogger, exit as dexit
@@ -35,7 +37,7 @@ if __name__=="__main__":
   
   from DIRAC.ConfigurationSystem.Client.Helpers.Resources import getQueues
   
-  res = getQueues(siteList = cli.site, ceList = cli.ce)
+  res = getQueues(siteList = clip.site, ceList = clip.ce)
   if not res['OK']:
     gLogger.error("Failed getting the queues", res['Message'])
     dexit(1)
@@ -69,3 +71,5 @@ if __name__=="__main__":
   
   dexit(0)
 
+if __name__=="__main__":
+  testAndProbeSites()

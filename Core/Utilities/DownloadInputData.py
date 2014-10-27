@@ -40,6 +40,7 @@ class DownloadInputData(object):
     self.counter = 1
 
   def __storageElement( self, seName ):
+    """returns dict of storage elements"""
     return self.storageElements.setdefault( seName, StorageElement( seName ) )
 
   #############################################################################
@@ -240,6 +241,7 @@ class DownloadInputData(object):
       return S_ERROR( msg )
 
   def __getDownloadDir( self, incrementCounter = True ):
+    """get the download directory"""
     if self.inputDataDirectory == "PerFile":
       if incrementCounter:
         self.counter += 1

@@ -7,13 +7,16 @@ issued and the file was added later in the catalog, after the job finished.
 But, as the registration failed, the job thought the upload failed, and marked the input file as 
 unused.
 
-So at then end, we have 2 files that were produced with the same input, but the first one has no 
+So at the end, we have 2 files that were produced with the same input, but the first one has no
 ancestor registered.
 
 This code removes the files that have no ancestors while they should have, and also removes their daughters 
 """
 
-if __name__ == "__main__":
+__RCSID__ = "$Id$"
+
+def removeTheWholeFamily():
+  """Remove files and daughters with them"""
   from DIRAC.Core.Base import Script
   Script.parseCommandLine()
   from DIRAC import gLogger, exit as dexit
@@ -51,7 +54,7 @@ if __name__ == "__main__":
     desc_dict.update(res['Value']['Successful'])
   files_to_remove = []
   for lfn in lfns:
-    if lfn in anc_dict.keys():
+    if lfn in anc_dict:
       if not anc_dict[lfn]:
         #gLogger.notice("Bad lfn:",lfn)
         if lfn in desc_dict:
@@ -61,9 +64,9 @@ if __name__ == "__main__":
   
   gLogger.notice("Initial files:",len(lfns))
   gLogger.notice("Will remove files:",len(files_to_remove) )
-  for f in files_to_remove:
-    if f in lfns:
-      lfns.remove(f)
+  for filename in files_to_remove:
+    if filename in lfns:
+      lfns.remove(filename)
   gLogger.notice("Remaining files:",len(lfns))
   
   from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
@@ -74,3 +77,6 @@ if __name__ == "__main__":
     dexit(1)
   gLogger.notice("Cleaned files:",len(files_to_remove))
   dexit(0)
+
+if __name__ == "__main__":
+  removeTheWholeFamily()

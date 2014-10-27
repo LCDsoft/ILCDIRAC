@@ -5,15 +5,17 @@ Created on Mar 24, 2010
 
 @author: sposs
 '''
+__RCSID__ = "$Id$"
+
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK, S_ERROR, exit as dexit
+from DIRAC import S_OK, exit as dexit
 
 class Params(object):
   def __init__(self):
     self.outputdata = False
     self.repo = ''
     
-  def setOuputData(self, opt):
+  def setOuputData(self, dummy_opt):
     self.outputdata = True
     return S_OK()
   
@@ -28,7 +30,7 @@ class Params(object):
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] )  )
     
-if __name__=="__main__":
+def getOutputs():
   repoLocation = ''
   clip = Params()
   clip.registerSwitches()
@@ -58,3 +60,6 @@ if __name__=="__main__":
       gLogger.error("Failed because %s" % res['Message'])
       exit(1)
   dexit(exitCode)
+
+if __name__=="__main__":
+  getOutputs()

@@ -175,6 +175,7 @@ def pathMatch(path, cmtconfig, shared=False):
   return selected
 
 def pathFilter(pathlist, cmtconfig, shared=False):
+  """filter the paths"""
   return [ p for p in pathlist if pathMatch(p, cmtconfig, shared) ]
 
 
@@ -258,6 +259,7 @@ supported_compilers = { "slc6"   : ["gcc44"],
                         "osx106" : ["gcc42"]
                       }
 class NativeMachine(object):
+  """Class to identify the local configuration/platform"""
   def __init__(self):
     self._arch = None
     self._ostype = None
@@ -305,6 +307,7 @@ class NativeMachine(object):
     return "%s-%s" % (self._ostype, self._machine)
   # OS extraction
   def OSFlavour(self, teststring=None):
+    """Return the OSFlavour"""
     if not self._osflavor or teststring:
       if self._ostype == "Windows" :
         self._osflavor = self._sysinfo[2]
@@ -355,6 +358,7 @@ class NativeMachine(object):
     return self._osflavor
 
   def OSVersion(self, position=None, teststring=None):
+    """returns the OSVersion"""
     if not self._osversion :
       if self._ostype == "Windows" :
         self._osversion = self._sysinfo[3]
@@ -386,6 +390,7 @@ class NativeMachine(object):
 
     return osver
   def nativeCompilerVersion(self, position=None):
+    """returns the local compiler version """
     if not self._compversion :
       if self._ostype == "Windows" :
         self._compversion = "vc71"
@@ -404,6 +409,7 @@ class NativeMachine(object):
     return ncv
 
   def nativeCompiler(self):
+    """returns the native compiler brand"""
     if not self._compiler :
       if self._ostype == "Windows" :
         self._compiler = self.nativeCompilerVersion()

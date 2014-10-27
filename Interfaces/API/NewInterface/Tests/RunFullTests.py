@@ -262,67 +262,67 @@ class CLIParams( object ):
     self.submitMode = opt
     return S_OK()
   
-  def setTestWhizard(self, opt):
+  def setTestWhizard(self, dummy_opt):
     """ Test whizard
     """
     self.testWhizard = True
     return S_OK()
   
-  def setTestInputData(self, opt):
+  def setTestInputData(self, dummy_opt):
     """ Test the InputData resolution
     """
     self.testInputData = True
     return S_OK()
   
-  def setTestUtilities(self, opt):
+  def setTestUtilities(self, dummy_opt):
     """ Test the utilities
     """
     self.testUtilities = True
     return S_OK()
   
-  def setTestMokka(self, opt):
+  def setTestMokka(self, dummy_opt):
     """ Test Mokka
     """
     self.testMokka = True
     return S_OK()
   
-  def setTestMarlin(self, opt):
+  def setTestMarlin(self, dummy_opt):
     """ Test Marlin
     """
     self.testMarlin = True
     return S_OK()
   
-  def setTestSLIC(self, opt):
+  def setTestSLIC(self, dummy_opt):
     """ Test SLIC
     """
     self.testSlic = True
     return S_OK()
   
-  def setTestLCSIM(self, opt):
+  def setTestLCSIM(self, dummy_opt):
     """ Test LCSIM
     """
     self.testLCSIM = True
     return S_OK() 
   
-  def setTestSlicPandora(self, opt):
+  def setTestSlicPandora(self, dummy_opt):
     """ Test of SLICPanodra
     """
     self.testSlicPandora = True
     return S_OK()
   
-  def setTestOverlay(self, opt):
+  def setTestOverlay(self, dummy_opt):
     """ Test Overlay
     """
     self.testOverlay = True
     return S_OK()
   
-  def setTestChain(self, opt):
+  def setTestChain(self, dummy_opt):
     """ Test the chaining of apps
     """
     self.testChain = True
     return S_OK()
   
-  def setTestAll(self, opt):
+  def setTestAll(self, dummy_opt):
     """ As name suggests, test everything
     """
     self.testInputData = True
@@ -338,7 +338,7 @@ class CLIParams( object ):
     self.testall = True
     return S_OK()
   
-  def registerCLIParams(self):
+  def registerSwitches(self):
     """ Register the switches
     """
     Script.registerSwitch("", "submitmode=", "Submission mode: local or WMS", self.setSubmitMode)
@@ -356,9 +356,10 @@ class CLIParams( object ):
     Script.setUsageMessage("%s --all --submitmode=local" % Script.scriptName)
     
   
-if __name__ == '__main__':
+def runTests():
+  """runs the tests"""
   clip = CLIParams()
-  clip.registerCLIParams()
+  clip.registerSwitches()
   Script.parseCommandLine()
   
   if clip.testall:
@@ -684,3 +685,5 @@ if __name__ == '__main__':
   os.chdir(curdir)
   dexit(0)
 
+if __name__ == '__main__':
+  runTests()

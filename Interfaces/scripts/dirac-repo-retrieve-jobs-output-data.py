@@ -6,6 +6,8 @@ Created on Mar 24, 2010
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, exit as dexit
 
+__RCSID__ = "$Id$"
+
 class Params(object):
   """ CLI params class
   """
@@ -15,26 +17,30 @@ class Params(object):
     self.repo = val
     return S_OK()
 
-cliParams = Params()
-Script.registerSwitch( "r:", "repo=", "repo file", cliParams.setRepo )
-# Define a help message
-Script.setUsageMessage( '\n'.join( [ __doc__,
-                                     'Usage:',
-                                     '  %s [option|cfgfile] ' % Script.scriptName] ) )
-  
-Script.parseCommandLine( ignoreErrors = False )
+  def registerSwitches(self):
+    Script.registerSwitch( "r:", "repo=", "repo file", self.setRepo )
+    # Define a help message
+    Script.setUsageMessage( '\n'.join( [ __doc__,
+                                         'Usage:',
+                                         '  %s [option|cfgfile] ' % Script.scriptName] ) )
 
-if __name__=="__main__":
-  repoLocation = cliParams.repo
-  if not repoLocation:
+
+def getOutputData():
+  cliParams = Params()
+  cliParams.registerSwitches()
+  Script.parseCommandLine( ignoreErrors = False )
+  if not cliParams.repo:
     Script.showHelp()
     dexit(2)
   from DIRAC.Interfaces.API.Dirac import Dirac
   
-  dirac = Dirac(True, repoLocation)
+  dirac = Dirac(True, cliParams.repo)
 
   exitCode = 0
   dirac.monitorRepository(False)
   dirac.retrieveRepositoryData()
 
   dexit(exitCode)
+
+if __name__=="__main__":
+  getOutputData()

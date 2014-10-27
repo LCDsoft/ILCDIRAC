@@ -55,7 +55,7 @@ class Job(DiracJob):
     """ Overload method to cancel it
     """
     return self._reportError('This job class does not implement setInputSandbox')
-  def setOuputData(self, lfns, OutputSE = [], OutputPath = '' ):
+  def setOutputData(self, lfns, OutputSE = [], OutputPath = '' ):
     """ Overload method to cancel it
     """
     return self._reportError('This job class does not implement setOutputData')

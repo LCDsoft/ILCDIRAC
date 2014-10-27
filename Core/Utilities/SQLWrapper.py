@@ -21,6 +21,7 @@ import os, sys, tempfile, threading, time, shutil
 EXECUTION_RESULT = {}
 
 class SQLWrapper:
+  """Wrapper around the mokka DB"""
   def __init__(self, softwareDir = './', mokkaDBroot = ''):
     """Set initial variables
     
@@ -378,6 +379,7 @@ class ExecutionThread( threading.Thread ):
 
   #############################################################################
   def sendOutput( self, stdid, line ):
+    """sends the Output"""
     if stdid == 0 and self.stdout:
       outputFile = open( self.stdout, 'a+' )
       print >> outputFile, line

@@ -15,7 +15,7 @@ from DIRAC.Core.Utilities.List                                            import
 AGENT_NAME = 'ILCTransformation/ILCInputDataAgent'
 
 class ILCInputDataAgent( InputDataAgent ):
-
+  """ILCDirac version of the InputDataAgent"""
   def __init__( self, *args, **kwargs ):
     ''' An AgentModule class for ILCDIRAC (this string is needed for allowing installation)
     '''
