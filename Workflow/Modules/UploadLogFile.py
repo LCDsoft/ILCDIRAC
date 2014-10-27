@@ -8,7 +8,6 @@ directory.
 
 __RCSID__ = "$Id$"
 
-from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 
@@ -17,6 +16,8 @@ from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
 
 from DIRAC.RequestManagementSystem.Client.Operation        import Operation
 from DIRAC.RequestManagementSystem.Client.File             import File
+
+from DIRAC.Resources.Storage.StorageElement                import StorageElement
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 import DIRAC
@@ -39,14 +40,13 @@ class UploadLogFile(ModuleBase):
     self.logFilePath = ""
     self.logLFNPath = ""
     self.logdir = ''
-    self.logSE = self.ops.getValue('/LogStorage/LogSE', 'LogSE')
+    self.logSE = StorageElement( self.ops.getValue('/LogStorage/LogSE', 'LogSE') )
     self.root = gConfig.getValue('/LocalSite/Root', os.getcwd())
     self.logSizeLimit = self.ops.getValue('/LogFiles/SizeLimit', 20 * 1024 * 1024)
     self.logExtensions = []
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
     self.diracLogo = self.ops.getValue('/SAM/LogoURL', 
                                        'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
-    self.repMan = ReplicaManager()
 
     self.experiment = 'CLIC'
     self.enable = True
@@ -174,20 +174,15 @@ class UploadLogFile(ModuleBase):
 
 
     #########################################
-    # Attempt to uplaod logs to the LogSE
-    self.log.info('Transferring log files to the %s' % self.logSE)
+    # Attempt to upload logs to the LogSE
+    self.log.info('Transferring log files to the %s' % self.logSE.name)
     res = S_ERROR()
     if not self.failoverTest:
-      self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE))
-      res = self.repMan.putStorageDirectory({ self.logFilePath : os.path.realpath(self.logdir) },
-                                            self.logSE, singleDirectory = True)
+      self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE.name))
+      res = self.logSE.putDirectory({ self.logFilePath : os.path.realpath(self.logdir) })
       self.log.verbose(res)
-      if res['OK']:
-        self.log.info('Successfully upload log directory to %s' % self.logSE)
-        # TODO: The logURL should be constructed using the LogSE and StorageElement()
-        #storageElement = StorageElement(self.logSE)
-        #pfn = storageElement.getPfnForLfn(self.logFilePath)['Value']
-        #logURL = getPfnForProtocol(res['Value'],'http')['Value']
+      if len(res['Value']['Failed']) == 0:
+        self.log.info('Successfully upload log directory to %s' % self.logSE.name)
         logURL = '%s' % self.logFilePath
         self.setJobParameter('Log LFN', logURL)
         self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % logURL)
@@ -242,7 +237,7 @@ class UploadLogFile(ModuleBase):
     
     #Now after all operations, retrieve potentially modified request object
     self.workflow_commons['Request'] = failoverTransfer.request
-    res = self.createLogUploadRequest(self.logSE, self.logLFNPath)
+    res = self.createLogUploadRequest(self.logSE.name, self.logLFNPath)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
       self.setApplicationStatus('Failed To Upload Logs To Failover')
