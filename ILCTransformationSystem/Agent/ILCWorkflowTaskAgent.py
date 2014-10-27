@@ -2,6 +2,8 @@
     transformation database and submits to the workload management system.
 '''
 
+__RCSID__ = "$Id$"
+
 from DIRAC.TransformationSystem.Agent.WorkflowTaskAgent  import WorkflowTaskAgent
 from ILCDIRAC.ILCTransformationSystem.Client.ILCTaskManager          import ILCWorkflowTasks
 

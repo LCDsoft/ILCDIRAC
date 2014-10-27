@@ -2,6 +2,7 @@
 This class is needed to get the Limited plugin support.
 """
 
+__RCSID__ = "$Id$"
 from DIRAC.TransformationSystem.Client.Transformation import Transformation as DT
 
 class Transformation(DT):
