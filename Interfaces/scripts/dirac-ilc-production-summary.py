@@ -2,8 +2,10 @@
 """
 Prepare the production summary tables
 """
+__RCSID__ = "$Id$"
+
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK, S_ERROR, exit as dexit
+from DIRAC import S_OK, exit as dexit
 import os
 
 def getFileInfo(lfn):
@@ -122,14 +124,14 @@ class Params(object):
 
     return S_OK()
 
-  def setFullDetail(self,opt):
+  def setFullDetail(self,dummy_opt):
     """ Get every individual file's properties, makes this 
     very very slow
     """
     self.full_det = True
     return S_OK()
 
-  def setVerbose(self, opt):
+  def setVerbose(self, dummy_opt):
     """ Extra printouts
     """
     self.verbose = True
@@ -156,10 +158,10 @@ class Params(object):
     Script.registerSwitch("t:", "types=", "Production Types, comma separated, default all", self.setProdTypes)
     Script.registerSwitch("S:", "Statuses=", "Statuses, comma separated, default all", self.setStatuses)
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
-                                        '\nUsage:',
-                                        '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
+                                         '\nUsage:',
+                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
 
-if __name__=="__main__":
+def getProductionSummary():
   clip = Params()
   clip.registerSwitch()
   Script.parseCommandLine()
@@ -179,14 +181,14 @@ if __name__=="__main__":
   trc = TransformationClient()
   prodids = []
   if not prod:
-   conddict = {}
-   conddict['Status'] = clip.statuses
-   if clip.ptypes:
-     conddict['Type'] = clip.ptypes
-   res = trc.getTransformations( conddict )
-   if res['OK']:
-     for transfs in res['Value']:
-       prodids.append(transfs['TransformationID'])
+    conddict = {}
+    conddict['Status'] = clip.statuses
+    if clip.ptypes:
+      conddict['Type'] = clip.ptypes
+    res = trc.getTransformations( conddict )
+    if res['OK']:
+      for transfs in res['Value']:
+        prodids.append(transfs['TransformationID'])
   else:
     prodids.extend(prod)
 
@@ -360,15 +362,15 @@ if __name__=="__main__":
         gLogger.error("This is unknown detector", channel['DetectorType'])
         continue
       detectors[channel['DetectorType']][corres[channel['prodtype']]].append((channel['detail'],
-                                                                   channel['Energy'],
-                                                                   channel['DetectorType'],
-                                                                   channel['ProdID'],
-                                                                   channel['nb_files'],
-                                                                   channel['NumberOfEvents']/channel['nb_files'],
-                                                                   channel['NumberOfEvents'],
-                                                                   channel['CrossSection'],
-                                                                   channel['MomProdID'],
-                                                                   str(channel['proddetail'])))
+                                                                              channel['Energy'],
+                                                                              channel['DetectorType'],
+                                                                              channel['ProdID'],
+                                                                              channel['nb_files'],
+                                                                              channel['NumberOfEvents']/channel['nb_files'],
+                                                                              channel['NumberOfEvents'],
+                                                                              channel['CrossSection'],
+                                                                              channel['MomProdID'],
+                                                                              str(channel['proddetail'])))
   
   of = file("tables.html","w")
   of.write("""<!DOCTYPE html>
@@ -380,48 +382,48 @@ if __name__=="__main__":
 """)
   if len(detectors['gen']):           
     of.write("<h1>gen prods</h1>\n")
-    t = Table(header_row = ('Channel', 'Energy','ProdID','Tasks','Average Evts/task','Statistics','Cross Section (fb)','Comment'))
+    table = Table(header_row = ('Channel', 'Energy','ProdID','Tasks','Average Evts/task','Statistics','Cross Section (fb)','Comment'))
     for item in detectors['gen']:
-      t.rows.append( item )
-    of.write(str(t))
+      table.rows.append( item )
+    of.write(str(table))
     gLogger.info("Gen prods")
-    gLogger.info(str(t))
+    gLogger.info(str(table))
 
   if len(detectors['ILD']):           
     of.write("<h1>ILD prods</h1>\n")
     for ptype in detectors['ILD'].keys():
       if len(detectors['ILD'][ptype]):
         of.write("<h2>%s</h2>\n"%ptype)
-        t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+        table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
         for item in detectors['ILD'][ptype]:
-          t.rows.append( item )
-        of.write(str(t))
+          table.rows.append( item )
+        of.write(str(table))
         gLogger.info("ILC CDR prods %s" % ptype)
-        gLogger.info(str(t))
+        gLogger.info(str(table))
   
   if len(detectors['SID']):           
     of.write("<h1>SID prods</h1>\n")
     for ptype in detectors['SID'].keys():
       if len(detectors['SID'][ptype]):
         of.write("<h2>%s</h2>\n"%ptype)
-        t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+        table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
         for item in detectors['SID'][ptype]:
-          t.rows.append( item )
-        of.write(str(t))
+          table.rows.append( item )
+        of.write(str(table))
         gLogger.info("SID CDR prods %s"%ptype)
-        gLogger.info(str(t))
+        gLogger.info(str(table))
 
   if len(detectors['sid']):           
     of.write("<h1>sid dbd prods</h1>\n")
-    for ptype in detectors['SID'].keys():
+    for ptype in detectors['sid'].keys():
       if len(detectors['sid'][ptype]):
         of.write("<h2>%s</h2>\n"%ptype)
-        t = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+        table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
         for item in detectors['sid'][ptype]:
-          t.rows.append( item )
-        of.write(str(t))
+          table.rows.append( item )
+        of.write(str(table))
         gLogger.info("sid DBD prods %s"%ptype)
-        gLogger.info(str(t))
+        gLogger.info(str(table))
   
   of.write("""
 </body>
@@ -430,3 +432,6 @@ if __name__=="__main__":
   of.close()
   gLogger.notice("Check ./tables.html in any browser for the results")
   dexit(0)
+
+if __name__=="__main__":
+  getProductionSummary()
