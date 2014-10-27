@@ -9,7 +9,7 @@ from DIRAC                                          import gLogger
 from DIRAC.Interfaces.API.Job                       import Job
 from ILCDIRAC.Core.Utilities.ProductionData         import constructProductionLFNs
 
-class OutputDataPolicy:
+class OutputDataPolicy(object):
   """ This module is called from the TransformationSystem
   """  
   def __init__(self, paramDict):

@@ -118,7 +118,7 @@ logINFO( "Version %s" % __RCSID__ )
 try:
   pilotScript = os.path.realpath( __file__ )
   # in old python versions __file__ is not defined
-except:
+except OSError:
   pilotScript = os.path.realpath( sys.argv[0] )
 
 pilotScriptName = os.path.basename( pilotScript )
@@ -164,7 +164,7 @@ if not os.path.isfile( installScript ):
     localFD.write( remoteFD.read() )
     localFD.close()
     remoteFD.close()
-  except Exception, e:
+  except IOError as e:
     logERROR( "Could not download %s..: %s" % ( remoteLocation, str( e ) ) )
     sys.exit( 1 )
 
@@ -255,12 +255,12 @@ for o, v in optList:
   elif o == '-D' or o == '--disk':
     try:
       cliParams.minDiskSpace = int( v )
-    except:
+    except ValueError:
       pass
   elif o == '-M' or o == '--MaxCycles':
     try:
       cliParams.maxCycles = min( CliParams.MAX_CYCLES, int( v ) )
-    except:
+    except ValueError:
       pass
   elif o == '-R' or o == '--reference':
     cliParams.pilotReference = v
@@ -453,7 +453,7 @@ diracBinPath = os.path.join( rootPath, cliParams.platform, 'bin' )
 for envVarName in ( 'LD_LIBRARY_PATH', 'PYTHONPATH' ):
   if envVarName in os.environ:
     os.environ[ '%s_SAVE' % envVarName ] = os.environ[ envVarName ]
-    del( os.environ[ envVarName ] )
+    del os.environ[ envVarName ]
   else:
     os.environ[ '%s_SAVE' % envVarName ] = ""
 os.environ['LD_LIBRARY_PATH'] = "%s" % ( diracLibPath )
@@ -508,7 +508,7 @@ localUid = os.getuid()
 try:
   import pwd
   localUser = pwd.getpwuid( localUid )[0]
-except:
+except KeyError:
   localUser = 'Unknown'
 
 logINFO( 'Uname      = %s' % " ".join( os.uname() ) )
