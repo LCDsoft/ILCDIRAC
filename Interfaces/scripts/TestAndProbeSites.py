@@ -1,5 +1,6 @@
 #!/bin/env python
-
+""" submit jobs to all sites and checks the worker nodes for functionality"""
+__RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK
 

@@ -7,6 +7,7 @@ List of files in the SteeringFiles tar ball.
 from DIRAC import S_OK, S_ERROR
 
 def Exists(myfile):
+  """check if the file exists"""
   files = ["defaultClicCrossingAngle.mac", "clic_ild_cdr500.steer",
            "clic_ild_cdr.steer", "clic_cdr_prePandora.lcsim",
            "clic_cdr_postPandora.lcsim", "clic_cdr_prePandoraOverlay.lcsim",

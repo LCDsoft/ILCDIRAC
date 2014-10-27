@@ -1,3 +1,4 @@
+"""ILCDirac version of the Transformation Agent"""
 __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.ThreadSafe                                import Synchronizer
 from DIRAC.TransformationSystem.Agent.TransformationAgent           import TransformationAgent

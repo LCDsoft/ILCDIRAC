@@ -74,22 +74,26 @@ cliParams = CliParams()
 ###
 
 def logDEBUG( msg ):
+  """logs Debug Message"""
   if cliParams.debug:
     for _line in msg.split( "\n" ):
       print "%s UTC dirac-pilot [DEBUG] %s" % ( time.strftime( '%Y-%m-%d %H:%M:%S', time.gmtime() ), _line )
     sys.stdout.flush()
 
 def logERROR( msg ):
+  """logs error messages"""
   for _line in msg.split( "\n" ):
     print "%s UTC dirac-pilot [ERROR] %s" % ( time.strftime( '%Y-%m-%d %H:%M:%S', time.gmtime() ), _line )
   sys.stdout.flush()
 
 def logINFO( msg ):
+  """logs Info Messages"""
   for _line in msg.split( "\n" ):
     print "%s UTC dirac-pilot [INFO]  %s" % ( time.strftime( '%Y-%m-%d %H:%M:%S', time.gmtime() ), _line )
   sys.stdout.flush()
 
 def executeAndGetOutput( cmd ):
+  """executes and gets the output"""
   try:
     import subprocess
     _p = subprocess.Popen( "%s" % cmd, shell = True, stdout = subprocess.PIPE,
