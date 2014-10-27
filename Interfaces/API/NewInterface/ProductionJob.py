@@ -157,7 +157,7 @@ class ProductionJob(Job):
     """Set prod type.
     """
     if not prodType in self.prodTypes:
-      raise TypeError,'Prod must be one of %s' % (', '.join(self.prodTypes))
+      raise TypeError('Prod must be one of %s' % (', '.join(self.prodTypes)))
     self.setType(prodType)
   #############################################################################
   def setWorkflowName(self, name):
