@@ -43,7 +43,9 @@ s/ TYPE=[a-zA-Z0-9]\{1,\}//g
 }
 programname=Mokka
 
+LD_LIBRARY_PATH_TEMP=$LD_LIBRARY_PATH
 source /afs/cern.ch/eng/clic/software/DIRAC/bashrc
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LD_LIBRARY_PATH_TEMP
 platform=`dirac-architecture`
 
 if [ $# -eq 0 ]; then
