@@ -17,7 +17,7 @@ The LFN path is given in the CS, Operations, under Transformations/BaseLogLFN
 from DIRAC.Core.Base.AgentModule                                import AgentModule
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations        import Operations
 from DIRAC.TransformationSystem.Client.TransformationClient     import TransformationClient
-from DIRAC.Resources.Storage.StorageElement                     import StorageElement
+from DIRAC.Resources.Storage.StorageElement                     import StorageElementItem as StorageElement
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
