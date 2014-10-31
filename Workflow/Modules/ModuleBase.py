@@ -20,7 +20,7 @@ from DIRAC.WorkloadManagementSystem.Client.JobReport      import JobReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC.RequestManagementSystem.Client.Request         import Request
-from DIRAC.RequestManagementSystem.private.RequestValidator   import gRequestValidator
+from DIRAC.RequestManagementSystem.private.RequestValidator   import RequestValidator
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
@@ -697,7 +697,7 @@ class ModuleBase(object):
       self.log.info("No Requests to process ")
       return S_OK()
 
-    isValid = gRequestValidator.validate( request )
+    isValid = RequestValidator().validate( request )
     if not isValid['OK']:
       raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
 
