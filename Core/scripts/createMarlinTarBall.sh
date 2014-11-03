@@ -1,9 +1,11 @@
 #!/bin/bash
 
 programname=Marlin
+LD_LIBRARY_PATH_TEMP=$LD_LIBRARY_PATH
 source /afs/cern.ch/eng/clic/software/DIRAC/bashrc
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LD_LIBRARY_PATH_TEMP
 platform=`dirac-architecture`
-platform='x86_64-slc5-gcc43-opt'
+
 
 if [ $# -eq 0 ]; then
     echo "Please Specify the version of the tarball e.g. 0108 and comment e.g. \"added new processor\""
