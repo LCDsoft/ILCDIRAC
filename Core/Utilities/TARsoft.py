@@ -399,7 +399,7 @@ def check(app, area, res_from_install):
       found_lib_to_ignore = False
       for lib in getLibsToIgnore():
         if fin.count(lib):
-          found_lib_to_ignore
+          found_lib_to_ignore = True
       if found_lib_to_ignore:
         continue
       fin = os.path.join(basefolder, fin.replace("./",""))
