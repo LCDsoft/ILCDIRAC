@@ -160,13 +160,6 @@ class UploadLogFile(ModuleBase):
       return S_OK()#because if the logs are lost, it's not the end of the world.
     self.log.info('%s populated with log files.' % self.logdir)
 
-    #########################################
-    # Create a tailored index page
-    #self.log.info('Creating an index page for the logs')
-    #result = self.__createLogIndex(selectedFiles)
-    #if not result['OK']:
-    #  self.log.error('Failed to create index page for logs', res['Message'])
-
     if not self.enable:
       self.log.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
@@ -380,68 +373,4 @@ class UploadLogFile(ModuleBase):
     return S_OK( {'Request': failoverTransfer.request, 'uploadedSE': result['Value']['uploadedSE']})
 
 
-  #############################################################################
-  def __createLogIndex(self, selectedFiles):
-    """ Create a log index page for browsing the log files.
-    """
-    productionID = self.productionID
-    prodJobID = self.jobID
-    wmsJobID = self.jobID
-    #logFilePath = self.logFilePath
-
-    targetFile = '%s/index.html' % (self.logdir)
-    fopen = open(targetFile, 'w')
-    fopen.write( """
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>\n""")
-    fopen.write("<title>Logs for Job %s of Production %s (DIRAC WMS ID %s)</title>\n" % (prodJobID, productionID, 
-                                                                                         wmsJobID))
-    fopen.write( """</head>
-<body text="#000000" bgcolor="#33ffff" link="#000099" vlink="#990099"
- alink="#000099"> \n
-""")
-    fopen.write("""<IMG SRC="%s" ALT="DIRAC" WIDTH="300" HEIGHT="120" ALIGN="right" BORDER="0">
-<br>
-""" %self.diracLogo)
-    fopen.write("<h3>Log files for  Job %s_%s </h3> \n<br>"  % (productionID, prodJobID))
-    for fileName in selectedFiles:
-      fopen.write('<a href="%s">%s</a><br> \n' % (fileName, fileName))
-
-    fopen.write("<p>Job %s_%s corresponds to WMS JobID %s executed at %s.</p><br>" % (productionID, prodJobID, wmsJobID,
-                                                                                      DIRAC.siteName()))
-    fopen.write("<h3>Parameter summary for job %s_%s</h3> \n"  %(prodJobID, productionID))
-    check = ['SystemConfig', 'SoftwarePackages', 'BannedSites', 'LogLevel',
-             'JobType', 'MaxCPUTime', 'ProductionOutputData', 'LogFilePath', 'InputData', 'InputSandbox']
-    params = {}
-    for parameter, value in self.workflow_commons.iteritems():
-      for item in check:
-        if parameter == item and value:
-          params[parameter] = str(value)
-
-    finalKeys = params.keys()
-    finalKeys.sort()
-    rows = ''
-    for k in finalKeys:
-      rows += """
-
-<tr>
-<td> %s </td>
-<td> %s </td>
-</tr>
-      """ % (k, params[k])
-
-    table = """<table border="1" bordercolor="#000000" width="50%" bgcolor="#BCCDFE">
-<tr>
-<td>Parameter Name</td>
-<td>Parameter Value</td>
-</tr>"""+rows+"""
-</table>
-"""
-    fopen.write(table)
-    fopen.write("""</body>
-</html>""" )
-    fopen.close()
-    return S_OK()
-  
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
