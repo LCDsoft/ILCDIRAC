@@ -4,8 +4,8 @@
 Test generateFailoverFile
 """
 __RCSID__ = "$Id$"
-
-import unittest
+#pylint: disable=W0212
+import unittest, copy
 from mock import MagicMock as Mock
 
 from DIRAC import gLogger, S_ERROR, S_OK
@@ -13,43 +13,41 @@ from DIRAC import gLogger, S_ERROR, S_OK
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
+from DIRAC.RequestManagementSystem.Client.Request import Request
+
+from ILCDIRAC.Core.Utilities.ProductionData import getLogPath
+from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest
+from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
+from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
+
 
 from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
 #import DIRAC.Workflow.Modules.test.Test_Modules as Test_Modules
-
+gLogger.setLevel("DEBUG")
+gLogger.showHeaders(True)
 class ModulesTestCase ( DiracModulesTestCase ):
   """ ILCDirac version of Workflow module tests"""
   def setUp( self ):
     """Set up the objects"""
     super(ModulesTestCase, self).setUp()
-    gLogger.setLevel("DEBUG")
-    self.log = gLogger.getSubLogger("ModuleBaseTest")
-    self.log.showHeaders(True)
-    self.log.setLevel("ERROR")
+    self.log = gLogger.getSubLogger("MODULEBASE")
     self.mb = ModuleBase()
     self.mb.rm = self.rm_mock
     self.mb.request = self.rc_mock
     self.mb.jobReport = self.jr_mock
     self.mb.fileReport = self.fr_mock
     self.mb.workflow_commons = self.wf_commons[0]
-    self.mb.workflow_commons['LogFilePath'] = "/ilc/test/dummy/folder"
+    self.mb.workflow_commons['LogFilePath'] = "/ilc/user/s/sailer/test/dummy/folder"
+    self.mb.log = gLogger.getSubLogger("ModuleBaseTest")
+    self.mb.log.showHeaders(True)
     
-    from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
     self.uod = UploadOutputData()
     self.uod.workflow_commons = self.mb.workflow_commons
-    
-    from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
-    self.ulf = UploadLogFile()
-    self.ulf.resolveInputVariables = Mock(return_value=S_OK())
-    self.ulf.tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
-                                                             'uploadedSE': 'CERN-SRM'}))
-    
-    self.ulf.workflow_commons = self.mb.workflow_commons
 
-    from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest
     self.fr = FailoverRequest()
     self.fr.workflow_commons = self.mb.workflow_commons
 
+    self.ulf = UploadLogFile()
 
     
 class ModuleBaseFailure( ModulesTestCase ):
@@ -77,26 +75,53 @@ class UploadLogFileFailure( ModulesTestCase ):
   """ test UploadLogFile """
 
   def test_NoLogFiles( self ):
-    self.ulf.resolveInputVariables = Mock(return_value=S_OK())
-    self.ulf.determineRelevantFiles = Mock(return_value=S_OK([]))
-    res = self.ulf.execute()
-    self.assertTrue( res['OK'] )
+    self.ulf = UploadLogFile()
+    self.ulf.workflow_commons = copy.deepcopy(self.mb.workflow_commons)
+    self.ulf.log = gLogger.getSubLogger("ULF-NoLogFiles")
+    self.ulf.log.setLevel("INFO")
 
-  def test_OneLogFile( self ):
-    self.ulf.log.setLevel("DEBUG")
-    self.ulf.determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="MockingJay")))
-    from ILCDIRAC.Core.Utilities.ProductionData import getLogPath
-    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
-    self.log.info("LOGPATH: %s: " % self.ulf.logLFNPath)
+    self.ulf.resolveInputVariables = Mock(return_value=S_OK())
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK([]))
     self.ulf.applicationSpecificInputs()
     res = self.ulf.execute()
     self.assertTrue( res['OK'] )
 
+  def test_OneLogFile( self ):
+    self.ulf = UploadLogFile()
+    self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
+    self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
+    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="MockingJay")))
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
+                                                              'uploadedSE': 'CERN-SRM'}))
+    self.ulf.applicationSpecificInputs()
+
+    res = self.ulf.execute()
+    self.assertTrue( res['OK'] )
+
   def test_LogFileGone( self ):
-    self.ulf.log.setLevel("DEBUG")
-    self.ulf.determineRelevantFiles = Mock(return_value=S_OK(['std.out']))
+    self.ulf = UploadLogFile()
+    self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
+    self.ulf.log = gLogger.getSubLogger("ULF-LogFileGone")
+
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['std.out']))
     self.assertRaises( IOError, self.ulf.execute )
+
+  def test_Request( self ):
+    self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
+    self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
+    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
+                                                              Message="MockingJay")))
+    self.ulf.workflow_commons['Request'] = Request()
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': Request(),
+                                                              'uploadedSE': 'CERN-SRM'}))
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf.applicationSpecificInputs()
+    res = self.ulf.execute()
+    self.assertTrue( res['OK'] )
 
 #############################################################################
 # UploadOutputData.py
