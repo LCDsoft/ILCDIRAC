@@ -20,7 +20,6 @@ from DIRAC.RequestManagementSystem.Client.File             import File
 from DIRAC.Resources.Storage.StorageElement                import StorageElement
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
-import DIRAC
 
 import os, shutil, glob, random, tarfile
 
@@ -45,9 +44,6 @@ class UploadLogFile(ModuleBase):
     self.logSizeLimit = self.ops.getValue('/LogFiles/SizeLimit', 20 * 1024 * 1024)
     self.logExtensions = []
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])    
-    self.diracLogo = self.ops.getValue('/SAM/LogoURL', 
-                                       'https://lhcbweb.pic.es/DIRAC/images/logos/DIRAC-logo-transp.png')
-
     self.experiment = 'CLIC'
     self.enable = True
     self.failoverTest = False #flag to put log files to failover by default
