@@ -137,7 +137,7 @@ class UploadLogFile(ModuleBase):
     ##########################################
     # First determine the files which should be saved
     self.log.info('Determining the files to be saved in the logs.')
-    resRelevantFiles = self.determineRelevantFiles()
+    resRelevantFiles = self._determineRelevantFiles()
     if not resRelevantFiles['OK']:
       self.log.error('Completely failed to select relevant log files.', resRelevantFiles['Message'])
       return S_OK()#because if the logs are lost, it's not the end of the world.
@@ -153,7 +153,7 @@ class UploadLogFile(ModuleBase):
     #########################################
     # Create a temporary directory containing these files
     self.log.info('Populating a temporary directory for selected files.')
-    resLogDir = self.populateLogDirectory(selectedFiles)
+    resLogDir = self._populateLogDirectory(selectedFiles)
     if not resLogDir['OK']:
       self.log.error('Completely failed to populate temporary log file directory.', resLogDir['Message'])
       self.setApplicationStatus('Failed To Populate Log Dir')
@@ -166,7 +166,7 @@ class UploadLogFile(ModuleBase):
 
     #########################################
     #Make sure all the files in the log directory have the correct permissions
-    result = self.__setLogFilePermissions(self.logdir)
+    result = self._setLogFilePermissions(self.logdir)
     if not result['OK']:
       self.log.error('Could not set permissions of log files to 0755 with message:\n%s' % (result['Message']))
 
@@ -222,23 +222,23 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    resFailover = self.tryFailoverTransfer(tarFileName, tarFileDir)
+    resFailover = self._tryFailoverTransfer(tarFileName, tarFileDir)
     if not resFailover['Value']:
       return resFailover ##log files lost, but who cares...
     
     self.workflow_commons['Request'] = resFailover['Value']['Request']
     uploadedSE = resFailover['Value']['uploadedSE']
-    res = self.createLogUploadRequest(self.logSE.name, self.logLFNPath, uploadedSE)
+    res = self._createLogUploadRequest(self.logSE.name, self.logLFNPath, uploadedSE)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
       self.setApplicationStatus('Failed To Upload Logs To Failover')
     else:
       self.log.info('Successfully created failover request')
-      self.log.debug("Request %s" % self._getRequestContainer())
+      self.log.info("Request %s" % self._getRequestContainer())
     return S_OK()
 
   #############################################################################
-  def determineRelevantFiles(self):
+  def _determineRelevantFiles(self):
     """ The files which are below a configurable size will be stored in the logs.
         This will typically pick up everything in the working directory minus the output data files.
     """
@@ -274,7 +274,7 @@ class UploadLogFile(ModuleBase):
       return S_ERROR('Could not determine log files')
 
   #############################################################################
-  def populateLogDirectory(self, selectedFiles):
+  def _populateLogDirectory(self, selectedFiles):
     """ A temporary directory is created for all the selected files.
         These files are then copied into this directory before being uploaded
     """
@@ -311,7 +311,7 @@ class UploadLogFile(ModuleBase):
       return S_OK()
     
   #############################################################################
-  def createLogUploadRequest(self, targetSE, logFileLFN, uploadedSE):
+  def _createLogUploadRequest(self, targetSE, logFileLFN, uploadedSE):
     """ Set a request to upload job log files from the output sandbox
         Changed to be similar to LHCb createLogUploadRequest
         using LHCb LogUpload Request and Removal Request
@@ -336,7 +336,7 @@ class UploadLogFile(ModuleBase):
     return S_OK()
 
   #############################################################################
-  def __setLogFilePermissions(self, logDir):
+  def _setLogFilePermissions(self, logDir):
     """ Sets the permissions of all the files in the log directory to ensure
         they are readable.
     """
@@ -352,7 +352,7 @@ class UploadLogFile(ModuleBase):
     return S_OK()
 
   ################################################################################
-  def tryFailoverTransfer(self, tarFileName, tarFileDir):
+  def _tryFailoverTransfer(self, tarFileName, tarFileDir):
     """tries to upload the log tarBall to the failoverSE and creates moving request"""
     failoverTransfer = FailoverTransfer(self._getRequestContainer())
     ##determine the experiment
