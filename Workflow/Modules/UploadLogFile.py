@@ -215,12 +215,10 @@ class UploadLogFile(ModuleBase):
       self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
       tfile.add(item)
     tfile.close()
-    #res = shellCall(0,comm)
-    if not os.path.exists(tarFileName):
-      res = S_ERROR("File was not created")
+    resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
     os.chdir(start)
-    if not res['OK']:
-      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, res['Message']))
+    if not resExists['OK']:
+      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
       self.setApplicationStatus('Failed To Create Log Tar Dir')
       return S_OK()#because if the logs are lost, it's not the end of the world.
     
