@@ -149,8 +149,8 @@ def getLogPath(paramDict):
   logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)/1000).zfill(3))]
   #Get log file path - unique for all modules
 
-  gLogger.verbose('Log file path is:\n%s' % logFilePath)
-  gLogger.verbose('Log target path is:\n%s' % logTargetPath)
+  gLogger.verbose('Log file path is: %s' % logFilePath)
+  gLogger.verbose('Log target path is: %s' % logTargetPath)
   jobOutputs = {'LogFilePath' : logFilePath, 'LogTargetPath' : logTargetPath}
   return S_OK(jobOutputs)
 
