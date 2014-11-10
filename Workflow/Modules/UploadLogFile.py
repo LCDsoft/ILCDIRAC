@@ -137,12 +137,12 @@ class UploadLogFile(ModuleBase):
     ##########################################
     # First determine the files which should be saved
     self.log.info('Determining the files to be saved in the logs.')
-    res = self.determineRelevantFiles()
-    if not res['OK']:
-      self.log.error('Completely failed to select relevant log files.', res['Message'])
+    resRelevantFiles = self.determineRelevantFiles()
+    if not resRelevantFiles['OK']:
+      self.log.error('Completely failed to select relevant log files.', resRelevantFiles['Message'])
       return S_OK()#because if the logs are lost, it's not the end of the world.
 
-    selectedFiles = res['Value']
+    selectedFiles = resRelevantFiles['Value']
     if not selectedFiles:
       self.log.info("No log files selected")
       return S_OK()
@@ -153,9 +153,9 @@ class UploadLogFile(ModuleBase):
     #########################################
     # Create a temporary directory containing these files
     self.log.info('Populating a temporary directory for selected files.')
-    res = self.populateLogDirectory(selectedFiles)
-    if not res['OK']:
-      self.log.error('Completely failed to populate temporary log file directory.', res['Message'])
+    resLogDir = self.populateLogDirectory(selectedFiles)
+    if not resLogDir['OK']:
+      self.log.error('Completely failed to populate temporary log file directory.', resLogDir['Message'])
       self.setApplicationStatus('Failed To Populate Log Dir')
       return S_OK()#because if the logs are lost, it's not the end of the world.
     self.log.info('%s populated with log files.' % self.logdir)
@@ -181,23 +181,23 @@ class UploadLogFile(ModuleBase):
     #########################################
     # Attempt to upload logs to the LogSE
     self.log.info('Transferring log files to the %s' % self.logSE.name)
-    res = S_ERROR()
+    resTransfer = S_ERROR("Skipping log upload, because failoverTest")
     if not self.failoverTest:
       self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE.name))
-      res = self.logSE.putDirectory({ self.logFilePath : os.path.realpath(self.logdir) })
-      self.log.verbose(res)
-      if len(res['Value']['Failed']) == 0:
+      resTransfer = self.logSE.putDirectory({ self.logFilePath : os.path.realpath(self.logdir) })
+      self.log.debug("putDirectory result: %s" % resTransfer)
+      if len(resTransfer['Value']['Failed']) == 0:
         self.log.info('Successfully upload log directory to %s' % self.logSE.name)
         logURL = '%s' % self.logFilePath
         self.setJobParameter('Log LFN', logURL)
         self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % logURL)
         return S_OK()
       else:
-        res = S_ERROR ( res['Value'] )
+        resTransfer = S_ERROR ( resTransfer['Value'] )
     #########################################
     # Recover the logs to a failover storage element
-    self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE, 
-                   res['Message'])
+    self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
+                   resTransfer['Message'])
 
     tarFileDir = os.path.dirname(self.logdir)
     self.logLFNPath = '%s.gz' % self.logLFNPath
