@@ -241,7 +241,7 @@ class UploadLogFile(ModuleBase):
       self.setApplicationStatus('Failed To Upload Logs To Failover')
     else:
       self.log.info('Successfully created failover request')
-      
+      self.log.debug("Request %s" % self._getRequestContainer())
     return S_OK()
 
   #############################################################################
@@ -318,19 +318,26 @@ class UploadLogFile(ModuleBase):
       return S_OK()
     
   #############################################################################
-  def createLogUploadRequest(self, targetSE, logFileLFN):
+  def createLogUploadRequest(self, targetSE, logFileLFN, uploadedSE):
     """ Set a request to upload job log files from the output sandbox
-        How does this thing get it logFiles from the output sandbox? Was this code ever actually run?
+        Changed to be similar to LHCb createLogUploadRequest
+        using LHCb LogUpload Request and Removal Request
     """
     self.log.info('Setting log upload request for %s at %s' %(targetSE, logFileLFN))
-    upload = Operation()
-    upload.Type = "PutAndRegister"
-    upload.TargetSE = targetSE
+    request = self._getRequestContainer()
+
+    logUpload = Operation()
+    logUpload.Type = "LogUpload"
+    logUpload.TargetSE = targetSE
+
     upFile = File()
     upFile.LFN = logFileLFN
-    upload.addFile(upFile)
-    request = self._getRequestContainer()
-    request.addOperation ( upload )
+    logUpload.addFile( upFile )
+
+    logRemoval = Operation()
+    logRemoval.Type = 'RemoveFile'
+    logRemoval.TargetSE = uploadedSE
+    logRemoval.addFile( upFile )
 
     self.workflow_commons['Request'] = request
     return S_OK()
