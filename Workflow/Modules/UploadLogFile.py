@@ -192,7 +192,8 @@ class UploadLogFile(ModuleBase):
         self.setJobParameter('Log LFN', logURL)
         self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % logURL)
         return S_OK()
-
+      else:
+        res = S_ERROR ( res['Value'] )
     #########################################
     # Recover the logs to a failover storage element
     self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE, 
