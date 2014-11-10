@@ -141,8 +141,13 @@ class UploadLogFile(ModuleBase):
     if not res['OK']:
       self.log.error('Completely failed to select relevant log files.', res['Message'])
       return S_OK()#because if the logs are lost, it's not the end of the world.
+
     selectedFiles = res['Value']
-    self.log.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles), 
+    if not selectedFiles:
+      self.log.info("No log files selected")
+      return S_OK()
+
+    self.log.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles),
                                                                              "\n".join(selectedFiles)))
 
     #########################################
