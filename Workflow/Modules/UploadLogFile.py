@@ -229,24 +229,13 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    failoverTransfer = FailoverTransfer(self._getRequestContainer())
-    ##determine the experiment
-    self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
-
-    random.shuffle(self.failoverSEs)
-    self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName, 
-                                                                               ', '.join(self.failoverSEs )))
-    result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath, 
-                                                      self.failoverSEs, fileMetaDict = { "GUID": None },
-                                                      fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
-    if not result['OK']:
-      self.log.error('Failed to upload logs to all destinations')
-      self.setApplicationStatus('Failed To Upload Logs')
-      return S_OK() #because if the logs are lost, it's not the end of the world.
+    resFailover = self.tryFailoverTransfer(tarFileName, tarFileDir)
+    if not resFailover['Value']:
+      return resFailover ##log files lost, but who cares...
     
-    #Now after all operations, retrieve potentially modified request object
-    self.workflow_commons['Request'] = failoverTransfer.request
-    res = self.createLogUploadRequest(self.logSE.name, self.logLFNPath)
+    self.workflow_commons['Request'] = resFailover['Value']['Request']
+    uploadedSE = resFailover['Value']['uploadedSE']
+    res = self.createLogUploadRequest(self.logSE.name, self.logLFNPath, uploadedSE)
     if not res['OK']:
       self.log.error('Failed to create failover request', res['Message'])
       self.setApplicationStatus('Failed To Upload Logs To Failover')
@@ -361,6 +350,28 @@ class UploadLogFile(ModuleBase):
       return S_ERROR(x)
 
     return S_OK()
+
+  ################################################################################
+  def tryFailoverTransfer(self, tarFileName, tarFileDir):
+    """tries to upload the log tarBall to the failoverSE and creates moving request"""
+    failoverTransfer = FailoverTransfer(self._getRequestContainer())
+    ##determine the experiment
+    self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
+
+    random.shuffle(self.failoverSEs)
+    self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName,
+                                                                               ', '.join(self.failoverSEs )))
+    result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath,
+                                                      self.failoverSEs, fileMetaDict = { "GUID": None },
+                                                      fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
+    if not result['OK']:
+      self.log.error('Failed to upload logs to all destinations')
+      self.setApplicationStatus('Failed To Upload Logs')
+      return S_OK() #because if the logs are lost, it's not the end of the world.
+
+    #Now after all operations, return potentially modified request object
+    return S_OK( {'Request': failoverTransfer.request, 'uploadedSE': result['Value']['uploadedSE']})
+
 
   #############################################################################
   def __createLogIndex(self, selectedFiles):
