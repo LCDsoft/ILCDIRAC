@@ -202,12 +202,17 @@ class UploadLogFile(ModuleBase):
     tarFileDir = os.path.dirname(self.logdir)
     self.logLFNPath = '%s.gz' % self.logLFNPath
     tarFileName = os.path.basename(self.logLFNPath)
+
+    self.log.debug("Log Directory: %s" % tarFileDir )
+    self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
+    self.log.debug("TarFileName:   %s" % tarFileName )
     start = os.getcwd()
     os.chdir(self.logdir)
     logTarFiles = os.listdir(self.logdir)
     #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
     tfile = tarfile.open(tarFileName, "w:gz")
     for item in logTarFiles:
+      self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
       tfile.add(item)
     tfile.close()
     #res = shellCall(0,comm)
@@ -298,30 +303,31 @@ class UploadLogFile(ModuleBase):
       if not os.path.exists(self.logdir):
         os.makedirs(self.logdir)
     except OSError as x:
-      self.log.exception('Exception while trying to create directory.', self.logdir, str(x))
+      self.log.exception('PopulateLogDir: Exception while trying to create directory.', self.logdir, str(x))
       return S_ERROR()
     # Set proper permissions
-    self.log.info('Changing log directory permissions to 0755')
+    self.log.info('PopulateLogDir: Changing log directory %s permissions to 0755' % self.logdir )
     try:
       os.chmod(self.logdir, 0755)
     except OSError as x:
-      self.log.error('Could not set logdir permissions to 0755:', '%s (%s)' % ( self.logdir, str(x) ) )
+      self.log.error('PopulateLogDir: Could not set logdir permissions to 0755:', '%s (%s)' % ( self.logdir, str(x) ) )
     # Populate the temporary directory
     try:
       for myfile in selectedFiles:
         destinationFile = '%s/%s' % (self.logdir, os.path.basename(myfile))
         shutil.copy(myfile, destinationFile)
     except OSError as x:
-      self.log.exception('Exception while trying to copy file.', myfile, str(x))
-      self.log.info('File %s will be skipped and can be considered lost.' % myfile)
+      self.log.exception('PopulateLogDir: Exception while trying to copy file.', myfile, str(x))
+      self.log.info('PopulateLogDir: File %s will be skipped and can be considered lost.' % myfile)
 
     # Now verify the contents of our target log dir
     successfulFiles = os.listdir(self.logdir)
+    self.log.info("PopulateLogDir: successfulFiles %s" % successfulFiles)
     if len(successfulFiles) == 0:
-      self.log.info('Failed to copy any files to the target directory.')
+      self.log.info('PopulateLogDir: Failed to copy any files to the target directory.')
       return S_ERROR()
     else:
-      self.log.info('Prepared %s files in the temporary directory.' % self.logdir)
+      self.log.info('PopulateLogDir: Prepared %s files in the temporary directory.' % self.logdir)
       return S_OK()
     
   #############################################################################
