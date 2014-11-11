@@ -115,8 +115,8 @@ class UploadLogFileFailure( ModulesTestCase ):
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
                                                               Message="MockingJay")))
-    self.ulf.workflow_commons['Request'] = Request()
-    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': Request(),
+    self.mb.workflow_commons['Request']  = Request()
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf.applicationSpecificInputs()
