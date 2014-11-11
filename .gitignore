@@ -1,3 +1,7 @@
 *.pyc
 *.pyo
 Interfaces/API/NewInterface/Tests/tests.rep
+Doc/*.html
+Doc/epydoc*
+Doc/api-objects.txt
+Doc/crarr.png
