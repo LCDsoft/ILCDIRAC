@@ -5,7 +5,7 @@ Test generateFailoverFile
 """
 __RCSID__ = "$Id$"
 #pylint: disable=W0212
-import unittest, copy
+import unittest, copy, os
 from mock import MagicMock as Mock
 
 from DIRAC import gLogger, S_ERROR, S_OK
@@ -23,7 +23,7 @@ from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
 
 from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
 #import DIRAC.Workflow.Modules.test.Test_Modules as Test_Modules
-gLogger.setLevel("DEBUG")
+gLogger.setLevel("Notice")
 gLogger.showHeaders(True)
 class ModulesTestCase ( DiracModulesTestCase ):
   """ ILCDirac version of Workflow module tests"""
@@ -50,7 +50,7 @@ class ModulesTestCase ( DiracModulesTestCase ):
     self.ulf = UploadLogFile()
 
     
-class ModuleBaseFailure( ModulesTestCase ):
+class TestModuleBase( ModulesTestCase ):
   """ Test the generateFailoverFile function"""
 
     
@@ -64,14 +64,7 @@ class ModuleBaseFailure( ModulesTestCase ):
 # UploadLogFile.py
 #############################################################################
 
-class UploadLogFileSuccess( ModulesTestCase ):
-  """ test UploadLogFile """
-
-  def test_execute( self ):
-    """ tests UploadLogFile execute function"""
-    pass
-
-class UploadLogFileFailure( ModulesTestCase ):
+class TestUploadLogFile( ModulesTestCase ):
   """ test UploadLogFile """
 
   def test_NoLogFiles( self ):
@@ -96,7 +89,19 @@ class UploadLogFileFailure( ModulesTestCase ):
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.applicationSpecificInputs()
+    res = self.ulf.execute()
+    self.assertTrue( res['OK'] )
 
+
+  def test_FailedFailover( self ):
+    self.ulf = UploadLogFile()
+    self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
+    self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
+    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK())
+    self.ulf.applicationSpecificInputs()
     res = self.ulf.execute()
     self.assertTrue( res['OK'] )
 
@@ -144,18 +149,64 @@ class UploadOutputDataFailure( ModulesTestCase ):
 # FailoverRequest.py
 #############################################################################
 
-class FailoverRequestSuccess( ModulesTestCase ):
+class TestFailoverRequest( ModulesTestCase ):
   """ test UploadLogFile """
+  def setUp( self ):
+    super(TestFailoverRequest, self).setUp()
+    self.frq = None
+
   def test_execute( self ):
-    """ tests execute function"""
     pass
 
-class FailoverRequestFailure( ModulesTestCase ):
-  """ test UploadLogFile """
-  def test_execute( self ):
-    """ tests execute function"""
-    pass
+  def test_ASI_Enabled( self ):
+    """applicationSpecificInputs: control flag is enabled......................................."""
+    self.frq = FailoverRequest()
+    self.frq.workflow_commons = dict( )
+    self.frq.log = gLogger.getSubLogger("testASI")
+    os.environ['JOBID']="12345"
+    self.frq.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertTrue ( self.frq.enable )
 
+  def test_ASI_Disable( self ):
+    """applicationSpecificInputs: control flag is enabled......................................."""
+    self.frq = FailoverRequest()
+    self.frq.workflow_commons = dict( )
+    self.frq.log = gLogger.getSubLogger("testASI")
+    os.environ['JOBID']="12345"
+    self.frq.step_commons = dict( Enable = "arg")
+    self.frq.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertFalse ( self.frq.enable )
+
+  def test_ASI_Disabled( self ):
+    """applicationSpecificInputs: control flag is disabled......................................"""
+    self.frq = FailoverRequest()
+    self.frq.workflow_commons = dict( )
+    self.frq.log = gLogger.getSubLogger("testASI")
+
+    self.frq.applicationSpecificInputs()
+    self.assertTrue ( self.frq.enable == False )
+
+  def test_ASI_AllVariables( self ):
+    """applicationSpecificInputs: checks if all variables have been properly set after this call"""
+    self.frq = FailoverRequest()
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    os.environ['JOBID']="12345"
+    self.frq.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertTrue( self.frq.jobReport and self.frq.fileReport and
+                     self.frq.productionID and self.frq.prodJobID and self.frq.enable )
+
+  def test_ASI_NoVariables( self ):
+    """applicationSpecificInputs: checks that no variables have been set after this call........"""
+    self.frq = FailoverRequest()
+    self.frq.workflow_commons = dict()
+    os.environ['JOBID']="12345"
+    self.frq.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertFalse( self.frq.jobReport or self.frq.fileReport or
+                      self.frq.productionID or self.frq.prodJobID )
 
 
 #############################################################################
@@ -164,17 +215,16 @@ class FailoverRequestFailure( ModulesTestCase ):
 def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( ModulesTestCase )
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( ModuleBaseFailure ) )
 
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( UploadOutputDataFailure ) )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( UploadLogFileFailure ) )
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( FailoverRequestFailure ) )
+  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadLogFile ) )
+  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestModuleBase ) )
+  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestFailoverRequest ) )
   
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( FailoverRequestSuccess ) )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
   print testResult
 
-  ## Test from ILCDirac Proper
+  ## Test from Dirac Proper
   # suite = unittest.defaultTestLoader.loadTestsFromTestCase( DiracModulesTestCase )
   # suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( Test_Modules.ModuleBaseSuccess ) )
   # suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( Test_Modules.FailoverRequestSuccess ) )
