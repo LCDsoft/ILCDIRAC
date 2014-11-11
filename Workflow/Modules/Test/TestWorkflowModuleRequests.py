@@ -91,7 +91,7 @@ class UploadLogFileFailure( ModulesTestCase ):
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="MockingJay")))
+    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="Ekke Ekke Ekke Ekke")))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
                                                               'uploadedSE': 'CERN-SRM'}))
@@ -114,7 +114,7 @@ class UploadLogFileFailure( ModulesTestCase ):
     self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
-                                                              Message="MockingJay")))
+                                                              Message="Ekke Ekke Ekke Ekke")))
     self.mb.workflow_commons['Request']  = Request()
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
