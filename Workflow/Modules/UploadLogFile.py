@@ -328,7 +328,11 @@ class UploadLogFile(ModuleBase):
     logRemoval.TargetSE = uploadedSE
     logRemoval.addFile( upFile )
 
+    request.addOperation ( logUpload )
+    request.addOperation ( logRemoval )
+
     self.workflow_commons['Request'] = request
+
     return S_OK()
 
   #############################################################################
