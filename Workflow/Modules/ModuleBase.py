@@ -678,31 +678,33 @@ class ModuleBase(object):
         self.log.error( "!!! Both Accounting and RequestDB are down? !!!" )
         return resultAR
 
+    if not len( request ):
+      self.log.info("No Requests to process ")
+      return S_OK()
 
-    if len( request ):
-      isValid = gRequestValidator.validate( request )
-      if not isValid['OK']:
-        raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
-      else:
-        requestJSON = request.toJSON()
-        if requestJSON['OK']:
-          self.log.info( "Creating failover request for deferred operations for job %d" % self.jobID )
-          request_string = str( requestJSON['Value'] )
-          self.log.debug( request_string )
-          # Write out the request string
-          fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
-          jsonFile = open( fname, 'w' )
-          jsonFile.write( request_string )
-          jsonFile.close()
-          self.log.info( "Created file containing failover request %s" % fname )
-          resultDigest = request.getDigest()
-          if resultDigest['OK']:
-            self.log.info( "Digest of the request: %s" % resultDigest['Value'] )
-          else:
-            self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
-        else:
-          raise RuntimeError( requestJSON['Message'] )
+    isValid = gRequestValidator.validate( request )
+    if not isValid['OK']:
+      raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
 
+    requestJSON = request.toJSON()
+    if not requestJSON['OK']:
+      raise RuntimeError( requestJSON['Message'] )
+
+    self.log.info( "Creating failover request for deferred operations for job %d" % self.jobID )
+    request_string = str( requestJSON['Value'] )
+    self.log.debug( request_string )
+    # Write out the request string
+    fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
+    with open( fname, 'w' ) as jsonFile:
+      jsonFile.write( request_string )
+    self.log.info( "Created file containing failover request %s" % fname )
+    resultDigest = request.getDigest()
+    if resultDigest['OK']:
+      self.log.info( "Digest of the request: %s" % resultDigest['Value'] )
+    else:
+      self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
+
+    return S_OK()
 
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
