@@ -662,22 +662,22 @@ class ModuleBase(object):
     request = self._getRequestContainer()
     
     reportRequest = None
-    result = self.jobReport.generateForwardDISET()
-    request = self._getRequestContainer()
-    if not result['OK']:
-      self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( result ) )
+    resultJR = self.jobReport.generateForwardDISET()
+    if not resultJR['OK']:
+      self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( resultJR ) )
     else:
-      reportRequest = result['Value']
+      reportRequest = resultJR['Value']
     if reportRequest:
       self.log.info( "Populating request with job report information" )
       request.addOperation( reportRequest )
 
     accountingReport = self.workflow_commons.get( 'AccountingReport', None)
     if accountingReport:
-      result = accountingReport.commit()
-      if not result['OK']:
-        self.log.error( "!!! Both accounting and RequestDB are down? !!!" )
-        return result
+      resultAR = accountingReport.commit()
+      if not resultAR['OK']:
+        self.log.error( "!!! Both Accounting and RequestDB are down? !!!" )
+        return resultAR
+
 
     if len( request ):
       isValid = gRequestValidator.validate( request )
@@ -695,11 +695,11 @@ class ModuleBase(object):
           jsonFile.write( request_string )
           jsonFile.close()
           self.log.info( "Created file containing failover request %s" % fname )
-          result = request.getDigest()
-          if result['OK']:
-            self.log.info( "Digest of the request: %s" % result['Value'] )
+          resultDigest = request.getDigest()
+          if resultDigest['OK']:
+            self.log.info( "Digest of the request: %s" % resultDigest['Value'] )
           else:
-            self.log.error( "No digest? That's not sooo important, anyway: %s" % result['Message'] )
+            self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
         else:
           raise RuntimeError( requestJSON['Message'] )
 
