@@ -39,31 +39,26 @@ class FailoverRequest(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module input parameters are resolved here.
     """
-    if os.environ.has_key('JOBID'):
+    if 'JOBID' in os.environ:
       self.jobID = os.environ['JOBID']
       self.log.verbose('Found WMS JobID = %s' %self.jobID)
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
-    if self.step_commons.has_key('Enable'):
-      self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
-        self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
-        self.enable = False
+    self.enable = self.step_commons.get('Enable', self.enable)
+    if not type(self.enable) == type(True):
+      self.log.error('Enable flag set to non-boolean value %s, setting to False' % self.enable)
+      self.enable = False
 
     #Earlier modules will have populated the report objects
-    if self.workflow_commons.has_key('JobReport'):
-      self.jobReport = self.workflow_commons['JobReport']
+    self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
-    if self.workflow_commons.has_key('FileReport'):
-      self.fileReport = self.workflow_commons['FileReport']
+    self.fileReport = self.workflow_commons.get('FileReport', self.fileReport)
 
-    if self.workflow_commons.has_key('PRODUCTION_ID'):
-      self.productionID = self.workflow_commons['PRODUCTION_ID']
+    self.productionID = self.workflow_commons.get('PRODUCTION_ID', self.productionID)
 
-    if self.workflow_commons.has_key('JOB_ID'):
-      self.prodJobID = self.workflow_commons['JOB_ID']
+    self.prodJobID = self.workflow_commons.get('JOB_ID', self.prodJobID)
 
     return S_OK('Parameters resolved')
 
