@@ -155,9 +155,6 @@ class TestFailoverRequest( ModulesTestCase ):
     super(TestFailoverRequest, self).setUp()
     self.frq = None
 
-  def test_execute( self ):
-    pass
-
   def test_ASI_Enabled( self ):
     """applicationSpecificInputs: control flag is enabled......................................."""
     self.frq = FailoverRequest()
@@ -169,7 +166,7 @@ class TestFailoverRequest( ModulesTestCase ):
     self.assertTrue ( self.frq.enable )
 
   def test_ASI_Disable( self ):
-    """applicationSpecificInputs: control flag is enabled......................................."""
+    """applicationSpecificInputs: control flag is enabled with non boolean......................"""
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
