@@ -76,8 +76,7 @@ class FailoverRequest(ModuleBase):
       self.log.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
 
-    if not self.fileReport:
-      self.fileReport =  FileReport('Transformation/TransformationManager')
+    self.fileReport = self.fileReport if self.fileReport else FileReport('Transformation/TransformationManager')
 
     if self.InputData:
       inputFiles = self.fileReport.getFiles()
@@ -96,10 +95,10 @@ class FailoverRequest(ModuleBase):
     else:
       inputFiles = self.fileReport.getFiles()
       if inputFiles:
-        self.log.info('Workflow status OK, setting input file status to Processed')                
+        self.log.info('Workflow status OK, setting input file status to Processed')
       for lfn in inputFiles:
         self.log.info('Setting status to "Processed" for: %s' % (lfn))
-        self.fileReport.setFileStatus(int(self.productionID), lfn, 'Processed')  
+        self.fileReport.setFileStatus(int(self.productionID), lfn, 'Processed')
 
     fileReportCommitResult = self.fileReport.commit()
     if fileReportCommitResult['OK']:
@@ -119,11 +118,12 @@ class FailoverRequest(ModuleBase):
 
     # Must ensure that the local job report instance is used to report the final status
     # in case of failure and a subsequent failover operation
-    if self.workflowStatus['OK'] and self.stepStatus['OK']: 
+    if self.workflowStatus['OK'] and self.stepStatus['OK']:
       self.jobReport.setApplicationStatus('Job Finished Successfully')
-      
-    self.generateFailoverFile()
 
+    resFF = self.generateFailoverFile()
+    if not resFF['OK']:
+      self.log.error(resFF['Message'])
 
     return self.finalize()
 
