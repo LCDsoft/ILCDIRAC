@@ -205,6 +205,49 @@ class TestFailoverRequest( ModulesTestCase ):
     self.assertFalse( self.frq.jobReport or self.frq.fileReport or
                       self.frq.productionID or self.frq.prodJobID )
 
+  def test_Exe_Disabled( self ):
+    """execute: is disabled....................................................................."""
+    self.frq = FailoverRequest()
+    self.frq._getJobReporter = Mock(return_value=self.jr_mock)
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Disabled")
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.enable = False
+    self.frq.workflow_commons = dict( )
+    res = self.frq.execute()
+    self.assertTrue( "Module is disabled" in res['Value'] )
+
+  def test_Exe_Fail( self ):
+    """execute: fails..........................................................................."""
+    gLogger.setLevel("ERROR")
+    self.frq = FailoverRequest()
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Fail")
+    self.frq.applicationSpecificInputs = Mock(return_value = S_OK())
+    self.jr_mock.generateForwardDISET = Mock(return_value = S_ERROR("EKKE"))
+    self.frq.enable = True
+    self.frq.jobID = 12345
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    res = self.frq.execute()
+    self.assertFalse( res['OK'] )
+
+  def test_Exe_sucess( self ):
+    """execute: succeeds........................................................................"""
+    gLogger.setLevel("DEBUG")
+    self.frq = FailoverRequest()
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    res = self.frq.execute()
+    self.assertTrue( res['OK'] )
+
+  def test_Exe_Request( self ):
+    """execute: Request........................................................................."""
+    gLogger.setLevel("ERROR")
+    self.frq = FailoverRequest()
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    res = self.frq.execute()
+    self.assertTrue( res['Value']['Request'] )
+
 
 #############################################################################
 # Run Tests
