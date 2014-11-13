@@ -4,7 +4,7 @@
 Test generateFailoverFile
 """
 __RCSID__ = "$Id$"
-#pylint: disable=W0212
+#pylint: disable=W0212,R0904
 import unittest, copy, os
 from mock import MagicMock as Mock
 
@@ -49,7 +49,14 @@ class ModulesTestCase ( DiracModulesTestCase ):
 
     self.ulf = UploadLogFile()
 
-    
+    self.rc_mock = Mock(name='RequestContainer')
+    self.rc_mock.update.return_value = {'OK': True, 'Value': ''}
+    self.rc_mock.setDISETRequest.return_value = {'OK': True, 'Value': ''}
+    self.rc_mock.isEmpty.return_value = {'OK': True, 'Value': ''}
+    self.rc_mock.toXML.return_value = {'OK': True, 'Value': 'Ex Em El'}
+    self.rc_mock.getDigest.return_value = {'OK': True, 'Value': 'Indigestion'}
+    self.rc_mock.__len__.return_value = 1
+
 class TestModuleBase( ModulesTestCase ):
   """ Test the generateFailoverFile function"""
 
@@ -216,8 +223,8 @@ class TestFailoverRequest( ModulesTestCase ):
     res = self.frq.execute()
     self.assertTrue( "Module is disabled" in res['Value'] )
 
-  def test_Exe_Fail( self ):
-    """execute: fails..........................................................................."""
+  def test_Exe_WFFail( self ):
+    """execute: WF Failed......................................................................."""
     gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Fail")
@@ -226,27 +233,52 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.enable = True
     self.frq.jobID = 12345
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflowStatus = S_ERROR()
     res = self.frq.execute()
     self.assertFalse( res['OK'] )
 
-  def test_Exe_sucess( self ):
+  def test_Exe_RIV_Failes( self ):
+    """execute: WF Failed......................................................................."""
+    gLogger.setLevel("ERROR")
+    self.frq = FailoverRequest()
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Fail")
+    self.frq.resolveInputVariables = Mock(return_value = S_ERROR("EKKE: no input variables"))
+    self.frq.applicationSpecificInputs = Mock(return_value = S_OK())
+    self.jr_mock.generateForwardDISET = Mock(return_value = S_ERROR("EKKE"))
+    self.frq.enable = True
+    self.frq.jobID = 12345
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflowStatus = S_ERROR()
+    res = self.frq.execute()
+    self.assertFalse( res['OK'] )
+
+  def test_Exe_Success( self ):
     """execute: succeeds........................................................................"""
-    gLogger.setLevel("DEBUG")
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
     self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
     self.frq.jobID = 12345
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
     res = self.frq.execute()
     self.assertTrue( res['OK'] )
 
-  def test_Exe_Request( self ):
-    """execute: Request........................................................................."""
+  def test_Exe_genDisetRequest( self ):
+    """execute: Generate Diset Request.........................................................."""
     gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
-    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
-    res = self.frq.execute()
-    self.assertTrue( res['Value']['Request'] )
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-GenDiset")
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.enable = True
+    self.frq.jobID = 12345
+    self.frq.fileReport = Mock(name="FailedFileReport")
+    self.frq.fileReport.commit.return_value = S_ERROR("Nobody suspects the ")
+    self.frq.fileReport.generateForwardDISET.return_value = S_OK("Spanish Inquisition")
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.frq.fileReport,
+                                      Request = self.rc_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.execute()
+    self.assertTrue( self.frq.workflow_commons['Request'] )
 
 
 #############################################################################
