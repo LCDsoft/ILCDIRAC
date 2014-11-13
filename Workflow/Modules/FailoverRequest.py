@@ -104,7 +104,8 @@ class FailoverRequest(ModuleBase):
     if fileReportCommitResult['OK']:
       self.log.info('Status of files have been properly updated in the ProcessingDB')
     else:
-      self.log.error('Failed to report file status to ProductionDB, request will be generated', fileReportCommitResult['Message'])
+      self.log.error('Failed to report file status to ProductionDB:', fileReportCommitResult['Message'])
+      self.log.error('Request will be generated.')
       disetResult = self.fileReport.generateForwardDISET()
       if not disetResult['OK']:
         self.log.warn( "Could not generate Operation for file report with result:\n%s" % disetResult['Value'] )
