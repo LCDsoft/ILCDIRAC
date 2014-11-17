@@ -69,8 +69,8 @@ class UploadOutputData(ModuleBase):
       self.enable = False
 
     ##This is the thing that is used to establish the list of outpufiles to treat:
-    ## Make sure that all that is in the : "listoutput" and also in the ProductionData
-    ## is treated properly. Needed as whatever is in listoutput does not contain any reference to the 
+    ## Make sure that all that is in the : "outputList" and also in the ProductionData
+    ## is treated properly. Needed as whatever is in outputList does not contain any reference to the 
     ## prodID and task ID. Also if for some reason a step failed, then the corresponding data will not be there
     self.outputList = self.workflow_commons.get('outputList', self.outputList)
     if self.outputList:
@@ -80,20 +80,17 @@ class UploadOutputData(ModuleBase):
         olist = {}
         for obj in self.outputList:
           fname_in_outputlist = obj['outputFile'].lower()
-          extension = ''
-          if fname_in_outputlist.count("_sim") or fname_in_outputlist.count("_rec") or fname_in_outputlist.count("_dst"):
-            extension = ".slcio"  
-          elif fname_in_outputlist.count("_gen"):
-            extension = ".stdhep"
+          self.log.debug("Treating file: %s" % fname_in_outputlist)
+          extension = self.__expectedExtension(fname_in_outputlist)
           fname_in_outputlist = fname_in_outputlist.replace(extension,"")
+          self.log.debug("Removed extension: %s" % fname_in_outputlist)
+
           for prodfile in proddata:
+            self.log.debug("Proddata file:     %s" % prodfile)
             prodfile = os.path.basename(prodfile)
-            extension = ''
-            if prodfile.count("_sim") or prodfile.count("_rec") or prodfile.count("_dst"):
-              extension = ".slcio"  
-            elif prodfile.count("_gen"):
-              extension = ".stdhep"
+            extension = self.__expectedExtension(prodfile)
             prodfile = prodfile.replace(extension,"")
+            self.log.debug("Removed extension: %s" % prodfile)
             if prodfile in olist:
               ## This has already been treated, no need to come back to it.
               continue
@@ -105,6 +102,7 @@ class UploadOutputData(ModuleBase):
                 appdict.update(obj)
                 appdict['outputFile'] = prodfile+extension
                 olist[prodfile] = appdict
+                ##no break because we might have more than one generator file per prod??
             if fname_in_outputlist.count("_sim"):
               simf = obj['outputFile'].split("_sim")[0]
               simf += "_sim"
@@ -139,7 +137,8 @@ class UploadOutputData(ModuleBase):
                                                   int(self.workflow_commons["JOB_ID"]))
           olist.append(appdict)
         self.outputList = olist
-      self.log.verbose("OutputList : %s" % self.outputList)  
+
+      self.log.verbose("OutputList : %s" % self.outputList)
 
     self.outputMode = self.workflow_commons.get('outputMode', self.outputMode)
 
@@ -324,5 +323,20 @@ class UploadOutputData(ModuleBase):
     self.addRemovalRequests(lfnList)
 
     return S_OK()
+
+
+  def __expectedExtension(self, filename):
+    """return the expected extension based on the production type hinted in the filename"""
+    extension = ''
+    if any( ext in filename for ext in ('_sim', '_dst', '_rec') ):
+      self.log.debug("expecting slcio file")
+      extension = ".slcio"
+    elif any( ext in filename for ext in ('_gen',) ):
+      self.log.debug("expecting stdhep file")
+      extension = ".stdhep"
+    else:
+      self.log.warn("Unknown production file type: %s" % filename)
+
+    return extension
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
