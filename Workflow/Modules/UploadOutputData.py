@@ -42,12 +42,12 @@ class UploadOutputData(ModuleBase):
     self.productionID = 0
     self.prodOutputLFNs = []
     self.experiment = "CLIC"
-    self.catalogs = None
     
   #############################################################################
   def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
+    self.log.debug("Workflow commons: %s" % self.workflow_commons)
 
     self.enable = self.step_commons.get('Enable', self.enable)
     if not type(self.enable) == type(True):
@@ -248,7 +248,7 @@ class UploadOutputData(ModuleBase):
     #One by one upload the files with failover if necessary
     failover = {}
     if not self.failoverTest:
-      for fileName, metadata in final.items():
+      for fileName, metadata in final.iteritems():
         self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
                                                                                    ', '.join(metadata['resolvedSE'])))
         result = failoverTransfer.transferAndRegisterFile(fileName, 
