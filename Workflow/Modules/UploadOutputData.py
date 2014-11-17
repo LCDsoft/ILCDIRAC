@@ -84,49 +84,7 @@ class UploadOutputData(ModuleBase):
           extension = self.__expectedExtension(fname_in_outputlist)
           fname_in_outputlist = fname_in_outputlist.replace(extension,"")
           self.log.debug("Removed extension: %s" % fname_in_outputlist)
-
-          for prodfile in proddata:
-            self.log.debug("Proddata file:     %s" % prodfile)
-            prodfile = os.path.basename(prodfile)
-            extension = self.__expectedExtension(prodfile)
-            prodfile = prodfile.replace(extension,"")
-            self.log.debug("Removed extension: %s" % prodfile)
-            if prodfile in olist:
-              ## This has already been treated, no need to come back to it.
-              continue
-            appdict = {}
-            if fname_in_outputlist.count("_gen"):# and prodfile.lower().count("_gen_")) :
-              genf = obj['outputFile'].split("_gen")[0]
-              genf += "_gen"
-              if prodfile.count(genf):
-                appdict.update(obj)
-                appdict['outputFile'] = prodfile+extension
-                olist[prodfile] = appdict
-                ##no break because we might have more than one generator file per prod??
-            if fname_in_outputlist.count("_sim"):
-              simf = obj['outputFile'].split("_sim")[0]
-              simf += "_sim"
-              if prodfile.count(simf):
-                appdict.update(obj)
-                appdict['outputFile'] = prodfile+extension
-                olist[prodfile] = appdict
-                self.log.verbose('olist %s'%olist)
-            if fname_in_outputlist.count("_rec"):
-              recf = obj['outputFile'].split("_rec")[0]
-              recf += "_rec"
-              if prodfile.count(recf):
-                appdict.update(obj)
-                appdict['outputFile'] = prodfile+extension
-                olist[prodfile] = appdict
-                break
-            if fname_in_outputlist.count("_dst") and prodfile.lower().count("_dst_"):
-              dstf = obj['outputFile'].split("_dst")[0]
-              dstf += "_dst"
-              if prodfile.count(dstf):
-                appdict.update(obj)
-                appdict['outputFile'] = prodfile+extension
-                olist[prodfile] = appdict
-                break
+          self.getOlist(proddata, olist, fname_in_outputlist, obj)
         self.outputList = olist.values()
       else:
         olist = []
@@ -338,5 +296,50 @@ class UploadOutputData(ModuleBase):
       self.log.warn("Unknown production file type: %s" % filename)
 
     return extension
+
+  def getOlist(self, proddata, olist, fname_in_outputlist, obj):
+    """Returns properly formatted output files based on the production requirements"""
+    for prodfile in proddata:
+      self.log.debug("Proddata file:     %s" % prodfile)
+      prodfile = os.path.basename(prodfile)
+      extension = self.__expectedExtension(prodfile)
+      prodfile = prodfile.replace(extension,"")
+      self.log.debug("Removed extension: %s" % prodfile)
+      if prodfile in olist:
+        ## This has already been treated, no need to come back to it.
+        continue
+      appdict = {}
+      if fname_in_outputlist.count("_gen"):# and prodfile.lower().count("_gen_")) :
+        genf = obj['outputFile'].split("_gen")[0]
+        genf += "_gen"
+        if prodfile.count(genf):
+          appdict.update(obj)
+          appdict['outputFile'] = prodfile+extension
+          olist[prodfile] = appdict
+          ##no break because we might have more than one generator file per prod??
+      if fname_in_outputlist.count("_sim"):
+        simf = obj['outputFile'].split("_sim")[0]
+        simf += "_sim"
+        if prodfile.count(simf):
+          appdict.update(obj)
+          appdict['outputFile'] = prodfile+extension
+          olist[prodfile] = appdict
+          self.log.verbose('olist %s'%olist)
+      if fname_in_outputlist.count("_rec"):
+        recf = obj['outputFile'].split("_rec")[0]
+        recf += "_rec"
+        if prodfile.count(recf):
+          appdict.update(obj)
+          appdict['outputFile'] = prodfile+extension
+          olist[prodfile] = appdict
+          break
+      if fname_in_outputlist.count("_dst") and prodfile.lower().count("_dst_"):
+        dstf = obj['outputFile'].split("_dst")[0]
+        dstf += "_dst"
+        if prodfile.count(dstf):
+          appdict.update(obj)
+          appdict['outputFile'] = prodfile+extension
+          olist[prodfile] = appdict
+          break
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
