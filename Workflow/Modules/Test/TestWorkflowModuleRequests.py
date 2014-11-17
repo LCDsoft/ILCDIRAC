@@ -280,6 +280,93 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.execute()
     self.assertTrue( self.frq.workflow_commons['Request'] )
 
+#############################################################################
+# UploadOutputData.py
+#############################################################################
+
+class TestUploadOutputData( ModulesTestCase ):
+  """ test UploadOutputData """
+  def setUp( self ):
+    super(TestUploadOutputData, self).setUp()
+    self.uod = None
+
+  def test_ASI_Enabled( self ):
+    """UOD.applicationSpecificInputs: control flag is enabled......................................."""
+    gLogger.setLevel("ERROR")
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = dict( )
+    self.uod.log = gLogger.getSubLogger("testASI")
+    os.environ['JOBID']="12345"
+    self.uod.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertTrue( self.uod.enable )
+
+  def test_ASI_Disable( self ):
+    """UOD.applicationSpecificInputs: control flag is enabled with non boolean......................"""
+    gLogger.setLevel("ERROR")
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = dict( )
+    self.uod.log = gLogger.getSubLogger("testASI")
+    os.environ['JOBID']="12345"
+    self.uod.step_commons = dict( Enable = "arg")
+    self.uod.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertFalse( self.uod.enable )
+
+  def test_ASI_Disabled( self ):
+    """UOD.applicationSpecificInputs: control flag is disabled......................................"""
+    gLogger.setLevel("ERROR")
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = dict( )
+    self.uod.log = gLogger.getSubLogger("testASI")
+    self.uod.applicationSpecificInputs()
+    self.assertTrue( self.uod.enable == False )
+
+  def test_ASI_AllVariables( self ):
+    """UOD.applicationSpecificInputs: checks if all variables have been properly set after this call"""
+    gLogger.setLevel("ERROR")
+    self.uod = UploadOutputData()
+    self.uod.log = gLogger.getSubLogger("Uod-Asi-AllVars")
+    self.uod.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321,
+                                      JOB_ID = 12345,
+                                      outputList = [{'outputFile': 'myFile_gen.stdhep'},
+                                                    {'outputFile': 'myFile_dst.slcio'},
+                                                    {'outputFile': 'myFile_sim.slcio'},
+                                                    {'outputFile': 'myFile_rec.slcio'},
+                                                    {'outputFile': 'myFile_unk.slcio'}
+                                                   ],
+                                      ProductionOutputData = "/my/long/path/GEN/myFile_gen_12345_001.stdhep;/my/long/path/DST/myFile_dst_12345_001.slcio"
+                                    )
+    os.environ['JOBID']="12345"
+    self.uod.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertTrue( type(self.uod.outputDataFileMask) == type([]) )
+    self.assertTrue( self.uod.outputMode )
+    self.assertTrue( self.uod.outputList )
+    self.assertTrue( self.uod.productionID )
+    self.assertTrue( self.uod.prodOutputLFNs )
+    self.assertTrue( self.uod.experiment )
+
+  def test_ASI_NoVariables( self ):
+    """UOD.applicationSpecificInputs: checks that no variables have been set after this call........"""
+    gLogger.setLevel("ERROR")
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = dict()
+    os.environ['JOBID']="12345"
+    self.uod.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertFalse( self.uod.jobReport or self.uod.productionID )
+
+
+  def test_ASI_OutputListCorrect( self ):
+    """UOD.applicationSpecificInputs: check outputfile list is treated properly....................."""
+    gLogger.setLevel("ERROR")
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = dict()
+    os.environ['JOBID']="12345"
+    self.uod.applicationSpecificInputs()
+    del os.environ['JOBID']
+    self.assertTrue( len(self.uod.outputList) == 10 )
 
 #############################################################################
 # Run Tests
