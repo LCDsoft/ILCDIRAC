@@ -1,4 +1,5 @@
 """Test the LFNPathUtilities"""
+__RCSID__ = "$Id$"
 
 import unittest
 
@@ -10,7 +11,6 @@ class LFNPathUtilitiesTests( unittest.TestCase ):
   def setUp ( self ):
     self.logPath = "/ilc/prod/ilc/mc-dbd/ild/"
     self.jobID = 12
-    pass
 
   def tearDown ( self ):
     pass
