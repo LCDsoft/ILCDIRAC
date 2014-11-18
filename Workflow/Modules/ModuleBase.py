@@ -219,13 +219,13 @@ class ModuleBase(object):
     """ Returns list of candidate files to upload, check if some outputs are missing.
 
       @param outputList: has the following structure:
-      [ ('outputDataType':'','outputDataSE':'','outputDataName':'') , (...) ]
+      [ ('outputFile':'','outputDataSE':'','outputPath':'') , (...) ]
 
       @param outputLFNs: list of output LFNs for the job
 
-      @param fileMask:  output file extensions to restrict the outputs to
+      @param fileMask:  UNUSED output file extensions to restrict the outputs to
 
-      @return: dictionary containing type, SE and LFN for files restricted by mask
+      @return: S_OK with dictionary containing type, SE and LFN for files [NOT: restricted by mask]
     """
     fileInfo = {}
     for outputFile in outputList:
@@ -238,14 +238,15 @@ class ModuleBase(object):
         self.log.error('Ignoring malformed output data specification', str(outputFile))
 
     for lfn in outputLFNs:
+      self.log.debug("Checking LFN: %s" % lfn)
       if os.path.basename(lfn) in fileInfo.keys():
         fileInfo[os.path.basename(lfn)]['lfn']=lfn
         self.log.verbose('Found LFN %s for file %s' %(lfn, os.path.basename(lfn)))
         if len(os.path.basename(lfn))>127:
-          self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload.')
+          self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload. Filename:', os.path.basename(lfn))
           return S_ERROR('Filename too long')
         if len(lfn)>256+127:
-          self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload.')
+          self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload. LFN:', lfn)
           return S_ERROR('LFN too long')
 
     #Check that the list of output files were produced
@@ -278,7 +279,7 @@ class ModuleBase(object):
     for fileName, metadata in candidateFiles.items():
       for key in mandatoryKeys:
         if not key in metadata:
-          return S_ERROR('File %s has missing %s' % (fileName, key))
+          return S_ERROR('File %s has missing key %s' % (fileName, key))
     return S_OK(candidateFiles)
 
   #############################################################################

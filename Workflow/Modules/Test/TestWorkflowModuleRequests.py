@@ -40,7 +40,7 @@ class ModulesTestCase ( DiracModulesTestCase ):
     self.mb.workflow_commons['LogFilePath'] = "/ilc/user/s/sailer/test/dummy/folder"
     self.mb.log = gLogger.getSubLogger("ModuleBaseTest")
     self.mb.log.showHeaders(True)
-    
+    self.mb.ignoreapperrors = False
     self.uod = UploadOutputData()
     self.uod.workflow_commons = self.mb.workflow_commons
 
@@ -58,13 +58,59 @@ class ModulesTestCase ( DiracModulesTestCase ):
     self.rc_mock.__len__.return_value = 1
 
 class TestModuleBase( ModulesTestCase ):
-  """ Test the generateFailoverFile function"""
+  """ Tests for ModuleBase functions"""
 
     
   def test_generateFailoverFile( self ):
     """run the generateFailoverFile function and see what happens"""
     dummy_res = self.mb.generateFailoverFile()
     #print res
+
+  def test_MB_getCandidateFiles( self ):
+    """ModuleBase: getCandidateFiles: files exist.........................................."""
+    gLogger.setLevel("ERROR")
+    outputList = {'h_nunu_gen_4191_0007': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0007.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0006': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0006.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0005': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0005.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0004': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0004.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0003': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0003.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0002': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0002.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0001': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0001.stdhep', 'outputDataSE': 'CERN-SRM'}, 'h_nunu_gen_4191_0000': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_0000.stdhep', 'outputDataSE': 'CERN-SRM'}}.values()
+    outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0004.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0005.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0006.stdhep',
+                  '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0007.stdhep']
+    dummy_fileMask = None
+    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    resDict = [ os.path.basename(lfn) in result['Value'] for lfn in outputLFNs ]
+    gLogger.debug("Result: %s" % result)
+    gLogger.debug("ResDict: %s" % resDict)
+    self.assertTrue( all(resDict) )
+
+  def test_MB_getCandidateFiles_FileNotFound( self ):
+    """ModuleBase: getCandidateFiles: No Such File........................................."""
+    gLogger.setLevel("ERROR")
+    outputList = {'h_nunu_gen_4191_NSF': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_NSF.stdhep', 'outputDataSE': 'CERN-SRM'}}.values()
+    outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_NSF.stdhep']
+    dummy_fileMask = None
+    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    self.assertTrue( "Output Data Not Found" in result['Message'] )
+
+  def test_MB_getCandidateFiles_FileTooLong( self ):
+    """ModuleBase: getCandidateFiles: File Too Long........................................"""
+    gLogger.setLevel("ERROR")
+    outputList = {'a'*128: {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'a'*128, 'outputDataSE': 'CERN-SRM'}}.values()
+    outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/'+'a'*128]
+    dummy_fileMask = None
+    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    self.assertTrue( "Filename too long" in result['Message'] )
+
+  def test_MB_getCandidateFiles_PathTooLong( self ):
+    """ModuleBase: getCandidateFiles: Path Too Long........................................"""
+    gLogger.setLevel("ERROR")
+    outputList = {'a'*127: {'outputPath': '/bbbbbbbbbb'*26, 'outputFile': 'a'*127, 'outputDataSE': 'CERN-SRM'}}.values()
+    outputLFNs = ['/bbbbbbbbbb'*26+'/'+'a'*127]
+    dummy_fileMask = None
+    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    self.assertTrue( "LFN too long" in result['Message'] )
 
 
 #############################################################################
