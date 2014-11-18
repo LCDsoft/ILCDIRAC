@@ -362,11 +362,89 @@ class TestUploadOutputData( ModulesTestCase ):
     """UOD.applicationSpecificInputs: check outputfile list is treated properly....................."""
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
-    self.uod.workflow_commons = dict()
+    self.uod.workflow_commons = {'outputList': [{'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen',
+                                                 'outputFile': 'h_nunu_gen.stdhep',
+                                                 'outputDataSE': 'CERN-SRM'},
+                                                {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/SIM',
+                                                 'outputFile': 'h_nunu_sim.slcio',
+                                                 'outputDataSE': 'CERN-SRM'},
+                                                {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC',
+                                                 'outputFile': 'h_nunu_rec.slcio',
+                                                 'outputDataSE': 'CERN-SRM'},
+                                                {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/DST',
+                                                 'outputFile': 'h_nunu_dst.slcio',
+                                                 'outputDataSE': 'CERN-SRM'}],
+                                 'ProductionOutputData':
+                                 '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep;/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/001/h_nunu_sim_4192_1002.slcio;/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/002/h_nunu_rec_4193_2766.slcio;/ilc/prod/clic/1.4tev/h_nunu/SID/DST/00004193/002/h_nunu_dst_4193_2766.slcio'}
     os.environ['JOBID']="12345"
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
-    self.assertTrue( len(self.uod.outputList) == 10 )
+    self.uod.log.debug([ o['outputFile'] for o in self.uod.outputList] )
+    self.assertTrue( len(self.uod.outputList) == 4 )
+
+  def test_GOL_Reco( self ):
+    """outputList properly formated for reconstruction jobs........................................."""
+    gLogger.setLevel("ERROR")
+    wf_real = {'TaskID': '2766', 'TotalSteps': '4', 'JobName': '00004193_00002766', 'Priority': '1', 'SoftwarePackages': 'overlayinput.1;lcsim.CLIC_CDR;slicpandora.CLIC_CDR_photon_fix', 'DebugLFNs': '', 'Status': 'Created', 'JobReport': self.jr_mock, 'BannedSites': 'LCG.Bristol.uk;LCG.RAL-LCG2.uk', 'LogLevel': 'verbose', 'StdOutput': 'std.out', 'JobType': 'MCReconstruction_Overlay', 'SystemConfig': 'x86_64-slc5-gcc43-opt', 'TransformationID': '4193', 'JOB_ID': '00002766', 'productionVersion': '$Id: ', 'StdError': 'std.err', 'LogTargetPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/LOG/00004193_2766.tar', 'IS_PROD': 'True', 'Request': self.rc_mock, 'ParametricInputSandbox': '', 'emailAddress': 'stephane.poss@cern.ch', 'JobGroup': '00004193', 'NbOfEvts': 200, 'Origin': 'DIRAC', 'outputList': [{'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC', 'outputFile': 'h_nunu_rec.slcio', 'outputDataSE': 'CERN-SRM'}, {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/DST', 'outputFile': 'h_nunu_dst.slcio', 'outputDataSE': 'CERN-SRM'}], 'Energy': 1400.0, 'ProductionOutputData': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/002/h_nunu_rec_4193_2766.slcio;/ilc/prod/clic/1.4tev/h_nunu/SID/DST/00004193/002/h_nunu_dst_4193_2766.slcio', 'Site': 'ANY', 'OwnerGroup': 'ilc_prod', 'PRODUCTION_ID': '00004193', 'Owner': 'sailer', 'MaxCPUTime': '300000', 'LogFilePath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/LOG/002', 'InputData': '/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/000/h_nunu_sim_4192_655.slcio'}
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = wf_real
+    self.uod.outputList = wf_real['outputList']
+    proddata = self.uod.workflow_commons['ProductionOutputData'].split(";")
+    olist = {}
+    for obj in self.uod.outputList:
+      self.uod.getTreatedOutputlist(proddata, olist, obj)
+
+    self.uod.log.debug ( "OList: %s " % olist )
+    filesFound = [f in olist for f in ('h_nunu_dst_4193_2766', 'h_nunu_rec_4193_2766') ]
+    self.uod.log.debug("%s" % filesFound )
+    self.assertTrue( all( filesFound ) )
+
+  def test_GOL_RecoNew( self ):
+    """outputList properly formated for reconstruction jobs........................................."""
+    gLogger.setLevel("ERROR")
+    wf_real = {'TaskID': '2766', 'TotalSteps': '4', 'JobName': '00004193_00002766', 'Priority': '1', 'SoftwarePackages': 'overlayinput.1;lcsim.CLIC_CDR;slicpandora.CLIC_CDR_photon_fix', 'DebugLFNs': '', 'Status': 'Created', 'JobReport': self.jr_mock, 'BannedSites': 'LCG.Bristol.uk;LCG.RAL-LCG2.uk', 'LogLevel': 'verbose', 'StdOutput': 'std.out', 'JobType': 'MCReconstruction_Overlay', 'SystemConfig': 'x86_64-slc5-gcc43-opt', 'TransformationID': '4193', 'JOB_ID': '00002766', 'productionVersion': '$Id: ', 'StdError': 'std.err', 'LogTargetPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/LOG/00004193_2766.tar', 'IS_PROD': 'True', 'Request': self.rc_mock, 'ParametricInputSandbox': '', 'emailAddress': 'stephane.poss@cern.ch', 'JobGroup': '00004193', 'NbOfEvts': 200, 'Origin': 'DIRAC', 'outputList': [{'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC', 'outputFile': 'h_nunu_rec.slcio', 'outputDataSE': 'CERN-SRM'}, {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/SID/DST', 'outputFile': 'h_nunu_dst.slcio', 'outputDataSE': 'CERN-SRM'}], 'Energy': 1400.0, 'ProductionOutputData': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/002/h_nunu_rec_4193_2766.slcio;/ilc/prod/clic/1.4tev/h_nunu/SID/DST/00004193/002/h_nunu_dst_4193_2766.slcio', 'Site': 'ANY', 'OwnerGroup': 'ilc_prod', 'PRODUCTION_ID': '00004193', 'Owner': 'sailer', 'MaxCPUTime': '300000', 'LogFilePath': '/ilc/prod/clic/1.4tev/h_nunu/SID/REC/00004193/LOG/002', 'InputData': '/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/000/h_nunu_sim_4192_655.slcio'}
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = wf_real
+    self.uod.outputList = wf_real['outputList']
+    proddata = self.uod.workflow_commons['ProductionOutputData'].split(";")
+    olist = {}
+    for obj in self.uod.outputList:
+      self.uod.getTreatedOutputlistNew(proddata, olist, obj)
+
+    self.uod.log.debug ( "OList: %s " % olist )
+    filesFound = [f in olist for f in ('h_nunu_dst_4193_2766', 'h_nunu_rec_4193_2766') ]
+    self.uod.log.debug("%s" % filesFound )
+    self.assertTrue( all( filesFound ) )
+
+
+  def test_GOL_gen( self ):
+    """outputList properly formated for reconstruction jobs........................................."""
+    gLogger.setLevel("DEBUG")
+    self.uod = UploadOutputData()
+    self.uod.workflow_commons = {'outputList': [{'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen',
+                                                 'outputFile': 'h_nunu_gen.stdhep',
+                                                 'outputDataSE': 'CERN-SRM'}],
+                                 'ProductionOutputData':
+                                 '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0004.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0005.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0006.stdhep;/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0007.stdhep;'}
+
+    self.uod.outputList = self.uod.workflow_commons['outputList']
+    proddata = self.uod.workflow_commons['ProductionOutputData'].split(";")
+    olist = {}
+    for obj in self.uod.outputList:
+      self.uod.getTreatedOutputlistNew(proddata, olist, obj)
+
+    self.uod.log.debug ( "OList: %s " % olist )
+    filesFound = [f in olist for f in ('h_nunu_gen_4191_0000',
+                                       'h_nunu_gen_4191_0001',
+                                       'h_nunu_gen_4191_0002',
+                                       'h_nunu_gen_4191_0003',
+                                       'h_nunu_gen_4191_0004',
+                                       'h_nunu_gen_4191_0005',
+                                       'h_nunu_gen_4191_0006',
+                                       'h_nunu_gen_4191_0007') ]
+    self.uod.log.debug("%s" % filesFound )
+    self.assertTrue( all( filesFound ) )
+
 
 #############################################################################
 # Run Tests
