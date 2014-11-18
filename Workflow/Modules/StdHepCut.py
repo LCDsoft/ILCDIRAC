@@ -37,6 +37,15 @@ class StdHepCut(ModuleBase):
   
     if self.step_commons.has_key('MaxNbEvts'):
       self.MaxNbEvts = self.step_commons['MaxNbEvts']
+
+    if not self.OutputFile:
+      dircont = os.listdir("./")
+      for myfile in dircont:
+        if myfile.count(".stdhep"):
+          self.OutputFile = myfile.rstrip(".stdhep") + "_reduced.stdhep"
+          break
+      if not self.OutputFile:
+        return S_ERROR("Could not find suitable OutputFile name")
       
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:
