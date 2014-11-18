@@ -357,8 +357,8 @@ class UploadOutputData(ModuleBase):
             appdict.update(outputfileObject)
             appdict['outputFile'] = productionFile+extension
             treatedOutputlist[productionFile] = appdict
-            # if fType in ('_rec', '_dst'): #there will only be one _rec or _dst file...
-            #   return
+            if fType in ('_rec', '_dst'): #there will only be one _rec or _dst file...
+              return
 
 
   def getBasenameAndExtension(self, filepath):
