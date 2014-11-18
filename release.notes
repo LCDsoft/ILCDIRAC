@@ -2,6 +2,14 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p5]
+
+* Workflow: Added tests, improved logging output
+* Workflow: UploadOutputData
+* Workflow: FailoverTransfer
+* Workflow: UploadLogFile
+* Workflow: ModuleBase
+
 [v22r0p4]
 
 * FIX: Fix OutputDataPolicy
