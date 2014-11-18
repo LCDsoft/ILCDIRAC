@@ -75,22 +75,18 @@ class UploadOutputData(ModuleBase):
     self.outputList = self.workflow_commons.get('outputList', self.outputList)
     if self.outputList:
       if 'ProductionOutputData' in self.workflow_commons:
-        proddata = self.workflow_commons['ProductionOutputData'].split(";")
-        self.log.verbose("prod data : %s" % proddata )
-        olist = {}
-        for obj in self.outputList:
-          fname_in_outputlist = obj['outputFile'].lower()
-          self.log.debug("Treating file: %s" % fname_in_outputlist)
-          extension = self.__expectedExtension(fname_in_outputlist)
-          fname_in_outputlist = fname_in_outputlist.replace(extension,"")
-          self.log.debug("Removed extension: %s" % fname_in_outputlist)
-          self.getOlist(proddata, olist, fname_in_outputlist, obj)
-        self.outputList = olist.values()
+        productionData = self.workflow_commons['ProductionOutputData'].split(";")
+        self.log.verbose("prod data : %s" % productionData )
+        treatedOutputlist = {}
+        for expectedOutputfile in self.outputList:
+          self.log.debug("Treating file: %s" % expectedOutputfile['outputFile'])
+          self.getTreatedOutputlistNew(productionData, treatedOutputlist, expectedOutputfile)
+        self.outputList = treatedOutputlist.values()
       else:
         olist = []
-        for obj in self.outputList:
-          appdict = obj
-          appdict['outputFile'] = getProdFilename(obj['outputFile'],
+        for expectedOutputfile in self.outputList:
+          appdict = expectedOutputfile
+          appdict['outputFile'] = getProdFilename(expectedOutputfile['outputFile'],
                                                   int(self.workflow_commons["PRODUCTION_ID"]),
                                                   int(self.workflow_commons["JOB_ID"]))
           olist.append(appdict)
@@ -283,7 +279,7 @@ class UploadOutputData(ModuleBase):
     return S_OK()
 
 
-  def __expectedExtension(self, filename):
+  def _expectedExtension(self, filename):
     """return the expected extension based on the production type hinted in the filename"""
     extension = ''
     if any( ext in filename for ext in ('_sim', '_dst', '_rec') ):
@@ -297,13 +293,12 @@ class UploadOutputData(ModuleBase):
 
     return extension
 
-  def getOlist(self, proddata, olist, fname_in_outputlist, obj):
+  def getTreatedOutputlist(self, proddata, olist, obj):
     """Returns properly formatted output files based on the production requirements"""
+    fname_in_outputlist, dummy_ext = self.getBasenameAndExtension(obj['outputFile'].lower())
     for prodfile in proddata:
       self.log.debug("Proddata file:     %s" % prodfile)
-      prodfile = os.path.basename(prodfile)
-      extension = self.__expectedExtension(prodfile)
-      prodfile = prodfile.replace(extension,"")
+      prodfile, extension = self.getBasenameAndExtension(prodfile)
       self.log.debug("Removed extension: %s" % prodfile)
       if prodfile in olist:
         ## This has already been treated, no need to come back to it.
@@ -341,5 +336,36 @@ class UploadOutputData(ModuleBase):
           appdict['outputFile'] = prodfile+extension
           olist[prodfile] = appdict
           break
+
+
+  def getTreatedOutputlistNew(self, producedData, treatedOutputlist, outputfileObject):
+    """returns properly formated outputList"""
+    expectedOutputFile, dummy_ext = self.getBasenameAndExtension(outputfileObject['outputFile'].lower())
+    for productionFile in producedData:
+      self.log.debug("Prodfile %s; outFile %s" %(productionFile, expectedOutputFile))
+      productionFile, extension = self.getBasenameAndExtension(productionFile)
+      self.log.debug("Removed extension: %s" % productionFile)
+      if productionFile in treatedOutputlist:
+        ## This has already been treated, no need to come back to it.
+        continue
+      appdict = {}
+      for fType in ('_gen', '_sim', '_rec', '_dst'):
+        ### No idea why the second thing is necessary, but it is there in the original function
+        if fType in expectedOutputFile and ( fType != '_dst' or '_dst_' in productionFile.lower() ):
+          filePrototype = outputfileObject['outputFile'].split(fType)[0]+fType
+          if filePrototype in productionFile:
+            appdict.update(outputfileObject)
+            appdict['outputFile'] = productionFile+extension
+            treatedOutputlist[productionFile] = appdict
+            # if fType in ('_rec', '_dst'): #there will only be one _rec or _dst file...
+            #   return
+
+
+  def getBasenameAndExtension(self, filepath):
+    """returns tuple of basename and extenion"""
+    baseFileName = os.path.basename(filepath)
+    extension = self._expectedExtension(baseFileName)
+    baseFileNameWoExtension = baseFileName.replace(extension,"")
+    return baseFileNameWoExtension, extension
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
