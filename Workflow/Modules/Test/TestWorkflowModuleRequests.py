@@ -74,7 +74,8 @@ class TestModuleBase( ModulesTestCase ):
 class TestUploadLogFile( ModulesTestCase ):
   """ test UploadLogFile """
 
-  def test_NoLogFiles( self ):
+  def test_ULF_ASI_NoLogFiles( self ):
+    """ULF.applicationSpecificInputs: no log files present.............................."""
     self.ulf = UploadLogFile()
     self.ulf.workflow_commons = copy.deepcopy(self.mb.workflow_commons)
     self.ulf.log = gLogger.getSubLogger("ULF-NoLogFiles")
@@ -86,7 +87,8 @@ class TestUploadLogFile( ModulesTestCase ):
     res = self.ulf.execute()
     self.assertTrue( res['OK'] )
 
-  def test_OneLogFile( self ):
+  def test_ULF_ASI_OneLogFile( self ):
+    """ULF.applicationSpecificInputs: one log files present............................."""
     self.ulf = UploadLogFile()
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
@@ -100,7 +102,8 @@ class TestUploadLogFile( ModulesTestCase ):
     self.assertTrue( res['OK'] )
 
 
-  def test_FailedFailover( self ):
+  def test_ULF_ASI_FailedFailover( self ):
+    """ULF.applicationSpecificInputs: Failovertransfer failes..........................."""
     self.ulf = UploadLogFile()
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
@@ -112,7 +115,8 @@ class TestUploadLogFile( ModulesTestCase ):
     res = self.ulf.execute()
     self.assertTrue( res['OK'] )
 
-  def test_LogFileGone( self ):
+  def test_ULF_ASI_LogFileGone( self ):
+    """ULF.applicationSpecificInputs: log file disappeared, IOError....................."""
     self.ulf = UploadLogFile()
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf.log = gLogger.getSubLogger("ULF-LogFileGone")
@@ -121,7 +125,8 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['std.out']))
     self.assertRaises( IOError, self.ulf.execute )
 
-  def test_Request( self ):
+  def test_ULF_ASI_execute( self ):
+    """ULF.ASI,Exe: run through and get request.........................................."""
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
@@ -419,7 +424,7 @@ class TestUploadOutputData( ModulesTestCase ):
 
   def test_GOL_gen( self ):
     """outputList properly formated for reconstruction jobs........................................."""
-    gLogger.setLevel("DEBUG")
+    gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
     self.uod.workflow_commons = {'outputList': [{'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen',
                                                  'outputFile': 'h_nunu_gen.stdhep',
@@ -453,9 +458,9 @@ def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( ModulesTestCase )
 
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadLogFile ) )
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestModuleBase ) )
-  #suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadLogFile ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestModuleBase ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestFailoverRequest ) )
   
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
@@ -469,4 +474,3 @@ def runTests():
 
 if __name__ == '__main__':
   runTests()
-  
