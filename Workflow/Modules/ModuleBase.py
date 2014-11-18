@@ -219,13 +219,13 @@ class ModuleBase(object):
     """ Returns list of candidate files to upload, check if some outputs are missing.
 
       @param outputList: has the following structure:
-      [ ('outputDataType':'','outputDataSE':'','outputDataName':'') , (...) ]
+      [ ('outputFile':'','outputDataSE':'','outputPath':'') , (...) ]
 
       @param outputLFNs: list of output LFNs for the job
 
-      @param fileMask:  output file extensions to restrict the outputs to
+      @param fileMask:  UNUSED output file extensions to restrict the outputs to
 
-      @return: dictionary containing type, SE and LFN for files restricted by mask
+      @return: S_OK with dictionary containing type, SE and LFN for files [NOT: restricted by mask]
     """
     fileInfo = {}
     for outputFile in outputList:
@@ -238,14 +238,15 @@ class ModuleBase(object):
         self.log.error('Ignoring malformed output data specification', str(outputFile))
 
     for lfn in outputLFNs:
+      self.log.debug("Checking LFN: %s" % lfn)
       if os.path.basename(lfn) in fileInfo.keys():
         fileInfo[os.path.basename(lfn)]['lfn']=lfn
         self.log.verbose('Found LFN %s for file %s' %(lfn, os.path.basename(lfn)))
         if len(os.path.basename(lfn))>127:
-          self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload.')
+          self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload. Filename:', os.path.basename(lfn))
           return S_ERROR('Filename too long')
         if len(lfn)>256+127:
-          self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload.')
+          self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload. LFN:', lfn)
           return S_ERROR('LFN too long')
 
     #Check that the list of output files were produced
@@ -278,7 +279,7 @@ class ModuleBase(object):
     for fileName, metadata in candidateFiles.items():
       for key in mandatoryKeys:
         if not key in metadata:
-          return S_ERROR('File %s has missing %s' % (fileName, key))
+          return S_ERROR('File %s has missing key %s' % (fileName, key))
     return S_OK(candidateFiles)
 
   #############################################################################
@@ -662,47 +663,49 @@ class ModuleBase(object):
     request = self._getRequestContainer()
     
     reportRequest = None
-    result = self.jobReport.generateForwardDISET()
-    request = self._getRequestContainer()
-    if not result['OK']:
-      self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( result ) )
+    resultJR = self.jobReport.generateForwardDISET()
+    if not resultJR['OK']:
+      self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( resultJR ) )
     else:
-      reportRequest = result['Value']
+      reportRequest = resultJR['Value']
     if reportRequest:
       self.log.info( "Populating request with job report information" )
       request.addOperation( reportRequest )
 
     accountingReport = self.workflow_commons.get( 'AccountingReport', None)
     if accountingReport:
-      result = accountingReport.commit()
-      if not result['OK']:
-        self.log.error( "!!! Both accounting and RequestDB are down? !!!" )
-        return result
+      resultAR = accountingReport.commit()
+      if not resultAR['OK']:
+        self.log.error( "!!! Both Accounting and RequestDB are down? !!!" )
+        return resultAR
 
-    if len( request ):
-      isValid = gRequestValidator.validate( request )
-      if not isValid['OK']:
-        raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
-      else:
-        requestJSON = request.toJSON()
-        if requestJSON['OK']:
-          self.log.info( "Creating failover request for deferred operations for job %d" % self.jobID )
-          request_string = str( requestJSON['Value'] )
-          self.log.debug( request_string )
-          # Write out the request string
-          fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
-          jsonFile = open( fname, 'w' )
-          jsonFile.write( request_string )
-          jsonFile.close()
-          self.log.info( "Created file containing failover request %s" % fname )
-          result = request.getDigest()
-          if result['OK']:
-            self.log.info( "Digest of the request: %s" % result['Value'] )
-          else:
-            self.log.error( "No digest? That's not sooo important, anyway: %s" % result['Message'] )
-        else:
-          raise RuntimeError( requestJSON['Message'] )
+    if not len( request ):
+      self.log.info("No Requests to process ")
+      return S_OK()
 
+    isValid = gRequestValidator.validate( request )
+    if not isValid['OK']:
+      raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
+
+    requestJSON = request.toJSON()
+    if not requestJSON['OK']:
+      raise RuntimeError( requestJSON['Message'] )
+
+    self.log.info( "Creating failover request for deferred operations for job %d" % self.jobID )
+    request_string = str( requestJSON['Value'] )
+    self.log.debug( request_string )
+    # Write out the request string
+    fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
+    with open( fname, 'w' ) as jsonFile:
+      jsonFile.write( request_string )
+    self.log.info( "Created file containing failover request %s" % fname )
+    resultDigest = request.getDigest()
+    if resultDigest['OK']:
+      self.log.info( "Digest of the request: %s" % resultDigest['Value'] )
+    else:
+      self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
+
+    return S_OK()
 
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application

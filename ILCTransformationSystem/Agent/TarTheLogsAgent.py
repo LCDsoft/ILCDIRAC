@@ -208,26 +208,21 @@ class TarTheProdLogsAgent( AgentModule ):
   def uploadToStorage(self, prod, tarballpath):
     """ Put the file to the Storage Element
     """
-    
+    ##FIXME: I don't think this does the right thing at the moment
     final_lfn_path = self.baselfn+"/"+prod
-    res = self.storageElement.getPfnForLfn(final_lfn_path)
+    res = self.storageElement.isFile(final_lfn_path)
     if not res["OK"]:
       return res
-    final_pfn_path = res["Value"]
-    
-    pfn = final_pfn_path + "/" + os.path.basename(tarballpath)
-    res = self.storageElement.isFile(final_pfn_path)
-    if not res["OK"]:
-      return res
-    
-    if pfn in res['Value']["Successful"]:
-      #the file is on the storage, make a new one
-      #AS: What if _2.tgz already exists?
-      tarballname = os.path.basename(tarballpath)
-      pfn = final_pfn_path + "/" + tarballname.rstrip(".tgz") + "_2.tgz" 
+    counter = 0
+    tarballbasename = os.path.basename(tarballpath)[:-4]
+    lfn = final_lfn_path +"/" + tarballbasename + "_%i.tgz" % counter
+    while lfn in res['Value']["Successful"]:
+      counter = counter + 1
+      lfn = final_lfn_path + "/" + tarballbasename + "_%i.tgz" % counter
+      res = self.storageElement.isFile(lfn)
     
     
-    fileDict = {pfn : tarballpath}
+    fileDict = {lfn : tarballpath}
     self.log.info( "putFile", fileDict )
     res = self.storageElement.putFile( fileDict )
     if res['OK']:

@@ -7,9 +7,8 @@ Module that gets a file from its SRM definition
 '''
 __RCSID__ = "$Id$"
 
-from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
 from DIRAC.Core.DISET.RPCClient                            import RPCClient
-
+from DIRAC.Resources.Storage.StorageElement                import StorageElement
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC import S_OK, S_ERROR, gLogger
 import os, tempfile, time
@@ -23,7 +22,6 @@ class GetSRMFile(ModuleBase):
     super(GetSRMFile, self).__init__()
     self.version = __RCSID__
     self.log = gLogger.getSubLogger('GetSRMFile')
-    self.repman = ReplicaManager()
     self.srmfiles = []
     self.files = []
     self.counter = 1
@@ -83,13 +81,13 @@ class GetSRMFile(ModuleBase):
       start = os.getcwd()
       downloadDir = tempfile.mkdtemp(prefix = 'InputData_%s' % (self.counter), dir = start)
       os.chdir(downloadDir)
-
-      result = self.repman.getStorageFile(filed['file'], filed['site'], singleFile = True)
-      if not result['OK']:
-        result = self.repman.getStorageFile(filed['file'], filed['site'], singleFile = True)
+      storageElement = StorageElement( filed['site'] )
+      result = storageElement.getFile( filed['file'] )
+      if result['Value']['Failed']:
+        result = storageElement.getFile( filed['file'] )
       os.chdir(start)
-      if not result['OK']:
-        self.log.error("Failed to get the file from storage:", result['Message'])
+      if result['Value']['Failed']:
+        self.log.error("Failed to get the file from storage:", result['Value']['Failed'])
         return result
       self.counter += 1
       

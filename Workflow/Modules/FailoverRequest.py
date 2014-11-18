@@ -39,31 +39,26 @@ class FailoverRequest(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module input parameters are resolved here.
     """
-    if os.environ.has_key('JOBID'):
+    if 'JOBID' in os.environ:
       self.jobID = os.environ['JOBID']
       self.log.verbose('Found WMS JobID = %s' %self.jobID)
     else:
       self.log.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
-    if self.step_commons.has_key('Enable'):
-      self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
-        self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
-        self.enable = False
+    self.enable = self.step_commons.get('Enable', self.enable)
+    if not type(self.enable) == type(True):
+      self.log.error('Enable flag set to non-boolean value %s, setting to False' % self.enable)
+      self.enable = False
 
     #Earlier modules will have populated the report objects
-    if self.workflow_commons.has_key('JobReport'):
-      self.jobReport = self.workflow_commons['JobReport']
+    self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
-    if self.workflow_commons.has_key('FileReport'):
-      self.fileReport = self.workflow_commons['FileReport']
+    self.fileReport = self.workflow_commons.get('FileReport', self.fileReport)
 
-    if self.workflow_commons.has_key('PRODUCTION_ID'):
-      self.productionID = self.workflow_commons['PRODUCTION_ID']
+    self.productionID = self.workflow_commons.get('PRODUCTION_ID', self.productionID)
 
-    if self.workflow_commons.has_key('JOB_ID'):
-      self.prodJobID = self.workflow_commons['JOB_ID']
+    self.prodJobID = self.workflow_commons.get('JOB_ID', self.prodJobID)
 
     return S_OK('Parameters resolved')
 
@@ -81,8 +76,7 @@ class FailoverRequest(ModuleBase):
       self.log.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
 
-    if not self.fileReport:
-      self.fileReport =  FileReport('Transformation/TransformationManager')
+    self.fileReport = self.fileReport if self.fileReport else FileReport('Transformation/TransformationManager')
 
     if self.InputData:
       inputFiles = self.fileReport.getFiles()
@@ -101,16 +95,17 @@ class FailoverRequest(ModuleBase):
     else:
       inputFiles = self.fileReport.getFiles()
       if inputFiles:
-        self.log.info('Workflow status OK, setting input file status to Processed')                
+        self.log.info('Workflow status OK, setting input file status to Processed')
       for lfn in inputFiles:
         self.log.info('Setting status to "Processed" for: %s' % (lfn))
-        self.fileReport.setFileStatus(int(self.productionID), lfn, 'Processed')  
+        self.fileReport.setFileStatus(int(self.productionID), lfn, 'Processed')
 
     fileReportCommitResult = self.fileReport.commit()
     if fileReportCommitResult['OK']:
       self.log.info('Status of files have been properly updated in the ProcessingDB')
     else:
-      self.log.error('Failed to report file status to ProductionDB, request will be generated', fileReportCommitResult['Message'])
+      self.log.error('Failed to report file status to ProductionDB:', fileReportCommitResult['Message'])
+      self.log.error('Request will be generated.')
       disetResult = self.fileReport.generateForwardDISET()
       if not disetResult['OK']:
         self.log.warn( "Could not generate Operation for file report with result:\n%s" % disetResult['Value'] )
@@ -124,11 +119,12 @@ class FailoverRequest(ModuleBase):
 
     # Must ensure that the local job report instance is used to report the final status
     # in case of failure and a subsequent failover operation
-    if self.workflowStatus['OK'] and self.stepStatus['OK']: 
+    if self.workflowStatus['OK'] and self.stepStatus['OK']:
       self.jobReport.setApplicationStatus('Job Finished Successfully')
-      
-    self.generateFailoverFile()
 
+    resFF = self.generateFailoverFile()
+    if not resFF['OK']:
+      self.log.error(resFF['Message'])
 
     return self.finalize()
 

@@ -9,7 +9,7 @@ Created on Mar 21, 2013
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger, S_OK, exit as dexit
+from DIRAC import gLogger, S_OK, S_ERROR, exit as dexit
 
 class Params(object):
   """Parameter object"""
@@ -34,6 +34,15 @@ class Params(object):
                           self.setOutputDir)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
+
+def printErrorReport(res):
+  """Print the failures for the call to getFile or Directory"""
+  if res['Value'] and res['Value']['Failed']:
+    for lfn in res['Value']['Failed']:
+      gLogger.error("%s %s" % (lfn,res['Value']['Failed'][lfn]) )
+      return S_ERROR()
+  return S_OK()
+
 def getProdLogs():
   """get production log files from LogSE"""
   clip = Params()
@@ -45,9 +54,9 @@ def getProdLogs():
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
   ops = Operations()
   storageElementName = ops.getValue('/LogStorage/LogSE', 'LogSE')
-  
-  from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-  rm = ReplicaManager()
+  from DIRAC.Resources.Storage.StorageElement import StorageElement
+  logSE = StorageElement(storageElementName)
+
   from DIRAC.Core.Utilities.PromptUser import promptUser
   if clip.logD:
     res = promptUser('Are you sure you want to get ALL the files in this directory?')
@@ -56,16 +65,12 @@ def getProdLogs():
     choice = res['Value']
     if choice.lower()=='n':
       dexit(0)
-    res = rm.getStorageDirectory(clip.logD, storageElementName, clip.outputdir, singleDirectory=True)
-    if not res['OK']:
-      gLogger.error(res['Message'])
-      dexit(1)
-  if clip.logF:
-    res = rm.getStorageFile(clip.logF, storageElementName, clip.outputdir, singleFile = True)
-    if not res['OK']:
-      gLogger.error(res['Message'])
-      dexit(1)
+    res = logSE.getDirectory(clip.logD, localPath=clip.outputdir)
+    printErrorReport(res)
 
+  if clip.logF:
+    res = logSE.getFile(clip.logF, localPath = clip.outputdir)
+    printErrorReport(res)
 
 if __name__ == '__main__':
   getProdLogs()

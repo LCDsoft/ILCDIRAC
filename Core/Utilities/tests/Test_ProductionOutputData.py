@@ -1,3 +1,6 @@
+"""Tests for .Core.Utilities.ProductionData.constructProductionLFNs"""
+__RCSID__ = "$Id$"
+#pylint: disable=R0904
 import unittest
 from ILCDIRAC.Core.Utilities.ProductionData import constructProductionLFNs
 
@@ -54,13 +57,17 @@ class ProductionOutputDataTestCase( unittest.TestCase ):
     result = constructProductionLFNs(commons)
     res = {'ProductionOutputData' : ["/ilc/prod/clic/test/gen/00012345/001/something_gen_12345_1234.stdhep"], 
            'LogFilePath' : ["/ilc/prod/clic/test/gen/00012345/LOG/001"],
-            'LogTargetPath' : ["/ilc/prod/clic/test/gen/00012345/LOG/00012345_1234.tar"], 
-            'DebugLFNs' : []}
+           'LogTargetPath' : ["/ilc/prod/clic/test/gen/00012345/LOG/00012345_1234.tar"],
+           'DebugLFNs' : []}
     for key in res.keys():
       self.assertEqual( result['Value'][key], res[key])
         
     
-if __name__ == '__main__':
+def runTests():
+  """runs all the tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( ProductionOutputDataTestCase )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  
+  print testResult
+
+if __name__ == '__main__':
+  runTests()

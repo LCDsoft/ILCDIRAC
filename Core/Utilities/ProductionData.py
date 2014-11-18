@@ -143,14 +143,14 @@ def getLogPath(paramDict):
   productionID = paramDict['PRODUCTION_ID']
   jobID = paramDict['JOB_ID']
   #need to built logPath from logFilePath, as it's not there, and must be as in method above
-  logPathtemp = paramDict['LogFilePath'].split("/")
-  logPath = os.path.join(*logPathtemp[0:-1])
+  logPathtemp = cleanUpLFNPath(paramDict['LogFilePath']).split("/")
+  logPath = "/"+os.path.join(*logPathtemp[0:-1])
   logFilePath = paramDict['LogFilePath']
   logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)/1000).zfill(3))]
   #Get log file path - unique for all modules
 
-  gLogger.verbose('Log file path is:\n%s' % logFilePath)
-  gLogger.verbose('Log target path is:\n%s' % logTargetPath)
+  gLogger.verbose('Log file path is: %s' % logFilePath)
+  gLogger.verbose('Log target path is: %s' % logTargetPath)
   jobOutputs = {'LogFilePath' : logFilePath, 'LogTargetPath' : logTargetPath}
   return S_OK(jobOutputs)
 
