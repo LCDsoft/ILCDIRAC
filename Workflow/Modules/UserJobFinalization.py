@@ -270,7 +270,7 @@ class UserJobFinalization(ModuleBase):
       return S_ERROR('Failed To Upload Output Data')
 
     #If there is now at least one replica for uploaded files can trigger replication
-    datMan = DataManager( catalogs = [self.userFileCatalog] )
+    datMan = DataManager( catalogs = self.userFileCatalog )
     self.log.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
     time.sleep(10)
     for lfn, repSE in replication.items():
