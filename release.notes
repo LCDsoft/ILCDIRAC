@@ -2,6 +2,15 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p7]
+
+* Workflow: Fix problems for request
+FIX: ModuleBase: getRequestContainer: if Request was not properly initialized do it
+
+* DataManagement
+FIX: Remove use of ReplicaManager, because RepMan is deprecated
+
+
 [v22r0p6]
 
 * Workflow: Fix problems from selecting cvmfs code and not setRequired parts
