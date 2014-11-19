@@ -8,7 +8,7 @@ defined in the user workflow.
 
 __RCSID__ = "$Id$"
 
-from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 
 from DIRAC.Core.Security.ProxyInfo                         import getProxyInfo
@@ -270,11 +270,11 @@ class UserJobFinalization(ModuleBase):
       return S_ERROR('Failed To Upload Output Data')
 
     #If there is now at least one replica for uploaded files can trigger replication
-    rm = ReplicaManager()
+    datMan = DataManager( catalogs = [self.userFileCatalog] )
     self.log.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
     time.sleep(10)
     for lfn, repSE in replication.items():
-      result = rm.replicateAndRegister(lfn, repSE, catalog = self.userFileCatalog)
+      result = datMan.replicateAndRegister(lfn, repSE)
       if not result['OK']:
         self.log.info('Replication failed with below error but file already exists in Grid storage with \
         at least one replica:\n%s' % (result))

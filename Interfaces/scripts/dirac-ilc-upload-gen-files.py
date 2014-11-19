@@ -220,7 +220,7 @@ def uploadGenFiles():
       dexit(0)    
 
   
-  from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+  from DIRAC.DataManagementSystem.Client.DataManager import DataManager
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   fc = FileCatalogClient()
   
@@ -234,7 +234,7 @@ def uploadGenFiles():
     if not res['OK']:
       gLogger.error("Failed to set meta data %s to %s" %(pathdict['meta'], pathdict['path']))
 
-  rm = ReplicaManager()
+  datMan = DataManager()
   for filename in flist:
     fnum = filename.split(".")[-2]
     fext = filename.split(".")[-1]
@@ -248,7 +248,7 @@ def uploadGenFiles():
       if not res['Value'].lower()=='y':
         break    
 
-    res = rm.putAndRegister(finalpath+"/"+final_fname, filename, clip.storageElement)
+    res = datMan.putAndRegister(finalpath+"/"+final_fname, filename, clip.storageElement)
     if not res['OK']:
       gLogger.error("Failed to upload %s:" % filename, res['Message'])
       continue

@@ -11,7 +11,7 @@ from distutils import dir_util, errors
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
-from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations   import Operations 
 
 from DIRAC.RequestManagementSystem.Client.Request           import Request
@@ -24,7 +24,7 @@ from DIRAC.RequestManagementSystem.Client.ReqClient         import ReqClient
 def upload(path, appTar):
   """ Upload software tar ball to storage
   """
-  rm = ReplicaManager()
+  datMan = DataManager()
   ops = Operations()
   if path[-1] != "/":
     path += "/"
@@ -44,7 +44,7 @@ def upload(path, appTar):
     return S_ERROR()
   else:
     lfnpath = "%s%s" % (path, os.path.basename(appTar))
-    res = rm.putAndRegister(lfnpath, appTar, ops.getValue('Software/BaseStorageElement', "CERN-SRM"))
+    res = datMan.putAndRegister(lfnpath, appTar, ops.getValue('Software/BaseStorageElement', "CERN-SRM"))
     if not res['OK']:
       return res
     request = Request()

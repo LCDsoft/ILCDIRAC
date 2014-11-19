@@ -69,9 +69,9 @@ def removeTheWholeFamily():
       lfns.remove(filename)
   gLogger.notice("Remaining files:",len(lfns))
   
-  from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
-  rm = ReplicaManager()
-  res = rm.removeFile(files_to_remove, force=True)
+  from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+  datMan = DataManager()
+  res = datMan.removeFile(files_to_remove, force=True)
   if not res['OK']:
     gLogger.error(res['Message'])
     dexit(1)

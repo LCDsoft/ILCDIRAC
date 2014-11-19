@@ -5,7 +5,7 @@
 '''
 __RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from DIRAC.DataManagementSystem.Client.ReplicaManager      import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import resolveIFpaths
 #from ILCDIRAC.Core.Utilities.InputFilesUtilities           import getNumberOfevents
 
@@ -25,7 +25,7 @@ class MoveInFC(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MoveInFC" )
     self.applicationName = 'MoveInFC'
-    self.repMan = ReplicaManager()
+    self.repMan = DataManager()
     self.listoutput = {}
     self.outputpath = ''
     
