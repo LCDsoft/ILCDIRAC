@@ -32,27 +32,34 @@ class StdHepCut(ModuleBase):
     self.scriptName = ""
     
   def applicationSpecificInputs(self):
-    if self.step_commons.has_key('CutFile'):
-      self.SteeringFile = self.step_commons['CutFile']
-  
-    if self.step_commons.has_key('MaxNbEvts'):
-      self.MaxNbEvts = self.step_commons['MaxNbEvts']
-      
-    if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
-        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
-          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-          for obj in outputlist:
-            if obj.lower().count("_gen_"):
-              self.OutputFile = os.path.basename(obj)
-              break
-        else:
-          self.OutputFile = getProdFilename(self.OutputFile,
-                                            int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))
+
+    self.SteeringFile = self.step_commons.get('CutFile', self.SteeringFile)
+    self.MaxNbEvts = self.step_commons.get('MaxNbEvts', self.MaxNbEvts)
+
+    if not self.OutputFile:
+      dircont = os.listdir("./")
+      for myfile in dircont:
+        if myfile.count(".stdhep"):
+          self.OutputFile = myfile.rstrip(".stdhep") + "_reduced.stdhep"
+          break
+      if not self.OutputFile:
+        return S_ERROR("Could not find suitable OutputFile name")
+
+    if "IS_PROD" in self.workflow_commons and self.workflow_commons["IS_PROD"]:
+      #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+      #                                  int(self.workflow_commons["JOB_ID"]))
+      if 'ProductionOutputData' in self.workflow_commons:
+        outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+        for obj in outputlist:
+          if obj.lower().count("_gen_"):
+            self.OutputFile = os.path.basename(obj)
+            break
+      else:
+        self.OutputFile = getProdFilename(self.OutputFile,
+                                          int(self.workflow_commons["PRODUCTION_ID"]),
+                                          int(self.workflow_commons["JOB_ID"]))
           
+    self.log.notice("Outputfile: %s" % self.OutputFile)
     if self.inlineCuts:
       cfile = open("cuts_local.txt", "w")
       cfile.write("\n".join(self.inlineCuts.split(";")))
@@ -69,8 +76,8 @@ class StdHepCut(ModuleBase):
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     if not self.OutputFile:
-      self.log.error("Output file name not specified")
-      return S_ERROR("OutputFile name not specified")
+      self.log.error("OutputFile not specified")
+      return S_ERROR("OutputFile not specified")
 
     res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:

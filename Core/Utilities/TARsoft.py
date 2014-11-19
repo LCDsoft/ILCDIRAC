@@ -429,15 +429,16 @@ def checkJava():
 
 def configureSlic(basefolder):
   """sets environment variables for SLIC"""
-  os.environ['SLIC_DIR'] = basefolder
+  slicfolder = os.path.join( os.getcwd(), basefolder)
+  os.environ['SLIC_DIR'] = slicfolder
   slicv = ''
   lcddv = ''
   xercesv = ''
   try:
-    slicv = os.listdir(os.path.join(basefolder, 'packages/slic/'))[0]
-    lcddv = os.listdir(os.path.join(basefolder, 'packages/lcdd/'))[0]
-    if os.path.exists(os.path.join(basefolder, 'packages/xerces/')):
-      xercesv = os.listdir(os.path.join(basefolder, 'packages/xerces/'))[0]
+    slicv = os.listdir(os.path.join(slicfolder, 'packages/slic/'))[0]
+    lcddv = os.listdir(os.path.join(slicfolder, 'packages/lcdd/'))[0]
+    if os.path.exists(os.path.join(slicfolder, 'packages/xerces/')):
+      xercesv = os.listdir(os.path.join(slicfolder, 'packages/xerces/'))[0]
   except OSError:
     return S_ERROR("Could not resolve slic env variables, folder content does not match usual pattern")
   #for mem in members:

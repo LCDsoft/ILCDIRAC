@@ -35,7 +35,7 @@ def getJob():
   myjob.dontPromptMe()
   myjob.setLogLevel("VERBOSE")
   myjob.setPlatform("x86_64-slc5-gcc43-opt")
-  myjob.setOutputSandbox(["*.log","*.xml"])
+  myjob.setOutputSandbox(["*.log","*.xml", "*.sh"])
   return myjob
 
 def getWhizardModel(dirac, nbevts, energy, model):
@@ -374,8 +374,9 @@ def runTests():
       gLogger.error("You need to have /LocalSite/LocalArea defined in your dirac.cfg")
       dexit(1)
   
-    if not localarea.find("/tmp") == 0:
-      gLogger.error("You have to have your /LocalSite/LocalArea set to /tmp/something as you'll get to install there")
+    if localarea.find("/afs") == 0:
+      gLogger.error("Don't set /LocalSite/LocalArea set to /afs/... as you'll get to install there")
+      gLogger.error("check ${HOME}/.dirac.cfg")
       dexit(1)
   
   from ILCDIRAC.Interfaces.API.DiracILC import DiracILC, __RCSID__ as drcsid
