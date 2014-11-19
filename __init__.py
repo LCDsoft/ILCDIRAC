@@ -9,7 +9,7 @@ __RCSID__ = "$Id$"
 
 majorVersion = 22
 minorVersion = 0
-patchLevel   = 5
+patchLevel   = 6
 preVersion   = 0
     
 version      = "v%sr%s" % ( majorVersion, minorVersion )
