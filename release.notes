@@ -2,6 +2,12 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p6]
+
+* Workflow: Fix problems from selecting cvmfs code and not setRequired parts
+FIX: SLIC Module not finding installation directory
+FIX: stdhepcut: outputfile was not found
+
 [v22r0p5]
 
 * Workflow: Added tests, improved logging output
