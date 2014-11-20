@@ -5,7 +5,8 @@ Created on Mar 26, 2012
 '''
 
 __RCSID__ = "$Id$"
-
+#pylint: skip-file
+#pylint: disable=C0103
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 

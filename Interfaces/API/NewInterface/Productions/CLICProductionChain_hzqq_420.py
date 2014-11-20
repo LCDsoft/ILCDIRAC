@@ -1,9 +1,11 @@
+
 '''
 Created on Feb 8, 2012
 
 @author: Stephane Poss
 '''
-
+#pylint: skip-file
+#pylint: disable=C0103
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
