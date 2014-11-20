@@ -66,6 +66,19 @@ class TestModuleBase( ModulesTestCase ):
     dummy_res = self.mb.generateFailoverFile()
     #print res
 
+  def test_CreateRemoveRequest( self ):
+    """ModuleBase: Create a removal request for some LFN.................................."""
+    gLogger.setLevel("ERROR")
+    lfnList = ['/ilc/user/s/sailer/2014_11/12/12345/testsim.slcio','/ilc/user/s/sailer/2014_11/12/12345/testsim.slcio']
+    mob = ModuleBase()
+    mob.workflow_commons = dict()
+    mob.jobID = 444444
+    mob.addRemovalRequests(lfnList)
+    request = mob.workflow_commons['Request']
+    mob.log.notice(request)
+    self.assertTrue( len(request) == 1 )
+
+
   def test_MB_getCandidateFiles( self ):
     """ModuleBase: getCandidateFiles: files exist.........................................."""
     gLogger.setLevel("ERROR")
