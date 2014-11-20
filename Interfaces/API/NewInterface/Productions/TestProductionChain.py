@@ -124,7 +124,7 @@ additionnalreqs = ''
 #additionnalreqs = 'MDCY(25,3)=5;' #for decay of H to quarks
 #additionnalreqs = 'MDCY(25,2)=220; MDCY(25,3)=1;'#for decay of H to tau tau
 #additionnalreqs = 'MDCY(23,2)=174; MDCY(23,3)=3;'#for decay of Z to bb
-mh = 12000.
+mh = 126.
 mb = 2.9
 mc = 0
 mmu = 0.10566
