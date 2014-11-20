@@ -2,6 +2,10 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p8]
+
+* Workflow: Change the way removal Request is created
+
 [v22r0p7]
 
 * Workflow: Fix problems for request
