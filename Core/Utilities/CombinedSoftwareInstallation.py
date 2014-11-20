@@ -7,7 +7,6 @@ Installs properly ILD soft and SiD soft, and all dependencies
 """
 __RCSID__ = "$Id$"
 import os
-#from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
 import DIRAC
 from ILCDIRAC.Core.Utilities.TARsoft   import tarInstall
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall

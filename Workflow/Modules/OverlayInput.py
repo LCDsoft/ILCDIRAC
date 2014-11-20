@@ -9,7 +9,7 @@ Get the overlay files
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
 from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
 from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
@@ -70,7 +70,7 @@ class OverlayInput (ModuleBase):
     self.nbsigeventsperfile = 0
     self.nbinputsigfile = 1
     self.NbSigEvtsPerJob = 0
-    self.repMan = ReplicaManager()
+    self.datMan = DataManager()
     self.fcc = FileCatalogClient()
     self.site = DIRAC.siteName()
     self.useEnergyForFileLookup = True
@@ -389,7 +389,7 @@ class OverlayInput (ModuleBase):
             f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
             f.write('Dont look at cpu')
             f.close()
-          res = self.repMan.getFile(self.lfns[fileindex])
+          res = self.datMan.getFile(self.lfns[fileindex])
           isDefault = True
 
         # Tue Jun 28 14:21:03 CEST 2011
@@ -397,7 +397,7 @@ class OverlayInput (ModuleBase):
 
         if (not res['OK']) and (not isDefault) and \
           (self.site in ['LCG.UKI-LT2-IC-HEP.uk', 'LCG.IN2P3-CC.fr', 'LCG.CERN.ch']):
-          res = self.repMan.getFile(self.lfns[fileindex])
+          res = self.datMan.getFile(self.lfns[fileindex])
 
         if not res['OK']:
           self.log.warn('Could not obtain %s' % self.lfns[fileindex])

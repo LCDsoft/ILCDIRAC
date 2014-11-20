@@ -142,12 +142,12 @@ class ProcessList(object):
     """Upload the new processList to the FileCatalog
     """
     from ILCDIRAC.Core.Utilities.FileUtils                       import upload
-    from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
+    from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
     from DIRAC import gConfig, exit as dexit
 
-    replicaManager = ReplicaManager()
+    datMan = DataManager()
     gLogger.notice("Removing process list from file catalog" + path_to_process_list)
-    res = replicaManager.removeFile(path_to_process_list)
+    res = datMan.removeFile(path_to_process_list)
     if not res['OK']:
       gLogger.error("Could not remove process list from file catalog, do it by hand")
       dexit(2)

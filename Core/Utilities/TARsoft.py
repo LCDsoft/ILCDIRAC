@@ -12,7 +12,7 @@ __RCSID__ = "$Id$"
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc, getLibsToIgnore
-from DIRAC.DataManagementSystem.Client.ReplicaManager       import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager          import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 from ILCDIRAC.Core.Utilities.WasteCPU                       import WasteCPUCycles
 import os, urllib, tarfile, subprocess, shutil, time
@@ -116,8 +116,8 @@ def downloadFile(tarballURL, app_tar, folder_name):
       gLogger.exception(str(err))
       return S_ERROR('Exception during url retrieve: %s' % str(err))
   else:
-    rm = ReplicaManager()
-    resget = rm.getFile("%s%s" % (tarballURL, app_tar))
+    datMan = DataManager()
+    resget = datMan.getFile("%s%s" % (tarballURL, app_tar))
     if not resget['OK']:
       gLogger.error("File could not be downloaded from the grid")
       return resget

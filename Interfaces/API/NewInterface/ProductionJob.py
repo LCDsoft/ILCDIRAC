@@ -23,7 +23,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 
 from math                                                   import modf
 
-from DIRAC                                                  import S_OK, S_ERROR
+from DIRAC                                                  import S_OK, S_ERROR, gLogger
 
 import os, shutil, types
 from decimal import Decimal
@@ -223,6 +223,7 @@ class ProductionJob(Job):
       return self._reportError('Could not find any directories corresponding to the query issued')
     dirs = res['Value'].values()
     for mdir in dirs:
+      gLogger.notice("Directory: %s" % mdir)
       res = self.fc.getDirectoryMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
@@ -248,6 +249,8 @@ class ProductionJob(Job):
       #  return self._reportError('Nb of events does not have any type recognised')
 
     self.basename = self.evttype
+    gLogger.notice("MetaData: %s" % compatmeta)
+    gLogger.notice("MetaData: %s" % metadata)
     if compatmeta.has_key("Energy"):
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]

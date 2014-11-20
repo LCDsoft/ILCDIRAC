@@ -5,7 +5,7 @@ Remove input data (used in case of merging
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC import S_OK, S_ERROR, gLogger
 
 class RemoveInputData(ModuleBase):
@@ -13,7 +13,7 @@ class RemoveInputData(ModuleBase):
   """
   def __init__(self):
     super(RemoveInputData, self).__init__()
-    self.repMan = ReplicaManager()
+    self.datMan = DataManager()
     self.log = gLogger.getSubLogger( "RemoveInputData" )
     self.enable = True
 
@@ -38,7 +38,7 @@ class RemoveInputData(ModuleBase):
       #Try to remove the file list with failover if necessary
       failover = []
       self.log.info( 'Attempting rm.removeFile("%s")' % ( self.InputData ) )
-      result = self.repMan.removeFile( self.InputData )
+      result = self.datMan.removeFile( self.InputData )
       self.log.verbose( result )
       if not result['OK']:
         self.log.error( 'Could not remove files with message:\n"%s"\n\

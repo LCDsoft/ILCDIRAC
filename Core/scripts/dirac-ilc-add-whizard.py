@@ -175,7 +175,7 @@ def doTheWhizardInstallation():
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations 
   from DIRAC.Interfaces.API.DiracAdmin                         import DiracAdmin
   from ILCDIRAC.Core.Utilities.FileUtils                       import upload
-  from DIRAC.DataManagementSystem.Client.ReplicaManager        import ReplicaManager
+  from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
   diracAdmin = DiracAdmin()
 
   modifiedCS = False
@@ -192,8 +192,8 @@ def doTheWhizardInstallation():
     dexit(2)
     
   gLogger.verbose("Getting process list from file catalog")
-  replicaManager = ReplicaManager()
-  res = replicaManager.getFile(path_to_process_list)
+  datMan = DataManager()
+  res = datMan.getFile(path_to_process_list)
   if not res['OK']:
     gLogger.error("Error while getting process list from storage")
     dexit(2)

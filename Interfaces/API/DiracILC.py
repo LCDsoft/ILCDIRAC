@@ -8,7 +8,7 @@ API to use to submit jobs in the ILC VO
 from DIRAC.Interfaces.API.Dirac                     import Dirac
 from DIRAC.Core.Utilities.List                      import sortList
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
-from DIRAC.DataManagementSystem.Client.ReplicaManager import ReplicaManager
+from DIRAC.DataManagementSystem.Client.DataManager  import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
@@ -48,8 +48,8 @@ class DiracILC(Dirac):
         gLogger.error("Could not get path to process list")
         processlist = ""
       else:
-        rm = ReplicaManager()
-        rm.getFile(pathtofile)
+        datMan = DataManager()
+        datMan.getFile(pathtofile)
         processlist = os.path.basename(pathtofile)   
     else:
       processlist = processlistpath

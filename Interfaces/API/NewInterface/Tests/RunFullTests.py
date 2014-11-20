@@ -36,6 +36,7 @@ def getJob():
   myjob.setLogLevel("VERBOSE")
   myjob.setPlatform("x86_64-slc5-gcc43-opt")
   myjob.setOutputSandbox(["*.log","*.xml", "*.sh"])
+  myjob._addParameter( myjob.workflow, 'TestFailover', 'String', True, 'Test failoverRequest')
   return myjob
 
 def getWhizardModel(dirac, nbevts, energy, model):
@@ -443,6 +444,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding Mokka:", res['Message'])
       dexit(1)
+    jobmo.setOutputData("testsim.slcio", OutputSE="CERN-DIP-4")
     joblist.append(jobmo)
 
   if clip.testSlic:
