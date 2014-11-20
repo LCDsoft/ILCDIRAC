@@ -743,11 +743,13 @@ class ModuleBase(object):
   def addRemovalRequests(self, lfnList):
     """Create removalRequests for lfns in lfnList and add it to the common request"""
     request = self._getRequestContainer()
+    remove = Operation()
+    remove.Type = "RemoveFile"
+
     for lfn in lfnList:
-      remove = Operation()
-      remove.Type = "RemoveFile"
       rmFile = File()
       rmFile.LFN = lfn
       remove.addFile( rmFile )
-      request.addOperation( remove )
+
+    request.addOperation( remove )
     self.workflow_commons['Request'] = request
