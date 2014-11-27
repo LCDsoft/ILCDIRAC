@@ -190,31 +190,7 @@ class UserJobFinalization(ModuleBase):
     failover = {}
     uploaded = []
     if not self.failoverTest:
-      for fileName, metadata in final.items():
-        self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
-                                                                                   ', '.join(metadata['resolvedSE'])))
-        result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], metadata['lfn'],
-                                                          metadata['resolvedSE'], fileMetaDict = metadata,
-                                                          fileCatalog = self.userFileCatalog)
-        if not result['OK']:
-          self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
-          failover[fileName] = metadata
-        else:
-          #Only attempt replication after successful upload
-          lfn = metadata['lfn']
-          uploaded.append(lfn)
-          seList = metadata['resolvedSE']
-          replicateSE = ''
-          uploadedSE = result['Value'].get('uploadedSE', '')
-          if uploadedSE:
-            for se in seList:
-              if not se == uploadedSE:
-                replicateSE = se
-                break
-
-          if replicateSE and lfn:
-            self.log.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
-            replication[lfn] = replicateSE
+      self.transferAndRegisterFiles(final, failoverTransfer, failover, uploaded, replication)
     else:
       failover = final
 
@@ -361,5 +337,40 @@ class UserJobFinalization(ModuleBase):
       self.log.info('--------%s--------' % fileName)
       for metaName, metaValue in metadata.iteritems():
         self.log.info('%s = %s' %(metaName, metaValue))
+
+  def transferAndRegisterFiles(self, final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate):
+    """transfer and register files to storage elements
+
+    fills filesToFailover, filesUploaded and filesToReplicate dicts
+    """
+
+    for fileName, metadata in final.items():
+      self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
+                                                                                 ', '.join(metadata['resolvedSE'])))
+      resultFT = failoverTransfer.transferAndRegisterFile(fileName,
+                                                          metadata['localpath'],
+                                                          metadata['lfn'],
+                                                          metadata['resolvedSE'],
+                                                          fileMetaDict = metadata,
+                                                          fileCatalog = self.userFileCatalog)
+      if not resultFT['OK']:
+        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        filesToFailover[fileName] = metadata
+      else:
+        #Only attempt replication after successful upload
+        lfn = metadata['lfn']
+        filesUploaded.append(lfn)
+        seList = metadata['resolvedSE']
+        replicateSE = ''
+        uploadedSE = resultFT['Value'].get('uploadedSE', '')
+        if uploadedSE:
+          for se in seList:
+            if not se == uploadedSE:
+              replicateSE = se
+              break
+
+        if replicateSE and lfn:
+          self.log.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
+          filesToReplicate[lfn] = replicateSE
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
