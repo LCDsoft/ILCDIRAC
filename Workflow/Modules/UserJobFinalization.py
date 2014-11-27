@@ -365,12 +365,24 @@ class UserJobFinalization(ModuleBase):
       random.shuffle(self.failoverSEs)
       targetSE = metadata['resolvedSE'][0]
 
-      metadata['resolvedSE'] = self.failoverSEs
+      ##make sure we don't upload to one SE and then try to move it there again
+      failoverSEs = list(self.failoverSEs)
+      if targetSE in failoverSEs:
+        failoverSEs.remove(targetSE)
+        if not failoverSEs:
+          self.log.error("No more failoverSEs to consider, skipping file: %s" % fileName)
+          self.log.error("TargetSE: %s, All FailoverSEs: %s" %( targetSE, self.failoverSEs))
+          cleanUp = True
+          continue
+      self.log.verbose("TargetSE: %s, All FailoverSEs: %s, Cleaned FailoverSEs: %s"
+                       % ( targetSE, self.failoverSEs, failoverSEs))
+
+      metadata['resolvedSE'] = failoverSEs
       resultFT = failoverTransfer.transferAndRegisterFileFailover(fileName,
                                                                   metadata['localpath'],
                                                                   metadata['lfn'],
                                                                   targetSE,
-                                                                  self.failoverSEs,
+                                                                  failoverSEs,
                                                                   fileMetaDict = metadata,
                                                                   fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
