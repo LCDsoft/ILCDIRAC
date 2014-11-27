@@ -122,44 +122,44 @@ class UserJobFinalization(ModuleBase):
 
     userOutputLFNs = []
     if self.userOutputData:
-      result = self.constructOutputLFNs()
-      if not result['OK']:
-        self.log.error('Could not create user LFNs', result['Message'])
-        return result
-      userOutputLFNs = result['Value']
+      resultOLfn = self.constructOutputLFNs()
+      if not resultOLfn['OK']:
+        self.log.error('Could not create user LFNs', resultOLfn['Message'])
+        return resultOLfn
+      userOutputLFNs = resultOLfn['Value']
 
     self.log.verbose('Calling getCandidateFiles( %s, %s, %s)' % (outputList, userOutputLFNs, self.outputDataFileMask))
     self.log.debug("IgnoreAppErrors? '%s' " % self.ignoreapperrors)
-    result = self.getCandidateFiles(outputList, userOutputLFNs, self.outputDataFileMask)
-    if not result['OK']:
+    resultCF = self.getCandidateFiles(outputList, userOutputLFNs, self.outputDataFileMask)
+    if not resultCF['OK']:
       if not self.ignoreapperrors:
-        self.log.error(result['Message'])
-        self.setApplicationStatus(result['Message'])
+        self.log.error(resultCF['Message'])
+        self.setApplicationStatus(resultCF['Message'])
+        return S_OK()
+    fileDict = resultCF['Value']
+
+    resultFMD = self.getFileMetadata(fileDict)
+    if not resultFMD['OK']:
+      if not self.ignoreapperrors:
+        self.log.error(resultFMD['Message'])
+        self.setApplicationStatus(resultFMD['Message'])
         return S_OK()
 
-    fileDict = result['Value']
-    result = self.getFileMetadata(fileDict)
-    if not result['OK']:
-      if not self.ignoreapperrors:
-        self.log.error(result['Message'])
-        self.setApplicationStatus(result['Message'])
-        return S_OK()
-
-    if not result['Value']:
+    if not resultFMD['Value']:
       if not self.ignoreapperrors:
         self.log.info('No output data files were determined to be uploaded for this workflow')
         self.setApplicationStatus('No Output Data Files To Upload')
         return S_OK()
 
-    fileMetadata = result['Value']
+    fileMetadata = resultFMD['Value']
 
     #First get the local (or assigned) SE to try first for upload and others in random fashion
-    result = getDestinationSEList('Tier1-USER', DIRAC.siteName(), outputmode='local')
-    if not result['OK']:
-      self.log.error('Could not resolve output data SE', result['Message'])
+    resultSEL = getDestinationSEList('Tier1-USER', DIRAC.siteName(), outputmode='local')
+    if not resultSEL['OK']:
+      self.log.error('Could not resolve output data SE', resultSEL['Message'])
       self.setApplicationStatus('Failed To Resolve OutputSE')
-      return result
-    localSE = result['Value']
+      return resultSEL
+    localSE = resultSEL['Value']
 
     orderedSEs = [ se for se in self.defaultOutputSE if se not in localSE and se not in self.userOutputSE]
 
