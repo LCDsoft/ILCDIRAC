@@ -348,8 +348,8 @@ class UserJobFinalization(ModuleBase):
     """returns list of dictionary with output files, paths and SEs
     userOutputData is list of files specified by user
 
-    Why is this taking the last part of the filename as outputPath????
-
+    Q: Why is this taking the last part of the filename as outputPath????
+    A: outputPath is not actually used anywhere
     """
     outputList = []
     for filename in self.userOutputData:
