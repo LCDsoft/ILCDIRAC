@@ -523,22 +523,22 @@ class TestUserJobFinalization( ModulesTestCase ):
 
 
   def test_UJF_execute_isLastStep(self):
-    """UJF.execute: is last step"""
+    """UJF.execute: is last step.........................................................."""
     self.ujf.step_commons['STEP_NUMBER'] = 2
     self.ujf.workflow_commons['TotalSteps'] = 2
     resLS = self.ujf.isLastStep()
     self.assertTrue( resLS['OK'] )
 
   def test_UJF_execute_isLastStep_not(self):
-    """UJF.execute: is Not the last step"""
+    """UJF.execute: is Not the last step.................................................."""
     self.ujf.step_commons['STEP_NUMBER'] = 1
     self.ujf.workflow_commons['TotalSteps'] = 2
     resLS = self.ujf.isLastStep()
     self.assertFalse( resLS['OK'] )
 
   def test_UFJ_getOutputList(self):
-    """UJF.execute: getOutputList"""
-    gLogger.setLevel("DEBUG")
+    """UJF.execute: getOutputList........................................................."""
+    gLogger.setLevel("ERROR")
     self.ujf.userOutputSE = "CERN-SRM"
     self.ujf.userOutputData = ['gen.stdhep',
                                'sim.slcio',
@@ -547,6 +547,44 @@ class TestUserJobFinalization( ModulesTestCase ):
 
     outputList = self.ujf.getOutputList()
     self.log.debug(outputList)
+
+  def test_UJF_TRFF(self):
+    """UJF.execute: transferAndRegisterFailoverFile......................................."""
+    gLogger.setLevel("ERROR")
+    ft_mock = Mock()
+    ft_mock.transferAndRegisterFileFailover.return_value=S_OK()
+    filesToFailover = {'test.txt': { 'lfn': '/ilc/user/s/sailer/test/test.txt',
+                                     'localpath': './test.txt',
+                                     'resolvedSE': ['CERN-SRM', 'KEK-SRM', 'RAL-SRM'],
+                                     'workflowSE': ['CERN-SRM'],
+                                     'path': 'SLCIO',
+                                     'guid': 'A331AE88-AD87-AF39-97E1-44257D8200C8'}}
+    filesUploaded = []
+    self.ujf.failoverSEs= ['CERN-SRM', 'RAL-SRM']
+    res = self.ujf.transferRegisterAndFailoverFiles(ft_mock, filesToFailover, filesUploaded)
+    self.log.debug(res)
+    self.log.debug(filesUploaded)
+    self.log.debug(res)
+    self.assertFalse( res['Value']['cleanUp'] and filesUploaded )
+
+  def test_UJF_TRFF_Failed(self):
+    """UJF.execute: transferAndRegisterFailoverFile, no more SEs.........................."""
+    gLogger.setLevel("ERROR")
+    ft_mock = Mock()
+    ft_mock.transferAndRegisterFileFailover.return_value=S_OK()
+    filesToFailover = {'test.txt': { 'lfn': '/ilc/user/s/sailer/test/test.txt',
+                                     'localpath': './test.txt',
+                                     'resolvedSE': ['CERN-SRM', 'KEK-SRM', 'RAL-SRM'],
+                                     'workflowSE': ['CERN-SRM'],
+                                     'path': 'SLCIO',
+                                     'guid': 'A331AE88-AD87-AF39-97E1-44257D8200C8'}}
+    filesUploaded = []
+    self.ujf.failoverSEs= ['CERN-SRM']
+    res = self.ujf.transferRegisterAndFailoverFiles(ft_mock, filesToFailover, filesUploaded)
+    self.log.debug(res)
+    self.log.debug(filesUploaded)
+    self.log.debug(res)
+    self.assertTrue( res['Value']['cleanUp'] and not filesUploaded )
 
 #############################################################################
 # Run Tests
