@@ -194,26 +194,9 @@ class UserJobFinalization(ModuleBase):
     else:
       filesToFailover = final
 
-    cleanUp = False
     ##if there are files to be failovered, we do it now
-    for fileName, metadata in filesToFailover.items():
-      random.shuffle(self.failoverSEs)
-      targetSE = metadata['resolvedSE'][0]
-      metadata['resolvedSE'] = self.failoverSEs
-      resultFT = failoverTransfer.transferAndRegisterFileFailover(fileName,
-                                                                  metadata['localpath'],
-                                                                  metadata['lfn'],
-                                                                  targetSE,
-                                                                  self.failoverSEs,
-                                                                  fileMetaDict = metadata,
-                                                                  fileCatalog = self.userFileCatalog)
-      if not resultFT['OK']:
-        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
-        cleanUp = True
-        continue #for users can continue even if one completely fails
-      else:
-        lfn = metadata['lfn']
-        filesUploaded.append(lfn)
+    resultTRFF = self.transferRegisterAndFailoverFiles(failoverTransfer, filesToFailover, filesUploaded)
+    cleanUp = resultTRFF['Value']['cleanUp']
 
     #For files correctly uploaded must report LFNs to job parameters
     if filesUploaded:
@@ -374,4 +357,29 @@ class UserJobFinalization(ModuleBase):
           self.log.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
           filesToReplicate[lfn] = replicateSE
 
+
+  def transferRegisterAndFailoverFiles(self, failoverTransfer, filesToFailover, filesUploaded):
+    """transfer and failover request"""
+    cleanUp = False
+    for fileName, metadata in filesToFailover.items():
+      random.shuffle(self.failoverSEs)
+      targetSE = metadata['resolvedSE'][0]
+
+      metadata['resolvedSE'] = self.failoverSEs
+      resultFT = failoverTransfer.transferAndRegisterFileFailover(fileName,
+                                                                  metadata['localpath'],
+                                                                  metadata['lfn'],
+                                                                  targetSE,
+                                                                  self.failoverSEs,
+                                                                  fileMetaDict = metadata,
+                                                                  fileCatalog = self.userFileCatalog)
+      if not resultFT['OK']:
+        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        cleanUp = True
+        continue #for users can continue even if one completely fails
+      else:
+        lfn = metadata['lfn']
+        filesUploaded.append(lfn)
+
+    return S_OK(dict(cleanUp=cleanUp))
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
