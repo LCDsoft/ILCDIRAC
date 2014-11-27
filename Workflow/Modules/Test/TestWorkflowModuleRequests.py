@@ -536,6 +536,17 @@ class TestUserJobFinalization( ModulesTestCase ):
     resLS = self.ujf.isLastStep()
     self.assertFalse( resLS['OK'] )
 
+  def test_UFJ_getOutputList(self):
+    """UJF.execute: getOutputList"""
+    gLogger.setLevel("DEBUG")
+    self.ujf.userOutputSE = "CERN-SRM"
+    self.ujf.userOutputData = ['gen.stdhep',
+                               'sim.slcio',
+                               'rec.slcio',
+                               'dst.slcio']
+
+    outputList = self.ujf.getOutputList()
+    self.log.debug(outputList)
 
 #############################################################################
 # Run Tests

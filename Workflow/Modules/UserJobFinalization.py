@@ -118,11 +118,7 @@ class UserJobFinalization(ModuleBase):
 
     #Determine the final list of possible output files for the
     #workflow and all the parameters needed to upload them.
-    outputList = []
-    for i in self.userOutputData:
-      outputList.append({'outputPath' : i.split('.')[-1].upper(),
-                         'outputDataSE' : self.userOutputSE,
-                         'outputFile' : os.path.basename(i)})
+    outputList = self.getOutputList()
 
     userOutputLFNs = []
     if self.userOutputData:
@@ -347,5 +343,20 @@ class UserJobFinalization(ModuleBase):
       self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
       at the last workflow step.' % (currentStep, totalSteps))
       return S_ERROR("Not the last step")
+
+  def getOutputList(self):
+    """returns list of dictionary with output files, paths and SEs
+    userOutputData is list of files specified by user
+
+    Why is this taking the last part of the filename as outputPath????
+
+    """
+    outputList = []
+    for filename in self.userOutputData:
+      outputList.append({'outputPath' : filename.split('.')[-1].upper(),
+                         'outputDataSE' : self.userOutputSE,
+                         'outputFile' : os.path.basename(filename)})
+    self.log.debug("OutputList: %s" % outputList)
+    return outputList
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
