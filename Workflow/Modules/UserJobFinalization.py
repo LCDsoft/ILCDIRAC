@@ -186,37 +186,38 @@ class UserJobFinalization(ModuleBase):
     failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
     #One by one upload the files with failover if necessary
-    replication = {}
-    failover = {}
-    uploaded = []
+    filesToReplicate = {}
+    filesToFailover = {}
+    filesUploaded = []
     if not self.failoverTest:
-      self.transferAndRegisterFiles(final, failoverTransfer, failover, uploaded, replication)
+      self.transferAndRegisterFiles(final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate)
     else:
-      failover = final
+      filesToFailover = final
 
     cleanUp = False
-    for fileName, metadata in failover.items():
+    ##if there are files to be failovered, we do it now
+    for fileName, metadata in filesToFailover.items():
       random.shuffle(self.failoverSEs)
       targetSE = metadata['resolvedSE'][0]
       metadata['resolvedSE'] = self.failoverSEs
-      result = failoverTransfer.transferAndRegisterFileFailover(fileName,
-                                                                metadata['localpath'],
-                                                                metadata['lfn'],
-                                                                targetSE,
-                                                                self.failoverSEs,
-                                                                fileMetaDict = metadata,
-                                                                fileCatalog = self.userFileCatalog)
-      if not result['OK']:
+      resultFT = failoverTransfer.transferAndRegisterFileFailover(fileName,
+                                                                  metadata['localpath'],
+                                                                  metadata['lfn'],
+                                                                  targetSE,
+                                                                  self.failoverSEs,
+                                                                  fileMetaDict = metadata,
+                                                                  fileCatalog = self.userFileCatalog)
+      if not resultFT['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
         continue #for users can continue even if one completely fails
       else:
         lfn = metadata['lfn']
-        uploaded.append(lfn)
+        filesUploaded.append(lfn)
 
     #For files correctly uploaded must report LFNs to job parameters
-    if uploaded:
-      report = ', '.join( uploaded )
+    if filesUploaded:
+      report = ', '.join( filesUploaded )
       self.jobReport.setJobParameter( 'UploadedOutputData', report )
 
     self.workflow_commons['Request'] = failoverTransfer.request
@@ -231,11 +232,11 @@ class UserJobFinalization(ModuleBase):
     datMan = DataManager( catalogs = self.userFileCatalog )
     self.log.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
     time.sleep(10)
-    for lfn, repSE in replication.items():
-      result = datMan.replicateAndRegister(lfn, repSE)
-      if not result['OK']:
+    for lfn, repSE in filesToReplicate.items():
+      resultRAR = datMan.replicateAndRegister(lfn, repSE)
+      if not resultRAR['OK']:
         self.log.info('Replication failed with below error but file already exists in Grid storage with \
-        at least one replica:\n%s' % (result))
+        at least one replica:\n%s' % (resultRAR))
 
     self.generateFailoverFile()
 
