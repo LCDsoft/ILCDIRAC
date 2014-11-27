@@ -179,13 +179,7 @@ class UserJobFinalization(ModuleBase):
 
     #At this point can exit and see exactly what the module will upload
     if not self.enable:
-      self.log.info('Module is disabled by control flag, would have attempted \
-      to upload the following files %s' % ', '.join(final.keys()))
-      for fileName, metadata in final.items():
-        self.log.info('--------%s--------' % fileName)
-        for metaName, metaValue in metadata.iteritems():
-          self.log.info('%s = %s' %(metaName, metaValue))
-
+      self.printOutputInfo(final)
       return S_OK('Module is disabled by control flag')
 
     #Instantiate the failover transfer client with the global request object
@@ -358,5 +352,14 @@ class UserJobFinalization(ModuleBase):
                          'outputFile' : os.path.basename(filename)})
     self.log.debug("OutputList: %s" % outputList)
     return outputList
+
+  def printOutputInfo(self, final):
+    """print some information about what would be uploaded"""
+    self.log.info('Module is disabled by control flag, would have attempted \
+                  to upload the following files %s' % ', '.join(final.keys()))
+    for fileName, metadata in final.items():
+      self.log.info('--------%s--------' % fileName)
+      for metaName, metaValue in metadata.iteritems():
+        self.log.info('%s = %s' %(metaName, metaValue))
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
