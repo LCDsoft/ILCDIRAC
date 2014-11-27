@@ -29,7 +29,6 @@ class Job(DiracJob):
     self.inputsandbox = []
     self.outputsandbox = []
     self.check = True
-    self.stepnumber = 0
     self.steps = []
     self.nbevts = 0
     self.energy = 0
@@ -124,10 +123,7 @@ class Job(DiracJob):
     @param application: Application instance
     
     """
-    #Start by defining step number
-    #self.stepnumber = len(self.steps) + 1
     
-
     res = application._analyseJob(self)
     if not res['OK']:
       return res
@@ -157,7 +153,7 @@ class Job(DiracJob):
 
     ##Now we can create the step and add it to the workflow
     #First we need a unique name, let's use the application name and step number
-    #stepname = "%s_step_%s"%(application.appname,self.stepnumber)
+    #stepname = "%s_step_%s"%(application.appname,self.stepCount)
     #stepdefinition = StepDefinition(stepname)
     #self.steps.append(stepdefinition)
 
@@ -192,7 +188,7 @@ class Job(DiracJob):
 #    #Now prevent overwriting of parameter values.
 #    application._addedtojob()
 #  
-#    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
+#    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepCount, 'Total number of steps')
     if application.NbEvts:
       self._addParameter(self.workflow, 'NbOfEvts', 'int', application.NbEvts, "Number of events to process")
   
@@ -208,7 +204,7 @@ class Job(DiracJob):
     """
     for application in self.applicationlist:
       #Start by defining step number 
-      self.stepnumber = len(self.steps) + 1
+      self.stepCount += 1
       
       res = application._analyseJob(self)
       if not res['OK']:
@@ -221,7 +217,7 @@ class Job(DiracJob):
       
       ##Now we can create the step and add it to the workflow
       #First we need a unique name, let's use the application name and step number
-      stepname = "%s_step_%s" % (application.appname, self.stepnumber)
+      stepname = "%s_step_%s" % (application.appname, self.stepCount)
       stepdefinition = StepDefinition(stepname)
       self.steps.append(stepdefinition)
       
@@ -256,7 +252,7 @@ class Job(DiracJob):
       #Now prevent overwriting of parameter values.
       application._addedtojob()
   
-      self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepnumber, 'Total number of steps')
+      self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepCount, 'Total number of steps')
       
     return S_OK()
   

@@ -41,7 +41,6 @@ class UserJobFinalization(ModuleBase):
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     #List all parameters here
     self.userFileCatalog = self.ops.getValue('/UserJobs/Catalogs', ['FileCatalog'] )
-    self.lastStep = False
     #Always allow any files specified by users
     self.outputDataFileMask = ''
     self.userOutputData = ''
@@ -97,22 +96,15 @@ class UserJobFinalization(ModuleBase):
     """
     #Have to work out if the module is part of the last step i.e.
     #user jobs can have any number of steps and we only want
-    #to run the finalization once.
-    currentStep = int(self.step_commons['STEP_NUMBER'])
-    totalSteps = int(self.workflow_commons['TotalSteps'])
-    if currentStep == totalSteps:
-      self.lastStep = True
-    else:
-      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
-      at the last workflow step.' % (currentStep, totalSteps))
-
-    if not self.lastStep:
+    #to run the finalization once. Not a problem if this is not the last step so return S_OK()
+    resultLS = self.isLastStep()
+    if not resultLS['OK']:
       return S_OK()
 
-    result = self.resolveInputVariables()
-    if not result['OK']:
-      self.log.error("Failed to resolve input parameters:", result['Message'])
-      return result
+    resultIV = self.resolveInputVariables()
+    if not resultIV['OK']:
+      self.log.error("Failed to resolve input parameters:", resultIV['Message'])
+      return resultIV
 
     self.log.info('Initializing %s' % self.version)
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -126,52 +118,48 @@ class UserJobFinalization(ModuleBase):
 
     #Determine the final list of possible output files for the
     #workflow and all the parameters needed to upload them.
-    outputList = []
-    for i in self.userOutputData:
-      outputList.append({'outputPath' : i.split('.')[-1].upper(),
-                         'outputDataSE' : self.userOutputSE,
-                         'outputFile' : os.path.basename(i)})
+    outputList = self.getOutputList()
 
     userOutputLFNs = []
     if self.userOutputData:
-      result = self.constructOutputLFNs()
-      if not result['OK']:
-        self.log.error('Could not create user LFNs', result['Message'])
-        return result
-      userOutputLFNs = result['Value']
+      resultOLfn = self.constructOutputLFNs()
+      if not resultOLfn['OK']:
+        self.log.error('Could not create user LFNs', resultOLfn['Message'])
+        return resultOLfn
+      userOutputLFNs = resultOLfn['Value']
 
     self.log.verbose('Calling getCandidateFiles( %s, %s, %s)' % (outputList, userOutputLFNs, self.outputDataFileMask))
     self.log.debug("IgnoreAppErrors? '%s' " % self.ignoreapperrors)
-    result = self.getCandidateFiles(outputList, userOutputLFNs, self.outputDataFileMask)
-    if not result['OK']:
+    resultCF = self.getCandidateFiles(outputList, userOutputLFNs, self.outputDataFileMask)
+    if not resultCF['OK']:
       if not self.ignoreapperrors:
-        self.log.error(result['Message'])
-        self.setApplicationStatus(result['Message'])
+        self.log.error(resultCF['Message'])
+        self.setApplicationStatus(resultCF['Message'])
+        return S_OK()
+    fileDict = resultCF['Value']
+
+    resultFMD = self.getFileMetadata(fileDict)
+    if not resultFMD['OK']:
+      if not self.ignoreapperrors:
+        self.log.error(resultFMD['Message'])
+        self.setApplicationStatus(resultFMD['Message'])
         return S_OK()
 
-    fileDict = result['Value']
-    result = self.getFileMetadata(fileDict)
-    if not result['OK']:
-      if not self.ignoreapperrors:
-        self.log.error(result['Message'])
-        self.setApplicationStatus(result['Message'])
-        return S_OK()
-
-    if not result['Value']:
+    if not resultFMD['Value']:
       if not self.ignoreapperrors:
         self.log.info('No output data files were determined to be uploaded for this workflow')
         self.setApplicationStatus('No Output Data Files To Upload')
         return S_OK()
 
-    fileMetadata = result['Value']
+    fileMetadata = resultFMD['Value']
 
     #First get the local (or assigned) SE to try first for upload and others in random fashion
-    result = getDestinationSEList('Tier1-USER', DIRAC.siteName(), outputmode='local')
-    if not result['OK']:
-      self.log.error('Could not resolve output data SE', result['Message'])
+    resultSEL = getDestinationSEList('Tier1-USER', DIRAC.siteName(), outputmode='local')
+    if not resultSEL['OK']:
+      self.log.error('Could not resolve output data SE', resultSEL['Message'])
       self.setApplicationStatus('Failed To Resolve OutputSE')
-      return result
-    localSE = result['Value']
+      return resultSEL
+    localSE = resultSEL['Value']
 
     orderedSEs = [ se for se in self.defaultOutputSE if se not in localSE and se not in self.userOutputSE]
 
@@ -191,74 +179,28 @@ class UserJobFinalization(ModuleBase):
 
     #At this point can exit and see exactly what the module will upload
     if not self.enable:
-      self.log.info('Module is disabled by control flag, would have attempted \
-      to upload the following files %s' % ', '.join(final.keys()))
-      for fileName, metadata in final.items():
-        self.log.info('--------%s--------' % fileName)
-        for metaName, metaValue in metadata.iteritems():
-          self.log.info('%s = %s' %(metaName, metaValue))
-
+      self.printOutputInfo(final)
       return S_OK('Module is disabled by control flag')
 
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
     #One by one upload the files with failover if necessary
-    replication = {}
-    failover = {}
-    uploaded = []
+    filesToReplicate = {}
+    filesToFailover = {}
+    filesUploaded = []
     if not self.failoverTest:
-      for fileName, metadata in final.items():
-        self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
-                                                                                   ', '.join(metadata['resolvedSE'])))
-        result = failoverTransfer.transferAndRegisterFile(fileName, metadata['localpath'], metadata['lfn'],
-                                                          metadata['resolvedSE'], fileMetaDict = metadata,
-                                                          fileCatalog = self.userFileCatalog)
-        if not result['OK']:
-          self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
-          failover[fileName] = metadata
-        else:
-          #Only attempt replication after successful upload
-          lfn = metadata['lfn']
-          uploaded.append(lfn)
-          seList = metadata['resolvedSE']
-          replicateSE = ''
-          uploadedSE = result['Value'].get('uploadedSE', '')
-          if uploadedSE:
-            for se in seList:
-              if not se == uploadedSE:
-                replicateSE = se
-                break
-
-          if replicateSE and lfn:
-            self.log.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
-            replication[lfn] = replicateSE
+      self.transferAndRegisterFiles(final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate)
     else:
-      failover = final
+      filesToFailover = final
 
-    cleanUp = False
-    for fileName, metadata in failover.items():
-      random.shuffle(self.failoverSEs)
-      targetSE = metadata['resolvedSE'][0]
-      metadata['resolvedSE'] = self.failoverSEs
-      result = failoverTransfer.transferAndRegisterFileFailover(fileName,
-                                                                metadata['localpath'],
-                                                                metadata['lfn'],
-                                                                targetSE,
-                                                                self.failoverSEs,
-                                                                fileMetaDict = metadata,
-                                                                fileCatalog = self.userFileCatalog)
-      if not result['OK']:
-        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
-        cleanUp = True
-        continue #for users can continue even if one completely fails
-      else:
-        lfn = metadata['lfn']
-        uploaded.append(lfn)
+    ##if there are files to be failovered, we do it now
+    resultTRFF = self.transferRegisterAndFailoverFiles(failoverTransfer, filesToFailover, filesUploaded)
+    cleanUp = resultTRFF['Value']['cleanUp']
 
     #For files correctly uploaded must report LFNs to job parameters
-    if uploaded:
-      report = ', '.join( uploaded )
+    if filesUploaded:
+      report = ', '.join( filesUploaded )
       self.jobReport.setJobParameter( 'UploadedOutputData', report )
 
     self.workflow_commons['Request'] = failoverTransfer.request
@@ -273,11 +215,11 @@ class UserJobFinalization(ModuleBase):
     datMan = DataManager( catalogs = self.userFileCatalog )
     self.log.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
     time.sleep(10)
-    for lfn, repSE in replication.items():
-      result = datMan.replicateAndRegister(lfn, repSE)
-      if not result['OK']:
+    for lfn, repSE in filesToReplicate.items():
+      resultRAR = datMan.replicateAndRegister(lfn, repSE)
+      if not resultRAR['OK']:
         self.log.info('Replication failed with below error but file already exists in Grid storage with \
-        at least one replica:\n%s' % (result))
+        at least one replica:\n%s' % (resultRAR))
 
     self.generateFailoverFile()
 
@@ -343,4 +285,113 @@ class UserJobFinalization(ModuleBase):
 
     return result
 
+
+  def isLastStep(self):
+    """returns S_OK() if this is the last step"""
+    currentStep = int(self.step_commons['STEP_NUMBER'])
+    totalSteps = int(self.workflow_commons['TotalSteps'])
+    if currentStep == totalSteps:
+      self.log.verbose("This is the last step, let's finalize this userjob")
+      return S_OK()
+    else:
+      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
+      at the last workflow step.' % (currentStep, totalSteps))
+      return S_ERROR("Not the last step")
+
+  def getOutputList(self):
+    """returns list of dictionary with output files, paths and SEs
+    userOutputData is list of files specified by user
+
+    Q: Why is this taking the last part of the filename as outputPath????
+    A: outputPath is not actually used anywhere
+    """
+    outputList = []
+    for filename in self.userOutputData:
+      outputList.append({'outputPath' : filename.split('.')[-1].upper(),
+                         'outputDataSE' : self.userOutputSE,
+                         'outputFile' : os.path.basename(filename)})
+    self.log.debug("OutputList: %s" % outputList)
+    return outputList
+
+  def printOutputInfo(self, final):
+    """print some information about what would be uploaded"""
+    self.log.info('Module is disabled by control flag, would have attempted \
+                  to upload the following files %s' % ', '.join(final.keys()))
+    for fileName, metadata in final.items():
+      self.log.info('--------%s--------' % fileName)
+      for metaName, metaValue in metadata.iteritems():
+        self.log.info('%s = %s' %(metaName, metaValue))
+
+  def transferAndRegisterFiles(self, final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate):
+    """transfer and register files to storage elements
+
+    fills filesToFailover, filesUploaded and filesToReplicate dicts
+    """
+
+    for fileName, metadata in final.items():
+      self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
+                                                                                 ', '.join(metadata['resolvedSE'])))
+      resultFT = failoverTransfer.transferAndRegisterFile(fileName,
+                                                          metadata['localpath'],
+                                                          metadata['lfn'],
+                                                          metadata['resolvedSE'],
+                                                          fileMetaDict = metadata,
+                                                          fileCatalog = self.userFileCatalog)
+      if not resultFT['OK']:
+        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        filesToFailover[fileName] = metadata
+      else:
+        #Only attempt replication after successful upload
+        lfn = metadata['lfn']
+        filesUploaded.append(lfn)
+        seList = metadata['resolvedSE']
+        replicateSE = ''
+        uploadedSE = resultFT['Value'].get('uploadedSE', '')
+        if uploadedSE:
+          for se in seList:
+            if not se == uploadedSE:
+              replicateSE = se
+              break
+
+        if replicateSE and lfn:
+          self.log.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
+          filesToReplicate[lfn] = replicateSE
+
+
+  def transferRegisterAndFailoverFiles(self, failoverTransfer, filesToFailover, filesUploaded):
+    """transfer and failover request"""
+    cleanUp = False
+    for fileName, metadata in filesToFailover.items():
+      random.shuffle(self.failoverSEs)
+      targetSE = metadata['resolvedSE'][0]
+
+      ##make sure we don't upload to one SE and then try to move it there again
+      failoverSEs = list(self.failoverSEs)
+      if targetSE in failoverSEs:
+        failoverSEs.remove(targetSE)
+        if not failoverSEs:
+          self.log.error("No more failoverSEs to consider, skipping file: %s" % fileName)
+          self.log.error("TargetSE: %s, All FailoverSEs: %s" %( targetSE, self.failoverSEs))
+          cleanUp = True
+          continue
+      self.log.verbose("TargetSE: %s, All FailoverSEs: %s, Cleaned FailoverSEs: %s"
+                       % ( targetSE, self.failoverSEs, failoverSEs))
+
+      metadata['resolvedSE'] = failoverSEs
+      resultFT = failoverTransfer.transferAndRegisterFileFailover(fileName,
+                                                                  metadata['localpath'],
+                                                                  metadata['lfn'],
+                                                                  targetSE,
+                                                                  failoverSEs,
+                                                                  fileMetaDict = metadata,
+                                                                  fileCatalog = self.userFileCatalog)
+      if not resultFT['OK']:
+        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        cleanUp = True
+        continue #for users can continue even if one completely fails
+      else:
+        lfn = metadata['lfn']
+        filesUploaded.append(lfn)
+
+    return S_OK(dict(cleanUp=cleanUp))
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

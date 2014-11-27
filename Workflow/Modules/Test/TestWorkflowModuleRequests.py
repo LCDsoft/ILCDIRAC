@@ -19,6 +19,7 @@ from ILCDIRAC.Core.Utilities.ProductionData import getLogPath
 from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest
 from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
 from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
+from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 
 
 from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
@@ -188,6 +189,7 @@ class TestUploadLogFile( ModulesTestCase ):
     """ULF.ASI,Exe: run through and get request.........................................."""
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
+    self.ulf.jobID = 12345
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
                                                               Message="Ekke Ekke Ekke Ekke")))
@@ -511,6 +513,81 @@ class TestUploadOutputData( ModulesTestCase ):
 
 
 #############################################################################
+# UserJobFinalization.py
+#############################################################################
+
+class TestUserJobFinalization( ModulesTestCase ):
+  """ test UserJobFinalization """
+  def setUp( self ):
+    super(TestUserJobFinalization, self).setUp()
+    self.ujf = UserJobFinalization()
+
+
+  def test_UJF_execute_isLastStep(self):
+    """UJF.execute: is last step.........................................................."""
+    self.ujf.step_commons['STEP_NUMBER'] = 2
+    self.ujf.workflow_commons['TotalSteps'] = 2
+    resLS = self.ujf.isLastStep()
+    self.assertTrue( resLS['OK'] )
+
+  def test_UJF_execute_isLastStep_not(self):
+    """UJF.execute: is Not the last step.................................................."""
+    self.ujf.step_commons['STEP_NUMBER'] = 1
+    self.ujf.workflow_commons['TotalSteps'] = 2
+    resLS = self.ujf.isLastStep()
+    self.assertFalse( resLS['OK'] )
+
+  def test_UFJ_getOutputList(self):
+    """UJF.execute: getOutputList........................................................."""
+    gLogger.setLevel("ERROR")
+    self.ujf.userOutputSE = "CERN-SRM"
+    self.ujf.userOutputData = ['gen.stdhep',
+                               'sim.slcio',
+                               'rec.slcio',
+                               'dst.slcio']
+
+    outputList = self.ujf.getOutputList()
+    self.log.debug(outputList)
+
+  def test_UJF_TRFF(self):
+    """UJF.execute: transferAndRegisterFailoverFile......................................."""
+    gLogger.setLevel("ERROR")
+    ft_mock = Mock()
+    ft_mock.transferAndRegisterFileFailover.return_value=S_OK()
+    filesToFailover = {'test.txt': { 'lfn': '/ilc/user/s/sailer/test/test.txt',
+                                     'localpath': './test.txt',
+                                     'resolvedSE': ['CERN-SRM', 'KEK-SRM', 'RAL-SRM'],
+                                     'workflowSE': ['CERN-SRM'],
+                                     'path': 'SLCIO',
+                                     'guid': 'A331AE88-AD87-AF39-97E1-44257D8200C8'}}
+    filesUploaded = []
+    self.ujf.failoverSEs= ['CERN-SRM', 'RAL-SRM']
+    res = self.ujf.transferRegisterAndFailoverFiles(ft_mock, filesToFailover, filesUploaded)
+    self.log.debug(res)
+    self.log.debug(filesUploaded)
+    self.log.debug(res)
+    self.assertFalse( res['Value']['cleanUp'] and filesUploaded )
+
+  def test_UJF_TRFF_Failed(self):
+    """UJF.execute: transferAndRegisterFailoverFile, no more SEs.........................."""
+    gLogger.setLevel("ERROR")
+    ft_mock = Mock()
+    ft_mock.transferAndRegisterFileFailover.return_value=S_OK()
+    filesToFailover = {'test.txt': { 'lfn': '/ilc/user/s/sailer/test/test.txt',
+                                     'localpath': './test.txt',
+                                     'resolvedSE': ['CERN-SRM', 'KEK-SRM', 'RAL-SRM'],
+                                     'workflowSE': ['CERN-SRM'],
+                                     'path': 'SLCIO',
+                                     'guid': 'A331AE88-AD87-AF39-97E1-44257D8200C8'}}
+    filesUploaded = []
+    self.ujf.failoverSEs= ['CERN-SRM']
+    res = self.ujf.transferRegisterAndFailoverFiles(ft_mock, filesToFailover, filesUploaded)
+    self.log.debug(res)
+    self.log.debug(filesUploaded)
+    self.log.debug(res)
+    self.assertTrue( res['Value']['cleanUp'] and not filesUploaded )
+
+#############################################################################
 # Run Tests
 #############################################################################
 def runTests():
@@ -521,6 +598,7 @@ def runTests():
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestModuleBase ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestFailoverRequest ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUserJobFinalization ) )
   
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
   print testResult
