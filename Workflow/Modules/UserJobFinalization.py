@@ -41,7 +41,6 @@ class UserJobFinalization(ModuleBase):
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     #List all parameters here
     self.userFileCatalog = self.ops.getValue('/UserJobs/Catalogs', ['FileCatalog'] )
-    self.lastStep = False
     #Always allow any files specified by users
     self.outputDataFileMask = ''
     self.userOutputData = ''
@@ -97,16 +96,9 @@ class UserJobFinalization(ModuleBase):
     """
     #Have to work out if the module is part of the last step i.e.
     #user jobs can have any number of steps and we only want
-    #to run the finalization once.
-    currentStep = int(self.step_commons['STEP_NUMBER'])
-    totalSteps = int(self.workflow_commons['TotalSteps'])
-    if currentStep == totalSteps:
-      self.lastStep = True
-    else:
-      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
-      at the last workflow step.' % (currentStep, totalSteps))
-
-    if not self.lastStep:
+    #to run the finalization once. Not a problem if this is not the last step so return S_OK()
+    resultLS = self.isLastStep()
+    if not resultLS['OK']:
       return S_OK()
 
     result = self.resolveInputVariables()
@@ -342,5 +334,18 @@ class UserJobFinalization(ModuleBase):
       return result
 
     return result
+
+
+  def isLastStep(self):
+    """returns S_OK() if this is the last step"""
+    currentStep = int(self.step_commons['STEP_NUMBER'])
+    totalSteps = int(self.workflow_commons['TotalSteps'])
+    if currentStep == totalSteps:
+      self.log.verbose("This is the last step, let's finalize this userjob")
+      return S_OK()
+    else:
+      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
+      at the last workflow step.' % (currentStep, totalSteps))
+      return S_ERROR("Not the last step")
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

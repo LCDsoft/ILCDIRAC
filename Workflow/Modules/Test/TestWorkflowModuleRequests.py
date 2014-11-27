@@ -19,6 +19,7 @@ from ILCDIRAC.Core.Utilities.ProductionData import getLogPath
 from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest
 from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
 from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
+from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 
 
 from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
@@ -511,6 +512,32 @@ class TestUploadOutputData( ModulesTestCase ):
 
 
 #############################################################################
+# UserJobFinalization.py
+#############################################################################
+
+class TestUserJobFinalization( ModulesTestCase ):
+  """ test UserJobFinalization """
+  def setUp( self ):
+    super(TestUserJobFinalization, self).setUp()
+    self.ujf = UserJobFinalization()
+
+
+  def test_UJF_execute_isLastStep(self):
+    """UJF.execute: is last step"""
+    self.ujf.step_commons['STEP_NUMBER'] = 2
+    self.ujf.workflow_commons['TotalSteps'] = 2
+    resLS = self.ujf.isLastStep()
+    self.assertTrue( resLS['OK'] )
+
+  def test_UJF_execute_isLastStep_not(self):
+    """UJF.execute: is Not the last step"""
+    self.ujf.step_commons['STEP_NUMBER'] = 1
+    self.ujf.workflow_commons['TotalSteps'] = 2
+    resLS = self.ujf.isLastStep()
+    self.assertFalse( resLS['OK'] )
+
+
+#############################################################################
 # Run Tests
 #############################################################################
 def runTests():
@@ -521,6 +548,7 @@ def runTests():
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestModuleBase ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestFailoverRequest ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUserJobFinalization ) )
   
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
   print testResult
