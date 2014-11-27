@@ -101,10 +101,10 @@ class UserJobFinalization(ModuleBase):
     if not resultLS['OK']:
       return S_OK()
 
-    result = self.resolveInputVariables()
-    if not result['OK']:
-      self.log.error("Failed to resolve input parameters:", result['Message'])
-      return result
+    resultIV = self.resolveInputVariables()
+    if not resultIV['OK']:
+      self.log.error("Failed to resolve input parameters:", resultIV['Message'])
+      return resultIV
 
     self.log.info('Initializing %s' % self.version)
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
