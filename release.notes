@@ -2,6 +2,12 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p9]
+
+*Workflow
+FIX: ILCDIRAC-384: Do not submit failover to same SE as targetSE
+FIX: ILCDIRAC-382: Allow job.setExecutable to be run before Workflow modules
+
 [v22r0p8]
 
 * Workflow: Change the way removal Request is created
