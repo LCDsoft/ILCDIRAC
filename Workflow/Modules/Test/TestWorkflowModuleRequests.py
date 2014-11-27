@@ -189,6 +189,7 @@ class TestUploadLogFile( ModulesTestCase ):
     """ULF.ASI,Exe: run through and get request.........................................."""
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
+    self.ulf.jobID = 12345
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
                                                               Message="Ekke Ekke Ekke Ekke")))
