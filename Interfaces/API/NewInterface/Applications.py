@@ -40,6 +40,7 @@ from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
 from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
 from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, getDict
 
+from DIRAC.Resources.Catalog.FileCatalogClient        import FileCatalogClient
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC                                            import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CheckXMLValidity         import CheckXMLValidity
@@ -1564,6 +1565,7 @@ class OverlayInput(LCUtilityApplication):
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
     self.accountInProduction = False
     self._paramsToExclude.append('_ops')
+    self.pathToOverlayFiles = ''
     
   def setMachine(self, machine):
     """ Define the machine to use, clic_cdr or ilc_dbd
@@ -1656,6 +1658,17 @@ class OverlayInput(LCUtilityApplication):
     self.DetectorModel = detectormodel
     return S_OK()
 
+  def setPathToFiles(self, path):
+    """ Sets the path to where the overlay files are located.
+    Setting this option will ignore all other settings!
+
+    @param path: LFN path to the folder containing the overlay files
+    @type path: string
+
+    """
+    self._checkArgs( { 'path' : types.StringTypes } )
+    self.pathToOverlayFiles = path
+    return S_OK()
 
   def setBkgEvtType(self, BkgEvtType):
     """ Define the background type.
@@ -1697,6 +1710,8 @@ class OverlayInput(LCUtilityApplication):
                               "machine: clic_cdr or ilc_dbd"))
     m1.addParameter(Parameter("useEnergyForFileLookup", True, "bool", "", "", False, False,
                               "useEnergy to look for background files: True or False"))
+    m1.addParameter(Parameter("pathToOverlayFiles", "", "string", "", "", False, False,
+                              "use overlay files from this path"))
 
     m1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return m1
@@ -1712,6 +1727,7 @@ class OverlayInput(LCUtilityApplication):
     moduleinstance.setValue('debug',             self.Debug)
     moduleinstance.setValue('machine',           self.Machine  )
     moduleinstance.setValue('useEnergyForFileLookup', self.useEnergyForFileLookup  )
+    moduleinstance.setValue('pathToOverlayFiles', self.pathToOverlayFiles )
   
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -1734,6 +1750,12 @@ class OverlayInput(LCUtilityApplication):
   def _checkConsistency(self):
     """ Checks that all needed parameters are set
     """
+    if self.pathToOverlayFiles:
+      res = FileCatalogClient().findFilesByMetadata({}, self.pathToOverlayFiles)
+      self._log.notice("Found %i files in path %s" %( len(res['Value']), self.pathToOverlayFiles))
+      if len(res['Value']) == 0 :
+        return S_ERROR("OverlayInput: PathToFiles is specified, but there are no files in that path")
+
     if not self.BXOverlay :
       return S_ERROR("Number of overlay bunch crossings not defined")
           
@@ -1750,12 +1772,15 @@ class OverlayInput(LCUtilityApplication):
       self.prodparameters['detectorModel'] = self.DetectorModel
       self.prodparameters['BXOverlay']  = self.BXOverlay
       self.prodparameters['GGtoHadInt'] = self.GGToHadInt
-    
+
     return S_OK() 
   
   def _checkFinalConsistency(self):
     """ Final check of consistency: the overlay files for the specifed energy must exist
     """
+    if self.pathToOverlayFiles:
+      return S_OK() # can ignore other parameter
+
     if not self.Energy:
       return S_ERROR("Energy MUST be specified for the overlay")
 
