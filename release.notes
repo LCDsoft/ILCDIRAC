@@ -1,12 +1,12 @@
 [v23-pre1]
 
-* Core: Based on Dirac v6r12-pre21: DO NOT USE
+* Core
+NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 [v22r0p10]
 
-*Workflow
+* Workflow
 NEW: ILCDIRAC-222: Print working directory content also for user jobs. Print content recursively
-
 
 [v22r0p9]
 
@@ -15,62 +15,70 @@ FIX: ILCDIRAC-384: Do not submit failover to same SE as targetSE
 FIX: ILCDIRAC-382: Allow job.setExecutable to be run before Workflow modules
 
 [v22r0p8]
-
-* Workflow: Change the way removal Request is created
+Workflow
+* CHANGE: Change the way removal request is created
 
 [v22r0p7]
 
-* Workflow: Fix problems for request
+* Workflow: 
+FIX problems for request
 FIX: ModuleBase: getRequestContainer: if Request was not properly initialized do it
 
 * DataManagement
 FIX: Remove use of ReplicaManager, because RepMan is deprecated
 
-
 [v22r0p6]
 
-* Workflow: Fix problems from selecting cvmfs code and not setRequired parts
+* Workflow
+FIX: Solve problems from selecting cvmfs code and not setRequired parts
 FIX: SLIC Module not finding installation directory
 FIX: stdhepcut: outputfile was not found
 
 [v22r0p5]
 
-* Workflow: Added tests, improved logging output
-* Workflow: UploadOutputData
-* Workflow: FailoverTransfer
-* Workflow: UploadLogFile
-* Workflow: ModuleBase
+* Workflow
+NEW: Added tests, improved logging output
+FIX: UploadOutputData
+FIX: FailoverTransfer
+FIX: UploadLogFile
+FIX: ModuleBase
 
 [v22r0p4]
 
+Workflow
 * FIX: Fix OutputDataPolicy
 
 [v22r0p3]
 
+Workflow
 * FIX: Restore OutputDataPolicy
 
 [v22r0p2]
 
-* Core: Based on Dirac v6r11p17: DO NOT USE
-* FIX: Some bug fixes, now jobs are running locally
+* Core
+NEW: Based on Dirac v6r11p17: DO NOT USE
+FIX: Some bug fixes, now jobs are running locally
 
 [v22r0p1]
 
-* Core: Based on Dirac v6r11p17: DO NOT USE
-* FIX: InputData Executor not working
+* Core:
+NEW: Based on Dirac v6r11p17: DO NOT USE
+FIX: InputData Executor not working
 
 [v22r0p0]
 
-* Core: Based on Dirac v6r11p14: DO NOT USE
-
+* Core
+NEW: Based on Dirac v6r11p14: DO NOT USE
 
 [v21r5p2]
 
+* Core
 FIX: dirac-ilc-add-user script
 
 [v21r5p1]
 
-Same as for v21r0p0, but using Dirac v6r10 instead of v6r9
+* Core
+NEW: Same as for v21r0p0, but using Dirac v6r10 instead of v6r9
 
 [v21r0p0]
 
