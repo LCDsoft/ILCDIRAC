@@ -1681,7 +1681,17 @@ class OverlayInput(LCUtilityApplication):
     
     self.BkgEvtType = BkgEvtType
     return S_OK()
-  
+
+
+
+  def setBackgroundType(self, backgroundType):
+    """Alternative to L{setBkgEvtType}"""
+    return self.setBkgEvtType(backgroundType)
+
+  def setNumberOfSignalEventsPerJob(self, numberSignalEvents):
+    """Alternative to L{setNbSigEvtsPerJob}"""
+    return self.setNbSigEvtsPerJob(numberSignalEvents)
+
 #  def setProdIDToUse(self,prodid):
 #    """ Optional parameter: Define the production ID to use as input
 #    
