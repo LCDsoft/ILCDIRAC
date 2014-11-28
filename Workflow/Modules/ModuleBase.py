@@ -14,6 +14,7 @@ __RCSID__ = "$Id$"
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Security.ProxyInfo                        import getProxyInfoAsString
 from DIRAC.Core.Utilities.Adler                           import fileAdler
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from DIRAC.TransformationSystem.Client.FileReport         import FileReport
 from DIRAC.WorkloadManagementSystem.Client.JobReport      import JobReport
 from DIRAC.Core.Utilities.File                            import makeGuid
@@ -753,3 +754,12 @@ class ModuleBase(object):
 
     request.addOperation( remove )
     self.workflow_commons['Request'] = request
+
+  def logWorkingDirectory(self):
+    """log the content of the working directory"""
+    res = shellCall(0,'ls -laR')
+    if res['OK'] and res['Value'][0] == 0:
+      self.log.info('The contents of the working directory...')
+      self.log.info(str(res['Value'][1]))
+    else:
+      self.log.error('Failed to list the working directory', str(res['Value'][2]))

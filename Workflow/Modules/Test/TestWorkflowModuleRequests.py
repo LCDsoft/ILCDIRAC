@@ -126,6 +126,10 @@ class TestModuleBase( ModulesTestCase ):
     result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
     self.assertTrue( "LFN too long" in result['Message'] )
 
+  def test_MB_logWorkingDirectory( self ):
+    """ModuleBase: logWorkingDirectory....................................................."""
+    gLogger.setLevel("ERROR")
+    self.mb.logWorkingDirectory()
 
 #############################################################################
 # UploadLogFile.py

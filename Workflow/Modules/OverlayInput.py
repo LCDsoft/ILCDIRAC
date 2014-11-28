@@ -75,12 +75,15 @@ class OverlayInput (ModuleBase):
     self.site = DIRAC.siteName()
     self.useEnergyForFileLookup = True
     self.machine = 'clic_cdr'
+    self.pathToOverlayFiles = ''
 
   def applicationSpecificInputs(self):
 
+    self.pathToOverlayFiles = self.step_commons.get("pathToOverlayFiles", self.pathToOverlayFiles)
+
     if self.step_commons.has_key('Detector'):
       self.detectormodel = self.step_commons['Detector']
-    if not self.detectormodel and not self.detector:
+    if not self.detectormodel and not self.detector and not self.pathToOverlayFiles:
       return S_ERROR('Detector model not defined')
 
     if self.step_commons.has_key('Energy'):
@@ -95,7 +98,7 @@ class OverlayInput (ModuleBase):
       if self.energytouse.count(".0"):
         self.energytouse = self.energytouse.replace(".0", "")
             
-    if not self.energytouse:
+    if not self.energytouse and not self.pathToOverlayFiles:
       return S_ERROR("Energy not set anywhere!")
 
     if self.step_commons.has_key('BXOverlay'):
@@ -119,7 +122,7 @@ class OverlayInput (ModuleBase):
                       detectormodel = self.detectormodel, machine = self.machine) 
     if not res['OK']:
       return res
-    if res['Value'] < 0:
+    if res['Value'] < 0 and not self.pathToOverlayFiles:
       return S_ERROR("No suitable ProdID") 
     #if self.workflow_commons.has_key('Site'):
     #  self.site = self.workflow_commons['Site']
@@ -210,6 +213,13 @@ class OverlayInput (ModuleBase):
 #      return self.__getFilesFromLyon(meta) ## nor this
     #else:
     return self.fcc.findFilesByMetadata(meta)
+
+
+  def __getFilesFromPath(self):
+    """ Get the list of files from the FileCatalog via the user specified path.
+    """
+    meta = {}
+    return self.fcc.findFilesByMetadata(meta, self.pathToOverlayFiles)
 
   def __getFilesFromLyon(self, meta):
     """ List the files present at Lyon, not used.
@@ -731,11 +741,18 @@ fi\n""" % (basename, lfile))
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('OverlayInput should not proceed as previous step did not end properly')
     self.setApplicationStatus('Starting up Overlay')
-    res = self.__getFilesFromFC()
+
+    if self.pathToOverlayFiles:
+      res = self.__getFilesFromPath()
+    else:
+      res = self.__getFilesFromFC()
+
     if not res['OK']:
       self.log.error("Failed to get the file list from the catalog:", res["Message"])
       self.setApplicationStatus('OverlayProcessor failed to get file list')
       return res
+    else:
+      self.log.notice("Found these files: %s" % res)
 
     self.lfns = res['Value']
     if not len(self.lfns):
