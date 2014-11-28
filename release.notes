@@ -7,6 +7,12 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 * Workflow
 NEW: ILCDIRAC-222: Print working directory content also for user jobs. Print content recursively
+NEW: ILCDIRAC-381: OverlayInput: One can now set the path at which the Overlay files should be picked up. This ignores all of the meta data
+
+* Interfaces
+NEW: ILCDIRAC-381: OverlayInput: new function setPathToFiles to set the path where the overlay files should be picked up. There is a check that there are files in that folder, but there is no check if it makes sense to overlay these files.
+NEW: OverlayInput: Two alternative spellings for old functions: setNumberOfSignalEventsPerJob and setBackgroundType, alternatives for setNbSigEvtsPerJob and setBkgEvtType, respectively.
+
 
 [v22r0p9]
 
