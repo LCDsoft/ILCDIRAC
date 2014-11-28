@@ -9,7 +9,6 @@ directory.
 __RCSID__ = "$Id$"
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
-from DIRAC.Core.Utilities.Subprocess                       import shellCall
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
@@ -108,13 +107,7 @@ class UploadLogFile(ModuleBase):
     if not res['OK']:
       self.log.error("Failed to resolve input parameters:", res['Message'])
       
-    res = shellCall(0,'ls -al')
-    if res['OK'] and res['Value'][0] == 0:
-      self.log.info('The contents of the working directory...')
-      self.log.info(str(res['Value'][1]))
-    else:
-      self.log.error('Failed to list the log directory', str(res['Value'][2]))
-
+    self.logWorkingDirectory()
     self.log.info('Job root is found to be %s' % (self.root))
     self.log.info('PRODUCTION_ID = %s, JOB_ID = %s '  % (self.productionID, self.jobID))
     self.logdir = os.path.realpath('./job/log/%s/%s' % (self.productionID, self.jobID))

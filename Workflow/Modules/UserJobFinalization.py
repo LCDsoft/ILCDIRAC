@@ -101,6 +101,8 @@ class UserJobFinalization(ModuleBase):
     if not resultLS['OK']:
       return S_OK()
 
+    self.logWorkingDirectory()
+
     resultIV = self.resolveInputVariables()
     if not resultIV['OK']:
       self.log.error("Failed to resolve input parameters:", resultIV['Message'])
