@@ -2,6 +2,12 @@
 
 * Core: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r0p10]
+
+*Workflow
+NEW: ILCDIRAC-222: Print working directory content also for user jobs. Print content recursively
+
+
 [v22r0p9]
 
 *Workflow
