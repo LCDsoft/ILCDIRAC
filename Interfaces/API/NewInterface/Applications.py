@@ -1581,6 +1581,13 @@ class OverlayInput(LCUtilityApplication):
     return S_OK()
 
   def setUseEnergyForFileLookup(self, useEnergyForFileLookup):
+    """
+    Sets the flag to use the energy meta data in the search of the background files.
+    Disable the energy when you want to use files created for a different energy than the signal events
+
+    @param useEnergyForFileLookup: Use the Energy in the metadata search or not
+    @type useEnergyForFileLookup: bool
+    """
     self._checkArgs( {'useEnergyForFileLookup': types.BooleanType } )
     self.useEnergyForFileLookup = useEnergyForFileLookup
     return S_OK()
@@ -1685,11 +1692,21 @@ class OverlayInput(LCUtilityApplication):
 
 
   def setBackgroundType(self, backgroundType):
-    """Alternative to L{setBkgEvtType}"""
+    """Alternative to L{setBkgEvtType}
+
+    @param backgroundType: Background type.
+    @type backgroundType: string
+
+    """
     return self.setBkgEvtType(backgroundType)
 
   def setNumberOfSignalEventsPerJob(self, numberSignalEvents):
-    """Alternative to L{setNbSigEvtsPerJob}"""
+    """Alternative to L{setNbSigEvtsPerJob}
+
+    @param numberSignalEvents: Number of signal events per job
+    @type numberSignalEvents: int
+
+    """
     return self.setNbSigEvtsPerJob(numberSignalEvents)
 
 #  def setProdIDToUse(self,prodid):
