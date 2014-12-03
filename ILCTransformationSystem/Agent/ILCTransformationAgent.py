@@ -36,9 +36,9 @@ class ILCTransformationAgent( TransformationAgent ):
       fdict[lfn].append(lfnName)
       
     if active:
-      res = clients['ReplicaManager'].getActiveReplicas( fdict.keys() )
+      res = clients['DataManager'].getActiveReplicas( fdict.keys() )
     else:
-      res = clients['ReplicaManager'].getReplicas( fdict.keys() )
+      res = clients['DataManager'].getReplicas( fdict.keys() )
     if not res['OK']:
       return res
     replicas = res['Value']
