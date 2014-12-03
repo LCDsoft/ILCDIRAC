@@ -306,7 +306,7 @@ class ProductionJob(Job):
     @param uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
     @param sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
     @param registerData: Register data in the file catalog
-    @todo: Do the registration only once, instead of once for each job
+    #todo: Do the registration only once, instead of once for each job
 
     """
     

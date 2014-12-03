@@ -378,6 +378,11 @@ class ModuleBase(object):
 
     self.platform = self.workflow_commons.get('Platform', self.platform)
 
+    #FIXME: Necessary for backward compatibility, can be removed eventually
+    #(once all productions defined with v6r8/9 are gone)
+    if 'Platform' not in self.workflow_commons and 'SystemConfig' in self.workflow_commons:
+      self.platform = self.workflow_commons.get('SystemConfig')
+
     self.ignoreapperrors = self.workflow_commons.get('IgnoreAppError', self.ignoreapperrors)
 
     self.applicationName = self.step_commons.get('applicationName', self.applicationName)
