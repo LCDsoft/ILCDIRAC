@@ -4,6 +4,15 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r1p1]
+
+* Workflow
+FIX: ILCDIRAC-400 Backward compatibility for old jobs/productions still using SystemConfig
+
+* ILCTransformationSystem
+FIX: ILCDIRAC-399 ILCTransformationAgent: Adapt to DataManager
+FIX: ILCDIRAC-398 DataRecoveryAgent: Fixed SyntaxError and KeyError
+
 [v22r1p0]
 
 * Core
