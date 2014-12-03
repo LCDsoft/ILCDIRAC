@@ -3,6 +3,13 @@
 * Core
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
+
+[v22r1p0]
+
+* Core
+Tag for official first release based on v6r11p25
+Contains all the changes for v22r0
+
 [v22r0p10]
 
 * Workflow
