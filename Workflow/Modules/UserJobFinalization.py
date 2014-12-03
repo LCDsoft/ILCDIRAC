@@ -180,8 +180,8 @@ class UserJobFinalization(ModuleBase):
       final[fileName]['resolvedSE'] = orderedSEs
 
     #At this point can exit and see exactly what the module will upload
+    self.printOutputInfo(final)
     if not self.enable:
-      self.printOutputInfo(final)
       return S_OK('Module is disabled by control flag')
 
     #Instantiate the failover transfer client with the global request object
