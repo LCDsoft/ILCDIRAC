@@ -4,6 +4,14 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r1p2]
+
+* Workflow
+FIX: ILCDIRAC-406: Create removal requests for production output when any kind of failure happens
+FIX: OverlayInput: only print list of files for DEBUG
+FIX: UserJobFinalization: Actually print the content of working directory as promised
+
+
 [v22r1p1]
 
 * Workflow
