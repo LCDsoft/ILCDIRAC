@@ -687,6 +687,12 @@ class ModuleBase(object):
         self.log.error( "!!! Both Accounting and RequestDB are down? !!!" )
         return resultAR
 
+    if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+      if 'ProductionOutputData' in self.workflow_commons:
+        prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
+        self.log.info("There was some kind of error, cleaning up outputData: %s" % prodOutputLFNs)
+        self.__cleanUp(prodOutputLFNs)
+
     if not len( request ):
       self.log.info("No Requests to process ")
       return S_OK()
@@ -768,3 +774,21 @@ class ModuleBase(object):
       self.log.info(str(res['Value'][1]))
     else:
       self.log.error('Failed to list the working directory', str(res['Value'][2]))
+
+    #############################################################################
+  def __cleanUp(self, lfnList):
+    """ Clean up uploaded data for the LFNs in the list
+    """
+    typeList = ['RegisterFile', 'ReplicateAndRegister']
+    request = self._getRequestContainer()
+
+    #keep all the requests which are not in typeList or whose file is not in lfnList
+    request = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
+
+    #just in case put the request object back to common request
+    self.workflow_commons['Request'] = request
+
+    # Set removal requests just in case
+    self.addRemovalRequests(lfnList)
+
+    return S_OK()

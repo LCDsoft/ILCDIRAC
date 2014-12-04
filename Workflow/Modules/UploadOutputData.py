@@ -260,25 +260,6 @@ class UploadOutputData(ModuleBase):
 
     return S_OK('Output data uploaded')
 
-  #############################################################################
-  def __cleanUp(self, lfnList):
-    """ Clean up uploaded data for the LFNs in the list
-    """
-    typeList = ['RegisterFile', 'ReplicateAndRegister']
-    request = self._getRequestContainer()
-
-    #keep all the requests which are not in typeList or whose file is not in lfnList
-    request = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
-
-    #just in case put the request object back to common request
-    self.workflow_commons['Request'] = request
-
-    # Set removal requests just in case
-    self.addRemovalRequests(lfnList)
-
-    return S_OK()
-
-
   def _expectedExtension(self, filename):
     """return the expected extension based on the production type hinted in the filename"""
     extension = ''

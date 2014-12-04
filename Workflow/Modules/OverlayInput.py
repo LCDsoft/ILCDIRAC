@@ -752,7 +752,7 @@ fi\n""" % (basename, lfile))
       self.setApplicationStatus('OverlayProcessor failed to get file list')
       return res
     else:
-      self.log.notice("Found these files: %s" % res)
+      self.log.debug("Found these files: %s" % res)
 
     self.lfns = res['Value']
     if not len(self.lfns):
