@@ -691,6 +691,7 @@ class ModuleBase(object):
       if 'ProductionOutputData' in self.workflow_commons:
         prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
         self.log.info("There was some kind of error, cleaning up outputData: %s" % prodOutputLFNs)
+        self.setApplicationStatus("Creating Removal Requests")
         self.__cleanUp(prodOutputLFNs)
 
     if not len( request ):
