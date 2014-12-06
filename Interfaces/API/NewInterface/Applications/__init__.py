@@ -7,7 +7,7 @@ __all__ = ['GenericApplication', 'GetSRMFile', '_Root', 'RootScript', 'RootMacro
            'Whizard', 'Pythia', 'PostGenSelection', 'StdhepCut', 'StdhepCutJava',
            'Mokka', 'SLIC', 'OverlayInput', 'Marlin', 'LCSIM', 'SLICPandora',
            'CheckCollections', 'SLCIOConcatenate', 'SLCIOSplit', 'StdHepSplit',
-           'Tomato']
+           'Tomato', 'CheckWNs']
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication import GenericApplication
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile import GetSRMFile
@@ -30,3 +30,4 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOConcatenate import S
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit import SLCIOSplit
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit import StdHepSplit
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato import Tomato
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs import CheckWNs
