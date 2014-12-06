@@ -36,18 +36,10 @@ prints out all the available methods.
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication as Application
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
-from ILCDIRAC.Core.Utilities.GeneratorModels          import GeneratorModels
-from ILCDIRAC.Core.Utilities.InstalledFiles           import Exists
-from ILCDIRAC.Core.Utilities.WhizardOptions           import WhizardOptions, getDict
 
-from DIRAC.Resources.Catalog.FileCatalogClient        import FileCatalogClient
 from DIRAC.Core.Workflow.Parameter                    import Parameter
 from DIRAC                                            import S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.CheckXMLValidity         import CheckXMLValidity
-
-from math import modf
-from decimal import Decimal
-import types, os
+import types
 
 __RCSID__ = "$Id$"
 
