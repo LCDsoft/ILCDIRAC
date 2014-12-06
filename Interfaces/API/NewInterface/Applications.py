@@ -53,34 +53,6 @@ __RCSID__ = "$Id$"
 
 ##########################################################################
 ##########################################################################
-#            StdhepCutJava: apply generator level cuts after pythia or whizard
-##########################################################################
-class StdhepCutJava(StdhepCut): 
-  """ Call stdhep cut after whizard of pythia
-  
-  Usage:
-  
-  >>> py = Pythia()
-  ...
-  >>> cut = StdhepCutJava()
-  >>> cut.getInputFromApp(py)
-  >>> cut.setSteeringFile("mycut.cfg")
-  >>> cut.setMaxNbEvts(10)
-  >>> cut.setNbEvtsPerFile(10)
-  
-  """
-  def __init__(self, paramdict = None):
-    self.MaxNbEvts = 0
-    self.NbEvtsPerFile = 0
-    self.SelectionEfficiency = 0
-    super(StdhepCutJava, self).__init__( paramdict )
-
-    self.appname = 'stdhepcutjava'
-    self._modulename = 'StdHepCutJava'
-    self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA) written in java'
-    self.datatype = 'gen'
-        
-##########################################################################
 #            Mokka: Simulation after Whizard or StdHepCut
 ##########################################################################
 class Mokka(Application): 
