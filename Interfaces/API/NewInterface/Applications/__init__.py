@@ -5,7 +5,7 @@ __RCSID__ = "$Id"
 
 __all__ = ['GenericApplication', 'GetSRMFile', '_Root', 'RootScript', 'RootMacro',
            'Whizard', 'Pythia', 'PostGenSelection', 'StdhepCut', 'StdhepCutJava',
-           'Mokka']
+           'Mokka','SLIC']
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication import GenericApplication
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile import GetSRMFile
@@ -18,3 +18,4 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.PostGenSelection import P
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut import StdhepCut
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava import StdhepCutJava
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Mokka import Mokka
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLIC import SLIC
