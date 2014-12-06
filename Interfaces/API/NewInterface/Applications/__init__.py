@@ -6,7 +6,7 @@ __RCSID__ = "$Id"
 __all__ = ['GenericApplication', 'GetSRMFile', '_Root', 'RootScript', 'RootMacro',
            'Whizard', 'Pythia', 'PostGenSelection', 'StdhepCut', 'StdhepCutJava',
            'Mokka', 'SLIC', 'OverlayInput', 'Marlin', 'LCSIM', 'SLICPandora',
-           'CheckCollections', 'SLCIOConcatenate', 'SLCIOSplit']
+           'CheckCollections', 'SLCIOConcatenate', 'SLCIOSplit', 'StdHepSplit']
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication import GenericApplication
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile import GetSRMFile
@@ -27,3 +27,4 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLICPandora import SLICPa
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckCollections import CheckCollections
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOConcatenate import SLCIOConcatenate
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit import SLCIOSplit
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit import StdHepSplit
