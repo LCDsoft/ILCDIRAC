@@ -61,8 +61,10 @@ class CombinedSoftwareInstallation(object):
       self.apps.append(app)
 
     self.jobConfig = ''
-    if self.job.has_key( 'SystemConfig' ):
+    if 'SystemConfig' in self.job:
       self.jobConfig = self.job['SystemConfig']
+    elif 'Platform' in self.job:
+      self.jobConfig = self.job['Platform']
     else:
       self.jobConfig = natOS.CMTSupportedConfig()[0]
       
