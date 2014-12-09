@@ -87,7 +87,7 @@ class ProductionJob(Job):
   def __setDefaults(self):
     """Sets some default parameters.
     """
-    self.setPlatform(self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt'))
+    self.setPlatform(self.ops.getValue('%s/Platform' % (self.csSection), 'x86_64-slc5-gcc43-opt'))
     self.setCPUTime('300000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
