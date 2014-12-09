@@ -75,7 +75,7 @@ class Application(object):
     self._importLocation = "ILCDIRAC.Workflow.Modules"
         
     #System Configuration: comes from Job definition
-    self._systemconfig = ''
+    self._platform = ''
     
     #Internal member: hold the list of the job's application set before self: used when using getInputFromApp
     self._job = None
@@ -97,7 +97,7 @@ class Application(object):
     #This is used to filter out the members that should not be set when using a dict as input
     self._paramsToExclude = ['_paramsToExclude', "_log", "_errorDict", "addedtojob",
                              "_inputappstep", "_linkedidx", "_inputapp", "_jobtype",
-                             "_jobsteps", "_jobapps", "_job", "_systemconfig", "_importLocation",
+                             "_jobsteps", "_jobapps", "_job", "_platform", "_importLocation",
                              "_moduledescription", "_modulename", "prodparameters",
                              "datatype", "detectortype", "_listofoutput", "inputSB",
                              "appname", 'accountInProduction', 'OutputPath']
@@ -510,7 +510,7 @@ class Application(object):
     """
     self._job = job
     
-    self._systemconfig = job.workflow.findParameter("Platform").getValue()
+    self._platform = job.workflow.findParameter("Platform").getValue()
     
     self._jobapps      = job.applicationlist
     

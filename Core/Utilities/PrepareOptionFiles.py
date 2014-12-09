@@ -20,9 +20,9 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFold
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
 import os
 
-def GetNewLDLibs(systemConfig, application, applicationVersion):
+def GetNewLDLibs(platform, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
-  @param systemConfig: System config used for the job
+  @param platform: System config used for the job
   @param application: name of the application considered
   @param applicationVersion: version of the application considered
   @return: new LD_LIBRARY_PATH
@@ -30,9 +30,9 @@ def GetNewLDLibs(systemConfig, application, applicationVersion):
   log = gLogger.getSubLogger("GetLDLibs")
   log.verbose("Getting all lib folders")
   new_ld_lib_path = ""
-  deps = resolveDeps(systemConfig, application, applicationVersion)
+  deps = resolveDeps(platform, application, applicationVersion)
   for dep in deps:
-    res = getSoftwareFolder(systemConfig, dep["app"], dep['version'])
+    res = getSoftwareFolder(platform, dep["app"], dep['version'])
     if not res['OK']:
       continue
     basedepfolder = res['Value']
@@ -55,15 +55,15 @@ def GetNewLDLibs(systemConfig, application, applicationVersion):
       new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]  
   return new_ld_lib_path
 
-def GetNewPATH(systemConfig, application, applicationVersion):
+def GetNewPATH(platform, application, applicationVersion):
   """ Same as L{GetNewLDLibs},but for the PATH
   """
   log = gLogger.getSubLogger("GetPaths")
   log.verbose("Getting all PATH folders")
   new_path = ""
-  deps = resolveDeps(systemConfig, application, applicationVersion)
+  deps = resolveDeps(platform, application, applicationVersion)
   for dep in deps:
-    res = getSoftwareFolder(systemConfig, dep['app'], dep['version'])
+    res = getSoftwareFolder(platform, dep['app'], dep['version'])
     if not res['OK']:
       continue
     depfolder = res['Value']
