@@ -181,28 +181,11 @@ class UploadLogFile(ModuleBase):
     self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
                    resTransfer['Message'])
 
-    tarFileDir = os.path.dirname(self.logdir)
-    self.logLFNPath = '%s.gz' % self.logLFNPath
-    tarFileName = os.path.basename(self.logLFNPath)
-
-    self.log.debug("Log Directory: %s" % tarFileDir )
-    self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
-    self.log.debug("TarFileName:   %s" % tarFileName )
-    start = os.getcwd()
-    os.chdir(self.logdir)
-    logTarFiles = os.listdir(self.logdir)
-    #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
-    tfile = tarfile.open(tarFileName, "w:gz")
-    for item in logTarFiles:
-      self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
-      tfile.add(item)
-    tfile.close()
-    resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
-    os.chdir(start)
-    if not resExists['OK']:
-      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
-      self.setApplicationStatus('Failed To Create Log Tar Dir')
+    resTarLogs = self._tarTheLogFiles()
+    if not resTarLogs['OK']:
       return S_OK()#because if the logs are lost, it's not the end of the world.
+    tarFileName = resTarLogs['Value']['fileName']
+    tarFileDir = resTarLogs['Value']['fileDir']
     
     #if res['Value'][0]: #i.e. non-zero status
     #  self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
@@ -365,5 +348,31 @@ class UploadLogFile(ModuleBase):
     #Now after all operations, return potentially modified request object
     return S_OK( {'Request': failoverTransfer.request, 'uploadedSE': result['Value']['uploadedSE']})
 
+  def _tarTheLogFiles(self):
+    """returns S_OK/S_ERROR and puts all the relevantFiles into a tarball"""
+    tarFileDir = os.path.dirname(self.logdir)
+    self.logLFNPath = '%s.gz' % self.logLFNPath
+    tarFileName = os.path.basename(self.logLFNPath)
+
+    self.log.debug("Log Directory: %s" % tarFileDir )
+    self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
+    self.log.debug("TarFileName:   %s" % tarFileName )
+    start = os.getcwd()
+    os.chdir(self.logdir)
+    logTarFiles = os.listdir(self.logdir)
+    #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
+    tfile = tarfile.open(tarFileName, "w:gz")
+    for item in logTarFiles:
+      self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
+      tfile.add(item)
+    tfile.close()
+    resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
+    os.chdir(start)
+    if resExists['OK']:
+      return S_OK(dict(fileName=tarFileName, fileDir=tarFileDir))
+    else:
+      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
+      self.setApplicationStatus('Failed To Create Log Tar Dir')
+      return S_ERROR()
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
