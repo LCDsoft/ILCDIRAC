@@ -279,7 +279,7 @@ class UploadLogFile(ModuleBase):
       self.log.info('PopulateLogDir: Failed to copy any files to the target directory.')
       return S_ERROR()
     else:
-      self.log.info('PopulateLogDir: Prepared %s files in the temporary directory.' % self.logdir)
+      self.log.info('PopulateLogDir: Prepared %s files in the temporary directory.' % len(successfulFiles))
       return S_OK()
     
   #############################################################################
