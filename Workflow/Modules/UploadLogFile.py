@@ -124,6 +124,9 @@ class UploadLogFile(ModuleBase):
     """
     
     self.log.verbose('Starting UploadLogFile finalize')
+    self.log.debug("LogFilePath: %s" % self.logFilePath)
+    self.log.debug("LogLFNPath:  %s" % self.logLFNPath)
+
     ##########################################
     # First determine the files which should be saved
     self.log.info('Determining the files to be saved in the logs.')
@@ -176,6 +179,7 @@ class UploadLogFile(ModuleBase):
     if not self.failoverTest:
       self.log.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
       resTransfer = self.logSE.putFile({ tarFileLFN : tarFileLocal })
+      self.log.debug("putFile result: %s" % resTransfer)
       if len(resTransfer['Value']['Failed']) == 0:
         self.log.info('Successfully upload log tarball to %s' % self.logSE.name)
         self.setJobParameter('Log LFN', tarFileLFN)
