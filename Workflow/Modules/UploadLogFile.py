@@ -169,18 +169,18 @@ class UploadLogFile(ModuleBase):
     tarFileDir = resTarLogs['Value']['fileDir']
 
     #########################################
-    # Attempt to upload logs to the LogSE
-    self.log.info('Transferring log files to the %s' % self.logSE.name)
+    # Attempt to upload log tar ball to the LogSE
+    self.log.info('Transferring log tarball to the %s' % self.logSE.name)
     resTransfer = S_ERROR("Skipping log upload, because failoverTest")
+    tarFileLFN = '%s/%s' % (self.logFilePath, tarFileName)
+    tarFileLocal = os.path.realpath(os.path.join(tarFileDir, tarFileName))
     if not self.failoverTest:
-      self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE.name))
-      resTransfer = self.logSE.putDirectory({ self.logFilePath : os.path.realpath(self.logdir) })
-      self.log.debug("putDirectory result: %s" % resTransfer)
+      self.log.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
+      resTransfer = self.logSE.putFile({ tarFileLFN : tarFileLocal })
       if len(resTransfer['Value']['Failed']) == 0:
-        self.log.info('Successfully upload log directory to %s' % self.logSE.name)
-        logURL = '%s' % self.logFilePath
-        self.setJobParameter('Log LFN', logURL)
-        self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % logURL)
+        self.log.info('Successfully upload log tarball to %s' % self.logSE.name)
+        self.setJobParameter('Log LFN', tarFileLFN)
+        self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % tarFileLFN)
         return S_OK()
       else:
         resTransfer = S_ERROR ( resTransfer['Value'] )
