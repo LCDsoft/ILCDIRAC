@@ -85,6 +85,7 @@ class UploadLogFile(ModuleBase):
     if not type(self.logLFNPath) == type(' '):
       self.logLFNPath = self.logLFNPath[0]
       
+    #FIXME: What if experiments change path, pick this up from the CS instead, or find a better way
     example_file = self.logFilePath
     if "/ilc/prod/clic" in example_file:
       self.experiment = "CLIC"
