@@ -157,7 +157,7 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],Message="Ekke Ekke Ekke Ekke")))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
                                                               'uploadedSE': 'CERN-SRM'}))
@@ -167,12 +167,13 @@ class TestUploadLogFile( ModulesTestCase ):
 
 
   def test_ULF_ASI_FailedFailover( self ):
-    """ULF.applicationSpecificInputs: Failovertransfer failes..........................."""
+    """ULF.applicationSpecificInputs: Failovertransfer fails............................"""
+    gLogger.setLevel("ERROR")
     self.ulf = UploadLogFile()
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],Message="Ekke Ekke Ekke Ekke")))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK())
     self.ulf.applicationSpecificInputs()
@@ -190,19 +191,39 @@ class TestUploadLogFile( ModulesTestCase ):
     self.assertRaises( IOError, self.ulf.execute )
 
   def test_ULF_ASI_execute( self ):
-    """ULF.ASI,Exe: run through and get request.........................................."""
+    """ULF.ASI,Exe: run through and get request........................................."""
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
     self.ulf.jobID = 12345
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
-                                                              Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
+                                                         Message="Ekke Ekke Ekke Ekke")))
     self.mb.workflow_commons['Request']  = Request()
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf.applicationSpecificInputs()
     res = self.ulf.execute()
+    self.assertTrue( res['OK'] )
+
+
+  def test_ULF_finalize_move( self ):
+    """ULF.Finalize: move to new folder"""
+    gLogger.setLevel("DEBUG")
+    self.ulf.workflow_commons = copy.deepcopy(self.mb.workflow_commons)
+    self.ulf.log = gLogger.getSubLogger("ULF-FinalMove")
+    self.ulf.jobID = 12345
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
+    #self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],
+    #                                                     Message="Ekke Ekke Ekke Ekke")))
+    self.mb.workflow_commons['Request']  = Request()
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
+                                                              'uploadedSE': 'CERN-SRM'}))
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf.logFilePath = self.ulf.workflow_commons['LogFilePath']
+    self.ulf.logdir = os.path.realpath("./my/log/folder")
+    #self.ulf.execute()
+    res = self.ulf.finalize()
     self.assertTrue( res['OK'] )
 
 #############################################################################
