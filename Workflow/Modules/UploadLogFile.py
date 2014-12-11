@@ -166,14 +166,13 @@ class UploadLogFile(ModuleBase):
     if not resTarLogs['OK']:
       return S_OK()#because if the logs are lost, it's not the end of the world.
     tarFileName = resTarLogs['Value']['fileName']
-    tarFileDir = resTarLogs['Value']['fileDir']
 
     #########################################
     # Attempt to upload log tar ball to the LogSE
     self.log.info('Transferring log tarball to the %s' % self.logSE.name)
     resTransfer = S_ERROR("Skipping log upload, because failoverTest")
     tarFileLFN = '%s/%s' % (self.logFilePath, tarFileName)
-    tarFileLocal = os.path.realpath(os.path.join(tarFileDir, tarFileName))
+    tarFileLocal = os.path.realpath(os.path.join(self.logdir, tarFileName))
     if not self.failoverTest:
       self.log.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
       resTransfer = self.logSE.putFile({ tarFileLFN : tarFileLocal })
@@ -197,7 +196,7 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    resFailover = self._tryFailoverTransfer(tarFileName, tarFileDir)
+    resFailover = self._tryFailoverTransfer(tarFileName, self.logdir)
     if not resFailover['Value']:
       return resFailover ##log files lost, but who cares...
     
@@ -353,11 +352,10 @@ class UploadLogFile(ModuleBase):
 
   def _tarTheLogFiles(self):
     """returns S_OK/S_ERROR and puts all the relevantFiles into a tarball"""
-    tarFileDir = os.path.dirname(self.logdir)
     self.logLFNPath = '%s.gz' % self.logLFNPath
     tarFileName = os.path.basename(self.logLFNPath)
 
-    self.log.debug("Log Directory: %s" % tarFileDir )
+    self.log.debug("Log Directory: %s" % self.logdir )
     self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
     self.log.debug("TarFileName:   %s" % tarFileName )
     start = os.getcwd()
@@ -371,8 +369,9 @@ class UploadLogFile(ModuleBase):
     tfile.close()
     resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
     os.chdir(start)
+    self.log.debug("TarFileName: %s" %(tarFileName,))
     if resExists['OK']:
-      return S_OK(dict(fileName=tarFileName, fileDir=tarFileDir))
+      return S_OK(dict(fileName=tarFileName))
     else:
       self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
       self.setApplicationStatus('Failed To Create Log Tar Dir')
