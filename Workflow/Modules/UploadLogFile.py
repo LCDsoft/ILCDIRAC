@@ -160,6 +160,13 @@ class UploadLogFile(ModuleBase):
     if not result['OK']:
       self.log.error('Could not set permissions of log files to 0755 with message:\n%s' % (result['Message']))
 
+    #########################################
+    #Tar all the files
+    resTarLogs = self._tarTheLogFiles()
+    if not resTarLogs['OK']:
+      return S_OK()#because if the logs are lost, it's not the end of the world.
+    tarFileName = resTarLogs['Value']['fileName']
+    tarFileDir = resTarLogs['Value']['fileDir']
 
     #########################################
     # Attempt to upload logs to the LogSE
@@ -182,11 +189,6 @@ class UploadLogFile(ModuleBase):
     self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
                    resTransfer['Message'])
 
-    resTarLogs = self._tarTheLogFiles()
-    if not resTarLogs['OK']:
-      return S_OK()#because if the logs are lost, it's not the end of the world.
-    tarFileName = resTarLogs['Value']['fileName']
-    tarFileDir = resTarLogs['Value']['fileDir']
     
     #if res['Value'][0]: #i.e. non-zero status
     #  self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
