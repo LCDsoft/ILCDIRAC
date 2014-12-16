@@ -4,6 +4,12 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2-pre1]
+
+* Workflow
+CHANGE: Tar and compress logfiles
+FIX: Remove SystemConfig/sysconfig, replace with platform
+
 [v22r1p2]
 
 * Workflow
@@ -11,6 +17,8 @@ FIX: ILCDIRAC-406: Create removal requests for production output when any kind o
 FIX: OverlayInput: only print list of files for DEBUG
 FIX: UserJobFinalization: Actually print the content of working directory as promised
 
+* Interfaces
+CHANGE: Move application to their own file, transparent change for users
 
 [v22r1p1]
 
