@@ -784,7 +784,7 @@ class ModuleBase(object):
     request = self._getRequestContainer()
 
     #keep all the requests which are not in typeList or whose file is not in lfnList
-    request = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
+    request.__operations__ = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
 
     #just in case put the request object back to common request
     self.workflow_commons['Request'] = request
