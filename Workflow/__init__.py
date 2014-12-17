@@ -4,4 +4,4 @@ Defines the different modules that wrap around the ILC applications
 @author: P. Majewski
 @since: Mar 22, 2010
 """
-__RCSID__ ="$Id"
+__RCSID__ ="$Id$"

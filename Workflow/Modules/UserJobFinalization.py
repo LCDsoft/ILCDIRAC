@@ -337,7 +337,7 @@ class UserJobFinalization(ModuleBase):
                                                           metadata['localpath'],
                                                           metadata['lfn'],
                                                           metadata['resolvedSE'],
-                                                          fileMetaDict = metadata,
+                                                          fileMetaDict = metadata['filedict'],
                                                           fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
@@ -385,7 +385,7 @@ class UserJobFinalization(ModuleBase):
                                                                   metadata['lfn'],
                                                                   targetSE,
                                                                   failoverSEs,
-                                                                  fileMetaDict = metadata,
+                                                                  fileMetaDict = metadata['filedict'],
                                                                   fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
