@@ -356,6 +356,38 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.execute()
     self.assertTrue( self.frq.workflow_commons['Request'] )
 
+  def test_set_registrationRequest( self ):
+    """execute: test if setRegistrationRequest succeeds ........................................"""
+    # setup the filedict from getFileMetaData and pass that to setRegistrationRequest
+    gLogger.setLevel("DEBUG")
+    self.uod = UploadOutputData()
+    self.uod.log = gLogger.getSubLogger("FRQ-Exe-RegReqs")
+    self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
+    self.uod.jobReport = Mock()
+    self.uod.jobReport.generateForwardDISET.return_value = S_ERROR("No JobRep")
+    self.uod.fileReport = self.fr_mock
+    self.uod.workflow_commons = dict(Enable=True, PRODUCTION_ID=43321, JOB_ID = 12345 )
+
+    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
+    self.uod.getCandidateFiles = Mock(return_value=S_OK())
+    res = self.uod.getFileMetadata(candidateFiles)
+    self.uod.log.debug("MetaData: %s" % res)
+    fileDict = res['Value']
+    self.uod.log.debug("MetaData fileDict: %s" % fileDict)
+    self.uod.getFileMetadata = Mock(return_value=res)
+    self.uod.getDestinationSEList = Mock(return_value=S_OK(["CERN-DIP-4"]))
+    self.uod.enable = True
+    self.uod.jobID = 12345
+    from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
+    lfn = '/ilc/user/s/sailer/test3.stdhep'
+    targetSE = "CERN-DIP-4"
+    catalog = ["FileCatalog"]
+    fot = FailoverTransfer( self.uod._getRequestContainer() )
+    fot._setRegistrationRequest(lfn, targetSE, fileDict['test3.stdhep']['filedict'], catalog)
+    self.uod.log.info("RegReq: %s " % self.uod._getRequestContainer() )
+    res = self.uod.generateFailoverFile( )
+    self.uod.log.info("failOverFile: %s " % res)
+
 #############################################################################
 # UploadOutputData.py
 #############################################################################
