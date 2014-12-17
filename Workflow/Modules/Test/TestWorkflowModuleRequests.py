@@ -515,8 +515,8 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
-  def test_EXE_HaveRegistrations( self ):
-    """execute: test when Registration Requests where created....................................."""
+  def test_EXE_cleanUpRequests( self ):
+    """execute: test when Requests are being cleaned up .........................................."""
     # we want that the upload output data fails to upload and do registration,
     # so we need to create a registration request, by failing at the right
     # place in the FailoverTransfer, which means we need to somehow control
