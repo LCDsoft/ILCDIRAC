@@ -10,6 +10,14 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
+[v22r1p3]
+
+* Workflow
+
+FIX: ILCDIRAC-417: Missing Checksum entry when creating RegistrationRequests during Failover
+FIX: ILCDIRAC-418: Properly cleanup requests when production jobs fail and we want to remove possible output files
+
+
 [v22r1p2]
 
 * Workflow
