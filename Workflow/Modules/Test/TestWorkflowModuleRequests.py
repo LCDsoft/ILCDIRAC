@@ -234,6 +234,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_Enabled( self ):
     """applicationSpecificInputs: control flag is enabled......................................."""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
@@ -244,6 +245,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_Disable( self ):
     """applicationSpecificInputs: control flag is enabled with non boolean......................"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
@@ -255,6 +257,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_Disabled( self ):
     """applicationSpecificInputs: control flag is disabled......................................"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
@@ -264,6 +267,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_AllVariables( self ):
     """applicationSpecificInputs: checks if all variables have been properly set after this call"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     os.environ['JOBID']="12345"
@@ -274,6 +278,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_NoVariables( self ):
     """applicationSpecificInputs: checks that no variables have been set after this call........"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict()
     os.environ['JOBID']="12345"
@@ -284,6 +289,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_Exe_Disabled( self ):
     """execute: is disabled....................................................................."""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq._getJobReporter = Mock(return_value=self.jr_mock)
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Disabled")
