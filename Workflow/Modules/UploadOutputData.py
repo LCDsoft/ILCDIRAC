@@ -209,10 +209,10 @@ class UploadOutputData(ModuleBase):
                                                           metadata['localpath'], 
                                                           metadata['lfn'], 
                                                           metadata['resolvedSE'], 
-                                                          fileMetaDict = metadata, 
+                                                          fileMetaDict = metadata['filedict'],
                                                           fileCatalog = catalogs)
         if not result['OK']:
-          self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+          self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata['filedict']))
           failover[fileName] = metadata
         else:
           #lfn = metadata['lfn']
@@ -238,10 +238,10 @@ class UploadOutputData(ModuleBase):
                                                                 metadata['lfn'], 
                                                                 targetSE, 
                                                                 metadata['resolvedSE'],
-                                                                fileMetaDict = metadata, 
+                                                                fileMetaDict = metadata['filedict'],
                                                                 fileCatalog = catalogs)
       if not result['OK']:
-        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata['filedict']))
         cleanUp = True
         break #no point continuing if one completely fails
 

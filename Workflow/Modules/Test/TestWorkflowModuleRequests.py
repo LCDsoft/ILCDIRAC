@@ -620,12 +620,10 @@ class TestUserJobFinalization( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     ft_mock = Mock()
     ft_mock.transferAndRegisterFileFailover.return_value=S_OK()
-    filesToFailover = {'test.txt': { 'lfn': '/ilc/user/s/sailer/test/test.txt',
-                                     'localpath': './test.txt',
-                                     'resolvedSE': ['CERN-SRM', 'KEK-SRM', 'RAL-SRM'],
-                                     'workflowSE': ['CERN-SRM'],
-                                     'path': 'SLCIO',
-                                     'guid': 'A331AE88-AD87-AF39-97E1-44257D8200C8'}}
+    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-SRM'}}
+    resMetadata = self.ujf.getFileMetadata( candidateFiles )
+    filesToFailover = resMetadata['Value']
+    filesToFailover['test3.stdhep']['resolvedSE'] = ['CERN-SRM', 'KEK-SRM', 'RAL-SRM']
     filesUploaded = []
     self.ujf.failoverSEs= ['CERN-SRM', 'RAL-SRM']
     res = self.ujf.transferRegisterAndFailoverFiles(ft_mock, filesToFailover, filesUploaded)

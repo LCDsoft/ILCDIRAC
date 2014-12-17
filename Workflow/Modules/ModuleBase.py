@@ -324,6 +324,9 @@ class ModuleBase(object):
       fileDict['LFN'] = metadata['lfn']
       fileDict['Size'] = os.path.getsize(fileName)
       fileDict['Addler'] = fileAdler(fileName)
+      fileDict['ADLER32'] = fileAdler(fileName)
+      fileDict['Checksum'] = fileAdler(fileName)
+      fileDict['ChecksumType'] = "ADLER32"
       fileDict['GUID'] = metadata['GUID']
       fileDict['Status'] = "Waiting"
 
