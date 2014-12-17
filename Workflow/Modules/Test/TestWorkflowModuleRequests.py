@@ -350,33 +350,6 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.execute()
     self.assertTrue( self.frq.workflow_commons['Request'] )
 
-
-  def test_EXE_HaveRegistrations( self ):
-    """execute: test when Registration Requests where created................................."""
-    # we want that the upload output data fails to upload and do registration,
-    # so we need to create a registration request, by failing at the right
-    # place in the FailoverTransfer, which means we need to somehow control
-    # the failovertransfer that is being called by the UploadOutputData...
-    #
-    gLogger.setLevel("DEBUG")
-    self.frq = FailoverRequest()
-    self.frq.log = gLogger.getSubLogger("Frq-Exe-RegReqs")
-    self.uod = UploadOutputData()
-    self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
-    self.uod.workflow_commons = dict(Enable=True)
-    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
-    self.uod.getCandidateFiles = Mock(return_value=S_OK())
-    res = self.uod.getFileMetadata(candidateFiles)
-    self.uod.getFileMetadata = Mock(return_value=res)
-    self.uod.getDestinationSEList = Mock(return_value=S_OK(["CERN-DIP-4"]))
-    self.uod.enable = True
-    self.uod.jobID = 12345
-    from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
-    FailoverTransfer.transferAndRegisterFile = Mock(return_value=S_ERROR("IT ACTUALLY WORKS!!!!!!1eleven!!"))
-    resUodExe = self.uod.execute()
-    self.frq.log.info(resUodExe)
-
-
 #############################################################################
 # UploadOutputData.py
 #############################################################################
@@ -542,6 +515,30 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
+  def test_EXE_HaveRegistrations( self ):
+    """execute: test when Registration Requests where created....................................."""
+    # we want that the upload output data fails to upload and do registration,
+    # so we need to create a registration request, by failing at the right
+    # place in the FailoverTransfer, which means we need to somehow control
+    # the failovertransfer that is being called by the UploadOutputData...
+    #
+    gLogger.setLevel("DEBUG")
+    self.uod = UploadOutputData()
+    self.uod.log = gLogger.getSubLogger("UOD-Exe-RegReqs")
+    self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
+    self.uod.workflow_commons = dict(Enable=True)
+    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
+    self.uod.getCandidateFiles = Mock(return_value=S_OK())
+    res = self.uod.getFileMetadata(candidateFiles)
+    self.uod.getFileMetadata = Mock(return_value=res)
+    self.uod.getDestinationSEList = Mock(return_value=S_OK(["CERN-DIP-4"]))
+    self.uod.enable = True
+    self.uod.jobID = 12345
+    from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
+    FailoverTransfer.transferAndRegisterFile = Mock(return_value=S_ERROR("IT ACTUALLY WORKS!!!!!!1eleven!!"))
+    resUodExe = self.uod.execute()
+    res = self.uod.generateFailoverFile( )
+    self.uod.log.info("RequestValidation: %s " % res)
 
 #############################################################################
 # UserJobFinalization.py
