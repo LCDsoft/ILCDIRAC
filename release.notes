@@ -10,6 +10,12 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
+[v22r1p5]
+
+* Workflow
+
+FIX: ILCDIRAC-422: Mokka did not work when ILDConfig parameter set
+
 [v22r1p4]
 
 * General
