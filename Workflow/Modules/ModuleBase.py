@@ -525,7 +525,7 @@ class ModuleBase(object):
     if 'ILDConfigPackage' in self.workflow_commons:
       config_dir = self.workflow_commons['ILDConfigPackage']
       #seems it's not on CVMFS, try local install then:
-      res = getSoftwareFolder(self.platform, "ILDConfig", config_dir.replace("ILDConfig", ""))
+      res = getSoftwareFolder(self.platform, "ildconfig", config_dir.replace("ILDConfig", ""))
       if not res['OK']:
         self.log.error("Cannot find %s" % config_dir, res['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)
