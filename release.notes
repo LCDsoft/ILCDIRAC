@@ -10,6 +10,20 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
+[v22r1p6]
+
+* Interfaces
+
+CHANGE: use ilcdirac-support@cern.ch for email address
+
+* Core
+
+CHANGE: use ilcdirac-support@cern.ch for email address
+
+* ILCTransformation
+
+FIX: DataRecoveryAgent: Use the new ReqClient
+
 [v22r1p5]
 
 * Workflow
