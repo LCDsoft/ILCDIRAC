@@ -33,7 +33,7 @@ class RemoveSoft(object):
 
     self.platform = self.workflow_commons.get('Platform', None)
     if not self.platform:
-      return S_ERROR('Platform, formerly known as SystemCOnfig not defined')
+      return S_ERROR('Platform, formerly known as SystemConfig not defined')
     
     self.softs.rstrip(";")
     self.apps = self.softs.split(';')

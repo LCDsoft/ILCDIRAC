@@ -157,7 +157,7 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],Message="Ekke Ekke Ekke Ekke")))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
                                                               'uploadedSE': 'CERN-SRM'}))
@@ -167,12 +167,13 @@ class TestUploadLogFile( ModulesTestCase ):
 
 
   def test_ULF_ASI_FailedFailover( self ):
-    """ULF.applicationSpecificInputs: Failovertransfer failes..........................."""
+    """ULF.applicationSpecificInputs: Failovertransfer fails............................"""
+    gLogger.setLevel("ERROR")
     self.ulf = UploadLogFile()
     self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],Message="Ekke Ekke Ekke Ekke")))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK())
     self.ulf.applicationSpecificInputs()
@@ -190,19 +191,39 @@ class TestUploadLogFile( ModulesTestCase ):
     self.assertRaises( IOError, self.ulf.execute )
 
   def test_ULF_ASI_execute( self ):
-    """ULF.ASI,Exe: run through and get request.........................................."""
+    """ULF.ASI,Exe: run through and get request........................................."""
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf.log = gLogger.getSubLogger("ULF-RequestTest")
     self.ulf.jobID = 12345
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
-    self.ulf.logSE.putDirectory = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
-                                                              Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
+                                                         Message="Ekke Ekke Ekke Ekke")))
     self.mb.workflow_commons['Request']  = Request()
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf.applicationSpecificInputs()
     res = self.ulf.execute()
+    self.assertTrue( res['OK'] )
+
+
+  def test_ULF_finalize_move( self ):
+    """ULF.Finalize: move to new folder"""
+    gLogger.setLevel("DEBUG")
+    self.ulf.workflow_commons = copy.deepcopy(self.mb.workflow_commons)
+    self.ulf.log = gLogger.getSubLogger("ULF-FinalMove")
+    self.ulf.jobID = 12345
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
+    #self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],
+    #                                                     Message="Ekke Ekke Ekke Ekke")))
+    self.mb.workflow_commons['Request']  = Request()
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
+                                                              'uploadedSE': 'CERN-SRM'}))
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf.logFilePath = self.ulf.workflow_commons['LogFilePath']
+    self.ulf.logdir = os.path.realpath("./my/log/folder")
+    #self.ulf.execute()
+    res = self.ulf.finalize()
     self.assertTrue( res['OK'] )
 
 #############################################################################
@@ -234,6 +255,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_Enabled( self ):
     """applicationSpecificInputs: control flag is enabled......................................."""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
@@ -244,6 +266,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_Disable( self ):
     """applicationSpecificInputs: control flag is enabled with non boolean......................"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
@@ -255,6 +278,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_Disabled( self ):
     """applicationSpecificInputs: control flag is disabled......................................"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
@@ -264,6 +288,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_AllVariables( self ):
     """applicationSpecificInputs: checks if all variables have been properly set after this call"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     os.environ['JOBID']="12345"
@@ -274,6 +299,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_ASI_NoVariables( self ):
     """applicationSpecificInputs: checks that no variables have been set after this call........"""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq.workflow_commons = dict()
     os.environ['JOBID']="12345"
@@ -284,6 +310,7 @@ class TestFailoverRequest( ModulesTestCase ):
 
   def test_Exe_Disabled( self ):
     """execute: is disabled....................................................................."""
+    gLogger.setLevel("ERROR")
     self.frq = FailoverRequest()
     self.frq._getJobReporter = Mock(return_value=self.jr_mock)
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Disabled")
@@ -349,6 +376,38 @@ class TestFailoverRequest( ModulesTestCase ):
                                       Request = self.rc_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.execute()
     self.assertTrue( self.frq.workflow_commons['Request'] )
+
+  def test_set_registrationRequest( self ):
+    """execute: test if setRegistrationRequest succeeds ........................................"""
+    # setup the filedict from getFileMetaData and pass that to setRegistrationRequest
+    gLogger.setLevel("DEBUG")
+    self.uod = UploadOutputData()
+    self.uod.log = gLogger.getSubLogger("FRQ-Exe-RegReqs")
+    self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
+    self.uod.jobReport = Mock()
+    self.uod.jobReport.generateForwardDISET.return_value = S_ERROR("No JobRep")
+    self.uod.fileReport = self.fr_mock
+    self.uod.workflow_commons = dict(Enable=True, PRODUCTION_ID=43321, JOB_ID = 12345 )
+
+    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
+    self.uod.getCandidateFiles = Mock(return_value=S_OK())
+    res = self.uod.getFileMetadata(candidateFiles)
+    self.uod.log.debug("MetaData: %s" % res)
+    fileDict = res['Value']
+    self.uod.log.debug("MetaData fileDict: %s" % fileDict)
+    self.uod.getFileMetadata = Mock(return_value=res)
+    self.uod.getDestinationSEList = Mock(return_value=S_OK(["CERN-DIP-4"]))
+    self.uod.enable = True
+    self.uod.jobID = 12345
+    from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
+    lfn = '/ilc/user/s/sailer/test3.stdhep'
+    targetSE = "CERN-DIP-4"
+    catalog = ["FileCatalog"]
+    fot = FailoverTransfer( self.uod._getRequestContainer() )
+    fot._setRegistrationRequest(lfn, targetSE, fileDict['test3.stdhep']['filedict'], catalog)
+    self.uod.log.info("RegReq: %s " % self.uod._getRequestContainer() )
+    res = self.uod.generateFailoverFile( )
+    self.uod.log.info("failOverFile: %s " % res)
 
 #############################################################################
 # UploadOutputData.py
@@ -515,6 +574,30 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
+  def test_EXE_cleanUpRequests( self ):
+    """execute: test when Requests are being cleaned up .........................................."""
+    # we want that the upload output data fails to upload and do registration,
+    # so we need to create a registration request, by failing at the right
+    # place in the FailoverTransfer, which means we need to somehow control
+    # the failovertransfer that is being called by the UploadOutputData...
+    #
+    gLogger.setLevel("DEBUG")
+    self.uod = UploadOutputData()
+    self.uod.log = gLogger.getSubLogger("UOD-Exe-RegReqs")
+    self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
+    self.uod.workflow_commons = dict(Enable=True)
+    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
+    self.uod.getCandidateFiles = Mock(return_value=S_OK())
+    res = self.uod.getFileMetadata(candidateFiles)
+    self.uod.getFileMetadata = Mock(return_value=res)
+    self.uod.getDestinationSEList = Mock(return_value=S_OK(["CERN-DIP-4"]))
+    self.uod.enable = True
+    self.uod.jobID = 12345
+    from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
+    FailoverTransfer.transferAndRegisterFile = Mock(return_value=S_ERROR("IT ACTUALLY WORKS!!!!!!1eleven!!"))
+    resUodExe = self.uod.execute()
+    res = self.uod.generateFailoverFile( )
+    self.uod.log.info("RequestValidation: %s " % res)
 
 #############################################################################
 # UserJobFinalization.py
@@ -558,12 +641,10 @@ class TestUserJobFinalization( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     ft_mock = Mock()
     ft_mock.transferAndRegisterFileFailover.return_value=S_OK()
-    filesToFailover = {'test.txt': { 'lfn': '/ilc/user/s/sailer/test/test.txt',
-                                     'localpath': './test.txt',
-                                     'resolvedSE': ['CERN-SRM', 'KEK-SRM', 'RAL-SRM'],
-                                     'workflowSE': ['CERN-SRM'],
-                                     'path': 'SLCIO',
-                                     'guid': 'A331AE88-AD87-AF39-97E1-44257D8200C8'}}
+    candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-SRM'}}
+    resMetadata = self.ujf.getFileMetadata( candidateFiles )
+    filesToFailover = resMetadata['Value']
+    filesToFailover['test3.stdhep']['resolvedSE'] = ['CERN-SRM', 'KEK-SRM', 'RAL-SRM']
     filesUploaded = []
     self.ujf.failoverSEs= ['CERN-SRM', 'RAL-SRM']
     res = self.ujf.transferRegisterAndFailoverFiles(ft_mock, filesToFailover, filesUploaded)

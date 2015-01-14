@@ -61,8 +61,10 @@ class CombinedSoftwareInstallation(object):
       self.apps.append(app)
 
     self.jobConfig = ''
-    if self.job.has_key( 'SystemConfig' ):
+    if 'SystemConfig' in self.job:
       self.jobConfig = self.job['SystemConfig']
+    elif 'Platform' in self.job:
+      self.jobConfig = self.job['Platform']
     else:
       self.jobConfig = natOS.CMTSupportedConfig()[0]
       
@@ -276,16 +278,16 @@ def LocalArea():
         localArea = ''
   return localArea
 
-def getSoftwareFolder(systemConfig, appname, appversion):
+def getSoftwareFolder(platform, appname, appversion):
   """ 
   Discover location of a given folder, either the local or the shared area
   """
-  res = CheckCVMFS(systemConfig, [appname, appversion])
+  res = CheckCVMFS(platform, [appname, appversion])
   if res["OK"]:
     return res
   
   ops = Operations()
-  app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(systemConfig, appname, appversion), '')
+  app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
   if not app_tar:
     return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
   if app_tar.count("gz"):
@@ -304,23 +306,23 @@ def getSoftwareFolder(systemConfig, appname, appversion):
   mySoftDir = os.path.join(mySoftwareRoot, folder)
   return S_OK(mySoftDir)
 
-def getEnvironmentScript(systemConfig, appname, appversion, fcn_env):
+def getEnvironmentScript(platform, appname, appversion, fcn_env):
   """ Return the path to the environment script, either from CVMFS, or from the fcn_env function
   """
-  res = CheckCVMFS(systemConfig, [appname, appversion])
+  res = CheckCVMFS(platform, [appname, appversion])
   if res["OK"]:
-    cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (systemConfig, appname, appversion),
+    cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (platform, appname, appversion),
                                      "")
     if cvmfsenv:
       return S_OK(os.path.join(res["Value"], cvmfsenv))
   #if CVMFS script is not here, the module produces its own.
-  return fcn_env(systemConfig, appname, appversion)
+  return fcn_env(platform, appname, appversion)
 
-def CheckCVMFS(sysconfig, app):
+def CheckCVMFS(platform, app):
   """ Check the existence of the CVMFS path
   """
   name, version = app
-  cvmfspath = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (sysconfig, name, version),"")
+  cvmfspath = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform, name, version),"")
   if cvmfspath and os.path.exists(cvmfspath):
     return S_OK(cvmfspath)
   

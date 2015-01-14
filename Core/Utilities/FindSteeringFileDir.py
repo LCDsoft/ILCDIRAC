@@ -1,6 +1,6 @@
 '''
 Obtain the related steering file directory given a certain 
-software name, version and system config
+software name, version and platform
 
 Created on Feb 10, 2012
 
@@ -15,26 +15,26 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFol
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from ILCDIRAC.Core.Utilities.TARsoft import check
 
-def getSteeringFileDirName(systemConfig, application, applicationVersion):
+def getSteeringFileDirName(platform, application, applicationVersion):
   """ Locate the path of the steering file directory assigned to the specified application
   """
   ops = Operations()
-  version = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (systemConfig, 
+  version = ops.getValue('/AvailableTarBalls/%s/%s/%s/Dependencies/steeringfiles/version' % (platform,
                                                                                              application,
                                                                                              applicationVersion), '')
   if not version: 
     return S_ERROR("Could not find attached SteeringFile version")
   
-  return getSteeringFileDir(systemConfig, version)
+  return getSteeringFileDir(platform, version)
 
-def getSteeringFileDir(systemConfig, version):
+def getSteeringFileDir(platform, version):
   """Return directly the directory, without passing by the dependency resolution
   """
-  res = CheckCVMFS(systemConfig, ['steeringfiles', version])
+  res = CheckCVMFS(platform, ['steeringfiles', version])
   if res['OK']:
     return res
   #Here means CVMFS is not defined, so we need to rely on the tar ball
-  res = getSoftwareFolder(systemConfig, 'steeringfiles', version)
+  res = getSoftwareFolder(platform, 'steeringfiles', version)
   if not res['OK']:
     return res
   mySoftDir = res['Value']

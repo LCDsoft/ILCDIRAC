@@ -324,6 +324,9 @@ class ModuleBase(object):
       fileDict['LFN'] = metadata['lfn']
       fileDict['Size'] = os.path.getsize(fileName)
       fileDict['Addler'] = fileAdler(fileName)
+      fileDict['ADLER32'] = fileAdler(fileName)
+      fileDict['Checksum'] = fileAdler(fileName)
+      fileDict['ChecksumType'] = "ADLER32"
       fileDict['GUID'] = metadata['GUID']
       fileDict['Status'] = "Waiting"
 
@@ -522,7 +525,7 @@ class ModuleBase(object):
     if 'ILDConfigPackage' in self.workflow_commons:
       config_dir = self.workflow_commons['ILDConfigPackage']
       #seems it's not on CVMFS, try local install then:
-      res = getSoftwareFolder(self.platform, "ILDConfig", config_dir.replace("ILDConfig", ""))
+      res = getSoftwareFolder(self.platform, "ildconfig", config_dir.replace("ILDConfig", ""))
       if not res['OK']:
         self.log.error("Cannot find %s" % config_dir, res['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)
@@ -691,6 +694,7 @@ class ModuleBase(object):
       if 'ProductionOutputData' in self.workflow_commons:
         prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
         self.log.info("There was some kind of error, cleaning up outputData: %s" % prodOutputLFNs)
+        self.setApplicationStatus("Creating Removal Requests")
         self.__cleanUp(prodOutputLFNs)
 
     if not len( request ):
@@ -783,7 +787,7 @@ class ModuleBase(object):
     request = self._getRequestContainer()
 
     #keep all the requests which are not in typeList or whose file is not in lfnList
-    request = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
+    request.__operations__ = [op for op in request for opFile in op if op.Type not in typeList or opFile.LFN not in lfnList]
 
     #just in case put the request object back to common request
     self.workflow_commons['Request'] = request

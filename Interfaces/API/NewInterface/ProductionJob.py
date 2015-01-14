@@ -87,7 +87,7 @@ class ProductionJob(Job):
   def __setDefaults(self):
     """Sets some default parameters.
     """
-    self.setPlatform(self.ops.getValue('%s/SystemConfig' % (self.csSection), 'x86_64-slc5-gcc43-opt'))
+    self.setPlatform(self.ops.getValue('%s/Platform' % (self.csSection), 'x86_64-slc5-gcc43-opt'))
     self.setCPUTime('300000')
     self.setLogLevel('verbose')
     self.setJobGroup('@{PRODUCTION_ID}')
@@ -99,7 +99,7 @@ class ProductionJob(Job):
     self._setParameter('PRODUCTION_ID',     'string', self.defaultProdID.zfill(8), 'ProductionID')
     self._setParameter('JOB_ID',            'string', self.defaultProdJobID.zfill(8), 'ProductionJobID')
     self._setParameter('Priority',             'JDL',                     '1', 'Priority')
-    self._setParameter('emailAddress',      'string', 'stephane.poss@cern.ch', 'CrashEmailAddress')
+    self._setParameter('emailAddress',      'string', 'ilcdirac-support@cern.ch', 'CrashEmailAddress')
 
   def _setParameter(self, name, parameterType, parameterValue, description):
     """Set parameters checking in CS in case some defaults need to be changed.
