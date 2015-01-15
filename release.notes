@@ -24,6 +24,10 @@ CHANGE: use ilcdirac-support@cern.ch for email address
 
 FIX: DataRecoveryAgent: Use the new ReqClient
 
+* Workflow
+
+NEW: Mokka: Print libraries used by Mokka and mysql executable (debug only)
+
 [v22r1p5]
 
 * Workflow
