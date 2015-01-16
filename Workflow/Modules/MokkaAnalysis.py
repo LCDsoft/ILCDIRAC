@@ -295,6 +295,13 @@ cat mokkamac.mac
     script.write('echo =============================\n')
     script.write('echo PATH is\n')
     script.write('echo $PATH | tr ":" "\n"\n')
+    if self.debug:
+      script.write('echo ldd of Mokka is\n')
+      script.write('ldd `which Mokka` \n' )
+      script.write('echo =============================\n')
+      script.write('echo ldd of mysql is\n')
+      script.write('ldd `which mysql` \n' )
+      script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
     script.write("""if [ ! -e ./%s ]; then
@@ -454,7 +461,7 @@ done
     ##Remove libc
     removeLibc(myMokkaDir)
     removeLibc(mySoftwareRoot+'/mysql4grid/lib64/mysql')
-    
+
     script = open(env_script_name, "w")
     script.write('#!/bin/sh \n')
     script.write('######################################################\n')
