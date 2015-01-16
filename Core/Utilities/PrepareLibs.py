@@ -4,19 +4,22 @@ Remove any system library provided in the application tar ball
 @author: sposs
 @since: Jan 26, 2011
 '''
+from DIRAC import gLogger
 import os
 
-files_to_remove = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so", "libstdc++.so"]
+files_to_remove = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so", "libstdc++.so", "libgcc_s.so.1"]
 
-def removeLibc(path):
+def removeLibc(libraryPath):
   """ Remove libraries that can be problematic, like libc.so
-  @param path: path to look for libraries to remove
+  @param libraryPath: libraryPath to look for libraries to remove
   """
-  #return True
+
+  gLogger.debug("RemoveLibC: Trying to remove these libraries:")
+  gLogger.debug("RemoveLibC - "+ "\nRemoveLibC - ".join(files_to_remove) )
 
   curdir = os.getcwd()
   try:
-    os.chdir(path)
+    os.chdir(libraryPath)
   except:
     return True  
   listlibs = os.listdir(os.getcwd())
@@ -24,9 +27,11 @@ def removeLibc(path):
     for lib_to_remove in files_to_remove:
       if lib.count(lib_to_remove):
         try:
-          os.remove(os.getcwd() + os.sep + lib)
+          libraryPath = os.getcwd() + os.sep + lib
+          gLogger.info("RemoveLibC: Trying to remove: %s" % libraryPath)
+          os.remove(libraryPath)
         except:
-          print "Could not remove %s" % lib
+          gLogger.error("RemoveLibC: Could not remove", lib)
           os.chdir(curdir)
           return False
   os.chdir(curdir)
