@@ -19,6 +19,7 @@ CHANGE: use ilcdirac-support@cern.ch for email address
 * Core
 
 CHANGE: use ilcdirac-support@cern.ch for email address
+CHANGE: Allow specifying additional libraries to remove in removeLibc function
 
 * ILCTransformation
 
@@ -27,6 +28,9 @@ FIX: DataRecoveryAgent: Use the new ReqClient
 * Workflow
 
 NEW: Mokka: Print libraries used by Mokka and mysql executable (debug only)
+FIX: ILCDIRAC-423: remove libgcc_s.so.1 from older mysq4grid versions
+
+
 
 [v22r1p5]
 
