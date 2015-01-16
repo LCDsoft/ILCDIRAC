@@ -461,7 +461,7 @@ done
     ##Remove libc
     removeLibc(myMokkaDir)
     removeLibc(mySoftwareRoot+'/mysql4grid/lib64/mysql')
-    
+
     script = open(env_script_name, "w")
     script.write('#!/bin/sh \n')
     script.write('######################################################\n')
