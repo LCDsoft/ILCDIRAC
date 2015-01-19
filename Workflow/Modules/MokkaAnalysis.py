@@ -286,11 +286,11 @@ cat mokkamac.mac
       script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    script.write("""if [ ! -e ./%s ]; then
+    script.write("""if [ ! -e ./%(DBDUMP)s ]; then
     echo "Missing DB dump!" >&2
     exit 1
 fi    
-    """ % self.db_dump_name)
+    """ % {'DBDUMP': self.db_dump_name} )
     ##Now start the MySQL server and configure.
     script.write("declare -x MOKKADBROOT=%s\n" % mysqlBasePath)
     script.write("declare -x WORKDIR=%s\n" % os.getcwd())
