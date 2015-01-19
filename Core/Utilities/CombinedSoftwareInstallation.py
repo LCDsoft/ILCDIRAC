@@ -309,6 +309,7 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   if res["OK"]:
     cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (platform, appname, appversion),
                                      "")
+    DIRAC.gLogger.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
     if cvmfsenv:
       return S_OK(os.path.join(res["Value"], cvmfsenv))
   #if CVMFS script is not here, the module produces its own.
