@@ -278,7 +278,7 @@ def getSoftwareFolder(platform, appname, appversion):
   """ 
   Discover location of a given folder, either the local or the shared area
   """
-  res = CheckCVMFS(platform, [appname, appversion])
+  res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
     return res
   
@@ -305,7 +305,7 @@ def getSoftwareFolder(platform, appname, appversion):
 def getEnvironmentScript(platform, appname, appversion, fcn_env):
   """ Return the path to the environment script, either from CVMFS, or from the fcn_env function
   """
-  res = CheckCVMFS(platform, [appname, appversion])
+  res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
     cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (platform, appname, appversion),
                                      "")
@@ -314,7 +314,7 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   #if CVMFS script is not here, the module produces its own.
   return fcn_env(platform, appname, appversion)
 
-def CheckCVMFS(platform, app):
+def checkCVMFS(platform, app):
   """ Check the existence of the CVMFS path
   """
   name, version = app
