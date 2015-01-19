@@ -189,8 +189,8 @@ class MokkaAnalysis(ModuleBase):
     if os.path.exists("mokka.steer"):
       try:
         os.rename("mokka.steer", "mymokka.steer")
-      except EnvironmentError, e:
-        self.log.error("Failed renaming the steering file: ", str(e))
+      except EnvironmentError as err:
+        self.log.error("Failed renaming the steering file: ", str(err))
       self.SteeringFile = "mymokka.steer"
         
     ###prepare steering file
@@ -219,10 +219,10 @@ class MokkaAnalysis(ModuleBase):
       if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
         try:
           shutil.copy(os.path.join(steeringfiledirname, self.SteeringFile), "./" + self.SteeringFile )
-        except EnvironmentError, x:
+        except EnvironmentError as err:
           #result = sqlwrapper.mysqlCleanUp()
           self.log.error("Failed copying file", self.SteeringFile)
-          return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(x)))  
+          return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(err)))
           #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
     if not os.path.exists(self.SteeringFile):
       #result = sqlwrapper.mysqlCleanUp()

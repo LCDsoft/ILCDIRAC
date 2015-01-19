@@ -241,7 +241,7 @@ def CreateSharedArea():
     os.remove( sharedArea )
     os.makedirs( sharedArea )
     return True
-  except Exception, x:
+  except OSError as x:
     DIRAC.gLogger.error('Problem trying to create shared area', str(x))
     return False
 
@@ -263,14 +263,14 @@ def LocalArea():
     if os.path.exists( localArea ):
       try:
         os.remove( localArea )
-      except OSError, x:
-        DIRAC.gLogger.error( 'Cannot remove:', localArea )
+      except OSError as err:
+        DIRAC.gLogger.error( 'Cannot remove:', localArea + " because " + str(err) )
         localArea = ''
     else:
       try:
         os.mkdir( localArea )
-      except OSError, x:
-        DIRAC.gLogger.error( 'Cannot create:', localArea )
+      except OSError as err:
+        DIRAC.gLogger.error( 'Cannot create:', localArea + " because " + str(err) )
         localArea = ''
   return localArea
 
