@@ -136,8 +136,8 @@ class MokkaAnalysis(ModuleBase):
       
       Executes the following:
         - read the application parameters that where defined in ILCJob, and stored in the job definition
-        - setup the SQL server and run it in the background, via a call to L{SQLWrapper}
-        - prepare the steering fie using L{PrepareSteeringFile}
+        - setup the SQL server and run it in the background
+        - prepare the steering file using L{PrepareSteeringFile}
         - run Mokka and catch its return status
       @return: S_OK(), S_ERROR()
       
@@ -200,7 +200,6 @@ class MokkaAnalysis(ModuleBase):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.log.error("Generator file not found")
-        #result = sqlwrapper.mysqlCleanUp()
         return res
       self.InputFile = res['Value']
     if len(self.macFile) > 0:
@@ -212,7 +211,6 @@ class MokkaAnalysis(ModuleBase):
       self.log.verbose("Steering file %s not found locally" % self.SteeringFile)
       res =  getSteeringFileDirName(self.platform, "mokka", self.applicationVersion)
       if not res['OK']:
-        #result = sqlwrapper.mysqlCleanUp()
         self.log.error("Missing Steering file directory")
         return res
       steeringfiledirname = res['Value']
@@ -220,12 +218,10 @@ class MokkaAnalysis(ModuleBase):
         try:
           shutil.copy(os.path.join(steeringfiledirname, self.SteeringFile), "./" + self.SteeringFile )
         except EnvironmentError as err:
-          #result = sqlwrapper.mysqlCleanUp()
           self.log.error("Failed copying file", self.SteeringFile)
           return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(err)))
           #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
     if not os.path.exists(self.SteeringFile):
-      #result = sqlwrapper.mysqlCleanUp()
       self.log.error("Missing steering file, should not happen!")
       return S_ERROR("Could not find steering file")
     else:
@@ -411,7 +407,6 @@ done
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
     self.log.info( "Status after Mokka execution is %s" % str( status ) )
-    #result = sqlwrapper.mysqlCleanUp()
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
