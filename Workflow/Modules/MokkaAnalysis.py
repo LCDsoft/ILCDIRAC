@@ -19,7 +19,7 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
-
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
 import  os, shutil, types
@@ -56,52 +56,33 @@ class MokkaAnalysis(ModuleBase):
     @return: S_OK()
     """
 
-    if self.step_commons.has_key('numberOfEvents'):
-      self.NumberOfEvents = self.step_commons['numberOfEvents']
-          
-    if self.step_commons.has_key('startFrom'):
-      self.startFrom = self.step_commons['startFrom']
-      
-    if self.WorkflowStartFrom:
-      self.startFrom = self.WorkflowStartFrom
+    self.NumberOfEvents = self.step_commons.get('numberOfEvents', self.NumberOfEvents)
+    self.startFrom = self.WorkflowStartFrom if self.WorkflowStartFrom else self.step_commons.get('startFrom', self.startFrom)
 
-      #Need to keep until old prods are archived.
-    if self.step_commons.has_key("steeringFile"):
-      self.SteeringFile = self.step_commons['steeringFile']
+    #Need to keep until old prods are archived.
+    self.SteeringFile = self.step_commons.get('steeringFile', self.SteeringFile)
 
-    if self.step_commons.has_key('stdhepFile'):
+    if 'stdhepFile' in self.step_commons:
       inputf = self.step_commons["stdhepFile"]
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
       self.InputFile = inputf
-        
-      
-    if self.step_commons.has_key('macFile'):
-      self.macFile = self.step_commons['macFile']
 
-    if self.step_commons.has_key('detectorModel'):
-      self.detectorModel = self.step_commons['detectorModel']
-        
-    if self.step_commons.has_key('ProcessID'):
-      self.processID = self.step_commons['ProcessID']
+    self.macFile = self.step_commons.get('macFile', self.macFile)
+    self.detectorModel = self.step_commons.get('detectorModel', self.detectorModel)
+    self.processID = self.step_commons.get('ProcessID', self.processID)
+    self.RandomSeed = self.determineRandomSeed()
       
-    if not self.RandomSeed:
-      if self.step_commons.has_key("RandomSeed"):
-        self.RandomSeed = self.step_commons["RandomSeed"]
-      elif self.jobID:
-        self.RandomSeed = self.jobID  
-    if self.workflow_commons.has_key("IS_PROD"):  
-      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
-      
-    if self.step_commons.has_key('dbSlice'):
-      self.dbSlice = self.step_commons['dbSlice']
-      
-    if self.workflow_commons.has_key("IS_PROD"):
+    resDBSlice = self.determineDBSlice()
+    if not resDBSlice['OK']:
+      return resDBSlice
+
+    if "IS_PROD" in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
         self.mcRunNumber = self.RandomSeed
         #self.OutputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_sim_"):
@@ -516,3 +497,34 @@ done
   #############################################################################
 
 
+  def determineDBSlice(self):
+    """Figure out where the dbSlice is located and what it is called"""
+    if 'dbSlice' in self.step_commons:
+      self.dbSlice = self.step_commons['dbSlice']
+      return S_OK()
+    else:
+      appVersion = self.step_commons['applicationVersion']
+      csPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'mokka', appVersion)
+      cvmfsDBSlice = Operations().getValue(csPathApplication+"/CVMFSDBSlice")
+      if not cvmfsDBSlice:
+        return S_ERROR("CVMFSDBSlice not defined for mokka version %s " % appVersion)
+      self.log.info("Getting this DBSlice: %s" % cvmfsDBSlice)
+      #copy the db slice and extract it to local folder?
+      #extract the name of the slice from the tarball name
+      self.dbSlice = cvmfsDBSlice.split("/")[-1][:-4] #cutaway the ".tgz"
+      self.log.info("Using this db %s" % self.dbSlice)
+      import tarfile
+      dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
+      dbsliceTar.extractall(path='./')
+      return S_OK()
+
+  def determineRandomSeed(self):
+    """determine what the randomSeed should be, depends on production or not"""
+    if not self.RandomSeed:
+      if "RandomSeed" in self.step_commons:
+        self.RandomSeed = self.step_commons["RandomSeed"]
+      elif self.jobID:
+        self.RandomSeed = self.jobID
+    if "IS_PROD" in self.workflow_commons:
+      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
+    return self.RandomSeed
