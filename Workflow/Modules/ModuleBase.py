@@ -462,40 +462,10 @@ class ModuleBase(object):
     Here we do preliminary things like resolving the application parameters and we definitely do not get a dedicated directory.
     """
 
-    # workdir = os.path.join(self.basedirectory, self.step_commons["STEP_DEFINITION_NAME"])
-    # if not os.path.exists(workdir):
-    #   try:
-    #     os.makedirs( workdir )
-    #   except OSError, e:
-    #     self.log.error("Failed to create the work directory :", str(e))
-
-    # #now go there
-    # os.chdir( workdir )
-    # self.log.verbose("We are now in ", workdir)
-
     result = self.resolveInputVariables()
     if not result['OK']:
       self.log.error("Failed to resolve input variables:", result['Message'])
       return result
-
-    # if self.InputFile:
-    #   ##Try to copy the input file to the work fdfir
-    #   for inf in self.InputFile:
-    #     bpath = os.path.join(self.basedirectory, inf)
-    #     if os.path.exists(bpath):
-    #       try:
-    #         shutil.move(bpath, "./"+inf)
-    #       except EnvironmentError, why:
-    #         self.log.error("Failed to get the file:", str(why))
-
-
-    # if self.SteeringFile:
-    #   bpath = os.path.join(self.basedirectory, os.path.basename(self.SteeringFile))
-    #   if os.path.exists(bpath):
-    #     try:
-    #       shutil.move(bpath, "./"+os.path.basename(self.SteeringFile))
-    #     except EnvironmentError, why:
-    #       self.log.error("Failed to get the file:", str(why))
 
     # because we need to make sure this does not overwrite steering files provided  by the user
     # it must be here.
@@ -509,86 +479,13 @@ class ModuleBase(object):
       if not resILDConf['OK']:
         return resILDConf
 
-
     if self.SteeringFile:
       if os.path.exists(os.path.basename(self.SteeringFile)):
         self.log.verbose("Found local copy of %s" % self.SteeringFile)
 
-
-    # if os.path.isdir(os.path.join(self.basedirectory, 'lib')):
-    #   try:
-    #     shutil.copytree(os.path.join(self.basedirectory, 'lib'), './lib')
-    #   except EnvironmentError, why:
-    #     self.log.error("Failed to get the lib directory:", str(why))
-
-    # if "Required" in self.step_commons:
-    #   reqs = self.step_commons["Required"].rstrip(";").split(";")
-    #   for reqitem in reqs:
-    #     if not reqitem:
-    #       continue
-    #     if os.path.exists(reqitem):
-    #       #file or dir is already here
-    #       continue
-    #     res = fullCopy(self.basedirectory, "./", reqitem)
-    #     if not res['OK']:
-    #       self.log.error("Failed to copy %s: " % reqitem, res['Message'])
-    #       return res
-    #     self.log.verbose("Copied to local directory", reqitem)
-
-
-
-    # try:
-    #   self.applicationSpecificMoveBefore()
-    # except EnvironmentError, e:
-    #   self.log.error("Failed to copy the required files", str(e))
-    #   return S_ERROR("Failed to copy the required files%s" % str(e))
-
-    # before_app_dir = os.listdir(os.getcwd())
-
     appres = self.runIt()
     if not appres["OK"]:
       self.log.error("Somehow the application did not exit properly")
-
-    ##Try to move things back to the base directory
-    # if self.OutputFile:
-    #   for ofile in glob.glob("*"+self.OutputFile+"*"):
-    #     try:
-    #       shutil.move(ofile, os.path.join(self.basedirectory, ofile))
-    #     except EnvironmentError, why:
-    #       self.log.error('Failed to move the file back to the main directory:', str(why))
-    #       appres = S_ERROR("Failed moving files")
-
-    # if os.path.exists(self.applicationLog):
-    #   try:
-    #     shutil.move("./"+self.applicationLog, os.path.join(self.basedirectory, self.applicationLog))
-    #   except EnvironmentError, why:
-    #     self.log.error("Failed to move the log to the basedir", str(why))
-
-    # try:
-    #   self.applicationSpecificMoveAfter()
-    # except EnvironmentError, e:
-    #   self.log.warn("Failed to move things back, next step may fail")
-
-    # #now move all the new stuff that wasn't moved before
-    # for item in os.listdir(os.getcwd()):
-    #   if item not in before_app_dir and item != os.path.basename(self.SteeringFile) and not os.path.isdir(item):
-    #     try:
-    #       shutil.move("./" + item, os.path.join(self.basedirectory, item) )
-    #     except EnvironmentError, why:
-    #       self.log.error("Failed to move the file %s to the basedir" % item, str(why))
-
-    # #move the InputFile back too if it's here
-    # for inf in self.InputFile:
-    #   localname = os.path.join("./", os.path.basename(inf))
-    #   if os.path.exists(localname):
-    #     try:
-    #       shutil.move(localname, os.path.join(self.basedirectory, os.path.basename(inf)))
-    #     except EnvironmentError, why:
-    #       self.log.error("Failed to move the input file back to the basedir", str(why))
-
-    ##Now we go back to the base directory
-    #os.chdir(self.basedirectory)
-    #self.log.verbose("We are now back to ", self.basedirectory)
 
     self.listDir()
 
@@ -604,16 +501,6 @@ class ModuleBase(object):
     """ Dummy call, needs to be overwritten by the actual applications
     """
     return S_OK()
-
-  # def applicationSpecificMoveBefore(self):
-  #   """ If some application need specific things: Marlin needs the GearFile from Mokka
-  #   """
-  #   return S_OK()
-
-  # def applicationSpecificMoveAfter(self):
-  #   """ If some application need specific things: Marlin needs send back its output
-  #   """
-  #   return S_OK()
 
   def finalStatusReport(self, status):
     """ Catch the resulting application status, and return corresponding workflow status
