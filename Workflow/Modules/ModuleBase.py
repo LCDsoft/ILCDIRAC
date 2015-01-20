@@ -677,17 +677,12 @@ class ModuleBase(object):
   def treatILDConfigPackage(self):
     """treat the ILDConfig package"""
     config_dir = self.workflow_commons['ILDConfigPackage']
-    #seems it's not on CVMFS, try local install then:
-
-    #APS: re comment above: of course it is on cvfms, but no in
-    #ilcsoft/versions, of course I don't know what the goal would have been if
-    #it were on cvmfs...'
     ildConfigVersion = config_dir.replace("ILDConfig", "")
     resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))
     if resCVMFS['OK']:
       ildConfigPath = resCVMFS['Value']
     else:
-      self.log.error("Cannot find %s on CVMFS" % config_dir, resCVMFS['Message'])
+      self.log.error("Cannot find ILDConfig on CVMFS" , ("Version: "+config_dir, resCVMFS['Message']) )
       resLoc = getSoftwareFolder(self.platform, "ildconfig", ildConfigVersion)
       if resLoc['OK']:
         ildConfigPath = resLoc['Value']
