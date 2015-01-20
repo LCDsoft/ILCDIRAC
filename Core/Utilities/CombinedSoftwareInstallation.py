@@ -319,10 +319,11 @@ def checkCVMFS(platform, app):
   """ Check the existence of the CVMFS path
   """
   name, version = app
-  cvmfspath = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform, name, version),"")
+  csPath = "/AvailableTarBalls/%s/%s/%s" % (platform, name, version)
+  cvmfspath = Operations().getValue(csPath + "/CVMFSPath" ,"")
   if cvmfspath and os.path.exists(cvmfspath):
     return S_OK(cvmfspath)
-  
+  DIRAC.gLogger.error("Cannot find package on cvmfs:", Operations().getOptionsDict(csPath))
   return S_ERROR('Missing CVMFS!')
 
 def unzip_file_into_dir(myfile, mydir):

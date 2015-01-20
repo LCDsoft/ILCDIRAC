@@ -684,20 +684,23 @@ class ModuleBase(object):
     #it were on cvmfs...'
     ildConfigVersion = config_dir.replace("ILDConfig", "")
     resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))
-    if not resCVMFS['OK']:
+    if resCVMFS['OK']:
+      ildConfigPath = resCVMFS['Value']
+    else:
       self.log.error("Cannot find %s on CVMFS" % config_dir, resCVMFS['Message'])
       resLoc = getSoftwareFolder(self.platform, "ildconfig", ildConfigVersion)
-      if not resLoc['OK']:
+      if resLoc['OK']:
+        ildConfigPath = resLoc['Value']
+      else:
         self.log.error("Cannot find %s" % config_dir, resLoc['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)
-      else:
-        ildConfigPath = resLoc['Value']
-    else:
-      ildConfigPath = resCVMFS['Value']
+
+    self.log.info("Found ILDConfig here:", ildConfigPath)
+
     list_f = os.listdir(ildConfigPath)
     for localFile in list_f:
       if os.path.exists("./"+localFile):
-        self.log.verbose("Found local file, don't overwrite")
+        self.log.verbose("Found local file, don't overwrite:", localFile)
         #Do not overwrite local files with the same name
         continue
       try:
