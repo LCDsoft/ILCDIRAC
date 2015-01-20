@@ -39,6 +39,7 @@ class ModulesTestCase ( DiracModulesTestCase ):
     self.mb.fileReport = self.fr_mock
     self.mb.workflow_commons = self.wf_commons[0]
     self.mb.workflow_commons['LogFilePath'] = "/ilc/user/s/sailer/test/dummy/folder"
+    self.mb.workflow_commons['Platform'] = "x86_64-slc5-gcc43-opt"
     self.mb.log = gLogger.getSubLogger("ModuleBaseTest")
     self.mb.log.showHeaders(True)
     self.mb.ignoreapperrors = False
@@ -130,6 +131,15 @@ class TestModuleBase( ModulesTestCase ):
     """ModuleBase: logWorkingDirectory....................................................."""
     gLogger.setLevel("ERROR")
     self.mb.logWorkingDirectory()
+
+
+  def test_MB_treatILDConfigPackage( self ):
+    """ModuleBase: treatILDConfigPackage..................................................."""
+    gLogger.setLevel("ERROR")
+    self.mb.platform = self.mb.workflow_commons.get('Platform', self.mb.platform)
+    self.mb.workflow_commons['ILDConfigPackage'] = "ILDConfigcvmfsTest"
+    res = self.mb.treatILDConfigPackage()
+    self.assertTrue(res['OK'])
 
 #############################################################################
 # UploadLogFile.py
