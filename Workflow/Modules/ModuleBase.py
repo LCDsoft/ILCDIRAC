@@ -22,7 +22,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC.RequestManagementSystem.Client.Request         import Request
 from DIRAC.RequestManagementSystem.private.RequestValidator   import gRequestValidator
 
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, checkCVMFS
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
 
@@ -523,26 +523,9 @@ class ModuleBase(object):
           self.log.error('Could not copy %s here because :' % localFile, str(why) )
 
     if 'ILDConfigPackage' in self.workflow_commons:
-      config_dir = self.workflow_commons['ILDConfigPackage']
-      #seems it's not on CVMFS, try local install then:
-      res = getSoftwareFolder(self.platform, "ildconfig", config_dir.replace("ILDConfig", ""))
-      if not res['OK']:
-        self.log.error("Cannot find %s" % config_dir, res['Message'])
-        return S_ERROR('Failed to locate %s as config dir' % config_dir)
-      path = res['Value']
-      list_f = os.listdir(path)
-      for localFile in list_f:
-        if os.path.exists("./"+localFile):
-          self.log.verbose("Found local file, don't overwrite")
-          #Do not overwrite local files with the same name
-          continue
-        try:
-          if os.path.isdir(os.path.join(path, localFile)):
-            shutil.copytree(os.path.join(path, localFile), "./"+localFile)
-          else:
-            shutil.copy2(os.path.join(path, localFile), "./"+localFile)
-        except EnvironmentError as why:
-          self.log.error('Could not copy %s here because %s!' % (localFile, str(why)))
+      resILDConf = self.treatILDConfigPackage()
+      if not resILDConf['OK']:
+        return resILDConf
 
 
     if self.SteeringFile:
@@ -795,4 +778,39 @@ class ModuleBase(object):
     # Set removal requests just in case
     self.addRemovalRequests(lfnList)
 
+    return S_OK()
+
+  def treatILDConfigPackage(self):
+    """treat the ILDConfig package"""
+    config_dir = self.workflow_commons['ILDConfigPackage']
+    #seems it's not on CVMFS, try local install then:
+
+    #APS: re comment above: of course it is on cvfms, but no in
+    #ilcsoft/versions, of course I don't know what the goal would have been if
+    #it were on cvmfs...'
+    ildConfigVersion = config_dir.replace("ILDConfig", "")
+    resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))
+    if not resCVMFS['OK']:
+      self.log.error("Cannot find %s on CVMFS" % config_dir, resCVMFS['Message'])
+      resLoc = getSoftwareFolder(self.platform, "ildconfig", ildConfigVersion)
+      if not resLoc['OK']:
+        self.log.error("Cannot find %s" % config_dir, resLoc['Message'])
+        return S_ERROR('Failed to locate %s as config dir' % config_dir)
+      else:
+        ildConfigPath = resLoc['Value']
+    else:
+      ildConfigPath = resCVMFS['Value']
+    list_f = os.listdir(ildConfigPath)
+    for localFile in list_f:
+      if os.path.exists("./"+localFile):
+        self.log.verbose("Found local file, don't overwrite")
+        #Do not overwrite local files with the same name
+        continue
+      try:
+        if os.path.isdir(os.path.join(ildConfigPath, localFile)):
+          shutil.copytree(os.path.join(ildConfigPath, localFile), "./"+localFile)
+        else:
+          shutil.copy2(os.path.join(ildConfigPath, localFile), "./"+localFile)
+      except EnvironmentError as why:
+        self.log.error('Could not copy %s here because %s!' % (localFile, str(why)))
     return S_OK()
