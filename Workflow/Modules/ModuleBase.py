@@ -367,10 +367,10 @@ class ModuleBase(object):
     """ Common utility for all sub classes, resolve the workflow parameters
     for the current step. Module parameters are resolved directly.
     """
-    self.log.verbose("Calling module: %s" % self.__class__ )
-    self.log.verbose("Workflow commons:", self.workflow_commons)
-    self.log.verbose("Request: %s" % self.workflow_commons.get('Request'))
-    self.log.verbose("Step commons:", self.step_commons)
+    self.log.info("Calling module:", self.__class__ )
+    self.log.info("Workflow commons:", self.workflow_commons)
+    self.log.info("Request:", self.workflow_commons.get('Request'))
+    self.log.info("Step commons:", self.step_commons)
     
     self.jobReport = self._getJobReporter()
 
