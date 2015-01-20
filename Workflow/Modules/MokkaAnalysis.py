@@ -315,28 +315,28 @@ fi
     script.write("declare -x MYSQLDATA=`pwd`/data\n")
     script.write("rm -rf $MYSQLDATA\n")
     script.write("mkdir -p $MYSQLDATA\n")
-    script.write("""echo "Installing MySQL"
-mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=./mysql.err --log=./mysql.log
+    script.write("""echo "*** Installing MySQL"
+mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log
 install_st=$?
 if [ $install_st -ne 0 ]
 then
       exit $install_st
 fi
-echo "Running mysqld-safe"
+echo "*** Running mysqld-safe"
 cd $MYSQL
-bin/mysqld_safe --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=./mysql.err --log=./mysql.log &
+bin/mysqld_safe --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log &
 while [ -z "$socket_grep" ] ; do
     socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
     echo -n .
     sleep 1
 done
 cd -
-echo "Configuring MySQL"
+echo "*** Configuring MySQL"
 mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot password 'rootpass'
 declare -x admin_st=$?
 if [ $admin_st -ne 0 ]
 then
-  echo "mysladmin failed, cannot proceed" >&2
+  echo "*** mysqladmin failed, cannot proceed" >&2
   mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown
   exit $admin_st
 fi
@@ -344,9 +344,9 @@ fi
 mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' 
 mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' 
 mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' 
-echo "Installing Mokka DB"
-mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%s
-sleep 5\n""" % (self.db_dump_name))  
+echo "*** Installing Mokka DB"
+mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%(DBDUMP)s
+sleep 5\n""" % {'DBDUMP': self.db_dump_name})
     #Now take care of the particle tables.
     script.write("""
 if [ -e "./particle.tbl" ]
