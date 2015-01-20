@@ -500,27 +500,9 @@ class ModuleBase(object):
     # because we need to make sure this does not overwrite steering files provided  by the user
     # it must be here.
     if "SteeringFileVers" in self.step_commons:
-      steeringfilevers = self.step_commons["SteeringFileVers"]
-      self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
-      res = getSteeringFileDir(self.platform, steeringfilevers)
-      if not res['OK']:
-        self.log.error("Cannot find the steering file directory: %s" % steeringfilevers,
-                       res['Message'])
-        return S_ERROR("Failed to locate steering files %s" % steeringfilevers)
-      path = res['Value']
-      list_f = os.listdir(path)
-      for localFile in list_f:
-        if os.path.exists("./"+localFile):
-          self.log.verbose("Found local file, don't overwrite")
-          #Do not overwrite local files with the same name
-          continue
-        try:
-          if os.path.isdir(os.path.join(path, localFile)):
-            shutil.copytree(os.path.join(path, localFile), "./"+localFile)
-          else:
-            shutil.copy2(os.path.join(path, localFile), "./"+localFile)
-        except EnvironmentError as why:
-          self.log.error('Could not copy %s here because :' % localFile, str(why) )
+      resSteering = self.treatSteeringFiles()
+      if not resSteering['OK']:
+        return resSteering
 
     if 'ILDConfigPackage' in self.workflow_commons:
       resILDConf = self.treatILDConfigPackage()
@@ -778,6 +760,31 @@ class ModuleBase(object):
     # Set removal requests just in case
     self.addRemovalRequests(lfnList)
 
+    return S_OK()
+
+  def treatSteeringFiles(self):
+    """treat steeringfiles"""
+    steeringfilevers = self.step_commons["SteeringFileVers"]
+    self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
+    res = getSteeringFileDir(self.platform, steeringfilevers)
+    if not res['OK']:
+      self.log.error("Cannot find the steering file directory: %s" % steeringfilevers,
+                     res['Message'])
+      return S_ERROR("Failed to locate steering files %s" % steeringfilevers)
+    path = res['Value']
+    list_f = os.listdir(path)
+    for localFile in list_f:
+      if os.path.exists("./"+localFile):
+        self.log.verbose("Found local file, don't overwrite")
+        #Do not overwrite local files with the same name
+        continue
+      try:
+        if os.path.isdir(os.path.join(path, localFile)):
+          shutil.copytree(os.path.join(path, localFile), "./"+localFile)
+        else:
+          shutil.copy2(os.path.join(path, localFile), "./"+localFile)
+      except EnvironmentError as why:
+        self.log.error('Could not copy %s here because :' % localFile, str(why) )
     return S_OK()
 
   def treatILDConfigPackage(self):
