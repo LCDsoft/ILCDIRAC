@@ -32,15 +32,9 @@ class CombinedSoftwareInstallation(object):
     
     self.ops = Operations()
     
-    self.job = {}
-    if argumentsDict.has_key('Job'):
-      self.job = argumentsDict['Job']
-    self.ce = {}
-    if argumentsDict.has_key('CE'):
-      self.ce = argumentsDict['CE']
-    self.source = {}
-    if argumentsDict.has_key('Source'):
-      self.source = argumentsDict['Source']
+    self.job = argumentsDict.get('Job', {})
+    self.ce = argumentsDict.get('CE', {})
+    self.source = argumentsDict.get('Source', {})
 
     apps = []
     if self.job.has_key('SoftwarePackages'):
@@ -69,7 +63,7 @@ class CombinedSoftwareInstallation(object):
       self.jobConfig = natOS.CMTSupportedConfig()[0]
       
     self.ceConfigs = []
-    if self.ce.has_key('CompatiblePlatforms'):
+    if 'CompatiblePlatforms' in self.ce:
       self.ceConfigs = self.ce['CompatiblePlatforms']
       if type(self.ceConfigs) == type(''):
         self.ceConfigs = [self.ceConfigs]
@@ -282,8 +276,7 @@ def getSoftwareFolder(platform, appname, appversion):
   if res["OK"]:
     return res
   
-  ops = Operations()
-  app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
+  app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
   if not app_tar:
     return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
   if app_tar.count("gz"):
@@ -307,8 +300,8 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   """
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
-    cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (platform, appname, appversion),
-                                     "")
+    csPath = "/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (platform, appname, appversion)
+    cvmfsenv = Operations().getValue(csPath, "")
     DIRAC.gLogger.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
     if cvmfsenv:
       return S_OK(os.path.join(res["Value"], cvmfsenv))
