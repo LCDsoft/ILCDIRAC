@@ -12,9 +12,21 @@ FIX: Remove SystemConfig/sysconfig, replace with platform
 
 [v22r1p6]
 
+
+* General
+
+NEW: Dirac version v6r11p31
+
+
+* FileCatalog
+
+NEW: FC Search: new flag -D to only display folders
+
 * Interfaces
 
 CHANGE: use ilcdirac-support@cern.ch for email address
+FIX: ProductionJob ILCDIRAC-427: Register energy metadata
+FIX: ProductionJob ILCDIRAC-427: Accept energy metadata as integer
 
 * Core
 
