@@ -10,6 +10,8 @@ import os, zipfile
 import DIRAC
 from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, resolveDeps, installDependencies
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
+from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
+
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from DIRAC.Core.Utilities.Subprocess   import systemCall
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
@@ -43,6 +45,15 @@ class CombinedSoftwareInstallation(object):
       elif type( self.job['SoftwarePackages'] ) == type([]):
         apps = self.job['SoftwarePackages']
 
+
+    self.jobConfig = ''
+    if 'SystemConfig' in self.job:
+      self.jobConfig = self.job['SystemConfig']
+    elif 'Platform' in self.job:
+      self.jobConfig = self.job['Platform']
+    else:
+      self.jobConfig = natOS.CMTSupportedConfig()[0]
+
     self.apps = []
     for app in apps:
       DIRAC.gLogger.verbose( 'Requested Package %s' % app )
@@ -52,15 +63,13 @@ class CombinedSoftwareInstallation(object):
         app = []
         app.append(tempapp[0])
         app.append(".".join(tempapp[1:]))
+
+      deps = resolveDeps(self.jobConfig, app[0], app[1])
+      for dep in deps:
+        depapp = (dep['app'], dep['version'])
+        self.apps.append(depapp)
       self.apps.append(app)
 
-    self.jobConfig = ''
-    if 'SystemConfig' in self.job:
-      self.jobConfig = self.job['SystemConfig']
-    elif 'Platform' in self.job:
-      self.jobConfig = self.job['Platform']
-    else:
-      self.jobConfig = natOS.CMTSupportedConfig()[0]
       
     self.ceConfigs = []
     if 'CompatiblePlatforms' in self.ce:
