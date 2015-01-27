@@ -753,6 +753,8 @@ class ProductionJob(Job):
     
     path = self.basepath  
     ###Need to resolve file names and paths
+    if self.energy:
+      self.finalMetaDict[self.basepath + energypath] = {"Energy":int(self.energy)}
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
       path = self.basepath + energypath + evttypepath + application.detectortype + "/REC"
       self.finalMetaDict[self.basepath + energypath + evttypepath] = {"EvtType":self.evttype}
