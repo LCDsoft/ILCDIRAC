@@ -251,11 +251,13 @@ class ProductionJob(Job):
     self.basename = self.evttype
     gLogger.notice("MetaData: %s" % compatmeta)
     gLogger.notice("MetaData: %s" % metadata)
-    if compatmeta.has_key("Energy"):
+    if "Energy" in compatmeta:
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
         self.energycat = compatmeta["Energy"][0]
+      if type(compatmeta["Energy"]) in (types.LongType, types.IntType):
+        self.energycat = str(compatmeta["Energy"])
         
     if self.energycat.count("tev"):
       self.energy = Decimal("1000.") * Decimal(self.energycat.split("tev")[0])
