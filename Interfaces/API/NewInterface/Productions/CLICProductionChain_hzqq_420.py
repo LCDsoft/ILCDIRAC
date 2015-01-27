@@ -50,9 +50,10 @@ analysis = 'several'
 process = 'hzqq'
 #additional_name = '_neu1_356'
 globname = ""
-additional_name = '_test3'
-energy = 420.
+additional_name = '_test_2'
+energy = 250.
 meta_energy = str(int(energy))
+dryRun = True
 
 #For meta def
 meta = {}
@@ -156,6 +157,8 @@ for proddict in prodlist:
   elif energy == 420.:
       spectrum = 13
   elif energy == 350.:
+      spectrum = 20
+  elif energy == 250.:
       spectrum = 20
   else:
       print "No spectrum defined, cannot proceed"
@@ -417,6 +420,7 @@ for proddict in prodlist:
     ##########################################
     ##Define the generation production.
     pwh = ProductionJob()
+    pwh.dryrun = dryRun
     pwh.setLogLevel("verbose")
     pwh.setOutputSE("CERN-SRM")
     pwh.setProdType("MCGeneration")
@@ -468,6 +472,7 @@ for proddict in prodlist:
     
   if activesplitstdhep and meta:
     pstdhepsplit =  ProductionJob()
+    pstdhepsplit.dryrun = dryRun
     pstdhepsplit.setLogLevel("verbose")
     pstdhepsplit.setProdType('Split')
     res = pstdhepsplit.setInputDataQuery(meta)
@@ -511,6 +516,7 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     pmo = ProductionJob()
+    pmo.dryrun = dryRun
     pmo.setLogLevel("verbose")
     pmo.setProdType('MCSimulation')
     res = pmo.setInputDataQuery(meta)
@@ -554,6 +560,7 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     psl = ProductionJob()
+    psl.dryrun = dryRun
     psl.setLogLevel("verbose")
     psl.setProdType('MCSimulation')
     res = psl.setInputDataQuery(meta)
@@ -594,6 +601,7 @@ for proddict in prodlist:
     #######################
     ## Split the input files.  
     psplit =  ProductionJob()
+    psplit.dryrun = dryRun
     psplit.setCPUTime(30000)
     psplit.setLogLevel("verbose")
     psplit.setProdType('Split')
@@ -636,6 +644,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod    
     pma = ProductionJob()
+    pma.dryrun = dryRun
     pma.setLogLevel("verbose")
     pma.setProdType('MCReconstruction')
     res = pma.setInputDataQuery(meta)
@@ -677,6 +686,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod      
     psidrec = ProductionJob()
+    psidrec.dryrun = dryRun
     psidrec.setLogLevel("verbose")
     psidrec.setProdType('MCReconstruction')
     psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
@@ -723,6 +733,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod    
     pmao = ProductionJob()
+    pmao.dryrun = dryRun
     pmao.setLogLevel("verbose")
     pmao.setProdType('MCReconstruction_Overlay')
     res = pmao.setInputDataQuery(meta)
@@ -769,6 +780,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod      
     psidreco = ProductionJob()
+    psidreco.dryrun = dryRun
     psidreco.setLogLevel("verbose")
     psidreco.setProdType('MCReconstruction_Overlay')
     psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])

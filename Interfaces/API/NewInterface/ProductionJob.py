@@ -251,11 +251,13 @@ class ProductionJob(Job):
     self.basename = self.evttype
     gLogger.notice("MetaData: %s" % compatmeta)
     gLogger.notice("MetaData: %s" % metadata)
-    if compatmeta.has_key("Energy"):
+    if "Energy" in compatmeta:
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
         self.energycat = compatmeta["Energy"][0]
+      if type(compatmeta["Energy"]) in (types.LongType, types.IntType):
+        self.energycat = str(compatmeta["Energy"])
         
     if self.energycat.count("tev"):
       self.energy = Decimal("1000.") * Decimal(self.energycat.split("tev")[0])
@@ -743,18 +745,7 @@ class ProductionJob(Job):
     if not res['OK']:
       return res
     
-    energypath = ''
-    fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1] > 0:
-      energypath = "%stev/" % (self.energy/Decimal("1000."))
-      if energypath == '3.0tev/':
-        energypath = '3tev/'
-    else:
-      energypath =  "%sgev/" % (self.energy)
-      if energypath == '500.0gev/':
-        energypath = '500gev/'
-      elif energypath == '350.0gev/':
-        energypath = '350gev/'  
+    energypath = self.getEnergyPath()
 
     if not self.basename:
       self.basename = self.evttype
@@ -764,6 +755,8 @@ class ProductionJob(Job):
     
     path = self.basepath  
     ###Need to resolve file names and paths
+    if self.energy:
+      self.finalMetaDict[self.basepath + energypath] = {"Energy":int(self.energy)}
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
       path = self.basepath + energypath + evttypepath + application.detectortype + "/REC"
       self.finalMetaDict[self.basepath + energypath + evttypepath] = {"EvtType":self.evttype}
@@ -825,4 +818,21 @@ class ProductionJob(Job):
   def _jobSpecificModules(self, application, step):
     return application._prodjobmodules(step)
 
+
+  def getEnergyPath(self):
+    """returns the energy path 250gev or 3tev or 1.4tev etc."""
+    energy = Decimal(str(self.energy))
+    tD = Decimal('1000.0')
+    unit = 'gev' if energy < tD else 'tev'
+    energy = energy if energy < tD else energy/tD
+
+    if float(energy).is_integer():
+      energyPath = str(int(energy))
+    else:
+      energyPath = "%1.1f" % energy
+
+    energyPath = energyPath+unit+'/'
+
+    self.log.info ("Energy path is: ", energyPath)
+    return energyPath
   
