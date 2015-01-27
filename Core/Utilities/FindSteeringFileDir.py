@@ -32,7 +32,7 @@ def getSteeringFileDir(platform, version):
   """
   res = checkCVMFS(platform, ['steeringfiles', version])
   if res['OK']:
-    return res
+    return S_OK(res['Value'][0])
   #Here means CVMFS is not defined, so we need to rely on the tar ball
   res = getSoftwareFolder(platform, 'steeringfiles', version)
   if not res['OK']:

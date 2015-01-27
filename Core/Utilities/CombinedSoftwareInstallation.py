@@ -283,7 +283,7 @@ def getSoftwareFolder(platform, appname, appversion):
   """
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
-    return res
+    return S_OK(res['Value'][0])
   
   app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
   if not app_tar:
@@ -309,8 +309,7 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   """
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
-    csPath = "/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (platform, appname, appversion)
-    cvmfsenv = Operations().getValue(csPath, "")
+    cvmfsenv = res['Value'][1]
     DIRAC.gLogger.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
     if cvmfsenv:
       return S_OK(os.path.join(res["Value"], cvmfsenv))
@@ -318,13 +317,14 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   return fcn_env(platform, appname, appversion)
 
 def checkCVMFS(platform, app):
-  """ Check the existence of the CVMFS path
+  """ Check the existence of the CVMFS path, returns S_OK tupe of path and envscript
   """
   name, version = app
   csPath = "/AvailableTarBalls/%s/%s/%s" % (platform, name, version)
   cvmfspath = Operations().getValue(csPath + "/CVMFSPath" ,"")
+  envScript = Operations().getValue(csPath + "/CVMFSEnvScript" ,"")
   if cvmfspath and os.path.exists(cvmfspath):
-    return S_OK(cvmfspath)
+    return S_OK((cvmfspath, envScript))
   DIRAC.gLogger.error("Cannot find package on cvmfs:", Operations().getOptionsDict(csPath))
   return S_ERROR('Missing CVMFS!')
 

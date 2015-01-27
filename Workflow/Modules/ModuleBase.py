@@ -680,7 +680,7 @@ class ModuleBase(object):
     ildConfigVersion = config_dir.replace("ILDConfig", "")
     resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))
     if resCVMFS['OK']:
-      ildConfigPath = resCVMFS['Value']
+      ildConfigPath = resCVMFS['Value'][0]
     else:
       self.log.error("Cannot find ILDConfig on CVMFS" , ("Version: "+config_dir, resCVMFS['Message']) )
       resLoc = getSoftwareFolder(self.platform, "ildconfig", ildConfigVersion)
