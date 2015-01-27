@@ -743,18 +743,7 @@ class ProductionJob(Job):
     if not res['OK']:
       return res
     
-    energypath = ''
-    fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1] > 0:
-      energypath = "%stev/" % (self.energy/Decimal("1000."))
-      if energypath == '3.0tev/':
-        energypath = '3tev/'
-    else:
-      energypath =  "%sgev/" % (self.energy)
-      if energypath == '500.0gev/':
-        energypath = '500gev/'
-      elif energypath == '350.0gev/':
-        energypath = '350gev/'  
+    energypath = self.getEnergyPath()
 
     if not self.basename:
       self.basename = self.evttype
@@ -825,4 +814,21 @@ class ProductionJob(Job):
   def _jobSpecificModules(self, application, step):
     return application._prodjobmodules(step)
 
+
+  def getEnergyPath(self):
+    """returns the energy path 250gev or 3tev or 1.4tev etc."""
+    energy = Decimal(str(self.energy))
+    tD = Decimal('1000.0')
+    unit = 'gev' if energy < tD else 'tev'
+    energy = energy if energy < tD else energy/tD
+
+    if float(energy).is_integer():
+      energyPath = str(int(energy))
+    else:
+      energyPath = "%1.1f" % energy
+
+    energyPath = energyPath+unit+'/'
+
+    self.log.info ("Energy path is: ", energyPath)
+    return energyPath
   
