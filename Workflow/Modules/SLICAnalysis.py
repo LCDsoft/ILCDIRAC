@@ -138,9 +138,9 @@ class SLICAnalysis(ModuleBase):
 
     try:
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
-    except (RuntimeError, OSError): #RuntimeError is for zipfile
+    except (RuntimeError, OSError) as err: #RuntimeError is for zipfile
       os.unlink(self.detectorModel + ".zip")
-      self.log.error('Failed to unzip detector model')
+      self.log.error('Failed to unzip detector model: ', str(err))
       return S_ERROR('Failed to unzip detector model')
     #unzip detector model
     #self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
@@ -159,6 +159,7 @@ class SLICAnalysis(ModuleBase):
         res = getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
         if not res['OK']:
           self.log.error("Could not find where the steering files are")
+          return res
         steeringfiledirname = res['Value']
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
