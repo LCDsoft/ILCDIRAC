@@ -12,24 +12,12 @@ import os, urllib, zipfile, types
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript, unzip_file_into_dir
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs, GetNewPATH
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-
-def unzip_file_into_dir(myfile, mydir):
-  """Used to unzip the downloaded detector model
-  """
-  zfobj = zipfile.ZipFile(myfile)
-  for name in zfobj.namelist():
-    if name.endswith('/'):
-      os.mkdir(os.path.join(mydir, name))
-    else:
-      outfile = open(os.path.join(mydir, name), 'wb')
-      outfile.write(zfobj.read(name))
-      outfile.close()
         
 class SLICPandoraAnalysis (ModuleBase):
   """ Run SLIC Pandora  

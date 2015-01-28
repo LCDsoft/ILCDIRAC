@@ -13,23 +13,12 @@ import os, types, urllib, zipfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, unzip_file_into_dir
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile, GetNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-
-def unzip_file_into_dir(myfile, mydir):
-  """Used to unzip the downloaded detector model
-  """
-  zfobj = zipfile.ZipFile(myfile)
-  for name in zfobj.namelist():
-    if name.endswith('/'):
-      os.mkdir(os.path.join(mydir, name))
-    else:
-      with open(os.path.join(mydir, name), 'wb') as outfile:
-        outfile.write(zfobj.read(name))
       
 class SLICAnalysis(ModuleBase):
   """
