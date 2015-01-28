@@ -135,6 +135,7 @@ class SLICAnalysis(ModuleBase):
     if not os.path.exists(self.detectorModel + ".zip"):
       self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
       return S_ERROR('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
+
     try:
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
     except (RuntimeError, OSError): #RuntimeError is for zipfile
