@@ -511,11 +511,15 @@ done
       self.log.info("Getting this DBSlice: %s" % cvmfsDBSlice)
       #copy the db slice and extract it to local folder?
       #extract the name of the slice from the tarball name
-      self.dbSlice = cvmfsDBSlice.split("/")[-1][:-4] #cutaway the ".tgz"
-      self.log.info("Using this db %s" % self.dbSlice)
-      import tarfile
-      dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
-      dbsliceTar.extractall(path='./')
+      dbSliceFileName = cvmfsDBSlice.split("/")[-1]
+      if dbSliceFileName[-4:] == ".tgz":
+        self.dbSlice = dbSliceFileName[:-4] #cutaway the ".tgz"
+        self.log.info("Using this db %s" % self.dbSlice)
+        import tarfile
+        dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
+        dbsliceTar.extractall(path='./')
+      else:
+        self.dbSlice = dbSliceFileName
       return S_OK()
 
   def determineRandomSeed(self):
