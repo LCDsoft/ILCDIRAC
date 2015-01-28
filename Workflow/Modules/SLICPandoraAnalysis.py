@@ -103,7 +103,8 @@ class SLICPandoraAnalysis (ModuleBase):
       if os.path.exists(detmodel + ".zip"):
         try:
           unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
-        except (RuntimeError, OSError):
+        except (RuntimeError, OSError) as err:
+          self.log.error("Exception when unpacking detectormodel zip file:", str(err))
           os.unlink(detmodel + ".zip") 
       if not os.path.exists(detmodel + ".zip"):  
         #retrieve detector model from web
@@ -121,7 +122,9 @@ class SLICPandoraAnalysis (ModuleBase):
           try:
             unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
             break
-          except (RuntimeError, OSError):
+          except (RuntimeError, OSError) as err:
+            self.log.error("Exception for zip file obtained from ", detector_url)
+            self.log.error("Exception:", str(err))
             os.unlink(detmodel + ".zip")
             continue
       #if os.path.exists(detmodel): #and os.path.isdir(detmodel):
