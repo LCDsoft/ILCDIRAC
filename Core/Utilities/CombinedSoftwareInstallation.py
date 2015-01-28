@@ -6,7 +6,7 @@ Installs properly ILD soft and SiD soft, and all dependencies
 @author: Stephane Poss and Przemyslaw Majewski
 """
 __RCSID__ = "$Id$"
-import os
+import os, zipfile
 import DIRAC
 from ILCDIRAC.Core.Utilities.TARsoft   import tarInstall
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
@@ -327,3 +327,16 @@ def CheckCVMFS(platform, app):
     return S_OK(cvmfspath)
   
   return S_ERROR('Missing CVMFS!')
+
+def unzip_file_into_dir(myfile, mydir):
+  """Used to unzip the downloaded detector model
+  """
+  zfobj = zipfile.ZipFile(myfile)
+  for name in zfobj.namelist():
+    newPath = os.path.join(mydir, name)
+    if name.endswith('/'):
+      if not os.path.exists(newPath):
+        os.mkdir(newPath)
+    else:
+      with open(newPath, 'wb') as outfile:
+        outfile.write(zfobj.read(name))
