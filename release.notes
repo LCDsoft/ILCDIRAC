@@ -16,7 +16,7 @@ FIX: Remove SystemConfig/sysconfig, replace with platform
 
 FIX: ILCDIRAC-302: SlicPandora would remove detector.zip: fix exception in unzip function that caused this issue
 FIX: MarlinAnalysis: Fix Issue when LCFIVertex and LCFIPlus are both in the MARLIN_DLL
-
+FIX: ILCDIRAC-442: MokkaAnalysis: Fix when mysql is available via CVMFS
 
 [v22r1p6]
 
