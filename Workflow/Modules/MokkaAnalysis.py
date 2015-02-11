@@ -297,14 +297,19 @@ fi
     """ % self.db_dump_name)
     ##Now start the MySQL server and configure.
     script.write("declare -x MOKKADBROOT=%s\n" % mysqlBasePath)
+    script.write("declare -x WORKDIR=%s\n" % os.getcwd())
+    #mysql socket must not be longer than 107 characters!
+    script.write("declare -x SOCKETBASE=/tmp/mokka-%s\n" % generateRandomString(8) )
+    script.write("mkdir -p $SOCKETBASE\n")
+    script.write("declare -x SOCKETPATH=$SOCKETBASE/mysql.sock\n" )
     script.write("mkdir -p $MOKKADBROOT\n")
     script.write("declare -x MYSQLDATA=$MOKKADBROOT/data\n")
     script.write("rm -rf $MYSQLDATA\n")
     script.write("mkdir -p $MYSQLDATA\n")
     script.write("date\n")
     script.write("""echo "*** Installing MySQL"
-echo "mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log"
-mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log
+echo "mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$WORKDIR/mysql.err --log=$WORKDIR/mysql.log"
+mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$WORKDIR/mysql.err --log=$WORKDIR/mysql.log
 install_st=$?
 if [ $install_st -ne 0 ]
 then
@@ -313,30 +318,36 @@ fi
 date
 echo "*** Running mysqld-safe"
 cd $MYSQL
-bin/mysqld_safe --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log &
+bin/mysqld_safe --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$WORKDIR/mysql.err --log=$WORKDIR/mysql.log &
+COUNT=0
 while [ -z "$socket_grep" ] ; do
-    socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
+    socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
+    if [ $COUNT -eq 30 ]; then
+        echo "Failed to find socket"
+        break
+    fi
+    COUNT=$(( $COUNT + 1 ))
 done
 cd -
 echo "*** Configuring MySQL"
-mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot password 'rootpass'
+mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot password 'rootpass'
 declare -x admin_st=$?
 if [ $admin_st -ne 0 ]
 then
   echo "*** mysqladmin failed, cannot proceed" >&2
-  mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown
+  mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass shutdown
   exit $admin_st
 fi
 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' 
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;'
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";'
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;'
 echo "*** Installing Mokka DB"
 date
-echo "mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%(DBDUMP)s"
-time mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%(DBDUMP)s
+echo "mysql --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass < ./%(DBDUMP)s"
+time mysql --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass < ./%(DBDUMP)s
 sleep 5
 date\n""" % {'DBDUMP': self.db_dump_name})
     #Now take care of the particle tables.
@@ -359,22 +370,20 @@ echo "/Mokka/init/PDGFile $PARTICLETBL" >> %s
 \n"""% mokkasteer)
 
     ##Now run Mokka
-    comm = 'Mokka %s -h localhost:$MOKKADBROOT/mysql.sock %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
+    comm = 'Mokka %s -h localhost:$SOCKETPATH %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
     self.log.info( "Command : %s" % (comm) )
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
 
     #Now shutdown the MySQL server
-    script.write("mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown\n")
+    script.write("mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass shutdown\n")
     script.write("""
 while [ -n "$socket_grep" ] ; do
-    socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
+    socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
 done 
 """)
-    script.write("cp $MOKKADBROOT/data/mysql.log .\n")
-    script.write("cp $MOKKADBROOT/data/mysql.err .\n")
     script.write("rm -f %s\n" % self.db_dump_name)#remove db file
     script.write('rm -rf $MYSQLDATA\n')#cleanup
     script.write('rm -rf $MOKKADBROOT\n')#cleanup
