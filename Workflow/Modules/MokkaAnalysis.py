@@ -173,6 +173,7 @@ class MokkaAnalysis(ModuleBase):
 
     
     res = getEnvironmentScript(self.platform, "mokka", self.applicationVersion, self.getEnvScript)
+    self.log.notice("Got the environment script: %s" % res )
     if not res['OK']:
       self.log.error("Error getting the env script: ", res['Message'])
       return res
@@ -180,23 +181,8 @@ class MokkaAnalysis(ModuleBase):
     
 
     ####Setup MySQL instance      
-    MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + generateRandomString(8)
-      
-    #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
-#     sqlwrapper = SQLWrapper(mySoftwareRoot, MokkaDBrandomName)#mySoftwareRoot)
-#     res = sqlwrapper.setDBpath(myMokkaDir, self.dbSlice)
-#     if not res['OK']:
-#       self.log.error("Failed to find the DB slice")
-#       return res
-#     result = sqlwrapper.makedirs()
-#     if not result['OK']:
-#       self.setApplicationStatus('MySQL setup failed to create directories.')
-#       return result
-#     result = sqlwrapper.mysqlSetup()
-#     if not result['OK']:
-#       self.setApplicationStatus('MySQL setup failed.')
-#       return result
-#     
+    mysqlBasePath = '%s/mysqltmp/MokkaDBRoot-%s' %(os.getcwd(), generateRandomString(8))
+    self.log.notice("Placing mysql files in %s" % mysqlBasePath)
     
     ###steering file that will be used to run
     mokkasteer = "mokka.steer"
@@ -310,18 +296,21 @@ cat mokkamac.mac
 fi    
     """ % self.db_dump_name)
     ##Now start the MySQL server and configure.
-    script.write("declare -x MOKKADBROOT=%s\n" % MokkaDBrandomName)
+    script.write("declare -x MOKKADBROOT=%s\n" % mysqlBasePath)
     script.write("mkdir -p $MOKKADBROOT\n")
-    script.write("declare -x MYSQLDATA=`pwd`/data\n")
+    script.write("declare -x MYSQLDATA=$MOKKADBROOT/data\n")
     script.write("rm -rf $MYSQLDATA\n")
     script.write("mkdir -p $MYSQLDATA\n")
+    script.write("date\n")
     script.write("""echo "*** Installing MySQL"
+echo "mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log"
 mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log
 install_st=$?
 if [ $install_st -ne 0 ]
 then
       exit $install_st
 fi
+date
 echo "*** Running mysqld-safe"
 cd $MYSQL
 bin/mysqld_safe --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$MYSQLDATA/mysql.err --log=$MYSQLDATA/mysql.log &
@@ -345,8 +334,11 @@ mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpa
 mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' 
 mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' 
 echo "*** Installing Mokka DB"
-mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%(DBDUMP)s
-sleep 5\n""" % {'DBDUMP': self.db_dump_name})
+date
+echo "mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%(DBDUMP)s"
+time mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%(DBDUMP)s
+sleep 5
+date\n""" % {'DBDUMP': self.db_dump_name})
     #Now take care of the particle tables.
     script.write("""
 if [ -e "./particle.tbl" ]
@@ -381,6 +373,8 @@ while [ -n "$socket_grep" ] ; do
     sleep 1
 done 
 """)
+    script.write("cp $MOKKADBROOT/data/mysql.log .\n")
+    script.write("cp $MOKKADBROOT/data/mysql.err .\n")
     script.write("rm -f %s\n" % self.db_dump_name)#remove db file
     script.write('rm -rf $MYSQLDATA\n')#cleanup
     script.write('rm -rf $MOKKADBROOT\n')#cleanup
