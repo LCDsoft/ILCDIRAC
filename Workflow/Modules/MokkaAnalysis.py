@@ -465,7 +465,7 @@ done
     removeLibc(myMokkaDir)
 
     remoteMysqlInstall = mySoftwareRoot
-    removeLibc(remoteMysqlInstall)
+    removeLibc(remoteMysqlInstall+'/mysql4grid/lib64/mysql')
 
     script = open(env_script_name, "w")
     script.write('#!/bin/sh \n')
