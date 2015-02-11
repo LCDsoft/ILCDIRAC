@@ -13,6 +13,11 @@ FIX: Remove SystemConfig/sysconfig, replace with platform
 [v22r1p7]
 
 * Workflow
+FIX: ILCDIRAC-442: more debugging output
+
+[v22r1p7]
+
+* Workflow
 
 FIX: ILCDIRAC-302: SlicPandora would remove detector.zip: fix exception in unzip function that caused this issue
 FIX: MarlinAnalysis: Fix Issue when LCFIVertex and LCFIPlus are both in the MARLIN_DLL
