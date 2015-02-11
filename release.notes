@@ -10,6 +10,13 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
+[v22r1p12]
+
+* Workflow
+
+FIX: ILCDIRAC-442: We need to run removeLibc correctly, pointing to the library folder
+
+
 [v22r1p11]
 
 * Workflow
