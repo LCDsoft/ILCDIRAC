@@ -464,17 +464,8 @@ done
     ##Remove libc
     removeLibc(myMokkaDir)
 
-    ## copy mysql4grid to local working directory and run from there, because something is fishy...
-    remoteMysqlInstall = mySoftwareRoot+'/mysql4grid'
-    localMysqlInstall = "%s/myMysql" % os.getcwd()
-    self.log.info ("Copying mysql4grid to folder: %s" % localMysqlInstall)
-    try:
-      shutil.copytree(remoteMysqlInstall, localMysqlInstall+"/mysql4grid")
-    except shutil.Error as err:
-      self.log.error("Failed to copy mysql installation", str(err))
-      return S_ERROR("Failed to copy mysql installation")
-
-    removeLibc(localMysqlInstall)
+    remoteMysqlInstall = mySoftwareRoot
+    #removeLibc(remoteMysqlInstall)
 
     script = open(env_script_name, "w")
     script.write('#!/bin/sh \n')
@@ -498,13 +489,13 @@ done
     script.write('declare -x G4NEUTRONHP_NEGLECT_DOPPLER=1\n')
     script.write('declare -x PATH=%s:$PATH\n' % myMokkaDir)
     script.write('declare -x LD_LIBRARY_PATH=%s\n' % (myMokkaDir))
-    script.write('declare -x MYSQL=%s/mysql4grid\n' % (localMysqlInstall))
+    script.write('declare -x MYSQL=%s/mysql4grid\n' % (remoteMysqlInstall))
     script.write('declare -x MOKKATARBALL=%s\n' % myMokkaDir)
     if new_ld_lib_path:
       script.write('declare -x LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH\n' % (new_ld_lib_path))
 
-    script.write('declare -x PATH=%s/mysql4grid/bin:$PATH\n' % localMysqlInstall)#for MySQL
-    script.write('declare -x LD_LIBRARY_PATH=%s/mysql4grid/lib64/mysql:$LD_LIBRARY_PATH\n' % localMysqlInstall)
+    script.write('declare -x PATH=%s/mysql4grid/bin:$PATH\n' % remoteMysqlInstall)#for MySQL
+    script.write('declare -x LD_LIBRARY_PATH=%s/mysql4grid/lib64/mysql:$LD_LIBRARY_PATH\n' % remoteMysqlInstall)
     #for MySQL
     script.write("if [ -e %s/%s ]; then\n" % (myMokkaDir, self.db_dump_name))
     script.write("  cp %s/%s .\n" % (myMokkaDir, self.db_dump_name) )
