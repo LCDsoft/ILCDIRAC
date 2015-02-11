@@ -10,7 +10,13 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
-[v22r1p7]
+[v22r1p9]
+
+* Workflow
+FIX: ILCDIRAC-442: copy mysql4grid to local working directory
+
+
+[v22r1p8]
 
 * Workflow
 FIX: ILCDIRAC-442: more debugging output
