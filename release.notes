@@ -10,6 +10,13 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
+
+[v22r1p13]
+
+* Workflow
+
+FIX: MokkaAnalysis: Place mysql logs in subdirectory $CWD/mysqllogs
+
 [v22r1p12]
 
 * Workflow
