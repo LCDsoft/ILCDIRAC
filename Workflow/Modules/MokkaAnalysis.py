@@ -298,6 +298,9 @@ fi
     ##Now start the MySQL server and configure.
     script.write("declare -x MOKKADBROOT=%s\n" % mysqlBasePath)
     script.write("declare -x WORKDIR=%s\n" % os.getcwd())
+    script.write("declare -x LOGDIR=$WORKDIR/mysqllogs/\n")
+    script.write("mkdir -p $LOGDIR\n")
+
     #mysql socket must not be longer than 107 characters!
     script.write("declare -x SOCKETBASE=/tmp/mokka-%s\n" % generateRandomString(8) )
     script.write("mkdir -p $SOCKETBASE\n")
@@ -308,8 +311,8 @@ fi
     script.write("mkdir -p $MYSQLDATA\n")
     script.write("date\n")
     script.write("""echo "*** Installing MySQL"
-echo "mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$WORKDIR/mysql.err --log=$WORKDIR/mysql.log"
-mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$WORKDIR/mysql.err --log=$WORKDIR/mysql.log
+echo "mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log"
+mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log
 install_st=$?
 if [ $install_st -ne 0 ]
 then
@@ -318,7 +321,7 @@ fi
 date
 echo "*** Running mysqld-safe"
 cd $MYSQL
-bin/mysqld_safe --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$WORKDIR/mysql.err --log=$WORKDIR/mysql.log &
+bin/mysqld_safe --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log &
 COUNT=0
 while [ -z "$socket_grep" ] ; do
     socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
