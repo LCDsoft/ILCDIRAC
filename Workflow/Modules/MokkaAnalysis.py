@@ -173,6 +173,7 @@ class MokkaAnalysis(ModuleBase):
 
     
     res = getEnvironmentScript(self.platform, "mokka", self.applicationVersion, self.getEnvScript)
+    self.log.notice("Got the environment script: %s" % res )
     if not res['OK']:
       self.log.error("Error getting the env script: ", res['Message'])
       return res
@@ -180,23 +181,8 @@ class MokkaAnalysis(ModuleBase):
     
 
     ####Setup MySQL instance      
-    MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + generateRandomString(8)
-      
-    #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
-#     sqlwrapper = SQLWrapper(mySoftwareRoot, MokkaDBrandomName)#mySoftwareRoot)
-#     res = sqlwrapper.setDBpath(myMokkaDir, self.dbSlice)
-#     if not res['OK']:
-#       self.log.error("Failed to find the DB slice")
-#       return res
-#     result = sqlwrapper.makedirs()
-#     if not result['OK']:
-#       self.setApplicationStatus('MySQL setup failed to create directories.')
-#       return result
-#     result = sqlwrapper.mysqlSetup()
-#     if not result['OK']:
-#       self.setApplicationStatus('MySQL setup failed.')
-#       return result
-#     
+    mysqlBasePath = '%s/mysqltmp/MokkaDBRoot-%s' %(os.getcwd(), generateRandomString(8))
+    self.log.notice("Placing mysql files in %s" % mysqlBasePath)
     
     ###steering file that will be used to run
     mokkasteer = "mokka.steer"
@@ -310,43 +296,63 @@ cat mokkamac.mac
 fi    
     """ % self.db_dump_name)
     ##Now start the MySQL server and configure.
-    script.write("declare -x MOKKADBROOT=%s\n" % MokkaDBrandomName)
+    script.write("declare -x MOKKADBROOT=%s\n" % mysqlBasePath)
+    script.write("declare -x WORKDIR=%s\n" % os.getcwd())
+    script.write("declare -x LOGDIR=$WORKDIR/mysqllogs/\n")
+    script.write("mkdir -p $LOGDIR\n")
+
+    #mysql socket must not be longer than 107 characters!
+    script.write("declare -x SOCKETBASE=/tmp/mokka-%s\n" % generateRandomString(8) )
+    script.write("mkdir -p $SOCKETBASE\n")
+    script.write("declare -x SOCKETPATH=$SOCKETBASE/mysql.sock\n" )
     script.write("mkdir -p $MOKKADBROOT\n")
-    script.write("declare -x MYSQLDATA=`pwd`/data\n")
+    script.write("declare -x MYSQLDATA=$MOKKADBROOT/data\n")
     script.write("rm -rf $MYSQLDATA\n")
     script.write("mkdir -p $MYSQLDATA\n")
-    script.write("""echo "Installing MySQL"
-mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=./mysql.err --log=./mysql.log
+    script.write("date\n")
+    script.write("""echo "*** Installing MySQL"
+echo "mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log"
+mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log
 install_st=$?
 if [ $install_st -ne 0 ]
 then
       exit $install_st
 fi
-echo "Running mysqld-safe"
+date
+echo "*** Running mysqld-safe"
 cd $MYSQL
-bin/mysqld_safe --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=./mysql.err --log=./mysql.log &
+bin/mysqld_safe --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log &
+COUNT=0
 while [ -z "$socket_grep" ] ; do
-    socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
+    socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
+    if [ $COUNT -eq 30 ]; then
+        echo "Failed to find socket"
+        break
+    fi
+    COUNT=$(( $COUNT + 1 ))
 done
 cd -
-echo "Configuring MySQL"
-mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot password 'rootpass'
+echo "*** Configuring MySQL"
+mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot password 'rootpass'
 declare -x admin_st=$?
 if [ $admin_st -ne 0 ]
 then
-  echo "mysladmin failed, cannot proceed" >&2
-  mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown
+  echo "*** mysqladmin failed, cannot proceed" >&2
+  mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass shutdown
   exit $admin_st
 fi
 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' 
-echo "Installing Mokka DB"
-mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%s
-sleep 5\n""" % (self.db_dump_name))  
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;'
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";'
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;'
+echo "*** Installing Mokka DB"
+date
+echo "mysql --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass < ./%(DBDUMP)s"
+time mysql --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass < ./%(DBDUMP)s
+sleep 5
+date\n""" % {'DBDUMP': self.db_dump_name})
     #Now take care of the particle tables.
     script.write("""
 if [ -e "./particle.tbl" ]
@@ -367,16 +373,16 @@ echo "/Mokka/init/PDGFile $PARTICLETBL" >> %s
 \n"""% mokkasteer)
 
     ##Now run Mokka
-    comm = 'Mokka %s -h localhost:$MOKKADBROOT/mysql.sock %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
+    comm = 'Mokka %s -h localhost:$SOCKETPATH %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
     self.log.info( "Command : %s" % (comm) )
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
 
     #Now shutdown the MySQL server
-    script.write("mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown\n")
+    script.write("mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass shutdown\n")
     script.write("""
 while [ -n "$socket_grep" ] ; do
-    socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
+    socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
 done 
@@ -460,7 +466,9 @@ done
 
     ##Remove libc
     removeLibc(myMokkaDir)
-    removeLibc(mySoftwareRoot+'/mysql4grid/lib64/mysql')
+
+    remoteMysqlInstall = mySoftwareRoot
+    removeLibc(remoteMysqlInstall+'/mysql4grid/lib64/mysql')
 
     script = open(env_script_name, "w")
     script.write('#!/bin/sh \n')
@@ -484,13 +492,13 @@ done
     script.write('declare -x G4NEUTRONHP_NEGLECT_DOPPLER=1\n')
     script.write('declare -x PATH=%s:$PATH\n' % myMokkaDir)
     script.write('declare -x LD_LIBRARY_PATH=%s\n' % (myMokkaDir))
-    script.write('declare -x MYSQL=%s/mysql4grid\n' % (mySoftwareRoot))
+    script.write('declare -x MYSQL=%s/mysql4grid\n' % (remoteMysqlInstall))
     script.write('declare -x MOKKATARBALL=%s\n' % myMokkaDir)
     if new_ld_lib_path:
       script.write('declare -x LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH\n' % (new_ld_lib_path))
 
-    script.write('declare -x PATH=%s/mysql4grid/bin:$PATH\n' % mySoftwareRoot)#for MySQL
-    script.write('declare -x LD_LIBRARY_PATH=%s/mysql4grid/lib64/mysql:$LD_LIBRARY_PATH\n' % mySoftwareRoot)
+    script.write('declare -x PATH=%s/mysql4grid/bin:$PATH\n' % remoteMysqlInstall)#for MySQL
+    script.write('declare -x LD_LIBRARY_PATH=%s/mysql4grid/lib64/mysql:$LD_LIBRARY_PATH\n' % remoteMysqlInstall)
     #for MySQL
     script.write("if [ -e %s/%s ]; then\n" % (myMokkaDir, self.db_dump_name))
     script.write("  cp %s/%s .\n" % (myMokkaDir, self.db_dump_name) )

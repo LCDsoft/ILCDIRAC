@@ -56,7 +56,7 @@ def checkLockAge(lockname):
       break
     loc_time = time.time()
     if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
-      gLogger.info("File is %s seconds old" % loc_time-last_touch)
+      gLogger.info("File is %s seconds old" % str(loc_time-last_touch))
       overwrite = True
       res = clearLock(lockname)
       if res['OK']:

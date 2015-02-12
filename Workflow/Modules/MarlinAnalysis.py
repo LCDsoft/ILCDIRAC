@@ -303,6 +303,20 @@ class MarlinAnalysis(ModuleBase):
             finallist.remove(item)
     else:
       finallist = items
+
+
+    ## LCFIPlus links with LCFIVertex, LCFIVertex needs to go first in the MARLIN_DLL
+    plusPos = 0
+    lcfiPos = 0
+    for position, lib in enumerate(finallist):
+      if 'libLCFIPlus' in lib:
+        plusPos = position
+      if 'libLCFIVertex' in lib:
+        lcfiPos = position
+    if plusPos < lcfiPos: # if lcfiplus is before lcfivertex
+      #swap the two entries
+      finallist[plusPos], finallist[lcfiPos] = finallist[lcfiPos], finallist[plusPos]
+
     marlindll = ":".join(finallist)
     self.log.verbose("Final MARLIN_DLL is:", marlindll)
     
