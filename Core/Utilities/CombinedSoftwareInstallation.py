@@ -139,7 +139,7 @@ class CombinedSoftwareInstallation(object):
     
     
     for app in self.apps:
-      res = CheckCVMFS(self.jobConfig, app)
+      res = checkCVMFS(self.jobConfig, app)
       if res['OK']:
         DIRAC.gLogger.notice('Software %s is available on CVMFS, skipping' % ", ".join(app) )
         continue
