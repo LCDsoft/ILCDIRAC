@@ -327,7 +327,7 @@ while [ -z "$socket_grep" ] ; do
     socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
-    if [ $COUNT -eq 30 ]; then
+    if [ $COUNT -eq 100 ]; then
         echo "Failed to find socket"
         break
     fi
