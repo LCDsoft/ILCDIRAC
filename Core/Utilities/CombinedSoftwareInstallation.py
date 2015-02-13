@@ -8,8 +8,7 @@ Installs properly ILD soft and SiD soft, and all dependencies
 __RCSID__ = "$Id$"
 import os, zipfile
 import DIRAC
-from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, resolveDeps, installDependencies
-#from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
+from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, installDependencies
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
 
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
