@@ -8,7 +8,7 @@ Installs properly ILD soft and SiD soft, and all dependencies
 __RCSID__ = "$Id$"
 import os, zipfile
 import DIRAC
-from ILCDIRAC.Core.Utilities.TARsoft   import tarInstall
+from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, resolveDeps, installDependencies
 #from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from DIRAC.Core.Utilities.Subprocess   import systemCall
@@ -137,26 +137,22 @@ class CombinedSoftwareInstallation(object):
     
     
     for app in self.apps:
-      failed = False
       res = CheckCVMFS(self.jobConfig, app)
       if res['OK']:
         DIRAC.gLogger.notice('Software %s is available on CVMFS, skipping' % ", ".join(app) )
         continue
-      for area in areas:
-        DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' % (app[0], app[1], self.jobConfig, area))
-        res = tarInstall(app, self.jobConfig, area)
-        if not res['OK']:
-          DIRAC.gLogger.error('Failed to install software in %s: %s' % (area, res['Message']), 
-                              '%s_%s' % (app[0], app[1]))
-          failed = True
-          continue
-        else:
-          DIRAC.gLogger.info('%s was successfully installed for %s in %s' % (app, self.jobConfig, area))
-          failed = False
-          break
-      if failed:
-        return DIRAC.S_ERROR("Failed to install software")
-      
+
+      ## First install the original package in any of the areas
+      resInstall = installInAnyArea(areas, app, self.jobConfig)
+      if not resInstall['OK']:
+        return resInstall
+
+      ## Then install the dependencies, which can be in a different area
+      resDeps = installDependencies(app, self.jobConfig, areas)
+      if not resDeps['OK']:
+        DIRAC.gLogger.error("Failed to install dependencies: ", resDeps['Message'])
+        return S_ERROR("Failed to install dependencies")
+
     if self.sharedArea:  
       #List content  
       listAreaDirectory(self.sharedArea)
