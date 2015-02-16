@@ -8,7 +8,7 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 * DIRAC
 
-NEW: v6r12p20
+NEW: v6r11p31
 
 * Workflow
 FIX: CVMFS support for native installations (Mokka, Marlin)
