@@ -4,6 +4,17 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2-pre3]
+
+* DIRAC
+
+NEW: v6r12p20
+
+* Workflow
+FIX: CVMFS support for native installations (Mokka, Marlin)
+FIX: Bugfixes/conventions/pylint cleanup, refactoring
+
+
 [v22r2-pre1]
 
 * Workflow
