@@ -44,11 +44,9 @@ class WhizardAnalysis(ModuleBase):
     self.applicationName = 'whizard'
     self.evttype = ""
     self.RandomSeed = 0
-    self.energy = 3000.
     self.getProcessInFile = False
     self.datMan = DataManager()
     self.processlist = None
-    self.jobindex = None
     self.parameters = {}
     self.susymodel = 0
     self.Model = ''
@@ -90,47 +88,30 @@ class WhizardAnalysis(ModuleBase):
     """Resolve module input
     @return: S_OK()
     """
-
-    if self.step_commons.has_key("Energy"):
-      self.energy = self.step_commons["Energy"]
     self.parameters['ENERGY'] = self.energy
 
-    if not self.RandomSeed:
-      if self.step_commons.has_key("RandomSeed"):
-        self.RandomSeed = self.step_commons['RandomSeed']
-      elif self.jobID:
-        self.RandomSeed = self.jobID
+    if not self.RandomSeed and self.jobID:
+      self.RandomSeed = self.jobID
     if self.workflow_commons.has_key("IS_PROD") or self.workflow_commons.has_key("IS_DBD_GEN_PROD"):  
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))  
-    self.parameters['SEED'] = self.RandomSeed
 
-    if self.step_commons.has_key('NbOfEvts'):
-      self.NumberOfEvents = self.step_commons['NbOfEvts']
+    self.parameters['SEED'] = self.RandomSeed
     self.parameters['NBEVTS'] = self.NumberOfEvents
-      
-    if self.step_commons.has_key('Lumi'):
-      self.Lumi = self.step_commons['Lumi']
     self.parameters['LUMI'] = self.Lumi
-      
+
+    ##EVER USED???
     if self.step_commons.has_key('SusyModel'):
       self.susymodel = self.step_commons['SusyModel']
       
     if self.step_commons.has_key("InputFile"):
       self.SteeringFile = os.path.basename(self.step_commons["InputFile"])
       
-    if self.step_commons.has_key("EvtType"):
-      self.evttype = os.path.basename(self.step_commons["EvtType"])
     self.parameters['PROCESS'] = self.evttype
-      
-    if self.step_commons.has_key("JobIndex"):
-      self.jobindex = self.step_commons["JobIndex"]
 
     if self.SteeringFile == "whizard.in":
       os.rename(self.SteeringFile, "whizardnew.in")
       self.SteeringFile = "whizardnew.in"
  
-    if self.step_commons.has_key("parameters"):
-      self.steeringparameters = self.step_commons["parameters"]
     listofparams = self.steeringparameters.split(";")
     for param in listofparams:
       if param.count("="):
@@ -334,8 +315,6 @@ class WhizardAnalysis(ModuleBase):
       leshouchesfiles = "LesHouches.msugra_1.in"
 
     outputfilename = self.evttype
-    if self.jobindex:
-      outputfilename = "%s_%s" % (outputfilename, self.jobindex)
     
           
     if self.optionsdict:
