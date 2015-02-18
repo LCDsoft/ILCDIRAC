@@ -31,12 +31,9 @@ class SLICAnalysis(ModuleBase):
     self.log = gLogger.getSubLogger( "SLICAnalysis" )
     self.result = S_ERROR()
     self.applicationName = 'SLIC'
-    self.NumberOfEvents = 0
     self.startFrom = 0
-    self.InputFile = []
-    self.randomseed = 0
+    self.RandomSeed = 0
     self.detectorModel = ''
-    self.SteeringFile = ''
     self.eventstring = ['BeginEvent']
     
   def applicationSpecificInputs(self):
@@ -44,45 +41,26 @@ class SLICAnalysis(ModuleBase):
     @return: S_OK()
     """
 
-    if self.step_commons.has_key('startFrom'):
-      self.startFrom = self.step_commons['startFrom']
-
     if self.WorkflowStartFrom:
       self.startFrom = self.WorkflowStartFrom
 
-    if self.step_commons.has_key('stdhepFile'):
-      inputf = self.step_commons["stdhepFile"]
-      if not type(inputf) == types.ListType:
-        inputf = inputf.split(";")
-      self.InputFile = inputf
-      
-    if self.step_commons.has_key("inputmacFile"):
-      self.SteeringFile = self.step_commons['inputmacFile']
-
-    if self.step_commons.has_key('detectorModel'):
-      self.detectorModel = self.step_commons['detectorModel'] 
-
-    if self.step_commons.has_key("RandomSeed"):
-      self.randomseed = self.step_commons["RandomSeed"]
     ##Move below to ModuleBase as common to Mokka
-    elif self.workflow_commons.has_key("IS_PROD"):  
-      self.randomseed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
+    if "IS_PROD" in self.workflow_commons:
+      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
     elif self.jobID:
-      self.randomseed = self.jobID
+      self.RandomSeed = self.jobID
 
-    if self.workflow_commons.has_key("IS_PROD"):
-      if self.workflow_commons["IS_PROD"]:
-        self.OutputFile = getProdFilename(self.OutputFile,
-                                          int(self.workflow_commons["PRODUCTION_ID"]),
-                                          int(self.workflow_commons["JOB_ID"]))
-
+    if self.workflow_commons.has_key("IS_PROD") and self.workflow_commons["IS_PROD"]:
+      self.OutputFile = getProdFilename(self.OutputFile,
+                                        int(self.workflow_commons["PRODUCTION_ID"]),
+                                        int(self.workflow_commons["JOB_ID"]))
       
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".stdhep") > -1 or files.lower().find(".hepevt") > -1:
           self.InputFile.append(files)
           break
-          
+
     return S_OK('Parameters resolved')
   
   
@@ -171,7 +149,7 @@ class SLICAnalysis(ModuleBase):
       self.InputFile = ['']    
     macok = prepareMacFile(self.SteeringFile, slicmac, self.InputFile[0],
                            self.NumberOfEvents, self.startFrom, self.detectorModel,
-                           self.randomseed, self.OutputFile, self.debug)
+                           self.RandomSeed, self.OutputFile, self.debug)
     if not macok['OK']:
       self.log.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
