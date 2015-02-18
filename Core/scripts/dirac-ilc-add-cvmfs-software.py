@@ -4,15 +4,15 @@ Add software from CVMFS to the CS
 
 Give list of applications, init_script path, MokkaDBSlice, ILDConfigPath (if set)
 
-Created on May 5, 2010
+Created on Feb 18, 2015
 '''
 
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger, gConfig, S_OK, exit as dexit
-import os
+from DIRAC import gLogger, gConfig, S_OK, S_ERROR, exit as dexit
 
+import os
 
 class Params(object):
   """Collection of Parameters set via CLI switches"""
@@ -35,7 +35,8 @@ class Params(object):
     return S_OK()
 
   def setName(self, optionValue):
-    self.applicationList = optionValue.split(',')
+    apps = optionValue.split(',')
+    self.applicationList = [ _.strip() for _ in apps ]
     return S_OK()
 
   def setComment(self, optionValue):
@@ -59,6 +60,37 @@ class Params(object):
     return S_OK()
 
 
+  def checkConsistency(self):
+    """Check if all necessary parameter were defined"""
+    if not self.version:
+      return S_ERROR("Version must be given")
+
+    if not self.initScriptLocation:
+      return S_ERROR("Initscript location is not defined")
+
+    if not self.basePath:
+      return S_ERROR("BasePath is not defined")
+
+    if not self.applicationList:
+      return S_ERROR("No applications have beend defined")
+
+    appListLower = [ _.lower() for _ in self.applicationList ]
+
+    if 'mokka' in appListLower and not self.dbSliceLocation:
+      return S_ERROR("Mokka in application list, but not dbSlice location given")
+
+    if 'ildconfig' in appListLower and not self.ildConfigPath:
+      return S_ERROR("ILDConfig in application list, but no location given")
+
+    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation):
+      if not os.path.exists(val):
+        gLogger.error("Cannot find this path:", val)
+        return S_ERROR("CVMFS not mounted, or path is misstyped")
+
+    return S_OK()
+
+
+
   def registerSwitches(self):
     Script.registerSwitch("P:", "Platform=", "Platform ex. %s" % self.platform, self.setPlatform)
     Script.registerSwitch("A:", "Applications=", "Comma separated list of applications", self.setName)
@@ -68,6 +100,9 @@ class Params(object):
     Script.registerSwitch("B:", "Base=", "Path to Installation Base", self.setBasePath)
 
     Script.registerSwitch("O:", "ILDConfig=", "Path To ILDConfig (if it is in ApplicationPath)", self.setILDConfig)
+
+    Script.registerSwitch("Q:", "DBSlice=", "Path to Mokka DB Slice", self.setDBSlice)
+
 
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                          '\nUsage:',
@@ -81,38 +116,52 @@ class CVMFSAdder(object):
     self.modifiedCS = False
     self.softSec = "/Operations/Defaults/AvailableTarBalls"
     self.mailadress = 'ilc-dirac@cern.ch'
-    self.params = cliParams
+    self.cliParams = cliParams
+    self.parameter = dict( softSec = self.softSec,
+                           platform = cliParams.platform,
+                           version = cliParams.version,
+                           basepath = cliParams.basePath,
+                           initsctipt = cliParams.initScriptLocation
+                         )
+    self.applications = cliParams.applicationList
 
-  #FIXME!!!!
+
   def checkConsistency(self):
     """checks if platform is defined, application exists, etc."""
     gLogger.notice("Checking consistency")
     av_platforms = gConfig.getSections(self.softSec, [])
     if av_platforms['OK']:
-      if not self.platform in av_platforms['Value']:
-        gLogger.error("Platform %s unknown, available are %s." % (self.platform, ", ".join(av_platforms['Value'])))
-        gLogger.error("If yours is missing add it in CS")
-        dexit(255)
+      if not self.parameter['platform'] in av_platforms['Value']:
+        gLogger.error("Platform %s unknown, available are %s." % (self.parameter['platform'], ", ".join(av_platforms['Value'])))
+        gLogger.error("If yours is missing, add it in CS")
+        return S_ERROR()
     else:
       gLogger.error("Could not find all platforms available in CS")
-      dexit(255)
+      return S_ERROR()
 
-    av_apps = gConfig.getSections("%(softSec)s/%(platform)s" % self.parameter, [])
-    if not av_apps['OK']:
-      gLogger.error("Could not find all applications available in CS")
-      dexit(255)
+    for application in self.applications:
+      av_apps = gConfig.getSections("%(softSec)s/%(platform)s/" % self.parameter + str(application), [])
+      if not av_apps['OK']:
+        gLogger.error("Could not find this application in the CS: '%s'" % application)
+        gLogger.error("Add its section to the CS, if it is missing")
+        return S_ERROR()
+
+    gLogger.notice("All OK, continuing...")
+    return S_OK()
+
 
   def commitToCS(self):
     """write changes to the CS to the server"""
-    gLogger.notice("Commiting changes to the CS")
     if self.modifiedCS:
+      gLogger.notice("Commiting changes to the CS")
       result = self.diracAdmin.csCommitChanges(False)
       if not result[ 'OK' ]:
         gLogger.error('Commit failed with message = %s' % (result[ 'Message' ]))
-        dexit(255)
+        return S_ERROR("Failed to commit to CS")
       gLogger.info('Successfully committed changes to CS')
     else:
       gLogger.info('No modifications to CS required')
+    return S_OK()
 
   def notifyAboutNewSoftware(self):
     """Send an email to the mailing list if a new software version was defined"""
@@ -146,47 +195,71 @@ class CVMFSAdder(object):
       gLogger.error('The mail could not be sent: %s' % res['Message'])
 
 
+  def addAllToCS(self):
+    """add all the applications to the CS, take care of special cases (mokka, ildconfig,...)"""
+
+    for application in self.applications:
+      csParameter = dict( CVMFSEnvScript = self.cliParams.initScriptLocation,
+                          CVMFSPath      = self.parameter['basepath']
+                        )
+
+      if application == 'mokka':
+        csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
+
+      elif application == 'ildconfig':
+        del csParameter['CVMFSEnvScript']
+        csParameter['CVMFSPath'] = self.cliParams.ildConfigPath
+
+      resInsert = self.insertApplicationToCS(application, csParameter)
+      if not resInsert['OK']:
+        return resInsert
+
+    return S_OK()
 
 
-  def addVersionToCS(self):
-    """adds the version of the application to the CS"""
-    gLogger.notice("Adding version %(appVersion)s to the CS" % self.parameter)
-    existingVersions = gConfig.getSections("%(softSec)s/%(platform)s/%(appname)s" % self.parameter, [])
+  def insertApplicationToCS(self, name, csParameter):
+    """add given application found via CVMFS to the CS"""
+
+    pars = dict(self.parameter)
+    pars['name'] = name
+
+    gLogger.notice("%(name)s: Adding version %(version)s to the CS" % pars)
+
+    existingVersions = gConfig.getSections("%(softSec)s/%(platform)s/%(name)s" % pars, [])
     if not existingVersions['OK']:
       gLogger.error("Could not find all versions available in CS: %s" % existingVersions['Message'])
       dexit(255)
-    if self.appVersion in existingVersions['Value']:
-      gLogger.always('Application %s %s for %s already in CS, nothing to do' % (self.appName.lower(),
-                                                                                self.appVersion,
-                                                                                self.platform))
-      dexit(0)
+    if pars['version'] in existingVersions['Value']:
+      gLogger.always('Application %s %s for %s already in CS, nothing to do' % (name.lower(),
+                                                                                pars['version'],
+                                                                                pars['platform']))
+      return S_OK()
 
-    result = self.diracAdmin.csSetOption("%(softSec)s/%(platform)s/%(appname)s/%(appVersion)s/TarBall" % self.parameter,
-                                         self.parameter['appTar_name'])
-    if result['OK']:
-      self.modifiedCS = True
-    else:
-      gLogger.error ("Could not add version to CS")
-      dexit(255)
+    csPath = self.softSec + ("/%(platform)s/%(name)s/%(version)s/" % pars)
+    for par, val in csParameter.iteritems():
+      gLogger.notice("Add: %s = %s" %(csPath+par, val))
+      result = self.diracAdmin.csSetOption(csPath+par, val)
+      if result['OK']:
+        self.modifiedCS = True
+      else:
+        gLogger.error("Failure to add to CS", result['Message'])
+        return S_ERROR("")
 
-  def addCommentToCS(self):
-    """adds the comment for the TarBall to the CS"""
-    gLogger.notice("Adding comment to CS: %s" % self.comment)
-    result = self.diracAdmin.csSetOptionComment("%(softSec)s/%(platform)s/%(appname)s/%(appVersion)s/TarBall"% self.parameter,
-                                                self.comment)
-    if not result['OK']:
-      gLogger.error("Error setting comment in CS")
+    return S_OK()
 
   def addSoftware(self):
     """run all the steps to add software to grid and CS"""
 
-    self.checkConsistency()
-    self.addVersionToCS()
-    self.addCommentToCS()
-    self.commitToCS()
-    self.notifyAboutNewSoftware()
+    resAdd = self.addAllToCS()
+    if not resAdd['OK']:
+      return resAdd
 
+    resCommit = self.commitToCS()
+    if not resCommit['OK']:
+      return resCommit
+    # self.notifyAboutNewSoftware()
 
+    return S_OK()
 
 def addSoftware():
   """uploads, registers, and sends email about new software package"""
@@ -194,10 +267,16 @@ def addSoftware():
   cliParams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = True )
 
+  consistent = cliParams.checkConsistency()
+  if not consistent['OK']:
+    gLogger.error("Error checking consistency:", consistent['Message'])
+    Script.showHelp()
+    dexit(2)
+
   softAdder = CVMFSAdder(cliParams)
   resCheck = softAdder.checkConsistency()
-  
-  if resCheck['OK']:
+
+  if not resCheck['OK']:
     Script.showHelp()
     dexit(2)
 
