@@ -22,6 +22,13 @@ CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
 
+[v22r1p14]
+
+* Workflow
+
+FIX: MokkaAnalysis: wait 100 seconds for socket
+FIX: CombinedSoftwareInstallation: Allow for mixing sharedarea (CVMFS) and LocalArea software
+
 [v22r1p13]
 
 * Workflow
