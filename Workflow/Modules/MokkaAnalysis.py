@@ -33,7 +33,6 @@ class MokkaAnalysis(ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MokkaAnalysis" )
-    self.SteeringFile = ''
     self.InputFile = [] 
     self.macFile = ''
     self.detectorModel = '' 
@@ -58,7 +57,6 @@ class MokkaAnalysis(ModuleBase):
     self.startFrom = self.WorkflowStartFrom if self.WorkflowStartFrom else self.step_commons.get('startFrom', self.startFrom)
 
     #Need to keep until old prods are archived.
-    self.SteeringFile = self.step_commons.get('steeringFile', self.SteeringFile)
 
     if 'stdhepFile' in self.step_commons:
       inputf = self.step_commons["stdhepFile"]
