@@ -63,9 +63,6 @@ class MokkaAnalysis(ModuleBase):
         inputf = inputf.split(";")
       self.InputFile = inputf
 
-    self.macFile = self.step_commons.get('macFile', self.macFile)
-    self.detectorModel = self.step_commons.get('detectorModel', self.detectorModel)
-    self.processID = self.step_commons.get('ProcessID', self.processID)
     self.RandomSeed = self.determineRandomSeed()
       
     resDBSlice = self.determineDBSlice()
@@ -536,9 +533,7 @@ done
   def determineRandomSeed(self):
     """determine what the randomSeed should be, depends on production or not"""
     if not self.RandomSeed:
-      if "RandomSeed" in self.step_commons:
-        self.RandomSeed = self.step_commons["RandomSeed"]
-      elif self.jobID:
+      if self.jobID:
         self.RandomSeed = self.jobID
     if "IS_PROD" in self.workflow_commons:
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
