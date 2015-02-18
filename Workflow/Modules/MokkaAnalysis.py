@@ -41,7 +41,6 @@ class MokkaAnalysis(ModuleBase):
     self.firstEventNumber = 1
     self.applicationName = 'Mokka'
     self.dbSlice = ''
-    self.NumberOfEvents = 0
     self.startFrom = 0
     self.eventstring = ['>>> Event']
     self.processID = ''
@@ -56,7 +55,6 @@ class MokkaAnalysis(ModuleBase):
     @return: S_OK()
     """
 
-    self.NumberOfEvents = self.step_commons.get('numberOfEvents', self.NumberOfEvents)
     self.startFrom = self.WorkflowStartFrom if self.WorkflowStartFrom else self.step_commons.get('startFrom', self.startFrom)
 
     #Need to keep until old prods are archived.
