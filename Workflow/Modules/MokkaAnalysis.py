@@ -498,13 +498,29 @@ done
 
 
   def determineDBSlice(self):
-    """Figure out where the dbSlice is located and what it is called"""
-    if 'dbSlice' in self.step_commons:
-      self.dbSlice = self.step_commons['dbSlice']
+    """Figure out where the dbSlice is located and what it is called
+     dbSlice is module parameter, set directly via workflow
+
+    if it is not set and we do not use native CVMFS installation, then we assume
+    the SQL file should be called CLICMOkkaDB.sql, but if we are using a native
+    CVMFS installation, we need to know where to find the default sql file.
+
+    """
+    if self.dbSlice:
       return S_OK()
     else:
       appVersion = self.step_commons['applicationVersion']
       csPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'mokka', appVersion)
+
+      ##check if this mokka version is CVMFS native:
+      cvmfsPath = Operations().getValue(csPathApplication+"/CVMFSPath")
+      if not cvmfsPath:
+        self.log.info("This mokka version is not native to CVMFS")
+        self.log.info("Assuming CLICMokkaDB.sql")
+        self.dbSlice = "CLICMokkaDB.sql"
+        return S_OK()
+
+      #Now we know we are CVMFS native, so we have to know CVMFSDBSlice
       cvmfsDBSlice = Operations().getValue(csPathApplication+"/CVMFSDBSlice")
       if not cvmfsDBSlice:
         return S_ERROR("CVMFSDBSlice not defined for mokka version %s " % appVersion)
