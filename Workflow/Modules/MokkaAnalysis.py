@@ -42,7 +42,7 @@ class MokkaAnalysis(ModuleBase):
     self.dbSlice = ''
     self.startFrom = 0
     self.eventstring = ['>>> Event']
-    self.processID = ''
+    self.ProcessID = ''
     self.RandomSeed = 0
     self.mcRunNumber = 0
     self.db_dump_name = ""
@@ -92,10 +92,10 @@ class MokkaAnalysis(ModuleBase):
                                             int(self.workflow_commons["JOB_ID"]))]
       
     if len(self.InputData):      
-      if 'EvtClass' in self.inputdataMeta and not self.processID:
-        self.processID = self.inputdataMeta['EvtClass']
-      if 'EvtType' in self.inputdataMeta and not self.processID:
-        self.processID = self.inputdataMeta['EvtType']
+      if 'EvtClass' in self.inputdataMeta and not self.ProcessID:
+        self.ProcessID = self.inputdataMeta['EvtClass']
+      if 'EvtType' in self.inputdataMeta and not self.ProcessID:
+        self.ProcessID = self.inputdataMeta['EvtType']
 
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
@@ -205,7 +205,7 @@ class MokkaAnalysis(ModuleBase):
     steerok = PrepareSteeringFile(self.SteeringFile, mokkasteer, self.detectorModel, self.InputFile[0],
                                   self.macFile, self.NumberOfEvents, self.startFrom, self.RandomSeed,
                                   self.mcRunNumber,
-                                  self.processID,
+                                  self.ProcessID,
                                   self.debug,
                                   self.OutputFile,
                                   self.inputdataMeta)
