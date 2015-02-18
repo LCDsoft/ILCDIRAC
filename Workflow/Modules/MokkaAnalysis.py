@@ -54,9 +54,8 @@ class MokkaAnalysis(ModuleBase):
     @return: S_OK()
     """
 
-    self.startFrom = self.WorkflowStartFrom if self.WorkflowStartFrom else self.step_commons.get('startFrom', self.startFrom)
-
-    #Need to keep until old prods are archived.
+    if self.WorkflowStartFrom:
+      self.startFrom = self.WorkflowStartFrom
 
     if 'stdhepFile' in self.step_commons:
       inputf = self.step_commons["stdhepFile"]
