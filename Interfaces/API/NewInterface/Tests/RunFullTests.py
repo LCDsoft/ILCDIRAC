@@ -167,7 +167,7 @@ def getMarlin(withoverlay = False):
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
   marlin = Marlin()
-  marlin.setVersion("v0111Prod")
+  marlin.setVersion("ILCSoft-01-17-6")
   if not withoverlay:
     marlin.setSteeringFile("clic_ild_cdr_steering.xml")
   else:
