@@ -22,11 +22,8 @@ class LCIOConcatenate(ModuleBase):
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "LCIOConcatenate" )
-    self.args        = ''
-    self.result      = S_ERROR()
         
     # Step parameters
-
     self.applicationName = "lcio"
     #
 
@@ -54,16 +51,20 @@ class LCIOConcatenate(ModuleBase):
   def execute(self):
     """ Execute the module, called by JobAgent
     """
+    result = S_ERROR()
     # Get input variables
-    self.result = self.resolveInputVariables()
+    result = self.resolveInputVariables()
     # Checks
+    if not result['OK']:
+      self.log.error("Failed to resolve input parameters:", result['Message'])
+      return result
 
     if not self.platform:
-      self.result = S_ERROR( 'No ILC platform selected' )
+      result = S_ERROR( 'No ILC platform selected' )
 
-    if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
-      return self.result
+    if not result['OK']:
+      self.log.error("Failed to resolve input parameters:", result['Message'])
+      return result
 
     if not os.environ.has_key("LCIO"):
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
@@ -128,15 +129,15 @@ exit $?
     self.setApplicationStatus( 'LCIOConcatenate %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
-    self.result = shellCall( 0,
-                             command,
-                             callbackFunction = self.redirectLogOutput,
-                             bufferLimit = 20971520
-                           )
+    result = shellCall( 0,
+                        command,
+                        callbackFunction = self.redirectLogOutput,
+                        bufferLimit = 20971520
+                      )
 
         # Check results
 
-    resultTuple = self.result['Value']
+    resultTuple = result['Value']
     status      = resultTuple[0]
 
     self.log.info( "Status after the application execution is %s" % str( status ) )
