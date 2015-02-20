@@ -411,7 +411,6 @@ class Whizard(LCApplication):
     md1.addParameter(Parameter("Lumi",          0,  "float", "", "", False, False, "Luminosity of beam"))
     md1.addParameter(Parameter("Model",        "", "string", "", "", False, False, "Model for generation"))
     md1.addParameter(Parameter("SteeringFile", "", "string", "", "", False, False, "Steering file"))
-    md1.addParameter(Parameter("JobIndex",     "", "string", "", "", False, False, "Job Index"))
     md1.addParameter(Parameter("steeringparameters",  "", "string", "", "", False, False,
                                "Specific steering parameters"))
     md1.addParameter(Parameter("OptionsDictStr",      "", "string", "", "", False, False,
@@ -430,7 +429,6 @@ class Whizard(LCApplication):
     moduleinstance.setValue("Lumi",               self.Luminosity)
     moduleinstance.setValue("Model",              self.Model)
     moduleinstance.setValue("SteeringFile",       self.SteeringFile)
-    moduleinstance.setValue("JobIndex",           self.JobIndex)
     moduleinstance.setValue("steeringparameters", self.parameters)
     moduleinstance.setValue("OptionsDictStr",     self._optionsdictstr)
     moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
