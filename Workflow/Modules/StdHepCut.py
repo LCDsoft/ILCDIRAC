@@ -33,9 +33,6 @@ class StdHepCut(ModuleBase):
     
   def applicationSpecificInputs(self):
 
-    self.SteeringFile = self.step_commons.get('CutFile', self.SteeringFile)
-    self.MaxNbEvts = self.step_commons.get('MaxNbEvts', self.MaxNbEvts)
-
     if not self.OutputFile:
       dircont = os.listdir("./")
       for myfile in dircont:
