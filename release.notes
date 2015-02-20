@@ -4,6 +4,12 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2-pre4]
+
+* Workflow
+FIX: Fix some of the issues with module and step_commons - parameters
+FIX: Mokka: ProcessID is now passed to the module
+
 [v22r2-pre3]
 
 * DIRAC
