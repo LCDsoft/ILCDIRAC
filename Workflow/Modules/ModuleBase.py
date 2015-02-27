@@ -442,7 +442,12 @@ class ModuleBase(object):
 
     if self.InputData:
       resNE = getNumberOfEvents(self.InputData)
-      if not resNE['OK'] and self.NumberOfEvents == 0:
+      #NumberOfEvents == 0 does not necessarily mean things went wrong... This
+      #is really almost(?)  impossible to solve, sometimes NumberOfEvents can
+      #be 0 and then the correct number is already found in the steering file
+      #provided to the job. Only in case of productions can we expect that we
+      #always get number of events from somewhere. So we would need to check for production ID
+      if not resNE['OK'] and self.NumberOfEvents == 0 and self.isProdJob:
         return S_ERROR("Failed to get NumberOfEvents from FileCatalog")
       if resNE['OK']:
         eventsMeta = resNE['Value']
