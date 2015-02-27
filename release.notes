@@ -28,6 +28,13 @@ CHANGE: Tar and compress logfiles
 FIX: Remove SystemConfig/sysconfig, replace with platform
 
 
+[v22r1p15]
+
+* Workflow
+
+FIX: ILCDIRAC-452: getNumberOfEvents will now fail if no information is found. if NumberOfEvents is 0 the job will fail.
+
+
 [v22r1p14]
 
 * Workflow
