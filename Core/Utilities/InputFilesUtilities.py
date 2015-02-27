@@ -42,20 +42,20 @@ def getNumberOfEvents(inputfile):
     if len(files) == 1:
       res = fc.getFileUserMetadata(files[0])
       if not res['OK']:
-        gLogger.warn("Failed to get NumberOfEvents from file: %s" % files[0])
-        continue
-      tags = res['Value']
-      if tags.has_key("NumberOfEvents") and not found_nbevts:
-        numberofevents += int(tags["NumberOfEvents"])
-        found_nbevts = True
-        completeFailure = False
-      if tags.has_key("Luminosity") and not found_lumi:
-        luminosity += float(tags["Luminosity"])  
-        found_lumi = True
-      others.update(tags)  
-      if found_nbevts: 
-        continue
-        
+        gLogger.warn("Failed to get NumberOfEvents from file: %s, because: %s" % (files[0], res['Message']))
+      else:
+        tags = res['Value']
+        if "NumberOfEvents" in tags and not found_nbevts:
+          numberofevents += int(tags["NumberOfEvents"])
+          found_nbevts = True
+          completeFailure = False
+        if "Luminosity" in tags and not found_lumi:
+          luminosity += float(tags["Luminosity"])
+          found_lumi = True
+        others.update(tags)
+        if found_nbevts:
+          continue
+
     res = fc.getDirectoryMetadata(path)
     if res['OK']:   
       tags = res['Value']
@@ -72,12 +72,12 @@ def getNumberOfEvents(inputfile):
       if found_nbevts: 
         continue
     else:
-      gLogger.warn("Failed to get NumberOfEvents from path: %s" % path)
+      gLogger.warn("Failed to get NumberOfEvents from path: %s, because: %s" % (path, res['Message']))
 
     for myfile in files:
       res = fc.getFileUserMetadata(myfile)
       if not res['OK']:
-        gLogger.warn("Failed to get NumberOfEvents for file: %s" % myfile)
+        gLogger.warn("Failed to get NumberOfEvents from file: %s, because: %s" % (myfile, res['Message']))
         continue
       tags = res['Value']
       if tags.has_key("NumberOfEvents"):
