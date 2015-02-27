@@ -24,7 +24,7 @@ from DIRAC.RequestManagementSystem.private.RequestValidator   import gRequestVal
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
-from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfevents
+from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfEvents
 
 from DIRAC.RequestManagementSystem.Client.Operation       import Operation
 from DIRAC.RequestManagementSystem.Client.File            import File
@@ -441,11 +441,15 @@ class ModuleBase(object):
     self.debug = self.step_commons.get('debug', self.debug)
 
     if self.InputData:
-      res = getNumberOfevents(self.InputData)
-      self.inputdataMeta.update(res['AdditionalMeta'])
-      if res["nbevts"]:
-        if self.NumberOfEvents > res['nbevts'] or self.NumberOfEvents == 0:
-          self.NumberOfEvents = res['nbevts']
+      resNE = getNumberOfEvents(self.InputData)
+      if not resNE['OK'] and self.NumberOfEvents == 0:
+        return S_ERROR("Failed to get NumberOfEvents from FileCatalog")
+      if resNE['OK']:
+        eventsMeta = resNE['Value']
+        self.inputdataMeta.update(eventsMeta['AdditionalMeta'])
+        if eventsMeta["nbevts"]:
+          if self.NumberOfEvents > eventsMeta['nbevts'] or self.NumberOfEvents == 0:
+            self.NumberOfEvents = eventsMeta['nbevts']
 
     res = self.applicationSpecificInputs()
     if not res['OK']:
