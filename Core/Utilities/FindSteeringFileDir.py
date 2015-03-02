@@ -11,7 +11,7 @@ Created on Feb 10, 2012
 __RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, CheckCVMFS
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, checkCVMFS
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from ILCDIRAC.Core.Utilities.TARsoft import check
 
@@ -30,9 +30,9 @@ def getSteeringFileDirName(platform, application, applicationVersion):
 def getSteeringFileDir(platform, version):
   """Return directly the directory, without passing by the dependency resolution
   """
-  res = CheckCVMFS(platform, ['steeringfiles', version])
+  res = checkCVMFS(platform, ['steeringfiles', version])
   if res['OK']:
-    return res
+    return S_OK(res['Value'][0])
   #Here means CVMFS is not defined, so we need to rely on the tar ball
   res = getSoftwareFolder(platform, 'steeringfiles', version)
   if not res['OK']:

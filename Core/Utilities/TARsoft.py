@@ -56,7 +56,7 @@ def checkLockAge(lockname):
       break
     loc_time = time.time()
     if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
-      gLogger.info("File is %s seconds old" % loc_time-last_touch)
+      gLogger.info("File is %s seconds old" % str(loc_time-last_touch))
       overwrite = True
       res = clearLock(lockname)
       if res['OK']:
@@ -139,23 +139,41 @@ def tarMd5Check(app_tar_base, md5sum ):
     return S_ERROR("Hash does not correspond")
   return S_OK()
 
-def tarInstall(app, config, area):
-  """ For the specified app, install all dependencies
-  """
-  curdir = os.getcwd()
+def installDependencies(app, config, areas):
+  """install dependencies for application"""
   appName    = app[0].lower()
   appVersion = app[1]
 
   deps = resolveDeps(config, appName, appVersion)
   for dep in deps:
     depapp = [ dep["app"], dep["version"] ]
-    gLogger.info("Installing dependency %s %s" % (dep["app"], dep["version"]))
-    res = installPackage(depapp, config, area, curdir)
-    if not res['OK']:
-      return res
+    resDep = installInAnyArea(areas, depapp, config)
+    if not resDep['OK']:
+      return S_ERROR("Failed to install dependency: %s" % str(depapp))
 
-  res = installPackage(app, config, area, curdir)
-  return res
+  return S_OK()
+
+def installInAnyArea(areas, app, jobConfig):
+  """try to install app in any area of areas"""
+  for area in areas:
+    resInstall= installSinglePackage(app, jobConfig, area)
+    if resInstall['OK']:
+      return S_OK()
+  ##If there was no sucess in the loop, we fail
+  return S_ERROR("Failed to install software")
+
+def installSinglePackage(app, jobConfig, area):
+  """install some package somewhere, returns S_OK/S_ERROR"""
+  gLogger.notice('Attempting to install %s_%s for %s in %s' % (app[0], app[1], jobConfig, area))
+  curdir = os.getcwd()
+  res = installPackage(app, jobConfig, area, curdir)
+  if not res['OK']:
+    gLogger.error('Failed to install software in %s: %s' % (area, res['Message']),
+                  '%s_%s' % (app[0], app[1]))
+    return S_ERROR("Failed to install here")
+  else:
+    gLogger.info('%s was successfully installed for %s in %s' % (app, jobConfig, area))
+    return S_OK()
 
 def getTarBallLocation(app, config, dummy_area):
   """ Get the tar ball location. 

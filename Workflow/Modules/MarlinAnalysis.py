@@ -35,13 +35,10 @@ class MarlinAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
-    self.InputFile = []
-    self.SteeringFile = ''
     self.inputGEAR = ''
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.NumberOfEvents = -1
     self.eventstring = ['ProgressHandler','event']
     self.envdict = {}
     self.ProcessorListToUse = []
@@ -51,16 +48,7 @@ class MarlinAnalysis(ModuleBase):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    ##TODO: Need to keep for old interface. Move to ModuleBase
-    if self.step_commons.has_key('inputSlcio'):
-      inputf = self.step_commons["inputSlcio"]
-      if not type(inputf) == types.ListType:
-        if len(inputf):
-          inputf = inputf.split(";")
-        else:
-          inputf = [] 
-      self.InputFile = inputf
-      
+
     if self.workflow_commons.has_key('ParametricInputSandbox'):
       paramsb = self.workflow_commons['ParametricInputSandbox']
       if not type(paramsb) == types.ListType:
@@ -70,15 +58,6 @@ class MarlinAnalysis(ModuleBase):
           paramsb = []
         
       self.InputFile += paramsb
-      
-    if self.step_commons.has_key('inputXML'):
-      self.SteeringFile = self.step_commons['inputXML']
-      
-    if self.step_commons.has_key('inputGEAR'):
-      self.inputGEAR = self.step_commons['inputGEAR']
-      
-    if self.step_commons.has_key('EvtsToProcess'):
-      self.NumberOfEvents = self.step_commons['EvtsToProcess']
     
     ##Backward compat needed, cannot remove yet.  
     if self.step_commons.has_key('outputREC'):
@@ -303,6 +282,20 @@ class MarlinAnalysis(ModuleBase):
             finallist.remove(item)
     else:
       finallist = items
+
+
+    ## LCFIPlus links with LCFIVertex, LCFIVertex needs to go first in the MARLIN_DLL
+    plusPos = 0
+    lcfiPos = 0
+    for position, lib in enumerate(finallist):
+      if 'libLCFIPlus' in lib:
+        plusPos = position
+      if 'libLCFIVertex' in lib:
+        lcfiPos = position
+    if plusPos < lcfiPos: # if lcfiplus is before lcfivertex
+      #swap the two entries
+      finallist[plusPos], finallist[lcfiPos] = finallist[lcfiPos], finallist[plusPos]
+
     marlindll = ":".join(finallist)
     self.log.verbose("Final MARLIN_DLL is:", marlindll)
     
