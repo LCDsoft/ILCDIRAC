@@ -11,7 +11,7 @@ Created on Feb 10, 2010
 
 __RCSID__ = "$Id$"
 
-from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfevents
+from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
 from DIRAC import S_OK, S_ERROR
 
 def SplitByFilesAndEvents(listoffiles, evtsperjob):
@@ -21,13 +21,13 @@ def SplitByFilesAndEvents(listoffiles, evtsperjob):
   total_evts = 0
   for files in listoffiles:
     myfdict = {}
-    info =  getNumberOfevents([files])
-    if not "nbevts" in info:
+    resInfo =  getNumberOfEvents([files])
+    if not resInfo['OK'] or not "nbevts" in resInfo['Value']:
       return S_ERROR("The file %s does not have attached number of events, cannot split" % files)
     myfdict['file'] = files
-    myfdict['nbevts'] = info['nbevts']
+    myfdict['nbevts'] = resInfo['Value']['nbevts']
     mylist.append(myfdict) 
-    total_evts += info['nbevts']
+    total_evts += resInfo['Value']['nbevts']
 
   #nb_jobs = total_evts/evtsperjob
   joblist = []
