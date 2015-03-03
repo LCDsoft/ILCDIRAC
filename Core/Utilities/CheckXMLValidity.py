@@ -12,7 +12,7 @@ __RCSID__ = "$Id$"
 from DIRAC                                                import S_OK, S_ERROR
 from xml.etree.ElementTree                                import ElementTree
 
-def CheckXMLValidity(xmlfile):
+def checkXMLValidity(xmlfile):
   """ Check that the xml parsing of the specified xml will not fail when running on the GRID
   @param xmlfile: path to xml file
   """
