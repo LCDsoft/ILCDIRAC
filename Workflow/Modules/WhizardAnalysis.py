@@ -102,16 +102,14 @@ class WhizardAnalysis(ModuleBase):
     ##EVER USED???
     if self.step_commons.has_key('SusyModel'):
       self.susymodel = self.step_commons['SusyModel']
-      
-    if self.step_commons.has_key("InputFile"):
-      self.SteeringFile = os.path.basename(self.step_commons["InputFile"])
-      
-    self.parameters['PROCESS'] = self.evttype
 
+    self.SteeringFile = os.path.basename(self.step_commons.get("InputFile", self.SteeringFile))
     if self.SteeringFile == "whizard.in":
       os.rename(self.SteeringFile, "whizardnew.in")
       self.SteeringFile = "whizardnew.in"
- 
+
+    self.parameters['PROCESS'] = self.evttype
+
     listofparams = self.steeringparameters.split(";")
     for param in listofparams:
       if param.count("="):
@@ -141,11 +139,11 @@ class WhizardAnalysis(ModuleBase):
     if not len(self.SteeringFile) and not self.optionsdict:
       self.getProcessInFile = True
  
-    if self.workflow_commons.has_key("IS_PROD"):
+    if "IS_PROD" in self.workflow_commons:
       if self.workflow_commons["IS_PROD"] and not self.willCut:
         #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_gen_"):
@@ -158,18 +156,17 @@ class WhizardAnalysis(ModuleBase):
           #getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
           #                                  int(self.workflow_commons["JOB_ID"]))
           
-    if self.workflow_commons.has_key("IS_DBD_GEN_PROD"):
-      if self.workflow_commons["IS_DBD_GEN_PROD"]:
-        #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
-          outputlist = self.workflow_commons['ProductionOutputData'].split(";")
-          for obj in outputlist:
-            self.OutputFile = os.path.basename(obj)
-            break
-        else:
-          self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))        
+    if "IS_DBD_GEN_PROD" in self.workflow_commons and self.workflow_commons["IS_DBD_GEN_PROD"]:
+      #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
+      #                                  int(self.workflow_commons["JOB_ID"]))
+      if 'ProductionOutputData' in self.workflow_commons:
+        outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+        for obj in outputlist:
+          self.OutputFile = os.path.basename(obj)
+          break
+      else:
+        self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
+                                          int(self.workflow_commons["JOB_ID"]))
     return S_OK()
 
   def runIt(self):
