@@ -224,8 +224,8 @@ class OverlayInput (ModuleBase):
   def __getFilesFromLyon(self, meta):
     """ List the files present at Lyon, not used.
     """
-    ProdID = meta['ProdID']
-    prod = str(ProdID).zfill(8)
+    prodID = meta['ProdID']
+    prod = str(prodID).zfill(8)
     energy = meta['Energy']
     bkg = meta["EvtType"]
     detector = meta["DetectorType"]
@@ -240,10 +240,10 @@ class OverlayInput (ModuleBase):
       curdir = path + mydir
       comm2 = ["nsls", curdir]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
-      for f in res[0].rstrip().split("\n"):
-        if f.count("dirac_directory"):
+      for oFile in res[0].rstrip().split("\n"):
+        if oFile.count("dirac_directory"):
           continue
-        mylist.append(path + mydir + "/" + f)
+        mylist.append(path + mydir + "/" + oFile)
     if not mylist:
       return S_ERROR("File list is empty")
     return S_OK(mylist)
@@ -251,8 +251,8 @@ class OverlayInput (ModuleBase):
   def __getFilesFromCastor(self, meta):
     """ Get the available files (list) from the CERN castor storage
     """ 
-    ProdID = meta['ProdID']
-    prod = str(ProdID).zfill(8)
+    prodID = meta['ProdID']
+    prod = str(prodID).zfill(8)
     energy = meta['Energy']
     bkg = meta["EvtType"]
     detector = meta["DetectorType"]
@@ -267,10 +267,10 @@ class OverlayInput (ModuleBase):
       curdir = path + mydir
       comm2 = ["nsls", curdir]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
-      for f in res[0].rstrip().split("\n"):
-        if f.count("dirac_directory"):
+      for oFile in res[0].rstrip().split("\n"):
+        if oFile.count("dirac_directory"):
           continue
-        mylist.append(path + mydir + "/" + f)
+        mylist.append(path + mydir + "/" + oFile)
     if not mylist:
       return S_ERROR("File list is empty")
     return S_OK(mylist)
@@ -314,9 +314,8 @@ class OverlayInput (ModuleBase):
 #      jobpropdict['Site']=self.site
 #      max_concurrent_running = res['Value']
     if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
-      f.write('Dont look at cpu')
-      f.close()
+      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+        checkFile.write('Dont look at cpu')
     overlaymon = RPCClient('Overlay/Overlay', timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
@@ -391,9 +390,8 @@ class OverlayInput (ModuleBase):
           res = self.getKEKFile(self.lfns[fileindex])
         else:
           if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-            f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
-            f.write('Dont look at cpu')
-            f.close()
+            with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+              checkFile.write('Dont look at cpu')
           res = self.datMan.getFile(self.lfns[fileindex])
           triedDataManager = True
 
@@ -536,9 +534,8 @@ fi\n""" % (basename, lfile))
     self.log.info("Getting %s" % file)
     ###Don't check for CPU time as other wise, job can get killed
     if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
-      f.write('Dont look at cpu')
-      f.close()
+      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+        checkFile.write('Dont look at cpu')
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
@@ -577,9 +574,8 @@ fi\n""" % (basename, lfile))
     self.log.info("Getting %s" % lfile)
     ###Don't check for CPU time as other wise, job can get killed
     if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
-      f.write('Dont look at cpu')
-      f.close()
+      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+        checkFile.write('Dont look at cpu')
     
     #command = "rfcp %s ./"%file
     #comm = []
