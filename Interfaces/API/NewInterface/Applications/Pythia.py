@@ -19,7 +19,7 @@ class Pythia(LCApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.EvtType = ''
+    self.eventType = ''
     super(Pythia, self).__init__( paramdict )
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
@@ -54,7 +54,7 @@ class Pythia(LCApplication):
       return S_ERROR("Version not specified")
 
     #Resolve event type, needed for production jobs
-    self.EvtType = self.Version.split("_")[0]
+    self.eventType = self.Version.split("_")[0]
 
     if not self.NbEvts:
       return S_ERROR("Number of events to generate not defined")
@@ -67,6 +67,6 @@ class Pythia(LCApplication):
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                    "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts'] = self.NbEvts
-      self.prodparameters['Process'] = self.EvtType
+      self.prodparameters['Process'] = self.eventType
 
     return S_OK()
