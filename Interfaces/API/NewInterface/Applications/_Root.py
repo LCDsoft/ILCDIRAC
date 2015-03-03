@@ -12,8 +12,8 @@ class _Root(LCApplication):
   """
 
   def __init__(self, paramdict = None):
-    self.Arguments = ''
-    self.Script = None
+    self.arguments = ''
+    self.script = None
     super(_Root, self).__init__( paramdict )
 
 
@@ -39,7 +39,7 @@ class _Root(LCApplication):
 
     """
     self._checkArgs( { 'args' : types.StringTypes } )
-    self.Arguments = args
+    self.arguments = args
     return S_OK()
 
 
@@ -52,8 +52,8 @@ class _Root(LCApplication):
 
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('arguments',   self.Arguments)
-    moduleinstance.setValue("script",      self.Script)
+    moduleinstance.setValue('arguments',   self.arguments)
+    moduleinstance.setValue("script",      self.script)
     moduleinstance.setValue('debug',       self.Debug)
 
 
@@ -75,7 +75,7 @@ class _Root(LCApplication):
   def _checkConsistency(self):
     """ Checks that script is set.
     """
-    if not self.Script:
+    if not self.script:
       return S_ERROR("Script or macro not defined")
     if not self.Version:
       return S_ERROR("You need to specify the Root version")
