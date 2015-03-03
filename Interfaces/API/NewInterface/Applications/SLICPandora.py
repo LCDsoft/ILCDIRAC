@@ -1,0 +1,144 @@
+"""
+SLICPandora : Run Pandora in the SID context
+"""
+__RCSID__ = "$Id$"
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
+from DIRAC import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Parameter import Parameter
+import types, os
+
+class SLICPandora(LCApplication):
+  """ Call SLICPandora
+
+  Usage:
+
+  >>> lcsim = LCSIM()
+  ...
+  >>> slicpandora = SLICPandora()
+  >>> slicpandora.getInputFromApp(lcsim)
+  >>> slicpandora.setPandoraSettings("~/GreatPathToHeaven/MyPandoraSettings.xml")
+  >>> slicpandora.setStartFrom(10)
+
+  Use setExtraCLIArguments if you want to add arguments to the PandoraFrontend call
+
+  """
+  def __init__(self, paramdict = None):
+
+    self.StartFrom = 0
+    self.PandoraSettings = ''
+    self.DetectorModel = ''
+    super(SLICPandora, self).__init__( paramdict)
+    ##Those 5 need to come after default constructor
+    self._modulename = 'SLICPandoraAnalysis'
+    self._moduledescription = 'Module to run SLICPANDORA'
+    self.appname = 'slicpandora'
+    self.datatype = 'REC'
+    self.detectortype = 'SID'
+    self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
+
+  def setDetectorModel(self, detectorModel):
+    """ Define detector to use for SlicPandora simulation
+
+    @param detectorModel: Detector Model to use for SlicPandora simulation.
+    @type detectorModel: string
+    """
+    self._checkArgs( { 'detectorModel' : types.StringTypes } )
+
+    self.DetectorModel = detectorModel
+    if os.path.exists(detectorModel) or detectorModel.lower().count("lfn:"):
+      self.inputSB.append(detectorModel)
+
+  def setStartFrom(self, startfrom):
+    """ Optional: Define from where slicpandora start to read in the input file
+
+    @param startfrom: from how slicpandora start to read the input file
+    @type startfrom: int
+    """
+    self._checkArgs( { 'startfrom' : types.IntType } )
+    self.StartFrom = startfrom
+
+  def setPandoraSettings(self, pandoraSettings):
+    """ Optional: Define the path where pandora settings are
+
+    @param pandoraSettings: path where pandora settings are
+    @type pandoraSettings: string
+    """
+    self._checkArgs( { 'pandoraSettings' : types.StringTypes } )
+    self.PandoraSettings = pandoraSettings
+    if os.path.exists(pandoraSettings) or pandoraSettings.lower().count("lfn:"):
+      self.inputSB.append(pandoraSettings)
+
+  def _userjobmodules(self, stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setUserJobFinalization(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('userjobmodules failed')
+    return S_OK()
+
+  def _prodjobmodules(self, stepdefinition):
+    res1 = self._setApplicationModuleAndParameters(stepdefinition)
+    res2 = self._setOutputComputeDataList(stepdefinition)
+    if not res1["OK"] or not res2["OK"] :
+      return S_ERROR('prodjobmodules failed')
+    return S_OK()
+
+  def _checkConsistency(self):
+
+    if not self.Version:
+      return S_ERROR('No version found')
+
+    if self.SteeringFile:
+      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+        res = Exists(self.SteeringFile)
+        if not res['OK']:
+          return res
+
+    if not self.PandoraSettings:
+      return S_ERROR("PandoraSettings not set, you need it")
+
+    #res = self._checkRequiredApp()
+    #if not res['OK']:
+    #  return res
+
+    if not self.StartFrom :
+      self._log.info('No startFrom defined for SlicPandora : start from the begining')
+
+    if not self._jobtype == 'User':
+      self.prodparameters['slicpandora_steeringfile'] = self.SteeringFile
+      self.prodparameters['slicpandora_detectorModel'] = self.DetectorModel
+
+
+    return S_OK()
+
+  def _applicationModule(self):
+
+    md1 = self._createModuleDefinition()
+    md1.addParameter(Parameter("pandorasettings",   "", "string", "", "", False, False,
+                               "Pandora Settings"))
+    md1.addParameter(Parameter("detectorxml",       "", "string", "", "", False, False,
+                               "Detector model for simulation"))
+    md1.addParameter(Parameter("startFrom",          0,    "int", "", "", False, False,
+                               "From how SlicPandora start to read the input file"))
+    md1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False,
+                               "debug mode"))
+    return md1
+
+  def _applicationModuleValues(self, moduleinstance):
+
+    moduleinstance.setValue("pandorasettings",    self.PandoraSettings)
+    moduleinstance.setValue("detectorxml",        self.DetectorModel)
+    moduleinstance.setValue("startFrom",          self.StartFrom)
+    moduleinstance.setValue("debug",              self.Debug)
+
+  def _checkWorkflowConsistency(self):
+    return self._checkRequiredApp()
+
+  def _resolveLinkedStepParameters(self, stepinstance):
+    if type(self._linkedidx) == types.IntType:
+      self._inputappstep = self._jobsteps[self._linkedidx]
+    if self._inputappstep:
+      stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
+    return S_OK()
+

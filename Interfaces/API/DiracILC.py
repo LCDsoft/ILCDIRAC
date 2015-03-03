@@ -192,9 +192,16 @@ class DiracILC(Dirac):
     @param appVersion: Application version
     @return: S_OK() or S_ERROR()
     """
-    self.log.debug("Checking for software version in " + '/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appName, appVersion))
-    app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appName, appVersion),'')
-    if not app_version:
+    csPathTarBall = "/AvailableTarBalls/%s/%s/%s/TarBall" %(platform, appName, appVersion)
+    csPathCVMFS   ="/AvailableTarBalls/%s/%s/%s/CVMFSPath"%(platform, appName, appVersion)
+
+    self.log.debug("Checking for software version in " + csPathTarBall)
+    app_version = self.ops.getValue(csPathTarBall,'')
+
+    self.log.debug("Checking for software version in " + csPathCVMFS)
+    app_version_cvmfs = self.ops.getValue(csPathCVMFS,'')
+
+    if not app_version and not app_version_cvmfs:
       self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
       return S_ERROR("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
     return S_OK()

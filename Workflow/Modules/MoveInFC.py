@@ -7,7 +7,6 @@ __RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import resolveIFpaths
-#from ILCDIRAC.Core.Utilities.InputFilesUtilities           import getNumberOfevents
 
 from DIRAC import gLogger, S_OK, S_ERROR
 import os, shutil

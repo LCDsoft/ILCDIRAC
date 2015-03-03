@@ -131,10 +131,10 @@ def getMokka():
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka
   mokka = Mokka()
-  mokka.setVersion("Test")
+  mokka.setVersion("cvmfsTest")
   mokka.setSteeringFile("clic_ild_cdr.steer")
   mokka.setOutputFile("testsim.slcio")
-  mokka.setSteeringFileVersion("V19")
+  mokka.setSteeringFileVersion("V22")
   return mokka
 
 def getSLIC():
@@ -541,7 +541,8 @@ def runTests():
         gLogger.error("Failed adding slic: ", res["Message"])
         dexit(1)
     elif clip.testInputData:
-      joblcsim.setInputData("/ilc/prod/clic/1.4tev/ee_qqaa/SID/SIM/00002308/000/ee_qqaa_sim_2308_222.slcio")
+      #joblcsim.setInputData("/ilc/prod/clic/1.4tev/ee_qqaa/SID/SIM/00002308/000/ee_qqaa_sim_2308_222.slcio")
+      joblcsim.setInputData("/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/003/h_nunu_sim_4192_3723.slcio")
     else:
       gLogger.error("LCSIM does not know where to get its input from")
       dexit(1)
@@ -584,6 +585,7 @@ def runTests():
           dexit(1)
       else:
         joblcsimov.setInputData("/ilc/prod/clic/1.4tev/ee_qqaa/SID/SIM/00002308/000/ee_qqaa_sim_2308_222.slcio")
+        joblcsimov.setInputData("/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/003/h_nunu_sim_4192_3723.slcio")
         
       if clip.testOverlay:
         ovslicp = getOverlay(2)
@@ -656,7 +658,8 @@ def runTests():
 
     #LCIO split
     joblciosplit = getJob()
-    joblciosplit.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_46.slcio")
+    # joblciosplit.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_46.slcio")
+    joblciosplit.setInputData("/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/002/aa_qqll_all_dst_4275_2104.slcio")
     mylciosplit = getLCIOSplit(100)
     res = joblciosplit.append(mylciosplit)
     if not res['OK']:
@@ -666,8 +669,12 @@ def runTests():
   
     #LCIO concat
     jobconcat = getJob()
-    jobconcat.setInputData(["/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_27.slcio",
-                            "/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_46.slcio"])
+    # jobconcat.setInputData(["/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_27.slcio",
+    #                         "/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_46.slcio"])
+
+    jobconcat.setInputData(["/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/002/aa_qqll_all_dst_4275_2104.slcio",
+                            "/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/002/aa_qqll_all_dst_4275_2105.slcio"])
+
     myconcat = getLCIOConcat()
     res = jobconcat.append(myconcat)
     if not res['OK']:

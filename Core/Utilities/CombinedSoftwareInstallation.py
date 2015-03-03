@@ -6,10 +6,11 @@ Installs properly ILD soft and SiD soft, and all dependencies
 @author: Stephane Poss and Przemyslaw Majewski
 """
 __RCSID__ = "$Id$"
-import os
+import os, zipfile
 import DIRAC
-from ILCDIRAC.Core.Utilities.TARsoft   import tarInstall
-#from ILCDIRAC.Core.Utilities.JAVAsoft import JAVAinstall
+from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, installDependencies
+from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
+
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from DIRAC.Core.Utilities.Subprocess   import systemCall
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
@@ -32,15 +33,9 @@ class CombinedSoftwareInstallation(object):
     
     self.ops = Operations()
     
-    self.job = {}
-    if argumentsDict.has_key('Job'):
-      self.job = argumentsDict['Job']
-    self.ce = {}
-    if argumentsDict.has_key('CE'):
-      self.ce = argumentsDict['CE']
-    self.source = {}
-    if argumentsDict.has_key('Source'):
-      self.source = argumentsDict['Source']
+    self.job = argumentsDict.get('Job', {})
+    self.ce = argumentsDict.get('CE', {})
+    self.source = argumentsDict.get('Source', {})
 
     apps = []
     if self.job.has_key('SoftwarePackages'):
@@ -48,6 +43,15 @@ class CombinedSoftwareInstallation(object):
         apps = [self.job['SoftwarePackages']]
       elif type( self.job['SoftwarePackages'] ) == type([]):
         apps = self.job['SoftwarePackages']
+
+
+    self.jobConfig = ''
+    if 'SystemConfig' in self.job:
+      self.jobConfig = self.job['SystemConfig']
+    elif 'Platform' in self.job:
+      self.jobConfig = self.job['Platform']
+    else:
+      self.jobConfig = natOS.CMTSupportedConfig()[0]
 
     self.apps = []
     for app in apps:
@@ -58,16 +62,16 @@ class CombinedSoftwareInstallation(object):
         app = []
         app.append(tempapp[0])
         app.append(".".join(tempapp[1:]))
+
+      deps = resolveDeps(self.jobConfig, app[0], app[1])
+      for dep in deps:
+        depapp = (dep['app'], dep['version'])
+        self.apps.append(depapp)
       self.apps.append(app)
 
-    self.jobConfig = ''
-    if self.job.has_key( 'SystemConfig' ):
-      self.jobConfig = self.job['SystemConfig']
-    else:
-      self.jobConfig = natOS.CMTSupportedConfig()[0]
       
     self.ceConfigs = []
-    if self.ce.has_key('CompatiblePlatforms'):
+    if 'CompatiblePlatforms' in self.ce:
       self.ceConfigs = self.ce['CompatiblePlatforms']
       if type(self.ceConfigs) == type(''):
         self.ceConfigs = [self.ceConfigs]
@@ -135,26 +139,22 @@ class CombinedSoftwareInstallation(object):
     
     
     for app in self.apps:
-      failed = False
-      res = CheckCVMFS(self.jobConfig, app)
+      res = checkCVMFS(self.jobConfig, app)
       if res['OK']:
         DIRAC.gLogger.notice('Software %s is available on CVMFS, skipping' % ", ".join(app) )
         continue
-      for area in areas:
-        DIRAC.gLogger.info('Attempting to install %s_%s for %s in %s' % (app[0], app[1], self.jobConfig, area))
-        res = tarInstall(app, self.jobConfig, area)
-        if not res['OK']:
-          DIRAC.gLogger.error('Failed to install software in %s: %s' % (area, res['Message']), 
-                              '%s_%s' % (app[0], app[1]))
-          failed = True
-          continue
-        else:
-          DIRAC.gLogger.info('%s was successfully installed for %s in %s' % (app, self.jobConfig, area))
-          failed = False
-          break
-      if failed:
-        return DIRAC.S_ERROR("Failed to install software")
-      
+
+      ## First install the original package in any of the areas
+      resInstall = installInAnyArea(areas, app, self.jobConfig)
+      if not resInstall['OK']:
+        return resInstall
+
+      ## Then install the dependencies, which can be in a different area
+      resDeps = installDependencies(app, self.jobConfig, areas)
+      if not resDeps['OK']:
+        DIRAC.gLogger.error("Failed to install dependencies: ", resDeps['Message'])
+        return S_ERROR("Failed to install dependencies")
+
     if self.sharedArea:  
       #List content  
       listAreaDirectory(self.sharedArea)
@@ -243,7 +243,7 @@ def CreateSharedArea():
     os.remove( sharedArea )
     os.makedirs( sharedArea )
     return True
-  except Exception, x:
+  except OSError as x:
     DIRAC.gLogger.error('Problem trying to create shared area', str(x))
     return False
 
@@ -265,27 +265,26 @@ def LocalArea():
     if os.path.exists( localArea ):
       try:
         os.remove( localArea )
-      except OSError, x:
-        DIRAC.gLogger.error( 'Cannot remove:', localArea )
+      except OSError as err:
+        DIRAC.gLogger.error( 'Cannot remove:', localArea + " because " + str(err) )
         localArea = ''
     else:
       try:
         os.mkdir( localArea )
-      except OSError, x:
-        DIRAC.gLogger.error( 'Cannot create:', localArea )
+      except OSError as err:
+        DIRAC.gLogger.error( 'Cannot create:', localArea + " because " + str(err) )
         localArea = ''
   return localArea
 
-def getSoftwareFolder(systemConfig, appname, appversion):
+def getSoftwareFolder(platform, appname, appversion):
   """ 
   Discover location of a given folder, either the local or the shared area
   """
-  res = CheckCVMFS(systemConfig, [appname, appversion])
+  res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
-    return res
+    return S_OK(res['Value'][0])
   
-  ops = Operations()
-  app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(systemConfig, appname, appversion), '')
+  app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
   if not app_tar:
     return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
   if app_tar.count("gz"):
@@ -304,24 +303,39 @@ def getSoftwareFolder(systemConfig, appname, appversion):
   mySoftDir = os.path.join(mySoftwareRoot, folder)
   return S_OK(mySoftDir)
 
-def getEnvironmentScript(systemConfig, appname, appversion, fcn_env):
+def getEnvironmentScript(platform, appname, appversion, fcn_env):
   """ Return the path to the environment script, either from CVMFS, or from the fcn_env function
   """
-  res = CheckCVMFS(systemConfig, [appname, appversion])
+  res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
-    cvmfsenv = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSEnvScript" % (systemConfig, appname, appversion),
-                                     "")
+    cvmfsenv = res['Value'][1]
+    DIRAC.gLogger.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
     if cvmfsenv:
       return S_OK(os.path.join(res["Value"], cvmfsenv))
   #if CVMFS script is not here, the module produces its own.
-  return fcn_env(systemConfig, appname, appversion)
+  return fcn_env(platform, appname, appversion)
 
-def CheckCVMFS(sysconfig, app):
-  """ Check the existence of the CVMFS path
+def checkCVMFS(platform, app):
+  """ Check the existence of the CVMFS path, returns S_OK tupe of path and envscript
   """
   name, version = app
-  cvmfspath = Operations().getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (sysconfig, name, version),"")
+  csPath = "/AvailableTarBalls/%s/%s/%s" % (platform, name, version)
+  cvmfspath = Operations().getValue(csPath + "/CVMFSPath" ,"")
+  envScript = Operations().getValue(csPath + "/CVMFSEnvScript" ,"")
   if cvmfspath and os.path.exists(cvmfspath):
-    return S_OK(cvmfspath)
-  
+    return S_OK((cvmfspath, envScript))
+  DIRAC.gLogger.info("Cannot find package on cvmfs:", Operations().getOptionsDict(csPath))
   return S_ERROR('Missing CVMFS!')
+
+def unzip_file_into_dir(myfile, mydir):
+  """Used to unzip the downloaded detector model
+  """
+  zfobj = zipfile.ZipFile(myfile)
+  for name in zfobj.namelist():
+    newPath = os.path.join(mydir, name)
+    if name.endswith('/'):
+      if not os.path.exists(newPath):
+        os.mkdir(newPath)
+    else:
+      with open(newPath, 'wb') as outfile:
+        outfile.write(zfobj.read(name))
