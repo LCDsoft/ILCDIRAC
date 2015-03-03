@@ -656,25 +656,21 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       cachedirelem.text = cachedir
       control.append(cachedirelem)
       
-  LcsimPrintEveryEvent = 1
   res = gConfig.getOption("/LocalSite/LcsimPrintEveryEvent", 1)
-  if not res['OK']:
-    LcsimPrintEveryEvent = 1
-  else:
-    LcsimPrintEveryEvent = res['Value']
+  lcsimPrintEveryEvent = 1 if not res['OK'] else res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
   if not eventInterval is None:
     evtint = eventInterval.text
     if int(evtint) < 10:    
-      eventInterval.text = "%s" % LcsimPrintEveryEvent
+      eventInterval.text = "%s" % lcsimPrintEveryEvent
   else:
     notdriver = True
     for driver in drivers:
       if driver.attrib.has_key("type"):
         if driver.attrib["type"] == "org.lcsim.job.EventMarkerDriver" :
           eventInterval = Element("eventInterval")
-          eventInterval.text = "%s" % LcsimPrintEveryEvent
+          eventInterval.text = "%s" % lcsimPrintEveryEvent
           driver.append(eventInterval)
           notdriver = False
     if notdriver:
@@ -684,7 +680,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       propdict['type'] = 'org.lcsim.job.EventMarkerDriver'
       eventmarker = Element("driver", propdict)
       eventInterval = Element("eventInterval")
-      eventInterval.text = "%s" % LcsimPrintEveryEvent
+      eventInterval.text = "%s" % lcsimPrintEveryEvent
       eventmarker.append(eventInterval)
       drivers.append(eventmarker)
       execut = tree.find("execute")
