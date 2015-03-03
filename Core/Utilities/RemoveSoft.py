@@ -6,7 +6,7 @@ Module to remove software. Not used if using the ProcessProductionSystem
 '''
 __RCSID__ = "$Id$"
 
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getLocalAreaLocation, getSharedAreaLocation
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
 
 from DIRAC import S_OK, S_ERROR, gLogger
@@ -48,8 +48,8 @@ class RemoveSoft(object):
       appDir = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (self.platform, appname, appversion), '')
       appDir = appDir.replace(".tgz", "").replace(".tar.gz", "")
       mySoftwareRoot = ''
-      localArea = LocalArea()
-      sharedArea = SharedArea()
+      localArea = getLocalAreaLocation()
+      sharedArea = getSharedAreaLocation()
       if os.path.exists('%s%s%s' %(localArea, os.sep, appDir)):
         mySoftwareRoot = localArea
       elif os.path.exists('%s%s%s' %(sharedArea, os.sep, appDir)):

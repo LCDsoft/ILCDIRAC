@@ -14,7 +14,7 @@ __RCSID__ = "$Id$"
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall, Subprocess
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import LocalArea, SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getLocalAreaLocation, getSharedAreaLocation
 
 import os, sys, tempfile, threading, time, shutil
 
@@ -113,8 +113,8 @@ class SQLWrapper:
       return S_ERROR("Mokka Data dir is not available")  
     
     ##Because it's possibly installed in the shared area, where one regular user cannot write, it's needed to get it back to the LocalArea
-    if self.softDir == SharedArea():
-      localarea = LocalArea()
+    if self.softDir == getSharedAreaLocation():
+      localarea = getLocalAreaLocation()
       if not os.path.isdir(os.path.join(localarea, "mysql4grid")):
         try:
           shutil.copytree(os.path.join(self.softDir, "mysql4grid"), os.path.join(localarea, "mysql4grid"), False)
