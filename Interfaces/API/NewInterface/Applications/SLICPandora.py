@@ -26,9 +26,9 @@ class SLICPandora(LCApplication):
   """
   def __init__(self, paramdict = None):
 
-    self.StartFrom = 0
-    self.PandoraSettings = ''
-    self.DetectorModel = ''
+    self.startFrom = 0
+    self.pandoraSettings = ''
+    self.detectorModel = ''
     super(SLICPandora, self).__init__( paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'SLICPandoraAnalysis'
@@ -46,7 +46,7 @@ class SLICPandora(LCApplication):
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
-    self.DetectorModel = detectorModel
+    self.detectorModel = detectorModel
     if os.path.exists(detectorModel) or detectorModel.lower().count("lfn:"):
       self.inputSB.append(detectorModel)
 
@@ -57,7 +57,7 @@ class SLICPandora(LCApplication):
     @type startfrom: int
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
-    self.StartFrom = startfrom
+    self.startFrom = startfrom
 
   def setPandoraSettings(self, pandoraSettings):
     """ Optional: Define the path where pandora settings are
@@ -66,7 +66,7 @@ class SLICPandora(LCApplication):
     @type pandoraSettings: string
     """
     self._checkArgs( { 'pandoraSettings' : types.StringTypes } )
-    self.PandoraSettings = pandoraSettings
+    self.pandoraSettings = pandoraSettings
     if os.path.exists(pandoraSettings) or pandoraSettings.lower().count("lfn:"):
       self.inputSB.append(pandoraSettings)
 
@@ -95,19 +95,19 @@ class SLICPandora(LCApplication):
         if not res['OK']:
           return res
 
-    if not self.PandoraSettings:
+    if not self.pandoraSettings:
       return S_ERROR("PandoraSettings not set, you need it")
 
     #res = self._checkRequiredApp()
     #if not res['OK']:
     #  return res
 
-    if not self.StartFrom :
+    if not self.startFrom :
       self._log.info('No startFrom defined for SlicPandora : start from the begining')
 
     if not self._jobtype == 'User':
       self.prodparameters['slicpandora_steeringfile'] = self.SteeringFile
-      self.prodparameters['slicpandora_detectorModel'] = self.DetectorModel
+      self.prodparameters['slicpandora_detectorModel'] = self.detectorModel
 
 
     return S_OK()
@@ -127,9 +127,9 @@ class SLICPandora(LCApplication):
 
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("pandorasettings",    self.PandoraSettings)
-    moduleinstance.setValue("detectorxml",        self.DetectorModel)
-    moduleinstance.setValue("startFrom",          self.StartFrom)
+    moduleinstance.setValue("pandorasettings",    self.pandoraSettings)
+    moduleinstance.setValue("detectorxml",        self.detectorModel)
+    moduleinstance.setValue("startFrom",          self.startFrom)
     moduleinstance.setValue("debug",              self.Debug)
 
   def _checkWorkflowConsistency(self):
