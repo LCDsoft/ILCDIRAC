@@ -8,7 +8,7 @@ Module that gets a file from its SRM definition
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.DISET.RPCClient                            import RPCClient
-from DIRAC.Resources.Storage.StorageElement                import StorageElement
+from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC import S_OK, S_ERROR, gLogger
 import os, tempfile, time
