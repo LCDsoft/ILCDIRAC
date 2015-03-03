@@ -24,15 +24,12 @@ class LCIOSplit(ModuleBase):
 
     self.STEP_NUMBER = ''
     self.log         = gLogger.getSubLogger( "LCIOSplit" )
-    self.result      = S_ERROR()
     self.nbEventsPerSlice = 0
-    self.InputFile = []
     # Step parameters
     self.prod_outputdata = []
     self.applicationName = "lcio"
     #
     self.listoutput = {}
-    self.OutputFile = []
     self.log.info("%s initialized" % ( self.__str__() ))
 
   def applicationSpecificInputs(self):
@@ -68,15 +65,15 @@ class LCIOSplit(ModuleBase):
     """ Execute the module, called by JobAgent
     """
     # Checks
-    self.result = self.resolveInputVariables()
+    resultRIV = self.resolveInputVariables()
+    if not resultRIV['OK']:
+      self.log.error("Failed to resolve input variables", resultRIV['Message'])
+      return resultRIV
+
     if not self.platform:
-      self.result = S_ERROR( 'No ILC platform selected' )
+      return S_ERROR( 'No ILC platform selected' )
 
-    if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
-      return self.result
-
-    if not os.environ.has_key("LCIO"):
+    if "LCIO" not in os.environ:
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
@@ -89,7 +86,6 @@ class LCIOSplit(ModuleBase):
       runonslcio = res['Value'][0]
     else:
       return S_OK("No files found to process")
-    # removeLibc
 
     removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
 
@@ -149,16 +145,14 @@ exit $?
     self.setApplicationStatus( 'LCIOSplit %s step %s' % ( self.applicationVersion, self.STEP_NUMBER ) )
     self.stdError = ''
 
-    self.result = shellCall( 0,
-                             command,
-                             callbackFunction = self.redirectLogOutput,
-                             bufferLimit = 20971520
-                           )
+    result = shellCall( 0,
+                        command,
+                        callbackFunction = self.redirectLogOutput,
+                        bufferLimit = 20971520
+                      )
 
-        # Check results
-
-    resultTuple = self.result['Value']
-    status      = resultTuple[0]
+    # Check results
+    status = result['Value'][0]
 
     if not os.path.exists(self.applicationLog):
       self.log.error("Cannot access log file, cannot proceed")

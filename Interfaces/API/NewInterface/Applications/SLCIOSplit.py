@@ -19,7 +19,7 @@ class SLCIOSplit(LCUtilityApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.NumberOfEventsPerFile = 0
+    self.numberOfEventsPerFile = 0
     super(SLCIOSplit, self).__init__( paramdict)
     if not self.Version:
       self.Version = 'HEAD'
@@ -31,7 +31,7 @@ class SLCIOSplit(LCUtilityApplication):
     """ Number of events to have in each file
     """
     self._checkArgs( { 'numberofevents' : types.IntType } )
-    self.NumberOfEventsPerFile = numberofevents
+    self.numberOfEventsPerFile = numberofevents
 
 
 
@@ -44,7 +44,7 @@ class SLCIOSplit(LCUtilityApplication):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('debug',            self.Debug)
-    moduleinstance.setValue('nbEventsPerSlice', self.NumberOfEventsPerFile)
+    moduleinstance.setValue('nbEventsPerSlice', self.numberOfEventsPerFile)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -71,7 +71,7 @@ class SLCIOSplit(LCUtilityApplication):
       self.detectortype = self._job.detector
 
     #This is needed for metadata registration
-    self.NbEvts = self.NumberOfEventsPerFile
+    self.NbEvts = self.numberOfEventsPerFile
 
     if not self.OutputFile and self._jobtype =='User' :
       self._log.error('No output file name specified.')
@@ -79,7 +79,7 @@ class SLCIOSplit(LCUtilityApplication):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nb_events_per_file'] = self.NumberOfEventsPerFile
+      self.prodparameters['nb_events_per_file'] = self.numberOfEventsPerFile
 
 
     return S_OK()
