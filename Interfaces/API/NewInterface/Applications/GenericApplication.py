@@ -23,8 +23,8 @@ class GenericApplication(LCApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.Script = None
-    self.Arguments = ''
+    self.script = None
+    self.arguments = ''
     self.dependencies = {}
     ### The Application init has to come last as if not the passed parameters are overwritten by the defaults.
     super(GenericApplication, self).__init__( paramdict )
@@ -43,7 +43,7 @@ class GenericApplication(LCApplication):
     self._checkArgs( { 'script' : types.StringTypes } )
     if os.path.exists(script) or script.lower().count("lfn:"):
       self.inputSB.append(script)
-    self.Script = script
+    self.script = script
     return S_OK()
 
   def setArguments(self, args):
@@ -54,7 +54,7 @@ class GenericApplication(LCApplication):
 
     """
     self._checkArgs( { 'args' : types.StringTypes } )
-    self.Arguments = args
+    self.arguments = args
     return S_OK()
 
   def setDependency(self, appdict):
@@ -80,8 +80,8 @@ class GenericApplication(LCApplication):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("script",    self.Script)
-    moduleinstance.setValue('arguments', self.Arguments)
+    moduleinstance.setValue("script",    self.script)
+    moduleinstance.setValue('arguments', self.arguments)
     moduleinstance.setValue('debug',     self.Debug)
 
   def _userjobmodules(self, stepdefinition):
@@ -113,9 +113,9 @@ class GenericApplication(LCApplication):
   def _checkConsistency(self):
     """ Checks that script and dependencies are set.
     """
-    if not self.Script:
+    if not self.script:
       return S_ERROR("Script not defined")
-    elif not self.Script.lower().count("lfn:") and not os.path.exists(self.Script):
+    elif not self.script.lower().count("lfn:") and not os.path.exists(self.script):
       return S_ERROR("Specified script is not an LFN and was not found on disk")
 
     #if not len(self.dependencies):
