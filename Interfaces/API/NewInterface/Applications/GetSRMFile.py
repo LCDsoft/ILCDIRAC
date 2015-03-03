@@ -17,7 +17,7 @@ class GetSRMFile(LCUtilityApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.Files = {}
+    self.files = {}
     super(GetSRMFile, self).__init__( paramdict )
     self._modulename = "GetSRMFile"
     self.appname = self._modulename
@@ -33,7 +33,7 @@ class GetSRMFile(LCUtilityApplication):
     if not type(fdict) == type({}) and not type(fdict) == type([]):
       return self._reportError('Expected dict or list of dicts for fdict', __name__, **kwargs)
 
-    self.Files = fdict
+    self.files = fdict
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -42,7 +42,7 @@ class GetSRMFile(LCUtilityApplication):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("srmfiles", self.Files)
+    moduleinstance.setValue("srmfiles", self.files)
     moduleinstance.setValue("debug",    self.Debug)
 
   def _userjobmodules(self, stepdefinition):
@@ -58,15 +58,15 @@ class GetSRMFile(LCUtilityApplication):
 
   def _checkConsistency(self):
 
-    if not self.Files:
+    if not self.files:
       return S_ERROR("The file list was not defined")
 
-    if type(self.Files) == type({}):
-      self.Files = [self.Files]
+    if type(self.files) == type({}):
+      self.files = [self.files]
 
     ##For the getInputFromApp to work, we nedd to tell the application about the expected OutputFile
     flist = ''
-    for fdict in self.Files:
+    for fdict in self.files:
       filePath = fdict['file']
       bname = filePath.split("/")[-1]
       flist += bname+";"
