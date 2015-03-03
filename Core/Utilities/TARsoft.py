@@ -14,7 +14,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc, getLibsToIgnore
 from DIRAC.DataManagementSystem.Client.DataManager          import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
-from ILCDIRAC.Core.Utilities.WasteCPU                       import WasteCPUCycles
+from ILCDIRAC.Core.Utilities.WasteCPU                       import wasteCPUCycles
 import os, urllib, tarfile, subprocess, shutil, time
 from tarfile import TarError
 try:
@@ -44,7 +44,7 @@ def checkLockAge(lockname):
       break
     count += 1
     gLogger.warn("Will wait one minute before proceeding")
-    res = WasteCPUCycles(60)
+    res = wasteCPUCycles(60)
     if not res['OK']:
       continue
     last_touch = time.time()
