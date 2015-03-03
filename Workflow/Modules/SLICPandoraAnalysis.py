@@ -14,7 +14,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript, unzip_file_into_dir
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs, GetNewPATH
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs, getNewPATH
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -243,9 +243,9 @@ fi
     removeLibc(myslicPandoraDir + "/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(sysconfig, appname, appversion)
+    new_ld_lib_path = getNewLDLibs(sysconfig, appname, appversion)
 
-    new_path = GetNewPATH(sysconfig, appname, appversion)
+    new_path = getNewPATH(sysconfig, appname, appversion)
 
     
     script = open(env_script_name, "w")

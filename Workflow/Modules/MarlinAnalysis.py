@@ -17,7 +17,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile, GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareXMLFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
@@ -175,7 +175,7 @@ class MarlinAnalysis(ModuleBase):
       self.log.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
     
-    res = PrepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio, 
+    res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
                          self.debug)
     if not res['OK']:
@@ -399,7 +399,7 @@ fi
     removeLibc(myMarlinDir + "/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(sysconfig, "marlin", appversion)
+    new_ld_lib_path = getNewLDLibs(sysconfig, "marlin", appversion)
 
     marlindll = ""
     if os.path.exists("%s/MARLIN_DLL" % myMarlinDir):

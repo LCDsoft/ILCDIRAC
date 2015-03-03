@@ -12,7 +12,7 @@ from DIRAC                                                import S_OK, S_ERROR, 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
 
@@ -168,7 +168,7 @@ class StdHepCut(ModuleBase):
   def prepareScript(self, mySoftDir):
     """ Prepare the script
     """
-    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = getNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     if os.path.exists("./lib"):
       new_ld_lib_path = "./lib:" + new_ld_lib_path
