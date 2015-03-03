@@ -10,7 +10,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
 from DIRAC import S_OK
 from types import FloatType, IntType
 
-class LCUtilityApplication( Application):
+class LCUtilityApplication( Application ):
   '''
   Utility applications
   '''
