@@ -32,7 +32,7 @@ class DiracILC(Dirac):
     self.log = gLogger
     self.software_versions = {}
     self.checked = False
-    self.pl = None
+    self.processList = None
     self.ops = Operations()
     
   def getProcessList(self): 
@@ -53,8 +53,8 @@ class DiracILC(Dirac):
         processlist = os.path.basename(pathtofile)   
     else:
       processlist = processlistpath
-    self.pl = ProcessList(processlist)
-    return self.pl
+    self.processList = ProcessList(processlist)
+    return self.processList
     
   def preSubmissionChecks(self, job, mode = None):
     """Overridden method from DIRAC.Interfaces.API.Dirac
@@ -103,9 +103,9 @@ class DiracILC(Dirac):
   def giveProcessList(self):
     """ Returns the list of Processes
     """
-    return self.pl
+    return self.processList
   
-  def retrieveRepositoryOutputDataLFNs(self, requestedStates = ['Done']):
+  def retrieveRepositoryOutputDataLFNs(self, requestedStates = None):
     """Helper function
     
     Get the list of uploaded output data for a set of jobs in a repository
@@ -114,6 +114,8 @@ class DiracILC(Dirac):
     @type requestedStates: list of strings
     @return: list
     """
+    if requestedStates is None:
+      requestedStates = ['Done']
     llist = []
     if not self.jobRepo:
       gLogger.warn( "No repository is initialised" )
@@ -248,9 +250,9 @@ class DiracILC(Dirac):
       isblist = inputsb.getValue()
       if isblist:
         isblist = isblist.split(';')
-        for f in isblist:
-          if f.lower().count('lfn:'):
-            lfns.append(f.replace('LFN:', '').replace('lfn:', ''))
+        for inBoxFile in isblist:
+          if inBoxFile.lower().count('lfn:'):
+            lfns.append(inBoxFile.replace('LFN:', '').replace('lfn:', ''))
     if len(lfns):
       res = self.getReplicas(lfns)
       if not res["OK"]:
