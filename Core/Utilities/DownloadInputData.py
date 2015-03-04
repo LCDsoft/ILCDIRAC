@@ -285,6 +285,7 @@ class DownloadInputData(object):
 
     downloadDir = self.__getDownloadDir()
     fileName = os.path.basename( lfn )
+    localFile = ''
     for localFile in ( os.path.join( os.getcwd(), fileName ), os.path.join( downloadDir, fileName ) ):
       if os.path.exists( localFile ):
         self.log.info( 'File %s already exists locally as %s' % ( fileName, localFile ) )

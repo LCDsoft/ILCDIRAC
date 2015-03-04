@@ -25,7 +25,7 @@ import string, types
 
 COMPONENT_NAME = 'ILCInputDataResolution'
 
-class InputDataResolution:
+class InputDataResolution(object):
   """ ILC specific input data resolution, imported from DIRAC
   """
   #############################################################################
