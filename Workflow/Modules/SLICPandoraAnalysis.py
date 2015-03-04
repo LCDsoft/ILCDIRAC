@@ -7,7 +7,7 @@ Run SLICPandora
 '''
 __RCSID__ = "$Id$"
 
-import os, urllib, zipfile, types
+import os, urllib, types
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 

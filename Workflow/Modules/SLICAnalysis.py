@@ -9,7 +9,7 @@ Run SLIC
 __RCSID__ = "$Id$"
 
 
-import os, types, urllib, zipfile
+import os, types, urllib
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
