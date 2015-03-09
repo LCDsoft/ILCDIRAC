@@ -82,8 +82,8 @@ class Params(object):
     if 'ildconfig' in appListLower and not self.ildConfigPath:
       return S_ERROR("ILDConfig in application list, but no location given")
 
-    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation):
-      if not os.path.exists(val):
+    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation ):
+      if val and not os.path.exists(val):
         gLogger.error("Cannot find this path:", val)
         return S_ERROR("CVMFS not mounted, or path is misstyped")
 
