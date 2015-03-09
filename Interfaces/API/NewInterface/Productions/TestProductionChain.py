@@ -50,8 +50,8 @@ analysis = 'several'
 process = 'hzqq'
 #additional_name = '_neu1_356'
 globname = ""
-additional_name = '_TestV22_p4'
-energy = 3000.
+additional_name = '_TestV22_p7'
+energy = 250.
 meta_energy = str(int(energy))
 
 #For meta def
@@ -60,6 +60,8 @@ meta['ProdID']=1
 meta['EvtType']=process
 meta['Energy'] = meta_energy
 
+ILDCONFIG = "CLICSteeringFilesV22"
+SOFTWAREVERSION = "ILCSoft-01-17-06"
 
 detectormodel='' #Can be ILD_00 (and nothing else)
 
@@ -155,6 +157,8 @@ for proddict in prodlist:
     spectrum = 13
   elif energy == 420.:
     spectrum = 13
+  elif energy == 250.:
+    spectrum = 20
   elif energy == 350.:
     spectrum = 20
   else:
@@ -253,9 +257,9 @@ for proddict in prodlist:
 
   ##Simulation ILD
   mo = Mokka()
-  mo.setVersion('0706P08')
-  #mo.setNbEvts(1000)
-  if energy in [500., 420., 375., 350.]:
+  mo.setVersion(SOFTWAREVERSION)
+  #mo.setNbEvts(10)
+  if energy in [500., 420., 375., 350., 250.]:
     mo.setSteeringFile("clic_ild_cdr500.steer")
   elif energy in [3000., 1400.]:
     mo.setSteeringFile("clic_ild_cdr.steer")
@@ -307,7 +311,7 @@ for proddict in prodlist:
   ##Reconstruction ILD with overlay
   mao = Marlin()
   mao.setDebug()
-  mao.setVersion('v0111Prod')
+  mao.setVersion(SOFTWAREVERSION)
   if ild_rec_ov:
     if energy==500.:
       mao.setSteeringFile("clic_ild_cdr500_steering_overlay.xml")
@@ -331,9 +335,9 @@ for proddict in prodlist:
   ##Reconstruction w/o overlay
   ma = Marlin()
   ma.setDebug()
-  ma.setVersion('v0111Prod')
+  ma.setVersion(SOFTWAREVERSION)
   if ild_rec:
-    if energy in [500.,420.,350.]:
+    if energy in [500.,420.,350.,250.]:
       ma.setSteeringFile("clic_ild_cdr500_steering.xml")
       ma.setGearFile('clic_ild_cdr500.gear')
     elif energy in [3000., 1400.]:
@@ -513,6 +517,7 @@ for proddict in prodlist:
     pmo = ProductionJob()
     pmo.setLogLevel("verbose")
     pmo.setProdType('MCSimulation')
+    pmo.setConfig(ILDCONFIG)
     res = pmo.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
@@ -638,6 +643,7 @@ for proddict in prodlist:
     pma = ProductionJob()
     pma.setLogLevel("verbose")
     pma.setProdType('MCReconstruction')
+    pma.setConfig(ILDCONFIG)
     res = pma.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
