@@ -79,9 +79,9 @@ class CombinedSoftwareInstallation(object):
     ### Use always the list of compatible platform.
     self.ceConfigs = natOS.CMTSupportedConfig()
 
-    self.sharedArea = SharedArea()
+    self.sharedArea = getSharedAreaLocation()
     DIRAC.gLogger.info("SharedArea is %s" % self.sharedArea)
-    self.localArea  = LocalArea()
+    self.localArea  = getLocalAreaLocation()
     DIRAC.gLogger.info("LocalArea is %s" % self.localArea)
     
   def execute(self):
@@ -126,8 +126,8 @@ class CombinedSoftwareInstallation(object):
     areas = []
     ###Deal with shared/local area: first try to see if the Shared area exists and if not create it (try to). If it fails, fall back to local area
     if not self.sharedArea:
-      if CreateSharedArea():
-        self.sharedArea = SharedArea()
+      if createSharedArea():
+        self.sharedArea = getSharedAreaLocation()
         if self.sharedArea:
           areas.append(self.sharedArea)
           DIRAC.gLogger.info("Will attempt to install in shared area")
@@ -179,7 +179,7 @@ def log( n, line ):
   """
   DIRAC.gLogger.info( line )
 
-def SharedArea():
+def getSharedAreaLocation():
   """
    Discover location of Shared SW area
    This area is populated by a tool independent of the DIRAC jobs
@@ -212,7 +212,7 @@ def SharedArea():
 
   return sharedArea
 
-def CreateSharedArea():
+def createSharedArea():
   """
    Method to be used by SAM jobs to make sure the proper directory structure is created
    if it does not exists
@@ -247,7 +247,7 @@ def CreateSharedArea():
     DIRAC.gLogger.error('Problem trying to create shared area', str(x))
     return False
 
-def LocalArea():
+def getLocalAreaLocation():
   """
    Discover Location of Local SW Area.
    This area is populated by DIRAC job Agent for jobs needing SW not present
@@ -292,8 +292,8 @@ def getSoftwareFolder(platform, appname, appversion):
   else:
     folder = app_tar
     
-  localArea = LocalArea()
-  sharedArea = SharedArea()
+  localArea = getLocalAreaLocation()
+  sharedArea = getSharedAreaLocation()
   if os.path.exists(os.path.join(localArea, folder)):
     mySoftwareRoot = localArea
   elif os.path.exists(os.path.join(sharedArea, folder)):

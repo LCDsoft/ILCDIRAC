@@ -17,7 +17,7 @@ The LFN path is given in the CS, Operations, under Transformations/BaseLogLFN
 from DIRAC.Core.Base.AgentModule                                import AgentModule
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations        import Operations
 from DIRAC.TransformationSystem.Client.TransformationClient     import TransformationClient
-from DIRAC.Resources.Storage.StorageElement                     import StorageElement
+from DIRAC.Resources.Storage.StorageElement                     import StorageElementItem as StorageElement
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
@@ -129,7 +129,7 @@ class TarTheProdLogsAgent( AgentModule ):
       except OSError:
         return S_ERROR("Could not produce the directory")
     
-    for root, dirs, files in os.walk(logs_dir):
+    for root, dummy_dirs, files in os.walk(logs_dir):
       if not len(files):
         continue
       prod = root.rstrip("/").split("/")[-1]
@@ -149,7 +149,7 @@ class TarTheProdLogsAgent( AgentModule ):
     """ List the directories below the base
     """
     final_dirs = {}
-    for root, dirs, files in os.walk(self.baselogpath):
+    for root, dirs, dummy_files in os.walk(self.baselogpath):
       if root.split("/")[-1] == "LOG" and len(dirs) > 1:
         logDirs = sorted(dirs) ## sort them so we can remove the last one
         del logDirs[-1]
@@ -171,7 +171,7 @@ class TarTheProdLogsAgent( AgentModule ):
           prods_dict[prodid] = []
         f_list.append(f_name)
         
-      prods_dict[prodid] = sorted(f_list, key = lambda x: self.__sortbyJob(x))
+      prods_dict[prodid] = sorted(f_list, key = self.__sortbyJob )
     
 
     return S_OK(prods_dict)

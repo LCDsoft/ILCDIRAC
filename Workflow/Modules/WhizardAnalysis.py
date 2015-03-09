@@ -14,8 +14,8 @@ from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFile
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareWhizardFileTemplate, GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import prepareWhizardFile
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import prepareWhizardFileTemplate, getNewLDLibs
 from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from ILCDIRAC.Core.Utilities.ProcessList                   import ProcessList
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
@@ -232,7 +232,7 @@ class WhizardAnalysis(ModuleBase):
     removeLibc(mySoftDir + "/lib")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = getNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     #Don't forget to prepend the application's libs
     new_ld_lib_path = mySoftDir + "/lib:" + new_ld_lib_path
     ### Resolve dependencies (look for beam_spectra)
@@ -346,11 +346,11 @@ class WhizardAnalysis(ModuleBase):
         return res
       res = self.options.toWhizardDotIn("whizard.in")
     elif not template:  
-      res = PrepareWhizardFile(self.SteeringFile, outputfilename, self.energy, 
+      res = prepareWhizardFile(self.SteeringFile, outputfilename, self.energy,
                                self.RandomSeed, self.NumberOfEvents, self.Lumi, 
                                "whizard.in")
     else:
-      res = PrepareWhizardFileTemplate(self.SteeringFile, outputfilename, 
+      res = prepareWhizardFileTemplate(self.SteeringFile, outputfilename,
                                        self.parameters, "whizard.in")
     if not res['OK']:
       self.log.error('Something went wrong with input file generation')

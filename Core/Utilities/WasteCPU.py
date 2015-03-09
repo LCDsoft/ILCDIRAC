@@ -9,7 +9,7 @@ import time
 from math import log
 from DIRAC import S_OK, S_ERROR
 
-def WasteCPUCycles(timecut):
+def wasteCPUCycles(timecut):
   """ Waste, waste, and waste more CPU.
   """
   number = 1e31

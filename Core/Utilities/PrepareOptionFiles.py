@@ -20,7 +20,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFold
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
 import os
 
-def GetNewLDLibs(platform, application, applicationVersion):
+def getNewLDLibs(platform, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
   @param platform: System config used for the job
   @param application: name of the application considered
@@ -55,8 +55,8 @@ def GetNewLDLibs(platform, application, applicationVersion):
       new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]  
   return new_ld_lib_path
 
-def GetNewPATH(platform, application, applicationVersion):
-  """ Same as L{GetNewLDLibs},but for the PATH
+def getNewPATH(platform, application, applicationVersion):
+  """ Same as L{getNewLDLibs},but for the PATH
   """
   log = gLogger.getSubLogger("GetPaths")
   log.verbose("Getting all PATH folders")
@@ -78,7 +78,7 @@ def GetNewPATH(platform, application, applicationVersion):
       new_path = os.environ["PATH"]  
   return new_path
 
-def PrepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, output_in):
+def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, output_in):
   """Prepares the whizard.in file to run
   
   Using specified parameters in the job definition passed from L{WhizardAnalysis}
@@ -123,7 +123,7 @@ def PrepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
 
   return S_OK(foundprocessid)
 
-def PrepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
+def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   """Prepares the whizard.in file to run
   
   Using specified parameters in the job definition passed from L{WhizardAnalysis}
@@ -189,7 +189,7 @@ def PrepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
 
   return S_OK(foundprocessid)
 
-def PrepareSteeringFile(inputSteering, outputSteering, detectormodel,
+def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
                         stdhepFile, mac, nbOfRuns, startFrom,
                         randomseed, mcrunnumber,
                         processID='', debug = False, outputlcio = None, 
@@ -319,7 +319,7 @@ def fixedXML(element):
   fixed_element = fixed_element.replace("&gt;",">").replace("&lt;","<")
   return fixed_element
 
-def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
+def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
   
@@ -486,7 +486,7 @@ def PrepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   return S_OK(True)
 
 
-def PrepareMacFile(inputmac, outputmac, stdhep, nbevts,
+def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
                    startfrom, detector = None, randomseed = 0,
                    outputlcio = None, debug = False):
   """Writes out a mac file for SLIC
@@ -556,7 +556,7 @@ def PrepareMacFile(inputmac, outputmac, stdhep, nbevts,
   output.close()
   return S_OK(True)
 
-def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
+def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
                      trackingstrategy, inputslcio, jars = None,
                      cachedir = None, outputFile = None,
                      outputRECFile = None, outputDSTFile = None,
@@ -656,25 +656,21 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       cachedirelem.text = cachedir
       control.append(cachedirelem)
       
-  LcsimPrintEveryEvent = 1
   res = gConfig.getOption("/LocalSite/LcsimPrintEveryEvent", 1)
-  if not res['OK']:
-    LcsimPrintEveryEvent = 1
-  else:
-    LcsimPrintEveryEvent = res['Value']
+  lcsimPrintEveryEvent = 1 if not res['OK'] else res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
   if not eventInterval is None:
     evtint = eventInterval.text
     if int(evtint) < 10:    
-      eventInterval.text = "%s" % LcsimPrintEveryEvent
+      eventInterval.text = "%s" % lcsimPrintEveryEvent
   else:
     notdriver = True
     for driver in drivers:
       if driver.attrib.has_key("type"):
         if driver.attrib["type"] == "org.lcsim.job.EventMarkerDriver" :
           eventInterval = Element("eventInterval")
-          eventInterval.text = "%s" % LcsimPrintEveryEvent
+          eventInterval.text = "%s" % lcsimPrintEveryEvent
           driver.append(eventInterval)
           notdriver = False
     if notdriver:
@@ -684,7 +680,7 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       propdict['type'] = 'org.lcsim.job.EventMarkerDriver'
       eventmarker = Element("driver", propdict)
       eventInterval = Element("eventInterval")
-      eventInterval.text = "%s" % LcsimPrintEveryEvent
+      eventInterval.text = "%s" % lcsimPrintEveryEvent
       eventmarker.append(eventInterval)
       drivers.append(eventmarker)
       execut = tree.find("execute")
@@ -818,7 +814,7 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   tree.write(outputlcsim)
   return S_OK(printtext)
 
-def PrepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
+def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   """ Prepare the proper steering file for Tomato
   """
   if not inputxml:

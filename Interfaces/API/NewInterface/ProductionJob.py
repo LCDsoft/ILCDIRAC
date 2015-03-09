@@ -21,8 +21,6 @@ from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogCl
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 
-from math                                                   import modf
-
 from DIRAC                                                  import S_OK, S_ERROR, gLogger
 
 import os, shutil, types

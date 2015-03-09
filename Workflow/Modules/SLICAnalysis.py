@@ -9,12 +9,12 @@ Run SLIC
 __RCSID__ = "$Id$"
 
 
-import os, types, urllib, zipfile
+import os, types, urllib
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, unzip_file_into_dir
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareMacFile, GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareMacFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
@@ -94,7 +94,7 @@ class SLICAnalysis(ModuleBase):
     Execute the following:
       - get the environment variables that should have been set during installation
       - download the detector model, using CS query to fetch the address
-      - prepare the mac file using L{PrepareMacFile}
+      - prepare the mac file using L{prepareMacFile}
       - run SLIC on this mac File and catch the exit status
     @return: S_OK(), S_ERROR()
     """
@@ -169,7 +169,7 @@ class SLICAnalysis(ModuleBase):
     ##Same as for mokka: using ParticleGun does not imply InputFile
     if not len(self.InputFile):
       self.InputFile = ['']    
-    macok = PrepareMacFile(self.SteeringFile, slicmac, self.InputFile[0],
+    macok = prepareMacFile(self.SteeringFile, slicmac, self.InputFile[0],
                            self.NumberOfEvents, self.startFrom, self.detectorModel,
                            self.randomseed, self.OutputFile, self.debug)
     if not macok['OK']:
@@ -236,7 +236,7 @@ class SLICAnalysis(ModuleBase):
 
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(sysconfig, appname, appversion)
+    new_ld_lib_path = getNewLDLibs(sysconfig, appname, appversion)
     #res = getSoftwareFolder(sysconfig, appname, appversion)
     #if not res['OK']:
     #  self.log.error('Directory %s was not found in either the local area or shared area' % (slicDir))

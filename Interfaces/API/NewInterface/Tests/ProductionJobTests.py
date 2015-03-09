@@ -4,12 +4,10 @@
 __RCSID__ = "$Id$"
 
 
-import unittest, copy, os
+import unittest
+
 from decimal import Decimal
-
-from mock import MagicMock as Mock
-
-from DIRAC import gLogger, S_ERROR, S_OK
+from DIRAC import gLogger
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -26,31 +24,31 @@ class ProductionJobTestCase( unittest.TestCase ):
   def setUp(self):
     """set up the objects"""
     super(ProductionJobTestCase, self).setUp()
-    self.pj = ProductionJob()
-    self.pj.energy=250.0
+    self.prodJob = ProductionJob()
+    self.prodJob.energy=250.0
 
   def test_Energy250( self ):
     """ test  250gev """
-    self.pj.energy = Decimal('250.0')
-    res = self.pj.getEnergyPath()
+    self.prodJob.energy = Decimal('250.0')
+    res = self.prodJob.getEnergyPath()
     self.assertEqual( "250gev/", res )
 
   def test_Energy350( self ):
     """ test  350gev """
-    self.pj.energy = 350.0
-    res = self.pj.getEnergyPath()
+    self.prodJob.energy = 350.0
+    res = self.prodJob.getEnergyPath()
     self.assertEqual( "350gev/", res )
 
   def test_Energy3000( self ):
     """ test  3tev """
-    self.pj.energy = 3000.0
-    res = self.pj.getEnergyPath()
+    self.prodJob.energy = 3000.0
+    res = self.prodJob.getEnergyPath()
     self.assertEqual( "3tev/", res )
 
   def test_Energy1400( self ):
     """ test  1.4tev """
-    self.pj.energy = 1400.0
-    res = self.pj.getEnergyPath()
+    self.prodJob.energy = 1400.0
+    res = self.prodJob.getEnergyPath()
     self.assertEqual( "1.4tev/", res )
 
 

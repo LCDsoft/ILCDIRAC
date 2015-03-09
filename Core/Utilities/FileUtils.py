@@ -17,7 +17,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations   import Operations
 from DIRAC.RequestManagementSystem.Client.Request           import Request
 from DIRAC.RequestManagementSystem.Client.Operation         import Operation
 from DIRAC.RequestManagementSystem.Client.Operation         import File
-from DIRAC.RequestManagementSystem.private.RequestValidator import gRequestValidator
+from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
 from DIRAC.RequestManagementSystem.Client.ReqClient         import ReqClient
 
 
@@ -62,7 +62,7 @@ def upload(path, appTar):
       transfer.addFile(trFile)
       request.addOperation(transfer)
 
-    res = gRequestValidator.validate(request)
+    res = RequestValidator().validate(request)
     if not res['OK']:
       return res
 

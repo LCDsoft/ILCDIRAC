@@ -9,7 +9,7 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import getNewLDLibs
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from DIRAC import gLogger, S_OK, S_ERROR
@@ -105,7 +105,7 @@ class PythiaAnalysis(ModuleBase):
     #self.lumifile = path+"/%s.ep"%depdir
     lumifile = "%s/%s" % (randomName, os.path.basename(originpath).replace(".ep",""))
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = getNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
     new_ld_lib_path = myappDir + "/lib:" + new_ld_lib_path
 
     scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)

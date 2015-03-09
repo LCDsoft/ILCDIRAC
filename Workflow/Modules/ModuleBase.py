@@ -20,7 +20,7 @@ from DIRAC.WorkloadManagementSystem.Client.JobReport      import JobReport
 from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC.RequestManagementSystem.Client.Request         import Request
-from DIRAC.RequestManagementSystem.private.RequestValidator   import gRequestValidator
+from DIRAC.RequestManagementSystem.private.RequestValidator   import RequestValidator
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, checkCVMFS
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
@@ -449,12 +449,15 @@ class ModuleBase(object):
       #always get number of events from somewhere. So we would need to check for production ID
       if not resNE['OK'] and self.NumberOfEvents == 0 and self.isProdJob:
         return S_ERROR("Failed to get NumberOfEvents from FileCatalog")
+      if not resNE['OK'] and self.NumberOfEvents == 0 and not self.isProdJob:
+        self.log.warn("Failed to get NumberOfEvents from FileCatalog, but this is not a production job")
       if resNE['OK']:
         eventsMeta = resNE['Value']
         self.inputdataMeta.update(eventsMeta['AdditionalMeta'])
         if eventsMeta["nbevts"]:
           if self.NumberOfEvents > eventsMeta['nbevts'] or self.NumberOfEvents == 0:
             self.NumberOfEvents = eventsMeta['nbevts']
+      self.log.info("NumberOfEvents = %s" %  str(self.NumberOfEvents))
 
     res = self.applicationSpecificInputs()
     if not res['OK']:
@@ -562,7 +565,7 @@ class ModuleBase(object):
       self.log.info("No Requests to process ")
       return S_OK()
 
-    isValid = gRequestValidator.validate( request )
+    isValid = RequestValidator().validate( request )
     if not isValid['OK']:
       raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
 

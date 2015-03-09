@@ -54,7 +54,7 @@ def getProdLogs():
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
   ops = Operations()
   storageElementName = ops.getValue('/LogStorage/LogSE', 'LogSE')
-  from DIRAC.Resources.Storage.StorageElement import StorageElement
+  from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
   logSE = StorageElement(storageElementName)
 
   from DIRAC.Core.Utilities.PromptUser import promptUser

@@ -16,7 +16,7 @@ from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
 from DIRAC.RequestManagementSystem.Client.Operation        import Operation
 from DIRAC.RequestManagementSystem.Client.File             import File
 
-from DIRAC.Resources.Storage.StorageElement                import StorageElement
+from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 

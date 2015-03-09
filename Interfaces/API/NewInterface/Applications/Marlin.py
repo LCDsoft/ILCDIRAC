@@ -4,7 +4,7 @@ Marlin: Reconstructor after Mokka
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
-from ILCDIRAC.Core.Utilities.CheckXMLValidity         import CheckXMLValidity
+from ILCDIRAC.Core.Utilities.CheckXMLValidity         import checkXMLValidity
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
 import types, os
@@ -144,7 +144,7 @@ class Marlin(LCApplication):
         if not res['OK']:
           return res
       if os.path.exists(self.SteeringFile):
-        res = CheckXMLValidity(self.SteeringFile)
+        res = checkXMLValidity(self.SteeringFile)
         if not res['OK']:
           return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
 

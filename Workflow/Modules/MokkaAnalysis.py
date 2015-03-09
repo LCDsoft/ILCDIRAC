@@ -14,7 +14,7 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareSteeringFile, GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareSteeringFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
@@ -110,7 +110,7 @@ class MokkaAnalysis(ModuleBase):
       Executes the following:
         - read the application parameters that where defined in ILCJob, and stored in the job definition
         - setup the SQL server and run it in the background
-        - prepare the steering file using L{PrepareSteeringFile}
+        - prepare the steering file using L{prepareSteeringFile}
         - run Mokka and catch its return status
       @return: S_OK(), S_ERROR()
       
@@ -202,7 +202,7 @@ class MokkaAnalysis(ModuleBase):
     ### The following is because if someone uses particle gun, there is no InputFile
     if not len(self.InputFile):
       self.InputFile = ['']
-    steerok = PrepareSteeringFile(self.SteeringFile, mokkasteer, self.detectorModel, self.InputFile[0],
+    steerok = prepareSteeringFile(self.SteeringFile, mokkasteer, self.detectorModel, self.InputFile[0],
                                   self.macFile, self.NumberOfEvents, self.startFrom, self.RandomSeed,
                                   self.mcRunNumber,
                                   self.ProcessID,
@@ -430,7 +430,7 @@ done
     
     mySoftwareRoot = os.sep.join(myMokkaDir.rstrip(os.sep).split(os.sep)[0:-1])
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.platform, "mokka", self.applicationVersion)
+    new_ld_lib_path = getNewLDLibs(self.platform, "mokka", self.applicationVersion)
 
     ##Remove libc
     removeLibc(myMokkaDir)

@@ -82,8 +82,8 @@ class Params(object):
     if 'ildconfig' in appListLower and not self.ildConfigPath:
       return S_ERROR("ILDConfig in application list, but no location given")
 
-    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation):
-      if not os.path.exists(val):
+    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation ):
+      if val and not os.path.exists(val):
         gLogger.error("Cannot find this path:", val)
         return S_ERROR("CVMFS not mounted, or path is misstyped")
 
@@ -163,38 +163,6 @@ class CVMFSAdder(object):
       gLogger.info('No modifications to CS required')
     return S_OK()
 
-  def notifyAboutNewSoftware(self):
-    """Send an email to the mailing list if a new software version was defined"""
-
-    #Only send email when something was actually added
-    if not self.modifiedCS:
-      return
-
-    subject = '%s %s added to DIRAC CS' % (self.appName, self.appVersion)
-    msg = 'New application %s %s declared into Configuration service\n %s' % (self.appName,
-                                                                              self.appVersion,
-                                                                              self.comment)
-    from DIRAC.Core.Security.ProxyInfo import getProxyInfo
-    from DIRAC.ConfigurationSystem.Client.Helpers.Registry import getUserOption
-    from DIRAC.FrameworkSystem.Client.NotificationClient       import NotificationClient
-
-    notifyClient = NotificationClient()
-    gLogger.notice('Sending mail for software installation to %s' % (self.mailadress))
-    res = getProxyInfo()
-    if not res['OK']:
-      sender = 'ilcdirac-admin@cern.ch'
-    else:
-      if 'username' in res['Value']:
-        sender = getUserOption(res['Value']['username'],'Email')
-      else:
-        sender = 'nobody@cern.ch'
-    gLogger.info('*'*80)# surround email with stars
-    res = notifyClient.sendMail(self.mailadress, subject, msg, sender, localAttempt = False)
-    gLogger.info('*'*80)
-    if not res[ 'OK' ]:
-      gLogger.error('The mail could not be sent: %s' % res['Message'])
-
-
   def addAllToCS(self):
     """add all the applications to the CS, take care of special cases (mokka, ildconfig,...)"""
 
@@ -257,7 +225,6 @@ class CVMFSAdder(object):
     resCommit = self.commitToCS()
     if not resCommit['OK']:
       return resCommit
-    # self.notifyAboutNewSoftware()
 
     return S_OK()
 
