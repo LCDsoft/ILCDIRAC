@@ -449,12 +449,15 @@ class ModuleBase(object):
       #always get number of events from somewhere. So we would need to check for production ID
       if not resNE['OK'] and self.NumberOfEvents == 0 and self.isProdJob:
         return S_ERROR("Failed to get NumberOfEvents from FileCatalog")
+      if not resNE['OK'] and self.NumberOfEvents == 0 and not self.isProdJob:
+        self.log.warn("Failed to get NumberOfEvents from FileCatalog, but this is not a production job")
       if resNE['OK']:
         eventsMeta = resNE['Value']
         self.inputdataMeta.update(eventsMeta['AdditionalMeta'])
         if eventsMeta["nbevts"]:
           if self.NumberOfEvents > eventsMeta['nbevts'] or self.NumberOfEvents == 0:
             self.NumberOfEvents = eventsMeta['nbevts']
+      self.log.info("NumberOfEvents = %s" %  str(self.NumberOfEvents))
 
     res = self.applicationSpecificInputs()
     if not res['OK']:

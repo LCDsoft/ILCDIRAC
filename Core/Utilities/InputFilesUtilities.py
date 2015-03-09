@@ -42,7 +42,7 @@ def getNumberOfEvents(inputfile):
     if len(files) == 1:
       res = fc.getFileUserMetadata(files[0])
       if not res['OK']:
-        gLogger.warn("Failed to get NumberOfEvents from file: %s, because: %s" % (files[0], res['Message']))
+        gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (files[0], res['Message']))
       else:
         tags = res['Value']
         if "NumberOfEvents" in tags and not found_nbevts:
@@ -72,12 +72,12 @@ def getNumberOfEvents(inputfile):
       if found_nbevts: 
         continue
     else:
-      gLogger.warn("Failed to get NumberOfEvents from path: %s, because: %s" % (path, res['Message']))
+      gLogger.warn("Failed to get Metadata from path: %s, because: %s" % (path, res['Message']))
 
     for myfile in files:
       res = fc.getFileUserMetadata(myfile)
       if not res['OK']:
-        gLogger.warn("Failed to get NumberOfEvents from file: %s, because: %s" % (myfile, res['Message']))
+        gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (myfile, res['Message']))
         continue
       tags = res['Value']
       if tags.has_key("NumberOfEvents"):
@@ -97,7 +97,7 @@ def getNumberOfEvents(inputfile):
   nbevts['AdditionalMeta'] = others
 
   if completeFailure:
-    gLogger.error("Completely failed to get NumberOfEvents from FileCatalog")
+    gLogger.warn("Did not obtain NumberOfEvents from FileCatalog")
     return S_ERROR("Failed to get Number of Events")
 
   return S_OK(nbevts)
