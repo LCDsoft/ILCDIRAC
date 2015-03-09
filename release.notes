@@ -4,6 +4,21 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2p0]
+
+* DIRAC
+
+NEW: v6r11p31
+
+* Workflow
+CHANGE: Tar and compress production logfiles
+
+FIX: CVMFS support for native installations (Mokka, Marlin)
+FIX: Fix some of the issues with module- and step_commons-parameters
+FIX: Mokka: ProcessID is now passed to the module
+FIX: Remove SystemConfig/sysconfig, replace with platform
+FIX: Bugfixes/conventions/pylint cleanup, refactoring
+
 [v22r2-pre4]
 
 * Workflow
