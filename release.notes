@@ -3,6 +3,12 @@
 * Core
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
+[v22r2p1]
+
+* Workflow
+
+FIX: OverlayInput will now always try to get files from the DataManager if files do not exist on local SE
+
 
 [v22r2p0]
 
