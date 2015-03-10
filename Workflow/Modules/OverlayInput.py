@@ -384,7 +384,7 @@ class OverlayInput (ModuleBase):
           
         usednumbers.append(fileindex)
 
-        isDefault = False
+        triedDataManager = False
 
         if self.site == 'LCG.CERN.ch':
           res = self.getCASTORFile(self.lfns[fileindex])
@@ -400,13 +400,11 @@ class OverlayInput (ModuleBase):
             f.write('Dont look at cpu')
             f.close()
           res = self.datMan.getFile(self.lfns[fileindex])
-          isDefault = True
+          triedDataManager = True
 
-        # Tue Jun 28 14:21:03 CEST 2011
-        # Temporarily for Imperial College site until dCache is fixed
-
-        if (not res['OK']) and (not isDefault) and \
-          (self.site in ['LCG.UKI-LT2-IC-HEP.uk', 'LCG.IN2P3-CC.fr', 'LCG.CERN.ch']):
+        #in case the specific copying did not work (mostly because the fileqs do
+        #not exist locally) try again to get the file via the DataManager
+        if (not res['OK']) and (not triedDataManager):
           res = self.datMan.getFile(self.lfns[fileindex])
 
         if not res['OK']:
@@ -414,11 +412,6 @@ class OverlayInput (ModuleBase):
           fail_count += 1
           continue
         
-        if res['Value'].has_key('Failed'):
-          if len(res['Value']['Failed']):
-            self.log.warn('Could not obtain %s' % self.lfns[fileindex])
-            fail_count += 1
-            continue
         filesobtained.append(self.lfns[fileindex])
       ##If no file could be obtained, need to make sure the job fails  
       if len(usednumbers) == nbfiles and not len(filesobtained):
@@ -495,26 +488,12 @@ fi\n""" % (basename, lfile))
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
-    #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
-    #try:
-    #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
-    #except Exception,x:
-    #  print ("failed : %s %s"%(Exception,x))
-    #logfile.close()
-    #print res
-    status = 0
-    if not os.path.exists(os.path.basename(lfile)):
-      status = 1
 
-    mydict = {}
-    mydict['Failed'] = []
-    mydict['Successful'] = []
-    if status:
-      mydict['Failed'] = lfn
-    else:
-      mydict['Successful'] = lfn
-      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
-    return S_OK(mydict)
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
 
   def getLyonFile(self, lfn):
     """ Use xrdcp to get the files from Lyon
@@ -550,35 +529,12 @@ fi\n""" % (basename, lfile))
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
-#    
-#    if os.environ.has_key('X509_USER_PROXY'):
-#      comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
-#      res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
-#      print res
-    #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
-    #command = string.join(comm,";")
-    #comm3 = ["xrdcp","root://ccdcacsn179.in2p3.fr:1094%s"%file,"./","-s"]
-    #res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
-    #print res
-    
-    status = 0
-    if not os.path.exists(os.path.basename(lfile)):
-      status = 1
-    #command2  = command.split()
-    #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
-    #print res
-    #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    #resultTuple = self.result['Value']
-    #status = resultTuple[0]
-    mydict = {}
-    mydict['Failed'] = []
-    mydict['Successful'] = []
-    if status:
-      return S_ERROR("Failed")
-    else:
-      mydict['Successful'] = lfn
-      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
-    return S_OK(mydict)
+
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
 
   def getImperialFile(self, lfn):
     """ USe dccp to get the files from the Imperial SE
@@ -614,37 +570,12 @@ fi\n""" % (basename, lfile))
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
-#    
-    #command = "rfcp %s ./"%file
-    #comm = []
-    #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    #if os.environ.has_key('X509_USER_PROXY'):
-    #  comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s"%os.getuid()]
-    #  res = subprocess.Popen(comm2,stdout=subprocess.PIPE).communicate()
-    #  print res
-    #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
-    #command = string.join(comm,";")
-    #comm3 = ["dccp","dcap://%s%s" % ( os.environ['VO_ILC_DEFAULT_SE'], file ),"./"]
-    #res = subprocess.Popen(comm3,stdout=subprocess.PIPE).communicate()
-    #print res
-    status = 0
-    if not os.path.exists(os.path.basename(lfile)):
-      status = 1
-    #command2  = command.split()
-    #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
-    #print res
-    #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    #resultTuple = self.result['Value']
-    #status = resultTuple[0]
-    mydict = {}
-    mydict['Failed'] = []
-    mydict['Successful'] = []
-    if status:
-      return S_ERROR("Failed")
-    else:
-      mydict['Successful'] = lfn
-      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
-    return S_OK(mydict)
+
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
 
   def getRALFile(self, lfn):
     """ Use rfcp to get the files from RAL castor
@@ -699,31 +630,12 @@ fi\n""" % (basename, lfile))
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
-    #comm7=["/usr/bin/rfcp","'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s'"%lfile,"file:%s"%basename]
-    #try:
-    #  res = subprocess.Popen(comm7,stdout=logfile,stderr=subprocess.STDOUT)
-    #except Exception,x:
-    #  print ("failed : %s %s"%(Exception,x))
-    #logfile.close()
-    #print res
-    status = 0
-    if not os.path.exists(os.path.basename(lfile)):
-      status = 1
-    #command2  = command.split()
-    #res = subprocess.Popen(command2,stdout=subprocess.PIPE).communicate()
-    #print res
-    #self.result = shellCall(0,command,callbackFunction=self.redirectLogOutput,bufferLimit=20971520)
-    #resultTuple = self.result['Value']
-    #status = resultTuple[0]
-    mydict = {}
-    mydict['Failed'] = []
-    mydict['Successful'] = []
-    if status:
-      return S_ERROR("Failed")
-    else:
-      mydict['Successful'] = lfn
-      #return S_ERROR("Problem getting %s"%os.path.basename(lfn))
-    return S_OK(mydict)
+
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
 
   def execute(self):
     """ Run the module, called rom Workflow
