@@ -3,6 +3,13 @@
 * Core
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
+
+[v22r2p2]
+
+* Dirac
+
+NEW: Based on Dirac version v6r11p32: Fixes issue for dirac-ilc-list-user
+
 [v22r2p1]
 
 * Workflow
