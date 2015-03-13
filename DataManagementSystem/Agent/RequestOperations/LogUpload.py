@@ -82,7 +82,10 @@ class LogUpload( OperationHandlerBase ):
       self.log.info( "processing file %s" % lfn )
       gMonitor.addMark( "LogUploadAtt", 1 )
 
-      destination = '/'.join( lfn.split( '/' )[0:-1] ) + '/' + ( os.path.basename( lfn ) ).split( '_' )[1].split( '.' )[0]
+      destinationFolder = '/'.join( lfn.split( '/' )[0:-1] )
+      destinationSubFolder = "%03d" % ( int(( os.path.basename( lfn ) ).split( '_' )[1].split( '.' )[0]) / 1000)
+      destination = destinationFolder + '/' + destinationSubFolder
+
       logUpload = self.dm.replicate( lfn, targetSE, destPath = destination, localCache = self.workDirectory )
       if not logUpload["OK"]:
         gMonitor.addMark( "LogUploadFail", 1 )
