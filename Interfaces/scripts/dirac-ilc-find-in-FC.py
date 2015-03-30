@@ -5,10 +5,26 @@ Created on Mar 20, 2013
 @author: stephane
 '''
 __RCSID__ = "$Id$"
-from DIRAC import gLogger
+from DIRAC.Core.Base import Script
+from DIRAC import gLogger, S_OK
 from types import ListType, DictType
 from DIRAC.Core.Utilities import uniqueElements
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+
+class Params(object):
+  """Parameter Object"""
+  def __init__(self):
+    self.printOnlyDirectories = False
+
+
+  def setPrintOnlyDs(self,dummy_opt):
+    self.printOnlyDirectories = True
+    return S_OK()
+
+  def registerSwitches(self):
+    Script.registerSwitch("D", "OnlyDirectories", "Print only directories", self.setPrintOnlyDs)
+    Script.setUsageMessage("""%s [-D] path meta1=A meta2=B etc.""" % Script.scriptName)
+
 
 def createQueryDict(argss):
   """
@@ -124,11 +140,10 @@ def createQueryDict(argss):
 
 def findInFC():
   """Find something in the FileCatalog"""
-  from DIRAC.Core.Base import Script
   from DIRAC import exit as dexit
-
+  clip = Params()
+  clip.registerSwitches()
   Script.parseCommandLine()
-  Script.setUsageMessage(  "%s path meta1=A meta2=B etc." % Script.scriptName)
 
   args = Script.getPositionalArgs()
   if len(args)<2:
@@ -154,8 +169,17 @@ def findInFC():
     dexit(1)
   if not res['Value']:
     gLogger.notice("No files found")
-  for files in res['Value']:
-    print files
+
+  listToPrint = None
+
+  if clip.printOnlyDirectories:
+    listToPrint = set( "/".join(fullpath.split("/")[:-1]) for fullpath in res['Value'] )
+  else:
+    listToPrint = res['Value']
+
+  for entry in listToPrint:
+    print entry
+
   dexit(0)
 
 if __name__ == '__main__':

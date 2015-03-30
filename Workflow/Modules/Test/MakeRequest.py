@@ -12,7 +12,7 @@ from DIRAC.RequestManagementSystem.Client.Request import Request
 
 from DIRAC.RequestManagementSystem.Client.File              import File
 from DIRAC.RequestManagementSystem.Client.Operation         import Operation
-from DIRAC.RequestManagementSystem.private.RequestValidator import gRequestValidator
+from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
 from DIRAC.RequestManagementSystem.Client.ReqClient         import ReqClient
 
 
@@ -33,7 +33,7 @@ def myRequest():
   remove.addFile( rmFile )
 
   request.addOperation( remove )
-  isValid = gRequestValidator.validate( request )
+  isValid = RequestValidator().validate( request )
   if not isValid['OK']:
     raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
   else:

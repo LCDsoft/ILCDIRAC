@@ -4,6 +4,7 @@ Add a number of tasks to a production, can only be used on prods that use the Li
 @since: Mar 26, 2013
 @author: S Poss
 """
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR
@@ -32,7 +33,8 @@ class Params(object):
     Script.registerSwitch("t:", "Tasks=", "Number of tasks to add (-1 for all)", self.setNbTasks)
     Script.setUsageMessage("%s -p 2145 -t 200" % Script.scriptName)
     
-if __name__=='__main__':
+def extend():
+  """Extends all the tasks"""
   clip = Params()
   clip.registerSwitches()
   Script.parseCommandLine()
@@ -70,3 +72,6 @@ if __name__=='__main__':
   gLogger.notice("Production %s extended!" % clip.prod)
     
   dexit(0)
+
+if __name__=='__main__':
+  extend()

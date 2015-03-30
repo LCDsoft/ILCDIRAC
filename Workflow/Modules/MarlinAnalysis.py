@@ -17,7 +17,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 #from DIRAC.Core.DISET.RPCClient                           import RPCClient
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareXMLFile, GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareXMLFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
@@ -35,13 +35,10 @@ class MarlinAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
-    self.InputFile = []
-    self.SteeringFile = ''
     self.inputGEAR = ''
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.NumberOfEvents = -1
     self.eventstring = ['ProgressHandler','event']
     self.envdict = {}
     self.ProcessorListToUse = []
@@ -51,16 +48,7 @@ class MarlinAnalysis(ModuleBase):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    ##TODO: Need to keep for old interface. Move to ModuleBase
-    if self.step_commons.has_key('inputSlcio'):
-      inputf = self.step_commons["inputSlcio"]
-      if not type(inputf) == types.ListType:
-        if len(inputf):
-          inputf = inputf.split(";")
-        else:
-          inputf = [] 
-      self.InputFile = inputf
-      
+
     if self.workflow_commons.has_key('ParametricInputSandbox'):
       paramsb = self.workflow_commons['ParametricInputSandbox']
       if not type(paramsb) == types.ListType:
@@ -70,15 +58,6 @@ class MarlinAnalysis(ModuleBase):
           paramsb = []
         
       self.InputFile += paramsb
-      
-    if self.step_commons.has_key('inputXML'):
-      self.SteeringFile = self.step_commons['inputXML']
-      
-    if self.step_commons.has_key('inputGEAR'):
-      self.inputGEAR = self.step_commons['inputGEAR']
-      
-    if self.step_commons.has_key('EvtsToProcess'):
-      self.NumberOfEvents = self.step_commons['EvtsToProcess']
     
     ##Backward compat needed, cannot remove yet.  
     if self.step_commons.has_key('outputREC'):
@@ -196,7 +175,7 @@ class MarlinAnalysis(ModuleBase):
       self.log.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
     
-    res = PrepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio, 
+    res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
                          self.debug)
     if not res['OK']:
@@ -303,6 +282,20 @@ class MarlinAnalysis(ModuleBase):
             finallist.remove(item)
     else:
       finallist = items
+
+
+    ## LCFIPlus links with LCFIVertex, LCFIVertex needs to go first in the MARLIN_DLL
+    plusPos = 0
+    lcfiPos = 0
+    for position, lib in enumerate(finallist):
+      if 'libLCFIPlus' in lib:
+        plusPos = position
+      if 'libLCFIVertex' in lib:
+        lcfiPos = position
+    if plusPos < lcfiPos: # if lcfiplus is before lcfivertex
+      #swap the two entries
+      finallist[plusPos], finallist[lcfiPos] = finallist[lcfiPos], finallist[plusPos]
+
     marlindll = ":".join(finallist)
     self.log.verbose("Final MARLIN_DLL is:", marlindll)
     
@@ -406,7 +399,7 @@ fi
     removeLibc(myMarlinDir + "/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(sysconfig, "marlin", appversion)
+    new_ld_lib_path = getNewLDLibs(sysconfig, "marlin", appversion)
 
     marlindll = ""
     if os.path.exists("%s/MARLIN_DLL" % myMarlinDir):

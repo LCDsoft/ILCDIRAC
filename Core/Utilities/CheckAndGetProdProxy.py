@@ -17,7 +17,7 @@ def getNewProxy():
   """
   print 'Getting production proxy ...'
   return call( [ 'dirac-proxy-init', '-g', 'ilc_prod' ] )
-def CheckAndGetProdProxy():
+def checkAndGetProdProxy():
   """ Check if current proxy is a production one, and if not call the L{getNewProxy} method.
   """
   result = getProxyInfo()

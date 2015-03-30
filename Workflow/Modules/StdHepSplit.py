@@ -11,7 +11,7 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 
 import os
@@ -114,7 +114,7 @@ class StdHepSplit(ModuleBase):
       return res
     
     mysplitDir = res['Value']
-    new_ld_lib = GetNewLDLibs(self.platform, "stdhepsplit", self.applicationVersion)
+    new_ld_lib = getNewLDLibs(self.platform, "stdhepsplit", self.applicationVersion)
     LD_LIBRARY_PATH = os.path.join(mysplitDir, "lib") + ":" + new_ld_lib
 
     

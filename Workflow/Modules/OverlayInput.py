@@ -13,7 +13,7 @@ from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
 from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
 from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
-from ILCDIRAC.Core.Utilities.WasteCPU                        import WasteCPUCycles
+from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycles
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger
@@ -375,7 +375,7 @@ class OverlayInput (ModuleBase):
       ##Now wait for a random time around 3 minutes
       ###Actually, waste CPU time !!!
       self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
-      res = WasteCPUCycles(60 * random.gauss(3, 0.1))
+      res = wasteCPUCycles(60 * random.gauss(3, 0.1))
       if not res['OK']:
         self.log.error("Could not waste as much CPU time as wanted, but whatever!")
 

@@ -16,7 +16,7 @@ from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
 from DIRAC.RequestManagementSystem.Client.Operation        import Operation
 from DIRAC.RequestManagementSystem.Client.File             import File
 
-from DIRAC.Resources.Storage.StorageElement                import StorageElement
+from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 
@@ -85,6 +85,7 @@ class UploadLogFile(ModuleBase):
     if not type(self.logLFNPath) == type(' '):
       self.logLFNPath = self.logLFNPath[0]
       
+    #FIXME: What if experiments change path, pick this up from the CS instead, or find a better way
     example_file = self.logFilePath
     if "/ilc/prod/clic" in example_file:
       self.experiment = "CLIC"
@@ -123,6 +124,9 @@ class UploadLogFile(ModuleBase):
     """
     
     self.log.verbose('Starting UploadLogFile finalize')
+    self.log.debug("LogFilePath: %s" % self.logFilePath)
+    self.log.debug("LogLFNPath:  %s" % self.logLFNPath)
+
     ##########################################
     # First determine the files which should be saved
     self.log.info('Determining the files to be saved in the logs.')
@@ -159,20 +163,27 @@ class UploadLogFile(ModuleBase):
     if not result['OK']:
       self.log.error('Could not set permissions of log files to 0755 with message:\n%s' % (result['Message']))
 
+    #########################################
+    #Tar all the files
+    resTarLogs = self._tarTheLogFiles()
+    if not resTarLogs['OK']:
+      return S_OK()#because if the logs are lost, it's not the end of the world.
+    tarFileName = resTarLogs['Value']['fileName']
 
     #########################################
-    # Attempt to upload logs to the LogSE
-    self.log.info('Transferring log files to the %s' % self.logSE.name)
+    # Attempt to upload log tar ball to the LogSE
+    self.log.info('Transferring log tarball to the %s' % self.logSE.name)
     resTransfer = S_ERROR("Skipping log upload, because failoverTest")
+    tarFileLFN = '%s/%s' % (self.logFilePath, tarFileName)
+    tarFileLocal = os.path.realpath(os.path.join(self.logdir, tarFileName))
     if not self.failoverTest:
-      self.log.info('PutDirectory %s %s %s' % (self.logFilePath, os.path.realpath(self.logdir), self.logSE.name))
-      resTransfer = self.logSE.putDirectory({ self.logFilePath : os.path.realpath(self.logdir) })
-      self.log.debug("putDirectory result: %s" % resTransfer)
+      self.log.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
+      resTransfer = self.logSE.putFile({ tarFileLFN : tarFileLocal })
+      self.log.debug("putFile result: %s" % resTransfer)
       if len(resTransfer['Value']['Failed']) == 0:
-        self.log.info('Successfully upload log directory to %s' % self.logSE.name)
-        logURL = '%s' % self.logFilePath
-        self.setJobParameter('Log LFN', logURL)
-        self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % logURL)
+        self.log.info('Successfully upload log tarball to %s' % self.logSE.name)
+        self.setJobParameter('Log LFN', tarFileLFN)
+        self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % tarFileLFN)
         return S_OK()
       else:
         resTransfer = S_ERROR ( resTransfer['Value'] )
@@ -181,28 +192,6 @@ class UploadLogFile(ModuleBase):
     self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
                    resTransfer['Message'])
 
-    tarFileDir = os.path.dirname(self.logdir)
-    self.logLFNPath = '%s.gz' % self.logLFNPath
-    tarFileName = os.path.basename(self.logLFNPath)
-
-    self.log.debug("Log Directory: %s" % tarFileDir )
-    self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
-    self.log.debug("TarFileName:   %s" % tarFileName )
-    start = os.getcwd()
-    os.chdir(self.logdir)
-    logTarFiles = os.listdir(self.logdir)
-    #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
-    tfile = tarfile.open(tarFileName, "w:gz")
-    for item in logTarFiles:
-      self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
-      tfile.add(item)
-    tfile.close()
-    resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
-    os.chdir(start)
-    if not resExists['OK']:
-      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
-      self.setApplicationStatus('Failed To Create Log Tar Dir')
-      return S_OK()#because if the logs are lost, it's not the end of the world.
     
     #if res['Value'][0]: #i.e. non-zero status
     #  self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
@@ -211,7 +200,7 @@ class UploadLogFile(ModuleBase):
 
     ############################################################
     #Instantiate the failover transfer client with the global request object
-    resFailover = self._tryFailoverTransfer(tarFileName, tarFileDir)
+    resFailover = self._tryFailoverTransfer(tarFileName, self.logdir)
     if not resFailover['Value']:
       return resFailover ##log files lost, but who cares...
     
@@ -296,7 +285,7 @@ class UploadLogFile(ModuleBase):
       self.log.info('PopulateLogDir: Failed to copy any files to the target directory.')
       return S_ERROR()
     else:
-      self.log.info('PopulateLogDir: Prepared %s files in the temporary directory.' % self.logdir)
+      self.log.info('PopulateLogDir: Prepared %s files in the temporary directory.' % len(successfulFiles))
       return S_OK()
     
   #############################################################################
@@ -365,5 +354,31 @@ class UploadLogFile(ModuleBase):
     #Now after all operations, return potentially modified request object
     return S_OK( {'Request': failoverTransfer.request, 'uploadedSE': result['Value']['uploadedSE']})
 
+  def _tarTheLogFiles(self):
+    """returns S_OK/S_ERROR and puts all the relevantFiles into a tarball"""
+    self.logLFNPath = '%s.gz' % self.logLFNPath
+    tarFileName = os.path.basename(self.logLFNPath)
+
+    self.log.debug("Log Directory: %s" % self.logdir )
+    self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
+    self.log.debug("TarFileName:   %s" % tarFileName )
+    start = os.getcwd()
+    os.chdir(self.logdir)
+    logTarFiles = os.listdir(self.logdir)
+    #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
+    tfile = tarfile.open(tarFileName, "w:gz")
+    for item in logTarFiles:
+      self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
+      tfile.add(item)
+    tfile.close()
+    resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
+    os.chdir(start)
+    self.log.debug("TarFileName: %s" %(tarFileName,))
+    if resExists['OK']:
+      return S_OK(dict(fileName=tarFileName))
+    else:
+      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
+      self.setApplicationStatus('Failed To Create Log Tar Dir')
+      return S_ERROR()
 
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

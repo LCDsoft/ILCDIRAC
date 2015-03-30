@@ -32,7 +32,7 @@ class DiracILC(Dirac):
     self.log = gLogger
     self.software_versions = {}
     self.checked = False
-    self.pl = None
+    self.processList = None
     self.ops = Operations()
     
   def getProcessList(self): 
@@ -53,8 +53,8 @@ class DiracILC(Dirac):
         processlist = os.path.basename(pathtofile)   
     else:
       processlist = processlistpath
-    self.pl = ProcessList(processlist)
-    return self.pl
+    self.processList = ProcessList(processlist)
+    return self.processList
     
   def preSubmissionChecks(self, job, mode = None):
     """Overridden method from DIRAC.Interfaces.API.Dirac
@@ -103,9 +103,9 @@ class DiracILC(Dirac):
   def giveProcessList(self):
     """ Returns the list of Processes
     """
-    return self.pl
+    return self.processList
   
-  def retrieveRepositoryOutputDataLFNs(self, requestedStates = ['Done']):
+  def retrieveRepositoryOutputDataLFNs(self, requestedStates = None):
     """Helper function
     
     Get the list of uploaded output data for a set of jobs in a repository
@@ -114,6 +114,8 @@ class DiracILC(Dirac):
     @type requestedStates: list of strings
     @return: list
     """
+    if requestedStates is None:
+      requestedStates = ['Done']
     llist = []
     if not self.jobRepo:
       gLogger.warn( "No repository is initialised" )
@@ -137,24 +139,23 @@ class DiracILC(Dirac):
     @return: S_OK() or S_ERROR()
     """
     #Start by taking care of sandbox
-    if hasattr(job, "inputsandbox"):
-      if type( job.inputsandbox ) == list and len( job.inputsandbox ):
-        found_list = False
-        for items in job.inputsandbox:
-          if type(items) == type([]):#We fix the SB in the case is contains a list of lists
-            found_list = True
-            for f in items:
-              if type(f) == type([]):
-                return S_ERROR("Too many lists of lists in the input sandbox, please fix!")
-              job.inputsandbox.append(f)
-            job.inputsandbox.remove(items)
-        resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
-        if found_list:
-          self.log.warn("Input Sandbox contains list of lists. Please avoid that.")
-        fileList = string.join( resolvedFiles, ";" )
-        description = 'Input sandbox file list'
-        job._addParameter( job.workflow, 'InputSandbox', 'JDL', fileList, description )
-          
+    if hasattr(job, "inputsandbox") and type( job.inputsandbox ) == list and len( job.inputsandbox ):
+      found_list = False
+      for items in job.inputsandbox:
+        if type(items) == type([]):#We fix the SB in the case is contains a list of lists
+          found_list = True
+          for inBoxFile in items:
+            if type(inBoxFile) == type([]):
+              return S_ERROR("Too many lists of lists in the input sandbox, please fix!")
+            job.inputsandbox.append(inBoxFile)
+          job.inputsandbox.remove(items)
+      resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
+      if found_list:
+        self.log.warn("Input Sandbox contains list of lists. Please avoid that.")
+      fileList = string.join( resolvedFiles, ";" )
+      description = 'Input sandbox file list'
+      job._addParameter( job.workflow, 'InputSandbox', 'JDL', fileList, description )
+
     res = self.checkInputSandboxLFNs(job)
     if not res['OK']:
       return res
@@ -192,9 +193,16 @@ class DiracILC(Dirac):
     @param appVersion: Application version
     @return: S_OK() or S_ERROR()
     """
-    self.log.debug("Checking for software version in " + '/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appName, appVersion))
-    app_version = self.ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appName, appVersion),'')
-    if not app_version:
+    csPathTarBall = "/AvailableTarBalls/%s/%s/%s/TarBall" %(platform, appName, appVersion)
+    csPathCVMFS   ="/AvailableTarBalls/%s/%s/%s/CVMFSPath"%(platform, appName, appVersion)
+
+    self.log.debug("Checking for software version in " + csPathTarBall)
+    app_version = self.ops.getValue(csPathTarBall,'')
+
+    self.log.debug("Checking for software version in " + csPathCVMFS)
+    app_version_cvmfs = self.ops.getValue(csPathCVMFS,'')
+
+    if not app_version and not app_version_cvmfs:
       self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
       return S_ERROR("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
     return S_OK()
@@ -241,9 +249,9 @@ class DiracILC(Dirac):
       isblist = inputsb.getValue()
       if isblist:
         isblist = isblist.split(';')
-        for f in isblist:
-          if f.lower().count('lfn:'):
-            lfns.append(f.replace('LFN:', '').replace('lfn:', ''))
+        for inBoxFile in isblist:
+          if inBoxFile.lower().count('lfn:'):
+            lfns.append(inBoxFile.replace('LFN:', '').replace('lfn:', ''))
     if len(lfns):
       res = self.getReplicas(lfns)
       if not res["OK"]:

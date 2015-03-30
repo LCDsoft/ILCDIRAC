@@ -50,7 +50,7 @@ def checkGcc() :
         # errLog.close()
         sys.stderr.write("\nERROR:\n")
         sys.stderr.write("\tCompiler version '" + compString + "' is not supported, sorry.\n")
-        sys.stderr.write("\tFor information on supported platforms and porting see mailto:stephane.poss@cern.ch \n\n")
+        sys.stderr.write("\tFor information on supported platforms and porting see mailto:ilcdirac-support@cern.ch \n\n")
         comp = "ERROR"
 #        sys.exit(-1)
 
@@ -199,7 +199,7 @@ def guessPlatform() :
             # errLog.close()
             sys.stderr.write("\nERROR:\n")
             sys.stderr.write("\tOperating system version '" + lines + "' is not supported, sorry.\n")
-            sys.stderr.write("\tFor information on supported platforms mailto:stephane.poss@cern.ch \n\n")
+            sys.stderr.write("\tFor information on supported platforms mailto:ilcdirac-support@cern.ch \n\n")
 #            sys.exit(-1)
             opSys = "ERROR"
 

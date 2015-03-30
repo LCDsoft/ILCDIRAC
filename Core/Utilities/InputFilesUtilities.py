@@ -10,9 +10,9 @@ __RCSID__ = "$Id$"
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 import os
 
-from DIRAC import gLogger
+from DIRAC import gLogger, S_OK, S_ERROR
 
-def getNumberOfevents(inputfile):
+def getNumberOfEvents(inputfile):
   """ Find from the FileCatalog the number of events in a file
   """
 
@@ -33,6 +33,7 @@ def getNumberOfevents(inputfile):
   numberofevents = 0
   evttype = ''
   others = {}
+  completeFailure = True
 
   for path, files in flist.items():
     found_nbevts = False
@@ -41,25 +42,27 @@ def getNumberOfevents(inputfile):
     if len(files) == 1:
       res = fc.getFileUserMetadata(files[0])
       if not res['OK']:
-        gLogger.verbose("Failed to get meta data")
-        continue
-      tags = res['Value']
-      if tags.has_key("NumberOfEvents") and not found_nbevts:
-        numberofevents += int(tags["NumberOfEvents"])
-        found_nbevts = True
-      if tags.has_key("Luminosity") and not found_lumi:
-        luminosity += float(tags["Luminosity"])  
-        found_lumi = True
-      others.update(tags)  
-      if found_nbevts: 
-        continue
-        
+        gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (files[0], res['Message']))
+      else:
+        tags = res['Value']
+        if "NumberOfEvents" in tags and not found_nbevts:
+          numberofevents += int(tags["NumberOfEvents"])
+          found_nbevts = True
+          completeFailure = False
+        if "Luminosity" in tags and not found_lumi:
+          luminosity += float(tags["Luminosity"])
+          found_lumi = True
+        others.update(tags)
+        if found_nbevts:
+          continue
+
     res = fc.getDirectoryMetadata(path)
     if res['OK']:   
       tags = res['Value']
       if tags.has_key("NumberOfEvents") and not found_nbevts:
         numberofevents += len(files)*int(tags["NumberOfEvents"])
         found_nbevts = True
+        completeFailure = False
       if tags.has_key("Luminosity") and not found_lumi:
         luminosity += len(files) * float(tags["Luminosity"])
         found_lumi = True
@@ -68,14 +71,18 @@ def getNumberOfevents(inputfile):
       others.update(tags)    
       if found_nbevts: 
         continue
-      
+    else:
+      gLogger.warn("Failed to get Metadata from path: %s, because: %s" % (path, res['Message']))
+
     for myfile in files:
       res = fc.getFileUserMetadata(myfile)
       if not res['OK']:
+        gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (myfile, res['Message']))
         continue
       tags = res['Value']
       if tags.has_key("NumberOfEvents"):
         numberofevents += int(tags["NumberOfEvents"])
+        completeFailure = False
       if tags.has_key("Luminosity") and not found_lumi:
         luminosity += float(tags["Luminosity"])
       others.update(tags)  
@@ -88,4 +95,9 @@ def getNumberOfevents(inputfile):
   if 'Luminosity' in others:
     del others['Luminosity']
   nbevts['AdditionalMeta'] = others
-  return nbevts
+
+  if completeFailure:
+    gLogger.warn("Did not obtain NumberOfEvents from FileCatalog")
+    return S_ERROR("Failed to get Number of Events")
+
+  return S_OK(nbevts)

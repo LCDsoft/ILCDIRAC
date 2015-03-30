@@ -11,7 +11,7 @@ __RCSID__ = "$Id$"
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import PrepareTomatoSalad
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import prepareTomatoSalad
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
 from DIRAC                                                 import S_OK, S_ERROR, gLogger
 import os, types
@@ -80,7 +80,7 @@ class TomatoAnalysis(MarlinAnalysis):
     listofslcio = res['Value']
  
     finalXML = 'tomato.xml'   
-    res = PrepareTomatoSalad(None, finalXML, self.OutputFile, listofslcio, self.collection)
+    res = prepareTomatoSalad(None, finalXML, self.OutputFile, listofslcio, self.collection)
     if not res['OK']:
       self.log.error('Could not prepare the Tomato XML: %s' % res['Message'])
       self.setApplicationStatus('Failed to setup Tomato')

@@ -8,7 +8,6 @@ Allows setting the Steering File dependency, as well as other LC community thing
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
 from DIRAC.Core.Workflow.Parameter                  import Parameter
-from types import StringTypes, ListType
 
 from DIRAC import S_OK
 

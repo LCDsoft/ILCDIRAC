@@ -14,12 +14,12 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import PrepareSteeringFile, GetNewLDLibs
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareSteeringFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
-
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
 import  os, shutil, types
@@ -33,7 +33,6 @@ class MokkaAnalysis(ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "MokkaAnalysis" )
-    self.SteeringFile = ''
     self.InputFile = [] 
     self.macFile = ''
     self.detectorModel = '' 
@@ -41,10 +40,9 @@ class MokkaAnalysis(ModuleBase):
     self.firstEventNumber = 1
     self.applicationName = 'Mokka'
     self.dbSlice = ''
-    self.NumberOfEvents = 0
     self.startFrom = 0
     self.eventstring = ['>>> Event']
-    self.processID = ''
+    self.ProcessID = ''
     self.RandomSeed = 0
     self.mcRunNumber = 0
     self.db_dump_name = ""
@@ -56,52 +54,27 @@ class MokkaAnalysis(ModuleBase):
     @return: S_OK()
     """
 
-    if self.step_commons.has_key('numberOfEvents'):
-      self.NumberOfEvents = self.step_commons['numberOfEvents']
-          
-    if self.step_commons.has_key('startFrom'):
-      self.startFrom = self.step_commons['startFrom']
-      
     if self.WorkflowStartFrom:
       self.startFrom = self.WorkflowStartFrom
 
-      #Need to keep until old prods are archived.
-    if self.step_commons.has_key("steeringFile"):
-      self.SteeringFile = self.step_commons['steeringFile']
-
-    if self.step_commons.has_key('stdhepFile'):
+    if 'stdhepFile' in self.step_commons:
       inputf = self.step_commons["stdhepFile"]
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
       self.InputFile = inputf
-        
-      
-    if self.step_commons.has_key('macFile'):
-      self.macFile = self.step_commons['macFile']
 
-    if self.step_commons.has_key('detectorModel'):
-      self.detectorModel = self.step_commons['detectorModel']
-        
-    if self.step_commons.has_key('ProcessID'):
-      self.processID = self.step_commons['ProcessID']
+    self.RandomSeed = self.determineRandomSeed()
       
-    if not self.RandomSeed:
-      if self.step_commons.has_key("RandomSeed"):
-        self.RandomSeed = self.step_commons["RandomSeed"]
-      elif self.jobID:
-        self.RandomSeed = self.jobID  
-    if self.workflow_commons.has_key("IS_PROD"):  
-      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
-      
-    if self.step_commons.has_key('dbSlice'):
-      self.dbSlice = self.step_commons['dbSlice']
-      
-    if self.workflow_commons.has_key("IS_PROD"):
+    resDBSlice = self.determineDBSlice()
+    if not resDBSlice['OK']:
+      return resDBSlice
+
+    if "IS_PROD" in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
         self.mcRunNumber = self.RandomSeed
         #self.OutputFile = getProdFilename(self.outputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_sim_"):
@@ -119,10 +92,10 @@ class MokkaAnalysis(ModuleBase):
                                             int(self.workflow_commons["JOB_ID"]))]
       
     if len(self.InputData):      
-      if 'EvtClass' in self.inputdataMeta and not self.processID:
-        self.processID = self.inputdataMeta['EvtClass']
-      if 'EvtType' in self.inputdataMeta and not self.processID:
-        self.processID = self.inputdataMeta['EvtType']
+      if 'EvtClass' in self.inputdataMeta and not self.ProcessID:
+        self.ProcessID = self.inputdataMeta['EvtClass']
+      if 'EvtType' in self.inputdataMeta and not self.ProcessID:
+        self.ProcessID = self.inputdataMeta['EvtType']
 
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
@@ -136,8 +109,8 @@ class MokkaAnalysis(ModuleBase):
       
       Executes the following:
         - read the application parameters that where defined in ILCJob, and stored in the job definition
-        - setup the SQL server and run it in the background, via a call to L{SQLWrapper}
-        - prepare the steering fie using L{PrepareSteeringFile}
+        - setup the SQL server and run it in the background
+        - prepare the steering file using L{prepareSteeringFile}
         - run Mokka and catch its return status
       @return: S_OK(), S_ERROR()
       
@@ -173,6 +146,7 @@ class MokkaAnalysis(ModuleBase):
 
     
     res = getEnvironmentScript(self.platform, "mokka", self.applicationVersion, self.getEnvScript)
+    self.log.notice("Got the environment script: %s" % res )
     if not res['OK']:
       self.log.error("Error getting the env script: ", res['Message'])
       return res
@@ -180,31 +154,16 @@ class MokkaAnalysis(ModuleBase):
     
 
     ####Setup MySQL instance      
-    MokkaDBrandomName =  '/tmp/MokkaDBRoot-' + generateRandomString(8)
-      
-    #sqlwrapper = SQLWrapper(self.dbslice,mySoftwareRoot,"/tmp/MokkaDBRoot")#mySoftwareRoot)
-#     sqlwrapper = SQLWrapper(mySoftwareRoot, MokkaDBrandomName)#mySoftwareRoot)
-#     res = sqlwrapper.setDBpath(myMokkaDir, self.dbSlice)
-#     if not res['OK']:
-#       self.log.error("Failed to find the DB slice")
-#       return res
-#     result = sqlwrapper.makedirs()
-#     if not result['OK']:
-#       self.setApplicationStatus('MySQL setup failed to create directories.')
-#       return result
-#     result = sqlwrapper.mysqlSetup()
-#     if not result['OK']:
-#       self.setApplicationStatus('MySQL setup failed.')
-#       return result
-#     
+    mysqlBasePath = '%s/mysqltmp/MokkaDBRoot-%s' %(os.getcwd(), generateRandomString(8))
+    self.log.notice("Placing mysql files in %s" % mysqlBasePath)
     
     ###steering file that will be used to run
     mokkasteer = "mokka.steer"
     if os.path.exists("mokka.steer"):
       try:
         os.rename("mokka.steer", "mymokka.steer")
-      except EnvironmentError, e:
-        self.log.error("Failed renaming the steering file: ", str(e))
+      except EnvironmentError as err:
+        self.log.error("Failed renaming the steering file: ", str(err))
       self.SteeringFile = "mymokka.steer"
         
     ###prepare steering file
@@ -214,7 +173,6 @@ class MokkaAnalysis(ModuleBase):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
         self.log.error("Generator file not found")
-        #result = sqlwrapper.mysqlCleanUp()
         return res
       self.InputFile = res['Value']
     if len(self.macFile) > 0:
@@ -226,20 +184,17 @@ class MokkaAnalysis(ModuleBase):
       self.log.verbose("Steering file %s not found locally" % self.SteeringFile)
       res =  getSteeringFileDirName(self.platform, "mokka", self.applicationVersion)
       if not res['OK']:
-        #result = sqlwrapper.mysqlCleanUp()
         self.log.error("Missing Steering file directory")
         return res
       steeringfiledirname = res['Value']
       if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
         try:
           shutil.copy(os.path.join(steeringfiledirname, self.SteeringFile), "./" + self.SteeringFile )
-        except EnvironmentError, x:
-          #result = sqlwrapper.mysqlCleanUp()
+        except EnvironmentError as err:
           self.log.error("Failed copying file", self.SteeringFile)
-          return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(x)))  
+          return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(err)))
           #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
     if not os.path.exists(self.SteeringFile):
-      #result = sqlwrapper.mysqlCleanUp()
       self.log.error("Missing steering file, should not happen!")
       return S_ERROR("Could not find steering file")
     else:
@@ -247,10 +202,10 @@ class MokkaAnalysis(ModuleBase):
     ### The following is because if someone uses particle gun, there is no InputFile
     if not len(self.InputFile):
       self.InputFile = ['']
-    steerok = PrepareSteeringFile(self.SteeringFile, mokkasteer, self.detectorModel, self.InputFile[0],
+    steerok = prepareSteeringFile(self.SteeringFile, mokkasteer, self.detectorModel, self.InputFile[0],
                                   self.macFile, self.NumberOfEvents, self.startFrom, self.RandomSeed,
                                   self.mcRunNumber,
-                                  self.processID,
+                                  self.ProcessID,
                                   self.debug,
                                   self.OutputFile,
                                   self.inputdataMeta)
@@ -295,51 +250,78 @@ cat mokkamac.mac
     script.write('echo =============================\n')
     script.write('echo PATH is\n')
     script.write('echo $PATH | tr ":" "\n"\n')
+    if self.debug:
+      script.write('echo ldd of Mokka is\n')
+      script.write('ldd `which Mokka` \n' )
+      script.write('echo =============================\n')
+      script.write('echo ldd of mysql is\n')
+      script.write('ldd `which mysql` \n' )
+      script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    script.write("""if [ ! -e ./%s ]; then
+    script.write("""if [ ! -e ./%(DBDUMP)s ]; then
     echo "Missing DB dump!" >&2
     exit 1
 fi    
-    """ % self.db_dump_name)
+    """ % {'DBDUMP': self.db_dump_name} )
     ##Now start the MySQL server and configure.
-    script.write("declare -x MOKKADBROOT=%s\n" % MokkaDBrandomName)
+    script.write("declare -x MOKKADBROOT=%s\n" % mysqlBasePath)
+    script.write("declare -x WORKDIR=%s\n" % os.getcwd())
+    script.write("declare -x LOGDIR=$WORKDIR/mysqllogs/\n")
+    script.write("mkdir -p $LOGDIR\n")
+
+    #mysql socket must not be longer than 107 characters!
+    script.write("declare -x SOCKETBASE=/tmp/mokka-%s\n" % generateRandomString(8) )
+    script.write("mkdir -p $SOCKETBASE\n")
+    script.write("declare -x SOCKETPATH=$SOCKETBASE/mysql.sock\n" )
     script.write("mkdir -p $MOKKADBROOT\n")
-    script.write("declare -x MYSQLDATA=`pwd`/data\n")
+    script.write("declare -x MYSQLDATA=$MOKKADBROOT/data\n")
     script.write("rm -rf $MYSQLDATA\n")
     script.write("mkdir -p $MYSQLDATA\n")
-    script.write("""echo "Installing MySQL"
-mysql_install_db --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=./mysql.err --log=./mysql.log
+    script.write("date\n")
+    script.write("""echo "*** Installing MySQL"
+echo "mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log"
+mysql_install_db --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log
 install_st=$?
 if [ $install_st -ne 0 ]
 then
       exit $install_st
 fi
-echo "Running mysqld-safe"
+date
+echo "*** Running mysqld-safe"
 cd $MYSQL
-bin/mysqld_safe --no-defaults --skip-networking --socket=$MOKKADBROOT/mysql.sock --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=./mysql.err --log=./mysql.log &
+bin/mysqld_safe --no-defaults --skip-networking --socket=$SOCKETPATH --datadir=$MYSQLDATA --basedir=$MYSQL --pid-file=$MOKKADBROOT/mysql.pid --log-error=$LOGDIR/mysql.err --log=$LOGDIR/mysql.log &
+COUNT=0
 while [ -z "$socket_grep" ] ; do
-    socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
+    socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
+    if [ $COUNT -eq 100 ]; then
+        echo "Failed to find socket"
+        break
+    fi
+    COUNT=$(( $COUNT + 1 ))
 done
 cd -
-echo "Configuring MySQL"
-mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot password 'rootpass'
+echo "*** Configuring MySQL"
+mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot password 'rootpass'
 declare -x admin_st=$?
 if [ $admin_st -ne 0 ]
 then
-  echo "mysladmin failed, cannot proceed" >&2
-  mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown
+  echo "*** mysqladmin failed, cannot proceed" >&2
+  mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass shutdown
   exit $admin_st
 fi
 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;' 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";' 
-mysql --no-defaults -uroot -hlocalhost --socket=$MOKKADBROOT/mysql.sock -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;' 
-echo "Installing Mokka DB"
-mysql --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass < ./%s
-sleep 5\n""" % (self.db_dump_name))  
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO root;'
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'GRANT ALL PRIVILEGES ON *.* TO consult IDENTIFIED BY \"consult\";'
+mysql --no-defaults -uroot -hlocalhost --socket=$SOCKETPATH -prootpass <<< 'DELETE FROM mysql.user WHERE User = \"\"; FLUSH PRIVILEGES;'
+echo "*** Installing Mokka DB"
+date
+echo "mysql --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass < ./%(DBDUMP)s"
+time mysql --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass < ./%(DBDUMP)s
+sleep 5
+date\n""" % {'DBDUMP': self.db_dump_name})
     #Now take care of the particle tables.
     script.write("""
 if [ -e "./particle.tbl" ]
@@ -360,16 +342,16 @@ echo "/Mokka/init/PDGFile $PARTICLETBL" >> %s
 \n"""% mokkasteer)
 
     ##Now run Mokka
-    comm = 'Mokka %s -h localhost:$MOKKADBROOT/mysql.sock %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
+    comm = 'Mokka %s -h localhost:$SOCKETPATH %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
     self.log.info( "Command : %s" % (comm) )
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
 
     #Now shutdown the MySQL server
-    script.write("mysqladmin --no-defaults -hlocalhost --socket=$MOKKADBROOT/mysql.sock -uroot -prootpass shutdown\n")
+    script.write("mysqladmin --no-defaults -hlocalhost --socket=$SOCKETPATH -uroot -prootpass shutdown\n")
     script.write("""
 while [ -n "$socket_grep" ] ; do
-    socket_grep=$(netstat -ln 2>/dev/null | grep "$MOKKADBROOT/mysql.sock")
+    socket_grep=$(netstat -ln 2>/dev/null | grep "$SOCKETPATH")
     echo -n .
     sleep 1
 done 
@@ -398,7 +380,6 @@ done
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
     self.log.info( "Status after Mokka execution is %s" % str( status ) )
-    #result = sqlwrapper.mysqlCleanUp()
     if not os.path.exists(self.applicationLog):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
@@ -449,12 +430,14 @@ done
     
     mySoftwareRoot = os.sep.join(myMokkaDir.rstrip(os.sep).split(os.sep)[0:-1])
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.platform, "mokka", self.applicationVersion)
+    new_ld_lib_path = getNewLDLibs(self.platform, "mokka", self.applicationVersion)
 
     ##Remove libc
     removeLibc(myMokkaDir)
-    removeLibc(mySoftwareRoot+'/mysql4grid/lib64/mysql')
-    
+
+    remoteMysqlInstall = mySoftwareRoot
+    removeLibc(remoteMysqlInstall+'/mysql4grid/lib64/mysql')
+
     script = open(env_script_name, "w")
     script.write('#!/bin/sh \n')
     script.write('######################################################\n')
@@ -477,13 +460,13 @@ done
     script.write('declare -x G4NEUTRONHP_NEGLECT_DOPPLER=1\n')
     script.write('declare -x PATH=%s:$PATH\n' % myMokkaDir)
     script.write('declare -x LD_LIBRARY_PATH=%s\n' % (myMokkaDir))
-    script.write('declare -x MYSQL=%s/mysql4grid\n' % (mySoftwareRoot))
+    script.write('declare -x MYSQL=%s/mysql4grid\n' % (remoteMysqlInstall))
     script.write('declare -x MOKKATARBALL=%s\n' % myMokkaDir)
     if new_ld_lib_path:
       script.write('declare -x LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH\n' % (new_ld_lib_path))
 
-    script.write('declare -x PATH=%s/mysql4grid/bin:$PATH\n' % mySoftwareRoot)#for MySQL
-    script.write('declare -x LD_LIBRARY_PATH=%s/mysql4grid/lib64/mysql:$LD_LIBRARY_PATH\n' % mySoftwareRoot)
+    script.write('declare -x PATH=%s/mysql4grid/bin:$PATH\n' % remoteMysqlInstall)#for MySQL
+    script.write('declare -x LD_LIBRARY_PATH=%s/mysql4grid/lib64/mysql:$LD_LIBRARY_PATH\n' % remoteMysqlInstall)
     #for MySQL
     script.write("if [ -e %s/%s ]; then\n" % (myMokkaDir, self.db_dump_name))
     script.write("  cp %s/%s .\n" % (myMokkaDir, self.db_dump_name) )
@@ -506,3 +489,52 @@ done
   #############################################################################
 
 
+  def determineDBSlice(self):
+    """Figure out where the dbSlice is located and what it is called
+     dbSlice is module parameter, set directly via workflow
+
+    if it is not set and we do not use native CVMFS installation, then we assume
+    the SQL file should be called CLICMOkkaDB.sql, but if we are using a native
+    CVMFS installation, we need to know where to find the default sql file.
+
+    """
+    if self.dbSlice:
+      return S_OK()
+    else:
+      appVersion = self.step_commons['applicationVersion']
+      csPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'mokka', appVersion)
+
+      ##check if this mokka version is CVMFS native:
+      cvmfsPath = Operations().getValue(csPathApplication+"/CVMFSPath")
+      if not cvmfsPath:
+        self.log.info("This mokka version is not native to CVMFS")
+        self.log.info("Assuming CLICMokkaDB.sql")
+        self.dbSlice = "CLICMokkaDB.sql"
+        return S_OK()
+
+      #Now we know we are CVMFS native, so we have to know CVMFSDBSlice
+      cvmfsDBSlice = Operations().getValue(csPathApplication+"/CVMFSDBSlice")
+      if not cvmfsDBSlice:
+        return S_ERROR("CVMFSDBSlice not defined for mokka version %s " % appVersion)
+      self.log.info("Getting this DBSlice: %s" % cvmfsDBSlice)
+      #copy the db slice and extract it to local folder?
+      #extract the name of the slice from the tarball name
+      dbSliceFileName = cvmfsDBSlice.split("/")[-1]
+      if dbSliceFileName[-4:] == ".tgz":
+        self.dbSlice = dbSliceFileName[:-4] #cutaway the ".tgz"
+        self.log.info("Using this db %s" % self.dbSlice)
+        import tarfile
+        dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
+        dbsliceTar.extractall(path='./')
+      else:
+        self.dbSlice = dbSliceFileName
+      return S_OK()
+
+  def determineRandomSeed(self):
+    """determine what the randomSeed should be, depends on production or not"""
+    if not self.RandomSeed:
+      if self.jobID:
+        self.RandomSeed = self.jobID
+    if "IS_PROD" in self.workflow_commons:
+      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
+    return self.RandomSeed

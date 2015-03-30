@@ -317,8 +317,10 @@ class UserJobFinalization(ModuleBase):
 
   def printOutputInfo(self, final):
     """print some information about what would be uploaded"""
-    self.log.info('Module is disabled by control flag, would have attempted \
-                  to upload the following files %s' % ', '.join(final.keys()))
+    if not self.enable:
+      self.log.info('Module is disabled by control flag, would have attempted to upload the following files')
+    else:
+      self.log.info('Attempt to upload the following files')
     for fileName, metadata in final.items():
       self.log.info('--------%s--------' % fileName)
       for metaName, metaValue in metadata.iteritems():
@@ -337,7 +339,7 @@ class UserJobFinalization(ModuleBase):
                                                           metadata['localpath'],
                                                           metadata['lfn'],
                                                           metadata['resolvedSE'],
-                                                          fileMetaDict = metadata,
+                                                          fileMetaDict = metadata['filedict'],
                                                           fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
@@ -385,7 +387,7 @@ class UserJobFinalization(ModuleBase):
                                                                   metadata['lfn'],
                                                                   targetSE,
                                                                   failoverSEs,
-                                                                  fileMetaDict = metadata,
+                                                                  fileMetaDict = metadata['filedict'],
                                                                   fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))

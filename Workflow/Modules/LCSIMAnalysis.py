@@ -14,7 +14,7 @@ import os, shutil, types
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import getSoftwareFolder
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import PrepareLCSIMFile, GetNewLDLibs 
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import prepareLCSIMFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames            import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.PrepareLibs                     import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringFileDirName
@@ -116,7 +116,7 @@ class LCSIMAnalysis(ModuleBase):
       - prepend in the LD_LIBRARY_PATH any lib directory of any dependency (e.g. root)
       - prepare the list of files to run on
       - set the cacheDirectory and put in there the alias.properties
-      - set the lcsim file using L{PrepareLCSIMFile}
+      - set the lcsim file using L{prepareLCSIMFile}
       - run java and catch the exit code
     @return: S_OK(), S_ERROR()
     """
@@ -140,7 +140,7 @@ class LCSIMAnalysis(ModuleBase):
       return res
     lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
+    new_ld_lib_path = getNewLDLibs(self.platform, self.applicationName, self.applicationVersion)
 
     runonslcio = []
     if len(self.InputFile):
@@ -209,7 +209,7 @@ class LCSIMAnalysis(ModuleBase):
     self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
     
     lcsimfile = "job_%s.lcsim" % self.STEP_NUMBER
-    res = PrepareLCSIMFile(self.SteeringFile, lcsimfile, self.NumberOfEvents, 
+    res = prepareLCSIMFile(self.SteeringFile, lcsimfile, self.NumberOfEvents,
                            self.trackingstrategy, runonslcio, jars, cachedir,
                            self.OutputFile, self.outputREC, self.outputDST, self.debug)
     if not res['OK']:

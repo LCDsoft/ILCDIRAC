@@ -7,29 +7,17 @@ Run SLICPandora
 '''
 __RCSID__ = "$Id$"
 
-import os, urllib, zipfile, types
+import os, urllib, types
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript, unzip_file_into_dir
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import GetNewLDLibs, GetNewPATH
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs, getNewPATH
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
-
-def unzip_file_into_dir(myfile, mydir):
-  """Used to unzip the downloaded detector model
-  """
-  zfobj = zipfile.ZipFile(myfile)
-  for name in zfobj.namelist():
-    if name.endswith('/'):
-      os.mkdir(os.path.join(mydir, name))
-    else:
-      outfile = open(os.path.join(mydir, name), 'wb')
-      outfile.write(zfobj.read(name))
-      outfile.close()
         
 class SLICPandoraAnalysis (ModuleBase):
   """ Run SLIC Pandora  
@@ -115,7 +103,8 @@ class SLICPandoraAnalysis (ModuleBase):
       if os.path.exists(detmodel + ".zip"):
         try:
           unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
-        except (RuntimeError, OSError):
+        except (RuntimeError, OSError) as err:
+          self.log.error("Exception when unpacking detectormodel zip file:", str(err))
           os.unlink(detmodel + ".zip") 
       if not os.path.exists(detmodel + ".zip"):  
         #retrieve detector model from web
@@ -133,7 +122,9 @@ class SLICPandoraAnalysis (ModuleBase):
           try:
             unzip_file_into_dir(open(detmodel + ".zip"), os.getcwd())
             break
-          except (RuntimeError, OSError):
+          except (RuntimeError, OSError) as err:
+            self.log.error("Exception for zip file obtained from ", detector_url)
+            self.log.error("Exception:", str(err))
             os.unlink(detmodel + ".zip")
             continue
       #if os.path.exists(detmodel): #and os.path.isdir(detmodel):
@@ -252,9 +243,9 @@ fi
     removeLibc(myslicPandoraDir + "/LDLibs")
 
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = GetNewLDLibs(sysconfig, appname, appversion)
+    new_ld_lib_path = getNewLDLibs(sysconfig, appname, appversion)
 
-    new_path = GetNewPATH(sysconfig, appname, appversion)
+    new_path = getNewPATH(sysconfig, appname, appversion)
 
     
     script = open(env_script_name, "w")

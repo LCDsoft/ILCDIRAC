@@ -4,7 +4,7 @@
 @author: sposs
 '''
 __RCSID__ = "$Id$"
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import SharedArea
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSharedAreaLocation
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.Core.Utilities.Os import getDiskSpace, getDirectorySize
 
@@ -89,7 +89,7 @@ class AnalyseWN(ModuleBase):
     diskSpace = fs[4] * fs[0] / 1024 / 1024
     info.append( 'DiskSpace (MB) = %s' % diskSpace )
       
-    sha = SharedArea()    
+    sha = getSharedAreaLocation()
     if not sha:
       info.append("No shared Area found here")
     else:
