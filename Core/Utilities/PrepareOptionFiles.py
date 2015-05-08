@@ -596,7 +596,7 @@ def PrepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     return S_ERROR("Empty input file list")
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
-  if filesinlcsim:
+  if filesinlcsim is not None:
     filesinlcsim.clear()
   else:
     baseelem = tree.getroot()

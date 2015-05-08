@@ -55,9 +55,9 @@ def upload(path, appTar):
     for copies in copies_at:
       transfer = Operation()
       transfer.Type = "ReplicateAndRegister"
-      transfer.TargetSET = copies
+      transfer.TargetSE = copies
       trFile = File()
-      trFile.lfn = lfnpath
+      trFile.LFN = lfnpath
       trFile.GUID = ""
       transfer.addFile(trFile)
       request.addOperation(transfer)
