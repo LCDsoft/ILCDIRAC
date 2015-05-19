@@ -4,6 +4,29 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2p3]
+
+* Dirac
+
+NEW: Based on Dirac version v6r11p33: Issue regarding space in CE_OS description
+
+* Workflow
+
+FIX: ILCDIRAC-413 fix regarding picking up ILDConfig from CVMFS
+
+* RMS
+
+FIX: LogUpload would place log files in the wrong location
+
+* Scripts
+
+FIX: ILCDIRAC-474: dirac-ilc-add-whizard fixes for creating the replication request
+
+* Core
+
+FIX: ILCDIRAC-479: Fix python warning
+
+
 [v22r2p2]
 
 * Dirac
