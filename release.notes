@@ -4,6 +4,12 @@
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2p4]
+
+* Workflow
+
+FIX: Fix if ILDConfig cannot access CVMFS
+
 [v22r2p3]
 
 * Dirac
