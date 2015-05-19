@@ -508,18 +508,22 @@ done
       appVersion = self.step_commons['applicationVersion']
       csPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'mokka', appVersion)
 
-      ##check if ildConfig is used, and then get the dbSlice from there
+      ##check if ildConfig is used, and then get the dbSlice from there, if it is on cvmfs
+      ##if the tarball is not on cvmfs we exit, because it will be taken from the ILDConfig tarball
       if 'ILDConfigPackage' in self.workflow_commons:
         self.log.notice("Using ILDConfig from CVMFS, get DBSlice from there")
         config_dir = self.workflow_commons['ILDConfigPackage']
         ildConfigVersion = config_dir.replace("ILDConfig", "")
         ildconfigCSPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'ildconfig', ildConfigVersion)
         cvmfsDBSlice = Operations().getValue(ildconfigCSPathApplication+"/CVMFSDBSlice")
-        if not cvmfsDBSlice:
-          self.log.error("CVMFSDBSlice is not set for this ILDCongfig version")
-          return S_ERROR("CVMFSDBSlice not set")
-        self.log.notice("Getting this dbSlice %s from CVMFS" % cvmfsDBSlice)
-        self.untarDBSlice(cvmfsDBSlice)
+        cvmfsPath = Operations().getValue(ildconfigCSPathApplication+"/CVMFSPath")
+        if cvmfsDBSlice and os.path.exists(cvmfsDBSlice):
+          self.log.notice("Getting this dbSlice %s from CVMFS" % cvmfsDBSlice)
+          self.untarDBSlice(cvmfsDBSlice)
+          return S_OK()
+        if cvmfsPath and not cvmfsDBSlice:
+          self.log.error("CVMFSDBSlice parameter not set for ILDConfig version", ildConfigVersion)
+          return S_ERROR("CVMFSDBSlice parameter not set")
         return S_OK()
 
       ##check if this mokka version is CVMFS native, if not we assume the steeringFile Tarballs has the db slice
