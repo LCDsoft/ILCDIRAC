@@ -50,7 +50,7 @@ analysis = 'several'
 process = 'hzqq'
 #additional_name = '_neu1_356'
 globname = ""
-additional_name = '_TestV22_p7'
+additional_name = '_TestV22_p10'
 energy = 250.
 meta_energy = str(int(energy))
 
@@ -107,7 +107,8 @@ sid_rec = False
 ild_rec_ov = False
 sid_rec_ov = False
 
-n_events = 10
+n_events = 100
+prodOutputSE = "PNNL3-SRM"
 
 model = 'sm'
 #model = 'susyStagedApproach'
@@ -422,7 +423,7 @@ for proddict in prodlist:
     ##Define the generation production.
     pwh = ProductionJob()
     pwh.setLogLevel("verbose")
-    pwh.setOutputSE("CERN-SRM")
+    pwh.setOutputSE(prodOutputSE)
     pwh.setProdType("MCGeneration")
     wname = process+"_"+str(energy)
     if additionnalreqs:
@@ -478,7 +479,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    pstdhepsplit.setOutputSE("CERN-SRM")
+    pstdhepsplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
     pstdhepsplit.setWorkflowName(wname)
@@ -522,7 +523,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    pmo.setOutputSE("CERN-SRM")
+    pmo.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_sim"
     wname += prod_name
     pmo.setWorkflowName(wname)
@@ -565,7 +566,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    psl.setOutputSE("CERN-SRM")
+    psl.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_sim"
     wname += prod_name
     psl.setWorkflowName(wname)
@@ -607,7 +608,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    psplit.setOutputSE("CERN-SRM")
+    psplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
     psplit.setWorkflowName(wname)
@@ -648,7 +649,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    pma.setOutputSE("CERN-SRM")
+    pma.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec"
     wname += prod_name
     pma.setWorkflowName(wname)
@@ -690,7 +691,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    psidrec.setOutputSE("CERN-SRM")
+    psidrec.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec"
     wname += prod_name
     psidrec.setWorkflowName(wname)
@@ -735,7 +736,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    pmao.setOutputSE("CERN-SRM")
+    pmao.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec_overlay"
     wname += prod_name
     pmao.setWorkflowName(wname)
@@ -782,7 +783,7 @@ for proddict in prodlist:
     if not res['OK']:
       print res['Message']
       exit(1)
-    psidreco.setOutputSE("CERN-SRM")
+    psidreco.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec_overlay"
     wname += prod_name
     psidreco.setWorkflowName(wname)
