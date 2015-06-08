@@ -3,6 +3,8 @@ Several utilities to "guess" the files names and the paths
 @author: sposs
 @since: March 13th, 2013
 '''
+__RCSID__ = "$Id$"
+
 import os
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger

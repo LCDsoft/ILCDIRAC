@@ -204,7 +204,7 @@ class SIDProductionJob(ProductionJob):
 
     if not self.energy:
       if application.Energy:
-        self.energy = Decimal(str(application.energy))
+        self.energy = Decimal(str(application.Energy))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
     elif not application.Energy:
