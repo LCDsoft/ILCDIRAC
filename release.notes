@@ -1,3 +1,14 @@
+[v23-pre3]
+
+* Core
+NEW: Based on Dirac v6r12p42:
+
+* Transformation
+
+FIX: Fixes for ILDProductionJob from C. Calancha (ILCDIRAC-413)
+
+
+
 [v23-pre1]
 
 * Core
