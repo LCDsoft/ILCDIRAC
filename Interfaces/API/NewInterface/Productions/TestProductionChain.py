@@ -50,7 +50,7 @@ analysis = 'several'
 process = 'hzqq'
 #additional_name = '_neu1_356'
 globname = ""
-additional_name = '_TestV22_p10'
+additional_name = '_TestV22_p11'
 energy = 250.
 meta_energy = str(int(energy))
 
@@ -107,8 +107,9 @@ sid_rec = False
 ild_rec_ov = False
 sid_rec_ov = False
 
-n_events = 100
+n_events = 10
 prodOutputSE = "PNNL3-SRM"
+logLevel = "DEBUG"
 
 model = 'sm'
 #model = 'susyStagedApproach'
@@ -422,7 +423,7 @@ for proddict in prodlist:
     ##########################################
     ##Define the generation production.
     pwh = ProductionJob()
-    pwh.setLogLevel("verbose")
+    pwh.setLogLevel(logLevel)
     pwh.setOutputSE(prodOutputSE)
     pwh.setProdType("MCGeneration")
     wname = process+"_"+str(energy)
@@ -473,7 +474,7 @@ for proddict in prodlist:
 
   if activesplitstdhep and meta:
     pstdhepsplit =  ProductionJob()
-    pstdhepsplit.setLogLevel("verbose")
+    pstdhepsplit.setLogLevel(logLevel)
     pstdhepsplit.setProdType('Split')
     res = pstdhepsplit.setInputDataQuery(meta)
     if not res['OK']:
@@ -516,7 +517,7 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     pmo = ProductionJob()
-    pmo.setLogLevel("verbose")
+    pmo.setLogLevel(logLevel)
     pmo.setProdType('MCSimulation')
     pmo.setConfig(ILDCONFIG)
     res = pmo.setInputDataQuery(meta)
@@ -560,7 +561,7 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     psl = ProductionJob()
-    psl.setLogLevel("verbose")
+    psl.setLogLevel(logLevel)
     psl.setProdType('MCSimulation')
     res = psl.setInputDataQuery(meta)
     if not res['OK']:
@@ -601,7 +602,7 @@ for proddict in prodlist:
     ## Split the input files.
     psplit =  ProductionJob()
     psplit.setCPUTime(30000)
-    psplit.setLogLevel("verbose")
+    psplit.setLogLevel(logLevel)
     psplit.setProdType('Split')
     psplit.setDestination("LCG.CERN.ch")
     res = psplit.setInputDataQuery(meta)
@@ -642,7 +643,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pma = ProductionJob()
-    pma.setLogLevel("verbose")
+    pma.setLogLevel(logLevel)
     pma.setProdType('MCReconstruction')
     pma.setConfig(ILDCONFIG)
     res = pma.setInputDataQuery(meta)
@@ -684,7 +685,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidrec = ProductionJob()
-    psidrec.setLogLevel("verbose")
+    psidrec.setLogLevel(logLevel)
     psidrec.setProdType('MCReconstruction')
     psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
     res = psidrec.setInputDataQuery(meta)
@@ -730,7 +731,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pmao = ProductionJob()
-    pmao.setLogLevel("verbose")
+    pmao.setLogLevel(logLevel)
     pmao.setProdType('MCReconstruction_Overlay')
     res = pmao.setInputDataQuery(meta)
     if not res['OK']:
@@ -776,7 +777,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidreco = ProductionJob()
-    psidreco.setLogLevel("verbose")
+    psidreco.setLogLevel(logLevel)
     psidreco.setProdType('MCReconstruction_Overlay')
     psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
     res = psidreco.setInputDataQuery(meta)
