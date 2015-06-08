@@ -497,14 +497,36 @@ done
     the SQL file should be called CLICMOkkaDB.sql, but if we are using a native
     CVMFS installation, we need to know where to find the default sql file.
 
+    If we are using ILDConfig, then the dbslice is a tarball in a subfolder of the package.
+    This must be specified in the CVMFSDBSlice CS variable
+
     """
-    if self.dbSlice:
+    if self.dbSlice and os.path.exists(self.dbSlice):
+      self.log.notice("DBSlice %s already in working directory"% self.dbSlice)
       return S_OK()
     else:
       appVersion = self.step_commons['applicationVersion']
       csPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'mokka', appVersion)
 
-      ##check if this mokka version is CVMFS native:
+      ##check if ildConfig is used, and then get the dbSlice from there, if it is on cvmfs
+      ##if the tarball is not on cvmfs we exit, because it will be taken from the ILDConfig tarball
+      if 'ILDConfigPackage' in self.workflow_commons:
+        self.log.notice("Using ILDConfig from CVMFS, get DBSlice from there")
+        config_dir = self.workflow_commons['ILDConfigPackage']
+        ildConfigVersion = config_dir.replace("ILDConfig", "")
+        ildconfigCSPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'ildconfig', ildConfigVersion)
+        cvmfsDBSlice = Operations().getValue(ildconfigCSPathApplication+"/CVMFSDBSlice")
+        cvmfsPath = Operations().getValue(ildconfigCSPathApplication+"/CVMFSPath")
+        if cvmfsDBSlice and os.path.exists(cvmfsDBSlice):
+          self.log.notice("Getting this dbSlice %s from CVMFS" % cvmfsDBSlice)
+          self.untarDBSlice(cvmfsDBSlice)
+          return S_OK()
+        if cvmfsPath and not cvmfsDBSlice:
+          self.log.error("CVMFSDBSlice parameter not set for ILDConfig version", ildConfigVersion)
+          return S_ERROR("CVMFSDBSlice parameter not set")
+        return S_OK()
+
+      ##check if this mokka version is CVMFS native, if not we assume the steeringFile Tarballs has the db slice
       cvmfsPath = Operations().getValue(csPathApplication+"/CVMFSPath")
       if not cvmfsPath:
         self.log.info("This mokka version is not native to CVMFS")
@@ -519,15 +541,7 @@ done
       self.log.info("Getting this DBSlice: %s" % cvmfsDBSlice)
       #copy the db slice and extract it to local folder?
       #extract the name of the slice from the tarball name
-      dbSliceFileName = cvmfsDBSlice.split("/")[-1]
-      if dbSliceFileName[-4:] == ".tgz":
-        self.dbSlice = dbSliceFileName[:-4] #cutaway the ".tgz"
-        self.log.info("Using this db %s" % self.dbSlice)
-        import tarfile
-        dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
-        dbsliceTar.extractall(path='./')
-      else:
-        self.dbSlice = dbSliceFileName
+      self.untarDBSlice(cvmfsDBSlice)
       return S_OK()
 
   def determineRandomSeed(self):
@@ -538,3 +552,18 @@ done
     if "IS_PROD" in self.workflow_commons:
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
     return self.RandomSeed
+
+
+
+  def untarDBSlice(self, cvmfsDBSlice):
+    """extract the sql slice from some tgz file"""
+    dbSliceFileName = cvmfsDBSlice.split("/")[-1]
+    if dbSliceFileName[-4:] == ".tgz":
+      self.dbSlice = dbSliceFileName[:-4] #cutaway the ".tgz"
+      self.log.notice("untarDBSlice: Using this db %s" % self.dbSlice)
+      import tarfile
+      dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
+      dbsliceTar.extractall(path='./')
+    else:
+      self.dbSlice = dbSliceFileName
+    return None

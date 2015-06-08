@@ -50,7 +50,7 @@ analysis = 'several'
 process = 'hzqq'
 #additional_name = '_neu1_356'
 globname = ""
-additional_name = '_TestV22_p7'
+additional_name = '_TestV22_p11'
 energy = 250.
 meta_energy = str(int(energy))
 
@@ -108,6 +108,8 @@ ild_rec_ov = False
 sid_rec_ov = False
 
 n_events = 10
+prodOutputSE = "PNNL3-SRM"
+logLevel = "DEBUG"
 
 model = 'sm'
 #model = 'susyStagedApproach'
@@ -421,8 +423,8 @@ for proddict in prodlist:
     ##########################################
     ##Define the generation production.
     pwh = ProductionJob()
-    pwh.setLogLevel("verbose")
-    pwh.setOutputSE("CERN-SRM")
+    pwh.setLogLevel(logLevel)
+    pwh.setOutputSE(prodOutputSE)
     pwh.setProdType("MCGeneration")
     wname = process+"_"+str(energy)
     if additionnalreqs:
@@ -472,13 +474,13 @@ for proddict in prodlist:
 
   if activesplitstdhep and meta:
     pstdhepsplit =  ProductionJob()
-    pstdhepsplit.setLogLevel("verbose")
+    pstdhepsplit.setLogLevel(logLevel)
     pstdhepsplit.setProdType('Split')
     res = pstdhepsplit.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pstdhepsplit.setOutputSE("CERN-SRM")
+    pstdhepsplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
     pstdhepsplit.setWorkflowName(wname)
@@ -515,14 +517,14 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     pmo = ProductionJob()
-    pmo.setLogLevel("verbose")
+    pmo.setLogLevel(logLevel)
     pmo.setProdType('MCSimulation')
     pmo.setConfig(ILDCONFIG)
     res = pmo.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pmo.setOutputSE("CERN-SRM")
+    pmo.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_sim"
     wname += prod_name
     pmo.setWorkflowName(wname)
@@ -559,13 +561,13 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     psl = ProductionJob()
-    psl.setLogLevel("verbose")
+    psl.setLogLevel(logLevel)
     psl.setProdType('MCSimulation')
     res = psl.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psl.setOutputSE("CERN-SRM")
+    psl.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_sim"
     wname += prod_name
     psl.setWorkflowName(wname)
@@ -600,14 +602,14 @@ for proddict in prodlist:
     ## Split the input files.
     psplit =  ProductionJob()
     psplit.setCPUTime(30000)
-    psplit.setLogLevel("verbose")
+    psplit.setLogLevel(logLevel)
     psplit.setProdType('Split')
     psplit.setDestination("LCG.CERN.ch")
     res = psplit.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psplit.setOutputSE("CERN-SRM")
+    psplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
     psplit.setWorkflowName(wname)
@@ -641,14 +643,14 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pma = ProductionJob()
-    pma.setLogLevel("verbose")
+    pma.setLogLevel(logLevel)
     pma.setProdType('MCReconstruction')
     pma.setConfig(ILDCONFIG)
     res = pma.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pma.setOutputSE("CERN-SRM")
+    pma.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec"
     wname += prod_name
     pma.setWorkflowName(wname)
@@ -683,14 +685,14 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidrec = ProductionJob()
-    psidrec.setLogLevel("verbose")
+    psidrec.setLogLevel(logLevel)
     psidrec.setProdType('MCReconstruction')
     psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
     res = psidrec.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psidrec.setOutputSE("CERN-SRM")
+    psidrec.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec"
     wname += prod_name
     psidrec.setWorkflowName(wname)
@@ -729,13 +731,13 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pmao = ProductionJob()
-    pmao.setLogLevel("verbose")
+    pmao.setLogLevel(logLevel)
     pmao.setProdType('MCReconstruction_Overlay')
     res = pmao.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pmao.setOutputSE("CERN-SRM")
+    pmao.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec_overlay"
     wname += prod_name
     pmao.setWorkflowName(wname)
@@ -775,14 +777,14 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidreco = ProductionJob()
-    psidreco.setLogLevel("verbose")
+    psidreco.setLogLevel(logLevel)
     psidreco.setProdType('MCReconstruction_Overlay')
     psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
     res = psidreco.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psidreco.setOutputSE("CERN-SRM")
+    psidreco.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec_overlay"
     wname += prod_name
     psidreco.setWorkflowName(wname)
