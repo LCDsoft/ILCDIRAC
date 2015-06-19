@@ -22,16 +22,155 @@ from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
 from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 
 
-from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
+#from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
 #import DIRAC.Workflow.Modules.test.Test_Modules as Test_Modules
 gLogger.setLevel("Notice")
 gLogger.showHeaders(True)
-class ModulesTestCase ( DiracModulesTestCase ):
+class ModulesTestCase ( unittest.TestCase ):
   """ ILCDirac version of Workflow module tests"""
+
   def setUp( self ):
     """Set up the objects"""
-    super(ModulesTestCase, self).setUp()
     self.log = gLogger.getSubLogger("MODULEBASE")
+
+    self.prod_id = 123
+    self.prod_job_id = 456
+    self.wms_job_id = 0
+    self.workflowStatus = {'OK':True}
+    self.stepStatus = {'OK':True}
+
+    self.jr_mock = Mock()
+    self.jr_mock.setApplicationStatus.return_value = {'OK': True, 'Value': ''}
+    self.jr_mock.generateRequest.return_value = {'OK': True, 'Value': 'pippo'}
+    self.jr_mock.setJobParameter.return_value = {'OK': True, 'Value': 'pippo'}
+    self.jr_mock.generateForwardDISET.return_value = {'OK': True, 'Value': 'pippo'}
+#    self.jr_mock.setJobApplicationStatus.return_value = {'OK': True, 'Value': 'pippo'}
+
+    self.fr_mock = Mock()
+    self.fr_mock.getFiles.return_value = {}
+    self.fr_mock.setFileStatus.return_value = {'OK': True, 'Value': ''}
+    self.fr_mock.commit.return_value = {'OK': True, 'Value': ''}
+    self.fr_mock.generateRequest.return_value = {'OK': True, 'Value': ''}
+
+    self.rm_mock = Mock()
+    self.rm_mock.getReplicas.return_value = {'OK': True, 'Value':{'Successful':{'pippo':'metadataPippo'},
+                                                                  'Failed':None}}
+    self.rm_mock.getCatalogFileMetadata.return_value = {'OK': True, 'Value':{'Successful':{'pippo':'metadataPippo'},
+                                                                             'Failed':None}}
+    self.rm_mock.removeFile.return_value = {'OK': True, 'Value': {'Failed':False}}
+    self.rm_mock.putStorageDirectory.return_value = {'OK': True, 'Value': {'Failed':False}}
+    self.rm_mock.addCatalogFile.return_value = {'OK': True, 'Value': {'Failed':False}}
+    self.rm_mock.putAndRegister.return_value = {'OK': True, 'Value': {'Failed':False}}
+    self.rm_mock.getFile.return_value = {'OK': True, 'Value': {'Failed':False}}
+
+    self.rc_mock = Mock(name='RequestContainer')
+    self.rc_mock.update.return_value = {'OK': True, 'Value': ''}
+    self.rc_mock.setDISETRequest.return_value = {'OK': True, 'Value': ''}
+    self.rc_mock.isEmpty.return_value = {'OK': True, 'Value': ''}
+    self.rc_mock.toXML.return_value = {'OK': True, 'Value': 'Ex Em El'}
+    self.rc_mock.getDigest.return_value = {'OK': True, 'Value': 'Indigestion'}
+    self.rc_mock.__len__.return_value = 1
+
+    self.ar_mock = Mock()
+    self.ar_mock.commit.return_value = {'OK': True, 'Value': ''}
+
+    self.wf_commons = [ {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ), 'eventType': '123456789', 'jobType': 'merge',
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData', 'numberOfEvents':'100',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'runNumber':'Unknown', 'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'merge',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData', 'numberOfEvents':'100',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'runNumber':'Unknown',
+                         'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'merge',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData', 'numberOfEvents':'100',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'merge',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData', 'numberOfEvents':'100',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'appSteps': ['someApp_1'] },
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'runNumber':'Unknown', 'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'runNumber':'Unknown',
+                         'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'InputData': '', 'appSteps': ['someApp_1'] },
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'InputData': 'foo;bar', 'appSteps': ['someApp_1'] },
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'InputData': 'foo;bar', 'ParametricInputData':'' ,
+                         'appSteps': ['someApp_1']},
+                        {'PRODUCTION_ID': str( self.prod_id ), 'JOB_ID': str( self.prod_job_id ),
+                         'configName': 'aConfigName', 'configVersion': 'aConfigVersion', 'outputDataFileMask':'', 'jobType': 'reco',
+                         'BookkeepingLFNs':'aa', 'ProductionOutputData':'ProductionOutputData',
+                         'JobReport':self.jr_mock, 'Request':self.rc_mock, 'AccountingReport': self.ar_mock, 'FileReport':self.fr_mock,
+                         'SystemConfig':'sys_config', 'LogFilePath':'someDir', 'LogTargetPath':'someOtherDir',
+                         'runNumber':'Unknown', 'InputData': 'foo;bar', 'ParametricInputData':'pid1;pid2;pid3',
+                         'appSteps': ['someApp_1']},
+                      ]
+    self.step_commons = [ {'applicationName':'someApp', 'applicationVersion':'v1r0', 'eventType': '123456789',
+                           'applicationLog':'appLog', 'extraPackages':'', 'XMLSummary':'XMLSummaryFile',
+                           'numberOfEvents':'100', 'BKStepID':'123', 'StepProcPass':'Sim123', 'outputFilePrefix':'pref_',
+                           'STEP_INSTANCE_NAME':'someApp_1',
+                           'listoutput':[{'outputDataName':str( self.prod_id ) + '_' + str( self.prod_job_id ) + '_', 'outputDataSE':'aaa',
+                                          'outputDataType':'bbb'}]},
+                          {'applicationName':'someApp', 'applicationVersion':'v1r0', 'eventType': '123456789',
+                           'applicationLog':'appLog', 'extraPackages':'', 'XMLSummary':'XMLSummaryFile',
+                           'numberOfEvents':'100', 'BKStepID':'123', 'StepProcPass':'Sim123', 'outputFilePrefix':'pref_',
+                           'optionsLine': '',
+                           'STEP_INSTANCE_NAME':'someApp_1',
+                           'listoutput':[{'outputDataName':str( self.prod_id ) + '_' + str( self.prod_job_id ) + '_', 'outputDataSE':'aaa',
+                                          'outputDataType':'bbb'}]},
+                          {'applicationName':'someApp', 'applicationVersion':'v1r0', 'eventType': '123456789',
+                           'applicationLog':'appLog', 'extraPackages':'', 'XMLSummary':'XMLSummaryFile',
+                           'numberOfEvents':'100', 'BKStepID':'123', 'StepProcPass':'Sim123', 'outputFilePrefix':'pref_',
+                           'extraOptionsLine': 'blaBla',
+                           'STEP_INSTANCE_NAME':'someApp_1',
+                           'listoutput':[{'outputDataName':str( self.prod_id ) + '_' + str( self.prod_job_id ) + '_', 'outputDataSE':'aaa',
+                                          'outputDataType':'bbb'}]}
+                        ]
+    self.step_number = '321'
+    self.step_id = '%s_%s_%s' % ( self.prod_id, self.prod_job_id, self.step_number )
+
     self.mb = ModuleBase()
     self.mb.rm = self.rm_mock
     self.mb.request = self.rc_mock
@@ -51,13 +190,6 @@ class ModulesTestCase ( DiracModulesTestCase ):
 
     self.ulf = UploadLogFile()
 
-    self.rc_mock = Mock(name='RequestContainer')
-    self.rc_mock.update.return_value = {'OK': True, 'Value': ''}
-    self.rc_mock.setDISETRequest.return_value = {'OK': True, 'Value': ''}
-    self.rc_mock.isEmpty.return_value = {'OK': True, 'Value': ''}
-    self.rc_mock.toXML.return_value = {'OK': True, 'Value': 'Ex Em El'}
-    self.rc_mock.getDigest.return_value = {'OK': True, 'Value': 'Indigestion'}
-    self.rc_mock.__len__.return_value = 1
 
 class TestModuleBase( ModulesTestCase ):
   """ Tests for ModuleBase functions"""
@@ -137,7 +269,7 @@ class TestModuleBase( ModulesTestCase ):
     """ModuleBase: treatILDConfigPackage............................................................"""
     gLogger.setLevel("ERROR")
     self.mb.platform = self.mb.workflow_commons.get('Platform', self.mb.platform)
-    self.mb.workflow_commons['ILDConfigPackage'] = "ILDConfigcvmfsTest"
+    self.mb.workflow_commons['ILDConfigPackage'] = "ILDConfigv01-16-p03"
     res = self.mb.treatILDConfigPackage()
     self.assertTrue(res['OK'])
 
