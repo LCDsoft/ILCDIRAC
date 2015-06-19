@@ -559,7 +559,7 @@ class ModuleBase(object):
         prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
         self.log.info("There was some kind of error, cleaning up outputData: %s" % prodOutputLFNs)
         self.setApplicationStatus("Creating Removal Requests")
-        self.__cleanUp(prodOutputLFNs)
+        self._cleanUp(prodOutputLFNs)
 
     if not len( request ):
       self.log.info("No Requests to process ")
@@ -644,7 +644,7 @@ class ModuleBase(object):
       self.log.error('Failed to list the working directory', str(res['Value'][2]))
 
     #############################################################################
-  def __cleanUp(self, lfnList):
+  def _cleanUp(self, lfnList):
     """ Clean up uploaded data for the LFNs in the list
     """
     typeList = ['RegisterFile', 'ReplicateAndRegister']
