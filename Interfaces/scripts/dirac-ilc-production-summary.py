@@ -230,7 +230,7 @@ def getProductionSummary():
       gLogger.warn("No files found for prod %s" % prodID)
       continue
     path = os.path.dirname(lfns[0])
-    res = fc.getDirectoryMetadata(path)
+    res = fc.getDirectoryUserMetadata(path)
     if not res['OK']:
       gLogger.warn('No meta data found for %s' % path)
       continue

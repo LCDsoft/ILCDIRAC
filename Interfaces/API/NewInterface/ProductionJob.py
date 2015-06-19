@@ -222,7 +222,7 @@ class ProductionJob(Job):
     dirs = res['Value'].values()
     for mdir in dirs:
       gLogger.notice("Directory: %s" % mdir)
-      res = self.fc.getDirectoryMetadata(mdir)
+      res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
     #res =   client.getCompatibleMetadata(metadata)

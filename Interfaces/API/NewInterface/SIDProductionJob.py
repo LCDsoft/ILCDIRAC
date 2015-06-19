@@ -52,7 +52,7 @@ class SIDProductionJob(ProductionJob):
       return self._reportError('Could not find any directory corresponding to the query issued')
     dirs = res['Value'].values()
     for mdir in dirs:
-      res = self.fc.getDirectoryMetadata(mdir)
+      res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
       compatmeta = res['Value']
