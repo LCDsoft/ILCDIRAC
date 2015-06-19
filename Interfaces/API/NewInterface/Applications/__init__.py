@@ -33,7 +33,7 @@ prints out all the available methods.
 @author: Remi Ete
 @author: Ching Bon Lam
 """
-__RCSID__ = "$Id"
+__RCSID__ = "$Id$"
 
 __all__ = ['GenericApplication', 'GetSRMFile', '_Root', 'RootScript', 'RootMacro',
            'Whizard', 'Pythia', 'PostGenSelection', 'StdhepCut', 'StdhepCutJava',

@@ -131,7 +131,7 @@ def getMokka():
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka
   mokka = Mokka()
-  mokka.setVersion("cvmfsTest")
+  mokka.setVersion("ILCSoft-01-17-06")
   mokka.setSteeringFile("clic_ild_cdr.steer")
   mokka.setOutputFile("testsim.slcio")
   mokka.setSteeringFileVersion("V22")
