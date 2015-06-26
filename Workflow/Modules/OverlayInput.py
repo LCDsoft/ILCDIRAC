@@ -323,7 +323,7 @@ class OverlayInput (ModuleBase):
     count = 0
     while 1:
       if error_count > 10 :
-        self.log.error('OverlayDB returned too any errors')
+        self.log.error('OverlayDB returned too many errors')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
       #jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
       #res = jobMonitor.getCurrentJobCounters(jobpropdict)
@@ -387,6 +387,8 @@ class OverlayInput (ModuleBase):
           res = self.getImperialFile(self.lfns[fileindex])
         elif  self.site == 'LCG.RAL-LCG2.uk':
           res = self.getRALFile(self.lfns[fileindex])
+        elif  self.site == 'LCG.KEK.jp':
+          res = self.getKEKFile(self.lfns[fileindex])
         else:
           if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
             f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
@@ -419,20 +421,6 @@ class OverlayInput (ModuleBase):
         if not res['OK']:
           self.log.error("Could not waste as much CPU time as wanted, but whatever!")
 
-    #res = self.rm.getFile(filesobtained)
-    #failed = len(res['Value']['Failed'])
-    #tryagain = []
-    #if failed:
-    #  self.log.error('Had issues getting %s files, retrying now with new files'%failed)
-    #  while len(tryagain) < failed:
-    #    fileindex = random.randrange(nbfiles)
-    #    if fileindex not in usednumbers:
-    #      usednumbers.append(fileindex)
-    #      tryagain.append(self.lfns[fileindex])
-    #  res = self.rm.getFile(tryagain)
-    #  if len(res['Value']['Failed']):
-    #    os.chdir(curdir)
-    #    return S_ERROR("Could not obtain enough files after 2 attempts")
     ## Remove all scripts remaining
     scripts = glob.glob("*.sh")
     for script in scripts:
@@ -637,6 +625,35 @@ fi\n""" % (basename, lfile))
       return S_OK(localfile)
 
     return S_ERROR("Failed")
+
+  def getKEKFile(self, lfn):
+    """ Use cp to get the files from kek-se
+    """
+    prependpath = '/grid'
+    lfile = os.path.join(prependpath, lfn)
+    self.log.info("Getting %s" % lfile)
+
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    with file("overlayinput.sh", "w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('###############################\n')
+      script.write('# Dynamically generated scrip #\n')
+      script.write('###############################\n')
+      script.write("cp %s ./ -s\n" % lfile.rstrip())
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
+
+    os.chmod("overlayinput.sh", 0755)
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
+
 
   def execute(self):
     """ Run the module, called rom Workflow
