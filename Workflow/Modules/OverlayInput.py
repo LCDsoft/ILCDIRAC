@@ -372,13 +372,6 @@ class OverlayInput (ModuleBase):
         fail = True
         break
 
-      ##Now wait for a random time around 3 minutes
-      ###Actually, waste CPU time !!!
-      self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
-      res = wasteCPUCycles(60 * random.gauss(3, 0.1))
-      if not res['OK']:
-        self.log.error("Could not waste as much CPU time as wanted, but whatever!")
-
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
           
@@ -417,7 +410,15 @@ class OverlayInput (ModuleBase):
       if len(usednumbers) == nbfiles and not len(filesobtained):
         fail = True
         break
-      
+
+      if len(filesobtained) < totnboffilestoget:
+        ##Now wait for a random time around 3 minutes
+        ###Actually, waste CPU time !!!
+        self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
+        res = wasteCPUCycles(60 * random.gauss(3, 0.1))
+        if not res['OK']:
+          self.log.error("Could not waste as much CPU time as wanted, but whatever!")
+
     #res = self.rm.getFile(filesobtained)
     #failed = len(res['Value']['Failed'])
     #tryagain = []
