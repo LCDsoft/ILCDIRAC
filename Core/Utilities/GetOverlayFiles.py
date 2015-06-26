@@ -15,8 +15,8 @@ def getOverlayFiles(evttype = 'gghad'):
   localfiles = []
   ovdir = os.path.join(os.getcwd() , "overlayinput_"+evttype )
 
-  if not os.path.exists( ovdir):
-    gLogger.error( 'overlay directory does not exists' )
+  if not os.path.exists( ovdir ):
+    gLogger.error( 'overlay directory does not exists', "overlayinput_"+evttype )
     return localfiles
   listdir = os.listdir( ovdir )
   for item in listdir:

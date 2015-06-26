@@ -147,7 +147,7 @@ class MarlinAnalysis(ModuleBase):
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
-      self.log.warn('Could not find the steering file directory')
+      self.log.warn('Could not find the steering file directory', res['Message'])
       
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'
