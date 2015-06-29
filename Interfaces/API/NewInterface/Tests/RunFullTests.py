@@ -131,7 +131,8 @@ def getMokka():
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka
   mokka = Mokka()
-  mokka.setVersion("ILCSoft-01-17-06")
+#  mokka.setVersion("ILCSoft-01-17-06")
+  mokka.setVersion("0706P08")
   mokka.setSteeringFile("clic_ild_cdr.steer")
   mokka.setOutputFile("testsim.slcio")
   mokka.setSteeringFileVersion("V22")
@@ -148,17 +149,17 @@ def getSLIC():
   slic.setOutputFile('testsim.slcio')
   return slic
 
-def getOverlay(nbevts):
+def getOverlay(nbevts, detector="CLIC_ILD_CDR", machine="clic_cdr", backgroundType="gghad", energy=1400):
   """ Create an overlay step
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
   overlay = OverlayInput()
-  overlay.setMachine("clic_cdr")
-  overlay.setEnergy(1400)
-  overlay.setBkgEvtType("gghad")
+  overlay.setMachine(machine)
+  overlay.setEnergy(energy)
+  overlay.setBkgEvtType(backgroundType)
   overlay.setBXOverlay(60)
   overlay.setGGToHadInt(1.3)
-  overlay.setDetectorModel("CLIC_ILD_CDR")
+  overlay.setDetectorModel(detector)
   overlay.setNbSigEvtsPerJob(nbevts)
   return overlay
 
@@ -399,7 +400,7 @@ def runTests():
     gLogger.notice("Applications RCSID:", apprcsid )
     gLogger.notice("")
 
-  joblist = []
+  joblist = {}
 
   if clip.testWhizard:
     ##### WhizardJob
@@ -409,7 +410,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding Whizard:", res['Message'])
       dexit(1)
-    joblist.append(jobw)
+    joblist['Whizard1'] = jobw
     
     ##### WhizardJob
     jobwsusy = getJob()
@@ -418,7 +419,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding Whizard:", res['Message'])
       dexit(1)
-    joblist.append(jobwsusy)
+    joblist['WhizSusy'] = jobwsusy
 
   if clip.testMokka:
     #(Whizard + )Mokka
@@ -430,7 +431,7 @@ def runTests():
         gLogger.error("Failed adding Whizard:", res['Message'])
         dexit(1)
     elif clip.testInputData:
-      jobmo.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/gen/00002213/000/e2e2_o_gen_2213_25.stdhep")
+      jobmo.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
     else:
       gLogger.error("Mokka does not know where to get its input from")
       dexit(1)
@@ -445,7 +446,7 @@ def runTests():
       gLogger.error("Failed adding Mokka:", res['Message'])
       dexit(1)
     jobmo.setOutputData("testsim.slcio", OutputSE="CERN-DIP-4")
-    joblist.append(jobmo)
+    joblist['Mokka1'] = jobmo
 
   if clip.testSlic:
     #run (Whizard +)SLIC
@@ -457,7 +458,7 @@ def runTests():
         gLogger.error("Failed adding Whizard:", res['Value'])
         dexit(1)
     elif clip.testInputData:
-      jobslic.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/gen/00002213/000/e2e2_o_gen_2213_25.stdhep")
+      jobslic.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
     else:
       gLogger.error("SLIC does not know where to get its input from")
       dexit(1)
@@ -470,7 +471,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding slic: ", res["Message"])
       dexit(1)
-    joblist.append(jobslic)
+    joblist['Slic1'] = jobslic
     
   if clip.testMarlin:  
     #((Whizard + Mokka +)Overlay+) Marlin  
@@ -483,7 +484,7 @@ def runTests():
           gLogger.error("Failed adding Whizard:", res['Message'])
           dexit(1)
       else:
-        jobma.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/gen/00002213/000/e2e2_o_gen_2213_25.stdhep")    
+        jobma.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
       moma = getMokka()
       if clip.testChain and not clip.testInputData:
         moma.getInputFromApp(whma)
@@ -494,12 +495,12 @@ def runTests():
         gLogger.error("Failed adding Mokka:", res['Message'])
         dexit(1)
     elif clip.testInputData:
-      jobma.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/ILD/SIM/00002214/000/e2e2_o_sim_2214_26.slcio")
+      jobma.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_ild_e2e2_o_sim_2214_26.slcio")
     else:
       gLogger.error("Marlin does not know where to get its input from")
       dexit(1)
     if clip.testOverlay:
-      ov = getOverlay(2)
+      ov = getOverlay(2, detector="CLIC_ILD_CDR")
       res = jobma.append(ov)
       if not res["OK"]:
         gLogger.error("Failed adding Overlay:", res['Message'])
@@ -517,7 +518,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding Marlin:", res['Message'])
       dexit(1)  
-    joblist.append(jobma)
+    joblist['Marlin1'] =jobma
     
   if clip.testLCSIM:  
     #run ((whiz+SLIC+)+Overlay+)LCSIM
@@ -530,7 +531,7 @@ def runTests():
           gLogger.error("Failed adding Whizard:", res['Value'])
           dexit(1)
       else:
-        joblcsim.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/gen/00002213/000/e2e2_o_gen_2213_25.stdhep")
+        joblcsim.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
       mysliclcsim = getSLIC()
       if not clip.testInputData:
         mysliclcsim.getInputFromApp(whlcsim)
@@ -542,12 +543,12 @@ def runTests():
         dexit(1)
     elif clip.testInputData:
       #joblcsim.setInputData("/ilc/prod/clic/1.4tev/ee_qqaa/SID/SIM/00002308/000/ee_qqaa_sim_2308_222.slcio")
-      joblcsim.setInputData("/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/003/h_nunu_sim_4192_3723.slcio")
+      joblcsim.setInputData("/ilc/user/s/sailer/testFiles/clic_prod_sid_h_nunu_sim.slcio")
     else:
       gLogger.error("LCSIM does not know where to get its input from")
       dexit(1)
     if clip.testOverlay:
-      ovlcsim = getOverlay(2)
+      ovlcsim = getOverlay(2, detector="CLIC_SID_CDR")
       res = joblcsim.append(ovlcsim)
       if not res["OK"]:
         gLogger.error("Failed adding Overlay:", res['Message'])
@@ -565,7 +566,7 @@ def runTests():
       gLogger.error("Failed adding LCSIM: ", res["Message"])
       dexit(1)
 
-    joblist.append(joblcsim)
+    joblist['lcsim1'] = joblcsim
   
   if clip.testSlicPandora:
     #run ((whiz+SLIC) + (Overlay +) LCSIM +) SLICPandora + LCSIM
@@ -584,9 +585,9 @@ def runTests():
           gLogger.error("Failed adding slic: ", res["Message"])
           dexit(1)
       else:
-        joblcsimov.setInputData("/ilc/prod/clic/1.4tev/ee_qqaa/SID/SIM/00002308/000/ee_qqaa_sim_2308_222.slcio")
-        joblcsimov.setInputData("/ilc/prod/clic/1.4tev/h_nunu/SID/SIM/00004192/003/h_nunu_sim_4192_3723.slcio")
-        
+        #joblcsimov.setInputData("/ilc/prod/clic/1.4tev/ee_qqaa/SID/SIM/00002308/000/ee_qqaa_sim_2308_222.slcio")
+        joblcsimov.setInputData("/ilc/user/s/sailer/testFiles/clic_prod_sid_h_nunu_sim.slcio")
+
       if clip.testOverlay:
         ovslicp = getOverlay(2)
         res = joblcsimov.append(ovslicp)
@@ -623,7 +624,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding LCSIM: ", res["Message"])
       dexit(1)
-    joblist.append(joblcsimov)
+    joblist['lcsimov1'] = joblcsimov
 
   if clip.testUtilities:
     ##### WhizardJob + split
@@ -639,7 +640,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding StdHepSplit:", res['Message'])
       dexit(1)
-    joblist.append(jobwsplit)
+    joblist['whizSplit'] = jobwsplit
 
     ##### WhizardJob + split
     jobwcut = getJob()
@@ -654,7 +655,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding StdHepCut:", res['Message'])
       dexit(1)
-    joblist.append(jobwcut)
+    joblist['whizCut'] = jobwcut
 
     #LCIO split
     joblciosplit = getJob()
@@ -665,7 +666,7 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding SLCIOSplit:", res['Message'])
       dexit(1)
-    joblist.append(joblciosplit)
+    joblist['lcioSplit'] = joblciosplit
   
     #LCIO concat
     jobconcat = getJob()
@@ -680,10 +681,13 @@ def runTests():
     if not res['OK']:
       gLogger.error("Failed adding SLCIOConcatenate:", res['Message'])
       dexit(1)
-    joblist.append(jobconcat)
+    joblist['concat'] = jobconcat
     
   ##Now submit/run all  
-  for finjob in joblist:
+  for name, finjob in joblist.iteritems():
+    gLogger.notice("############################################################")
+    gLogger.notice(" Running job: %s " % name)
+    gLogger.notice("\n\n")
     res = finjob.submit(ilcd, mode = clip.submitMode)
     if not res["OK"]:
       gLogger.error("Failed job:", res['Message'])
