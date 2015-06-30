@@ -1,13 +1,13 @@
 #!/bin/env python
 '''
-Run many different applications as a test. Creates a temp directory and runs in there. 
+Run many different applications as a test. Creates a temp directory and runs in there.
 Stops at any error.
 
 @since: Nov 8, 2013
 
 @author: sposs
 '''
-__RCSID__ = "$Id$" 
+__RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, gLogger, exit as dexit
@@ -39,6 +39,9 @@ def getJob():
   myjob._addParameter( myjob.workflow, 'TestFailover', 'String', True, 'Test failoverRequest')
   return myjob
 
+def setConfig(job):
+  job.setILDConfig("v01-16-p10_250")
+
 def getWhizardModel(dirac, nbevts, energy, model):
   """ Create a default whizard
   """
@@ -67,7 +70,7 @@ def getWhizardModel(dirac, nbevts, energy, model):
   pdict['simulation_input']['events_per_file'] = 500000
   if model != 'sm':
     pdict['simulation_input']['pythia_parameters'] = "PMAS(25,1)=125; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ;PARJ(21)=0.40000;PARJ(41)=0.11000; PARJ(42)=0.52000; PARJ(81)=0.25000; PARJ(82)=1.90000; MSTJ(11)=3; PARJ(54)=-0.03100; PARJ(55)=-0.00200;PARJ(1)=0.08500; PARJ(3)=0.45000; PARJ(4)=0.02500; PARJ(2)=0.31000; PARJ(11)=0.60000; PARJ(12)=0.40000; PARJ(13)=0.72000;PARJ(14)=0.43000; PARJ(15)=0.08000; PARJ(16)=0.08000; PARJ(17)=0.17000; MSTP(3)=1;IMSS(1)=11; IMSS(21)=71; IMSS(22)=71"
-  else:  
+  else:
     pdict['simulation_input']['pythia_parameters'] = "PMAS(25,1)=125; PMAS(25,2)=0.3605E-02; MSTU(22)=20 ; MSTJ(28)=2 ;PARJ(21)=0.40000;PARJ(41)=0.11000; PARJ(42)=0.52000; PARJ(81)=0.25000; PARJ(82)=1.90000; MSTJ(11)=3; PARJ(54)=-0.03100; PARJ(55)=-0.00200;PARJ(1)=0.08500; PARJ(3)=0.45000; PARJ(4)=0.02500; PARJ(2)=0.31000; PARJ(11)=0.60000; PARJ(12)=0.40000; PARJ(13)=0.72000;PARJ(14)=0.43000; PARJ(15)=0.08000; PARJ(16)=0.08000; PARJ(17)=0.17000; MSTP(3)=1"
     pdict['parameter_input'] = {}
     #  pdict['parameter_input']['mmu']=mmu
@@ -79,10 +82,7 @@ def getWhizardModel(dirac, nbevts, energy, model):
   pdict['beam_input_1']['particle_name'] = "e1"
   pdict['beam_input_1']['polarization'] = "0.0 0.0"
   pdict['beam_input_1']['USER_spectrum_on'] = 'T'
-  if energy == 1400:
-    pdict['beam_input_1']['USER_spectrum_mode'] = 19
-  else:
-    pdict['beam_input_1']['USER_spectrum_mode'] = 11
+  pdict['beam_input_1']['USER_spectrum_mode'] = 19 if energy == 1400 else 11
   pdict['beam_input_1']['ISR_on'] = 'T'
   pdict['beam_input_1']['EPA_on'] = "F"
 
@@ -91,13 +91,10 @@ def getWhizardModel(dirac, nbevts, energy, model):
   pdict['beam_input_2']['polarization'] = "0.0 0.0"
   pdict['beam_input_2']['USER_spectrum_on'] = 'T'
   pdict['beam_input_2']['ISR_on'] = 'T'
-  if energy == 1400:
-    pdict['beam_input_2']['USER_spectrum_mode'] = -19
-  else:
-    pdict['beam_input_2']['USER_spectrum_mode'] = -11  
+  pdict['beam_input_2']['USER_spectrum_mode'] = 19 if energy == 1400 else 11
   pdict['beam_input_2']['EPA_on'] = 'F'
-  
-  
+
+
   whiz.setFullParameterDict(pdict)
   whiz.setOutputFile("testgen.stdhep")
   return whiz
@@ -131,10 +128,11 @@ def getMokka():
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Mokka
   mokka = Mokka()
-  mokka.setVersion("0706P08")
-  mokka.setSteeringFile("clic_ild_cdr.steer")
+  mokka.setVersion("ILCSoft-01-17-06")
+  mokka.setSteeringFile("bbudsc_3evt.steer")
   mokka.setOutputFile("testsim.slcio")
-  mokka.setSteeringFileVersion("V22")
+  mokka.setDetectorModel("ILD_o1_v05")
+  #mokka.setSteeringFileVersion("V22")
   return mokka
 
 def getSLIC():
@@ -151,15 +149,25 @@ def getSLIC():
 def getOverlay(nbevts, detector="CLIC_ILD_CDR", machine="clic_cdr", backgroundType="gghad", energy=1400):
   """ Create an overlay step
   """
+  pathToFiles = None
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
   overlay = OverlayInput()
-  overlay.setMachine(machine)
-  overlay.setEnergy(energy)
+  if energy==350:
+    if detector=="ILD_o1_v05":
+      pathToFiles="/ilc/user/s/sailer/testFiles/overlay/ild_350/"
+  if pathToFiles:
+    overlay.setPathToFiles(pathToFiles)
+  else:
+    gLogger.error("better define pathToFiles for this overlay: %s, %s, %s" % (energy, machine, backgroundType) )
+    overlay.setMachine(machine)
+    overlay.setEnergy(energy)
+    overlay.setDetectorModel(detector)
+
   overlay.setBkgEvtType(backgroundType)
   overlay.setBXOverlay(60)
-  overlay.setGGToHadInt(1.3)
-  overlay.setDetectorModel(detector)
-  overlay.setNbSigEvtsPerJob(nbevts)
+  overlay.setGGToHadInt(0.3)
+  overlay.setNumberOfSignalEventsPerJob(nbevts)
+
   return overlay
 
 def getMarlin(withoverlay = False):
@@ -167,14 +175,16 @@ def getMarlin(withoverlay = False):
   """
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
   marlin = Marlin()
-  marlin.setVersion("v0111Prod")
+#  marlin.setVersion("v0111Prod")
+  marlin.setVersion("ILCSoft-01-17-06")
   if not withoverlay:
-    marlin.setSteeringFile("clic_ild_cdr_steering.xml")
+    marlin.setSteeringFile("bbudsc_3evt_stdreco.xml")
   else:
-    marlin.setSteeringFile("clic_ild_cdr_steering_overlay_1400.0.xml")
-  marlin.setGearFile('clic_ild_cdr.gear')
+    marlin.setSteeringFile("bbudsc_3evt_stdreco.xml")
+  marlin.setGearFile('GearOutput.xml')
   marlin.setOutputDstFile("testmarlinDST.slcio")
   marlin.setOutputRecFile("testmarlinREC.slcio")
+  marlin.setNumberOfEvents(2)
   return marlin
 
 def getLCSIM(prepandora = True, withoverlay = False):
@@ -194,8 +204,8 @@ def getLCSIM(prepandora = True, withoverlay = False):
     #lcsim.setOutputFile("testlcsimfinal.slcio")
     lcsim.setOutputDstFile("testlcsimDST.slcio")
     lcsim.setOutputRecFile("testlcsimREC.slcio")
-  lcsim.setTrackingStrategy("defaultStrategies_clic_sid_cdr.xml")  
-    
+  lcsim.setTrackingStrategy("defaultStrategies_clic_sid_cdr.xml")
+
   return lcsim
 
 def getSLICPandora():
@@ -254,7 +264,7 @@ class CLIParams( object ):
     self.testSlicPandora = False
     self.testChain = False
     self.testall  = False
-    
+
   def setSubmitMode(self, opt):
     """ Define the submit mode
     """
@@ -262,67 +272,67 @@ class CLIParams( object ):
       return S_ERROR("SubmitMode must be either 'local' or 'WMS'.")
     self.submitMode = opt
     return S_OK()
-  
+
   def setTestWhizard(self, dummy_opt):
     """ Test whizard
     """
     self.testWhizard = True
     return S_OK()
-  
+
   def setTestInputData(self, dummy_opt):
     """ Test the InputData resolution
     """
     self.testInputData = True
     return S_OK()
-  
+
   def setTestUtilities(self, dummy_opt):
     """ Test the utilities
     """
     self.testUtilities = True
     return S_OK()
-  
+
   def setTestMokka(self, dummy_opt):
     """ Test Mokka
     """
     self.testMokka = True
     return S_OK()
-  
+
   def setTestMarlin(self, dummy_opt):
     """ Test Marlin
     """
     self.testMarlin = True
     return S_OK()
-  
+
   def setTestSLIC(self, dummy_opt):
     """ Test SLIC
     """
     self.testSlic = True
     return S_OK()
-  
+
   def setTestLCSIM(self, dummy_opt):
     """ Test LCSIM
     """
     self.testLCSIM = True
-    return S_OK() 
-  
+    return S_OK()
+
   def setTestSlicPandora(self, dummy_opt):
     """ Test of SLICPanodra
     """
     self.testSlicPandora = True
     return S_OK()
-  
+
   def setTestOverlay(self, dummy_opt):
     """ Test Overlay
     """
     self.testOverlay = True
     return S_OK()
-  
+
   def setTestChain(self, dummy_opt):
     """ Test the chaining of apps
     """
     self.testChain = True
     return S_OK()
-  
+
   def setTestAll(self, dummy_opt):
     """ As name suggests, test everything
     """
@@ -338,7 +348,7 @@ class CLIParams( object ):
     self.testChain = True
     self.testall = True
     return S_OK()
-  
+
   def registerSwitches(self):
     """ Register the switches
     """
@@ -355,42 +365,42 @@ class CLIParams( object ):
     Script.registerSwitch("", 'chain', 'Test the chaining of applications', self.setTestChain)
     Script.registerSwitch("a", "all", "Test them ALL!", self.setTestAll)
     Script.setUsageMessage("%s --all --submitmode=local" % Script.scriptName)
-    
-  
+
+
 def runTests():
   """runs the tests"""
   clip = CLIParams()
   clip.registerSwitches()
   Script.parseCommandLine()
-  
+
   if clip.testall:
     gLogger.notice("Running all the jobs possible")
-  
+
   from DIRAC import gConfig
-    
+
   if clip.submitMode == "local":
     gLogger.notice("I will run the tests locally.")
     localarea = gConfig.getValue("/LocalSite/LocalArea", "")
     if not localarea:
       gLogger.error("You need to have /LocalSite/LocalArea defined in your dirac.cfg")
       dexit(1)
-  
+
     if localarea.find("/afs") == 0:
       gLogger.error("Don't set /LocalSite/LocalArea set to /afs/... as you'll get to install there")
       gLogger.error("check ${HOME}/.dirac.cfg")
       dexit(1)
-  
+
   from ILCDIRAC.Interfaces.API.DiracILC import DiracILC, __RCSID__ as drcsid
   from ILCDIRAC.Interfaces.API.NewInterface.UserJob import __RCSID__ as jrcsid
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import __RCSID__ as apprcsid
-  
-  
+
+
   curdir = os.getcwd()
   if clip.submitMode == "local":
     gLogger.notice("To run locally, I will create a temp directory here.")
     tmpdir = tempfile.mkdtemp("", dir = "./")
     os.chdir(tmpdir)
-  
+
   ilcd = DiracILC(True, 'tests.rep')
   if clip.submitMode == "local":
     gLogger.notice("")
@@ -410,7 +420,7 @@ def runTests():
       gLogger.error("Failed adding Whizard:", res['Message'])
       dexit(1)
     joblist['Whizard1'] = jobw
-    
+
     ##### WhizardJob
     jobwsusy = getJob()
     whsusy = getWhizardSUSY(ilcd, 2)
@@ -434,12 +444,13 @@ def runTests():
     else:
       gLogger.error("Mokka does not know where to get its input from")
       dexit(1)
-      
+
     mo = getMokka()
     if clip.testChain:
       mo.getInputFromApp(whmo)
     else:
       mo.setNumberOfEvents(2)
+    setConfig(jobmo)
     res = jobmo.append(mo)
     if not res['OK']:
       gLogger.error("Failed adding Mokka:", res['Message'])
@@ -471,10 +482,11 @@ def runTests():
       gLogger.error("Failed adding slic: ", res["Message"])
       dexit(1)
     joblist['Slic1'] = jobslic
-    
-  if clip.testMarlin:  
-    #((Whizard + Mokka +)Overlay+) Marlin  
+
+  if clip.testMarlin:
+    #((Whizard + Mokka +)Overlay+) Marlin
     jobma = getJob()
+    setConfig(jobma)
     if clip.testChain:
       if not clip.testInputData:
         whma = getWhizard(ilcd, 2)
@@ -494,12 +506,12 @@ def runTests():
         gLogger.error("Failed adding Mokka:", res['Message'])
         dexit(1)
     elif clip.testInputData:
-      jobma.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_ild_e2e2_o_sim_2214_26.slcio")
+      jobma.setInputData("/ilc/user/s/sailer/testILDsim.slcio")
     else:
       gLogger.error("Marlin does not know where to get its input from")
       dexit(1)
     if clip.testOverlay:
-      ov = getOverlay(2, detector="CLIC_ILD_CDR")
+      ov = getOverlay(2, detector="ILD_o1_v05", energy=350, machine="ilc_dbd", backgroundType="aa_lowpt")
       res = jobma.append(ov)
       if not res["OK"]:
         gLogger.error("Failed adding Overlay:", res['Message'])
@@ -512,14 +524,14 @@ def runTests():
       ma.getInputFromApp(moma)
     else:
       ma.setNumberOfEvents(2)
-      
+
     res = jobma.append(ma)
     if not res['OK']:
       gLogger.error("Failed adding Marlin:", res['Message'])
-      dexit(1)  
+      dexit(1)
     joblist['Marlin1'] =jobma
-    
-  if clip.testLCSIM:  
+
+  if clip.testLCSIM:
     #run ((whiz+SLIC+)+Overlay+)LCSIM
     joblcsim = getJob()
     if clip.testChain:
@@ -566,7 +578,7 @@ def runTests():
       dexit(1)
 
     joblist['lcsim1'] = joblcsim
-  
+
   if clip.testSlicPandora:
     #run ((whiz+SLIC) + (Overlay +) LCSIM +) SLICPandora + LCSIM
     joblcsimov = getJob()
@@ -609,7 +621,7 @@ def runTests():
     else:
       gLogger.error("SLICPandora does not know where to get its input from")
       dexit(1)
-      
+
     myslicpov = getSLICPandora()
     if clip.testChain:
       myslicpov.getInputFromApp(mylcsimov)
@@ -666,7 +678,7 @@ def runTests():
       gLogger.error("Failed adding SLCIOSplit:", res['Message'])
       dexit(1)
     joblist['lcioSplit'] = joblciosplit
-  
+
     #LCIO concat
     jobconcat = getJob()
     # jobconcat.setInputData(["/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_27.slcio",
