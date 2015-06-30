@@ -507,7 +507,8 @@ class WhizardAnalysis(ModuleBase):
       ###Deal with output file
       if len(self.OutputFile):
         if os.path.exists(outputfilename + ".001.stdhep"):
-          ofnames = glob.glob('*.stdhep')
+          self.log.notice("Looking for output files")
+          ofnames = glob.glob(outputfilename+'*.stdhep')
           if len(ofnames) > 1:
             basename = self.OutputFile.split(".stdhep")[0]
             i = 0
