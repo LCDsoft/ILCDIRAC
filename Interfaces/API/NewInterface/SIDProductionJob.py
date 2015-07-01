@@ -174,8 +174,8 @@ class SIDProductionJob(ProductionJob):
     if self.created:
       return S_ERROR("The production was created, you cannot add new applications to the job.")
 
-    if not application.LogFile:
-      logf = application.appname+"_"+application.Version+"_@{STEP_ID}.log"
+    if not application.logFile:
+      logf = application.appname+"_"+application.version+"_@{STEP_ID}.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
@@ -184,30 +184,30 @@ class SIDProductionJob(ProductionJob):
     
     ### Retrieve from the application the essential info to build the prod info.
     if not self.nbevts:
-      self.nbevts = application.NbEvts
+      self.nbevts = application.numberOfEvents
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
-    elif not application.NbEvts:
-      res = application.setNbEvts(self.jobFileGroupSize*self.nbevts)
+    elif not application.numberOfEvents:
+      res = application.setNumberOfEvents(self.jobFileGroupSize*self.nbevts)
       if not res['OK']:
         return res
       
-    if application.NbEvts > 0 and self.jobFileGroupSize*self.nbevts > application.NbEvts:
-      self.nbevts = application.NbEvts
+    if application.numberOfEvents > 0 and self.jobFileGroupSize*self.nbevts > application.numberOfEvents:
+      self.nbevts = application.numberOfEvents
     
     if self.prodparameters["SWPackages"]:
-      curpackage = "%s.%s" % (application.appname, application.Version)
+      curpackage = "%s.%s" % (application.appname, application.version)
       if not self.prodparameters["SWPackages"].count(curpackage):
         self.prodparameters["SWPackages"] += ";%s" % ( curpackage )
     else :
-      self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.Version)
+      self.prodparameters["SWPackages"] = "%s.%s" % (application.appname, application.version)
 
     if not self.energy:
-      if application.Energy:
-        self.energy = Decimal(str(application.Energy))
+      if application.energy:
+        self.energy = Decimal(str(application.energy))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
-    elif not application.Energy:
+    elif not application.energy:
       res = application.setEnergy(float(self.energy))
       if not res['OK']:
         return res
@@ -216,8 +216,8 @@ class SIDProductionJob(ProductionJob):
       self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
-      if hasattr(application,'EvtType'):
-        self.evttype = application.EvtType
+      if hasattr(application,'eventType'):
+        self.evttype = application.eventType
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
       

@@ -276,7 +276,7 @@ class Job(DiracJob):
     if self.energy:
       if not application.energy:
         application.setEnergy(self.energy)
-      elif application.Energy != self.energy:
+      elif application.energy != self.energy:
         return S_ERROR("You have to use always the same energy per job.")
     else:
       if application.energy:
