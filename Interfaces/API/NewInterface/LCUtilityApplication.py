@@ -18,36 +18,36 @@ class LCUtilityApplication( Application ):
   def __init__(self, paramdict = None):
     super(LCUtilityApplication, self).__init__(paramdict)
     #Number of events to process
-    self.NbEvts = 0
+    self.numberOfEvents = 0
     #Energy to use (duh! again)
-    self.Energy = 0
+    self.energy = 0
     self._importLocation = "ILCDIRAC.Workflow.Modules"
     
-  def setNbEvts(self, nbevts):
+  def setNbEvts(self, numberOfEvents):
     """ Set the number of events to process
     
     @param nbevts: Number of events to process (or generate)
     @type nbevts: int
     """
-    self._checkArgs({ 'nbevts' : IntType })
-    self.NbEvts = nbevts  
+    self._checkArgs({ 'numberOfEvents' : IntType })
+    self.numberOfEvents = numberOfEvents
     return S_OK()  
 
-  def setNumberOfEvents(self, nbevts):
+  def setNumberOfEvents(self, numberOfEvents):
     """ Set the number of events to process, alias to setNbEvts
     """
-    return self.setNbEvts(nbevts)
+    return self.setNbEvts(numberOfEvents)
     
 
-  def setEnergy(self, Energy):
+  def setEnergy(self, energy):
     """ Set the energy to use
     
-    @param Energy: Energy used in GeV
-    @type Energy: float
+    @param energy: Energy used in GeV
+    @type energy: float
     """
-    if not type(Energy) == type(1.1):
-      Energy = float(Energy)
-    self._checkArgs({ 'Energy' : FloatType })
-    self.Energy = Energy
+    if not type(energy) == type(1.1):
+      energy = float(energy)
+    self._checkArgs({ 'energy' : FloatType })
+    self.energy = energy
     return S_OK()  
 
