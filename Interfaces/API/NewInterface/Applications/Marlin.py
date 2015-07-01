@@ -48,7 +48,7 @@ class Marlin(LCApplication):
     @param GearFile: input gear file for Marlin reconstrcutor
     @type GearFile: string
     """
-    self._checkArgs( { 'GearFile' : types.StringTypes } )
+    self._checkArgs( { 'gearFile' : types.StringTypes } )
 
     self.gearFile = gearFile
     if os.path.exists(gearFile) or gearFile.lower().count("lfn:"):
@@ -122,7 +122,7 @@ class Marlin(LCApplication):
   def _prodjobmodules(self, stepdefinition):
 
     ## Here one needs to take care of listoutput
-    if self.OutputPath:
+    if self.outputPath:
       self._listofoutput.append({'OutputFile' : '@{OutputFile}', "outputPath" : "@{OutputPath}",
                                  "outputDataSE" : '@{OutputSE}'})
 
@@ -134,17 +134,17 @@ class Marlin(LCApplication):
 
   def _checkConsistency(self):
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('Version not set!')
 
-    if self.SteeringFile:
-      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+    if self.steeringFile:
+      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
         #res = Exists(self.SteeringFile)
         res = S_OK()
         if not res['OK']:
           return res
-      if os.path.exists(self.SteeringFile):
-        res = checkXMLValidity(self.SteeringFile)
+      if os.path.exists(self.steeringFile):
+        res = checkXMLValidity(self.steeringFile)
         if not res['OK']:
           return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
 
@@ -161,14 +161,14 @@ class Marlin(LCApplication):
       self.gearFile = 'GearOutput.xml'
 
     if not self._jobtype == 'User' :
-      if not self.OutputFile:
+      if not self.outputFile:
         self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}",
                                    "outputDataSE":'@{OutputSE}'})
         self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}",
                                    "outputDataSE":'@{OutputSE}'})
       self.prodparameters['detectorType'] = self.detectortype
       self.prodparameters['marlin_gearfile'] = self.gearFile
-      self.prodparameters['marlin_steeringfile'] = self.SteeringFile
+      self.prodparameters['marlin_steeringfile'] = self.steeringFile
 
 
     return S_OK()
@@ -191,7 +191,7 @@ class Marlin(LCApplication):
     moduleinstance.setValue("inputGEAR",              self.gearFile)
     moduleinstance.setValue('ProcessorListToUse',     self.processorsToUse)
     moduleinstance.setValue('ProcessorListToExclude', self.processorsToExclude)
-    moduleinstance.setValue("debug",                  self.Debug)
+    moduleinstance.setValue("debug",                  self.debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

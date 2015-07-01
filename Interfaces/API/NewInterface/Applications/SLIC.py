@@ -93,11 +93,11 @@ class SLIC(LCApplication):
 
   def _checkConsistency(self):
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('No version found')
-    if self.SteeringFile:
-      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
-        res = Exists(self.SteeringFile)
+    if self.steeringFile:
+      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
+        res = Exists(self.steeringFile)
         if not res['OK']:
           return res
 
@@ -108,7 +108,7 @@ class SLIC(LCApplication):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['slic_steeringfile'] = self.SteeringFile
+      self.prodparameters['slic_steeringfile'] = self.steeringFile
       self.prodparameters['detectorType'] = self.detectortype
       if self.detectorModel:
         self.prodparameters['slic_detectormodel'] = self.detectorModel
@@ -135,7 +135,7 @@ class SLIC(LCApplication):
     moduleinstance.setValue("RandomSeed",      self.randomSeed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
     moduleinstance.setValue("startFrom",       self.startFrom)
-    moduleinstance.setValue("debug",           self.Debug)
+    moduleinstance.setValue("debug",           self.debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

@@ -43,7 +43,7 @@ class GetSRMFile(LCUtilityApplication):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("srmfiles", self.files)
-    moduleinstance.setValue("debug",    self.Debug)
+    moduleinstance.setValue("debug",    self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)

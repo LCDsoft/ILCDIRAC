@@ -82,7 +82,7 @@ class GenericApplication(LCApplication):
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("script",    self.script)
     moduleinstance.setValue('arguments', self.arguments)
-    moduleinstance.setValue('debug',     self.Debug)
+    moduleinstance.setValue('debug',     self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)

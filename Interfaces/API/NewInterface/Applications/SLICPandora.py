@@ -86,12 +86,12 @@ class SLICPandora(LCApplication):
 
   def _checkConsistency(self):
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('No version found')
 
-    if self.SteeringFile:
-      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
-        res = Exists(self.SteeringFile)
+    if self.steeringFile:
+      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
+        res = Exists(self.steeringFile)
         if not res['OK']:
           return res
 
@@ -106,7 +106,7 @@ class SLICPandora(LCApplication):
       self._log.info('No startFrom defined for SlicPandora : start from the begining')
 
     if not self._jobtype == 'User':
-      self.prodparameters['slicpandora_steeringfile'] = self.SteeringFile
+      self.prodparameters['slicpandora_steeringfile'] = self.steeringFile
       self.prodparameters['slicpandora_detectorModel'] = self.detectorModel
 
 
@@ -130,7 +130,7 @@ class SLICPandora(LCApplication):
     moduleinstance.setValue("pandorasettings",    self.pandoraSettings)
     moduleinstance.setValue("detectorxml",        self.detectorModel)
     moduleinstance.setValue("startFrom",          self.startFrom)
-    moduleinstance.setValue("debug",              self.Debug)
+    moduleinstance.setValue("debug",              self.debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

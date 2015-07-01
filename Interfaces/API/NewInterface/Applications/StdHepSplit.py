@@ -24,8 +24,8 @@ class StdHepSplit(LCUtilityApplication):
   def __init__(self, paramdict = None):
     self.numberOfEventsPerFile = 0
     super(StdHepSplit, self).__init__( paramdict )
-    if not self.Version:
-      self.Version = 'V2'
+    if not self.version:
+      self.version = 'V2'
     self._modulename = "StdHepSplit"
     self.appname = 'stdhepsplit'
     self._moduledescription = 'Helper call to split Stdhep files'
@@ -46,7 +46,7 @@ class StdHepSplit(LCUtilityApplication):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('debug',            self.Debug)
+    moduleinstance.setValue('debug',            self.debug)
     moduleinstance.setValue('nbEventsPerSlice', self.numberOfEventsPerFile)
 
   def _userjobmodules(self, stepdefinition):
@@ -72,9 +72,9 @@ class StdHepSplit(LCUtilityApplication):
       self.datatype = self._job.datatype
 
     #This is needed for metadata registration
-    self.NbEvts = self.numberOfEventsPerFile
+    self.numberOfEvents = self.numberOfEventsPerFile
 
-    if not self.OutputFile and self._jobtype =='User' :
+    if not self.outputFile and self._jobtype =='User' :
       self._log.notice('No output file name specified.')
 
     if not self._jobtype == 'User':

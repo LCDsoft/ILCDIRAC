@@ -145,13 +145,13 @@ class Mokka(LCApplication):
 
   def _checkConsistency(self):
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('No version found')
 
-    if not self.SteeringFile :
+    if not self.steeringFile :
       return S_ERROR('No Steering File')
 
-    if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
+    if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
       #res = Exists(self.SteeringFile)
       res = S_OK()
       if not res['OK']:
@@ -163,7 +163,7 @@ class Mokka(LCApplication):
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['mokka_steeringfile'] = self.SteeringFile
+      self.prodparameters['mokka_steeringfile'] = self.steeringFile
       if self.detectorModel:
         self.prodparameters['mokka_detectormodel'] = self.detectorModel
       self.prodparameters['detectorType'] = self.detectortype
@@ -196,7 +196,7 @@ class Mokka(LCApplication):
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("dbSlice",         self.dbSlice)
     moduleinstance.setValue("ProcessID",       self.processID)
-    moduleinstance.setValue("debug",           self.Debug)
+    moduleinstance.setValue("debug",           self.debug)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

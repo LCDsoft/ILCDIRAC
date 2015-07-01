@@ -36,7 +36,7 @@ class OverlayInput(LCUtilityApplication):
     self.detectorModel = ''
     self.useEnergyForFileLookup = True
     super(OverlayInput, self).__init__( paramdict )
-    self.Version = '1'
+    self.version = '1'
     self._modulename = "OverlayInput"
     self.appname = self._modulename
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
@@ -228,7 +228,7 @@ class OverlayInput(LCUtilityApplication):
     moduleinstance.setValue('prodid',            self.prodID)
     moduleinstance.setValue('BkgEvtType',        self.backgroundEventType)
     moduleinstance.setValue('detectormodel',     self.detectorModel)
-    moduleinstance.setValue('debug',             self.Debug)
+    moduleinstance.setValue('debug',             self.debug)
     moduleinstance.setValue('machine',           self.machine  )
     moduleinstance.setValue('useEnergyForFileLookup', self.useEnergyForFileLookup  )
     moduleinstance.setValue('pathToOverlayFiles', self.pathToOverlayFiles )

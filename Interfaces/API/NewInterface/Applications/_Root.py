@@ -54,7 +54,7 @@ class _Root(LCApplication):
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('arguments',   self.arguments)
     moduleinstance.setValue("script",      self.script)
-    moduleinstance.setValue('debug',       self.Debug)
+    moduleinstance.setValue('debug',       self.debug)
 
 
   def _userjobmodules(self, stepdefinition):
@@ -77,7 +77,7 @@ class _Root(LCApplication):
     """
     if not self.script:
       return S_ERROR("Script or macro not defined")
-    if not self.Version:
+    if not self.version:
       return S_ERROR("You need to specify the Root version")
 
     #res = self._checkRequiredApp() ##Check that job order is correct

@@ -48,9 +48,9 @@ class LCSIM(LCApplication):
     @type path: string
     """
     self._checkArgs( { 'outputRecFile' : types.StringTypes } )
-    self.OutputRecFile = outputRecFile
-    self.prodparameters[self.OutputRecFile] = {}
-    self.prodparameters[self.OutputRecFile]['datatype'] = 'REC'
+    self.outputRecFile = outputRecFile
+    self.prodparameters[self.outputRecFile] = {}
+    self.prodparameters[self.outputRecFile]['datatype'] = 'REC'
     if path:
       self.outputRecPath = path
 
@@ -64,9 +64,9 @@ class LCSIM(LCApplication):
     @type path: string
     """
     self._checkArgs( { 'outputDstFile' : types.StringTypes } )
-    self.OutputDstFile = outputDstFile
-    self.prodparameters[self.OutputDstFile] = {}
-    self.prodparameters[self.OutputDstFile]['datatype'] = 'DST'
+    self.outputDstFile = outputDstFile
+    self.prodparameters[self.outputDstFile] = {}
+    self.prodparameters[self.outputDstFile]['datatype'] = 'DST'
     if path:
       self.outputDstPath = path
 
@@ -136,22 +136,22 @@ class LCSIM(LCApplication):
 
   def _checkConsistency(self):
 
-    if not self.Energy :
+    if not self.energy :
       self._log.info('Energy set to 0 !')
 
-    if not self.NbEvts :
+    if not self.numberOfEvents :
       self._log.info('Number of events set to 0 !')
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('No version found')
 
-    if self.SteeringFile:
-      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
-        res = Exists(self.SteeringFile)
+    if self.steeringFile:
+      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
+        res = Exists(self.steeringFile)
         if not res['OK']:
           return res
-      if os.path.exists(self.SteeringFile):
-        res = checkXMLValidity(self.SteeringFile)
+      if os.path.exists(self.steeringFile):
+        res = checkXMLValidity(self.steeringFile)
         if not res['OK']:
           return S_ERROR("Supplied steering file cannot be read by XML parser: %s" % ( res['Message'] ) )
     if self.trackingStrategy:
@@ -171,7 +171,7 @@ class LCSIM(LCApplication):
 
     if not self._jobtype == 'User':
       #slicp = False
-      if self._inputapp and not self.OutputFile and not self.willBeCut:
+      if self._inputapp and not self.outputFile and not self.willBeCut:
         for app in self._inputapp:
           if app.appname in ['slicpandora', 'marlin']:
             self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}",
@@ -181,7 +181,7 @@ class LCSIM(LCApplication):
             #slicp = True
             break
       self.prodparameters['detectorType'] = self.detectortype
-      self.prodparameters['lcsim_steeringfile'] = self.SteeringFile
+      self.prodparameters['lcsim_steeringfile'] = self.steeringFile
       self.prodparameters['lcsim_trackingstrategy'] = self.trackingStrategy
 
       #if not slicp:
@@ -209,7 +209,7 @@ class LCSIM(LCApplication):
 
     moduleinstance.setValue("extraparams",        self.extraParams)
     moduleinstance.setValue("aliasproperties",    self.aliasProperties)
-    moduleinstance.setValue("debug",              self.Debug)
+    moduleinstance.setValue("debug",              self.debug)
     moduleinstance.setValue("detectorModel",      self.detectorModel)
     moduleinstance.setValue("trackingstrategy",   self.trackingStrategy)
 

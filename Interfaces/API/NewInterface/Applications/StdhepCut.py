@@ -80,7 +80,7 @@ class StdhepCut(LCApplication):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("MaxNbEvts", self.maxNumberOfEvents)
-    moduleinstance.setValue("debug",     self.Debug)
+    moduleinstance.setValue("debug",     self.debug)
     moduleinstance.setValue("inlineCuts", self.inlineCuts )
 
   def _userjobmodules(self, stepdefinition):
@@ -98,9 +98,9 @@ class StdhepCut(LCApplication):
     return S_OK()
 
   def _checkConsistency(self):
-    if not self.SteeringFile and not self.inlineCuts:
+    if not self.steeringFile and not self.inlineCuts:
       return S_ERROR("Cuts not specified")
-    if self.SteeringFile and self.inlineCuts:
+    if self.steeringFile and self.inlineCuts:
       self._log.notice("You specifed a cuts file and InlineCuts. InlineCuts has precedence.")
     #elif not self.SteeringFile.lower().count("lfn:") and not os.path.exists(self.SteeringFile):
     # res = Exists(self.SteeringFile)
@@ -117,7 +117,7 @@ class StdhepCut(LCApplication):
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts_kept'] = self.maxNumberOfEvents
-      self.prodparameters['cut_file'] = self.SteeringFile
+      self.prodparameters['cut_file'] = self.steeringFile
 
     #res = self._checkRequiredApp() ##Check that job order is correct
     #if not res['OK']:
@@ -128,10 +128,10 @@ class StdhepCut(LCApplication):
   def _checkFinalConsistency(self):
     """ Final check of consistency: check that there are enough events generated
     """
-    if not self.NbEvts:
+    if not self.numberOfEvents:
       return S_ERROR('Please specify the number of events that will be generated in that step')
 
-    kept = self.NbEvts * self.selectionEfficiency
+    kept = self.numberOfEvents * self.selectionEfficiency
     if kept < 2*self.maxNumberOfEvents:
       return S_ERROR("You don't generate enough events")
 

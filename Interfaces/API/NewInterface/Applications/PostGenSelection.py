@@ -47,7 +47,7 @@ class PostGenSelection(LCUtilityApplication):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('NbEvtsKept',                  self.numberOfEventsToKeep)
-    moduleinstance.setValue('debug',                       self.Debug)
+    moduleinstance.setValue('debug',                       self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)

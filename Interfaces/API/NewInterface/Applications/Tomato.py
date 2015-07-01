@@ -51,7 +51,7 @@ class Tomato(LCApplication):
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('libTomato',     self.libTomato)
-    moduleinstance.setValue('debug',         self.Debug)
+    moduleinstance.setValue('debug',         self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
