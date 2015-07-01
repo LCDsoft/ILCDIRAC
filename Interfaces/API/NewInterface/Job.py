@@ -189,12 +189,12 @@ class Job(DiracJob):
 #    application._addedtojob()
 #  
 #    self._addParameter(self.workflow, 'TotalSteps', 'String', self.stepCount, 'Total number of steps')
-    if application.NbEvts:
-      self._addParameter(self.workflow, 'NbOfEvts', 'int', application.NbEvts, "Number of events to process")
+    if application.numberOfEvents:
+      self._addParameter(self.workflow, 'NbOfEvts', 'int', application.numberOfEvents, "Number of events to process")
   
     ##Finally, add the software packages if needed
-    if application.appname and application.Version:
-      self._addSoftware(application.appname, application.Version)
+    if application.appname and application.version:
+      self._addSoftware(application.appname, application.version)
       
     return S_OK()
   
@@ -266,21 +266,21 @@ class Job(DiracJob):
     """ Every type of job has to reimplement this method. By default, just set the log file if not 
     provided and the energy.
     """
-    if not application.LogFile:      
+    if not application.logFile:
       logf = application.appname
-      if application.Version:
-        logf += "_" + application.Version
+      if application.version:
+        logf += "_" + application.version
       logf += "_Step_%s.log" % (len(self.applicationlist)+1)
       application.setLogFile(logf)
     
     if self.energy:
-      if not application.Energy:
+      if not application.energy:
         application.setEnergy(self.energy)
       elif application.Energy != self.energy:
         return S_ERROR("You have to use always the same energy per job.")
     else:
-      if application.Energy:
-        self.energy = application.Energy
+      if application.energy:
+        self.energy = application.energy
       else:
         self.log.warn("Energy not set for this step")
       #  return S_ERROR("Energy must be set somewhere.")
