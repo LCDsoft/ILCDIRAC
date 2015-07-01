@@ -20,24 +20,24 @@ class CheckCollections(LCUtilityApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.Collections = []
+    self.collections = []
     super(CheckCollections, self).__init__( paramdict )
-    if not self.Version:
-      self.Version = 'HEAD'
+    if not self.version:
+      self.version = 'HEAD'
     self._modulename = "CheckCollections"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to define Overlay processor/driver inputs'
 
-  def setCollections(self, CollectionList):
+  def setCollections(self, collectionList):
     """ Set collections. Must be a list
 
-    @param CollectionList: Collections. Must be a list
-    @type CollectionList: list
+    @param collectionList: Collections. Must be a list
+    @type collectionList: list
 
     """
-    self._checkArgs( { 'CollectionList' : types.ListType } )
+    self._checkArgs( { 'collectionList' : types.ListType } )
 
-    self.Collections = CollectionList
+    self.collections = collectionList
     return S_OK()
 
 
@@ -49,8 +49,8 @@ class CheckCollections(LCUtilityApplication):
 
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('collections',             self.Collections)
-    moduleinstance.setValue('debug',                   self.Debug)
+    moduleinstance.setValue('collections',             self.collections)
+    moduleinstance.setValue('debug',                   self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -70,7 +70,7 @@ class CheckCollections(LCUtilityApplication):
     """ Checks that all needed parameters are set
     """
 
-    if not self.Collections :
+    if not self.collections :
       return S_ERROR('No collections to check')
 
     res = self._checkRequiredApp()
