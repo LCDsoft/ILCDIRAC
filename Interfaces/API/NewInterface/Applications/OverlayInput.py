@@ -27,13 +27,13 @@ class OverlayInput(LCUtilityApplication):
   """
   def __init__(self, paramdict = None):
     self._ops = Operations()
-    self.BXOverlay = None
-    self.GGToHadInt = 0
-    self.NbSigEvtsPerJob = 0
-    self.BkgEvtType = ''
-    self.ProdID = 0
-    self.Machine = 'clic_cdr'
-    self.DetectorModel = ''
+    self.bxToOverlay = None
+    self.numberOfGGToHadronInteractions = 0
+    self.numberOfSignalEventsPerJob = 0
+    self.backgroundEventType = ''
+    self.prodID = 0
+    self.machine = 'clic_cdr'
+    self.detectorModel = ''
     self.useEnergyForFileLookup = True
     super(OverlayInput, self).__init__( paramdict )
     self.Version = '1'
@@ -48,13 +48,13 @@ class OverlayInput(LCUtilityApplication):
     """ Define the machine to use, clic_cdr or ilc_dbd
     """
     self._checkArgs( { 'machine' : types.StringTypes } )
-    self.Machine = machine
+    self.machine = machine
 
   def setProdID(self, pid):
     """ Define the prodID to use as input, experts only
     """
     self._checkArgs( {'pid': types.IntType})
-    self.ProdID = pid
+    self.prodID = pid
     return S_OK()
 
   def setUseEnergyForFileLookup(self, useEnergyForFileLookup):
@@ -78,7 +78,7 @@ class OverlayInput(LCUtilityApplication):
     @type bxoverlay: float
     """
     self._checkArgs( { 'bxoverlay' : types.IntType } )
-    self.BXOverlay = bxoverlay
+    self.bxToOverlay = bxoverlay
     return S_OK()
 
   def setBXOverlay(self, bxoverlay):
@@ -101,7 +101,7 @@ class OverlayInput(LCUtilityApplication):
 
     """
     self._checkArgs( { 'ggtohadint' : types.FloatType } )
-    self.GGToHadInt = ggtohadint
+    self.numberOfGGToHadronInteractions = ggtohadint
     return S_OK()
 
   def setGGToHadInt(self, ggtohadint):
@@ -126,7 +126,7 @@ class OverlayInput(LCUtilityApplication):
     """
     self._checkArgs( { 'nbsigevtsperjob' : types.IntType } )
 
-    self.NbSigEvtsPerJob = nbsigevtsperjob
+    self.numberOfSignalEventsPerJob = nbsigevtsperjob
     return S_OK()
 
 
@@ -139,7 +139,7 @@ class OverlayInput(LCUtilityApplication):
     """
     self._checkArgs( { 'detectormodel' : types.StringTypes } )
 
-    self.DetectorModel = detectormodel
+    self.detectorModel = detectormodel
     return S_OK()
 
   def setPathToFiles(self, path):
@@ -154,16 +154,16 @@ class OverlayInput(LCUtilityApplication):
     self.pathToOverlayFiles = path
     return S_OK()
 
-  def setBkgEvtType(self, BkgEvtType):
+  def setBkgEvtType(self, backgroundEventType):
     """ Define the background type.
 
-    @param BkgEvtType: Background type.
-    @type BkgEvtType: string
+    @param backgroundEventType: Background type.
+    @type backgroundEventType: string
 
     """
-    self._checkArgs( { 'BkgEvtType' : types.StringTypes } )
+    self._checkArgs( { 'backgroundEventType' : types.StringTypes } )
 
-    self.BkgEvtType = BkgEvtType
+    self.backgroundEventType = backgroundEventType
     return S_OK()
 
 
@@ -222,14 +222,14 @@ class OverlayInput(LCUtilityApplication):
 
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("BXOverlay",         self.BXOverlay)
-    moduleinstance.setValue('ggtohadint',        self.GGToHadInt)
-    moduleinstance.setValue('NbSigEvtsPerJob',   self.NbSigEvtsPerJob)
-    moduleinstance.setValue('prodid',            self.ProdID)
-    moduleinstance.setValue('BkgEvtType',        self.BkgEvtType)
-    moduleinstance.setValue('detectormodel',     self.DetectorModel)
+    moduleinstance.setValue("BXOverlay",         self.bxToOverlay)
+    moduleinstance.setValue('ggtohadint',        self.numberOfGGToHadronInteractions)
+    moduleinstance.setValue('NbSigEvtsPerJob',   self.numberOfSignalEventsPerJob)
+    moduleinstance.setValue('prodid',            self.prodID)
+    moduleinstance.setValue('BkgEvtType',        self.backgroundEventType)
+    moduleinstance.setValue('detectormodel',     self.detectorModel)
     moduleinstance.setValue('debug',             self.Debug)
-    moduleinstance.setValue('machine',           self.Machine  )
+    moduleinstance.setValue('machine',           self.machine  )
     moduleinstance.setValue('useEnergyForFileLookup', self.useEnergyForFileLookup  )
     moduleinstance.setValue('pathToOverlayFiles', self.pathToOverlayFiles )
 
@@ -260,22 +260,22 @@ class OverlayInput(LCUtilityApplication):
       if len(res['Value']) == 0 :
         return S_ERROR("OverlayInput: PathToFiles is specified, but there are no files in that path")
 
-    if not self.BXOverlay :
+    if not self.bxToOverlay :
       return S_ERROR("Number of overlay bunch crossings not defined")
 
-    if not self.GGToHadInt :
+    if not self.numberOfGGToHadronInteractions :
       return S_ERROR("Number of background events per bunch crossing is not defined")
 
-    if not self.BkgEvtType :
+    if not self.backgroundEventType :
       return S_ERROR("Background event type is not defined: Chose one gghad, aa_lowpt, ...")
 
     if self._jobtype == 'User' :
-      if not self.NbSigEvtsPerJob :
+      if not self.numberOfSignalEventsPerJob :
         return S_ERROR("Number of signal event per job is not defined")
     else:
-      self.prodparameters['detectorModel'] = self.DetectorModel
-      self.prodparameters['BXOverlay']  = self.BXOverlay
-      self.prodparameters['GGtoHadInt'] = self.GGToHadInt
+      self.prodparameters['detectorModel'] = self.detectorModel
+      self.prodparameters['BXOverlay']  = self.bxToOverlay
+      self.prodparameters['GGtoHadInt'] = self.numberOfGGToHadronInteractions
 
     return S_OK()
 
@@ -285,35 +285,35 @@ class OverlayInput(LCUtilityApplication):
     if self.pathToOverlayFiles:
       return S_OK() # can ignore other parameter
 
-    if not self.Energy:
+    if not self.energy:
       return S_ERROR("Energy MUST be specified for the overlay")
 
     res = self._ops.getSections('/Overlay')
     if not res['OK']:
       return S_ERROR("Could not resolve the CS path to the overlay specifications")
     sections = res['Value']
-    if not self.Machine in sections:
-      return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.Machine, sections))
+    if not self.machine in sections:
+      return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.machine, sections))
 
-    fracappen = modf(float(self.Energy)/1000.)
+    fracappen = modf(float(self.energy)/1000.)
     if fracappen[1] > 0:
-      energytouse = "%stev" % (Decimal(str(self.Energy))/Decimal("1000."))
+      energytouse = "%stev" % (Decimal(str(self.energy))/Decimal("1000."))
     else:
-      energytouse =  "%sgev" % (Decimal(str(self.Energy)))
+      energytouse =  "%sgev" % (Decimal(str(self.energy)))
     if energytouse.count(".0"):
       energytouse = energytouse.replace(".0", "")
-    res = self._ops.getSections("/Overlay/%s" % self.Machine)
+    res = self._ops.getSections("/Overlay/%s" % self.machine)
     if not energytouse in res['Value']:
       return S_ERROR("No overlay files corresponding to %s" % energytouse)
 
-    res = self._ops.getSections("/Overlay/%s/%s" % (self.Machine, energytouse))
+    res = self._ops.getSections("/Overlay/%s/%s" % (self.machine, energytouse))
     if not res['OK']:
       return S_ERROR("Could not find the detector models")
 
-    if not self.DetectorModel in res['Value']:
+    if not self.detectorModel in res['Value']:
       return S_ERROR("Detector model specified has no overlay data with that energy and machine")
 
-    res = allowedBkg(self.BkgEvtType, energytouse, detectormodel = self.DetectorModel, machine = self.Machine)
+    res = allowedBkg(self.backgroundEventType, energytouse, detectormodel = self.detectorModel, machine = self.machine)
     if not res['OK']:
       return res
     if res['Value'] < 0:
