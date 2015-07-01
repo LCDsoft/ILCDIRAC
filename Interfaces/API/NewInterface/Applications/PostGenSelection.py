@@ -19,22 +19,22 @@ class PostGenSelection(LCUtilityApplication):
   """
   def __init__(self, paramdict = None):
 
-    self.NbEvtsToKeep = 0
+    self.numberOfEventsToKeep = 0
     super(PostGenSelection, self).__init__( paramdict )
     self._modulename = "PostGenSelection"
     self.appname = 'postgensel'
     self._moduledescription = 'Helper to filter generator selection'
 
-  def setNbEvtsToKeep(self, NbEvtsToKeep):
+  def setNbEvtsToKeep(self, numberOfEventsToKeep):
     """ Set the number of events to keep in the input file
 
-    @param NbEvtsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
-    @type NbEvtsToKeep: int
+    @param numberOfEventsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
+    @type numberOfEventsToKeep: int
 
     """
-    self._checkArgs( { 'NbEvtsToKeep' : types.IntType } )
+    self._checkArgs( { 'numberOfEventsToKeep' : types.IntType } )
 
-    self.NbEvtsToKeep = NbEvtsToKeep
+    self.numberOfEventsToKeep = numberOfEventsToKeep
     return S_OK()
 
 
@@ -46,7 +46,7 @@ class PostGenSelection(LCUtilityApplication):
 
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('NbEvtsKept',                  self.NbEvtsToKeep)
+    moduleinstance.setValue('NbEvtsKept',                  self.numberOfEventsToKeep)
     moduleinstance.setValue('debug',                       self.Debug)
 
   def _userjobmodules(self, stepdefinition):
@@ -67,7 +67,7 @@ class PostGenSelection(LCUtilityApplication):
     """ Checks that all needed parameters are set
     """
 
-    if not self.NbEvtsToKeep :
+    if not self.numberOfEventsToKeep :
       return S_ERROR('Number of events to keep was not given! Throw your brain to the trash and try again!')
 
     #res = self._checkRequiredApp() ##Check that job order is correct
