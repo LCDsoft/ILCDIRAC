@@ -11,7 +11,7 @@ import types, os
 class Mokka(LCApplication):
   """ Call Mokka simulator (after Whizard, Pythia or StdHepCut)
 
-  To ensure reproductibility, the RandomSeed is used as mcRunNumber. By default it's the jobID.
+  To ensure reproductibility, the randomSeed is used as mcRunNumber. By default it's the jobID.
 
   Usage:
 
@@ -28,13 +28,13 @@ class Mokka(LCApplication):
   """
   def __init__(self, paramdict = None):
 
-    self.StartFrom = 0
-    self.MacFile = ''
-    self.RandomSeed = 0
+    self.startFrom = 0
+    self.macFile = ''
+    self.randomSeed = 0
     self.mcRunNumber = 0
-    self.DbSlice = ''
-    self.DetectorModel = ''
-    self.ProcessID = ''
+    self.dbSlice = ''
+    self.detectorModel = ''
+    self.processID = ''
     super(Mokka, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
     self._modulename = 'MokkaAnalysis'
@@ -44,17 +44,17 @@ class Mokka(LCApplication):
     self.detectortype = 'ILD'
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
 
-  def setRandomSeed(self, RandomSeed):
+  def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is JobID.
 
     Also used as mcRunNumber.
 
-    @param RandomSeed: Seed to use during integration and generation. Default is Job ID.
-    @type RandomSeed: int
+    @param randomSeed: Seed to use during integration and generation. Default is Job ID.
+    @type randomSeed: int
     """
-    self._checkArgs( { 'RandomSeed' : types.IntType } )
+    self._checkArgs( { 'randomSeed' : types.IntType } )
 
-    self.RandomSeed = RandomSeed
+    self.randomSeed = randomSeed
 
   def setmcRunNumber(self, runnumber):
     """ Optional: Define mcRunNumber to use. Default is 0. In Production jobs, is equal to RandomSeed
@@ -74,7 +74,7 @@ class Mokka(LCApplication):
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
-    self.DetectorModel = detectorModel
+    self.detectorModel = detectorModel
 
   def setMacFile(self, macfile):
     """ Optional: Define Mac File. Useful if using particle gun.
@@ -83,12 +83,12 @@ class Mokka(LCApplication):
     @type macfile: string
     """
     self._checkArgs( { 'macfile' : types.StringTypes } )
-    self.MacFile = macfile
+    self.macFile = macfile
     if os.path.exists(macfile) or macfile.lower().count("lfn:"):
       self.inputSB.append(macfile)
-    elif self.MacFile:
+    elif self.macFile:
       self._log.notice("Mac file not found locally and is not an lfn, I hope you know what you are doing...")
-      self._log.notice("MacFile:", self.MacFile)
+      self._log.notice("MacFile:", self.macFile)
     else:
       pass
 
@@ -99,7 +99,7 @@ class Mokka(LCApplication):
     @type startfrom: int
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
-    self.StartFrom = startfrom
+    self.startFrom = startfrom
 
 
   def setProcessID(self, processID):
@@ -109,7 +109,7 @@ class Mokka(LCApplication):
     @type processID: string
     """
     self._checkArgs( { 'processID' : types.StringTypes } )
-    self.ProcessID = processID
+    self.processID = processID
 
 
   def setDbSlice(self, dbSlice):
@@ -119,12 +119,12 @@ class Mokka(LCApplication):
     @type dbSlice: string
     """
     self._checkArgs( { 'dbSlice' : types.StringTypes } )
-    self.DbSlice = dbSlice
+    self.dbSlice = dbSlice
     if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
       self.inputSB.append(dbSlice)
     elif dbSlice:
       self._log.notice("Slice not found locally and is not an lfn, I hope you know what you are doing...")
-      self._log.notice("DB slice:", self.DbSlice)
+      self._log.notice("DB slice:", self.dbSlice)
     else:
       pass
 
@@ -164,8 +164,8 @@ class Mokka(LCApplication):
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['mokka_steeringfile'] = self.SteeringFile
-      if self.DetectorModel:
-        self.prodparameters['mokka_detectormodel'] = self.DetectorModel
+      if self.detectorModel:
+        self.prodparameters['mokka_detectormodel'] = self.detectorModel
       self.prodparameters['detectorType'] = self.detectortype
 
     return S_OK()
@@ -189,13 +189,13 @@ class Mokka(LCApplication):
 
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",      self.RandomSeed)
-    moduleinstance.setValue("detectorModel",   self.DetectorModel)
+    moduleinstance.setValue("RandomSeed",      self.randomSeed)
+    moduleinstance.setValue("detectorModel",   self.detectorModel)
     moduleinstance.setValue("mcRunNumber",     self.mcRunNumber)
-    moduleinstance.setValue("macFile",         self.MacFile)
-    moduleinstance.setValue("startFrom",       self.StartFrom)
-    moduleinstance.setValue("dbSlice",         self.DbSlice)
-    moduleinstance.setValue("ProcessID",       self.ProcessID)
+    moduleinstance.setValue("macFile",         self.macFile)
+    moduleinstance.setValue("startFrom",       self.startFrom)
+    moduleinstance.setValue("dbSlice",         self.dbSlice)
+    moduleinstance.setValue("ProcessID",       self.processID)
     moduleinstance.setValue("debug",           self.Debug)
 
   def _checkWorkflowConsistency(self):
