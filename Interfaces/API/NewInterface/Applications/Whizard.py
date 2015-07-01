@@ -27,19 +27,19 @@ class Whizard(LCApplication):
   """
   def __init__(self, processlist = None, paramdict = None):
 
-    self.ParameterDict = {}
-    self.Model = 'sm'
-    self.RandomSeed = 0
-    self.Luminosity = 0
-    self.JobIndex = ''
+    self.parameterDict = {}
+    self.model = 'sm'
+    self.randomSeed = 0
+    self.luminosity = 0
+    self.jobIndex = ''
     self._optionsdictstr = ''
-    self.FullParameterDict = {}
-    self.GeneratorLevelCuts = {}
+    self.fullParameterDict = {}
+    self.generatorLevelCuts = {}
     self._genlevelcutsstr = ''
     self._leshouchesfiles = None
     self._generatormodels = GeneratorModels()
-    self.EvtType = ''
-    self.GlobalEvtType = ''
+    self.eventType = ''
+    self.globalEventType = ''
     self.useGridFiles = False
     self._allowedparams = ['PNAME1', 'PNAME2', 'POLAB1', 'POLAB2', 'USERB1', 'USERB2',
                            'ISRB1', 'ISRB2', 'EPAB1', 'EPAB2', 'RECOIL', 'INITIALS', 'USERSPECTRUM']
@@ -72,14 +72,14 @@ class Whizard(LCApplication):
     if self.addedtojob:
       self._log.error("Cannot modify this attribute once application has been added to Job")
       return S_ERROR("Cannot modify")
-    self.EvtType = evttype
+    self.eventType = evttype
 
   def setGlobalEvtType(self, globalname):
     """ When producing multiple process in one job, it is needed to define this for the output file name.
     It's mandatory to use the L{setFullParameterDict} method when using this.
     """
     self._checkArgs( { 'globalname' : types.StringTypes } )
-    self.GlobalEvtType = globalname
+    self.globalEventType = globalname
 
   def setLuminosity(self, lumi):
     """ Optional: Define luminosity to generate
@@ -88,17 +88,17 @@ class Whizard(LCApplication):
     @type lumi: float
     """
     self._checkArgs( { 'lumi' : types.FloatType } )
-    self.Luminosity = lumi
+    self.luminosity = lumi
 
-  def setRandomSeed(self, RandomSeed):
+  def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
 
-    @param RandomSeed: Seed to use during integration and generation.
-    @type RandomSeed: int
+    @param randomSeed: Seed to use during integration and generation.
+    @type randomSeed: int
     """
-    self._checkArgs( { 'RandomSeed' : types.IntType } )
+    self._checkArgs( { 'randomSeed' : types.IntType } )
 
-    self.RandomSeed = RandomSeed
+    self.randomSeed = randomSeed
 
   def setParameterDict(self, paramdict):
     """ Parameters for Whizard steering files
@@ -107,7 +107,7 @@ class Whizard(LCApplication):
     @type paramdict: dict
     """
     self._checkArgs( { 'paramdict' : types.DictType } )
-    self.ParameterDict = paramdict
+    self.parameterDict = paramdict
 
   def setGeneratorLevelCuts(self, cutsdict):
     """ Define generator level cuts (to be put in whizard.cut1)
@@ -120,7 +120,7 @@ class Whizard(LCApplication):
     @type cutsdict: dict
     """
     self._checkArgs( { 'cutsdict' : types.DictType } )
-    self.GeneratorLevelCuts = cutsdict
+    self.generatorLevelCuts = cutsdict
 
   def setFullParameterDict(self, pdict):
     """ Parameters for Whizard steering files, better than above as much more complete (cannot be more complete)
@@ -149,7 +149,7 @@ class Whizard(LCApplication):
     """
     self._checkArgs( { 'pdict' : types.DictType } )
 
-    self.FullParameterDict = pdict
+    self.fullParameterDict = pdict
     #self._wo.changeAndReturn(dict)
 
   def setModel(self, model):
@@ -160,7 +160,7 @@ class Whizard(LCApplication):
     """
     self._checkArgs( { 'model' : types.StringTypes } )
 
-    self.Model = model
+    self.model = model
 
   def willCut(self):
     """ You need this if you plan on cutting using L{StdhepCut}
@@ -182,7 +182,7 @@ class Whizard(LCApplication):
     """
     self._checkArgs( { 'index' : types.StringTypes } )
 
-    self.JobIndex = index
+    self.jobIndex = index
 
   def dumpWhizardDotIn(self, fname = 'whizard.in'):
     """ Dump the content of the whizard.in file requested for this application
@@ -195,31 +195,31 @@ class Whizard(LCApplication):
   def _checkConsistency(self):
     """ Check the consistency, called from Application
     """
-    self._wo = WhizardOptions(self.Model)
+    self._wo = WhizardOptions(self.model)
 
-    if not self.FullParameterDict:
-      if not self.Energy :
+    if not self.fullParameterDict:
+      if not self.energy :
         return S_ERROR('Energy not set')
 
-      if not self.NbEvts :
+      if not self.numberOfEvents :
         return S_ERROR('Number of events not set!')
 
-      if not self.EvtType:
+      if not self.eventType:
         return S_ERROR("Process not defined")
     else:
-      res = self._wo.checkFields(self.FullParameterDict)
+      res = self._wo.checkFields(self.fullParameterDict)
       if not res['OK']:
         return res
-      self._wo.changeAndReturn(self.FullParameterDict)
+      self._wo.changeAndReturn(self.fullParameterDict)
       res = self._wo.getValue("process_input/process_id")
       if not len(res['Value']):
-        if self.EvtType:
-          if not self.FullParameterDict.has_key('process_input'):
-            self.FullParameterDict['process_input'] = {}
-          self.FullParameterDict['process_input']['process_id'] = self.EvtType
+        if self.eventType:
+          if not 'process_input' in self.fullParameterDict:
+            self.fullParameterDict['process_input'] = {}
+          self.fullParameterDict['process_input']['process_id'] = self.eventType
         else:
           return S_ERROR("Event type not specified")
-      self.EvtType = res['Value']
+      self.eventType = res['Value']
 
       res = self._wo.getValue("process_input/sqrts")
       if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
@@ -227,48 +227,48 @@ class Whizard(LCApplication):
       else:
         energy = eval(res['Value'])
       if not energy:
-        if self.Energy:
-          if not self.FullParameterDict.has_key('process_input'):
-            self.FullParameterDict['process_input'] = {}
-          self.FullParameterDict['process_input']['sqrts'] = self.Energy
-          energy = self.Energy
+        if self.energy:
+          if not 'process_input' in self.fullParameterDict:
+            self.fullParameterDict['process_input'] = {}
+          self.fullParameterDict['process_input']['sqrts'] = self.energy
+          energy = self.energy
         else:
           return S_ERROR("Energy set to 0")
-      self.Energy = energy
+      self.energy = energy
 
       res = self._wo.getValue("simulation_input/n_events")
       if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
-        nbevts = res['Value']
+        numberOfEvents = res['Value']
       else:
-        nbevts = eval(res['Value'])
-      if not nbevts:
-        if self.NbEvts:
-          if not self.FullParameterDict.has_key('simulation_input'):
-            self.FullParameterDict['simulation_input'] = {}
-          self.FullParameterDict['simulation_input']['n_events'] = self.NbEvts
-          nbevts = self.NbEvts
+        numberOfEvents = eval(res['Value'])
+      if not numberOfEvents:
+        if self.numberOfEvents:
+          if not 'simulation_input' in self.fullParameterDict:
+            self.fullParameterDict['simulation_input'] = {}
+          self.fullParameterDict['simulation_input']['n_events'] = self.numberOfEvents
+          numberOfEvents = self.numberOfEvents
         else:
           return S_ERROR("Number of events set to 0")
-      self.NbEvts = nbevts
+      self.numberOfEvents = numberOfEvents
 
     if not self._processlist:
       return S_ERROR("Process list was not given")
 
-    if self.GeneratorLevelCuts:
-      for process in self.GeneratorLevelCuts.keys():
-        if not process in self.EvtType.split():
+    if self.generatorLevelCuts:
+      for process in self.generatorLevelCuts.keys():
+        if not process in self.eventType.split():
           self._log.info("You want to cut on %s but that process is not to be generated" % process)
-      for values in self.GeneratorLevelCuts.values():
+      for values in self.generatorLevelCuts.values():
         if not type(values) == types.ListType:
           return S_ERROR('Type of %s is not a list, cannot proceed' % values)
-      self._genlevelcutsstr = str(self.GeneratorLevelCuts)
+      self._genlevelcutsstr = str(self.generatorLevelCuts)
 
-    if self.EvtType:
-      processes = self.EvtType.split()
-      if len(processes) > 1 and not self.GlobalEvtType:
+    if self.eventType:
+      processes = self.eventType.split()
+      if len(processes) > 1 and not self.globalEventType:
         return S_ERROR("Global name MUST be defined when producing multiple processes in one job")
-      elif self.GlobalEvtType:
-        self.EvtType = self.GlobalEvtType
+      elif self.globalEventType:
+        self.eventType = self.globalEventType
       for process in processes:
         if not self._processlist.existsProcess(process)['Value']:
           self._log.notice("Available processes are:")
@@ -278,128 +278,66 @@ class Whizard(LCApplication):
           cspath = self._processlist.getCSPath(process)
           whiz_file = os.path.basename(cspath)
           version = whiz_file.replace(".tar.gz","").replace(".tgz","").replace("whizard","")
-          if self.Version:
-            if self.Version != version:
+          if self.version:
+            if self.version != version:
               return S_ERROR("All processes to consider are not available in the same WHIZARD version")
           else:
-            self.Version = version
-          self._log.info("Found the process %s in whizard %s"%(process, self.Version))
+            self.version = version
+          self._log.info("Found the process %s in whizard %s"%(process, self.version))
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('No version found')
 
-    if self.Model:
-      if not self._generatormodels.hasModel(self.Model)['OK']:
-        return S_ERROR("Unknown model %s" % self.Model)
+    if self.model:
+      if not self._generatormodels.hasModel(self.model)['OK']:
+        return S_ERROR("Unknown model %s" % self.model)
 
-    if self.OutputFile:
-      if self.OutputFile.count("/"):
+    if self.outputFile:
+      if self.outputFile.count("/"):
         return S_ERROR("The OutputFile name is a file name, not a path. Remove any / in there")
 
-    if not self.OutputFile and self._jobtype == 'User':
-      self.OutputFile = self.EvtType
-      if self.JobIndex :
-        self.OutputFile += "_" + self.JobIndex
-      self.OutputFile += "_gen.stdhep"
+    if not self.outputFile and self._jobtype == 'User':
+      self.outputFile = self.eventType
+      if self.jobIndex :
+        self.outputFile += "_" + self.jobIndex
+      self.outputFile += "_gen.stdhep"
 
     if not self._jobtype == 'User':
       if not self.willBeCut:
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                    "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nbevts'] = self.NbEvts
-      self.prodparameters['Process'] = self.EvtType
-      self.prodparameters['model'] = self.Model
-      self.prodparameters['Energy'] = self.Energy
-      self.prodparameters['whizardparams'] = self.FullParameterDict
-      self.prodparameters['gencuts'] = self.GeneratorLevelCuts
+      self.prodparameters['nbevts'] = self.numberOfEvents
+      self.prodparameters['Process'] = self.eventType
+      self.prodparameters['model'] = self.model
+      self.prodparameters['Energy'] = self.energy
+      self.prodparameters['whizardparams'] = self.fullParameterDict
+      self.prodparameters['gencuts'] = self.generatorLevelCuts
       self.prodparameters['gridfiles'] = self.useGridFiles
 
-    if not self.FullParameterDict and  self.ParameterDict:
-      for key in self.ParameterDict.keys():
+    if not self.fullParameterDict and self.parameterDict:
+      for key in self.parameterDict.keys():
         if not key in self._allowedparams:
           return S_ERROR("Unknown parameter %s"%key)
 
-      if not self.ParameterDict.has_key('PNAME1'):
-        self._log.info("Assuming incoming beam 1 to be electrons")
-        self.parameters.append('PNAME1=e1')
-      else:
-        self.parameters.append("PNAME1=%s" % self.ParameterDict["PNAME1"] )
+      self.setParameter( 'PNAME1', 'e1', "Assuming incoming beam 1 to be electrons" )
+      self.setParameter( 'PNAME2', 'E1', "Assuming incoming beam 2 to be positrons" )
+      self.setParameter( 'POLAB1', '0.0 0.0', "Assuming no polarization for beam 1" )
+      self.setParameter( 'POLAB2', '0.0 0.0', "Assuming no polarization for beam 2" )
+      self.setParameter( 'USERB1', 'T', "Will put beam spectrum to True for beam 1" )
+      self.setParameter( 'USERB2', 'T', "Will put beam spectrum to True for beam 2" )
+      self.setParameter( 'ISRB1', 'T', "Will put ISR to True for beam 1" )
+      self.setParameter( 'ISRB2', 'T', "Will put ISR to True for beam 2" )
 
-      if not self.ParameterDict.has_key('PNAME2'):
-        self._log.info("Assuming incoming beam 2 to be positrons")
-        self.parameters.append('PNAME2=E1')
-      else:
-        self.parameters.append("PNAME2=%s" %self.ParameterDict["PNAME2"] )
+      self.setParameter( 'EPAB1', 'F', "Will put EPA to False for beam 1" )
+      self.setParameter( 'EPAB2', 'F', "Will put EPA to False for beam 2" )
 
-      if not self.ParameterDict.has_key('POLAB1'):
-        self._log.info("Assuming no polarization for beam 1")
-        self.parameters.append('POLAB1=0.0 0.0')
-      else:
-        self.parameters.append("POLAB1=%s" % self.ParameterDict["POLAB1"])
-
-      if not self.ParameterDict.has_key('POLAB2'):
-        self._log.info("Assuming no polarization for beam 2")
-        self.parameters.append('POLAB2=0.0 0.0')
-      else:
-        self.parameters.append("POLAB2=%s" % self.ParameterDict["POLAB2"])
-
-      if not self.ParameterDict.has_key('USERB1'):
-        self._log.info("Will put beam spectrum to True for beam 1")
-        self.parameters.append('USERB1=T')
-      else:
-        self.parameters.append("USERB1=%s" % self.ParameterDict["USERB1"])
-
-      if not self.ParameterDict.has_key('USERB2'):
-        self._log.info("Will put beam spectrum to True for beam 2")
-        self.parameters.append('USERB2=T')
-      else:
-        self.parameters.append("USERB2=%s" % self.ParameterDict["USERB2"])
-
-      if not self.ParameterDict.has_key('ISRB1'):
-        self._log.info("Will put ISR to True for beam 1")
-        self.parameters.append('ISRB1=T')
-      else:
-        self.parameters.append("ISRB1=%s" % self.ParameterDict["ISRB1"])
-
-      if not self.ParameterDict.has_key('ISRB2'):
-        self._log.info("Will put ISR to True for beam 2")
-        self.parameters.append('ISRB2=T')
-      else:
-        self.parameters.append("ISRB2=%s" % self.ParameterDict["ISRB2"])
-
-      if not self.ParameterDict.has_key('EPAB1'):
-        self._log.info("Will put EPA to False for beam 1")
-        self.parameters.append('EPAB1=F')
-      else:
-        self.parameters.append("EPAB1=%s" % self.ParameterDict["EPAB1"])
-
-      if not self.ParameterDict.has_key('EPAB2'):
-        self._log.info("Will put EPA to False for beam 2")
-        self.parameters.append('EPAB2=F')
-      else:
-        self.parameters.append("EPAB2=%s" % self.ParameterDict["EPAB2"])
-
-      if not self.ParameterDict.has_key('RECOIL'):
-        self._log.info("Will set Beam_recoil to False")
-        self.parameters.append('RECOIL=F')
-      else:
-        self.parameters.append("RECOIL=%s" % self.ParameterDict["RECOIL"])
-
-      if not self.ParameterDict.has_key('INITIALS'):
-        self._log.info("Will set keep_initials to False")
-        self.parameters.append('INITIALS=F')
-      else:
-        self.parameters.append("INITIALS=%s" % self.ParameterDict["INITIALS"])
-
-      if not self.ParameterDict.has_key('USERSPECTRUM'):
-        self._log.info("Will set USER_spectrum_on to +-11")
-        self.parameters.append('USERSPECTRUM=11')
-      else:
-        self.parameters.append("USERSPECTRUM=%s" % self.ParameterDict["USERSPECTRUM"])
+      self.setParameter( 'RECOIL', 'F', "Will set Beam_recoil to False" )
+      self.setParameter( 'INITIALS', 'F', "Will set keep_initials to False" )
+      self.setParameter( 'USERSPECTRUM', '11', "Will set USER_spectrum_on to +-11" )
 
       self.parameters = ";".join( self.parameters )
-    elif self.FullParameterDict:
-      self._optionsdictstr = str(self.FullParameterDict)
+    elif self.fullParameterDict:
+      self._optionsdictstr = str(self.fullParameterDict)
 
 
     return S_OK()
@@ -424,17 +362,17 @@ class Whizard(LCApplication):
 
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("evttype",            self.EvtType)
-    moduleinstance.setValue("RandomSeed",         self.RandomSeed)
-    moduleinstance.setValue("Lumi",               self.Luminosity)
-    moduleinstance.setValue("Model",              self.Model)
-    moduleinstance.setValue("SteeringFile",       self.SteeringFile)
+    moduleinstance.setValue("evttype",            self.eventType)
+    moduleinstance.setValue("RandomSeed",         self.randomSeed)
+    moduleinstance.setValue("Lumi",               self.luminosity)
+    moduleinstance.setValue("Model",              self.model)
+    moduleinstance.setValue("SteeringFile",       self.steeringFile)
     moduleinstance.setValue("steeringparameters", self.parameters)
     moduleinstance.setValue("OptionsDictStr",     self._optionsdictstr)
     moduleinstance.setValue("GenLevelCutDictStr", self._genlevelcutsstr)
     moduleinstance.setValue("willCut",            self.willBeCut)
     moduleinstance.setValue("useGridFiles",       self.useGridFiles)
-    moduleinstance.setValue("debug",              self.Debug)
+    moduleinstance.setValue("debug",              self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -449,3 +387,10 @@ class Whizard(LCApplication):
     if not res1["OK"] or not res2["OK"] :
       return S_ERROR('prodjobmodules failed')
     return S_OK()
+
+  def setParameter(self, parameter, defaultValue, docString):
+    if not parameter in self.parameterDict:
+      self._log.info(docString)
+      self.parameters.append( "%s=%s" % (parameter, defaultValue) )
+    else:
+      self.parameters.append( "%s=%s" % (parameter, self.parameterDict[parameter]) )
