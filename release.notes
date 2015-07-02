@@ -15,6 +15,20 @@ FIX: Fixes for ILDProductionJob from C. Calancha (ILCDIRAC-413)
 NEW: Based on Dirac v6r12-pre21: DO NOT USE
 
 
+[v22r2p5]
+
+* Transformation
+
+NEW: Script to create replication transformations dirac-ilc-replication-transformation
+
+* Workflow
+
+FIX: OverlayInput will only waste time after downloading the first file
+
+* Dirac
+
+NEW: based on v6r11p5 (GlobusComputingElement)
+
 [v22r2p4]
 
 * Workflow
