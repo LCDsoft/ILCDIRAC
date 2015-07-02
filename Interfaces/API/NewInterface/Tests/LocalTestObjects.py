@@ -4,23 +4,14 @@ __RCSID__ ="$Id$"
 
 
 from DIRAC.Core.Base import Script
-import os, glob, shutil, tempfile
+import os, shutil, tempfile
 from DIRAC import S_OK, S_ERROR, gLogger
 
-def cleanup():
+def cleanup(tempdir):
   """
   Remove files after run
   """
-  all_files = glob.glob("./*")
-  for of in all_files:
-    if os.path.isdir(of):
-      shutil.rmtree(of)
-    else:
-      os.unlink(of)
-
-
-def setConfig(job):
-  job.setILDConfig("v01-16-p10_250")
+  shutil.rmtree(tempdir)
 
 class CLIParams( object ):
   """ CLI parameters
@@ -220,7 +211,7 @@ class TestCreater(object):
       return S_ERROR("Failed adding Mokka to Job")
     jobmo.setOutputData("testsim.slcio", OutputSE="CERN-DIP-4")
     self.jobList['Mokka1'] = jobmo
-    return S_OK("added job")
+    return S_OK(jobmo)
 
 
   def getOverlay(self, nbevts):
@@ -473,7 +464,7 @@ class TestCreater(object):
       self.log.error("Failed adding Whizard:", res['Message'])
       return S_ERROR()
     self.jobList['WhizSusy'] = jobwsusy
-    return S_OK()
+    return S_OK((jobw, jobwsusy))
 
   def createSlicTest(self):
     """create tests for slic"""
@@ -501,7 +492,7 @@ class TestCreater(object):
       self.log.error("Failed adding slic: ", res["Message"])
       return S_ERROR()
     self.jobList['Slic1'] = jobslic
-    return S_OK()
+    return S_OK(jobslic)
 
 
   def createMarlinTest(self):
@@ -547,8 +538,7 @@ class TestCreater(object):
       self.log.error("Failed adding Marlin:", res['Message'])
       return S_ERROR()
     self.jobList['Marlin1'] =jobma
-
-    return S_OK()
+    return S_OK(jobma)
 
   def createLCSimTest(self):
     """create tests for LCSIM"""
@@ -596,7 +586,7 @@ class TestCreater(object):
       return S_ERROR()
     self.jobList['lcsim1'] = joblcsim
 
-    return S_OK()
+    return S_OK(joblcsim)
 
   def createSlicPandoraTest(self):
     """create tests for slicPandora"""
@@ -650,7 +640,7 @@ class TestCreater(object):
       self.log.error("Failed adding LCSIM: ", res["Message"])
       return S_ERROR()
     self.jobList['lcsimov1'] = joblcsimov
-    return S_OK()
+    return S_OK(joblcsimov)
 
   def createUtilityTests(self):
     """Create tests for utility applications"""
@@ -709,45 +699,54 @@ class TestCreater(object):
       self.log.error("Failed adding SLCIOConcatenate:", res['Message'])
       return S_ERROR()
     self.jobList['concat'] = jobconcat
+    return S_OK((jobconcat, joblciosplit,jobwcut,jobwsplit))
+
+
+  def runJobLocally(self, job, jobName="unknown"):
+    """run a job locally"""
+    self.log.notice("I will run the tests locally.")
+    from DIRAC import gConfig
+    localarea = gConfig.getValue("/LocalSite/LocalArea", "")
+    if not localarea:
+      self.log.error("You need to have /LocalSite/LocalArea defined in your dirac.cfg")
+      return S_ERROR()
+    if localarea.find("/afs") == 0:
+      self.log.error("Don't set /LocalSite/LocalArea set to /afs/... as you'll get to install there")
+      self.log.error("check ${HOME}/.dirac.cfg")
+      return S_ERROR()
+    self.log.notice("To run locally, I will create a temp directory here.")
+    curdir = os.getcwd()
+    tmpdir = tempfile.mkdtemp("", dir = "./")
+    os.chdir(tmpdir)
+    resJob = self.runJob(job, jobName)
+    os.chdir(curdir)
+    if not resJob['OK']:
+      return resJob
+    os.chdir(curdir)
+    cleanup(tmpdir)
     return S_OK()
 
   def run(self):
     """submit and run all the tests in jobList"""
 
-    from DIRAC import gConfig
-
-    if self.clip.submitMode == "local":
-      self.log.notice("I will run the tests locally.")
-      localarea = gConfig.getValue("/LocalSite/LocalArea", "")
-      if not localarea:
-        self.log.error("You need to have /LocalSite/LocalArea defined in your dirac.cfg")
-        return S_ERROR()
-
-      if localarea.find("/afs") == 0:
-        self.log.error("Don't set /LocalSite/LocalArea set to /afs/... as you'll get to install there")
-        self.log.error("check ${HOME}/.dirac.cfg")
-        return S_ERROR()
-
-    curdir = os.getcwd()
-    if self.clip.submitMode == "local":
-      self.log.notice("To run locally, I will create a temp directory here.")
-      tmpdir = tempfile.mkdtemp("", dir = "./")
-      os.chdir(tmpdir)
-
     for name, finjob in self.jobList.iteritems():
-      self.log.notice("############################################################")
-      self.log.notice(" Running job: %s " % name)
-      self.log.notice("\n\n")
-      res = finjob.submit(self.diracInstance, mode = self.clip.submitMode)
-      if not res["OK"]:
-        self.log.error("Failed job:", res['Message'])
-        return S_ERROR()
-      if self.clip.submitMode == "local":
-        cleanup()
-    if self.clip.submitMode == 'local':
-      self.log.notice("All good")
-    os.chdir(curdir)
+      if self.clip.submitMode == 'local':
+        res = self.runJobLocally(finjob, name)
+      else:
+        res = self.runJob(finjob, name)
+    return res
+
+  def runJob(self, finjob, name):
+    """runs or submits the job"""
+    self.log.notice("############################################################")
+    self.log.notice(" Running or submitting job: %s " % name)
+    self.log.notice("\n\n")
+    res = finjob.submit(self.diracInstance, mode = self.clip.submitMode)
+    if not res["OK"]:
+      self.log.error("Failed job:", res['Message'])
+      return S_ERROR()
     return S_OK()
+
 
   def checkForTests(self):
     """check which tests to run"""
