@@ -86,13 +86,17 @@ def createReplication( targetSE, sourceSE, prodID, datatype):
   trans.setLongDescription( description )
   trans.setType( 'Replication' )
   trans.setPlugin( 'Broadcast' )
-  trans.setSourceSE( sourceSE )
-  trans.setTargetSE( targetSE )
+  res = trans.setSourceSE( sourceSE )
+  if not res['OK']:
+    exit(1)
+  res = trans.setTargetSE( targetSE )
+  if not res['OK']:
+    exit(1)
 
   res = trans.addTransformation()
   if not res['OK']:
     gLogger.error(res['Message'])
-    exit(0)
+    exit(1)
   gLogger.verbose(res)
   trans.setStatus( 'Active' )
   trans.setAgentType( 'Automatic' )
