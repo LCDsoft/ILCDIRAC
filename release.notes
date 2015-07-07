@@ -1,3 +1,13 @@
+
+[v23-pre5]
+
+* Core
+NEW: Based on Dirac v6r12p44:
+
+* Interfaces:
+
+FIX: Cleanup of interfaces member variables, should be completely transparent for users
+
 [v23-pre3]
 
 * Core
