@@ -7,9 +7,6 @@ Created on May 18, 2015
 __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
-from types import ListType, DictType
-from DIRAC.Core.Utilities import uniqueElements
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
 VALIDDATATYPES = ('GEN','SIM','REC','DST')
 
