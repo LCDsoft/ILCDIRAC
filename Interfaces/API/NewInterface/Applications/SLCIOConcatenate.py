@@ -21,8 +21,8 @@ class SLCIOConcatenate(LCUtilityApplication):
   def __init__(self, paramdict = None):
 
     super(SLCIOConcatenate, self).__init__( paramdict)
-    if not self.Version:
-      self.Version = 'HEAD'
+    if not self.version:
+      self.version = 'HEAD'
     self._modulename = "LCIOConcatenate"
     self.appname = 'lcio'
     self._moduledescription = 'Helper call to concatenate SLCIO files'
@@ -33,7 +33,7 @@ class SLCIOConcatenate(LCUtilityApplication):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('debug',                       self.Debug)
+    moduleinstance.setValue('debug',                       self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -53,7 +53,7 @@ class SLCIOConcatenate(LCUtilityApplication):
     """ Checks that all needed parameters are set
     """
 
-    if not self.OutputFile and self._jobtype =='User' :
+    if not self.outputFile and self._jobtype =='User' :
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self._log.notice('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 

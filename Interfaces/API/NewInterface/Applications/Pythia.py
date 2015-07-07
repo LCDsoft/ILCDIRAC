@@ -19,7 +19,7 @@ class Pythia(LCApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.EvtType = ''
+    self.eventType = ''
     super(Pythia, self).__init__( paramdict )
     self.appname = 'pythia'
     self._modulename = 'PythiaAnalysis'
@@ -50,23 +50,23 @@ class Pythia(LCApplication):
     return S_OK()
 
   def _checkConsistency(self):
-    if not self.Version:
+    if not self.version:
       return S_ERROR("Version not specified")
 
     #Resolve event type, needed for production jobs
-    self.EvtType = self.Version.split("_")[0]
+    self.eventType = self.version.split("_")[0]
 
-    if not self.NbEvts:
+    if not self.numberOfEvents:
       return S_ERROR("Number of events to generate not defined")
 
-    if not self.OutputFile:
+    if not self.outputFile:
       return S_ERROR("Output File not defined")
 
     if not self._jobtype == 'User':
       if not self.willBeCut:
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                    "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nbevts'] = self.NbEvts
-      self.prodparameters['Process'] = self.EvtType
+      self.prodparameters['nbevts'] = self.numberOfEvents
+      self.prodparameters['Process'] = self.eventType
 
     return S_OK()

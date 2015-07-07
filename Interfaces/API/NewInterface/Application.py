@@ -22,8 +22,8 @@ class Application(object):
   def __init__(self, paramdict = None):
     """ Can define the full application by passing a dictionary in the constructor.
     
-    >>> app = Application({"Name":"marlin","Version":"v0111Prod",
-    ...                    "SteeringFile":"My_file.xml","NbEvts":1000})
+    >>> app = Application({"appname":"marlin","version":"v0111Prod",
+    ...                    "steeringFile":"My_file.xml","numberOfEvents":1000})
     
     @param paramdict: Dictionary of parameters that can be set. Will throw an exception if one of them does not exist.
     @type paramdict: dict
@@ -33,24 +33,24 @@ class Application(object):
     #application nane (executable)
     self.appname = ""
     #application version
-    self.Version = ""
+    self.version = ""
     #Steering file (duh!)
-    self.SteeringFile = ""
+    self.steeringFile = ""
     #Input sandbox: steering file automatically added to SB
     self.inputSB = []
     #Input file
-    self.InputFile = ""
+    self.inputFile = ""
     #Output file
-    self.OutputFile = ""
-    self.OutputPath = ""
-    self.OutputDstFile = ''
+    self.outputFile = ""
+    self.outputPath = ""
+    self.outputDstFile = ''
     self.outputDstPath = ''
-    self.OutputRecFile = ''
-    self.outputRecPath = ''    
-    self.OutputSE = ''
+    self.outputRecFile = ''
+    self.outputRecPath = ''
+    self.outputSE = ''
     self._listofoutput = []
     #Log file
-    self.LogFile = ""
+    self.logFile = ""
 
     #Detector type (ILD or SID)
     self.detectortype = ""
@@ -58,13 +58,13 @@ class Application(object):
     self.datatype = ""
 
     #Extra command line arguments
-    self.ExtraCLIArguments = ""
+    self.extraCLIArguments = ""
     
     ##Needed for Generation+Stdhepcut
     self.willBeCut = False
     
     ##Debug mode
-    self.Debug = False
+    self.debug = False
     
     #Prod Parameters: things that appear on the prod details
     self.prodparameters = {}
@@ -100,15 +100,15 @@ class Application(object):
                              "_jobsteps", "_jobapps", "_job", "_platform", "_importLocation",
                              "_moduledescription", "_modulename", "prodparameters",
                              "datatype", "detectortype", "_listofoutput", "inputSB",
-                             "appname", 'accountInProduction', 'OutputPath']
+                             "appname", 'accountInProduction', 'outputPath']
     
     ### Next is to use the setattr method.
     self._setparams(paramdict)
   
   def __repr__(self):
     classstr  = "%s" % self.appname
-    if self.Version:
-      classstr += " %s" % self.Version
+    if self.version:
+      classstr += " %s" % self.version
     return classstr
   
   def _setparams(self, params):
@@ -153,7 +153,7 @@ class Application(object):
     @type version: string
     """
     self._checkArgs({ 'version' : types.StringTypes } )
-    self.Version = version
+    self.version = version
     return S_OK()  
     
   def setSteeringFile(self, steeringfile):
@@ -163,7 +163,7 @@ class Application(object):
     @type steeringfile: string
     """
     self._checkArgs({ 'steeringfile' : types.StringTypes } )
-    self.SteeringFile = steeringfile
+    self.steeringFile = steeringfile
     if os.path.exists(steeringfile) or steeringfile.lower().count("lfn:"):
       self.inputSB.append(steeringfile) 
     return S_OK()  
@@ -175,7 +175,7 @@ class Application(object):
     @type logfile: string
     """
     self._checkArgs({ 'logfile' : types.StringTypes } )
-    self.LogFile = logfile
+    self.logFile = logfile
     return S_OK()  
   
     
@@ -189,7 +189,7 @@ class Application(object):
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
     
-    self.OutputFile = ofile
+    self.outputFile = ofile
     self.prodparameters[ofile] = {}
     if self.detectortype:
       self.prodparameters[ofile]['detectortype'] = self.detectortype
@@ -198,7 +198,7 @@ class Application(object):
     
     if path:
       self._checkArgs({ 'path' : types.StringTypes } )
-      self.OutputPath = path
+      self.outputPath = path
       
     return S_OK()
   
@@ -210,7 +210,7 @@ class Application(object):
   
     """
     self._checkArgs({ 'se' : types.StringTypes } )
-    self.OutputSE = se
+    self.outputSE = se
     return S_OK()
   
   def setInputFile(self, inputfile):
@@ -228,7 +228,7 @@ class Application(object):
       if os.path.exists(inf) or inf.lower().count("lfn:"):
         self.inputSB.append(inf)
         
-    self.InputFile = ";".join(inputfile)
+    self.inputFile = ";".join(inputfile)
 
     return S_OK()
   
@@ -255,14 +255,14 @@ class Application(object):
     @type debug: bool
     """
     self._checkArgs({ "debug": types.BooleanType} )
-    self.Debug = debug
+    self.debug = debug
     return S_OK()
 
   def setExtraCLIArguments(self, arguments):
     """ Pass any CLI argument as a string to the application
     """
     self._checkArgs({ "arguments": types.StringTypes} )
-    self.ExtraCLIArguments = arguments
+    self.extraCLIArguments = arguments
     return S_OK()
 
   def listAttributes(self):
@@ -423,12 +423,12 @@ class Application(object):
     stepdefinition.addParameter(Parameter("ExtraCLIArguments",     "", "string", "", "", False, False, "Extra CLI arguments"))
     stepdefinition.addParameter(Parameter("InputFile",          "", "string", "", "",  True, False, "Input File"))
     
-    if len(self.OutputFile):
+    if len(self.outputFile):
       stepdefinition.addParameter(Parameter("OutputFile",       "", "string", "", "", False,  False, "Output File"))
-    if len(self.OutputDstFile):
+    if len(self.outputDstFile):
       stepdefinition.addParameter(Parameter("outputDST",        "", "string", "", "", False,  False, 
                                             "Output DST File"))
-    if len(self.OutputRecFile):
+    if len(self.outputRecFile):
       stepdefinition.addParameter(Parameter("outputREC",       "", "string", "", "",  False,  False, 
                                             "Output REC File"))
       
@@ -459,24 +459,24 @@ class Application(object):
     """
         
     stepinstance.setValue("applicationName",    self.appname)
-    stepinstance.setValue("applicationVersion", self.Version)
-    stepinstance.setValue("applicationLog",     self.LogFile)
-    stepinstance.setValue("SteeringFile",       self.SteeringFile)
+    stepinstance.setValue("applicationVersion", self.version)
+    stepinstance.setValue("applicationLog",     self.logFile)
+    stepinstance.setValue("SteeringFile",       self.steeringFile)
     if not self._inputapp:
-      stepinstance.setValue("InputFile",        self.InputFile)
-    
-    if len(self.OutputFile):  
-      stepinstance.setValue("OutputFile",       self.OutputFile)
-    if len(self.OutputRecFile):  
-      stepinstance.setValue("outputREC",        self.OutputRecFile)
-    if len(self.OutputDstFile):  
-      stepinstance.setValue("outputDST",        self.OutputDstFile)
-    stepinstance.setValue("OutputPath",         self.OutputPath)
+      stepinstance.setValue("InputFile",        self.inputFile)
+
+    if len(self.outputFile):
+      stepinstance.setValue("OutputFile",       self.outputFile)
+    if len(self.outputRecFile):
+      stepinstance.setValue("outputREC",        self.outputRecFile)
+    if len(self.outputDstFile):
+      stepinstance.setValue("outputDST",        self.outputDstFile)
+    stepinstance.setValue("OutputPath",         self.outputPath)
     stepinstance.setValue("outputPathREC",      self.outputRecPath)
     stepinstance.setValue("outputPathDST",      self.outputDstPath)
-    stepinstance.setValue("OutputSE",           self.OutputSE)
+    stepinstance.setValue("OutputSE",           self.outputSE)
     stepinstance.setValue('listoutput',         self._listofoutput)
-    stepinstance.setValue('ExtraCLIArguments',  urllib.quote(self.ExtraCLIArguments))
+    stepinstance.setValue('ExtraCLIArguments',  urllib.quote(self.extraCLIArguments))
     return self._setSpecificAppParameters(stepinstance)
 
   def _setSpecificAppParameters(self, stepinstance):

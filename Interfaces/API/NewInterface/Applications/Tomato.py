@@ -22,9 +22,9 @@ class Tomato(LCApplication):
   """
   def __init__(self, paramdict = None):
 
-    self.LibTomato = ''
+    self.libTomato = ''
     super(Tomato, self).__init__( paramdict )
-    self.Version = self.Version if self.Version else 'HEAD'
+    self.version = self.version if self.version else 'HEAD'
     self._modulename = "TomatoAnalysis"
     self.appname = 'tomato'
     self._moduledescription = 'Helper Application over Marlin reconstruction'
@@ -38,7 +38,7 @@ class Tomato(LCApplication):
     """
     self._checkArgs( { 'libTomato' : types.StringTypes } )
 
-    self.LibTomato = libTomato
+    self.libTomato = libTomato
     return S_OK()
 
 
@@ -50,8 +50,8 @@ class Tomato(LCApplication):
 
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue('libTomato',     self.LibTomato)
-    moduleinstance.setValue('debug',         self.Debug)
+    moduleinstance.setValue('libTomato',     self.libTomato)
+    moduleinstance.setValue('debug',         self.debug)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -71,15 +71,11 @@ class Tomato(LCApplication):
     """ Checks that all needed parameters are set
     """
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR("You need to specify which version of Marlin to use.")
 
-    if not self.LibTomato :
+    if not self.libTomato :
       self._log.info('Tomato library not given. It will run without it')
-
-    #res = self._checkRequiredApp()
-    #if not res['OK']:
-    #  return res
 
     return S_OK()
 

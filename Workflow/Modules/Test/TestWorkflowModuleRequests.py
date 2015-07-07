@@ -5,7 +5,7 @@ Test generateFailoverFile
 """
 __RCSID__ = "$Id$"
 #pylint: disable=W0212,R0904
-import unittest, copy, os
+import unittest, copy, os, shutil
 from mock import MagicMock as Mock
 
 from DIRAC import gLogger, S_ERROR, S_OK
@@ -29,7 +29,7 @@ gLogger.showHeaders(True)
 class ModulesTestCase ( unittest.TestCase ):
   """ ILCDirac version of Workflow module tests"""
 
-  def setUp( self ):
+  def setUp( self ): #pylint: disable=R0915
     """Set up the objects"""
     self.log = gLogger.getSubLogger("MODULEBASE")
 
@@ -171,33 +171,84 @@ class ModulesTestCase ( unittest.TestCase ):
     self.step_number = '321'
     self.step_id = '%s_%s_%s' % ( self.prod_id, self.prod_job_id, self.step_number )
 
-    self.mb = ModuleBase()
-    self.mb.rm = self.rm_mock
-    self.mb.request = self.rc_mock
-    self.mb.jobReport = self.jr_mock
-    self.mb.fileReport = self.fr_mock
-    self.mb.workflow_commons = self.wf_commons[0]
-    self.mb.workflow_commons['LogFilePath'] = "/ilc/user/s/sailer/test/dummy/folder"
-    self.mb.workflow_commons['Platform'] = "x86_64-slc5-gcc43-opt"
-    self.mb.log = gLogger.getSubLogger("ModuleBaseTest")
-    self.mb.log.showHeaders(True)
-    self.mb.ignoreapperrors = False
+    self.mbase = ModuleBase()
+    self.mbase.rm = self.rm_mock
+    self.mbase.request = self.rc_mock
+    self.mbase.jobReport = self.jr_mock
+    self.mbase.fileReport = self.fr_mock
+    self.mbase.workflow_commons = self.wf_commons[0]
+    self.mbase.workflow_commons['LogFilePath'] = "/ilc/user/s/sailer/test/dummy/folder"
+    self.mbase.workflow_commons['Platform'] = "x86_64-slc5-gcc43-opt"
+    self.mbase.log = gLogger.getSubLogger("ModuleBaseTest")
+    self.mbase.log.showHeaders(True)
+    self.mbase.ignoreapperrors = False
     self.uod = UploadOutputData()
-    self.uod.workflow_commons = self.mb.workflow_commons
+    self.uod.workflow_commons = self.mbase.workflow_commons
 
-    self.fr = FailoverRequest()
-    self.fr.workflow_commons = self.mb.workflow_commons
+    self.freq = FailoverRequest()
+    self.freq.workflow_commons = self.mbase.workflow_commons
 
     self.ulf = UploadLogFile()
 
+    ### create some dummy files
+    for i in xrange(0,8):
+      path="h_nunu_gen_4191_000%s.stdhep" % str(i)
+      with open(path, 'a'):
+        pass
+    path="test3.stdhep"
+    with open(path, 'a'):
+      pass
 
+        
+  def tearDown( self ):
+    removeFile = ["E1000-B1b_ws.Ptth-ln4q-hnonbb.eL.pR.Gphyssim_dbd-01-01.I106411_3evt.stdhep",
+                  "README",
+                  "GearOutput.xml",
+                  "PandoraLikelihoodData9EBin.xml",
+                  "PandoraSettingsDefault.xml",
+                  "PandoraSettingsMuon.xml",
+                  "PandoraSettings_README.txt",
+                  "bbudsc_3evt.g4macro",
+                  "bbudsc_3evt.stdhep",
+                  "bbudsc_3evt.steer",
+                  "bbudsc_3evt_stdreco.xml",
+                  "bbudsc_3evt_viewer.xml",
+                  "bbudsc_3evt_viewerDST.xml",
+                  "bg_aver.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.PBeamstr-pairs.I230000.root",
+                  "bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root",
+                  "particle.tbl",
+                  "None_12345_request.json",
+                  "0_0_request.json",
+                  "h_nunu_gen_4191_0000.stdhep",
+                  "h_nunu_gen_4191_0001.stdhep",
+                  "h_nunu_gen_4191_0002.stdhep",
+                  "h_nunu_gen_4191_0003.stdhep",
+                  "h_nunu_gen_4191_0004.stdhep",
+                  "h_nunu_gen_4191_0005.stdhep",
+                  "h_nunu_gen_4191_0006.stdhep",
+                  "h_nunu_gen_4191_0007.stdhep",
+                  "test3.stdhep",
+                  ]
+    removeDirs = ["my", "job"]
+    for tempFile in removeFile:
+      try:
+        os.remove(tempFile)
+      except OSError:
+        pass
+
+    for tempDir in removeDirs:
+      try:
+        shutil.rmtree(tempDir)
+      except OSError:
+        pass
+
+        
 class TestModuleBase( ModulesTestCase ):
   """ Tests for ModuleBase functions"""
-
     
   def test_generateFailoverFile( self ):
     """run the generateFailoverFile function and see what happens"""
-    dummy_res = self.mb.generateFailoverFile()
+    dummy_res = self.mbase.generateFailoverFile()
     #print res
 
   def test_CreateRemoveRequest( self ):
@@ -226,7 +277,8 @@ class TestModuleBase( ModulesTestCase ):
                   '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0006.stdhep',
                   '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0007.stdhep']
     dummy_fileMask = None
-    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    print result
     resDict = [ os.path.basename(lfn) in result['Value'] for lfn in outputLFNs ]
     gLogger.debug("Result: %s" % result)
     gLogger.debug("ResDict: %s" % resDict)
@@ -238,7 +290,7 @@ class TestModuleBase( ModulesTestCase ):
     outputList = {'h_nunu_gen_4191_NSF': {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'h_nunu_gen_4191_NSF.stdhep', 'outputDataSE': 'CERN-SRM'}}.values()
     outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_NSF.stdhep']
     dummy_fileMask = None
-    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
     self.assertTrue( "Output Data Not Found" in result['Message'] )
 
   def test_MB_getCandidateFiles_FileTooLong( self ):
@@ -247,7 +299,7 @@ class TestModuleBase( ModulesTestCase ):
     outputList = {'a'*128: {'outputPath': '/ilc/prod/clic/1.4tev/h_nunu/gen', 'outputFile': 'a'*128, 'outputDataSE': 'CERN-SRM'}}.values()
     outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/'+'a'*128]
     dummy_fileMask = None
-    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
     self.assertTrue( "Filename too long" in result['Message'] )
 
   def test_MB_getCandidateFiles_PathTooLong( self ):
@@ -256,21 +308,21 @@ class TestModuleBase( ModulesTestCase ):
     outputList = {'a'*127: {'outputPath': '/bbbbbbbbbb'*26, 'outputFile': 'a'*127, 'outputDataSE': 'CERN-SRM'}}.values()
     outputLFNs = ['/bbbbbbbbbb'*26+'/'+'a'*127]
     dummy_fileMask = None
-    result = self.mb.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
+    result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
     self.assertTrue( "LFN too long" in result['Message'] )
 
   def test_MB_logWorkingDirectory( self ):
     """ModuleBase: logWorkingDirectory.............................................................."""
     gLogger.setLevel("ERROR")
-    self.mb.logWorkingDirectory()
+    self.mbase.logWorkingDirectory()
 
 
   def test_MB_treatILDConfigPackage( self ):
     """ModuleBase: treatILDConfigPackage............................................................"""
     gLogger.setLevel("ERROR")
-    self.mb.platform = self.mb.workflow_commons.get('Platform', self.mb.platform)
-    self.mb.workflow_commons['ILDConfigPackage'] = "ILDConfigv01-16-p03"
-    res = self.mb.treatILDConfigPackage()
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['ILDConfigPackage'] = "ILDConfigv01-16-p03"
+    res = self.mbase.treatILDConfigPackage()
     self.assertTrue(res['OK'])
 
 #############################################################################
@@ -283,7 +335,7 @@ class TestUploadLogFile( ModulesTestCase ):
   def test_ULF_ASI_NoLogFiles( self ):
     """ULF.applicationSpecificInputs: no log files present.........................................."""
     self.ulf = UploadLogFile()
-    self.ulf.workflow_commons = copy.deepcopy(self.mb.workflow_commons)
+    self.ulf.workflow_commons = copy.deepcopy(self.mbase.workflow_commons)
     self.ulf.log = gLogger.getSubLogger("ULF-NoLogFiles")
     self.ulf.log.setLevel("INFO")
 
@@ -340,8 +392,8 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
                                                          Message="Ekke Ekke Ekke Ekke")))
-    self.mb.workflow_commons['Request']  = Request()
-    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
+    self.mbase.workflow_commons['Request']  = Request()
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mbase.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf.applicationSpecificInputs()
@@ -352,14 +404,14 @@ class TestUploadLogFile( ModulesTestCase ):
   def test_ULF_finalize_move( self ):
     """ULF.Finalize: move to new folder............................................................."""
     gLogger.setLevel("ERROR")
-    self.ulf.workflow_commons = copy.deepcopy(self.mb.workflow_commons)
+    self.ulf.workflow_commons = copy.deepcopy(self.mbase.workflow_commons)
     self.ulf.log = gLogger.getSubLogger("ULF-FinalMove")
     self.ulf.jobID = 12345
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     #self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],
     #                                                     Message="Ekke Ekke Ekke Ekke")))
-    self.mb.workflow_commons['Request']  = Request()
-    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mb.workflow_commons['Request'],
+    self.mbase.workflow_commons['Request']  = Request()
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mbase.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf.logFilePath = self.ulf.workflow_commons['LogFilePath']
@@ -737,7 +789,7 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.jobID = 12345
     from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
     FailoverTransfer.transferAndRegisterFile = Mock(return_value=S_ERROR("IT ACTUALLY WORKS!!!!!!1eleven!!"))
-    resUodExe = self.uod.execute()
+    _resUodExe = self.uod.execute()
     res = self.uod.generateFailoverFile( )
     self.uod.log.info("RequestValidation: %s " % res)
 

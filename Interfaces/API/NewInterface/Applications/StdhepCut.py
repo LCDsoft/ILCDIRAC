@@ -23,10 +23,10 @@ class StdhepCut(LCApplication):
 
   """
   def __init__(self, paramdict = None):
-    self.MaxNbEvts = 0
-    self.NbEvtsPerFile = 0
-    self.SelectionEfficiency = 0
-    self.InlineCuts = ""
+    self.maxNumberOfEvents = 0
+    self.numberOfEventsPerFile = 0
+    self.selectionEfficiency = 0
+    self.inlineCuts = ""
     super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'
@@ -41,7 +41,7 @@ class StdhepCut(LCApplication):
     @type nbevts: int
     """
     self._checkArgs( { 'nbevts' : types.IntType } )
-    self.MaxNbEvts = nbevts
+    self.maxNumberOfEvents = nbevts
 
   def setNbEvtsPerFile(self, nbevts):
     """ Number of events per file (not used)
@@ -50,7 +50,7 @@ class StdhepCut(LCApplication):
     @type nbevts: int
     """
     self._checkArgs( { 'nbevts' : types.IntType } )
-    self.NbEvtsPerFile = nbevts
+    self.numberOfEventsPerFile = nbevts
 
   def setSelectionEfficiency(self, efficiency):
     """ Selection efficiency of your cuts, needed to determine the number of files that will be created
@@ -59,7 +59,7 @@ class StdhepCut(LCApplication):
     @type efficiency: float
     """
     self._checkArgs( { 'efficiency' : types.FloatType } )
-    self.SelectionEfficiency = efficiency
+    self.selectionEfficiency = efficiency
 
   def setInlineCuts(self, cutsstring):
     """ Define cuts directly, not by specifying a file
@@ -68,7 +68,7 @@ class StdhepCut(LCApplication):
     """
     self._checkArgs( { 'cutsstring' : types.StringTypes } )
 
-    self.InlineCuts = ";".join([cut.rstrip().lstrip() for cut in cutsstring.rstrip().lstrip().split("\n")])
+    self.inlineCuts = ";".join([cut.strip() for cut in cutsstring.strip().split("\n")])
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -79,9 +79,9 @@ class StdhepCut(LCApplication):
     return m1
 
   def _applicationModuleValues(self, moduleinstance):
-    moduleinstance.setValue("MaxNbEvts", self.MaxNbEvts)
-    moduleinstance.setValue("debug",     self.Debug)
-    moduleinstance.setValue("inlineCuts", self.InlineCuts )
+    moduleinstance.setValue("MaxNbEvts", self.maxNumberOfEvents)
+    moduleinstance.setValue("debug",     self.debug)
+    moduleinstance.setValue("inlineCuts", self.inlineCuts )
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -98,26 +98,26 @@ class StdhepCut(LCApplication):
     return S_OK()
 
   def _checkConsistency(self):
-    if not self.SteeringFile and not self.InlineCuts:
+    if not self.steeringFile and not self.inlineCuts:
       return S_ERROR("Cuts not specified")
-    if self.SteeringFile and self.InlineCuts:
+    if self.steeringFile and self.inlineCuts:
       self._log.notice("You specifed a cuts file and InlineCuts. InlineCuts has precedence.")
     #elif not self.SteeringFile.lower().count("lfn:") and not os.path.exists(self.SteeringFile):
     # res = Exists(self.SteeringFile)
     # if not res['OK']:
     #   return res
 
-    if not self.MaxNbEvts:
+    if not self.maxNumberOfEvents:
       return S_ERROR("You did not specify how many events you need to keep per file (MaxNbEvts)")
 
-    if not self.SelectionEfficiency:
+    if not self.selectionEfficiency:
       return S_ERROR('You need to know the selection efficiency of your cuts')
 
     if not self._jobtype == 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
-      self.prodparameters['nbevts_kept'] = self.MaxNbEvts
-      self.prodparameters['cut_file'] = self.SteeringFile
+      self.prodparameters['nbevts_kept'] = self.maxNumberOfEvents
+      self.prodparameters['cut_file'] = self.steeringFile
 
     #res = self._checkRequiredApp() ##Check that job order is correct
     #if not res['OK']:
@@ -128,11 +128,11 @@ class StdhepCut(LCApplication):
   def _checkFinalConsistency(self):
     """ Final check of consistency: check that there are enough events generated
     """
-    if not self.NbEvts:
+    if not self.numberOfEvents:
       return S_ERROR('Please specify the number of events that will be generated in that step')
 
-    kept = self.NbEvts * self.SelectionEfficiency
-    if kept < 2*self.MaxNbEvts:
+    kept = self.numberOfEvents * self.selectionEfficiency
+    if kept < 2*self.maxNumberOfEvents:
       return S_ERROR("You don't generate enough events")
 
     return S_OK()

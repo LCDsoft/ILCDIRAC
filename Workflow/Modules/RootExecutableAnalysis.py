@@ -22,6 +22,7 @@ class RootExecutableAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "RootExecutableAnalysis" )
     self.applicationName = 'ROOT'
+    # from the interface
     self.script = ''
     self.arguments = ''
       
