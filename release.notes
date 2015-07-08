@@ -1,4 +1,15 @@
 
+[v23r0]
+
+* Core
+NEW: Based on Dirac v6r12p44:
+
+* Interfaces:
+FIX: Cleanup of interfaces member variables, should be completely transparent for users
+
+* Transformation
+FIX: Fixes for ILDProductionJob from C. Calancha (ILCDIRAC-413)
+
 [v23-pre5]
 
 * Core
