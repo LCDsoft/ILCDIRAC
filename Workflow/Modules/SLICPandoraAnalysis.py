@@ -7,7 +7,7 @@ Run SLICPandora
 '''
 __RCSID__ = "$Id$"
 
-import os, urllib, types
+import os, urllib
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 
@@ -29,45 +29,24 @@ class SLICPandoraAnalysis (ModuleBase):
     self.applicationName = 'SLICPandora'
     self.pandorasettings = ""
     self.detectorxml = ""
-    self.InputFile = []
-    self.NumberOfEvents = -1
     self.startFrom = 0
     self.eventstring = ['>>>>>> EVENT']
     self.log = gLogger.getSubLogger('SLICPandora')
-    
+
+
   def applicationSpecificInputs(self):
 
-    if self.step_commons.has_key("PandoraSettings"):
-      self.pandorasettings = self.step_commons["PandoraSettings"]
     if not self.pandorasettings:
       self.pandorasettings  = "PandoraSettings.xml"
-    else:
-      self.pandorasettings  = os.path.basename(self.pandorasettings)
-       
-    if self.step_commons.has_key("DetectorXML"):
-      self.detectorxml = self.step_commons["DetectorXML"]
 
-    if self.step_commons.has_key("inputSlcio"):
-      inputf = self.step_commons["inputSlcio"]
-      if not type(inputf) == types.ListType:
-        inputf = inputf.split(";")
-      self.InputFile = inputf
-        
-    if self.step_commons.has_key('EvtsToProcess'):
-      self.NumberOfEvents = self.step_commons['EvtsToProcess']
-          
-    if self.step_commons.has_key('startFrom'):
-      self.startFrom = self.step_commons['startFrom']
-      
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".slcio") > -1:
           self.InputFile.append(files)
-           
+
     return S_OK('Parameters resolved')
-  
-  
-  
+
+
   def runIt(self):
     """ Called from ModuleBase
     """

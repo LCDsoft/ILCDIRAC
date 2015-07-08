@@ -18,7 +18,7 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     """
     Make fake files for the test
     """
-    self.inputfile = "/ilc/prod/ilc/mc-dbd/generated/250-TDR_ws/higgs/qqh/0/v01-16-p10_250/00004343/000/rv01-16-p10_250.sv01-14-01-p00.E250-TDR_ws.I999.Pqqh_gen_4343_1_013.stdhep"
+    self.inputfile = "/ilc/prod/ilc/mc-dbd/generated/500-TDR_ws/6f_eeWW/v01-16-p05_500/00005160/000/E500-TDR_ws.I108640.P6f_eexyev.eL.pR_gen_5160_2_065.stdhep"
 
     self.inputfiles = [ self.inputfile, self.inputfile ]
     gLogger.setLevel("INFO")
@@ -30,11 +30,11 @@ class TestgetNumberOfEvents( unittest.TestCase ):
 
   def test_getNumberOfEvents(self):
     res = getNumberOfEvents(self.inputfiles)
-    self.assertEqual(res['Value']['nbevts'],400)
+    self.assertEqual(res['Value']['nbevts'],1000)
 
   def test_getNumberOfEvents_2(self):
     res = getNumberOfEvents([self.inputfile])
-    self.assertEqual(res['Value']['nbevts'],200)
+    self.assertEqual(res['Value']['nbevts'],500)
 
 
   def test_getNumberOfEvents_Fail(self):

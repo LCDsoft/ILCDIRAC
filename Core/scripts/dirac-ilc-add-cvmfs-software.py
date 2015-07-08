@@ -79,7 +79,7 @@ class Params(object):
     if 'mokka' in appListLower and not self.dbSliceLocation:
       return S_ERROR("Mokka in application list, but not dbSlice location given")
 
-    if 'ildconfig' in appListLower and not self.ildConfigPath:
+    if 'ildconfig' in appListLower and not self.ildConfigPath and not self.dbSliceLocation:
       return S_ERROR("ILDConfig in application list, but no location given")
 
     for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation ):
@@ -177,6 +177,7 @@ class CVMFSAdder(object):
       elif application == 'ildconfig':
         del csParameter['CVMFSEnvScript']
         csParameter['CVMFSPath'] = self.cliParams.ildConfigPath
+        csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
 
       resInsert = self.insertApplicationToCS(application, csParameter)
       if not resInsert['OK']:

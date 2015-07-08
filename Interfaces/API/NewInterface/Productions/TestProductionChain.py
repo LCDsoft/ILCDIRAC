@@ -7,12 +7,14 @@ __RCSID__ = "$Id$"
 #pylint: disable=C0103
 #pylint: skip-file
 from DIRAC.Core.Base import Script
-Script.parseCommandLine()
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard, Mokka, Marlin, OverlayInput, StdhepCut, StdhepCutJava
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC, LCSIM, SLICPandora, SLCIOSplit, StdHepSplit
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+
+
+from DIRAC import S_OK, S_ERROR
 
 dirac = DiracILC()
 
@@ -22,6 +24,63 @@ dirac = DiracILC()
 ##and the energy directly in the whizard def, but for clarity
 ## it's better to do it before, that way we know the very
 ##essential
+
+class Params(object):
+  """command line parameters to create test productions"""
+
+  def __init__(self):
+    self.knownModels = ['CLIC_ILD_CDR', 'ILD_o1_v05']
+
+    self.energy = 250
+    self.detectorModel = "CLIC_ILD_CDR"
+    self.outputSE = "CERN-DIP-4"
+    self.ildConfig = "CLICSteeringFilesV22"
+    self.onlyDestination = []
+    self.logLevel = "INFO"
+
+  def setDetectorModel(self, model):
+    if model not in self.knownModels:
+      return S_ERROR("Unknown detectormodel, use one of these %s " % (",".join(self.knownModels) ) )
+    self.detectorModel = model
+    return S_OK()
+
+  def setOutputSE(self, se):
+    self.outputSE = se
+    return S_OK()
+
+  def setILDConfig(self, config):
+    self.ildConfig = config
+    return S_OK()
+
+  def setOnlyDestination(self, dest):
+    if isinstance(dest, list):
+      self.onlyDestination = dest
+    elif ',' in dest:
+      self.onlyDestination = dest.split(',')
+    elif ' ' in dest:
+      self.onlyDestination = dest.split(' ')
+    return S_OK()
+
+  def setEnergy(self, energy):
+    self.energy = energy
+    return S_OK()
+
+  def setNumberOfEvents(self, numberOfEvents):
+    try:
+      numberOfEvents = int(numberOfEvents)
+    except ValueError as e:
+      return S_ERROR("ERROR: Number of events needs to be an integer: %s" % str(e) )
+    self.numberOfEvents = numberOfEvents
+    return S_OK()
+
+  def registerSwitches(self):
+    Script.registerSwitch( "O:", "OutputSE=",       "Output SE",                        self.setOutputSE )
+    Script.registerSwitch( "D:", "Destination=",    "Only send jobs to these CEs",      self.setOnlyDestination )
+    Script.registerSwitch( "M:", "DetectorModel=",  "DetectorModel: [%s]" % ", ".join(self.knownModels), self.setDetectorModel )
+    Script.registerSwitch( "C:", "Configuration=",  "Configuration with Steeringfiles", self.setILDConfig )
+    Script.registerSwitch( "E:", "Energy=",         "Energy",                           self.setEnergy )
+    Script.registerSwitch( "N:", "NumberOfEvents=", "Number of Events",                 self.setNumberOfEvents )
+    Script.setUsageMessage("%s [opts] extraName" % Script.scriptName)
 
 
 def getdicts(process):
@@ -44,14 +103,28 @@ def getdicts(process):
     plist.append({'process':process,'pname1':'e1', 'pname2':'E1', "epa_b1":'F', "epa_b2":'F', "isr_b1":'T', "isr_b2":'T'})
   return plist
 
+
+
+
+PARAMS = Params()
+PARAMS.registerSwitches()
+Script.parseCommandLine()
+extraargs= Script.getPositionalArgs()
+if len(extraargs) == 0:
+  print "ExtraName not defined"
+  exit(1)
+additional_name = extraargs[0]
+
+
+energy = PARAMS.energy
+
+
 ## tripleH, Hrecoil, stau, gauginos, Hmass, tt, Htautau, Hmumu, Hee, Hbbccmumu, squarks, LCFITraining, Hgammagamma
 ## HZgamma Hinclusive ZZfusion, Any, ttH, bb_cc_gg
 analysis = 'several'
 process = 'hzqq'
 #additional_name = '_neu1_356'
 globname = ""
-additional_name = '_TestV22_p7'
-energy = 250.
 meta_energy = str(int(energy))
 
 #For meta def
@@ -60,10 +133,13 @@ meta['ProdID']=1
 meta['EvtType']=process
 meta['Energy'] = meta_energy
 
-ILDCONFIG = "CLICSteeringFilesV22"
+#ILDCONFIG = "CLICSteeringFilesV22"
+ILDCONFIG = "v01-16-p10_250"
 SOFTWAREVERSION = "ILCSoft-01-17-06"
 
-detectormodel='' #Can be ILD_00 (and nothing else)
+ILDDetectorModels = ['ILD_o1_v05']
+
+detectormodel=PARAMS.detectorModel
 
 #Here get the prod list: initial particles combinasions
 prodlist = getdicts(process)
@@ -101,13 +177,17 @@ if activesplit:
 nbevtsperfile = 10
 
 #Do Reco
-ild_rec = True
+ild_rec = False
 sid_rec = False
 #Do Reco with Overlay
-ild_rec_ov = False
+ild_rec_ov = True
 sid_rec_ov = False
 
 n_events = 10
+#rodOutputSE = "PNNL3-SRM"
+prodOutputSE = PARAMS.outputSE
+onlyDestination = PARAMS.onlyDestination
+logLevel = PARAMS.logLevel
 
 model = 'sm'
 #model = 'susyStagedApproach'
@@ -267,6 +347,8 @@ for proddict in prodlist:
     print 'Detector Model for Mokka undefined for this energy'
   if detectormodel=='ild_00':
     mo.setSteeringFile("ild_00.steer")
+  if detectormodel=='ILD_o1_v05':
+    mo.setSteeringFile("bbudsc_3evt.steer")
 
 
   ##Simulation SID
@@ -308,6 +390,14 @@ for proddict in prodlist:
   else:
     print "Overlay ILD: No overlay parameters defined for this energy"
 
+  if detectormodel in (ILDDetectorModels):
+    overlay.setMachine("ilc_dbd")
+    overlay.setBackgroundType("aa_lowpt")
+    overlay.setBXOverlay(1)
+    overlay.setDetectorModel(detectormodel)
+    if energy == 250:
+      overlay.setGGToHadInt(0.3)
+    
   ##Reconstruction ILD with overlay
   mao = Marlin()
   mao.setDebug()
@@ -331,6 +421,9 @@ for proddict in prodlist:
     else:
       print "Marlin: No reconstruction suitable for this energy"
 
+  if detectormodel in ILDDetectorModels:
+    mao.setSteeringFile("bbudsc_3evt_stdreco.xml")
+    mao.setGearFile("GearOutput.xml")
 
   ##Reconstruction w/o overlay
   ma = Marlin()
@@ -421,8 +514,10 @@ for proddict in prodlist:
     ##########################################
     ##Define the generation production.
     pwh = ProductionJob()
-    pwh.setLogLevel("verbose")
-    pwh.setOutputSE("CERN-SRM")
+    pwh.setLogLevel(logLevel)
+    pwh.setOutputSE(prodOutputSE)
+    if onlyDestination:
+      pwh.setDestination(onlyDestination)
     pwh.setProdType("MCGeneration")
     wname = process+"_"+str(energy)
     if additionnalreqs:
@@ -472,13 +567,15 @@ for proddict in prodlist:
 
   if activesplitstdhep and meta:
     pstdhepsplit =  ProductionJob()
-    pstdhepsplit.setLogLevel("verbose")
+    pstdhepsplit.setLogLevel(logLevel)
     pstdhepsplit.setProdType('Split')
+    if onlyDestination:
+      pstdhepsplit.setDestination(onlyDestination)
     res = pstdhepsplit.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pstdhepsplit.setOutputSE("CERN-SRM")
+    pstdhepsplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
     pstdhepsplit.setWorkflowName(wname)
@@ -515,14 +612,16 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     pmo = ProductionJob()
-    pmo.setLogLevel("verbose")
+    pmo.setLogLevel(logLevel)
+    if onlyDestination:
+      pmo.setDestination(onlyDestination)
     pmo.setProdType('MCSimulation')
     pmo.setConfig(ILDCONFIG)
     res = pmo.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pmo.setOutputSE("CERN-SRM")
+    pmo.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_sim"
     wname += prod_name
     pmo.setWorkflowName(wname)
@@ -559,13 +658,15 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     psl = ProductionJob()
-    psl.setLogLevel("verbose")
+    psl.setLogLevel(logLevel)
     psl.setProdType('MCSimulation')
+    if onlyDestination:
+      psl.setDestination(onlyDestination)
     res = psl.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psl.setOutputSE("CERN-SRM")
+    psl.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_sim"
     wname += prod_name
     psl.setWorkflowName(wname)
@@ -598,16 +699,18 @@ for proddict in prodlist:
   if activesplit and meta:
     #######################
     ## Split the input files.
-    psplit =  ProductionJob()
+    psplit = ProductionJob()
     psplit.setCPUTime(30000)
-    psplit.setLogLevel("verbose")
+    if onlyDestination:
+      psplit.setDestination(onlyDestination)
+    psplit.setLogLevel(logLevel)
     psplit.setProdType('Split')
     psplit.setDestination("LCG.CERN.ch")
     res = psplit.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psplit.setOutputSE("CERN-SRM")
+    psplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
     psplit.setWorkflowName(wname)
@@ -641,14 +744,16 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pma = ProductionJob()
-    pma.setLogLevel("verbose")
+    pma.setLogLevel(logLevel)
     pma.setProdType('MCReconstruction')
     pma.setConfig(ILDCONFIG)
+    if onlyDestination:
+      pma.setDestination(onlyDestination)
     res = pma.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pma.setOutputSE("CERN-SRM")
+    pma.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec"
     wname += prod_name
     pma.setWorkflowName(wname)
@@ -683,14 +788,16 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidrec = ProductionJob()
-    psidrec.setLogLevel("verbose")
+    psidrec.setLogLevel(logLevel)
     psidrec.setProdType('MCReconstruction')
     psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
+    if onlyDestination:
+      psidrec.setDestination(onlyDestination)
     res = psidrec.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psidrec.setOutputSE("CERN-SRM")
+    psidrec.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec"
     wname += prod_name
     psidrec.setWorkflowName(wname)
@@ -729,13 +836,15 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pmao = ProductionJob()
-    pmao.setLogLevel("verbose")
+    pmao.setLogLevel(logLevel)
     pmao.setProdType('MCReconstruction_Overlay')
+    if onlyDestination:
+      pmao.setDestination(onlyDestination)
     res = pmao.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    pmao.setOutputSE("CERN-SRM")
+    pmao.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec_overlay"
     wname += prod_name
     pmao.setWorkflowName(wname)
@@ -775,14 +884,16 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidreco = ProductionJob()
-    psidreco.setLogLevel("verbose")
+    psidreco.setLogLevel(logLevel)
     psidreco.setProdType('MCReconstruction_Overlay')
     psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
+    if onlyDestination:
+      psidreco.setDestination(onlyDestination)
     res = psidreco.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
       exit(1)
-    psidreco.setOutputSE("CERN-SRM")
+    psidreco.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec_overlay"
     wname += prod_name
     psidreco.setWorkflowName(wname)

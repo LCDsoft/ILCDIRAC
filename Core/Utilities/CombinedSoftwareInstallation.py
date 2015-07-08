@@ -316,7 +316,7 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   return fcn_env(platform, appname, appversion)
 
 def checkCVMFS(platform, app):
-  """ Check the existence of the CVMFS path, returns S_OK tupe of path and envscript
+  """ Check the existence of the CVMFS path, returns S_OK tuple of path and envscript
   """
   name, version = app
   csPath = "/AvailableTarBalls/%s/%s/%s" % (platform, name, version)

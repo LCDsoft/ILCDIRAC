@@ -31,6 +31,31 @@ class ILDProductionJob( ProductionJob ):
         self.compatmeta = {}
         self.processID = 0
         self.evtclass = ''
+        self.evttype = ''
+        self.genprocname = ''
+        self.usesofttag = False
+
+    def setEvtClass( self, evtclass ):
+        """ Sometimes we used different evtclass in the sim/reco files than the original in the stdhep
+        """
+        self.evtclass = evtclass
+
+    def setEvtType( self, evttype ):
+        """ EvtType missing in input lfn: i have no privileges to set metadata on those files
+        """
+        self.evttype = evttype
+
+    def setGenProcName( self, genprocname ):
+        """ ILD convention add gen process name in the basename of LFN's
+        """
+        self.genprocname = genprocname
+
+    def setUseSoftTagInPath( self, usesoft = True):
+        """ At DBD simulation uses a lower ilcsoftware version than reconstruction
+            That version is included in the path
+        """
+        self.usesofttag = usesoft
+
     def setILDConfig( self, version ):
         """ This is because in the ProductionJob, it's called Config
         """
@@ -41,6 +66,10 @@ class ILDProductionJob( ProductionJob ):
         """
         metakeys = metadata.keys()
         res = self.fc.getMetadataFields()
+
+        for k,v in metadata.items():
+            print "[0] meta[%s] %s"%(k,v)
+
         if not res['OK']:
             print "Could not contact File Catalog"
             return S_ERROR()
@@ -66,17 +95,20 @@ class ILDProductionJob( ProductionJob ):
             res = self.fc.getDirectoryUserMetadata( mdir )
             if not res['OK']:
                 return self._reportError( "Error looking up the catalog for directory metadata" )
-            compatmeta = res['Value']
+            compatmeta = res['Value'] # this reset compatmeta for each iteration (do we want this?)
             compatmeta.update( metadata )
         
         # get all the files available, if any
         res = self.fc.findFilesByMetadata( metadata, '/ilc/prod/ilc' )
         if not res['OK']:
             return self._reportError( "Could not find the files with this metadata" )
+
+
         if len( res['Value'] ):
             my_lfn = res['Value'][0]
             # #Get the meta data of the first one as it should be enough is the registration was 
             # # done right
+
             res = self.fc.getFileUserMetadata( my_lfn )
             if not res['OK']:
                 return self._reportError( 'Failed to get file metadata, cannot build filename' )
@@ -84,22 +116,29 @@ class ILDProductionJob( ProductionJob ):
         
         self.log.verbose( "Using %s to build path" % str( compatmeta ) )
         if compatmeta.has_key( 'EvtClass' ):
-            if type( compatmeta['EvtClass'] ) in types.StringTypes:
+            if type( compatmeta['EvtClass'] ) in types.StringTypes and not self.evtclass:
                 self.evtclass = compatmeta['EvtClass']
-            if type( compatmeta['EvtClass'] ) == type( [] ):
+            if type( compatmeta['EvtClass'] ) == type( [] ) and not self.evtclass:
                 self.evtclass = compatmeta['EvtClass'][0]
         if compatmeta.has_key( 'EvtType' ):
-            if type( compatmeta['EvtType'] ) in types.StringTypes:
+            if type( compatmeta['EvtType'] ) in types.StringTypes and not self.evttype:
                 self.evttype = compatmeta['EvtType']
-            if type( compatmeta['EvtType'] ) == type( [] ):
+            if type( compatmeta['EvtType'] ) == type( [] ) and not self.evttype:
                 self.evttype = compatmeta['EvtType'][0]
-        elif compatmeta.has_key( 'GenProcessName' ):
-            if type( compatmeta['GenProcessName'] ) in types.StringTypes:
-                self.evttype = compatmeta['GenProcessName']
-            if type( compatmeta['GenProcessName'] ) == type( [] ):
-                self.evttype = compatmeta['GenProcessName'][0]            
-        else:
-            return self._reportError( "EvtType is not in the metadata, it has to be!" )
+        elif compatmeta.has_key( 'GenProcessType' ):
+            if type( compatmeta['GenProcessType'] ) in types.StringTypes and not self.evttype:
+                self.evttype = compatmeta['GenProcessType']
+            if type( compatmeta['GenProcessType'] ) == type( [] ) and not self.evttype:
+                self.evttype = compatmeta['GenProcessType'][0]
+        elif not self.evttype:
+            return self._reportError( "Neither EvtType nor GenProcessType are in the metadata: if you dont set app evttype with setEvtType at least one should be " )
+
+        if 'GenProcessName' in compatmeta:
+            self.genprocname = compatmeta['GenProcessName']
+
+        if not self.genprocname:
+            return self._reportError( "GenProcessName is missing! It should appear in the basename")
+
         if 'GenProcessID' in compatmeta:
             if type( compatmeta['GenProcessID'] ) == type( 2L ):
                 self.processID = compatmeta['GenProcessID']
@@ -209,12 +248,11 @@ class ILDProductionJob( ProductionJob ):
     def _jobSpecificParams( self, application ):
         """ For production additional checks are needed: ask the user
         """
-
         if self.created:
             return S_ERROR( "The production was created, you cannot add new applications to the job." )
 
-        if not application.LogFile:
-            logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
+        if not application.logFile:
+            logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
             res = application.setLogFile( logf )
             if not res['OK']:
                 return res
@@ -222,11 +260,11 @@ class ILDProductionJob( ProductionJob ):
             # in fact a bit more tricky as the log files have the prodID and jobID in them
         
         if "SoftwareTag" in self.prodparameters:
-            curpackage = "%s.%s" % ( application.appname, application.Version )
+            curpackage = "%s.%s" % ( application.appname, application.version )
             if not self.prodparameters["SoftwareTag"].count( curpackage ):
                 self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
         else :
-            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.Version )
+            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.version )
             
         # softwarepath = application.appname+application.Version
         if 'ILDConfigVersion' in self.prodparameters:
@@ -234,12 +272,19 @@ class ILDProductionJob( ProductionJob ):
         else:
             return S_ERROR( "ILDConfig not set, it is mandatory for path definition, please use p.setILDConfig() before appending applications" )
 
+        # override softwarepath if asked by user
+        if self.usesofttag:
+            if 'SoftwareTag' in self.compatmeta:
+                softwarepath = self.compatmeta['SoftwareTag']
+            else:
+                 print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
+
         if not self.energy:
-            if application.Energy:
+            if application.energy:
                 self.energy = Decimal( str( application.energy ) )
             else:
                 return S_ERROR( "Could not find the energy defined, it is needed for the production definition." )
-        elif not application.Energy:
+        elif not application.energy:
             res = application.setEnergy( float( self.energy ) )
             if not res['OK']:
                 return res
@@ -248,8 +293,8 @@ class ILDProductionJob( ProductionJob ):
             self.prodparameters["Energy"] = float( self.energy )
             
         if not self.evttype:
-            if hasattr( application, 'EvtType' ):
-                self.evttype = application.EvtType
+            if hasattr( application, 'eventType' ):
+                self.evttype = application.eventType
             else:
                 return S_ERROR( "Event type not found nor specified, it's mandatory for the production paths." )    
             
@@ -284,13 +329,30 @@ class ILDProductionJob( ProductionJob ):
         # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include 
         # EvtClass automatically)
         if not self.basename:
-            self.basename = 's' + self.prodparameters['ILDConfigVersion']
+            # self.basename = 's' + self.prodparameters['ILDConfigVersion']
+            if 'SoftwareTag' in self.compatmeta:
+                if application.appname == 'mokka':     # sim
+                    self.basename = 's' + self.compatmeta['SoftwareTag']
+                elif application.appname == 'marlin':  # reco
+                    self.basename = 'r' + self.prodparameters['ILDConfigVersion']
+                    self.basename += '.s' + self.compatmeta['SoftwareTag']
+                elif application.appname == 'stdhepsplit':  # we dont need this tag in stdhep's: metadata search will fail if not present
+                    self.compatmeta.pop('SoftwareTag')
+                    self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app")
+                # need extension if planning to use additional modules (LCIOSplit)
+            else:
+              if application.datatype != 'gen': # for stdhepsplit we dont need to return
+                return self._reportError( "'SoftwareTag' should be defined to build the path")
+
         if 'DetectorModel'    in self.compatmeta:
             self.basename += '.m' + self.compatmeta['DetectorModel']
         elif self.detector:
             self.basename += '.m' + self.detector
         if self.energy:
-            self.basename += '.E' + str( self.energy )
+            if not self.basename:
+              self.basename += 'E' + str( self.energy )
+            else:
+              self.basename += '.E' + str( self.energy )
         if 'MachineParams' in self.compatmeta:
             self.basename += '-' + self.compatmeta['MachineParams']
             
@@ -298,10 +360,14 @@ class ILDProductionJob( ProductionJob ):
             self.basename += '.I' + str( self.compatmeta['GenProcessID'] )
         elif 'ProcessID' in self.compatmeta:
             self.basename += '.I' + str( self.compatmeta['ProcessID'] )
-        if 'EvtType' in self.compatmeta:
-            self.basename += '.P' + self.compatmeta['EvtType']  # To be fixed with Jan
-        elif 'GenProcessType' in self.compatmeta:
-            self.basename += '.P' + self.compatmeta['GenProcessType']
+
+        if 'GenProcessName' in self.compatmeta:
+            self.basename += '.P' + self.compatmeta['GenProcessName']
+        elif self.genprocname:
+            self.basename += '.P' + self.genprocname
+        else:
+            return self._reportError( "GenProcessName is missing! It should appear in the basename")
+
         if 'BeamParticle1' in self.compatmeta:
             self.basename += '.'
             if self.compatmeta['BeamParticle1'] == 'e1':
@@ -339,7 +405,9 @@ class ILDProductionJob( ProductionJob ):
         else:
             evtclassmeta = self.evtclass.rstrip( "/" )
 
-        softwaremeta = softwarepath
+        softwaremeta = ''
+        if 'SoftwareTag' in self.compatmeta:
+            softwaremeta = self.compatmeta['SoftwareTag']
         softwarepath += "/"
         if self.detector:
             if not self.detector[-1] == "/":
@@ -348,31 +416,30 @@ class ILDProductionJob( ProductionJob ):
             else:
                 detectormeta = self.detector.rstrip( "/" )
             
+        path = self.basepath
         # ##Need to resolve file names and paths
         # TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
         if hasattr( application, "setOutputRecFile" ) and not application.willBeCut:
-            metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath, self.evtclass)
+            metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath, self.evttype)
             self.finalMetaDict[ metaBasePathRec ] = {"EvtClass" : evtclassmeta}
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype )] = {"EvtType" : evttypemeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ))] = {'ProcessID': self.processID}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.detector)] = {"DetectorModel" : detectormeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
+
             fname = self.basename + "_rec.slcio"
-            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
+            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evttype , self.detector , softwarepath)
             application.setOutputRecFile( fname, pathRec )
             self.finalpaths.append( pathRec )
 
-            metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath, self.evtclass)
+            metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath, self.evttype)
             self.finalMetaDict[ metaBasePathDst ] = {"EvtClass" : evtclassmeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype )] = {"EvtType" : evttypemeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ))] = {'ProcessID': self.processID}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ), self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.detector)] = {"DetectorModel" : detectormeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.detector, softwarepath)] = {"SoftwareTag" : softwaremeta}
             fname = self.basename + "_dst.slcio"
-            pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evtclass , self.evttype , str( self.processID ) , self.detector , softwarepath)
+            pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evttype , self.detector , softwarepath)
             application.setOutputDstFile( fname, pathDst )
             self.finalpaths.append( pathDst )
-        elif hasattr( application, "OutputFile" ) and hasattr( application, 'datatype' ) and ( not application.OutputFile ) and ( not application.willBeCut ):
+        elif hasattr( application, "outputFile" ) and hasattr( application, 'datatype' ) and ( not application.outputFile ) and ( not application.willBeCut ):
             if ( not application.datatype ) and self.datatype:
                 application.datatype = self.datatype
             if application.datatype == 'gen':
@@ -381,11 +448,8 @@ class ILDProductionJob( ProductionJob ):
             elif application.datatype == 'SIM':
                 datatype = 'sim/'
             path = self.basepath + datatype
-            path += energypath + self.evtclass
-            self.finalMetaDict[path] = {"EvtClass" : evtclassmeta}
-            path += self.evttype
+            path += energypath + self.evttype
             self.finalMetaDict[path] = {"EvtType" : evttypemeta}
-            path += str( self.processID ) + "/"
             metap = {}
             if 'GenProcessID' in self.compatmeta:
                 metap.update( {"ProcessID":self.compatmeta['GenProcessID']} )  # because we need 2 fields for the same info: file and directory metadata
@@ -393,10 +457,10 @@ class ILDProductionJob( ProductionJob ):
             elif 'ProcessID' in self.compatmeta:
                 metap.update( {"ProcessID":self.compatmeta['ProcessID']} )    
                 self.finalMetaDict[path] = metap     
-            if hasattr( application, "DetectorModel" ):
-                if application.DetectorModel:
-                    path += application.DetectorModel
-                    self.finalMetaDict[path] = {"DetectorModel" : application.DetectorModel}
+            if hasattr( application, "detectorModel" ):
+                if application.detectorModel:
+                    path += application.detectorModel
+                    self.finalMetaDict[path] = {"DetectorModel" : application.detectorModel}
                     path += '/'
                 elif self.detector:
                     path += self.detector
@@ -404,8 +468,9 @@ class ILDProductionJob( ProductionJob ):
                     path += '/'
             path += softwarepath         
             self.finalMetaDict[path] = {"SoftwareTag" : softwaremeta}
-            path += '/'
-            
+            if not path[-1] == '/':
+                path += "/"
+
             self.log.info( "Will store the files under", "%s" % path )
             self.finalpaths.append( path )
 
@@ -416,8 +481,7 @@ class ILDProductionJob( ProductionJob ):
             application.setOutputFile( fname, path )    
 
         self.basepath = path
-        
-        res = self._updateProdParameters( application )
+
         if not res['OK']:
             return res            
         

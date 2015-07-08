@@ -20,9 +20,6 @@ class StdhepCutJava(StdhepCut):
 
   """
   def __init__(self, paramdict = None):
-    self.MaxNbEvts = 0
-    self.NbEvtsPerFile = 0
-    self.SelectionEfficiency = 0
     super(StdhepCutJava, self).__init__( paramdict )
 
     self.appname = 'stdhepcutjava'

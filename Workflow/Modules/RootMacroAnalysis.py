@@ -21,19 +21,14 @@ class RootMacroAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "RootMacroAnalysis" )
     self.applicationName = 'ROOT'
-    
-    self.macro = ''
-    self.args = ''    
+    # from the interface
+    self.script = ''
+    self.arguments = ''
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
     @return: S_OK()
     """
-    if self.step_commons.has_key("script"):
-      self.macro = self.step_commons["script"]
-    if self.step_commons.has_key("args"):
-      self.args = self.step_commons["args"]
-
     return S_OK('Parameters resolved') 
   
   def runIt(self):
@@ -70,11 +65,11 @@ class RootMacroAnalysis(ModuleBase):
     #  mySoftwareRoot = localArea
     #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
     #  mySoftwareRoot = sharedArea
-    if len(self.macro) < 1:
+    if len(self.script) < 1:
       self.log.error('Macro file not defined, should not happen!')
       return S_ERROR("Macro file not defined")
      
-    self.macro = os.path.basename(self.macro)
+    self.script = os.path.basename(self.script)
 
     
     scriptName = 'Root_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
@@ -107,7 +102,7 @@ class RootMacroAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    comm = "root -b -q %s\(%s\) \n" % (self.macro, self.args)
+    comm = "root -b -q %s\(%s\) \n" % (self.script, self.arguments)
     self.log.info("Will run %s" % (comm))
     script.write(comm)
     

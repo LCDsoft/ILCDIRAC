@@ -224,8 +224,8 @@ class OverlayInput (ModuleBase):
   def __getFilesFromLyon(self, meta):
     """ List the files present at Lyon, not used.
     """
-    ProdID = meta['ProdID']
-    prod = str(ProdID).zfill(8)
+    prodID = meta['ProdID']
+    prod = str(prodID).zfill(8)
     energy = meta['Energy']
     bkg = meta["EvtType"]
     detector = meta["DetectorType"]
@@ -240,10 +240,10 @@ class OverlayInput (ModuleBase):
       curdir = path + mydir
       comm2 = ["nsls", curdir]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
-      for f in res[0].rstrip().split("\n"):
-        if f.count("dirac_directory"):
+      for oFile in res[0].rstrip().split("\n"):
+        if oFile.count("dirac_directory"):
           continue
-        mylist.append(path + mydir + "/" + f)
+        mylist.append(path + mydir + "/" + oFile)
     if not mylist:
       return S_ERROR("File list is empty")
     return S_OK(mylist)
@@ -251,8 +251,8 @@ class OverlayInput (ModuleBase):
   def __getFilesFromCastor(self, meta):
     """ Get the available files (list) from the CERN castor storage
     """ 
-    ProdID = meta['ProdID']
-    prod = str(ProdID).zfill(8)
+    prodID = meta['ProdID']
+    prod = str(prodID).zfill(8)
     energy = meta['Energy']
     bkg = meta["EvtType"]
     detector = meta["DetectorType"]
@@ -267,10 +267,10 @@ class OverlayInput (ModuleBase):
       curdir = path + mydir
       comm2 = ["nsls", curdir]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
-      for f in res[0].rstrip().split("\n"):
-        if f.count("dirac_directory"):
+      for oFile in res[0].rstrip().split("\n"):
+        if oFile.count("dirac_directory"):
           continue
-        mylist.append(path + mydir + "/" + f)
+        mylist.append(path + mydir + "/" + oFile)
     if not mylist:
       return S_ERROR("File list is empty")
     return S_OK(mylist)
@@ -314,16 +314,15 @@ class OverlayInput (ModuleBase):
 #      jobpropdict['Site']=self.site
 #      max_concurrent_running = res['Value']
     if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
-      f.write('Dont look at cpu')
-      f.close()
+      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+        checkFile.write('Dont look at cpu')
     overlaymon = RPCClient('Overlay/Overlay', timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
     while 1:
       if error_count > 10 :
-        self.log.error('OverlayDB returned too any errors')
+        self.log.error('OverlayDB returned too many errors')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
       #jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
       #res = jobMonitor.getCurrentJobCounters(jobpropdict)
@@ -372,13 +371,6 @@ class OverlayInput (ModuleBase):
         fail = True
         break
 
-      ##Now wait for a random time around 3 minutes
-      ###Actually, waste CPU time !!!
-      self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
-      res = wasteCPUCycles(60 * random.gauss(3, 0.1))
-      if not res['OK']:
-        self.log.error("Could not waste as much CPU time as wanted, but whatever!")
-
       fileindex = random.randrange(nbfiles)
       if fileindex not in usednumbers:
           
@@ -394,11 +386,12 @@ class OverlayInput (ModuleBase):
           res = self.getImperialFile(self.lfns[fileindex])
         elif  self.site == 'LCG.RAL-LCG2.uk':
           res = self.getRALFile(self.lfns[fileindex])
+        elif  self.site == 'LCG.KEK.jp':
+          res = self.getKEKFile(self.lfns[fileindex])
         else:
           if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-            f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
-            f.write('Dont look at cpu')
-            f.close()
+            with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+              checkFile.write('Dont look at cpu')
           res = self.datMan.getFile(self.lfns[fileindex])
           triedDataManager = True
 
@@ -417,21 +410,15 @@ class OverlayInput (ModuleBase):
       if len(usednumbers) == nbfiles and not len(filesobtained):
         fail = True
         break
-      
-    #res = self.rm.getFile(filesobtained)
-    #failed = len(res['Value']['Failed'])
-    #tryagain = []
-    #if failed:
-    #  self.log.error('Had issues getting %s files, retrying now with new files'%failed)
-    #  while len(tryagain) < failed:
-    #    fileindex = random.randrange(nbfiles)
-    #    if fileindex not in usednumbers:
-    #      usednumbers.append(fileindex)
-    #      tryagain.append(self.lfns[fileindex])
-    #  res = self.rm.getFile(tryagain)
-    #  if len(res['Value']['Failed']):
-    #    os.chdir(curdir)
-    #    return S_ERROR("Could not obtain enough files after 2 attempts")
+
+      if len(filesobtained) < totnboffilestoget:
+        ##Now wait for a random time around 3 minutes
+        ###Actually, waste CPU time !!!
+        self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
+        res = wasteCPUCycles(60 * random.gauss(3, 0.1))
+        if not res['OK']:
+          self.log.error("Could not waste as much CPU time as wanted, but whatever!")
+
     ## Remove all scripts remaining
     scripts = glob.glob("*.sh")
     for script in scripts:
@@ -547,9 +534,8 @@ fi\n""" % (basename, lfile))
     self.log.info("Getting %s" % file)
     ###Don't check for CPU time as other wise, job can get killed
     if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
-      f.write('Dont look at cpu')
-      f.close()
+      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+        checkFile.write('Dont look at cpu')
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
@@ -588,9 +574,8 @@ fi\n""" % (basename, lfile))
     self.log.info("Getting %s" % lfile)
     ###Don't check for CPU time as other wise, job can get killed
     if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      f = file('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
-      f.write('Dont look at cpu')
-      f.close()
+      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
+        checkFile.write('Dont look at cpu')
     
     #command = "rfcp %s ./"%file
     #comm = []
@@ -636,6 +621,35 @@ fi\n""" % (basename, lfile))
       return S_OK(localfile)
 
     return S_ERROR("Failed")
+
+  def getKEKFile(self, lfn):
+    """ Use cp to get the files from kek-se
+    """
+    prependpath = '/grid'
+    lfile = os.path.join(prependpath, lfn)
+    self.log.info("Getting %s" % lfile)
+
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    with file("overlayinput.sh", "w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('###############################\n')
+      script.write('# Dynamically generated scrip #\n')
+      script.write('###############################\n')
+      script.write("cp %s ./ -s\n" % lfile.rstrip())
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
+
+    os.chmod("overlayinput.sh", 0755)
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
+
 
   def execute(self):
     """ Run the module, called rom Workflow

@@ -26,21 +26,17 @@ class StdHepCut(ModuleBase):
     self.log = gLogger.getSubLogger( "StdhepCut" )
     self.applicationName = 'stdhepCut'
     self.STEP_NUMBER = ''
-    self.SteeringFile = ''
     self.inlineCuts = ""
     self.MaxNbEvts = 0
     self.scriptName = ""
     
   def applicationSpecificInputs(self):
 
-    self.SteeringFile = self.step_commons.get('CutFile', self.SteeringFile)
-    self.MaxNbEvts = self.step_commons.get('MaxNbEvts', self.MaxNbEvts)
-
     if not self.OutputFile:
       dircont = os.listdir("./")
       for myfile in dircont:
         if myfile.count(".stdhep"):
-          self.OutputFile = myfile.rstrip(".stdhep") + "_reduced.stdhep"
+          self.OutputFile = myfile.replace(".stdhep", "_reduced.stdhep")
           break
       if not self.OutputFile:
         return S_ERROR("Could not find suitable OutputFile name")

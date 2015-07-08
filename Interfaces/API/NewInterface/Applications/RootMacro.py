@@ -19,7 +19,6 @@ class RootMacro(_Root):
   The setExtraCLIArguments is not available here, use the Arguments
   """
   def __init__(self, paramdict = None):
-    self.Script = None
     super(RootMacro, self).__init__( paramdict )
     self._modulename = "RootMacroAnalysis"
     self.appname = 'root'
@@ -34,7 +33,7 @@ class RootMacro(_Root):
     """
     self._checkArgs( { 'macro' : types.StringTypes } )
 
-    self.Script = macro
+    self.script = macro
     if os.path.exists(macro) or macro.lower().count("lfn:"):
       self.inputSB.append(macro)
     return S_OK()
