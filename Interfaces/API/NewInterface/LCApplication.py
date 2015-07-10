@@ -19,9 +19,8 @@ class LCApplication(LCUtilityApplication):
   """
   def __init__(self, paramdict = None):
     super(LCApplication, self).__init__(paramdict)
-    self.Energy = 0
     self.steeringFileVersion = ""
-    self.ForgetAboutInput = False
+    self.forgetAboutInput = False
     self._importLocation = "ILCDIRAC.Workflow.Modules"
 
     
@@ -36,7 +35,7 @@ class LCApplication(LCUtilityApplication):
     """ Do not overwrite the input set in the SteeringFile
     """
     
-    self.ForgetAboutInput = flag
+    self.forgetAboutInput = flag
     
     return S_OK()
   
@@ -53,7 +52,7 @@ class LCApplication(LCUtilityApplication):
   def _setSpecificAppParameters(self, stepinst):
     """ Overload of Application._setSpecificAppParameters
     """
-    stepinst.setValue( "ForgetInput",       self.ForgetAboutInput)
+    stepinst.setValue( "ForgetInput",       self.forgetAboutInput)
 
     if self.steeringFileVersion:
       stepinst.setValue("SteeringFileVers", self.steeringFileVersion)

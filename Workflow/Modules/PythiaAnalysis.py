@@ -21,17 +21,12 @@ class PythiaAnalysis(ModuleBase):
   """
   def __init__(self):
     super(PythiaAnalysis, self).__init__()
-    self.NumberOfEvents = 1
     self.enable = True
     self.STEP_NUMBER = ''
     self.debug = True
     self.log = gLogger.getSubLogger( "PythiaAnalysis" )
         
   def applicationSpecificInputs(self):
-    if self.step_commons.has_key("NbOfEvts"):
-      self.NumberOfEvents = self.step_commons["NbOfEvts"]
-    else:
-      return S_ERROR("Number of events to process not specified")
     
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"]:

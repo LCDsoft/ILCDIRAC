@@ -60,11 +60,8 @@ class MarlinAnalysis(ModuleBase):
       self.InputFile += paramsb
     
     ##Backward compat needed, cannot remove yet.  
-    if self.step_commons.has_key('outputREC'):
-      self.outputREC = self.step_commons['outputREC']
-      
-    if self.step_commons.has_key('outputDST'):
-      self.outputDST = self.step_commons['outputDST']
+    self.outputREC = self.step_commons.get('outputREC', self.outputREC)
+    self.outputDST = self.step_commons.get('outputDST', self.outputDST)
       
     if self.workflow_commons.has_key("IS_PROD"):
       if self.workflow_commons["IS_PROD"] and len(self.OutputFile)==0:
@@ -147,7 +144,7 @@ class MarlinAnalysis(ModuleBase):
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
-      self.log.warn('Could not find the steering file directory')
+      self.log.warn('Could not find the steering file directory', res['Message'])
       
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'

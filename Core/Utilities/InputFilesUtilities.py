@@ -56,7 +56,7 @@ def getNumberOfEvents(inputfile):
         if found_nbevts:
           continue
 
-    res = fc.getDirectoryMetadata(path)
+    res = fc.getDirectoryUserMetadata(path)
     if res['OK']:   
       tags = res['Value']
       if tags.has_key("NumberOfEvents") and not found_nbevts:

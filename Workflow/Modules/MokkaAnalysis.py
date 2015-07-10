@@ -184,7 +184,7 @@ class MokkaAnalysis(ModuleBase):
       self.log.verbose("Steering file %s not found locally" % self.SteeringFile)
       res =  getSteeringFileDirName(self.platform, "mokka", self.applicationVersion)
       if not res['OK']:
-        self.log.error("Missing Steering file directory")
+        self.log.error( "Missing Steering file directory:", res['Message'] )
         return res
       steeringfiledirname = res['Value']
       if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):

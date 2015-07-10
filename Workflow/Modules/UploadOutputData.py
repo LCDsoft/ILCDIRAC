@@ -255,7 +255,7 @@ class UploadOutputData(ModuleBase):
       for fileName, metadata in final.items():
         lfns.append(metadata['lfn'])
 
-      result = self._ModuleBase__cleanUp(lfns)
+      result = self._cleanUp(lfns)
       return S_ERROR('Failed to upload output data')
 
     return S_OK('Output data uploaded')

@@ -182,7 +182,7 @@ def getInfo():
       if len(res1['Value'].values()):
         gLogger.verbose("Found %i directory matching the metadata" % len(res1['Value'].values()) )
         for dirs in res1['Value'].values():
-          res = fc.getDirectoryMetadata(dirs)
+          res = fc.getDirectoryUserMetadata(dirs)
           if res['OK']:
             fmeta.update(res['Value'])
           else:
@@ -214,7 +214,7 @@ def getInfo():
     pid = ""
     if clip.filename.count("/"):
       fpath = os.path.dirname(clip.filename)
-      res = fc.getDirectoryMetadata(fpath)
+      res = fc.getDirectoryUserMetadata(fpath)
       if not res['OK']:
         gLogger.error(res['Message'])
         dexit(0)
@@ -282,7 +282,7 @@ def getInfo():
           for dummy_lfn,descendDict in res['Value']['Successful'].items():
             fmeta['Descendants'] = descendDict.keys()
 
-      res = fc.getDirectoryMetadata(dir_ex)
+      res = fc.getDirectoryUserMetadata(dir_ex)
       if not res['OK']:
         gLogger.error(res['Message'])
       else:

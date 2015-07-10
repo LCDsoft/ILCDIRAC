@@ -20,7 +20,6 @@ class RootScript(_Root):
   The ExtraCLIArguments is not used here, only use the Arguments
   """
   def __init__(self, paramdict = None):
-    self.script = None
     super(RootScript, self).__init__( paramdict )
     self._modulename = "RootExecutableAnalysis"
     self.appname = 'root'
@@ -35,7 +34,7 @@ class RootScript(_Root):
     """
     self._checkArgs( { 'executable' : types.StringTypes } )
 
-    self.Script = executable
+    self.script = executable
     if os.path.exists(executable) or executable.lower().count("lfn:"):
       self.inputSB.append(executable)
     return S_OK()

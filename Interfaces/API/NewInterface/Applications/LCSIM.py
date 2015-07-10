@@ -26,10 +26,10 @@ class LCSIM(LCApplication):
   """
   def __init__(self, paramdict = None):
 
-    self.ExtraParams = ''
-    self.AliasProperties = ''
-    self.TrackingStrategy = ''
-    self.DetectorModel = ''
+    self.extraParams = ''
+    self.aliasProperties = ''
+    self.trackingStrategy = ''
+    self.detectorModel = ''
     super(LCSIM, self).__init__( paramdict)
     ##Those 5 need to come after default constructor
     self._modulename = 'LCSIMAnalysis'
@@ -48,9 +48,9 @@ class LCSIM(LCApplication):
     @type path: string
     """
     self._checkArgs( { 'outputRecFile' : types.StringTypes } )
-    self.OutputRecFile = outputRecFile
-    self.prodparameters[self.OutputRecFile] = {}
-    self.prodparameters[self.OutputRecFile]['datatype'] = 'REC'
+    self.outputRecFile = outputRecFile
+    self.prodparameters[self.outputRecFile] = {}
+    self.prodparameters[self.outputRecFile]['datatype'] = 'REC'
     if path:
       self.outputRecPath = path
 
@@ -64,9 +64,9 @@ class LCSIM(LCApplication):
     @type path: string
     """
     self._checkArgs( { 'outputDstFile' : types.StringTypes } )
-    self.OutputDstFile = outputDstFile
-    self.prodparameters[self.OutputDstFile] = {}
-    self.prodparameters[self.OutputDstFile]['datatype'] = 'DST'
+    self.outputDstFile = outputDstFile
+    self.prodparameters[self.outputDstFile] = {}
+    self.prodparameters[self.outputDstFile]['datatype'] = 'DST'
     if path:
       self.outputDstPath = path
 
@@ -78,7 +78,7 @@ class LCSIM(LCApplication):
     """
     self._checkArgs( { 'alias' : types.StringTypes } )
 
-    self.AliasProperties = alias
+    self.aliasProperties = alias
     if os.path.exists(alias) or alias.lower().count("lfn:"):
       self.inputSB.append(alias)
 
@@ -89,7 +89,7 @@ class LCSIM(LCApplication):
     @type model: string
     """
     self._checkArgs( { 'model' : types.StringTypes } )
-    self.DetectorModel = model
+    self.detectorModel = model
     if os.path.exists(model) or model.lower().count("lfn:"):
       self.inputSB.append(model)
 
@@ -101,9 +101,9 @@ class LCSIM(LCApplication):
     @type trackingstrategy: string
     """
     self._checkArgs( { 'trackingstrategy' : types.StringTypes } )
-    self.TrackingStrategy = trackingstrategy
-    if os.path.exists(self.TrackingStrategy) or self.TrackingStrategy.lower().count('lfn:'):
-      self.inputSB.append(self.TrackingStrategy)
+    self.trackingStrategy = trackingstrategy
+    if os.path.exists(self.trackingStrategy) or self.trackingStrategy.lower().count('lfn:'):
+      self.inputSB.append(self.trackingStrategy)
 
   def setExtraParams(self, extraparams):
     """ Optional: Define command line parameters to pass to java
@@ -113,7 +113,7 @@ class LCSIM(LCApplication):
     """
     self._checkArgs( { 'extraparams' : types.StringTypes } )
 
-    self.ExtraParams = extraparams
+    self.extraParams = extraparams
 
   def willRunSLICPandora(self):
     """ You need this if you plan on running L{SLICPandora}
@@ -136,32 +136,32 @@ class LCSIM(LCApplication):
 
   def _checkConsistency(self):
 
-    if not self.Energy :
+    if not self.energy :
       self._log.info('Energy set to 0 !')
 
-    if not self.NbEvts :
+    if not self.numberOfEvents :
       self._log.info('Number of events set to 0 !')
 
-    if not self.Version:
+    if not self.version:
       return S_ERROR('No version found')
 
-    if self.SteeringFile:
-      if not os.path.exists(self.SteeringFile) and not self.SteeringFile.lower().count("lfn:"):
-        res = Exists(self.SteeringFile)
+    if self.steeringFile:
+      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
+        res = Exists(self.steeringFile)
         if not res['OK']:
           return res
-      if os.path.exists(self.SteeringFile):
-        res = checkXMLValidity(self.SteeringFile)
+      if os.path.exists(self.steeringFile):
+        res = checkXMLValidity(self.steeringFile)
         if not res['OK']:
           return S_ERROR("Supplied steering file cannot be read by XML parser: %s" % ( res['Message'] ) )
-    if self.TrackingStrategy:
-      if not os.path.exists(self.TrackingStrategy) and not self.TrackingStrategy.lower().count("lfn:"):
-        res = Exists(self.TrackingStrategy)
+    if self.trackingStrategy:
+      if not os.path.exists(self.trackingStrategy) and not self.trackingStrategy.lower().count("lfn:"):
+        res = Exists(self.trackingStrategy)
         if not res['OK']:
           return res
 
-    if self.DetectorModel:
-      if not self.DetectorModel.lower().count(".zip"):
+    if self.detectorModel:
+      if not self.detectorModel.lower().count(".zip"):
         return S_ERROR("setDetectorModel: You HAVE to pass an existing .zip file, either as local file or as LFN. \
         Or use the alias.properties.")
 
@@ -171,7 +171,7 @@ class LCSIM(LCApplication):
 
     if not self._jobtype == 'User':
       #slicp = False
-      if self._inputapp and not self.OutputFile and not self.willBeCut:
+      if self._inputapp and not self.outputFile and not self.willBeCut:
         for app in self._inputapp:
           if app.appname in ['slicpandora', 'marlin']:
             self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}",
@@ -181,8 +181,8 @@ class LCSIM(LCApplication):
             #slicp = True
             break
       self.prodparameters['detectorType'] = self.detectortype
-      self.prodparameters['lcsim_steeringfile'] = self.SteeringFile
-      self.prodparameters['lcsim_trackingstrategy'] = self.TrackingStrategy
+      self.prodparameters['lcsim_steeringfile'] = self.steeringFile
+      self.prodparameters['lcsim_trackingstrategy'] = self.trackingStrategy
 
       #if not slicp:
       #  self._listofoutput.append({"outputFile":"@{OutputFile}","outputPath":"@{OutputPath}","outputDataSE":'@{OutputSE}'})
@@ -207,11 +207,11 @@ class LCSIM(LCApplication):
 
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("extraparams",        self.ExtraParams)
-    moduleinstance.setValue("aliasproperties",    self.AliasProperties)
-    moduleinstance.setValue("debug",              self.Debug)
-    moduleinstance.setValue("detectorModel",      self.DetectorModel)
-    moduleinstance.setValue("trackingstrategy",   self.TrackingStrategy)
+    moduleinstance.setValue("extraparams",        self.extraParams)
+    moduleinstance.setValue("aliasproperties",    self.aliasProperties)
+    moduleinstance.setValue("debug",              self.debug)
+    moduleinstance.setValue("detectorModel",      self.detectorModel)
+    moduleinstance.setValue("trackingstrategy",   self.trackingStrategy)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

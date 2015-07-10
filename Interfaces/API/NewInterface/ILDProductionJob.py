@@ -92,7 +92,7 @@ class ILDProductionJob( ProductionJob ):
             return self._reportError( 'Could not find any directory corresponding to the query issued' )
         dirs = res['Value'].values()
         for mdir in dirs:
-            res = self.fc.getDirectoryMetadata( mdir )
+            res = self.fc.getDirectoryUserMetadata( mdir )
             if not res['OK']:
                 return self._reportError( "Error looking up the catalog for directory metadata" )
             compatmeta = res['Value'] # this reset compatmeta for each iteration (do we want this?)
@@ -248,12 +248,11 @@ class ILDProductionJob( ProductionJob ):
     def _jobSpecificParams( self, application ):
         """ For production additional checks are needed: ask the user
         """
-
         if self.created:
             return S_ERROR( "The production was created, you cannot add new applications to the job." )
 
-        if not application.LogFile:
-            logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
+        if not application.logFile:
+            logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
             res = application.setLogFile( logf )
             if not res['OK']:
                 return res
@@ -261,11 +260,11 @@ class ILDProductionJob( ProductionJob ):
             # in fact a bit more tricky as the log files have the prodID and jobID in them
         
         if "SoftwareTag" in self.prodparameters:
-            curpackage = "%s.%s" % ( application.appname, application.Version )
+            curpackage = "%s.%s" % ( application.appname, application.version )
             if not self.prodparameters["SoftwareTag"].count( curpackage ):
                 self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
         else :
-            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.Version )
+            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.version )
             
         # softwarepath = application.appname+application.Version
         if 'ILDConfigVersion' in self.prodparameters:
@@ -281,11 +280,11 @@ class ILDProductionJob( ProductionJob ):
                  print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
 
         if not self.energy:
-            if application.Energy:
-                self.energy = Decimal( str( application.Energy ) )
+            if application.energy:
+                self.energy = Decimal( str( application.energy ) )
             else:
                 return S_ERROR( "Could not find the energy defined, it is needed for the production definition." )
-        elif not application.Energy:
+        elif not application.energy:
             res = application.setEnergy( float( self.energy ) )
             if not res['OK']:
                 return res
@@ -294,8 +293,8 @@ class ILDProductionJob( ProductionJob ):
             self.prodparameters["Energy"] = float( self.energy )
             
         if not self.evttype:
-            if hasattr( application, 'EvtType' ):
-                self.evttype = application.EvtType
+            if hasattr( application, 'eventType' ):
+                self.evttype = application.eventType
             else:
                 return S_ERROR( "Event type not found nor specified, it's mandatory for the production paths." )    
             
@@ -315,8 +314,8 @@ class ILDProductionJob( ProductionJob ):
             return res
         
         if not self.detector:
-            if hasattr( application, "DetectorModel" ):
-                self.detector = application.DetectorModel
+            if hasattr( application, "detectorModel" ):
+                self.detector = application.detectorModel
                 if not self.detector:
                     return S_ERROR( "Application does not know which model to use, so the production does not either." )
             # else:
@@ -440,7 +439,7 @@ class ILDProductionJob( ProductionJob ):
             pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evttype , self.detector , softwarepath)
             application.setOutputDstFile( fname, pathDst )
             self.finalpaths.append( pathDst )
-        elif hasattr( application, "OutputFile" ) and hasattr( application, 'datatype' ) and ( not application.OutputFile ) and ( not application.willBeCut ):
+        elif hasattr( application, "outputFile" ) and hasattr( application, 'datatype' ) and ( not application.outputFile ) and ( not application.willBeCut ):
             if ( not application.datatype ) and self.datatype:
                 application.datatype = self.datatype
             if application.datatype == 'gen':
@@ -458,10 +457,10 @@ class ILDProductionJob( ProductionJob ):
             elif 'ProcessID' in self.compatmeta:
                 metap.update( {"ProcessID":self.compatmeta['ProcessID']} )    
                 self.finalMetaDict[path] = metap     
-            if hasattr( application, "DetectorModel" ):
-                if application.DetectorModel:
-                    path += application.DetectorModel
-                    self.finalMetaDict[path] = {"DetectorModel" : application.DetectorModel}
+            if hasattr( application, "detectorModel" ):
+                if application.detectorModel:
+                    path += application.detectorModel
+                    self.finalMetaDict[path] = {"DetectorModel" : application.detectorModel}
                     path += '/'
                 elif self.detector:
                     path += self.detector

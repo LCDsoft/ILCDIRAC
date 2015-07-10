@@ -4,9 +4,12 @@
 __RCSID__ = "$Id$"
 
 
-import unittest, copy, os
-from mock import MagicMock as Mock
-from DIRAC import gLogger, S_ERROR, S_OK
+import unittest
+import os
+import shutil
+import urllib2
+
+from DIRAC import gLogger
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -21,16 +24,39 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
   def setUp( self ):
     super(TestSlicPandoraAnalysis, self).setUp()
     self.spa = SLICPandoraAnalysis()
+    self.mydir = "temp_dir"
+    detURL = "http://www.lcsim.org/detectors/clic_sid_cdr.zip"
+    self.zipfile = "clic_sid_cdr.zip"
 
+    
+    attempts = 0
+    
+    while attempts < 3:
+      try:
+        response = urllib2.urlopen(detURL, timeout = 5)
+        content = response.read()
+        with open( self.zipfile, 'w' ) as zipF:
+          zipF.write( content )
+        break
+      except urllib2.URLError as e:
+        attempts += 1
+        print type(e)
+
+
+    
+    
+  def tearDown(self):
+    shutil.rmtree(self.mydir)
+    os.remove(self.zipfile)
+    
   def test_Unzip_file_into_dir(self):
     """test unzip_file_into_dir............................................................"""
-    myfile = "clic_sid_cdr.zip"
-    mydir = "temp_dir"
+    
     from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import unzip_file_into_dir
-    if not os.path.exists(mydir):
-      os.mkdir(mydir)
-    unzip_file_into_dir( myfile, mydir )
-    unzip_file_into_dir( myfile, mydir )
+    if not os.path.exists(self.mydir):
+      os.mkdir(self.mydir)
+    unzip_file_into_dir( self.zipfile, self.mydir )
+    unzip_file_into_dir( self.zipfile, self.mydir )
     self.assertTrue ( True )
 
 

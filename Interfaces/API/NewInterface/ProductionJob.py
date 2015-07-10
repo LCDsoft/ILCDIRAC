@@ -222,7 +222,7 @@ class ProductionJob(Job):
     dirs = res['Value'].values()
     for mdir in dirs:
       gLogger.notice("Directory: %s" % mdir)
-      res = self.fc.getDirectoryMetadata(mdir)
+      res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
     #res =   client.getCompatibleMetadata(metadata)
@@ -676,8 +676,8 @@ class ProductionJob(Job):
     if self.created:
       return S_ERROR("The production was created, you cannot add new applications to the job.")
 
-    if not application.LogFile:
-      logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
+    if not application.logFile:
+      logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
       res = application.setLogFile(logf)
       if not res['OK']:
         return res
@@ -686,27 +686,27 @@ class ProductionJob(Job):
     
     ### Retrieve from the application the essential info to build the prod info.
     if not self.nbevts and not self.slicesize:
-      self.nbevts = application.NbEvts
+      self.nbevts = application.numberOfEvents
       if not self.nbevts:
         return S_ERROR("Number of events to process is not defined.")
-    elif not application.NbEvts:
+    elif not application.numberOfEvents:
       if not self.slicesize:
-        res = application.setNbEvts(self.jobFileGroupSize * self.nbevts)
+        res = application.setNumberOfEvents(self.jobFileGroupSize * self.nbevts)
       else:
-        res = application.setNbEvts(self.slicesize)
+        res = application.setNumberOfEvents(self.slicesize)
       if not res['OK']:
         return res
     
-    if application.NbEvts > 0 and (self.jobFileGroupSize * self.nbevts > application.NbEvts or self.slicesize > application.NbEvts):
-      self.nbevts = application.NbEvts 
+    if application.numberOfEvents > 0 and (self.jobFileGroupSize * self.nbevts > application.numberOfEvents or self.slicesize > application.numberOfEvents):
+      self.nbevts = application.numberOfEvents
 
     
     if not self.energy:
-      if application.Energy:
-        self.energy = Decimal(str(application.Energy))
+      if application.energy:
+        self.energy = Decimal(str(application.energy))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
-    elif not application.Energy:
+    elif not application.energy:
       res = application.setEnergy(float(self.energy))
       if not res['OK']:
         return res
@@ -715,8 +715,8 @@ class ProductionJob(Job):
       self.prodparameters["Energy"] = float(self.energy)
       
     if not self.evttype:
-      if hasattr(application, 'EvtType'):
-        self.evttype = application.EvtType
+      if hasattr(application, 'eventType'):
+        self.evttype = application.eventType
       else:
         return S_ERROR("Event type not found nor specified, it's mandatory for the production paths.")  
       self.prodparameters['Process'] = self.evttype
@@ -724,7 +724,7 @@ class ProductionJob(Job):
     if not self.outputStorage:
       return S_ERROR("You need to specify the Output storage element")
     
-    curpackage = "%s.%s" % (application.appname, application.Version)
+    curpackage = "%s.%s" % (application.appname, application.version)
     if "SWPackages" in self.prodparameters:      
       if not self.prodparameters["SWPackages"].count(curpackage):
         self.prodparameters["SWPackages"] += ";%s" % ( curpackage )    
@@ -770,7 +770,7 @@ class ProductionJob(Job):
       application.setOutputDstFile(fname, path)  
       self.log.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
-    elif hasattr(application, "OutputFile") and hasattr(application, 'datatype') and not application.OutputFile and not application.willBeCut:
+    elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath + energypath + evttypepath
       self.finalMetaDict[path] = {"EvtType" : self.evttype}
       if hasattr(application, "detectortype"):
