@@ -9,11 +9,11 @@ from DIRAC.Core.Utilities.List                                         import in
 class ProcessDB ( DB ):
   """ DB for the ProcessProductionSystem
   """
-  def __init__( self, maxQueueSize = 10 ):
+  def __init__( self ):
     """ 
     """
     self.dbname = 'ProcessDB'
-    DB.__init__( self, self.dbname, 'ProcessProduction/ProcessDB', maxQueueSize  )
+    DB.__init__( self, self.dbname, 'ProcessProduction/ProcessDB' )
     self.ProdTypes = ['MCGeneration', "MCSimulation", "MCReconstruction"]
     self.SoftwareParams = ['Path', 'Valid', 'AppName', 'AppVersion', 'Platform']
     self.ProcessDataParams = ['CrossSection', 'NbEvts', 'Path', 'Files', 'Polarisation']

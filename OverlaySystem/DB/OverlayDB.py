@@ -9,13 +9,13 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Opera
 class OverlayDB ( DB ):
   """ DB for OverlaySystem
   """
-  def __init__( self, maxQueueSize = 10 ):
+  def __init__( self ):
     """ 
     """
     self.ops = Operations()
     self.dbname = 'OverlayDB'
     self.logger = gLogger.getSubLogger('OverlayDB')
-    DB.__init__( self, self.dbname, 'Overlay/OverlayDB', maxQueueSize  )
+    DB.__init__( self, self.dbname, 'Overlay/OverlayDB' )
     self._createTables( { "OverlayData" : { 'Fields' : { 'Site' : "VARCHAR(255) UNIQUE NOT NULL",
                                                          'NumberOfJobs' : "INTEGER DEFAULT 0"
                                                        },
