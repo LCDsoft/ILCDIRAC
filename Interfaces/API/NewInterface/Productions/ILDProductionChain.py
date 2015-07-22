@@ -128,6 +128,7 @@ if ild_rec:
 ### HERE WE DEFINE THE PRODUCTIONS  
 if activesplitstdhep and meta:
   pstdhepsplit =  ILDProductionJob()
+  pstdhepsplit.basepath = "/ilc/prod/ilc/mc-dbd.generated/ild/"
   pstdhepsplit.setDryRun(dryrun)
   pstdhepsplit.setLogLevel("verbose")
   pstdhepsplit.setProdType('Split')
