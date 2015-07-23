@@ -11,6 +11,15 @@ New: Based on Dirac v6r13p8
 New: Based on Dirac v6r13p7
 
 
+[v23r0p1]
+
+* Core
+NEW: based on Dirac v6r12p46: Many fixes for Xroot(EOS), GlobusCEs
+
+* Interfaces
+
+FIX: ILCDIRAC-537: ILDProductionChain set different basepath for stdhepsplit productions
+
 [v23r0]
 
 * Core
