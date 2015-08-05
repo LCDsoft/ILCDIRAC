@@ -11,6 +11,9 @@ from types import ListType, DictType
 from DIRAC.Core.Utilities import uniqueElements
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
+OPLIST = ['>=','<=','>','<','!=','=']
+SCRIPTNAME = "dirac-ilc-find-in-FC"
+
 class Params(object):
   """Parameter Object"""
   def __init__(self):
@@ -23,7 +26,7 @@ class Params(object):
 
   def registerSwitches(self):
     Script.registerSwitch("D", "OnlyDirectories", "Print only directories", self.setPrintOnlyDs)
-    Script.setUsageMessage("""%s [-D] path meta1=A meta2=B etc.""" % Script.scriptName)
+    Script.setUsageMessage("""%s [-D] path meta1=A meta2=B etc.\nPossible operators for metadata: %s""" % (SCRIPTNAME, OPLIST ) )
 
 
 def createQueryDict(argss):
@@ -47,7 +50,7 @@ def createQueryDict(argss):
   for arg in argss:
     if not contMode:
       operation = ''
-      for op in ['>=','<=','>','<','!=','=']:
+      for op in OPLIST:
         if arg.find(op) != -1:
           operation = op
           break
@@ -147,13 +150,20 @@ def findInFC():
 
   args = Script.getPositionalArgs()
   if len(args)<2:
-    gLogger.error('Not enough arguments')
-    Script.showHelp()
+    Script.showHelp('ERROR: Not enough arguments')
+    gLogger.error("Run %s --help" % SCRIPTNAME )
     dexit(1)
     
   path = args[0]
   if path == '.':
     path = '/'
+
+  ## Check that the first argument is not a MetaQuery
+  if any( op in path for op in OPLIST ):
+    gLogger.error("ERROR: Path '%s' is not a valid path! The first argument must be a path" % path)
+    gLogger.error("Run %s --help" % SCRIPTNAME )
+    dexit(1)
+
   gLogger.verbose("Path:", path)
   metaQuery = args[1:]
   metaDataDict = createQueryDict(metaQuery)
