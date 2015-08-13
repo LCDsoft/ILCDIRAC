@@ -17,6 +17,14 @@ New: Based on Dirac v6r13p8
 New: Based on Dirac v6r13p7
 
 
+[v23r0p2]
+
+* Core
+FIX: Based on Dirac v6r12p47, fixes issue with removing metadata in the filecatalog
+
+* Interfaces
+FIX: ILCDIRAC-547: Give error when dirac-ilc-find-in-FC does not get a path as first argument
+
 [v23r0p1]
 
 * Core
