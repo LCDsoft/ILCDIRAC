@@ -7,6 +7,7 @@ Created on May 18, 2015
 __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
+from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
 VALIDDATATYPES = ('GEN','SIM','REC','DST')
 
@@ -17,6 +18,8 @@ class Params(object):
     self.targetSE = []
     self.sourceSE = None
     self.datatype = None
+    self.errorMessages = []
+    self.extraname = ''
 
   def setProdID(self,prodID):
     self.prodID = prodID
@@ -33,43 +36,58 @@ class Params(object):
     
   def setDatatype(self, datatype):
     if not datatype.upper() in VALIDDATATYPES:
-      return S_ERROR("Unknown Datatype, use %s " % (",".join(VALIDDATATYPES),) )
+      self.errorMessages.append("ERROR: Unknown Datatype, use %s " % (",".join(VALIDDATATYPES),) )
+      return S_ERROR()
     self.datatype = datatype
     return S_OK()
-  
-  def registerSwitches(self):
-    Script.registerSwitch("P:", "ProductionID=", "ID of the production to replicate", self.setProdID)
-    Script.registerSwitch("T:", "TargetSE=", "Target StorageElement", self.setTargetSE)
-    Script.registerSwitch("S:", "SourceSE=", "Source StorageElement", self.setSourceSE)
-    Script.registerSwitch("D:", "DataType=", "DataType (GEN,SIM,REC,DST)", self.setDatatype)
+
+  def setExtraname(self, extraname):
+    self.extraname = extraname
+    return S_OK()
     
-    Script.setUsageMessage("""%s -P<prodID> -T<TargetSE> -S<SourceSE> -D{GEN,SIM,REC,DST}""" % Script.scriptName)
+  def registerSwitches(self):
+    Script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
+    Script.setUsageMessage("""%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName""" % Script.scriptName)
 
   def checkSettings(self):
     """check if all required parameters are set, print error message and return S_ERROR if not"""
-    allIsGood = True
-    if not self.prodID:
-      gLogger.error("ProdID is not set")
-      allIsGood = False
 
-    if not self.targetSE:
-      gLogger.error("TargetSE is not set")
-      allIsGood = False
+    args = Script.getPositionalArgs()
+    if len(args) < 4:
+      self.errorMessages.append("ERROR: Not enough arguments")
+    else:
+      self.setProdID( args[0] )
+      self.setTargetSE( args[1] )
+      self.setSourceSE( args[2] )
+      self.setDatatype( args[3] )
 
-    if not self.sourceSE:
-      gLogger.error("SourceSE is not set")
-      allIsGood = False
-
-    if not self.datatype:
-      gLogger.error("Datatype is not set")
-      allIsGood = False
+    self.checkProxy()
       
-    if allIsGood:
+    if not self.errorMessages:
       return S_OK()
+    gLogger.error("\n".join(self.errorMessages))
     Script.showHelp()
     return S_ERROR()
 
-def createReplication( targetSE, sourceSE, prodID, datatype):
+  def checkProxy(self):
+    """checks if the proxy belongs to ilc_prod"""
+    proxyInfo = getProxyInfo()
+    if not proxyInfo['OK']:
+      self.errorMessages.append( "ERROR: No Proxy present" )
+      return False
+    proxyValues = proxyInfo.get( 'Value', {} )
+    group = proxyValues.get( 'group' )
+
+    if group:
+      if not group == "ilc_prod":
+        self.errorMessages.append("ERROR: Not allowed to create production, you need a ilc_prod proxy.")
+        return False
+    else:
+      self.errorMessages.append("ERROR: Could not determine group, you do not have the right proxy.")
+      return False
+    return True
+
+def createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
   """Creates the replication transformation based on the given parameters"""
 
   from DIRAC.TransformationSystem.Client.Transformation import Transformation
@@ -77,7 +95,11 @@ def createReplication( targetSE, sourceSE, prodID, datatype):
   metadata = {"Datatype":datatype, "ProdID":prodID}
   
   trans = Transformation()
-  trans.setTransformationName( 'replicate_%s_%s' % ( str(prodID), ",".join(targetSE) ) )
+  transName = 'replicate_%s_%s' % ( str(prodID), ",".join(targetSE) )
+  if extraname:
+    transName += "_%s" % extraname
+
+  trans.setTransformationName( transName )
   description = 'Replicate files for prodID %s to %s' % ( str(prodID), ",".join(targetSE) )
   trans.setDescription( description )
   trans.setLongDescription( description )
@@ -117,7 +139,7 @@ def createTrafo():
   if not clip.checkSettings()['OK']:
     gLogger.error("ERROR: Missing settings")
     dexit(1)
-  resCreate = createReplication( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype)
+  resCreate = createReplication( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
   if not resCreate['OK']:
     dexit(1)
   dexit(0)

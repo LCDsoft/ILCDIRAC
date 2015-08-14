@@ -121,11 +121,11 @@ def addUserToFC(clip):
       gLogger.error(res['Message'])
       continue
 
-    res = fc.changePathGroup({ bpath: { "Group": grp } }, False)
+    res = fc.changePathGroup({ bpath: grp }, False)
     if not res['OK']:
       gLogger.error(res['Message'])
 
-    res = fc.changePathOwner({ bpath: {"Owner": clip.uname } }, False)
+    res = fc.changePathOwner({ bpath: clip.uname }, False)
     if not res['OK']:
       gLogger.error(res['Message'])
 
@@ -139,13 +139,14 @@ def addUserToEgroup(clip):
   pwd = gConfig.getValue("/Security/egroupPass","").strip('"')
   url = 'https://foundservices.cern.ch/ws/egroups/v1/EgroupsWebService/EgroupsWebService.wsdl'
   if not ( login and pwd ):
-    gLogger.error("Missing configuration parameters: username or password for WSDL interactions")
-    gLogger.error("Add options: -o /Security/egroupAdmin=<cernusername> -o /Security/egroupPass=<password>")
-    dexit(1)
+    gLogger.warn("Missing configuration parameters: username or password for WSDL interactions")
+    gLogger.warn("Add options: -o /Security/egroupAdmin=<cernusername> -o /Security/egroupPass=<password>")
+    gLogger.error("User registration in e-group must be done manually")
+    return
   try:
     client = Client(url=url, username=login, password=pwd)
     #gLogger.notice(client)
-  except suds.transport.TransportError, exc:
+  except suds.transport.TransportError as exc:
     gLogger.error("Failed to get the WSDL client:%s" %exc)
     gLogger.error("User registration in e-group must be done manually")
     return

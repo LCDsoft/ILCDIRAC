@@ -37,6 +37,8 @@ class Params(object):
     self.ildConfig = "CLICSteeringFilesV22"
     self.onlyDestination = []
     self.logLevel = "INFO"
+    self.numberOfEvents = 10
+    self.dryrun = False
 
   def setDetectorModel(self, model):
     if model not in self.knownModels:
@@ -65,6 +67,10 @@ class Params(object):
     self.energy = energy
     return S_OK()
 
+  def setDryRun(self, _dummy):
+    self.dryrun = True
+    return S_OK()
+
   def setNumberOfEvents(self, numberOfEvents):
     try:
       numberOfEvents = int(numberOfEvents)
@@ -80,7 +86,8 @@ class Params(object):
     Script.registerSwitch( "C:", "Configuration=",  "Configuration with Steeringfiles", self.setILDConfig )
     Script.registerSwitch( "E:", "Energy=",         "Energy",                           self.setEnergy )
     Script.registerSwitch( "N:", "NumberOfEvents=", "Number of Events",                 self.setNumberOfEvents )
-    Script.setUsageMessage("%s [opts] extraName" % Script.scriptName)
+    Script.registerSwitch( "",    "dry-run",        "Just do a dry run",                self.setDryRun )
+    Script.setUsageMessage("%s [opts] <extraName>" % Script.scriptName)
 
 
 def getdicts(process):
@@ -111,12 +118,13 @@ PARAMS.registerSwitches()
 Script.parseCommandLine()
 extraargs= Script.getPositionalArgs()
 if len(extraargs) == 0:
-  print "ExtraName not defined"
+  print "ERROR: ExtraName not defined"
+  Script.showHelp()
   exit(1)
 additional_name = extraargs[0]
 
 
-energy = PARAMS.energy
+energy = float(PARAMS.energy)
 
 
 ## tripleH, Hrecoil, stau, gauginos, Hmass, tt, Htautau, Hmumu, Hee, Hbbccmumu, squarks, LCFITraining, Hgammagamma
@@ -138,6 +146,7 @@ ILDCONFIG = "v01-16-p10_250"
 SOFTWAREVERSION = "ILCSoft-01-17-06"
 
 ILDDetectorModels = ['ILD_o1_v05']
+CLICDetectorModels = ['CLIC_ILD_CDR']
 
 detectormodel=PARAMS.detectorModel
 
@@ -183,7 +192,7 @@ sid_rec = False
 ild_rec_ov = True
 sid_rec_ov = False
 
-n_events = 10
+n_events = PARAMS.numberOfEvents
 #rodOutputSE = "PNNL3-SRM"
 prodOutputSE = PARAMS.outputSE
 onlyDestination = PARAMS.onlyDestination
@@ -364,31 +373,33 @@ for proddict in prodlist:
 
 
   overlay = OverlayInput()
-  overlay.setMachine("clic_cdr")
-  overlay.setEnergy(energy)
-  overlay.setBkgEvtType("gghad")
-  if energy==500.:
-    overlay.setBXOverlay(300)
-    overlay.setGGToHadInt(0.3)##When running at 500geV
-    overlay.setDetectorModel("CLIC_ILD_CDR500")
-  elif energy==420.:
-    overlay.setBXOverlay(300)
-    overlay.setGGToHadInt(0.17)##When running at 420geV
-    overlay.setDetectorModel("CLIC_ILD_CDR500")
-  elif energy == 350.:
-    overlay.setBXOverlay(300)
-    overlay.setGGToHadInt(0.0464)##When running at 350geV
-    overlay.setDetectorModel("CLIC_ILD_CDR500")
-  elif energy == 3000.:
-    overlay.setBXOverlay(60)
-    overlay.setGGToHadInt(3.2)##When running at 3TeV
-    overlay.setDetectorModel("CLIC_ILD_CDR")
-  elif energy == 1400.:
-    overlay.setBXOverlay(60)
-    overlay.setGGToHadInt(1.3)##When running at 1.4TeV
-    overlay.setDetectorModel("CLIC_ILD_CDR")
-  else:
-    print "Overlay ILD: No overlay parameters defined for this energy"
+  if detectormodel in CLICDetectorModels:
+    overlay.setMachine("clic_cdr")
+    overlay.setEnergy(energy)
+    overlay.setBkgEvtType("gghad")
+
+    if energy == 500.:
+      overlay.setBXOverlay(300)
+      overlay.setGGToHadInt(0.3)##When running at 500geV
+      overlay.setDetectorModel("CLIC_ILD_CDR500")
+    elif energy == 420.:
+      overlay.setBXOverlay(300)
+      overlay.setGGToHadInt(0.17)##When running at 420geV
+      overlay.setDetectorModel("CLIC_ILD_CDR500")
+    elif energy == 350.:
+      overlay.setBXOverlay(300)
+      overlay.setGGToHadInt(0.0464)##When running at 350geV
+      overlay.setDetectorModel("CLIC_ILD_CDR500")
+    elif energy == 3000.:
+      overlay.setBXOverlay(60)
+      overlay.setGGToHadInt(3.2)##When running at 3TeV
+      overlay.setDetectorModel("CLIC_ILD_CDR")
+    elif energy == 1400.:
+      overlay.setBXOverlay(60)
+      overlay.setGGToHadInt(1.3)##When running at 1.4TeV
+      overlay.setDetectorModel("CLIC_ILD_CDR")
+    else:
+      print "Overlay CLIC_ILD: No overlay parameters defined for this energy"
 
   if detectormodel in (ILDDetectorModels):
     overlay.setMachine("ilc_dbd")
@@ -514,6 +525,7 @@ for proddict in prodlist:
     ##########################################
     ##Define the generation production.
     pwh = ProductionJob()
+    pwh.setDryRun(PARAMS.dryrun)
     pwh.setLogLevel(logLevel)
     pwh.setOutputSE(prodOutputSE)
     if onlyDestination:
@@ -566,7 +578,8 @@ for proddict in prodlist:
     meta = pwh.getMetadata()
 
   if activesplitstdhep and meta:
-    pstdhepsplit =  ProductionJob()
+    pstdhepsplit = ProductionJob()
+    pstdhepsplit.setDryRun(PARAMS.dryrun)
     pstdhepsplit.setLogLevel(logLevel)
     pstdhepsplit.setProdType('Split')
     if onlyDestination:
@@ -612,6 +625,7 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     pmo = ProductionJob()
+    pmo.setDryRun(PARAMS.dryrun)
     pmo.setLogLevel(logLevel)
     if onlyDestination:
       pmo.setDestination(onlyDestination)
@@ -658,6 +672,7 @@ for proddict in prodlist:
     ####################
     ##Define the second production (simulation). Notice the setInputDataQuery call
     psl = ProductionJob()
+    psl.setDryRun(PARAMS.dryrun)
     psl.setLogLevel(logLevel)
     psl.setProdType('MCSimulation')
     if onlyDestination:
@@ -700,6 +715,7 @@ for proddict in prodlist:
     #######################
     ## Split the input files.
     psplit = ProductionJob()
+    psplit.setDryRun(PARAMS.dryrun)
     psplit.setCPUTime(30000)
     if onlyDestination:
       psplit.setDestination(onlyDestination)
@@ -744,6 +760,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pma = ProductionJob()
+    pma.setDryRun(PARAMS.dryrun)
     pma.setLogLevel(logLevel)
     pma.setProdType('MCReconstruction')
     pma.setConfig(ILDCONFIG)
@@ -788,6 +805,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidrec = ProductionJob()
+    psidrec.setDryRun(PARAMS.dryrun)
     psidrec.setLogLevel(logLevel)
     psidrec.setProdType('MCReconstruction')
     psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
@@ -836,6 +854,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     pmao = ProductionJob()
+    pmao.setDryRun(PARAMS.dryrun)
     pmao.setLogLevel(logLevel)
     pmao.setProdType('MCReconstruction_Overlay')
     if onlyDestination:
@@ -884,6 +903,7 @@ for proddict in prodlist:
     #######################
     #Define the reconstruction prod
     psidreco = ProductionJob()
+    psidreco.setDryRun(PARAMS.dryrun)
     psidreco.setLogLevel(logLevel)
     psidreco.setProdType('MCReconstruction_Overlay')
     psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
