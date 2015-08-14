@@ -190,7 +190,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
                         stdhepFile, mac, nbOfRuns, startFrom,
                         randomseed, mcrunnumber,
                         processID='', debug = False, outputlcio = None, 
-                        filemeta = {}):
+                        filemeta = None ):
   """Writes out a steering file for Mokka
   
   Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
@@ -210,6 +210,9 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
   :param dict filemeta: meta data dictionary used to set various metadata parameters Mokka can write to the lcio file header
   :return: S_OK()
   """
+  if filemeta is None:
+    filemeta = {}
+
   macname = "mokkamac.mac"
   if len(mac) < 1:
     macfile = file(macname, "w")
