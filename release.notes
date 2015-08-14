@@ -16,6 +16,15 @@ New: Based on Dirac v6r13p8
 
 New: Based on Dirac v6r13p7
 
+[v23r0p3]
+
+* Core
+FIX: Based on Dirac v6r12p48
+
+* Interfaces
+FIX: ProductionJob: Adapt to new changePathMode interface (ILCDIRAC-544)
+FIX: dirac-ilc-add-user: Adapt to new changePathOwner, changePathGroup interface
+FIX: dirac-ilc-replication-transformation: check that ilc_prod proxy is used
 
 [v23r0p2]
 
