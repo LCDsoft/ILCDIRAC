@@ -854,21 +854,18 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
 
   params = tree.findall('processor')
   for param in params:
-    if param.attrib.has_key('type'):
-      if param.attrib['type'] == 'TomatoProcessor':
-        subparams = param.findall('parameter')
-        for subparam in subparams:
-          if subparam.attrib.has_key('name'):
-            if outputFile:
-              if subparam.attrib['name'] == 'OutputFile':
-                com = Comment('Outputfile changed')
-                param.insert(0, com)
-                subparam.text = outputFile
-            if collection:
-              if subparam.attrib['name'] == 'MCCollectionName':
-                com = Comment('Collections to analyse changed')
-                param.insert(0, com)
-                subparam.text = collection
+    if 'type' in param.attrib and param.attrib['type'] == 'TomatoProcessor':
+      subparams = param.findall('parameter')
+      for subparam in subparams:
+        if subparam.attrib.has_key('name'):
+          if outputFile and subparam.attrib['name'] == 'OutputFile':
+            com = Comment('Outputfile changed')
+            param.insert(0, com)
+            subparam.text = outputFile
+          if collection and subparam.attrib['name'] == 'MCCollectionName':
+            com = Comment('Collections to analyse changed')
+            param.insert(0, com)
+            subparam.text = collection
          
   tree.write(outputxml)              
   return S_OK()
