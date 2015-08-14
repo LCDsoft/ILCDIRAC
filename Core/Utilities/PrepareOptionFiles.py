@@ -475,7 +475,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
 
 def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
                    startfrom, detector = None, randomseed = 0,
-                   outputlcio = None, debug = False):
+                   outputlcio = None, _debug = False):
   """Writes out a mac file for SLIC
   
   Takes the parameters passed from :mod:`~ILCDIRAC.Workflow.Modules.SLICAnalysis` to define a new mac file if none was provided
@@ -495,30 +495,23 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
   inputmacfile = file(inputmac, 'r')
   output = file(outputmac, 'w')
   listtext = []
+  replacelines = []
+  replacelines.append("/generator/filename")
+  replacelines.append("/generator/skipEvents")
+  #replacelines.append("/run/initialize")
+  replacelines.append("/random/seed")
+  replacelines.append("/lcio/path")
+  replacelines.append("/run/beamOn")
+
   for line in inputmacfile:
-    if not line.count("/generator/filename"):
-      if not line.count("/generator/skipEvents"):
-        #if line.find("/run/initialize")<0:
-        if not line.count("/random/seed"):
-          if not line.count("/lcio/path"):
-            if not line.count("/run/beamOn"):
-              if detector:
-                if not line.count("/lcdd/url"):
-                  if outputlcio:
-                    if not line.count("/lcio/filename"):
-                      #output.write(line)
-                      listtext.append(line)
-                  else:
-                    #output.write(line)
-                    listtext.append(line)
-              else :
-                if outputlcio:
-                  if not line.count("/lcio/filename"):
-                    #output.write(line)
-                    listtext.append(line)
-                else: 
-                  #output.write(line)
-                  listtext.append(line)
+    if any( rl in line for rl in replacelines ):
+      continue
+    if detector and line.count("/lcdd/url"):
+      continue
+    if outputlcio and line.count("/lcio/filename"):
+      continue
+
+    listtext.append(line)
 
   finaltext = "\n".join(listtext)
   finaltext += "\n"
