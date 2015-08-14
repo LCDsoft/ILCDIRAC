@@ -228,7 +228,7 @@ class ModulesTestCase ( unittest.TestCase ):
                   "h_nunu_gen_4191_0006.stdhep",
                   "h_nunu_gen_4191_0007.stdhep",
                   "test3.stdhep",
-                  ]
+                 ]
     removeDirs = ["my", "job"]
     for tempFile in removeFile:
       try:
