@@ -121,11 +121,11 @@ def addUserToFC(clip):
       gLogger.error(res['Message'])
       continue
 
-    res = fc.changePathGroup({ bpath: { "Group": grp } }, False)
+    res = fc.changePathGroup({ bpath: grp }, False)
     if not res['OK']:
       gLogger.error(res['Message'])
 
-    res = fc.changePathOwner({ bpath: {"Owner": clip.uname } }, False)
+    res = fc.changePathOwner({ bpath: clip.uname }, False)
     if not res['OK']:
       gLogger.error(res['Message'])
 
