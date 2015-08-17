@@ -60,7 +60,7 @@ class Job(DiracJob):
     """ Overload method to cancel it
     """
     return self._reportError('This job class does not implement setInputSandbox')
-  def setOutputData(self, lfns, OutputSE = [], OutputPath = '' ):
+  def setOutputData(self, lfns, _OutputPath = '', _OutputSE = '' ):
     """ Overload method to cancel it
     """
     return self._reportError('This job class does not implement setOutputData')
@@ -87,11 +87,11 @@ class Job(DiracJob):
     self.check = False
     return S_OK()
 
-  def submit(self, dirac = None, mode = 'wms'):
+  def submit(self, _dirac = None, _mode = 'wms'):
     """ Method to submit the job. Not doing anything by default, so that ProductionJobs 
     cannot be submitted by mistake
     """
-    return S_ERROR("Not available for this job class")
+    return self._reportError("Submit is not available for this job class")
   
   def checkparams(self, dirac = None):
     """ Check job consistency instead of submitting
