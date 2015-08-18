@@ -20,6 +20,8 @@ New: Based on Dirac v6r13p7
 
 * Core
 FIX: Based on Dirac v6r12p48
+NEW: createTarBallForProgram.sh script to create a tarball of the executable and required libraries
+
 
 * Interfaces
 FIX: ProductionJob: Adapt to new changePathMode interface (ILCDIRAC-544)
