@@ -44,12 +44,12 @@ class GetSRMFile(ModuleBase):
       self.log.error("Failed to resolve input parameters:", result["Message"])
       return result
     if not self.srmfiles:
-      self.log.error('Files txt where not found correctly: %s' % self.srmfiles)
-      return S_ERROR('Files txt where not found correctly: %s' % self.srmfiles)
+      self.log.error('Files txt was not found correctly: %s' % self.srmfiles)
+      return S_ERROR('Files txt was not found correctly')
     
     if not type(self.files[0]) is type({}):
-      self.log.error('Files where not found correctly: %s' % self.files)
-      return S_ERROR('Files where not found correctly: %s' % self.files)
+      self.log.error('Files were not found correctly: %s' % self.files)
+      return S_ERROR('Files were not found correctly')
 
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     max_concurrent_running = self.ops.getValue('/GetSRM/MaxConcurrentRunning', 100)

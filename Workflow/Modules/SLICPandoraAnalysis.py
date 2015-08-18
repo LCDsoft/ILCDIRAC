@@ -111,7 +111,7 @@ class SLICPandoraAnalysis (ModuleBase):
     
     if not os.path.exists(self.detectorxml):
       self.log.error('Detector model xml %s was not found, exiting' % self.detectorxml)
-      return S_ERROR('Detector model xml %s was not found, exiting' % self.detectorxml)
+      return S_ERROR('Detector model xml was not found, exiting')
     
     oldversion = False
     if self.applicationVersion in ['CLIC_CDR', 'CDR1', 'CDR2', 'CDR0', 'V2', 'V3', 'V4']:
