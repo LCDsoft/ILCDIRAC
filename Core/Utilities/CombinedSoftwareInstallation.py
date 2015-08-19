@@ -181,26 +181,35 @@ def log( n, line ):
 
 def getSharedAreaLocation():
   """
-   Discover location of Shared SW area
-   This area is populated by a tool independent of the DIRAC jobs
-   Not used yet in ILC DIRAC, but should be
+  Discover location of Shared SW area
+  based on the list of "Operations/Software/SharedAreaLocations"
+
   """
+
+  listOfSharedAreas = Operations().getValue( "Software/SharedAreaLocations",
+                                             [ "/cvmfs/ilc.desy.de/clic",
+                                               "$VO_ILC_SW_DIR",
+                                               "$OSG_APP",
+                                               "/cvmfs/oasis.opensciencegrid.org/ilc/clic",
+                                             ] )
+  if not isinstance( listOfSharedAreas , list ):
+    listOfSharedAreas = [ listOfSharedAreas ]
+  DIRAC.gLogger.debug( "ListOfSharedAreas: %s " % ", ".join(listOfSharedAreas) )
   sharedArea = ''
-  if os.environ.has_key('VO_ILC_SW_DIR'):
-    sharedArea = os.path.join(os.environ['VO_ILC_SW_DIR'],'clic')
-    DIRAC.gLogger.debug( 'Using VO_ILC_SW_DIR at "%s"' % sharedArea )
-    if os.environ['VO_ILC_SW_DIR'] == '.':
-      if not os.path.isdir( sharedArea ):
-        os.makedirs( sharedArea )
-          
-  elif os.environ.has_key('OSG_APP'):
-    sharedArea = os.path.join(os.environ['OSG_APP'],'clic')
-    DIRAC.gLogger.debug( 'Using OSG_APP_DIR at "%s"' % sharedArea )
-    if os.environ['OSG_APP'] == '.':
-      if not os.path.isdir( sharedArea ):
-        os.makedirs( sharedArea )
-        
-  elif DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
+  for area in listOfSharedAreas:
+    DIRAC.gLogger.debug( "Checking ShareadArea %s " % area )
+    if area.startswith( "$" ): ## is an environment variable
+      envVar = area[1:]
+      if envVar in os.environ:
+        sharedArea = os.path.join( os.environ[envVar], 'clic' )
+    else:
+      sharedArea = area
+
+    if os.path.exists( sharedArea ):
+      DIRAC.gLogger.info( "Using sharead area %s based on %s " %( sharedArea, area ) )
+      break
+
+  if DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
     sharedArea = DIRAC.gConfig.getValue('/LocalSite/SharedArea')
     DIRAC.gLogger.debug( 'Using CE SharedArea at "%s"' % sharedArea )
     
