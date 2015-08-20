@@ -16,12 +16,12 @@ New: Based on Dirac v6r13p8
 
 New: Based on Dirac v6r13p7
 
+
 [v23r0p4]
 
 * Core
-
+FIX: Based on Dirac v6r12p49, for real this time
 NEW: ilcdirac-version script to display the ilcdirac and dirac versions
-
 
 [v23r0p3]
 
