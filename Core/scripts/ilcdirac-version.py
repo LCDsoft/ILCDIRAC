@@ -2,7 +2,11 @@
 """
     print version of current ILCDIRAC installation
 """
-__RCSID__ = "$Id$"
+
 import DIRAC
 import ILCDIRAC
-print "ILCDirac Version:", ILCDIRAC.version, "\nWith DIRAC version:", DIRAC.version
+
+__RCSID__ = "$Id$"
+
+print "ILCDirac Version:", ILCDIRAC.version
+print "With DIRAC version:", DIRAC.version
