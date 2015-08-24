@@ -197,7 +197,7 @@ def getSharedAreaLocation():
   DIRAC.gLogger.debug( "ListOfSharedAreas: %s " % ", ".join(listOfSharedAreas) )
   sharedArea = ''
   for area in listOfSharedAreas:
-    DIRAC.gLogger.debug( "Checking ShareadArea %s " % area )
+    DIRAC.gLogger.debug( "Checking SharedArea %s " % area )
     if area.startswith( "$" ): ## is an environment variable
       envVar = area[1:]
       if envVar in os.environ:
@@ -206,7 +206,7 @@ def getSharedAreaLocation():
       sharedArea = area
 
     if os.path.exists( sharedArea ):
-      DIRAC.gLogger.info( "Using sharead area %s based on %s " %( sharedArea, area ) )
+      DIRAC.gLogger.info( "Using shared area %s based on %s " %( sharedArea, area ) )
       break
 
   if DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
