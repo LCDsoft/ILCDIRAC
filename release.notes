@@ -17,6 +17,12 @@ New: Based on Dirac v6r13p8
 New: Based on Dirac v6r13p7
 
 
+[v23r0p5]
+
+* Core
+NEW: Option to set the location of the shared area, needed to run with OSG cvmfs for now
+
+
 [v23r0p4]
 
 * Core
