@@ -457,6 +457,13 @@ class ILDProductionJob( ProductionJob ):
             elif 'ProcessID' in self.compatmeta:
                 metap.update( {"ProcessID":self.compatmeta['ProcessID']} )    
                 self.finalMetaDict[path] = metap     
+
+            for imeta in ['MachineParams','Energy','BeamParticle1','BeamParticle2','PolarizationB1','PolarizationB2']:
+                if imeta in self.compatmeta:
+                    metap.update( {imeta : self.compatmeta[imeta]} )
+                    self.finalMetaDict[path] = metap
+
+
             if hasattr( application, "detectorModel" ):
                 if application.detectorModel:
                     path += application.detectorModel
