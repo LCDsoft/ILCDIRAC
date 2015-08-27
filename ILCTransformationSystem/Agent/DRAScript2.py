@@ -73,10 +73,11 @@ class FileInformation( object ):
 
   def setJobDone( self, tInfo ):
     """set the jobstatus to Done"""
-    res = tInfo.transClient.setTaskStatus( tInfo.transName, self.wmsID, "Done" )
-    if not res['OK']:
-      raise RuntimeError( "Failed updating task status" )
-    self.__updateJobStatus( tInfo, "Done", "Job Finished Successfully" )
+    if ENABLED:
+      res = tInfo.transClient.setTaskStatus( tInfo.transName, self.wmsID, "Done" )
+      if not res['OK']:
+        raise RuntimeError( "Failed updating task status" )
+      self.__updateJobStatus( tInfo, "Done", "Job Finished Successfully" )
 
 
   def setInputUnused( self, tInfo ):
@@ -125,13 +126,13 @@ class FileInformation( object ):
 class TransformationInfo( object ):
   """ hold information about transformations """
   def __init__( self, transformationID, transName, tClient, jobDB, logDB ):
+    self.log = gLogger.getSubLogger( "TInfo" )
     self.tID = transformationID
     self.transName = transName
     self.transClient = tClient
     self.jobDB = jobDB
     self.logDB = logDB
     self.olist = self.__getOutputList()
-    self.log = gLogger.getSubLogger( "TInfo" )
 
   def __getTransformationWorkflow( self ):
     """return the workflow for the transformation"""
