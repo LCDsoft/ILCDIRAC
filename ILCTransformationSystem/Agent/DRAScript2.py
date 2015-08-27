@@ -13,8 +13,8 @@ get Jobs for InputDataFiles, print status of file and jobs
 
 
 
-FIXME: jobDone, but actually Failed because of DB Troubles??
-FIXME: jobFailed, but outputdata still there
+FIXME: jobDone, but actually Failed, so no(t all) outputData present
+FIXME: jobFailed, but outputdata partially there
 
 """
 
