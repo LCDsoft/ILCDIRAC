@@ -23,7 +23,7 @@ ENABLED=True
 __RCSID__ = "$Id$"
 
 import datetime
-
+from itertools import izip_longest
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -63,7 +63,7 @@ class FileInformation( object ):
                                                                            int(self.jobID),
                                                                            str(self.jobStatus) )
     if self.outputFiles:
-      efInfo = [ "%s (%s)" % _ for _ in map(None, self.outputFiles, self.outputStatus ) ]
+      efInfo = [ "%s (%s)" % _ for _ in izip_longest(self.outputFiles, self.outputStatus ) ]
       info += "\n-->OutputFiles: "
       info += ", ".join(efInfo)
     if self.descendents:
