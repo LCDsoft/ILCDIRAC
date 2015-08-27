@@ -23,7 +23,6 @@ ENABLED=False
 __RCSID__ = "$Id$"
 
 import datetime
-from itertools import izip_longest
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -32,146 +31,15 @@ from DIRAC import gLogger, S_OK
 
 from DIRAC.RequestManagementSystem.Client.ReqClient            import ReqClient
 from DIRAC.Core.Utilities.Time                                 import dateTime
-from DIRAC.Core.Workflow.Workflow                              import fromXMLString
 from DIRAC.Resources.Catalog.FileCatalogClient                 import FileCatalogClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
 from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
 
 from DIRAC.TransformationSystem.Client.TransformationClient    import TransformationClient  
-from ILCDIRAC.Core.Utilities.ProductionData                    import constructProductionLFNs
-
-class FileInformation( object ):
-  """hold information about inputdata files"""
-
-  def __init__( self, lfn, fileID, status, wmsID ):
-    self.lfn = lfn
-    self.status = status
-    self.wmsID = wmsID
-    self.fileID = fileID
-    self.jobID = 0
-    self.jobStatus = None
-    self.outputFiles = []
-    self.outputStatus = []
-    self.descendents = []
-
-  def __str__( self ):
-    info = "LFN: %s, FileID %s FileStatus: %s WMSID: %s, Job: %d (%s)" % ( self.lfn,
-                                                                           self.fileID,
-                                                                           self.status,
-                                                                           self.wmsID,
-                                                                           int(self.jobID),
-                                                                           str(self.jobStatus) )
-    if self.outputFiles:
-      efInfo = [ "%s (%s)" % _ for _ in izip_longest(self.outputFiles, self.outputStatus ) ]
-      info += "\n-->OutputFiles: "
-      info += ", ".join(efInfo)
-    if self.descendents:
-      info += "\n-->Descendents: "
-      info += ", ".join(self.descendents)
-    return info
-
-  def setJobDone( self, tInfo ):
-    """set the jobstatus to Done"""
-    if ENABLED:
-      res = tInfo.transClient.setTaskStatus( tInfo.transName, self.wmsID, "Done" )
-      if not res['OK']:
-        raise RuntimeError( "Failed updating task status" )
-      self.__updateJobStatus( tInfo, "Done", "Job Finished Successfully" )
+from ILCDIRAC.ILCTransformationSystem.Utilities import FileInformation
 
 
-  def setInputUnused( self, tInfo ):
-    """set the inputfile to unused"""
-    self.__setInputStatus( tInfo, "Unused" )
-
-  def setInputProcessed( self, tInfo ):
-    """set the inputfile to processed"""
-    self.__setInputStatus( tInfo, "Processed" )
-
-  def __setInputStatus( self, tInfo, status ):
-    """set the input file to status"""
-    if ENABLED:
-      result = tInfo.transClient.setFileStatusForTransformation(tInfo.tID, status, [self.lfn], force = True)
-      if not result['OK']:
-        gLogger.error( "Failed updating status", result['Message'] )
-
-  def __updateJobStatus( self, tInfo , status, minorstatus = None ):
-    """ This method updates the job status in the JobDB
-    """
-    tInfo.log.verbose( "self.jobDB.setJobAttribute(%s,'Status','%s',update=True)" % ( self.jobID, status ) )
-
-    if ENABLED:
-      result = tInfo.jobDB.setJobAttribute( self.jobID, 'Status', status, update = True )
-    else:
-      return S_OK( 'DisabledMode' )
-
-    if result['OK']:
-      if minorstatus:
-        tInfo.log.verbose( "self.jobDB.setJobAttribute(%s,'MinorStatus','%s',update=True)" % ( self.jobID, minorstatus ) )
-        result = tInfo.jobDB.setJobAttribute( self.jobID, 'MinorStatus', minorstatus, update = True )
-
-    if not minorstatus: #Retain last minor status for stalled jobs
-      result = tInfo.jobDB.getJobAttributes( self.jobID, ['MinorStatus'] )
-      if result['OK']:
-        minorstatus = result['Value']['MinorStatus']
-
-    logStatus = status
-    result = tInfo.logDB.addLoggingRecord( self.jobID, status = logStatus, minor = minorstatus, source = 'DataRecoveryAgent' )
-    if not result['OK']:
-      tInfo.log.warn( result )
-
-    return result
-
-
-class TransformationInfo( object ):
-  """ hold information about transformations """
-  def __init__( self, transformationID, transName, tClient, jobDB, logDB ):
-    self.log = gLogger.getSubLogger( "TInfo" )
-    self.tID = transformationID
-    self.transName = transName
-    self.transClient = tClient
-    self.jobDB = jobDB
-    self.logDB = logDB
-    self.olist = self.__getOutputList()
-
-  def __getTransformationWorkflow( self ):
-    """return the workflow for the transformation"""
-    res = self.transClient.getTransformationParameters( self.tID, ['Body'] )
-    if not res['OK']:
-      self.log.error( 'Could not get Body from TransformationDB' )
-      return res
-    body = res['Value']
-    workflow = fromXMLString( body )
-    workflow.resolveGlobalVars()
-    return S_OK( workflow )
-
-  def __getOutputList( self ):
-    """Get list of outputfiles"""
-    resWorkflow = self.__getTransformationWorkflow()
-    if not resWorkflow['OK']:
-      self.log.error("Failed to get Transformation Workflow")
-      raise RuntimeError( "Failed to get outputlist" )
-
-    workflow = resWorkflow['Value']
-    olist = []
-    for step in workflow.step_instances:
-      param = step.findParameter('listoutput')
-      if not param:
-        continue
-      olist.extend(param.value)
-    return olist
-
-  def getOutputFiles( self, taskID ):
-    """returns list of expected lfns for given task"""
-    commons = { 'outputList': self.olist,
-                'PRODUCTION_ID': int(self.tID),
-                'JOB_ID': int(taskID),
-              }
-    resFiles = constructProductionLFNs( commons )
-    if not resFiles['OK']:
-      raise RuntimeError( "Failed to create productionLFNs" )
-    expectedlfns = resFiles['Value']['ProductionOutputData']
-    return expectedlfns 
 
     
 class DRA( object ):
@@ -271,9 +139,10 @@ class DRA( object ):
   def getOutputFileStatus( self, selectedFiles ):
     for inputFile in selectedFiles.values():
       outputFiles = inputFile.outputFiles
-      reps = self.fcClient.getReplicas( outputFiles )
+      reps = self.fcClient.exists( outputFiles )
       if not reps['OK']:
-        raise RuntimeError("Failed to get replicas")
+        self.log.error( " Failed checking existance: " , reps['Message'] )
+        raise RuntimeError("Failed to check existance")
       for lfn in inputFile.outputFiles:
         success = reps['Value']['Successful']
         failed = reps['Value']['Failed']
@@ -291,6 +160,7 @@ class DRA( object ):
       lfnsToCheck = [inputFile.lfn]
       resDescendents = self.fcClient.getFileDescendents( lfnsToCheck, range(1,6) )
       if not resDescendents['OK']:
+        self.log.error( "Failed to get descendents: ", resDescendents['Message'] )
         raise RuntimeError ("Failed to get descendents")
       for _lfn, descendents in resDescendents['Value']['Successful'].iteritems():
         for descendent in descendents:
@@ -331,10 +201,14 @@ class DRA( object ):
     self.getJobStatuses( transformationInfo, selectedFiles, 2 )
 
     selectedInteresting = {}
+    selectedDoneInteresting = {}
     for taskID, inputFile in selectedFiles.iteritems():
-      if inputFile.jobStatus == 'Failed' and inputFile.status in ('Processed',):
+      if inputFile.jobStatus == 'Failed' and inputFile.status in ('Processed','Assigned'):
         selectedInteresting[taskID] = inputFile
+      elif inputFile.jobStatus == 'Done' and inputFile.status in ('Assigned',):
+        selectedDoneInteresting[taskID] = inputFile
     self.log.notice("Found %d interesting files" % len( selectedInteresting ) )
+    self.log.notice("Found %d interesting Done Jobs " % len( selectedDoneInteresting ) )
     
     self.log.notice( "Getting output files..." )
     self.getOutputFiles( transformationInfo, selectedInteresting )
@@ -345,6 +219,13 @@ class DRA( object ):
     self.log.notice( "Getting descendents..." )
     self.getOutputFileDescendents( selectedInteresting )
 
+    changeCounters = [ [0, "Assigned Files to Processed, Job to Done"],
+                       [0, "Assigned Files to Unused"],
+                       [0, "Assigned Files to Unused, Cleanup output"],
+                       [0, "Processed Files, Job to Done"],
+                       [0, "Done Job to Failed"],
+                     ]
+
     for taskID, inputFile in selectedInteresting.iteritems():
       if inputFile.status in ("Assigned",) and inputFile.jobStatus == "Failed":
         if all( "Exists" in status for status in inputFile.outputStatus ):
@@ -352,28 +233,36 @@ class DRA( object ):
           print inputFile, "\nAll files exist, set job to Done, mark input Processed"
           inputFile.setJobDone( transformationInfo )
           inputFile.setInputProcessed( transformationInfo )
+          changeCounters[0][0] += 1
         elif all( "Missing" in status for status in inputFile.outputStatus ) and not inputFile.descendents:
           print "*"*60
           print inputFile, "\nMissing all output files, mark input unused"
           inputFile.setInputUnused( transformationInfo )
+          changeCounters[1][0] += 1
         else:
           print "*"*60
           print inputFile, "\nSome output files missing, cleanup and mark input unused"
           #inpputFile.cleanupOutput( transformationInfo )
           #inputFile.setInputUnused( transformationInfo )
+          changeCounters[2][0] += 1
       elif inputFile.status in ("Processed",) and inputFile.jobStatus == "Failed":
         if all( "Exists" in status for status in inputFile.outputStatus ):
           print "*"*60
           print inputFile, "\nAll files exist, input Processed: Set job to Done! "
           inputFile.setJobDone( transformationInfo )
+          changeCounters[3][0] += 1
         else:
           print "*"*60
           print inputFile, "\nSome output files missing, cleanup and mark input unused"
           #inpputFile.cleanupOutput( transformationInfo )
           #inputFile.setInputUnused( transformationInfo )
+          changeCounters[4][0] += 1
       elif inputFile.descendents:
         print "*"*60
         print inputFile, "\nDescendents exist "
+
+    for counter in changeCounters:
+      print counter[0], counter[1]
 
 if __name__ == "__main__":
   DRA = DRA()
