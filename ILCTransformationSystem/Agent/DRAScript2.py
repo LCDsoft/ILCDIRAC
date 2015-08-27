@@ -18,7 +18,7 @@ FIXME: jobFailed, but outputdata partially there
 
 """
 
-ENABLED=True
+ENABLED=False
 
 __RCSID__ = "$Id$"
 
@@ -296,12 +296,29 @@ class DRA( object ):
         for descendent in descendents:
           inputFile.descendents.append(descendent)
 
+
+  def getEligibleTransformations( self, status, typeList ):
+    """ Select transformations of given status and type.
+    """
+    res = self.transClient.getTransformations(condDict = {'Status' : status, 'Type' : typeList})
+    if not res['OK']:
+      return res
+    transformations = {}
+    for prod in res['Value']:
+      prodID = prod['TransformationID']
+      prodName = prod['TransformationName']
+      transformations[str(prodID)] = (prod['Type'], prodName)
+    return S_OK(transformations)
+
     
   def execute( self ):
     """ run the DataRecovery things """
     #transformationInfo = TransformationInfo( 5678, self.transClient, self.jobDB, self.logDB )
-    transName = "e2e2nn_1400.0_ild_rec_overlay_beamrecoil_e1F_E1F"
-    transformationInfo = TransformationInfo( 4732, transName, self.transClient, self.jobDB, self.logDB )
+    res = self.getEligibleTransformations( ["Active","Completed"], [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction"] )
+    #prodID = 5678
+    prodID = 5732
+    transName = res['Value'][str(prodID)]
+    transformationInfo = TransformationInfo( prodID, transName, self.transClient, self.jobDB, self.logDB )
     self.log.notice( "Getting transformation tasks..." )
     result = self.selectTransformationFiles( transformationInfo, [ 'Processed', 'Assigned', 'MaxReset'] )
     #result = self.selectTransformationFiles( transformationInfo, ['Assigned'] )
