@@ -233,6 +233,36 @@ class DRA( object ):
     for do in self.todo:
       print do['ShortMessage'],":",do['Counter']
 
+
+  def checkRequestsForJobList( self, jobList ):
+    """return a dict of jobID to requestID"""
+    jobIDList = jobList.keys()
+    result = self.reqClient.readRequestsForJobs( jobIDList )
+    if not result['OK']:
+      raise RuntimeError( "Failed to get requests" )
+    for jobID in result['Value']['Successful']:
+      request = result['Value']['Successful'][jobID]
+      if request.Status != "Done":
+        self.log.notice( " Removing job because pending requests ")
+        self.log.notice( str(jobList[jobID]) )
+        del jobList[jobID]
+
+  def getAllJobInformation( self, jobs ):
+    """get the jobInformation for all jobs"""
+    counter = 0
+    nJobs = len(jobs)
+    print "Getting Job Information from JDL"
+    for job in jobs.values():
+      counter += 1
+      stdout.write( "\r %d/%d" % (counter, nJobs) )
+      stdout.flush()
+      try:
+        job.getJobInformation( self.jobMon )
+      except RuntimeError as e:
+        self.log.error( "+++++ Failure for job: %d " % job.jobID )
+        self.log.error( "+++++ Exception: ", str(e) )
+        del jobs[job.jobID]
+
 if __name__ == "__main__":
   DRA = DRA()
   DRA.execute()
