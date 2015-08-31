@@ -11,6 +11,7 @@ __RCSID__="$Id$"
 from collections import defaultdict
 from sys import stdout
 import time
+import itertools
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -39,6 +40,7 @@ class DRA( object ):
     self.jobDB = JobDB()
     self.logDB = JobLoggingDB()
     self.dMan = DataManager()
+    self.ignoreTasks = set()
     self.todo = {'MCGeneration':
                  [ dict( Message="MCGeneration: OutputExists: Job 'Done'",
                          ShortMessage="MCGeneration: job 'Done' ",
@@ -52,9 +54,22 @@ class DRA( object ):
                          Check=lambda job: job.allFilesMissing() and job.status=='Done',
                          Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
                        ),
+                   # dict( Message="MCGeneration, job 'Done': OutputExists: Task 'Done'",
+                   #       ShortMessage="MCGeneration: job already 'Done' ",
+                   #       Counter=0,
+                   #       Check=lambda job: job.allFilesExist() and job.status=='Done',
+                   #       Actions=lambda job,tInfo: [ tInfo._TransformationInfo__setTaskStatus(job, 'Done') ]
+                   #     ),
                  ],
                  'OtherProductions':
-                 [ dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
+                 [ \
+                   dict( Message="Other Tasks Exist: Do nothing",
+                         ShortMessage="Other Tasks",
+                         Counter=0,
+                         Check=lambda job: job.finalTask or job.taskID in self.ignoreTasks,
+                         Actions=lambda job,tInfo: [ None ]
+                       ),
+                   dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
                          ShortMessage="Job 'Failed, Input 'Deleted'",
                          Counter=0,
                          Check=lambda job: job.inputFile and not job.inputFileExists and job.status=='Done',
@@ -173,24 +188,21 @@ class DRA( object ):
   def execute( self ):
     """ run for this """
     status = ["Active"]
-
-    types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction" ]
+    types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction", "MCGeneration" ]
     transformations = self.getEligibleTransformations( status, types )
-    prodID = 5679
+    prodID = 5615
     transType, transName = transformations['Value'][str(prodID)]
-    self.treatProduction( prodID, transName, transType )
-
-    types = [ "MCGeneration" ]
-    transformations = self.getEligibleTransformations( status, types )
-    prodID = 5677
-    transType, transName = transformations['Value'][str(prodID)]
-    self.treatMCGeneration( prodID, transName, transType )
+    if transType == "MCGeneration":
+      self.treatMCGeneration( prodID, transName, transType )
+    else:
+      self.treatProduction( prodID, transName, transType )
 
   def treatMCGeneration( self, prodID, transName, transType ):
     """deal with MCGeneration jobs, where there is no inputFile"""
     tInfo = TransformationInfo( prodID, transName, transType,
                                 self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
-    jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
+    #jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
+    jobs = tInfo.getJobs(statusList=['Done'])
     while jobs:
       jobs = self.checkAllJobs( jobs, tInfo )
     self.printSummary()
@@ -208,6 +220,7 @@ class DRA( object ):
 
     while jobs:
       jobs = self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
+
     self.printSummary()
 
   def checkJob( self, job, tInfo ):
@@ -217,8 +230,8 @@ class DRA( object ):
       if do['Check'](job):
         do['Counter'] += 1
         stdout.write('\n')
-        print do['Message']
-        print job
+        self.log.notice( do['Message'] )
+        self.log.notice( job )
         action = do['Actions']
         action(job, tInfo)
         return
@@ -230,7 +243,7 @@ class DRA( object ):
     counter = 0
     startTime = time.time()
     nJobs = len(jobs)
-    print "Running over all the jobs"
+    self.log.notice( "Running over all the jobs" )
     for job in jobs.values():
       counter += 1
       stdout.write( "\r %d/%d: %3.1fs " % (counter, nJobs, float(time.time() - startTime) ) )
@@ -238,11 +251,13 @@ class DRA( object ):
       try:
         job.checkRequests( self.reqClient )
         if job.pendingRequest:
+          self.log.warn( "Job has Pending requests:\n%s" % job )
           continue
         job.getJobInformation( self.jobMon )
         job.checkFileExistance( self.fcClient )
         if tasksDict and lfnTaskDict:
-          job.getTaskInfo( tasksDict, lfnTaskDict )
+          job.getTaskInfo( tasksDict, lfnTaskDict, self.ignoreTasks)
+          print self.ignoreTasks
           fileJobDict[job.inputFile].append(job.jobID)
         self.checkJob( job, tInfo )
       except RuntimeError as e:
@@ -254,10 +269,9 @@ class DRA( object ):
 
   def printSummary( self ):
     """print summary of changes"""
-    print "Summary:"
-    for do in self.todo:
-      print do['ShortMessage'],":",do['Counter']
-
+    self.log.notice( "Summary:" )
+    for do in itertools.chain.from_iterable(self.todo.values()):
+      self.log.notice( "%s: %s" %(  do['ShortMessage'],do['Counter'] ) )
 
   def checkRequestsForJobList( self, jobList ):
     """return a dict of jobID to requestID"""
