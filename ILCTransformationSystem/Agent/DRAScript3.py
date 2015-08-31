@@ -38,7 +38,19 @@ class DRA( object ):
     self.jobDB = JobDB()
     self.logDB = JobLoggingDB()
     self.dMan = DataManager()
-    self.todo = [ dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
+    self.todo = [ dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
+                        ShortMessage="Job 'Failed, Input 'Deleted'",
+                        Counter=0,
+                        Check=lambda job: not job.inputFileExists and job.status=='Done',
+                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
+                      ),
+                  dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
+                        ShortMessage="Input 'Deleted'",
+                        Counter=0,
+                        Check=lambda job: not job.inputFileExists,
+                        Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo) ]
+                      ),
+                  dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
                         ShortMessage="Jobs 'Done', Input 'Processed'",
                         Counter=0,
                         Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',),
