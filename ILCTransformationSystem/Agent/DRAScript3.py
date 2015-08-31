@@ -45,47 +45,47 @@ class DRA( object ):
                         Check=lambda job: not job.inputFileExists and job.status=='Done',
                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
                       ),
-                  dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
+                  dict( Message="InputFile missing, job'Failed': mark input 'Deleted'",
                         ShortMessage="Input 'Deleted'",
                         Counter=0,
-                        Check=lambda job: not job.inputFileExists,
+                        Check=lambda job: not job.inputFileExists and job.status=='Failed',
                         Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo) ]
                       ),
                   dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
                         ShortMessage="Jobs 'Done', Input 'Processed'",
                         Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',),
+                        Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',) and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
                       ),
                   dict( Message="All files exist, input processed, mark job 'Done'",
                         ShortMessage="Jobs 'Done'",
                         Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.taskStatus in ('Processed',) and job.allFilesExist(),
+                        Check=lambda job: job.status=='Failed' and job.taskStatus in ('Processed',) and job.allFilesExist() and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
                       ),
                   dict( Message="Some output files missing: cleanup,  mark input 'Unused'",
                         ShortMessage="Outputs Cleaned, Input 'Unused'",
                         Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
+                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setInputUnused(tInfo) ]
                       ),
                   dict( Message="Some output files missing, job 'Done': cleanup, mark job 'Failed',  mark input 'Unused'",
-                        ShortMessage="Outputs Cleaned, Input 'Unused'",
+                        ShortMessage="Job, 'Failed', Outputs Cleaned, Input 'Unused'",
                         Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
+                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask and job.inputFileExists,
                         Actions=lambda job,tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputUnused(tInfo)]
                       ),
                   dict( Message="Some output files missing: cleanup. Processed in different task",
                         ShortMessage="Outputs Cleaned",
                         Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.someFilesMissing(),
+                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo) ]
                       ),
                   dict( Message="Missing all output files: mark input unused",
                         ShortMessage="Input 'Unused'",
                         Counter=0,
                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned',) \
-                                          and job.allFilesMissing() and not job.finalTask,
+                                          and job.allFilesMissing() and not job.finalTask and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), tInfo.setInputUnused(job) ]
                       ),
                   dict( Message="All files missing, mark job 'Failed'",
@@ -97,20 +97,20 @@ class DRA( object ):
                   dict( Message="All files missing, mark job 'Failed', input 'Unused'",
                         ShortMessage="Jobs 'Failed', Input 'Unused'",
                         Counter=0,
-                        Check=lambda job: job.status=='Done' and job.allFilesMissing() and not job.finalTask,
+                        Check=lambda job: job.status=='Done' and job.allFilesMissing() and not job.finalTask and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputUnused(tInfo) ]
                       ),
                   dict( Message="Some files missing, mark job 'Failed'",
                         ShortMessage="Jobs 'Failed', Outputs Cleaned",
                         Counter=0,
-                        Check=lambda job: job.status=='Done' and job.someFilesMissing(),
+                        Check=lambda job: job.status=='Done' and job.someFilesMissing() and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs() ]
                       ),
                   dict( Message="All files exist, job is 'Done': mark input 'Processed'",
                         ShortMessage="Input 'Processed'",
                         Counter=0,
                         Check=lambda job: job.status=='Done' and job.allFilesExist() and job.taskStatus in ('Assigned',) \
-                                          and not job.finalTask,
+                                          and not job.finalTask and job.inputFileExists,
                         Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
                       ),
 
@@ -240,6 +240,7 @@ class DRA( object ):
         print job
         action = do['Actions']
         action(job, tInfo)
+        break
 
   def printSummary( self ):
     """print summary of changes"""
