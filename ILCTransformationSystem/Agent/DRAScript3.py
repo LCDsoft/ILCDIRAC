@@ -10,6 +10,7 @@ __RCSID__="$Id$"
 
 from collections import defaultdict
 from sys import stdout
+import time
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -202,11 +203,12 @@ class DRA( object ):
 
     fileJobDict = defaultdict(list)
     counter = 0
+    startTime = time.time()
     nJobs = len(jobs)
     print "Running over all the jobs"
     for job in jobs.values():
       counter += 1
-      stdout.write( "\r %d/%d" % (counter, nJobs) )
+      stdout.write( "\r %d/%d: %3.1fs " % (counter, nJobs, float(time.time() - startTime) ) )
       stdout.flush()
       try:
         job.checkRequests( self.reqClient )
