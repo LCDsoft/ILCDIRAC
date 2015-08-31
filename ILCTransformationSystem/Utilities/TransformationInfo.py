@@ -107,6 +107,10 @@ class TransformationInfo( object ):
     """set the inputfile to processed"""
     self.__setInputStatus( job, "Processed" )
 
+  def setInputDeleted( self, job ):
+    """set the inputfile to processed"""
+    self.__setInputStatus( job, "Deleted" )
+
   def __setInputStatus( self, job, status ):
     """set the input file to status"""
     if ENABLED:
