@@ -25,7 +25,7 @@ from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 
-from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo, FileInformation, JobInfo
+from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo, FileInformation
 
 class DRA( object ):
   """ DataRecovery primarily based on jobs, not on task"""
@@ -116,16 +116,6 @@ class DRA( object ):
 
                 ]
 
-  def getJobs( self, transformationID, status ):
-    """returns list of done jobs"""
-    attrDict = dict( Status=status, JobGroup="%08d" % int(transformationID) )
-    res = self.jobMon.getJobs( attrDict )
-    if res['OK']:
-      self.log.debug("Found Prod jobs: %s" % res['Value'] )
-    else:
-      self.log.error("Error finding jobs: ", res['Message'] )
-    return res
-
   def selectTransformationFiles( self, tInfo, statusList ):
     """ Select files, production jobIDs in specified file status for a given transformation.
     returns dictionary of lfn -> jobID
@@ -167,40 +157,55 @@ class DRA( object ):
     return S_OK(transformations)
 
   def execute( self ):
-    self.treatProduction( 5679 )
-
-  def treatProduction( self, prodID ):
-    """run this thing for given production"""
+    """ run for this """
     status = ["Active"]
+
     types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction" ]
     transformations = self.getEligibleTransformations( status, types )
-    transType, transName = transformations['Value'][str(prodID)]
-    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient )
+    prodID = 5679
+    _transType, transName = transformations['Value'][str(prodID)]
+    self.treatProduction( prodID, transName )
 
-    self.log.notice( "Getting 'Done' Jobs..." )
-    done = self.getJobs( tInfo.tID, ["Done"] )
-    self.log.notice( "Getting 'Failed' Jobs..." )
-    failed = self.getJobs( tInfo.tID, ["Failed"] )
-    if not done['OK']:
-      raise RuntimeError( "Failed to get Done Jobs" )
-    if not failed['OK']:
-      raise RuntimeError( "Failed to get Failed Jobs" )
-    done = done['Value']
-    failed = failed['Value']
+    types = [ "MCGeneration" ]
+    transformations = self.getEligibleTransformations( status, types )
+    prodID = 5677
+    _transType, transName = transformations['Value'][str(prodID)]
+    self.treatMCGeneration( prodID, transName )
 
-    jobs = {}
-    for job in done:
-      jobs[int(job)] = JobInfo( job, "Done", tInfo.tID )
-    for job in failed:
-      jobs[int(job)] = JobInfo( job, "Failed", tInfo.tID )
+  def treatMCGeneration( self, prodID, transName ):
+    """deal with MCGeneration jobs, where there is no inputFile"""
+    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
+    jobs = tInfo.getJobs()
+    self.checkAllJobs( jobs, tInfo )
+    self.printSummary()
 
-    self.log.notice( "Found %d Done Jobs " % len(done) )
-    self.log.notice( "Found %d Failed Jobs " % len(failed) )
+  def treatProduction( self, prodID, transName ):
+    """run this thing for given production"""
+
+    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
+    jobs = tInfo.getJobs()
 
     self.log.notice( "Getting tasks...")
     tasksDict = tInfo.checkTasksStatus()
     lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
 
+    self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
+    self.printSummary()
+
+  def checkJob( self, job, tInfo ):
+    """ deal with the job """
+    for do in self.todo:
+      if do['Check'](job):
+        do['Counter'] += 1
+        stdout.write('\n')
+        print do['Message']
+        print job
+        action = do['Actions']
+        action(job, tInfo)
+        break
+
+  def checkAllJobs( self, jobs, tInfo, tasksDict=None, lfnTaskDict=None ):
+    """run over all jobs and do checks"""
     fileJobDict = defaultdict(list)
     counter = 0
     startTime = time.time()
@@ -216,8 +221,9 @@ class DRA( object ):
           continue
         job.getJobInformation( self.jobMon )
         job.checkFileExistance( self.fcClient )
-        job.getTaskInfo( tasksDict, lfnTaskDict )
-        fileJobDict[job.inputFile].append(job.jobID)
+        if tasksDict and lfnTaskDict:
+          job.getTaskInfo( tasksDict, lfnTaskDict )
+          fileJobDict[job.inputFile].append(job.jobID)
         self.checkJob( job, tInfo )
       except RuntimeError as e:
         self.log.error( "+++++ Failure for job: %d " % job.jobID )
@@ -227,20 +233,6 @@ class DRA( object ):
     for lfn, jobs in fileJobDict.iteritems():
       if len(jobs) > 1:
         print lfn, jobs
-
-    self.printSummary()
-
-  def checkJob( self, job, tInfo ):
-    """ deal with the job """
-    for do in self.todo:
-      if do['Check'](job):
-        do['Counter'] += 1
-        stdout.write('\n')
-        print do['Message']
-        print job
-        action = do['Actions']
-        action(job, tInfo)
-        break
 
   def printSummary( self ):
     """print summary of changes"""
