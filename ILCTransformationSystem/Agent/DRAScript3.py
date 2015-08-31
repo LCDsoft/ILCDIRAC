@@ -39,82 +39,97 @@ class DRA( object ):
     self.jobDB = JobDB()
     self.logDB = JobLoggingDB()
     self.dMan = DataManager()
-    self.todo = [ dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
-                        ShortMessage="Job 'Failed, Input 'Deleted'",
-                        Counter=0,
-                        Check=lambda job: not job.inputFileExists and job.status=='Done',
-                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
-                      ),
-                  dict( Message="InputFile missing, job'Failed': mark input 'Deleted'",
-                        ShortMessage="Input 'Deleted'",
-                        Counter=0,
-                        Check=lambda job: not job.inputFileExists and job.status=='Failed',
-                        Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo) ]
-                      ),
-                  dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
-                        ShortMessage="Jobs 'Done', Input 'Processed'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',) and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
-                      ),
-                  dict( Message="All files exist, input processed, mark job 'Done'",
-                        ShortMessage="Jobs 'Done'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.taskStatus in ('Processed',) and job.allFilesExist() and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
-                      ),
-                  dict( Message="Some output files missing: cleanup,  mark input 'Unused'",
-                        ShortMessage="Outputs Cleaned, Input 'Unused'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setInputUnused(tInfo) ]
-                      ),
-                  dict( Message="Some output files missing, job 'Done': cleanup, mark job 'Failed',  mark input 'Unused'",
-                        ShortMessage="Job, 'Failed', Outputs Cleaned, Input 'Unused'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask and job.inputFileExists,
-                        Actions=lambda job,tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputUnused(tInfo)]
-                      ),
-                  dict( Message="Some output files missing: cleanup. Processed in different task",
-                        ShortMessage="Outputs Cleaned",
-                        Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo) ]
-                      ),
-                  dict( Message="Missing all output files: mark input unused",
-                        ShortMessage="Input 'Unused'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned',) \
-                                          and job.allFilesMissing() and not job.finalTask and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), tInfo.setInputUnused(job) ]
-                      ),
-                  dict( Message="All files missing, mark job 'Failed'",
-                        ShortMessage="Jobs 'Failed'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Done' and job.allFilesMissing() and job.finalTask,
-                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
-                      ),
-                  dict( Message="All files missing, mark job 'Failed', input 'Unused'",
-                        ShortMessage="Jobs 'Failed', Input 'Unused'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Done' and job.allFilesMissing() and not job.finalTask and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputUnused(tInfo) ]
-                      ),
-                  dict( Message="Some files missing, mark job 'Failed'",
-                        ShortMessage="Jobs 'Failed', Outputs Cleaned",
-                        Counter=0,
-                        Check=lambda job: job.status=='Done' and job.someFilesMissing() and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs() ]
-                      ),
-                  dict( Message="All files exist, job is 'Done': mark input 'Processed'",
-                        ShortMessage="Input 'Processed'",
-                        Counter=0,
-                        Check=lambda job: job.status=='Done' and job.allFilesExist() and job.taskStatus in ('Assigned',) \
-                                          and not job.finalTask and job.inputFileExists,
-                        Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
-                      ),
-
-                ]
+    self.todo = {'MCGeneration':
+                 [ dict( Message="MCGeneration: OutputExists: Job 'Done'",
+                         ShortMessage="MCGeneration: job 'Done' ",
+                         Counter=0,
+                         Check=lambda job: job.allFilesExist() and job.status=='Failed',
+                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
+                       ),
+                   dict( Message="MCGeneration: OutputMissing: Job 'Failed'",
+                         ShortMessage="MCGeneration: job 'Failed' ",
+                         Counter=0,
+                         Check=lambda job: job.allFilesMissing() and job.status=='Done',
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
+                       ),
+                 ],
+                 'OtherProductions':
+                 [ dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
+                         ShortMessage="Job 'Failed, Input 'Deleted'",
+                         Counter=0,
+                         Check=lambda job: job.inputFile and not job.inputFileExists and job.status=='Done',
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
+                       ),
+                   dict( Message="InputFile missing, job'Failed': mark input 'Deleted'",
+                         ShortMessage="Input 'Deleted'",
+                         Counter=0,
+                         Check=lambda job: job.inputFile and not job.inputFileExists and job.status=='Failed',
+                         Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo) ]
+                       ),
+                   dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
+                         ShortMessage="Jobs 'Done', Input 'Processed'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',),
+                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
+                       ),
+                   dict( Message="All files exist, input processed, mark job 'Done'",
+                         ShortMessage="Jobs 'Done'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Processed',) and job.allFilesExist(),
+                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
+                       ),
+                   dict( Message="Some output files missing: cleanup,  mark input 'Unused'",
+                         ShortMessage="Outputs Cleaned, Input 'Unused'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
+                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setInputUnused(tInfo) ]
+                       ),
+                   dict( Message="Some output files missing, job 'Done': cleanup, mark job 'Failed',  mark input 'Unused'",
+                         ShortMessage="Job, 'Failed', Outputs Cleaned, Input 'Unused'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
+                         Actions=lambda job,tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputUnused(tInfo)]
+                       ),
+                   dict( Message="Some output files missing: cleanup. Processed in different task",
+                         ShortMessage="Outputs Cleaned",
+                         Counter=0,
+                         Check=lambda job: job.status=='Failed' and job.someFilesMissing(),
+                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo) ]
+                       ),
+                   dict( Message="Missing all output files: mark input unused",
+                         ShortMessage="Input 'Unused'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned',) \
+                         and job.allFilesMissing() and not job.finalTask,
+                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), tInfo.setInputUnused(job) ]
+                       ),
+                   dict( Message="All files missing, mark job 'Failed'",
+                         ShortMessage="Jobs 'Failed'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Done' and job.allFilesMissing() and job.finalTask,
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
+                       ),
+                   dict( Message="All files missing, mark job 'Failed', input 'Unused'",
+                         ShortMessage="Jobs 'Failed', Input 'Unused'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Done' and job.allFilesMissing() and not job.finalTask,
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputUnused(tInfo) ]
+                       ),
+                   dict( Message="Some files missing, mark job 'Failed'",
+                         ShortMessage="Jobs 'Failed', Outputs Cleaned",
+                         Counter=0,
+                         Check=lambda job: job.status=='Done' and job.someFilesMissing(),
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs() ]
+                       ),
+                   dict( Message="All files exist, job is 'Done': mark input 'Processed'",
+                         ShortMessage="Input 'Processed'",
+                         Counter=0,
+                         Check=lambda job: job.status=='Done' and job.allFilesExist() and job.taskStatus in ('Assigned',) \
+                         and not job.finalTask,
+                         Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
+                       ),
+                 ]
+                }
 
   def selectTransformationFiles( self, tInfo, statusList ):
     """ Select files, production jobIDs in specified file status for a given transformation.
@@ -122,14 +137,14 @@ class DRA( object ):
     """
     #Until a query for files with timestamp can be obtained must rely on the
     #WMS job last update
-    res = self.tClient.getTransformationFiles(condDict = {'TransformationID' : tInfo.tID, 'Status' : statusList})
+    res = self.tClient.getTransformationFiles( condDict = {'TransformationID' : tInfo.tID, 'Status' : statusList} )
     self.log.debug(res)
     if not res['OK']:
       return res
     resDict = {}
     for fileDict in res['Value']:
       if not 'LFN' in fileDict or not 'TaskID' in fileDict or not 'LastUpdate' in fileDict:
-        self.log.info('LFN, %s, and LastUpdate are mandatory, >=1 are missing for:\n%s' % ('TaskID', fileDict))
+        self.log.info( "LFN, %s, and LastUpdate are mandatory, >=1 are missing for:\n%s" % ('TaskID', fileDict) )
         continue
       taskID = fileDict['TaskID']
       resDict[taskID] = FileInformation( fileDict['LFN'],
@@ -137,9 +152,8 @@ class DRA( object ):
                                          fileDict['Status'],
                                          taskID,
                                        )
-      
     if resDict:
-      self.log.notice('Selected %s files overall for transformation %s' % (len(resDict), tInfo.tID))
+      self.log.notice( "Selected %s files overall for transformation %s" % (len(resDict), tInfo.tID))
     return S_OK(resDict)
 
     
@@ -163,38 +177,43 @@ class DRA( object ):
     types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction" ]
     transformations = self.getEligibleTransformations( status, types )
     prodID = 5679
-    _transType, transName = transformations['Value'][str(prodID)]
-    self.treatProduction( prodID, transName )
+    transType, transName = transformations['Value'][str(prodID)]
+    self.treatProduction( prodID, transName, transType )
 
     types = [ "MCGeneration" ]
     transformations = self.getEligibleTransformations( status, types )
     prodID = 5677
-    _transType, transName = transformations['Value'][str(prodID)]
-    self.treatMCGeneration( prodID, transName )
+    transType, transName = transformations['Value'][str(prodID)]
+    self.treatMCGeneration( prodID, transName, transType )
 
-  def treatMCGeneration( self, prodID, transName ):
+  def treatMCGeneration( self, prodID, transName, transType ):
     """deal with MCGeneration jobs, where there is no inputFile"""
-    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
-    jobs = tInfo.getJobs()
-    self.checkAllJobs( jobs, tInfo )
+    tInfo = TransformationInfo( prodID, transName, transType,
+                                self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
+    jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
+    while jobs:
+      jobs = self.checkAllJobs( jobs, tInfo )
     self.printSummary()
 
-  def treatProduction( self, prodID, transName ):
+  def treatProduction( self, prodID, transName, transType ):
     """run this thing for given production"""
 
-    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
+    tInfo = TransformationInfo( prodID, transName, transType,
+                                self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
     jobs = tInfo.getJobs()
 
     self.log.notice( "Getting tasks...")
     tasksDict = tInfo.checkTasksStatus()
     lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
 
-    self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
+    while jobs:
+      jobs = self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
     self.printSummary()
 
   def checkJob( self, job, tInfo ):
     """ deal with the job """
-    for do in self.todo:
+    checks = self.todo['MCGeneration'] if job.tType == 'MCGeneration' else self.todo['OtherProductions']
+    for do in checks:
       if do['Check'](job):
         do['Counter'] += 1
         stdout.write('\n')
@@ -202,10 +221,11 @@ class DRA( object ):
         print job
         action = do['Actions']
         action(job, tInfo)
-        break
+        return
 
   def checkAllJobs( self, jobs, tInfo, tasksDict=None, lfnTaskDict=None ):
     """run over all jobs and do checks"""
+    nextRound = {}
     fileJobDict = defaultdict(list)
     counter = 0
     startTime = time.time()
@@ -228,11 +248,9 @@ class DRA( object ):
       except RuntimeError as e:
         self.log.error( "+++++ Failure for job: %d " % job.jobID )
         self.log.error( "+++++ Exception: ", str(e) )
-
-    print "Check multiple used input files"
-    for lfn, jobs in fileJobDict.iteritems():
-      if len(jobs) > 1:
-        print lfn, jobs
+        nextRound[job.jobID] = job
+    ## runs these again because of RuntimeError
+    return nextRound
 
   def printSummary( self ):
     """print summary of changes"""
