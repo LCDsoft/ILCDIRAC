@@ -177,12 +177,12 @@ class JobInfo( object ):
   def setJobDone( self , tInfo ):
     """mark job as done in wms and transformationsystem"""
     if ENABLED:
-      tInfo.setJobDone( self.taskID )
+      tInfo.setJobDone( self )
 
   def setJobFailed( self, tInfo ):
     """mark job as failed in  wms and transformationsystem"""
     if ENABLED:
-      tInfo.setJobFailed( self.taskID )
+      tInfo.setJobFailed( self )
 
   def setInputProcessed( self, tInfo ):
     """mark input file as Processed"""
@@ -196,4 +196,5 @@ class JobInfo( object ):
 
   def cleanOutputs( self, tInfo ):
     """remove all job outputs"""
-    pass
+    if ENABLED:
+      tInfo.cleanOutputs( self )
