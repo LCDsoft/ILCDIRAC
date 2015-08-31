@@ -9,6 +9,7 @@ getTaskAndFileStatusForTheInputFiles
 __RCSID__="$Id$"
 
 from collections import defaultdict
+from sys import stdout
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -21,6 +22,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
 from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
+from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 
 from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo, FileInformation, JobInfo
 
@@ -35,29 +37,30 @@ class DRA( object ):
     self.reqClient = ReqClient()
     self.jobDB = JobDB()
     self.logDB = JobLoggingDB()
+    self.dMan = DataManager()
     self.todo = [ dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
                         ShortMessage="Jobs 'Done', Input 'Processed'",
                         Counter=0,
-                        Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Asssiged',),
+                        Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',),
                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
                       ),
                   dict( Message="All files exist, input processed, mark job 'Done'",
                         ShortMessage="Jobs 'Done'",
                         Counter=0,
-                        Check=lambda job: job.status == "Failed" and job.taskStatus in ("Processed",) and job.allFilesExist(),
+                        Check=lambda job: job.status=='Failed' and job.taskStatus in ('Processed',) and job.allFilesExist(),
                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
-                      ),
-                  dict( Message="All files missing, mark job 'Failed'",
-                        ShortMessage="Jobs 'Failed'",
-                        Counter=0,
-                        Check=lambda job: job.status == "Done" and job.allFilesMissing(),
-                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
                       ),
                   dict( Message="Some output files missing: cleanup,  mark input 'Unused'",
                         ShortMessage="Outputs Cleaned, Input 'Unused'",
                         Counter=0,
                         Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setInputUnused(tInfo) ]
+                      ),
+                  dict( Message="Some output files missing, job 'Done': cleanup, mark job 'Failed',  mark input 'Unused'",
+                        ShortMessage="Outputs Cleaned, Input 'Unused'",
+                        Counter=0,
+                        Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
+                        Actions=lambda job,tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputUnused(tInfo)]
                       ),
                   dict( Message="Some output files missing: cleanup. Processed in different task",
                         ShortMessage="Outputs Cleaned",
@@ -68,8 +71,34 @@ class DRA( object ):
                   dict( Message="Missing all output files: mark input unused",
                         ShortMessage="Input 'Unused'",
                         Counter=0,
-                        Check=lambda job: job.status == "Failed" and job.taskStatus in ("Assigned",) and job.allFilesMissing(),
+                        Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned',) \
+                                          and job.allFilesMissing() and not job.finalTask,
                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), tInfo.setInputUnused(job) ]
+                      ),
+                  dict( Message="All files missing, mark job 'Failed'",
+                        ShortMessage="Jobs 'Failed'",
+                        Counter=0,
+                        Check=lambda job: job.status=='Done' and job.allFilesMissing() and job.finalTask,
+                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
+                      ),
+                  dict( Message="All files missing, mark job 'Failed', input 'Unused'",
+                        ShortMessage="Jobs 'Failed', Input 'Unused'",
+                        Counter=0,
+                        Check=lambda job: job.status=='Done' and job.allFilesMissing() and not job.finalTask,
+                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputUnused(tInfo) ]
+                      ),
+                  dict( Message="Some files missing, mark job 'Failed'",
+                        ShortMessage="Jobs 'Failed', Outputs Cleaned",
+                        Counter=0,
+                        Check=lambda job: job.status=='Done' and job.someFilesMissing(),
+                        Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs() ]
+                      ),
+                  dict( Message="All files exist, job is 'Done': mark input 'Processed'",
+                        ShortMessage="Input 'Processed'",
+                        Counter=0,
+                        Check=lambda job: job.status=='Done' and job.allFilesExist() and job.taskStatus in ('Assigned',) \
+                                          and not job.finalTask,
+                        Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
                       ),
 
                 ]
@@ -125,19 +154,18 @@ class DRA( object ):
     return S_OK(transformations)
 
   def execute( self ):
-    """run this thing"""
+    self.treatProduction( 5679 )
+
+  def treatProduction( self, prodID ):
+    """run this thing for given production"""
     status = ["Active"]
-    types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction"]
+    types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction" ]
     transformations = self.getEligibleTransformations( status, types )
-    prodID = 5678
-    #prodID = 4732
-    #prodID = 5702
-    transName = transformations['Value'][str(prodID)]
-    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB )
+    transType, transName = transformations['Value'][str(prodID)]
+    tInfo = TransformationInfo( prodID, transName, self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient )
 
     self.log.notice( "Getting 'Done' Jobs..." )
     done = self.getJobs( tInfo.tID, ["Done"] )
-    done = S_OK([])
     self.log.notice( "Getting 'Failed' Jobs..." )
     failed = self.getJobs( tInfo.tID, ["Failed"] )
     if not done['OK']:
@@ -153,22 +181,33 @@ class DRA( object ):
     for job in failed:
       jobs[int(job)] = JobInfo( job, "Failed", tInfo.tID )
 
+    self.log.notice( "Found %d Done Jobs " % len(done) )
+    self.log.notice( "Found %d Failed Jobs " % len(failed) )
+
     self.log.notice( "Getting tasks...")
     tasksDict = tInfo.checkTasksStatus()
     lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
 
     fileJobDict = defaultdict(list)
+    counter = 0
+    nJobs = len(jobs)
+    print "Running over all the jobs"
     for job in jobs.values():
+      counter += 1
+      stdout.write( "\r %d/%d" % (counter, nJobs) )
+      stdout.flush()
       try:
         job.checkRequests( self.reqClient )
+        if job.pendingRequest:
+          continue
         job.getJobInformation( self.jobMon )
         job.checkFileExistance( self.fcClient )
         job.getTaskInfo( tasksDict, lfnTaskDict )
         fileJobDict[job.inputFile].append(job.jobID)
         self.checkJob( job, tInfo )
       except RuntimeError as e:
-        self.log.error( "Failure for job: %d " % job.jobID )
-        self.log.error(" Exception: ", str(e) )
+        self.log.error( "+++++ Failure for job: %d " % job.jobID )
+        self.log.error( "+++++ Exception: ", str(e) )
 
     print "Check multiple used input files"
     for lfn, jobs in fileJobDict.iteritems():
@@ -182,6 +221,7 @@ class DRA( object ):
     for do in self.todo:
       if do['Check'](job):
         do['Counter'] += 1
+        stdout.write('\n')
         print do['Message']
         print job
         action = do['Actions']
