@@ -40,7 +40,6 @@ class DRA( object ):
     self.jobDB = JobDB()
     self.logDB = JobLoggingDB()
     self.dMan = DataManager()
-    self.ignoreTasks = set()
     self.todo = {'MCGeneration':
                  [ dict( Message="MCGeneration: OutputExists: Job 'Done'",
                          ShortMessage="MCGeneration: job 'Done' ",
@@ -63,17 +62,11 @@ class DRA( object ):
                  ],
                  'OtherProductions':
                  [ \
-                   dict( Message="Other Tasks Exist: Do nothing",
-                         ShortMessage="Other Tasks",
+                   dict( Message="Other Tasks Exist but this has output: CleanThisUp",
+                         ShortMessage="Other Tasks: Need cleanup",
                          Counter=0,
-                         Check=lambda job: job.finalTask,
-                         Actions=lambda job,tInfo: [ None ]
-                       ),
-                   dict( Message="Other Tasks Exist: Do nothing",
-                         ShortMessage="Last Task",
-                         Counter=0,
-                         Check=lambda job: job.taskID in self.ignoreTasks,
-                         Actions=lambda job,tInfo: [ None ]
+                         Check=lambda job: job.finalTask and not job.allFilesMissing(),
+                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo) ]
                        ),
                    dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
                          ShortMessage="Job 'Failed, Input 'Deleted'",
@@ -196,7 +189,9 @@ class DRA( object ):
     status = ["Active"]
     types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction", "MCGeneration" ]
     transformations = self.getEligibleTransformations( status, types )
-    prodID = 5615
+    #prodID = 5615
+    #prodID = 5677
+    prodID = 5705
     transType, transName = transformations['Value'][str(prodID)]
     if transType == "MCGeneration":
       self.treatMCGeneration( prodID, transName, transType )
@@ -207,11 +202,10 @@ class DRA( object ):
     """deal with MCGeneration jobs, where there is no inputFile"""
     tInfo = TransformationInfo( prodID, transName, transType,
                                 self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
-    #jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
-    jobs = tInfo.getJobs(statusList=['Done'])
+    jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
+    #jobs = tInfo.getJobs(statusList=['Failed'])
     ## try until all jobs have been treated
-    while jobs:
-      jobs = self.checkAllJobs( jobs, tInfo )
+    self.checkAllJobs( jobs, tInfo )
     self.printSummary()
 
   def treatProduction( self, prodID, transName, transType ):
@@ -225,8 +219,7 @@ class DRA( object ):
     tasksDict = tInfo.checkTasksStatus()
     lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
 
-    while jobs:
-      jobs = self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
+    self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
 
     self.printSummary()
 
@@ -245,7 +238,6 @@ class DRA( object ):
 
   def checkAllJobs( self, jobs, tInfo, tasksDict=None, lfnTaskDict=None ):
     """run over all jobs and do checks"""
-    nextRound = {}
     fileJobDict = defaultdict(list)
     counter = 0
     startTime = time.time()
@@ -255,23 +247,23 @@ class DRA( object ):
       counter += 1
       stdout.write( "\r %d/%d: %3.1fs " % (counter, nJobs, float(time.time() - startTime) ) )
       stdout.flush()
-      try:
-        job.checkRequests( self.reqClient )
-        if job.pendingRequest:
-          self.log.warn( "Job has Pending requests:\n%s" % job )
-          continue
-        job.getJobInformation( self.jobMon )
-        job.checkFileExistance( self.fcClient )
-        if tasksDict and lfnTaskDict:
-          job.getTaskInfo( tasksDict, lfnTaskDict, self.ignoreTasks )
-          fileJobDict[job.inputFile].append( job.jobID )
-        self.checkJob( job, tInfo )
-      except RuntimeError as e:
-        self.log.error( "+++++ Failure for job: %d " % job.jobID )
-        self.log.error( "+++++ Exception: ", str(e) )
-        nextRound[job.jobID] = job
-    ## runs these again because of RuntimeError
-    return nextRound
+      while True:
+        try:
+          job.checkRequests( self.reqClient )
+          if job.pendingRequest:
+            self.log.warn( "Job has Pending requests:\n%s" % job )
+            continue
+          job.getJobInformation( self.jobMon )
+          job.checkFileExistance( self.fcClient )
+          if tasksDict and lfnTaskDict:
+            job.getTaskInfo( tasksDict, lfnTaskDict )
+            fileJobDict[job.inputFile].append( job.jobID )
+          self.checkJob( job, tInfo )
+          break # get out of the while loop
+        except RuntimeError as e:
+          self.log.error( "+++++ Failure for job: %d " % job.jobID )
+          self.log.error( "+++++ Exception: ", str(e) )
+          ## runs these again because of RuntimeError
 
   def printSummary( self ):
     """print summary of changes"""
@@ -287,7 +279,7 @@ class DRA( object ):
       raise RuntimeError( "Failed to get requests" )
     for jobID in result['Value']['Successful']:
       request = result['Value']['Successful'][jobID]
-      if request.Status != "Done":
+      if request.Status not in ( "Done", "Canceled" ):
         self.log.notice( " Removing job because pending requests ")
         self.log.notice( str(jobList[jobID]) )
         del jobList[jobID]
