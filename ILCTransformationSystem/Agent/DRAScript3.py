@@ -66,7 +66,13 @@ class DRA( object ):
                    dict( Message="Other Tasks Exist: Do nothing",
                          ShortMessage="Other Tasks",
                          Counter=0,
-                         Check=lambda job: job.finalTask or job.taskID in self.ignoreTasks,
+                         Check=lambda job: job.finalTask,
+                         Actions=lambda job,tInfo: [ None ]
+                       ),
+                   dict( Message="Other Tasks Exist: Do nothing",
+                         ShortMessage="Last Task",
+                         Counter=0,
+                         Check=lambda job: job.taskID in self.ignoreTasks,
                          Actions=lambda job,tInfo: [ None ]
                        ),
                    dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
@@ -203,6 +209,7 @@ class DRA( object ):
                                 self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
     #jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
     jobs = tInfo.getJobs(statusList=['Done'])
+    ## try until all jobs have been treated
     while jobs:
       jobs = self.checkAllJobs( jobs, tInfo )
     self.printSummary()
@@ -256,9 +263,8 @@ class DRA( object ):
         job.getJobInformation( self.jobMon )
         job.checkFileExistance( self.fcClient )
         if tasksDict and lfnTaskDict:
-          job.getTaskInfo( tasksDict, lfnTaskDict, self.ignoreTasks)
-          print self.ignoreTasks
-          fileJobDict[job.inputFile].append(job.jobID)
+          job.getTaskInfo( tasksDict, lfnTaskDict, self.ignoreTasks )
+          fileJobDict[job.inputFile].append( job.jobID )
         self.checkJob( job, tInfo )
       except RuntimeError as e:
         self.log.error( "+++++ Failure for job: %d " % job.jobID )

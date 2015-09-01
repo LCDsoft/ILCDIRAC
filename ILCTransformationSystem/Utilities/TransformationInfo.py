@@ -10,6 +10,9 @@ from DIRAC.Core.Utilities.List import breakListIntoChunks
 from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
 from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import ENABLED
 
+from collections import OrderedDict
+
+
 class TransformationInfo( object ):
   """ hold information about transformations """
   def __init__( self, transformationID, transName, transType, tClient, jobDB, logDB, dMan, fcClient, jobMon ):
@@ -212,6 +215,7 @@ class TransformationInfo( object ):
       jobs[int(job)] = JobInfo( job, "Done", self.tID, self.transType )
     for job in failed:
       jobs[int(job)] = JobInfo( job, "Failed", self.tID, self.transType )
+    jobs = OrderedDict( sorted(jobs.items(), key=lambda t: t[0]) )
 
     self.log.notice( "Found %d Done Jobs " % len(done) )
     self.log.notice( "Found %d Failed Jobs " % len(failed) )
