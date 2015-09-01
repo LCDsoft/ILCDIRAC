@@ -1,4 +1,4 @@
-#/usr/env python
+#!/usr/env python
 """
 getTransformations
 getJobsForTransformation including Status etc.
@@ -14,25 +14,56 @@ import time
 import itertools
 
 from DIRAC.Core.Base import Script
-Script.parseCommandLine()
 
 from DIRAC import S_OK, gLogger
 
-from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
-from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
-from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
-from DIRAC.DataManagementSystem.Client.DataManager import DataManager
-
 from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo, FileInformation
+
+class Params( object ):
+  """Collection of Parameters set via CLI switches"""
+  def __init__( self ):
+    self.enabled = False
+    self.prodID = 0
+    self.jobStatus = ['Failed','Done']
+  def setEnabled(self, _ ):
+    self.enabled = True
+    return S_OK()
+
+  def setProdID(self, prodID):
+    self.prodID = int(prodID)
+    return S_OK()
+
+  def setJobStatus(self, jobStatus):
+    self.jobStatus = [ status.strip() for status in jobStatus.split(",") ]
+    return S_OK()
+
+  def registerSwitches(self):
+    Script.registerSwitch( "P:", "ProdID=", "ProdID to Check/Fix", self.setProdID )
+    Script.registerSwitch( "S:", "Status=", "List of Job Statuses to check", self.setJobStatus )
+    Script.registerSwitch( "X", "Enabled", "Enable the changes", self.setEnabled )
+    Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
+                                         '\nUsage:',
+                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
+
 
 class DRA( object ):
   """ DataRecovery primarily based on jobs, not on task"""
+
   def __init__( self ):
+
+    from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
+    from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+    from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+    from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
+    from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
+    from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
+    from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+
     self.log = gLogger
 
+    self.enabled = False
+    self.prodID = 0
+    self.jobStatus = []
     self.jobMon = JobMonitoringClient()
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
@@ -77,8 +108,8 @@ class DRA( object ):
                    dict( Message="InputFile missing, job'Failed': mark input 'Deleted'",
                          ShortMessage="Input 'Deleted'",
                          Counter=0,
-                         Check=lambda job: job.inputFile and not job.inputFileExists and job.status=='Failed',
-                         Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo) ]
+                         Check=lambda job: job.status=='Failed' and job.inputFile and not job.inputFileExists,
+                         Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo), job.cleanOutputs(tInfo)]
                        ),
                    dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
                          ShortMessage="Jobs 'Done', Input 'Processed'",
@@ -96,13 +127,13 @@ class DRA( object ):
                          ShortMessage="Outputs Cleaned, Input 'Unused'",
                          Counter=0,
                          Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setInputUnused(tInfo) ]
+                         Actions=lambda job,tInfo: [job.setInputUnused(tInfo),job.cleanOutputs(tInfo)]
                        ),
                    dict( Message="Some output files missing, job 'Done': cleanup, mark job 'Failed',  mark input 'Unused'",
                          ShortMessage="Job, 'Failed', Outputs Cleaned, Input 'Unused'",
                          Counter=0,
                          Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputUnused(tInfo)]
+                         Actions=lambda job,tInfo: [job.setJobFailed(tInfo), job.setInputUnused(tInfo),job.cleanOutputs(tInfo)]
                        ),
                    dict( Message="Some output files missing: cleanup. Processed in different task",
                          ShortMessage="Outputs Cleaned",
@@ -113,9 +144,9 @@ class DRA( object ):
                    dict( Message="Missing all output files: mark input unused",
                          ShortMessage="Input 'Unused'",
                          Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned',) \
+                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned','Processed') \
                          and job.allFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), tInfo.setInputUnused(job) ]
+                         Actions=lambda job,tInfo: [tInfo.setInputUnused(job),job.cleanOutputs(tInfo)]
                        ),
                    dict( Message="All files missing, mark job 'Failed'",
                          ShortMessage="Jobs 'Failed'",
@@ -189,20 +220,17 @@ class DRA( object ):
     status = ["Active"]
     types = [ "MCSimulation", "MCReconstruction_Overlay", "MCReconstruction", "MCGeneration" ]
     transformations = self.getEligibleTransformations( status, types )
-    #prodID = 5615
-    #prodID = 5677
-    prodID = 5705
-    transType, transName = transformations['Value'][str(prodID)]
+    transType, transName = transformations['Value'][str(self.prodID)]
     if transType == "MCGeneration":
-      self.treatMCGeneration( prodID, transName, transType )
+      self.treatMCGeneration( self.prodID, transName, transType )
     else:
-      self.treatProduction( prodID, transName, transType )
+      self.treatProduction( self.prodID, transName, transType )
 
   def treatMCGeneration( self, prodID, transName, transType ):
     """deal with MCGeneration jobs, where there is no inputFile"""
-    tInfo = TransformationInfo( prodID, transName, transType,
+    tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
                                 self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
-    jobs = tInfo.getJobs(statusList=['Done', 'Failed'])
+    jobs = tInfo.getJobs(statusList=self.jobStatus)
     #jobs = tInfo.getJobs(statusList=['Failed'])
     ## try until all jobs have been treated
     self.checkAllJobs( jobs, tInfo )
@@ -211,9 +239,9 @@ class DRA( object ):
   def treatProduction( self, prodID, transName, transType ):
     """run this thing for given production"""
 
-    tInfo = TransformationInfo( prodID, transName, transType,
+    tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
                                 self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
-    jobs = tInfo.getJobs()
+    jobs = tInfo.getJobs(statusList=self.jobStatus)
 
     self.log.notice( "Getting tasks...")
     tasksDict = tInfo.checkTasksStatus()
@@ -252,7 +280,7 @@ class DRA( object ):
           job.checkRequests( self.reqClient )
           if job.pendingRequest:
             self.log.warn( "Job has Pending requests:\n%s" % job )
-            continue
+            break
           job.getJobInformation( self.jobMon )
           job.checkFileExistance( self.fcClient )
           if tasksDict and lfnTaskDict:
@@ -301,5 +329,11 @@ class DRA( object ):
         del jobs[job.jobID]
 
 if __name__ == "__main__":
+  PARAMS = Params()
+  PARAMS.registerSwitches()
+  Script.parseCommandLine( ignoreErrors = True )
   DRA = DRA()
+  DRA.enabled = PARAMS.enabled
+  DRA.prodID = PARAMS.prodID
+  DRA.jobStatus = PARAMS.jobStatus
   DRA.execute()
