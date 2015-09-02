@@ -25,6 +25,8 @@ class Params( object ):
     self.enabled = False
     self.prodID = 0
     self.jobStatus = ['Failed','Done']
+    self.firstJob = 0
+
   def setEnabled(self, _ ):
     self.enabled = True
     return S_OK()
@@ -33,12 +35,17 @@ class Params( object ):
     self.prodID = int(prodID)
     return S_OK()
 
+  def setFirstJob(self, jobID):
+    self.firstJob = int(jobID)
+    return S_OK()
+
   def setJobStatus(self, jobStatus):
     self.jobStatus = [ status.strip() for status in jobStatus.split(",") ]
     return S_OK()
 
   def registerSwitches(self):
     Script.registerSwitch( "P:", "ProdID=", "ProdID to Check/Fix", self.setProdID )
+    Script.registerSwitch( "F:", "FirstJob=", "First WMS JobID to Check/Fix", self.setFirstJob )
     Script.registerSwitch( "S:", "Status=", "List of Job Statuses to check", self.setJobStatus )
     Script.registerSwitch( "X", "Enabled", "Enable the changes", self.setEnabled )
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
@@ -63,6 +70,7 @@ class DRA( object ):
 
     self.enabled = False
     self.prodID = 0
+    self.firstJob = 1
     self.jobStatus = []
     self.jobMon = JobMonitoringClient()
     self.fcClient = FileCatalogClient()
@@ -71,6 +79,7 @@ class DRA( object ):
     self.jobDB = JobDB()
     self.logDB = JobLoggingDB()
     self.dMan = DataManager()
+    self.inputFilesProcessed = set()
     self.todo = {'MCGeneration':
                  [ dict( Message="MCGeneration: OutputExists: Job 'Done'",
                          ShortMessage="MCGeneration: job 'Done' ",
@@ -93,86 +102,83 @@ class DRA( object ):
                  ],
                  'OtherProductions':
                  [ \
-                   dict( Message="Other Tasks Exist but this has output: CleanThisUp",
-                         ShortMessage="Other Tasks: Need cleanup",
+                   dict( Message="One of many Successful: clean others",
+                         ShortMessage="Other Tasks --> Keep",
                          Counter=0,
-                         Check=lambda job: job.finalTask and not job.allFilesMissing(),
-                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo) ]
+                         Check=lambda job: job.allFilesExist() and job.otherTasks,
+                         Actions=lambda job,tInfo: [ self.inputFilesProcessed.add(job.inputFile), job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
                        ),
-                   dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
-                         ShortMessage="Job 'Failed, Input 'Deleted'",
+                   dict( Message="Other Task processed Input, no Output: Fail",
+                         ShortMessage="Other Tasks --> Fail",
                          Counter=0,
-                         Check=lambda job: job.inputFile and not job.inputFileExists and job.status=='Done',
-                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
-                       ),
-                   dict( Message="InputFile missing, job'Failed': mark input 'Deleted'",
-                         ShortMessage="Input 'Deleted'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.inputFile and not job.inputFileExists,
-                         Actions=lambda job,tInfo: [ job.setInputDeleted(tInfo), job.cleanOutputs(tInfo)]
-                       ),
-                   dict( Message="All files exist: mark job 'Done', mark input 'Processed'",
-                         ShortMessage="Jobs 'Done', Input 'Processed'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.allFilesExist() and job.taskStatus in ('Assigned',),
-                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
-                       ),
-                   dict( Message="All files exist, input processed, mark job 'Done'",
-                         ShortMessage="Jobs 'Done'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Processed',) and job.allFilesExist(),
-                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
-                       ),
-                   dict( Message="Some output files missing: cleanup,  mark input 'Unused'",
-                         ShortMessage="Outputs Cleaned, Input 'Unused'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [job.setInputUnused(tInfo),job.cleanOutputs(tInfo)]
-                       ),
-                   dict( Message="Some output files missing, job 'Done': cleanup, mark job 'Failed',  mark input 'Unused'",
-                         ShortMessage="Job, 'Failed', Outputs Cleaned, Input 'Unused'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.someFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [job.setJobFailed(tInfo), job.setInputUnused(tInfo),job.cleanOutputs(tInfo)]
-                       ),
-                   dict( Message="Some output files missing: cleanup. Processed in different task",
-                         ShortMessage="Outputs Cleaned",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.someFilesMissing(),
-                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo) ]
-                       ),
-                   dict( Message="Missing all output files: mark input unused",
-                         ShortMessage="Input 'Unused'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Failed' and job.taskStatus in ('Assigned','Processed') \
-                         and job.allFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [tInfo.setInputUnused(job),job.cleanOutputs(tInfo)]
-                       ),
-                   dict( Message="All files missing, mark job 'Failed'",
-                         ShortMessage="Jobs 'Failed'",
-                         Counter=0,
-                         Check=lambda job: job.status=='Done' and job.allFilesMissing() and job.finalTask,
+                         Check=lambda job: job.inputFile in self.inputFilesProcessed and job.allFilesMissing(),
                          Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
                        ),
-                   dict( Message="All files missing, mark job 'Failed', input 'Unused'",
-                         ShortMessage="Jobs 'Failed', Input 'Unused'",
+                   dict( Message="Other Task processed Input: Fail and clean",
+                         ShortMessage="Other Tasks --> Cleanup",
                          Counter=0,
-                         Check=lambda job: job.status=='Done' and job.allFilesMissing() and not job.finalTask,
-                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputUnused(tInfo) ]
+                         Check=lambda job: job.inputFile in self.inputFilesProcessed and not job.allFilesMissing(),
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs(tInfo) ]
                        ),
-                   dict( Message="Some files missing, mark job 'Failed'",
-                         ShortMessage="Jobs 'Failed', Outputs Cleaned",
+                   dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
+                         ShortMessage="Input Missing --> Job 'Failed, Input 'Deleted'",
                          Counter=0,
-                         Check=lambda job: job.status=='Done' and job.someFilesMissing(),
-                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs() ]
+                         Check=lambda job: job.inputFile and not job.inputFileExists,
+                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
                        ),
-                   dict( Message="All files exist, job is 'Done': mark input 'Processed'",
-                         ShortMessage="Input 'Processed'",
+                   ## All Output Exists
+                   dict( Message="Output Exists, job Failed, input not Processed --> Job Done, Input Processed",
+                         ShortMessage="Output Exists --> Job Done, Input Processed",
                          Counter=0,
-                         Check=lambda job: job.status=='Done' and job.allFilesExist() and job.taskStatus in ('Assigned',) \
-                         and not job.finalTask,
+                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Failed' and job.fileStatus!="Processed",
+                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
+                       ),
+                   dict( Message="Output Exists, job Failed, input Processed --> Job Done",
+                         ShortMessage="Output Exists --> Job Done",
+                         Counter=0,
+                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Processed",
+                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
+                       ),
+                   dict( Message="Output Exists, job Done, input not Processed --> Input Processed",
+                         ShortMessage="Output Exists --> Input Processed",
+                         Counter=0,
+                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Done' and job.fileStatus!="Processed",
                          Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
                        ),
+                   ## outputmissing
+                   dict( Message="Output Missing, job Failed, input Assigned --> Input Unused",
+                         ShortMessage="Output Missing --> Input Unused",
+                         Counter=0,
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned",
+                         Actions=lambda job,tInfo: [ job.setInputUnused(tInfo) ]
+                       ),
+                   dict( Message="Output Missing, job Done, input Assigned --> Job Failed, Input Unused",
+                         ShortMessage="Output Missing --> Job Failed, Input Unused",
+                         Counter=0,
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned",
+                         Actions=lambda job,tInfo: [ job.setInputUnused(tInfo), job.setJobFailed(tInfo) ]
+                       ),
+                   ## some files missing, needing cleanup. Only checking for assigned, because processed could mean an earlier job was succesful and this one is just the duplucate that needed to be removed!
+                   dict( Message="Some missing, job Failed, input Assigned --> cleanup, Input 'Unused'",
+                         ShortMessage="Output Missing --> Cleanup, Input Unused",
+                         Counter=0,
+                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned",
+                         Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo)]
+                         #Actions=lambda job,tInfo: []
+                       ),
+                   dict( Message="Some missing, job Done, input Assigned --> cleanup, job Failed, Input 'Unused'",
+                         ShortMessage="Output Missing --> Cleanup, Job Failed, Input Unused",
+                         Counter=0,
+                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned",
+                         Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo),job.setJobFailed(tInfo)]
+                         #Actions=lambda job,tInfo: []
+                       ),
+                   dict ( Message="Something Strange",
+                          ShortMessage="Strange",
+                          Counter=0,
+                          Check=lambda job: job.status not in ("Failed","Done"),
+                          Actions=lambda job,tInfo: []
+                        ),
                  ]
                 }
 
@@ -260,8 +266,7 @@ class DRA( object ):
         stdout.write('\n')
         self.log.notice( do['Message'] )
         self.log.notice( job )
-        action = do['Actions']
-        action(job, tInfo)
+        do['Actions'](job, tInfo)
         return
 
   def checkAllJobs( self, jobs, tInfo, tasksDict=None, lfnTaskDict=None ):
@@ -275,6 +280,8 @@ class DRA( object ):
       counter += 1
       stdout.write( "\r %d/%d: %3.1fs " % (counter, nJobs, float(time.time() - startTime) ) )
       stdout.flush()
+      if job.jobID < self.firstJob:
+        continue
       while True:
         try:
           job.checkRequests( self.reqClient )
@@ -297,7 +304,7 @@ class DRA( object ):
     """print summary of changes"""
     self.log.notice( "Summary:" )
     for do in itertools.chain.from_iterable(self.todo.values()):
-      self.log.notice( "%s: %s" %(  do['ShortMessage'],do['Counter'] ) )
+      self.log.notice( "%s: %s" % ( do['ShortMessage'].ljust(52), str(do['Counter']).rjust(5) ) )
 
   def checkRequestsForJobList( self, jobList ):
     """return a dict of jobID to requestID"""
@@ -336,4 +343,5 @@ if __name__ == "__main__":
   DRA.enabled = PARAMS.enabled
   DRA.prodID = PARAMS.prodID
   DRA.jobStatus = PARAMS.jobStatus
+  DRA.firstJob = PARAMS.firstJob
   DRA.execute()
