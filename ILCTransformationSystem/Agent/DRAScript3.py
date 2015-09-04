@@ -119,53 +119,59 @@ class DRA( object ):
                    dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted', clean",
                          ShortMessage="Input Missing --> Job 'Failed, Input 'Deleted', Cleanup",
                          Counter=0,
-                         Check=lambda job: job.inputFile and not job.inputFileExists,
+                         Check=lambda job: job.inputFile and not job.inputFileExists and job.fileStatus != "Deleted",
                          Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
+                       ),
+                   dict( Message="InputFile Deleted, output Exists: mark job 'Failed', clean",
+                         ShortMessage="Input Deleted --> Job 'Failed, Cleanup",
+                         Counter=0,
+                         Check=lambda job: job.inputFile and not job.inputFileExists and job.fileStatus == "Deleted" and not job.allFilesMissing(),
+                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setJobFailed(tInfo) ]
                        ),
                    ## All Output Exists
                    dict( Message="Output Exists, job Failed, input not Processed --> Job Done, Input Processed",
                          ShortMessage="Output Exists --> Job Done, Input Processed",
                          Counter=0,
-                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Failed' and job.fileStatus!="Processed",
+                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Failed' and job.fileStatus!="Processed" and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
                        ),
                    dict( Message="Output Exists, job Failed, input Processed --> Job Done",
                          ShortMessage="Output Exists --> Job Done",
                          Counter=0,
-                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Processed",
+                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Processed" and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
                        ),
                    dict( Message="Output Exists, job Done, input not Processed --> Input Processed",
                          ShortMessage="Output Exists --> Input Processed",
                          Counter=0,
-                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Done' and job.fileStatus!="Processed",
+                         Check=lambda job: job.allFilesExist() and not job.otherTasks and job.status=='Done' and job.fileStatus!="Processed" and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
                        ),
                    ## outputmissing
                    dict( Message="Output Missing, job Failed, input Assigned --> Input Unused",
                          ShortMessage="Output Missing --> Input Unused",
                          Counter=0,
-                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned",
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned" and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo) ]
                        ),
                    dict( Message="Output Missing, job Done, input Assigned --> Job Failed, Input Unused",
                          ShortMessage="Output Missing --> Job Failed, Input Unused",
                          Counter=0,
-                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned",
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned" and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo), job.setJobFailed(tInfo) ]
                        ),
                    ## some files missing, needing cleanup. Only checking for assigned, because processed could mean an earlier job was succesful and this one is just the duplucate that needed to be removed!
                    dict( Message="Some missing, job Failed, input Assigned --> cleanup, Input 'Unused'",
                          ShortMessage="Output Missing --> Cleanup, Input Unused",
                          Counter=0,
-                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned",
+                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned" and job.inputFileExists,
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),
                    dict( Message="Some missing, job Done, input Assigned --> cleanup, job Failed, Input 'Unused'",
                          ShortMessage="Output Missing --> Cleanup, Job Failed, Input Unused",
                          Counter=0,
-                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned",
+                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned" and job.inputFileExists,
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo),job.setJobFailed(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),
