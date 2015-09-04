@@ -58,13 +58,11 @@ class DRA( object ):
 
   def __init__( self ):
 
+    from DIRAC.DataManagementSystem.Client.DataManager import DataManager
     from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
     from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
     from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-    from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
-    from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
     from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
-    from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 
     self.log = gLogger
 
@@ -72,13 +70,11 @@ class DRA( object ):
     self.prodID = 0
     self.firstJob = 1
     self.jobStatus = []
+    self.dMan = DataManager()
     self.jobMon = JobMonitoringClient()
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
     self.reqClient = ReqClient()
-    self.jobDB = JobDB()
-    self.logDB = JobLoggingDB()
-    self.dMan = DataManager()
     self.inputFilesProcessed = set()
     self.todo = {'MCGeneration':
                  [ dict( Message="MCGeneration: OutputExists: Job 'Done'",
@@ -120,11 +116,11 @@ class DRA( object ):
                          Check=lambda job: job.inputFile in self.inputFilesProcessed and not job.allFilesMissing(),
                          Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs(tInfo) ]
                        ),
-                   dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted'",
-                         ShortMessage="Input Missing --> Job 'Failed, Input 'Deleted'",
+                   dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted', clean",
+                         ShortMessage="Input Missing --> Job 'Failed, Input 'Deleted', Cleanup",
                          Counter=0,
                          Check=lambda job: job.inputFile and not job.inputFileExists,
-                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
+                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
                        ),
                    ## All Output Exists
                    dict( Message="Output Exists, job Failed, input not Processed --> Job Done, Input Processed",
@@ -235,7 +231,7 @@ class DRA( object ):
   def treatMCGeneration( self, prodID, transName, transType ):
     """deal with MCGeneration jobs, where there is no inputFile"""
     tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
-                                self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
+                                self.tClient, self.dMan, self.fcClient, self.jobMon )
     jobs = tInfo.getJobs(statusList=self.jobStatus)
     #jobs = tInfo.getJobs(statusList=['Failed'])
     ## try until all jobs have been treated
@@ -246,7 +242,7 @@ class DRA( object ):
     """run this thing for given production"""
 
     tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
-                                self.tClient, self.jobDB, self.logDB, self.dMan, self.fcClient, self.jobMon )
+                                self.tClient, self.dMan, self.fcClient, self.jobMon )
     jobs = tInfo.getJobs(statusList=self.jobStatus)
 
     self.log.notice( "Getting tasks...")
