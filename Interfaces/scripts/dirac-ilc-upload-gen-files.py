@@ -44,8 +44,10 @@ class Params(object):
     return S_OK()
 
   def setEnergy(self, opt):
+    self.energy = str(opt)
+    ##check that energy is a simple number
     try:
-      self.energy = int(opt)
+      _energy = int(opt)
     except ValueError:
       return S_ERROR("Energy should be unit less, only integers")
     return S_OK()
