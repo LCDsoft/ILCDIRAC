@@ -165,8 +165,8 @@ def uploadGenFiles():
     dexit(1)
   
   for key in MANDATORY_KEYS:
-    if not key in clip.fmeta:
-      gLogger.error("All meta data not defined, please check")
+    if key not in clip.fmeta:
+      gLogger.error("Not all mandatory meta data defined, please check and add key: ", key)
       Script.showHelp()
       dexit(1)
     
@@ -234,7 +234,7 @@ def uploadGenFiles():
 
     res = fc.setMetadata(pathdict['path'], pathdict['meta'])
     if not res['OK']:
-      gLogger.error("Failed to set meta data %s to %s" %(pathdict['meta'], pathdict['path']))
+      gLogger.error( "Failed to set meta data %s to %s\n" %(pathdict['meta'], pathdict['path']), res['Message'] )
 
   datMan = DataManager()
   for filename in flist:
