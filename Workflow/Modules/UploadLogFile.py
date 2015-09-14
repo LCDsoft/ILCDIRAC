@@ -338,13 +338,14 @@ class UploadLogFile(ModuleBase):
     failoverTransfer = FailoverTransfer(self._getRequestContainer())
     ##determine the experiment
     self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)
+    catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment, ['FileCatalog', 'LcgFileCatalog'])
 
     random.shuffle(self.failoverSEs)
     self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName,
                                                                                ', '.join(self.failoverSEs )))
     result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath,
                                                       self.failoverSEs, fileMetaDict = { "GUID": None },
-                                                      fileCatalog = ['FileCatalog', 'LcgFileCatalog'])
+                                                      fileCatalog = catalogs )
     if not result['OK']:
       self.log.error('Failed to upload logs to all destinations')
       self.setApplicationStatus('Failed To Upload Logs')
