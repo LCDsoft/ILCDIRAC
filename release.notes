@@ -34,6 +34,9 @@ NEW: Based on Dirac v6r12p50
 FIX: dirac-ilc-upload-gen-files: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
 FIX: DIRAC FileCatalog CLI: fixes for path arguments
 
+* RequestManagement
+
+NEW: RestartReqExeAgent to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
 
 [v23r0p5]
 
