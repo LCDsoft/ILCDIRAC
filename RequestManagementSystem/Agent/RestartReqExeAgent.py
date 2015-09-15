@@ -33,7 +33,7 @@ class RestartReqExeAgent( AgentModule ):
   def initialize( self ):
     """ initialization """
 
-    self.maxLogAge = self.am_getOption( "MaxLogAge", 60*MINUTES )
+    self.maxLogAge = int(self.am_getOption( "MaxLogAge", 60 ))*MINUTES
     self.agentNames = self.am_getOption( "AgentNames", ['RequestExecutingAgent'] )
     self.enabled = self.am_getOption( "Enabled" )
     return S_OK()
