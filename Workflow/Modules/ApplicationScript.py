@@ -54,7 +54,6 @@ class ApplicationScript(ModuleBase):
 
     
     cmd = []
-    cmd.append( "export OMP_NUM_THREADS=1" )
     if re.search('.py$', self.script):
       cmd.append('python')
       cmd.append(os.path.basename(self.script))
