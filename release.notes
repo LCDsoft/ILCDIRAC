@@ -23,7 +23,7 @@ New: Based on Dirac v6r13p8
 New: Based on Dirac v6r13p7
 
 
-[v23r0p6]
+[v23r0pX]
 
 * Core
 
@@ -31,12 +31,23 @@ NEW: Based on Dirac v6r12p50
 
 * Interfaces
 
-FIX: dirac-ilc-upload-gen-files: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
 FIX: DIRAC FileCatalog CLI: fixes for path arguments
+
+
+
+[v23r0p6]
+
+* Interfaces
+
+FIX: dirac-ilc-upload-gen-files: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
 
 * RequestManagement
 
 NEW: RestartReqExeAgent to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
+
+* Workflow
+
+FIX: ILCDIRAC-576: ApplicationScript: Set OMP_NUM_THREADS=1
 
 [v23r0p5]
 
