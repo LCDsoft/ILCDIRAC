@@ -54,6 +54,7 @@ class ApplicationScript(ModuleBase):
 
     
     cmd = []
+    cmd.append( "export OMP_NUM_THREADS=1" )
     if re.search('.py$', self.script):
       cmd.append('python')
       cmd.append(os.path.basename(self.script))
@@ -76,6 +77,7 @@ class ApplicationScript(ModuleBase):
       com.append('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH')
     com.append(command)
     com.append('declare -x appstatus=$?')
+    com.append('env | grep OMP')
     com.append('exit $appstatus')
     finalCommand = ';'.join(com)
     
