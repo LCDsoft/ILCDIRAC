@@ -68,6 +68,8 @@ class ApplicationScript(ModuleBase):
     com = []
     cmdSep = 'echo "%s"' % ('=' * 50)
     com.append(cmdSep)
+    com.append('env | grep OMP')
+    com.append( "export OMP_NUM_THREADS=1" )
     com.append('echo "Log file from execution of: %s"' % (command))
     com.append(cmdSep)
     com.append('env | sort >> localEnv.log')
