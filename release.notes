@@ -23,7 +23,7 @@ New: Based on Dirac v6r13p8
 New: Based on Dirac v6r13p7
 
 
-[v23r0pX]
+[v23r0p9]
 
 * Core
 
@@ -33,7 +33,15 @@ NEW: Based on Dirac v6r12p50
 
 FIX: DIRAC FileCatalog CLI: fixes for path arguments
 
+[v23r0p8]
 
+* Workflow
+
+FIX: Set OMP_NUM_THREADS=1 for all in Modulebase and in the execution of the Script in ApplicationScript
+
+* ILCTransformation
+
+NEW: Rewrite of the DataRecoveryAgent
 
 [v23r0p6]
 
