@@ -32,7 +32,6 @@ import itertools
 from DIRAC                                                     import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule                               import AgentModule
 
-from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
@@ -57,9 +56,10 @@ class DataRecoveryAgent( AgentModule ):
                                                    'MCReconstruction_Overlay',
                                                    'MCGenerations'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
+    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
+
     self.jobStatus = ['Failed','Done'] ##This needs to be both otherwise we cannot account for all cases
 
-    self.dMan = DataManager()
     self.jobMon = JobMonitoringClient()
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
@@ -164,6 +164,12 @@ class DataRecoveryAgent( AgentModule ):
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo),job.setJobFailed(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),
+                   dict( Message="Some missing, job Done --> job Failed",
+                         ShortMessage="Output Missing, Done --> Job Failed",
+                         Counter=0,
+                         Check=lambda job: not job.allFilesExist() and job.status=='Done',
+                         Actions=lambda job,tInfo: [job.setJobFailed(tInfo)]
+                       ),
                    dict ( Message="Something Strange",
                           ShortMessage="Strange",
                           Counter=0,
@@ -175,8 +181,8 @@ class DataRecoveryAgent( AgentModule ):
 
     ##Notification
     self.notesToSend = ""
-    self.addressTo = self.am_getOption( 'MailTo', "andre.philippe.sailer@cern.ch" )
-    self.addressFrom = self.am_getOption( 'MailFrom', self.addressTo )
+    self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch"] )
+    self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
     self.subject = "DataRecoveryAgent"
 
     
@@ -185,7 +191,7 @@ class DataRecoveryAgent( AgentModule ):
     """Sets defaults
     """
     self.enabled = self.am_getOption('EnableFlag', False)
-    self.am_setModuleParam("shifterProxy", "ProductionManager")
+    #self.am_setModuleParam("shifterProxy", "ProductionManager")
 
     return S_OK()
   #############################################################################
@@ -209,6 +215,7 @@ class DataRecoveryAgent( AgentModule ):
         self.treatMCGeneration( int(prodID), transName, transType )
       else:
         self.treatProduction( int(prodID), transName, transType )
+    return S_OK()
 
   def getEligibleTransformations( self, status, typeList ):
     """ Select transformations of given status and type.
@@ -226,7 +233,7 @@ class DataRecoveryAgent( AgentModule ):
   def treatMCGeneration( self, prodID, transName, transType ):
     """deal with MCGeneration jobs, where there is no inputFile"""
     tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
-                                self.tClient, self.dMan, self.fcClient, self.jobMon )
+                                self.tClient, self.fcClient, self.jobMon )
     jobs = tInfo.getJobs(statusList=self.jobStatus)
     self.checkAllJobs( jobs, tInfo )
     self.printSummary()
@@ -235,7 +242,7 @@ class DataRecoveryAgent( AgentModule ):
     """run this thing for given production"""
 
     tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
-                                self.tClient, self.dMan, self.fcClient, self.jobMon )
+                                self.tClient, self.fcClient, self.jobMon )
     jobs = tInfo.getJobs(statusList=self.jobStatus)
 
     self.log.notice( "Getting tasks...")
@@ -247,9 +254,10 @@ class DataRecoveryAgent( AgentModule ):
 
     if self.notesToSend:
       notification = NotificationClient()
-      result = notification.sendMail( self.addressTo, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
-      if not result['OK']:
-        self.log.error( 'Cannot send notification mail', result['Message'] )
+      for address in self.addressTo:
+        result = notification.sendMail( address, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
+        if not result['OK']:
+          self.log.error( 'Cannot send notification mail', result['Message'] )
       self.notesToSend = ""
 
   def checkJob( self, job, tInfo ):
