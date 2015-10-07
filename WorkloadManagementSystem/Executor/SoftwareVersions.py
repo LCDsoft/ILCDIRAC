@@ -22,34 +22,37 @@ class SoftwareVersions( OptimizerExecutor ):
   def initializeOptimizer( cls ):
     """Initialize specific parameters for SoftwareVersions.
     """
-    # cls.failedMinorStatus = cls.ex_getOption( '', 'Input Data Not Available' )
-    # #this will ignore failover SE files
-    # cls.checkFileMetadata = cls.ex_getOption( 'CheckFileMetadata', True )
-
-    cls.__dataManDict = {}
-    cls.__fcDict = {}
-    cls.__SEToSiteMap = {}
+    cls.__softToBanned = {}
     cls.__lastCacheUpdate = 0
     cls.__cacheLifeTime = 600
+
+    banLists = cls.ex_getOption( 'BanLists', [] )
+    cls.log.notice( banLists )
+
+    for banList in banLists:
+      resReason = cls.ex_getOption( banList+"Reason", '' )
+      resSites = cls.ex_getOption( banList+"Sites", [] )
+      cls.__softToBanned[resReason] = resSites
+
+    cls.log.notice( "BanLists:%s " % cls.__softToBanned )
 
     return S_OK()
 
 
   def optimizeJob( self, jid, jobState ):
 
-    software = jobState.getAttribute( "SoftwarePackages" )
-    self.log.notice ( "Software: %s ", software )
-    softBanned = []
+    result = jobState.getManifest()
+    if not result['OK']:
+      return S_ERROR( "Could not retrieve manifest: %s" % result[ 'Message' ] )
+    manifest = result['Value']
 
-    bannedSites = jobState.getAttribute( "BannedSite" )
-    self.log.notice ( "BannedSites: %s ", bannedSites )
+    software = manifest.getOption( "SoftwarePackages" )
+    self.log.verbose( "SoftwarePackages: %s " % software )
+    if isinstance( software , basestring ):
+      software = [ software ]
 
-    newBannedSites = bannedSites + softBanned
-
-    jobState.setAttribute( "BannedSites" , newBannedSites )
-
-    self.log.notice( " Done SoftwareVersioning ")
-
+    if software:
+      self.checkSoftware( manifest, software )
 
     result = jobState.setStatus( "SoftwareCheck",
                                  "Done",
@@ -58,5 +61,29 @@ class SoftwareVersions( OptimizerExecutor ):
     if not result[ 'OK' ]:
       return result
 
-    
-    return self.setNextOptimizer()
+    self.log.verbose( "Done SoftwareVersioning")
+
+    return self.setNextOptimizer( jobState )
+
+
+  def checkSoftware(self, manifest, software ):
+
+    bannedSites = manifest.getOption( "BannedSites", [] )
+    if not bannedSites:
+      bannedSites = manifest.getOption( "BannedSite", [] )
+
+    self.log.verbose( "Original BannedSites: %s " % bannedSites )
+
+    softBanned = set()
+    for reason, sites in self.__softToBanned.iteritems():
+      for package in software:
+        self.log.verbose( "Checking %s against %s " % ( reason, package ) )
+        if reason in package:
+          softBanned.update(sites)
+
+    newBannedSites = set(bannedSites).union(softBanned)
+
+    manifest.setOption( "BannedSites" , ", ".join(newBannedSites) )
+
+    self.log.notice( "Updated BannedSites: %s" % ", ".join(newBannedSites) )
+    return
