@@ -17,9 +17,9 @@ class Whizard(LCApplication):
   Usage:
 
   >>> wh = Whizard(dirac.getProcessList())
-  >>> wh.setProcess("ee_h_mumu")
+  >>> wh.setEvtType("ee_h_mumu")
   >>> wh.setEnergy(500)
-  >>> wh.setNbEvts(1000)
+  >>> wh.setNumberOfEvents(1000)
   >>> wh.setModel("sm")
 
   use setExtraArguments to overwrite the content of the whizard.in
