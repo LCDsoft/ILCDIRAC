@@ -1,7 +1,12 @@
 """ Executor to check which Sites have the proper software installed
 
-I.e. reject OSG sites when desy CVMFS is mandatory
-Maybe reject KEK when slc6 is mandatory
+Based on some part of the SoftwarePackage name we ban a lists of sites.
+Arbitrary number of BanLists can be created.
+In the CS:
+BanLists is a list of strings, for each string create two more options.
+<string>Reason
+<string>Sites
+Where Reason is the substring of the softwarePackage that is looked for and Sites is a lists of sites to be banned if the software package includes the substring
 
 """
 
