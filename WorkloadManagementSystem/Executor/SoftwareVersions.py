@@ -67,6 +67,10 @@ class SoftwareVersions( OptimizerExecutor ):
 
 
   def checkSoftware(self, manifest, software ):
+    """check if there are softwarepackages needed for the job and ban all sites
+    if there is some prohibitions for that package
+
+    """
 
     bannedSites = manifest.getOption( "BannedSites", [] )
     if not bannedSites:
