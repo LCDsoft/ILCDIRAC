@@ -75,16 +75,17 @@ class RestartReqExeAgent( AgentModule ):
 
     if age.seconds > self.maxLogAge:
       self.log.info( "Current log file is too old!" )
-      res = self.__getPID( agentName )
+      res = self.__getPIDs( agentName )
       if not res['OK']:
         return res
-      pid = res['Value']
+      pids = res['Value']
 
-      self.log.info( "Found PID for %s: %d" % ( agentName, pid ) )
+      self.log.info( "Found PIDs for %s: %s" % ( agentName, pids ) )
       ## kill the agent
       if self.enabled:
-        os.kill( pid, signal.SIGTERM )
-        self.log.info( "Killed the %s Agent" % agentName )
+        for pid in pids:
+          os.kill( pid, signal.SIGTERM )
+          self.log.info( "Killed the %s Agent with PID %s" % (agentName, pid) )
       else:
         self.log.info( "Would have killed the %s Agent" % agentName )
 
@@ -92,7 +93,7 @@ class RestartReqExeAgent( AgentModule ):
     return S_OK()
 
 
-  def __getPID( self, agentName ):
+  def __getPIDs( self, agentName ):
     """return PID for agentName"""
 
     ## Whitespaces around third argument are mandatory to only match the given agentName
@@ -100,12 +101,12 @@ class RestartReqExeAgent( AgentModule ):
     if not pidRes['OK']:
       return pidRes
     pid = pidRes['Value'][1].strip()
-
-    ## this is checking there is only one PID returned
+    pid = pid.split("\n")
+    pids = []
     try:
-      pid = int( pid )
+      pids.append( int( pid[0] ) )
     except ValueError as e:
-      self.log.error( "Could not create int from PID: ", str(e) )
+      self.log.error( "Could not create int from PID: ", "PID %s: %s" (pid, e) )
       return S_ERROR( "Could not create int from PID" )
 
-    return S_OK( pid )
+    return S_OK( pids )
