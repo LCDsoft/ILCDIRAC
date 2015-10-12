@@ -6,7 +6,7 @@
     The arguments dictionary from the JobPathAgent includes the ClassAd
     job description and therefore decisions are made based on the existence
     of JDL parameters.
-    @Author : Stuart Paterson
+    @author: Stuart Paterson
 """
 
 __RCSID__ = "$Id$"

@@ -154,7 +154,7 @@ def pathBinaryMatch(path, cmtconfig):
 def pathSharedMatch(path, dummy_cmtconfig=None):
   """ select path with are not part of a binary distribution
   @param path: file/dir path to be tested
-  @param cmtconfig: optional parameter to exclude specific files for a given cmtconfig
+  @param dummy_cmtconfig: optional parameter to exclude specific files for a given cmtconfig, unused
   """
   selected = True
   for b in binary_list :

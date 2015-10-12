@@ -36,7 +36,7 @@ class DiracILC(Dirac):
     self.ops = Operations()
     
   def getProcessList(self): 
-    """ Get the L{ProcessList} needed by L{Whizard}.
+    """ Get the L{ProcessList} needed by L{ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard}.
     @return: process list object
     """   
     processlistpath = gConfig.getValue("/LocalSite/ProcessListPath", "")

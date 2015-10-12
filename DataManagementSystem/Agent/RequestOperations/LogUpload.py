@@ -1,5 +1,5 @@
 """ :mod: LogUpload
-    ====================
+    ===============
 
     .. module: LogUpload
     :synopsis: logUpload operation handler

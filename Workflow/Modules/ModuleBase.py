@@ -226,7 +226,7 @@ class ModuleBase(object):
 
       @param outputLFNs: list of output LFNs for the job
 
-      @param fileMask:  UNUSED output file extensions to restrict the outputs to
+      @param dummy_fileMask:  UNUSED output file extensions to restrict the outputs to
 
       @return: S_OK with dictionary containing type, SE and LFN for files [NOT: restricted by mask]
     """

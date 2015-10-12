@@ -41,8 +41,8 @@ class SLIC(LCApplication):
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
 
-    @param RandomSeed: Seed to use during simulation.
-    @type RandomSeed: int
+    @param randomSeed: Seed to use during simulation.
+    @type randomSeed: int
     """
     self._checkArgs( { 'randomSeed' : types.IntType } )
 

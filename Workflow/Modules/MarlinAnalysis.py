@@ -107,7 +107,7 @@ class MarlinAnalysis(ModuleBase):
     Execute the following:
       - resolve where the soft was installed
       - prepare the list of file to feed Marlin with
-      - create the XML file on which Marlin has to run, done by L{PrepareXMLFile}
+      - create the XML file on which Marlin has to run, done by L{prepareXMLFile}
       - run Marlin and catch the exit code
     @return: S_OK(), S_ERROR()
     """

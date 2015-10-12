@@ -1,7 +1,7 @@
 '''
 Several file utilities
 
-@site: Mar 13, 2013
+@date: Mar 13, 2013
 @author: sposs
 '''
 __RCSID__ = "$Id$"

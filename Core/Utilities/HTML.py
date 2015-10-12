@@ -1,5 +1,4 @@
-"""
-HTML.py - v0.04 2009-07-28 Philippe Lagadec
+"""HTML.py - v0.04 2009-07-28 Philippe Lagadec
 
 This module provides a few classes to easily generate HTML code such as tables
 and lists.
@@ -7,7 +6,7 @@ and lists.
 Project website: http://www.decalage.info/python/html
 
 License: CeCILL (open-source GPL compatible), see source code for details.
-         http://www.cecill.info
+http://www.cecill.info
 """
 
 __version__ = '0.04'
@@ -101,17 +100,17 @@ class TableCell ( object ):
   a TableCell object is used to create a cell in a HTML table. (TD or TH)
 
   Attributes:
-  - text: text in the cell (may contain HTML tags). May be any object which
-          can be converted to a string using str().
-  - header: bool, false for a normal data cell (TD), true for a header cell (TH)
-  - bgcolor: str, background color
-  - width: str, width
-  - align: str, horizontal alignement (left, center, right, justify or char)
-  - char: str, alignment character, decimal point if not specified
-  - charoff: str, see HTML specs
-  - valign: str, vertical alignment (top|middle|bottom|baseline)
-  - style: str, CSS style
-  - attribs: dict, additional attributes for the TD/TH tag
+    - text: text in the cell (may contain HTML tags). May be any object which
+            can be converted to a string using str().
+    - header: bool, false for a normal data cell (TD), true for a header cell (TH)
+    - bgcolor: str, background color
+    - width: str, width
+    - align: str, horizontal alignement (left, center, right, justify or char)
+    - char: str, alignment character, decimal point if not specified
+    - charoff: str, see HTML specs
+    - valign: str, vertical alignment (top|middle|bottom|baseline)
+    - style: str, CSS style
+    - attribs: dict, additional attributes for the TD/TH tag
 
   Reference: http://www.w3.org/TR/html4/struct/tables.html#h-11.2.6
   """
@@ -169,12 +168,12 @@ class TableRow ( object ):
   a TableRow object is used to create a row in a HTML table. (TR tag)
 
   Attributes:
-  - cells: list, tuple or any iterable, containing one string or TableCell
-           object for each cell
-  - header: bool, true for a header row (TH), false for a normal data row (TD)
-  - bgcolor: str, background color
-  - col_align, col_valign, col_char, col_charoff, col_styles: see Table class
-  - attribs: dict, additional attributes for the TR tag
+    - cells: list, tuple or any iterable, containing one string or TableCell
+             object for each cell
+    - header: bool, true for a header row (TH), false for a normal data row (TD)
+    - bgcolor: str, background color
+    - col_align, col_valign, col_char, col_charoff, col_styles: see Table class
+    - attribs: dict, additional attributes for the TR tag
 
   Reference: http://www.w3.org/TR/html4/struct/tables.html#h-11.2.5
   """
@@ -230,20 +229,20 @@ class Table ( object ):
   a Table object is used to create a HTML table. (TABLE tag)
 
   Attributes:
-  - rows: list, tuple or any iterable, containing one iterable or TableRow
-          object for each row
-  - header_row: list, tuple or any iterable, containing the header row (optional)
-  - border: str or int, border width
-  - style: str, table style in CSS syntax (thin black borders by default)
-  - width: str, width of the table on the page
-  - attribs: dict, additional attributes for the TABLE tag
-  - col_width: list or tuple defining width for each column
-  - col_align: list or tuple defining horizontal alignment for each column
-  - col_char: list or tuple defining alignment character for each column
-  - col_charoff: list or tuple defining charoff attribute for each column
-  - col_valign: list or tuple defining vertical alignment for each column
-  - col_styles: list or tuple of HTML styles for each column
-
+    - rows: list, tuple or any iterable, containing one iterable or TableRow
+            object for each row
+    - header_row: list, tuple or any iterable, containing the header row (optional)
+    - border: str or int, border width
+    - style: str, table style in CSS syntax (thin black borders by default)
+    - width: str, width of the table on the page
+    - attribs: dict, additional attributes for the TABLE tag
+    - col_width: list or tuple defining width for each column
+    - col_align: list or tuple defining horizontal alignment for each column
+    - col_char: list or tuple defining alignment character for each column
+    - col_charoff: list or tuple defining charoff attribute for each column
+    - col_valign: list or tuple defining vertical alignment for each column
+    - col_styles: list or tuple of HTML styles for each column
+  
   Reference: http://www.w3.org/TR/html4/struct/tables.html#h-11.2.1
   """
 
@@ -354,10 +353,10 @@ class List ( object ):
   (UL/OL tag)
 
   Attributes:
-  - lines: list, tuple or any iterable, containing one string for each line
-  - ordered: bool, choice between an ordered (OL) or unordered list (UL)
-  - attribs: dict, additional attributes for the OL/UL tag
-
+    - lines: list, tuple or any iterable, containing one string for each line
+    - ordered: bool, choice between an ordered (OL) or unordered list (UL)
+    - attribs: dict, additional attributes for the OL/UL tag
+  
   Reference: http://www.w3.org/TR/html4/struct/lists.html
   """
 

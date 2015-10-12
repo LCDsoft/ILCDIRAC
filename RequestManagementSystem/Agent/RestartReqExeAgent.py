@@ -1,5 +1,5 @@
 """ :mod: RestartReqExeAgent
-    =====================
+    ========================
 
     .. module: RestartReqExeAgent
     :synopsis: restart the RequestExecutingAgent in case it gets stuck

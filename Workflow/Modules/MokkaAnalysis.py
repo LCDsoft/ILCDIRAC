@@ -490,8 +490,8 @@ done
 
 
   def determineDBSlice(self):
-    """Figure out where the dbSlice is located and what it is called
-     dbSlice is module parameter, set directly via workflow
+    """ Figure out where the dbSlice is located and what it is called
+    dbSlice is module parameter, set directly via workflow
 
     if it is not set and we do not use native CVMFS installation, then we assume
     the SQL file should be called CLICMOkkaDB.sql, but if we are using a native

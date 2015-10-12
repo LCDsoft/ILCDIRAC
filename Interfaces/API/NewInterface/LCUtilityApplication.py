@@ -26,8 +26,8 @@ class LCUtilityApplication( Application ):
   def setNbEvts(self, numberOfEvents):
     """ Set the number of events to process
     
-    @param nbevts: Number of events to process (or generate)
-    @type nbevts: int
+    @param numberOfEvents: Number of events to process (or generate)
+    @type numberOfEvents: int
     """
     self._checkArgs({ 'numberOfEvents' : IntType })
     self.numberOfEvents = numberOfEvents
