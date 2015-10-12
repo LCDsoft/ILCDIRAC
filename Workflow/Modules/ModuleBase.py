@@ -89,6 +89,8 @@ class ModuleBase(object):
     self.productionID = 0
     self.prod_job_id = 0
     self.jobReport = None
+    ## Make sure this is set everywhere
+    os.environ['OMP_NUM_THREADS'] = '1'
 
   #############################################################################
   def setApplicationStatus(self, status, sendFlag=True):
