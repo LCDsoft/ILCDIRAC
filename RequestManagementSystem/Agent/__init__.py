@@ -1,0 +1,3 @@
+"""
+   ILCDIRAC.RequestManagementSystem.Agent package
+"""
