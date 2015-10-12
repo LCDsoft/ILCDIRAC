@@ -25,19 +25,19 @@ New: Based on Dirac v6r13p7
 
 [v23r0p10]
 
-* DIRAC
+*DIRAC
 
 NEW: Based on v6r12p51
 
-* WorkloadManagement
+*WorkloadManagement
 
 NEW: SoftwareVersion Executor: Takes care to ban sites which are not compatible with the SofwarePackages required for any given job
 
-* ILCTransformation
+*ILCTransformation
 
 FIX: DataRecoveryAgent: Fixes for notification, updates configuration before every cycle
 
-* RequestManagement
+*RequestManagement
 
 FIX: RestartReqExeAgent deal with multiple PIDs
 
