@@ -18,7 +18,6 @@ NEW: Based on Dirac v6r13p8
 *Core
 NEW: Based on Dirac v6r13p7
 
-
 [v23r0p10]
 
 *DIRAC
@@ -128,7 +127,6 @@ FIX: Cleanup of interfaces member variables, should be completely transparent fo
 NEW: Based on Dirac v6r12p42
 
 *Transformation
-
 FIX: Fixes for ILDProductionJob from C. Calancha (ILCDIRAC-413)
 
 
@@ -142,68 +140,55 @@ NEW: Based on Dirac v6r12-pre21: DO NOT USE
 [v22r2p5]
 
 *Transformation
-
 NEW: Script to create replication transformations dirac-ilc-replication-transformation
 
 *Workflow
-
 FIX: OverlayInput will only waste time after downloading the first file
 
 *Dirac
-
 NEW: based on v6r11p5 (GlobusComputingElement)
 
 [v22r2p4]
 
 *Workflow
-
 FIX: Fix if ILDConfig cannot access CVMFS
 
 [v22r2p3]
 
 *Dirac
-
 NEW: Based on Dirac version v6r11p33: Issue regarding space in CE_OS description
 
 *Workflow
-
 FIX: ILCDIRAC-413 fix regarding picking up ILDConfig from CVMFS
 
 *RMS
-
 FIX: LogUpload would place log files in the wrong location
 
 *Scripts
-
 FIX: ILCDIRAC-474: dirac-ilc-add-whizard fixes for creating the replication request
 
 *Core
-
 FIX: ILCDIRAC-479: Fix python warning
 
 
 [v22r2p2]
 
 *Dirac
-
 NEW: Based on Dirac version v6r11p32: Fixes issue for dirac-ilc-list-user
 
 [v22r2p1]
 
 *Workflow
-
 FIX: OverlayInput will now always try to get files from the DataManager if files do not exist on local SE
 
 
 [v22r2p0]
 
 *DIRAC
-
 NEW: v6r11p31
 
 *Workflow
 CHANGE: Tar and compress production logfiles
-
 FIX: CVMFS support for native installations (Mokka, Marlin)
 FIX: Fix some of the issues with module- and step_commons-parameters
 FIX: Mokka: ProcessID is now passed to the module
@@ -219,7 +204,6 @@ FIX: Mokka: ProcessID is now passed to the module
 [v22r2-pre3]
 
 *DIRAC
-
 NEW: v6r11p31
 
 *Workflow
@@ -237,34 +221,29 @@ FIX: Remove SystemConfig/sysconfig, replace with platform
 [v22r1p15]
 
 *Workflow
-
 FIX: ILCDIRAC-452: getNumberOfEvents will now fail if no information is found. if NumberOfEvents is 0 the job will fail.
 
 
 [v22r1p14]
 
 *Workflow
-
 FIX: MokkaAnalysis: wait 100 seconds for socket
 FIX: CombinedSoftwareInstallation: Allow for mixing sharedarea (CVMFS) and LocalArea software
 
 [v22r1p13]
 
 *Workflow
-
 FIX: MokkaAnalysis: Place mysql logs in subdirectory $CWD/mysqllogs
 
 [v22r1p12]
 
 *Workflow
-
 FIX: ILCDIRAC-442: We need to run removeLibc correctly, pointing to the library folder
 
 
 [v22r1p11]
 
 *Workflow
-
 FIX: ILCDIRAC-442: We need to run removeLibc in case mysql4grid is not on cvmfs
 
 [v22r1p10]
@@ -288,69 +267,53 @@ FIX: ILCDIRAC-442: more debugging output
 [v22r1p7]
 
 *Workflow
-
 FIX: ILCDIRAC-302: SlicPandora would remove detector.zip: fix exception in unzip function that caused this issue
 FIX: MarlinAnalysis: Fix Issue when LCFIVertex and LCFIPlus are both in the MARLIN_DLL
 FIX: ILCDIRAC-442: MokkaAnalysis: Fix when mysql is available via CVMFS
 
 [v22r1p6]
 
-
 *General
-
 NEW: Dirac version v6r11p31
 
-
 *FileCatalog
-
 NEW: FC Search: new flag -D to only display folders
 
 *Interfaces
-
 CHANGE: use ilcdirac-support@cern.ch for email address
 FIX: ProductionJob ILCDIRAC-427: Register energy metadata
 FIX: ProductionJob ILCDIRAC-427: Accept energy metadata as integer
 
 *Core
-
 CHANGE: use ilcdirac-support@cern.ch for email address
 CHANGE: Allow specifying additional libraries to remove in removeLibc function
 
 *ILCTransformation
-
 FIX: DataRecoveryAgent: Use the new ReqClient
 
 *Workflow
-
 NEW: Mokka: Print libraries used by Mokka and mysql executable (debug only)
 FIX: ILCDIRAC-423: remove libgcc_s.so.1 from older mysq4grid versions
-
-
 
 [v22r1p5]
 
 *Workflow
-
 FIX: ILCDIRAC-422: Mokka did not work when ILDConfig parameter set
 
 [v22r1p4]
 
 *General
-
 NEW: Dirac version v6r11p28
 
 *Transformation
 FIX: TransformationCleaningAgent will now cleanup files when cleaning productions
 
 *Workflow
-
 FIX: Print correct message about files being uploaded
-
 
 [v22r1p3]
 
 *Workflow
-
 FIX: ILCDIRAC-417: Missing Checksum entry when creating RegistrationRequests during Failover
 FIX: ILCDIRAC-418: Properly cleanup requests when production jobs fail and we want to remove possible output files
 
@@ -377,8 +340,7 @@ FIX: ILCDIRAC-398 DataRecoveryAgent: Fixed SyntaxError and KeyError
 [v22r1p0]
 
 *Core
-Tag for official first release based on v6r11p25
-Contains all the changes for v22r0
+CHANGE: Tag for official first release based on v6r11p25 Contains all the changes for v22r0
 
 [v22r0p10]
 
