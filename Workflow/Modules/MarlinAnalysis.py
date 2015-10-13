@@ -7,6 +7,7 @@ ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
 
 @author: Stephane Poss 
 @author: Przemyslaw Majewski
+
 '''
 
 __RCSID__ = "$Id$"
@@ -109,6 +110,7 @@ class MarlinAnalysis(ModuleBase):
       - prepare the list of file to feed Marlin with
       - create the XML file on which Marlin has to run, done by L{prepareXMLFile}
       - run Marlin and catch the exit code
+
     @return: S_OK(), S_ERROR()
     """
     self.result = S_OK()

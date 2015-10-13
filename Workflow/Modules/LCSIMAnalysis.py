@@ -119,6 +119,7 @@ class LCSIMAnalysis(ModuleBase):
       - set the lcsim file using L{prepareLCSIMFile}
       - run java and catch the exit code
     @return: S_OK(), S_ERROR()
+
     """
     self.result = S_OK()
     if not self.platform:
