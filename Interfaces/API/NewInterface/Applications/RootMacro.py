@@ -28,8 +28,7 @@ class RootMacro(_Root):
   def setMacro(self, macro):
     """ Define macro to use
 
-    @param macro: Macro to run on. Must be a local C file.
-    @type macro: string
+    :param string macro: Macro to run on. Must be a local C file.
     """
     self._checkArgs( { 'macro' : types.StringTypes } )
 

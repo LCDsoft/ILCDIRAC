@@ -34,8 +34,7 @@ class _Root(LCApplication):
   def setArguments(self, args):
     """ Optional: Define the arguments of the script
 
-    @param args: Arguments to pass to the command line call
-    @type args: string
+    :param string args: Arguments to pass to the command line call
 
     """
     self._checkArgs( { 'args' : types.StringTypes } )

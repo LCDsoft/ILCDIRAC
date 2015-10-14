@@ -45,8 +45,7 @@ class Marlin(LCApplication):
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
 
-    @param gearFile: input gear file for Marlin reconstrcutor
-    @type gearFile: string
+    :param string gearFile: input gear file for Marlin reconstrcutor
     """
     self._checkArgs( { 'gearFile' : types.StringTypes } )
 
@@ -55,13 +54,14 @@ class Marlin(LCApplication):
       self.inputSB.append(gearFile)
 
   def setOutputRecFile(self, outputRecFile, path = None):
-    """ Optional: Define output rec file for Marlin
+    """Optional: Define output rec file for Marlin. Used only in production
+    context. Use :func:`UserJob.setOutputData
+    <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
+    want to keep the file on the grid.
 
-    @param outputRecFile: output rec file for Marlin
-    @type outputRecFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if
-    you want to keep the file on the grid.
-    @type path: string
+    :param string outputRecFile: output rec file for Marlin
+    :param string path: Path where to store the file.
+
     """
     self._checkArgs( { 'outputRecFile' : types.StringTypes } )
     self.outputRecFile = outputRecFile
@@ -71,13 +71,14 @@ class Marlin(LCApplication):
       self.outputRecPath = path
 
   def setOutputDstFile(self, outputDstFile, path = None):
-    """ Optional: Define output dst file for Marlin
+    """Optional: Define output dst file for Marlin.  Used only in production
+    context. Use :func:`UserJob.setOutputData
+    <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
+    want to keep the file on the grid.
 
-    @param outputDstFile: output dst file for Marlin
-    @type outputDstFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if
-    you want to keep the file on the grid.
-    @type path: string
+    :param string outputDstFile: output dst file for Marlin
+    :param string path: Path where to store the file.
+
     """
     self._checkArgs( { 'outputDstFile' : types.StringTypes } )
     self.outputDstFile = outputDstFile
@@ -93,8 +94,7 @@ class Marlin(LCApplication):
 
     >>> ma.setProcessorsToUse(['libMarlinTPC.so','libMarlinReco.so','libOverlay.so','libMarlinTrkProcessors.so'])
 
-    @param processorlist: list of processors to use
-    @type processorlist: list
+    :param list processorlist: list of processors to use
     """
     self._checkArgs( { 'processorlist' : types.ListType } )
     self.processorsToUse = processorlist
@@ -106,8 +106,7 @@ class Marlin(LCApplication):
 
     >>> ma.setProcessorsToExclude(['libLCFIVertex.so'])
 
-    @param processorlist: list of processors to exclude
-    @type processorlist: list
+    :param list processorlist: list of processors to exclude
     """
     self._checkArgs( { 'processorlist' : types.ListType } )
     self.processorsToExclude = processorlist

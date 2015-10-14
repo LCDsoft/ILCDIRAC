@@ -120,7 +120,7 @@ class Job(DiracJob):
     """ Helper function
     
     This is the main part: call for every application
-    @param application: Application instance
+    :param application application: Application instance
     
     """
     

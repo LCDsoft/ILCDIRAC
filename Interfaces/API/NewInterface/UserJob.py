@@ -1,11 +1,19 @@
-'''
-User Job class. Used to define (guess what?) user jobs!
+"""
+User Job class. Used to define user jobs!
 
+Example usage:
 
-@author: Stephane Poss
-@author: Remi Ete
-@author: Ching Bon Lam
-'''
+>>> from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+>>> ...
+>>> myJob = UserJob()
+>>> ...
+>>> myJob.append( myMarlinApp )
+>>> myJob.submit(myDiracInstance)
+
+:author: Stephane Poss
+:author: Remi Ete
+:author: Ching Bon Lam
+"""
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
@@ -31,6 +39,9 @@ class UserJob(Job):
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
     add the job to DIRAC.
+
+    :param diracinstance: :any:`DiracILC <ILCDIRAC.Interfaces.API.DiracILC.DiracILC>` instance
+    :param string mode: "wms" (default), "agent", or "local"
     """
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
@@ -61,15 +72,15 @@ class UserJob(Job):
   def setInputData( self, lfns ):
     """Helper function.
 
-       Specify input data by Logical File Name (LFN).
+    Specify input data by Logical File Name (LFN).
 
-       Example usage:
+    Example usage:
 
-       >>> job = Job()
-       >>> job.setInputData(['/ilc/prod/whizard/processlist.whiz'])
+    >>> job = UserJob()
+    >>> job.setInputData(['/ilc/prod/whizard/processlist.whiz'])
 
-       @param lfns: Logical File Names
-       @type lfns: Single LFN string or list of LFNs
+    :param lfns: Logical File Names
+    :type lfns: Single LFN string or list of LFNs
     """
     if type( lfns ) == list and len( lfns ):
       for i in xrange( len( lfns ) ):
@@ -90,7 +101,14 @@ class UserJob(Job):
     return S_OK()
    
   def setInputSandbox(self, flist):
-    """ Mostly inherited from DIRAC.Job
+    """ Add files to the input sandbox, can be on the local machine or on the grid
+
+    >>> job = UserJob()
+    >>> job.setInputSandBox( ['LFN:/ilc/user/u/username/libraries.tar.gz',
+    >>>                       'mySteeringFile.xml'] )
+
+    :param flist: Files for the inputsandbox
+    :type flist: list or string
     """
     if type(flist) == type(""):
       flist = [flist]
@@ -103,23 +121,21 @@ class UserJob(Job):
   def setOutputData(self, lfns, OutputPath = '', OutputSE = ''):
     """Helper function, used in preference to Job.setOutputData() for ILC.
 
-       For specifying output data to be registered in Grid storage.  If a list
-       of OutputSEs are specified the job wrapper will try each in turn until
-       successful.
+    For specifying output data to be registered in Grid storage.  If a list
+    of OutputSEs are specified the job wrapper will try each in turn until
+    successful.
 
-       Example usage:
+    Example usage:
 
-       >>> job = Job()
-       >>> job.setOutputData(['Ntuple.root'])
+    >>> job = UserJob()
+    >>> job.setOutputData(['Ntuple.root'])
 
-       @param lfns: Output data file or files
-       @type lfns: Single string or list of strings ['','']
-       @param OutputSE: Optional parameter to specify the Storage
-       @param OutputPath: Optional parameter to specify the Path in the Storage, postpented to /ilc/user/u/username/
-       Element to store data or files, e.g. CERN-tape
-       @type OutputSE: string or list
-       @type OutputPath: string
-    """    
+    :param lfns: Output data file or files
+    :type lfns: Single string or list of strings ['','']
+    :param string OutputPath: Optional parameter to specify the Path in the Storage, postpended to /ilc/user/u/username/
+    :param OutputSE: Optional parameter to specify the Storage Element to store data or files, e.g. CERN-SRM
+    :type OutputSE: string or list
+    """
     kwargs = {'lfns' : lfns, 'OutputSE' : OutputSE, 'OutputPath' : OutputPath}
     if type(lfns) == list and len(lfns):
       outputDataStr = ';'.join(lfns)
@@ -163,11 +179,11 @@ class UserJob(Job):
 
        Example usage:
 
-       >>> job = Job()
+       >>> job = UserJob()
        >>> job.setOutputSandbox(['*.log','myfile.slcio'])
 
-       @param files: Output sandbox files
-       @type files: Single string or list of strings ['','']
+       :param files: Output sandbox files
+       :type files: Single string or list of strings ['','']
 
     """
     if type( files ) == list and len( files ):

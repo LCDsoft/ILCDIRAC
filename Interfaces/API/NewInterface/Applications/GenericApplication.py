@@ -37,8 +37,7 @@ class GenericApplication(LCApplication):
   def setScript(self, script):
     """ Define script to use
 
-    @param script: Script to run on. Can be shell or python. Can be local file or LFN.
-    @type script: string
+    :param string script: Script to run on. Can be shell or python. Can be local file or LFN.
     """
     self._checkArgs( { 'script' : types.StringTypes } )
     if os.path.exists(script) or script.lower().count("lfn:"):
@@ -49,9 +48,7 @@ class GenericApplication(LCApplication):
   def setArguments(self, args):
     """ Optional: Define the arguments of the script
 
-    @param args: Arguments to pass to the command line call
-    @type args: string
-
+    :param string args: Arguments to pass to the command line call
     """
     self._checkArgs( { 'args' : types.StringTypes } )
     self.arguments = args
@@ -62,8 +59,7 @@ class GenericApplication(LCApplication):
 
     >>> app.setDependency({"mokka":"v0706P08","marlin":"v0111Prod"})
 
-    @param appdict: Dictionary of application to use: {"App":"version"}
-    @type appdict: dict
+    :param dict appdict: Dictionary of application to use: {"App":"version"}
 
     """
     #check that dict has proper structure

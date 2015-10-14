@@ -39,13 +39,14 @@ class LCSIM(LCApplication):
     self.detectortype = 'SID'
 
   def setOutputRecFile(self, outputRecFile, path = None):
-    """ Optional: Define output rec file for LCSIM
+    """Optional: Define output rec file for LCSIM Used only in production
+    context. Use :func:`UserJob.setOutputData
+    <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
+    want to keep the file on the grid.
 
-    @param outputRecFile: output rec file for LCSIM
-    @type outputRecFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if
-    you want to keep the file on the grid.
-    @type path: string
+    :param string outputRecFile: output rec file for LCSIM
+    :param string path: Path where to store the file.
+
     """
     self._checkArgs( { 'outputRecFile' : types.StringTypes } )
     self.outputRecFile = outputRecFile
@@ -55,13 +56,14 @@ class LCSIM(LCApplication):
       self.outputRecPath = path
 
   def setOutputDstFile(self, outputDstFile, path = None):
-    """ Optional: Define output dst file for LCSIM
+    """Optional: Define output dst file for LCSIM.Used only in production
+    context. Use :func:`UserJob.setOutputData
+    <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
+    want to keep the file on the grid.
 
-    @param outputDstFile: output dst file for LCSIM
-    @type outputDstFile: string
-    @param path: Path where to store the file. Used only in prouction context. Use setOutputData if you want
-    to keep the file on the grid.
-    @type path: string
+    :param string outputDstFile: output dst file for LCSIM
+    :param string path: Path where to store the file.
+
     """
     self._checkArgs( { 'outputDstFile' : types.StringTypes } )
     self.outputDstFile = outputDstFile
@@ -73,8 +75,7 @@ class LCSIM(LCApplication):
   def setAliasProperties(self, alias):
     """ Optional: Define the path to the alias.properties file name that will be used
 
-    @param alias: Path to the alias.properties file name that will be used
-    @type alias: string
+    :param string alias: Path to the alias.properties file name that will be used
     """
     self._checkArgs( { 'alias' : types.StringTypes } )
 
@@ -85,8 +86,7 @@ class LCSIM(LCApplication):
   def setDetectorModel(self, model):
     """ Detector Model to use
 
-    @param model: name, zip file, or lfn that points to the detector model
-    @type model: string
+    :param string model: name, zip file, or lfn that points to the detector model
     """
     self._checkArgs( { 'model' : types.StringTypes } )
     self.detectorModel = model
@@ -96,9 +96,9 @@ class LCSIM(LCApplication):
   def setTrackingStrategy(self, trackingstrategy):
     """ Optional: Define the tracking strategy to use.
 
-    @param trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is
-    in the steering file
-    @type trackingstrategy: string
+    :param string trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is
+                                    in the steering file
+
     """
     self._checkArgs( { 'trackingstrategy' : types.StringTypes } )
     self.trackingStrategy = trackingstrategy
@@ -108,8 +108,7 @@ class LCSIM(LCApplication):
   def setExtraParams(self, extraparams):
     """ Optional: Define command line parameters to pass to java
 
-    @param extraparams: Command line parameters to pass to java
-    @type extraparams: string
+    :param string extraparams: Command line parameters to pass to java
     """
     self._checkArgs( { 'extraparams' : types.StringTypes } )
 

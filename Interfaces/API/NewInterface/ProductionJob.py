@@ -289,7 +289,7 @@ class ProductionJob(Job):
   def setDescription(self, desc):
     """ Set the production's description
     
-    @param desc: Description
+    :param string desc: Description
     """
     self.description = desc
     return S_OK()
@@ -302,10 +302,10 @@ class ProductionJob(Job):
   def addFinalization(self, uploadData = False, registerData = False, uploadLog = False, sendFailover=False):
     """ Add finalization step
 
-    @param uploadData: Upload or not the data to the storage
-    @param uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
-    @param sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
-    @param registerData: Register data in the file catalog
+    :param bool uploadData: Upload or not the data to the storage
+    :param bool uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
+    :param bool sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
+    :param bool registerData: Register data in the file catalog
     #todo: Do the registration only once, instead of once for each job
 
     """
