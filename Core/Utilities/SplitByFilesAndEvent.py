@@ -6,7 +6,7 @@ Gives a list of dictionaries
 
 Created on Feb 10, 2010
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"

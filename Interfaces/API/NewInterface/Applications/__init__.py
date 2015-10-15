@@ -29,9 +29,9 @@ Running:
 
 prints out all the available methods.
 
-@author: Stephane Poss
-@author: Remi Ete
-@author: Ching Bon Lam
+:author: Stephane Poss
+:author: Remi Ete
+:author: Ching Bon Lam
 """
 __RCSID__ = "$Id$"
 

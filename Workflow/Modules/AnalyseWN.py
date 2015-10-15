@@ -1,7 +1,7 @@
 '''
-@since: May 30, 2013
+:since: May 30, 2013
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSharedAreaLocation

@@ -1,9 +1,9 @@
 """
 Installs properly ILD soft and SiD soft, and all dependencies
 
-@since: Feb 4, 2010
-
-@author: Stephane Poss and Przemyslaw Majewski
+:since: Feb 4, 2010
+:author: Stephane Poss
+:author: Przemyslaw Majewski
 """
 __RCSID__ = "$Id$"
 import os, zipfile
@@ -89,9 +89,9 @@ class CombinedSoftwareInstallation(object):
 
     Executes the following:
       - look for the compatible platforms in the CS, see if one matches request
-      - install the applications, calls L{TARsoft}
+      - install the applications, calls :any:`TARsoft`
 
-    @return: S_OK(), S_ERROR()
+    :return: S_OK(), S_ERROR()
     """
     if not self.apps:
       # There is nothing to do

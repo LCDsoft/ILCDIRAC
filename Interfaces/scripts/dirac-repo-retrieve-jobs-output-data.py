@@ -1,7 +1,7 @@
 '''
 Created on Mar 24, 2010
 
-@author: sposs
+:author: sposs
 '''
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, exit as dexit

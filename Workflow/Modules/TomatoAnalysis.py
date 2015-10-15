@@ -1,10 +1,10 @@
 '''
 Run TOMATO
 
-@since: Feb 24, 2011
+:since: Feb 24, 2011
 
-@author: S. Poss
-@author: C. B. Lam
+:author: S. Poss
+:author: C. B. Lam
 '''
 
 __RCSID__ = "$Id$"

@@ -3,9 +3,9 @@
 Run many different applications as a test. Creates a temp directory and runs in there.
 Stops at any error.
 
-@since: Nov 8, 2013
+:since: Nov 8, 2013
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

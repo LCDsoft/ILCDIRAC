@@ -2,8 +2,8 @@
 
 Allows setting the Steering File dependency, as well as other LC community things
 
-@author: sposs
-@since: Nov 1st, 2013
+:author: sposs
+:since: Nov 1st, 2013
 """
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication

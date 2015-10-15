@@ -18,14 +18,14 @@ class _Root(LCApplication):
 
 
   def setScript(self, script):
-    """ Base method, overloaded in L{RootScript}
+    """ Base method, overloaded in :any:`RootScript`
     """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
 
   def setMacro(self, macro):
-    """ Base method, overloaded in L{RootMacro}
+    """ Base method, overloaded in :any`RootMacro`
     """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")

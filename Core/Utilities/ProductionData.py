@@ -2,8 +2,8 @@
 Utility to construct production LFNs from workflow parameters
 according to LHCb conventions.
 
-@author: S. Poss
-@since: Jun 16, 2010
+:author: S. Poss
+:since: Jun 16, 2010
 """
 
 __RCSID__ = "$Id$"

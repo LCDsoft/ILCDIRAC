@@ -2,7 +2,7 @@
 '''
 Created on Feb 8, 2012
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 #pylint: skip-file
 #pylint: disable=C0103

@@ -3,7 +3,7 @@ Retrieve the output sandboxes of jobs created using the API, stored in the repos
 
 Created on Mar 24, 2010
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

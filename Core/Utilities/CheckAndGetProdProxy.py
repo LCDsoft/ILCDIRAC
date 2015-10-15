@@ -1,9 +1,9 @@
 '''
-Checks and potentially provides production proxy, called from L{ProductionJob}
+Checks and potentially provides production proxy, called from :any:`ProductionJob`
 
 Created on Feb 10, 2011
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"
@@ -18,7 +18,7 @@ def getNewProxy():
   print 'Getting production proxy ...'
   return call( [ 'dirac-proxy-init', '-g', 'ilc_prod' ] )
 def checkAndGetProdProxy():
-  """ Check if current proxy is a production one, and if not call the L{getNewProxy} method.
+  """ Check if current proxy is a production one, and if not call the :any:`getNewProxy` method.
   """
   result = getProxyInfo()
   if not result['OK']:

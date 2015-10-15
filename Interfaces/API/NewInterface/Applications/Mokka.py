@@ -68,7 +68,6 @@ class Mokka(LCApplication):
     """ Define detector to use for Mokka simulation
 
     :param string detectorModel: Detector Model to use for Mokka simulation.
-    @type detectorModel: string
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 

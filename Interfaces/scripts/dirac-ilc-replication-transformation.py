@@ -2,7 +2,7 @@
 '''
 Created on May 18, 2015
 
-@author: A. Sailer
+:author: A. Sailer
 '''
 __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script

@@ -1,7 +1,7 @@
 """
 Utilities to deal with the normalisation of LFNs for various occasions
 
-@author: sailer
+:author: sailer
 """
 
 __RCSID__= "$Id$"

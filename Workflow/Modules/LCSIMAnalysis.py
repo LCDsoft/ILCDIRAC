@@ -3,9 +3,9 @@ Run LCSIM
 
 Called by Job Agent. 
 
-@since: Apr 7, 2010
+:since: Apr 7, 2010
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 
 __RCSID__ = "$Id$"
@@ -47,7 +47,8 @@ class LCSIMAnalysis(ModuleBase):
      
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
     
     if self.step_commons.has_key('inputXML'):
@@ -116,10 +117,10 @@ class LCSIMAnalysis(ModuleBase):
       - prepend in the LD_LIBRARY_PATH any lib directory of any dependency (e.g. root)
       - prepare the list of files to run on
       - set the cacheDirectory and put in there the alias.properties
-      - set the lcsim file using L{prepareLCSIMFile}
+      - set the lcsim file using :any:`prepareLCSIMFile`
       - run java and catch the exit code
-    @return: S_OK(), S_ERROR()
 
+    :return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
     if not self.platform:

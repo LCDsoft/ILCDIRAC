@@ -1,9 +1,9 @@
 '''
-Run the Post generation filter, not the same as L{StdHepCut}
+Run the Post generation filter, not the same as :any:`StdHepCut`
 
-@since: Dec 20, 2010
+:since: Dec 20, 2010
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"

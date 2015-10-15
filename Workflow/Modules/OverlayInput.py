@@ -1,9 +1,9 @@
 '''
 Get the overlay files
 
-@since: Jan 27, 2011
+:since: Jan 27, 2011
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"

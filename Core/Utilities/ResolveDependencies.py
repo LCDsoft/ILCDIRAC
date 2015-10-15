@@ -3,9 +3,8 @@ Set of functions used to resolve the applications' dependencies, looking into th
 
 Works recursively
 
-@since: Apr 26, 2010
-
-@author: Stephane Poss
+:since: Apr 26, 2010
+:author: Stephane Poss
 '''
 
 __RCSID__ = "$Id$"
@@ -16,14 +15,10 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Opera
 def resolveDeps(sysconfig, appli, appversion):
   """ Resolve the dependencies
   
-  @param sysconfig: system configuration
-  @type sysconfig: string
-  @param appli: application name
-  @type appli: string
-  @param appversion: application version
-  @type appversion: string
-  
-  @return: array of dictionaries
+  :param string sysconfig: system configuration
+  :param string appli: application name
+  :param string appversion: application version
+  :return: list of dictionaries
   """
   log = gLogger.getSubLogger("resolveDeps")
   ops = Operations()

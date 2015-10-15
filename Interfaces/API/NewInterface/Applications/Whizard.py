@@ -75,7 +75,7 @@ class Whizard(LCApplication):
 
   def setGlobalEvtType(self, globalname):
     """ When producing multiple process in one job, it is needed to define this for the output file name.
-    It's mandatory to use the L{setFullParameterDict} method when using this.
+    It's mandatory to use the :any:`setFullParameterDict` method when using this.
     """
     self._checkArgs( { 'globalname' : types.StringTypes } )
     self.globalEventType = globalname

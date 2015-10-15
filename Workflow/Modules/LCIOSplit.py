@@ -1,9 +1,8 @@
 """
 Module to concatenate LCIO files
 
-@author: Ching Bon Lam
-@since: Dec 17, 2011
-
+:author: Ching Bon Lam
+:since: Dec 17, 2011
 """
 
 __RCSID__ = "$Id$"

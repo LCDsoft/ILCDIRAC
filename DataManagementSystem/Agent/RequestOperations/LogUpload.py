@@ -1,10 +1,11 @@
-""" :mod: LogUpload
-    ===============
+"""
+:synopsis: RequestOperation to handle log file failover
 
-    .. module: LogUpload
-    :synopsis: logUpload operation handler
+Uploads log files to the LogSE that were uploaded to a GridSE as a failover
+mechanism. Removes log files from the GridSE
 
-    LogUpload operation handler
+Adapted from LHCbDirac.
+
 """
 __RCSID__ = "$Id$"
 # # imports
@@ -14,8 +15,6 @@ from DIRAC.RequestManagementSystem.private.OperationHandlerBase import Operation
 
 class LogUpload( OperationHandlerBase ):
   """
-  .. class:: LogUpload
-
   LogUpload operation handler
   """
 
@@ -24,7 +23,7 @@ class LogUpload( OperationHandlerBase ):
 
     :param self: self reference
     :param Operation operation: Operation instance
-    :param str csPath: CS path for this handler
+    :param string csPath: CS path for this handler
     """
     # # base class ctor
     OperationHandlerBase.__init__( self, operation, csPath )

@@ -1,8 +1,8 @@
 '''
 Interface to the processlist.whiz that contains all the processes known to WHIZARD.
 
-@author: S. Poss
-@since: Sep 21, 2010
+:author: S. Poss
+:since: Sep 21, 2010
 '''
 
 __RCSID__ = "$Id$"
@@ -53,7 +53,8 @@ class ProcessList(object):
   
   def updateProcessList(self, processes):
     """ Adds a new entry or updates an existing one.
-    @param processes: dictionary of processes to treat
+
+    :param dict processes: dictionary of processes to treat
     """
     gLogger.verbose("Updating process list:")
     for process, mydict in processes.items():
@@ -87,7 +88,8 @@ class ProcessList(object):
   
   def getCSPath(self, process):
     """ Return the path to the TarBall (for install)
-    @param process: process to look for
+
+    :param string process: process to look for
     """
     return self.cfg.getOption("Processes/%s/TarBallCSPath" % process, None)
 

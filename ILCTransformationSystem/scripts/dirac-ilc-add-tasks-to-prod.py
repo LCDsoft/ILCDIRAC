@@ -1,8 +1,8 @@
 #!/bin/env python
 """
 Add a number of tasks to a production, can only be used on prods that use the Limited Plugin
-@since: Mar 26, 2013
-@author: S Poss
+:since: Mar 26, 2013
+:author: S Poss
 """
 __RCSID__ = "$Id$"
 

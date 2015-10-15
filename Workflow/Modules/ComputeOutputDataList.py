@@ -1,9 +1,9 @@
 '''
 Compute the outputdata list for production jobs
 
-@since:  Jun 30, 2010
+:since:  Jun 30, 2010
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"

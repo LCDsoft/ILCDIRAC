@@ -4,7 +4,7 @@ Get production logs
 
 Created on Mar 21, 2013
 
-@author: stephane
+:author: stephane
 '''
 __RCSID__ = "$Id$"
 

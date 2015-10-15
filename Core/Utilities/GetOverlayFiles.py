@@ -1,8 +1,8 @@
 '''List the content of the overlay directory given a background type. Called
-from L{ILCDIRAC.Core.Utilities.PrepareOptionFiles.prepareXMLFile}.
+from :any:`prepareXMLFile <ILCDIRAC.Core.Utilities.PrepareOptionFiles.prepareXMLFile>`.
 
-@author: S. Poss
-@since: Jan 28, 2011
+:author: S. Poss
+:since: Jan 28, 2011
 
 '''
 __RCSID__ = "$Id$"

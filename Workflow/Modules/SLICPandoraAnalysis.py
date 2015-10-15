@@ -1,9 +1,8 @@
 '''
 Run SLICPandora
 
-@since: Oct 25, 2010
-
-@author: sposs
+:since: Oct 25, 2010
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

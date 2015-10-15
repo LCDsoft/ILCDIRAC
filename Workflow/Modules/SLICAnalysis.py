@@ -1,9 +1,9 @@
 '''
 Run SLIC
 
-@since:  Apr 7, 2010
+:since:  Apr 7, 2010
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 
 __RCSID__ = "$Id$"
@@ -38,7 +38,8 @@ class SLICAnalysis(ModuleBase):
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
 
     if self.WorkflowStartFrom:
@@ -72,9 +73,10 @@ class SLICAnalysis(ModuleBase):
     Execute the following:
       - get the environment variables that should have been set during installation
       - download the detector model, using CS query to fetch the address
-      - prepare the mac file using L{prepareMacFile}
+      - prepare the mac file using :any:`prepareMacFile`
       - run SLIC on this mac File and catch the exit status
-    @return: S_OK(), S_ERROR()
+
+    :return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
     if not self.platform:

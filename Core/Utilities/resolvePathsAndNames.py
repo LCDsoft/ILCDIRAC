@@ -1,7 +1,7 @@
 '''
 Several utilities to "guess" the files names and the paths
-@author: sposs
-@since: March 13th, 2013
+:author: sposs
+:since: March 13th, 2013
 '''
 __RCSID__ = "$Id$"
 
@@ -11,13 +11,11 @@ from DIRAC import gLogger
 
 def getProdFilename(filename, prodID, jobID):
   """ Build the output file names based of local job property.
-  @param filename: File name before change
-  @type filename: string
-  @param prodID: Production ID
-  @type prodID: int
-  @param jobID: Job ID
-  @type jobID: int
-  @return: the modified file name
+
+  :param string filename: File name before change
+  :param int prodID: Production ID
+  :param int jobID: Job ID
+  :return: the modified file name
   """
   outfile = ""
   if filename.count(".slcio"):

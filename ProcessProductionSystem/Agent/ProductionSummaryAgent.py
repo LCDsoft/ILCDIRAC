@@ -3,7 +3,7 @@ Production Summary agent: writes out every day the production status
 
 Created on Apr 8, 2011
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 #pylint: skip-file
 __RCSID__ = "$Id$"

@@ -1,9 +1,9 @@
 '''
 Dummy module that prints out the workflow parameters
 
-@since: Mar 11, 2011
+:since: Mar 11, 2011
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

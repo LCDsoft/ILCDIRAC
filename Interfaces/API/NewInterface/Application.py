@@ -1,9 +1,9 @@
 '''
 Base application class. All applications inherit this class.
 
-@author: Stephane Poss
-@author: Remi Ete
-@author: Ching Bon Lam
+:author: Stephane Poss
+:author: Remi Ete
+:author: Ching Bon Lam
 '''
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
@@ -177,7 +177,7 @@ class Application(object):
   def setOutputFile(self, ofile, path = None):
     """ Set the output file
     
-    :param string ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using L{getInputFromApp})
+    :param string ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using :any:`getInputFromApp`)
     :param string path: Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
@@ -383,12 +383,12 @@ class Application(object):
   def _checkWorkflowConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check the workflow consistency: linking between 
     applications
-    Should also call L{_checkRequiredApp} when needed.
+    Should also call :any:`_checkRequiredApp` when needed.
     """
     return S_OK()
 
   def _checkRequiredApp(self):
-    """ Called by L{_checkWorkflowConsistency} when relevant
+    """ Called by :any:`_checkWorkflowConsistency` when relevant
     """
     if self._inputapp:
       for app in self._inputapp:
@@ -476,7 +476,7 @@ class Application(object):
       
   def _addParametersToStep(self, stepdefinition):
     """ Method to be overloaded by every application. Add the parameters to the given step. 
-    Should call L{_addBaseParameters}.
+    Should call any:`_addBaseParameters`.
     Called from Job
     """
     return self._addBaseParameters(stepdefinition)
@@ -490,7 +490,7 @@ class Application(object):
 
   def _resolveLinkedStepParameters(self, stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. 
-    OuputFile and InputFile). See L{StdHepCut} for example.
+    OuputFile and InputFile). See :any:`StdHepCut` for example.
     Called from Job.
     """
     return S_OK()

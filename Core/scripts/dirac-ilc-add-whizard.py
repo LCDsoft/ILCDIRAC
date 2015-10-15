@@ -4,7 +4,9 @@ Define a new WHIZARD version: update the process list, create the new tar ball, 
 
 Created on Sep 21, 2010
 
-@author: sposs
+:author: sposs
+:author: sailer
+:author: strube
 '''
 
 __RCSID__ = "$Id$"

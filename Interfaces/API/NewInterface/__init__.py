@@ -1,9 +1,9 @@
 '''
 Here lies the new Interface for the moment
 
-@since: Jul 28, 2011
+:since: Jul 28, 2011
 
-@author: Stephane Poss
+:author: Stephane Poss
 
 '''
 __RCSID__ = "$Id$"

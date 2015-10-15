@@ -1,11 +1,11 @@
 '''
 Production Job class. Used to define new productions. 
 
-Mostly similar to L{UserJob}, but cannot be (and should not be) used like the UserJob class.
+Mostly similar to :any:`UserJob`, but cannot be (and should not be) used like the :any:`UserJob` class.
 
-@author: Stephane Poss
-@author: Remi Ete
-@author: Ching Bon Lam
+:author: Stephane Poss
+:author: Remi Ete
+:author: Ching Bon Lam
 '''
 
 __RCSID__ = "$Id$"
@@ -295,7 +295,7 @@ class ProductionJob(Job):
     return S_OK()
 
   def getBasePath(self):
-    """ Return the base path. Updated by L{setInputDataQuery}.
+    """ Return the base path. Updated by :any`setInputDataQuery`.
     """
     return self.basepath
   
@@ -306,9 +306,8 @@ class ProductionJob(Job):
     :param bool uploadLog: Upload log file to storage (currently only available for admins, thus add them to OutputSandbox)
     :param bool sendFailover: Send Failover requests, and declare files as processed or unused in transfDB
     :param bool registerData: Register data in the file catalog
-    #todo: Do the registration only once, instead of once for each job
-
     """
+    #TODO: Do the registration only once, instead of once for each job
     
     self.call_finalization = True
     self.finalsdict['uploadData'] = uploadData

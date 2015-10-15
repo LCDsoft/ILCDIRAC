@@ -1,8 +1,8 @@
 '''
 Several file utilities
 
-@date: Mar 13, 2013
-@author: sposs
+:since: Mar 13, 2013
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

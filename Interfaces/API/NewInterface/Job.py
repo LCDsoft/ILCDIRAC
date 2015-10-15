@@ -1,10 +1,10 @@
 '''
 New Job class, for the new interface. This job class should not be used to create jobs. 
-Use L{UserJob} or L{ProductionJob}.
+Use :any:`UserJob` or :any:`ProductionJob`.
 
-@author: Stephane Poss
-@author: Remi Ete
-@author: Ching Bon Lam
+:author: Stephane Poss
+:author: Remi Ete
+:author: Ching Bon Lam
 '''
 
 from DIRAC.Interfaces.API.Job                          import Job as DiracJob
@@ -37,7 +37,13 @@ class Job(DiracJob):
 
 
   def setSystemConfig(self, platform):
-    """Deprecation warning for setSystemConfig"""
+    """Deprecation warning for setSystemConfig
+
+    .. deprecated:: v23r0
+
+    use :func:`setPlatform`
+
+    """
     self.log.error("""WARNING: setSystemConfig has been deprecated! use
 
                   setPlatform(platform)
@@ -64,17 +70,19 @@ class Job(DiracJob):
     return self._reportError('This job class does not implement setOutputSandbox')
   
   def setIgnoreApplicationErrors(self):
-    """ Helper function
-    
-    Set a flag for all applications that they should not care about errors
+    """ Set a flag for all applications that they should not care about errors
     """
     self._addParameter(self.workflow, 'IgnoreAppError', 'JDL', True, 'To ignore application errors')
     return S_OK()
   
   def dontPromptMe(self):
-    """ Helper function
+    """ Call this function to automatically confirm job submission
+
+    >>> job = UserJob()
+    >>> job.dontPromptMe()
+    >>> ...
+    >>> job.submit(diracInstance)
     
-    Called by users to remove checking of job.
     """
     self.check = False
     return S_OK()
@@ -87,6 +95,8 @@ class Job(DiracJob):
   
   def checkparams(self, dirac = None):
     """ Check job consistency instead of submitting
+
+    :param DiracILC dirac: DiracILC instance
     """
     if not dirac:
       return S_ERROR("Missing dirac instance")
@@ -99,7 +109,7 @@ class Job(DiracJob):
   def _askUser(self):
     """ Private function
     
-    Called from DiracILC class to prompt the user
+    Called from :any:`DiracILC` class to prompt the user
     """
     if not self.check:
       return S_OK()
@@ -120,8 +130,8 @@ class Job(DiracJob):
     """ Helper function
     
     This is the main part: call for every application
-    :param application application: Application instance
-    
+
+    :param Application application: Application instance
     """
     
     res = application._analyseJob(self)

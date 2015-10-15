@@ -1,9 +1,9 @@
 '''
 Module to run root executables
 
-@since:  Apr 29, 2010
+:since:  Apr 29, 2010
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 
@@ -28,7 +28,8 @@ class RootExecutableAnalysis(ModuleBase):
       
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
 
     if not self.script:

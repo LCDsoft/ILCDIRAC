@@ -1,6 +1,6 @@
 """
 Module to check the file contents
-@author: Ching Bon Lam
+:author: Ching Bon Lam
 """
 
 __RCSID__ = "$Id$"

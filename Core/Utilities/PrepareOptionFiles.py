@@ -1,9 +1,9 @@
-'''
+"""
 Provides a set of methods to prepare the option files needed by the ILC applications.
 
-@author: Stephane Poss
-@since: Jan 29, 2010
-'''
+:author: Stephane Poss
+:since: Jan 29, 2010
+"""
 
 __RCSID__ = "$Id$"
 
@@ -22,10 +22,11 @@ import os
 
 def getNewLDLibs(platform, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
-  @param platform: System config used for the job
-  @param application: name of the application considered
-  @param applicationVersion: version of the application considered
-  @return: new LD_LIBRARY_PATH
+
+  :param string platform: System config used for the job
+  :param string application: name of the application considered
+  :param string applicationVersion: version of the application considered
+  :return: new LD_LIBRARY_PATH
   """
   log = gLogger.getSubLogger("GetLDLibs")
   log.verbose("Getting all lib folders")
@@ -56,7 +57,12 @@ def getNewLDLibs(platform, application, applicationVersion):
   return new_ld_lib_path
 
 def getNewPATH(platform, application, applicationVersion):
-  """ Same as L{getNewLDLibs},but for the PATH
+  """ Same as :func:`getNewLDLibs`,but for the PATH
+
+  :param string platform: System config used for the job
+  :param string application: name of the application considered
+  :param string applicationVersion: version of the application considered
+  :return: new PATH
   """
   log = gLogger.getSubLogger("GetPaths")
   log.verbose("Getting all PATH folders")
@@ -81,21 +87,16 @@ def getNewPATH(platform, application, applicationVersion):
 def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, output_in):
   """Prepares the whizard.in file to run
   
-  Using specified parameters in the job definition passed from L{WhizardAnalysis}
+  Using specified parameters in the job definition passed from :any:`WhizardAnalysis`
   
-  @param input_in: input whizard.in to modify
-  @type input_in: string
-  @param evttype: process type that will prepend stdhep output name
-  @type evttype: string
-  @param randomseed: random seed to use
-  @type randomseed: int
-  @param nevts: number of events to generate
-  @type nevts: int
-  @param lumi: luminosity to use
-  @type lumi: int
-  @param output_in: whizard.in output file name (usually whizard.in)
-  @type output_in: string
-  @return: S_OK()
+  :param string input_in: input whizard.in to modify
+  :param string evttype: process type that will prepend stdhep output name
+  :param int randomseed: random seed to use
+  :param int nevts: number of events to generate
+  :param lumi: luminosity to use
+  :type lumi: int (float?)
+  :param string output_in: whizard.in output file name (usually whizard.in)
+  :return: S_OK
   """
   inputfile = file(input_in, "r")  
   outputfile = file(output_in, "w")
@@ -126,17 +127,13 @@ def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
 def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   """Prepares the whizard.in file to run
   
-  Using specified parameters in the job definition passed from L{WhizardAnalysis}
+  Using specified parameters in the job definition passed from :any:`WhizardAnalysis`
   
-  @param input_in: input whizard.in to modify
-  @type input_in: string
-  @param evttype: process type that will prepend stdhep output name
-  @type evttype: string
-  @param parameters: dictionary of parameters to set in the whizard.in
-  @type parameters: dict 
-  @param output_in: whizard.in output file name (usually whizard.in)
-  @type output_in: string
-  @return: S_OK()
+  :param string input_in: input whizard.in to modify
+  :param string evttype: process type that will prepend stdhep output name
+  :param dict parameters: dictionary of parameters to set in the whizard.in
+  :param string output_in: whizard.in output file name (usually whizard.in)
+  :return: S_OK()
   """
   inputfile = file(input_in, "r")  
   outputfile = file(output_in, "w")
@@ -196,30 +193,22 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
                         filemeta = {}):
   """Writes out a steering file for Mokka
   
-  Using specified parameters in the job definition passed from L{MokkaAnalysis}
+  Using specified parameters in the job definition passed from :any:`MokkaAnalysis`
   
-  @param inputSteering: input steering file name
-  @type inputSteering: string
-  @param outputSteering: new steering file that will be used by Mokka
-  @type outputSteering: string
-  @param detectormodel: detector model to use from the DB
-  @type detectormodel: string
-  @param stdhepFile: generator file name to put in the mac file, if needed
-  @type stdhepFile: string
-  @param mac: input mac file
-  @type mac: string
-  @param nbOfRuns: number of runs to use
-  @type nbOfRuns: string
-  @param startFrom: First event to read from the generator file
-  @type startFrom: int
-  @param randomseed: Seed to use
-  @type randomseed: int
-  @param debug: overwrite default print level, if set to True, don't change input steering parameter
-  @type debug: bool
-  @param outputlcio: output slcio file name, not used
-  @type outputlcio: string
-  @return: S_OK()
-  
+  :param string inputSteering: input steering file name
+  :param string outputSteering: new steering file that will be used by Mokka
+  :param string detectormodel: detector model to use from the DB
+  :param string stdhepFile: generator file name to put in the mac file, if needed
+  :param string mac: input macro file
+  :param int nbOfRuns: number of runs to use
+  :param int startFrom: First event to read from the generator file
+  :param int randomseed: Seed to use
+  :param int mcrunnumber: MC Run number written to lcio file header
+  :param string processID: process ID written to lcio file header
+  :param bool debug: overwrite default print level. If set to True, don't change printLevel steering parameter
+  :param string outputlcio: output slcio file name
+  :param dict filemeta: meta data dictionary used to set various metadata parameters Mokka can write to the lcio file header
+  :return: S_OK()
   """
   macname = "mokkamac.mac"
   if len(mac) < 1:
@@ -323,24 +312,19 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
   
-  Takes in input the specified job parameters for Marlin application given from L{MarlinAnalysis}
+  Takes in input the specified job parameters for Marlin application given from :any:`MarlinAnalysis`
   
-  @param finalxml: name of the xml file that will be used by Marlin
-  @type finalxml: string
-  @param inputXML: name of the provided input XML file
-  @type inputXML: string
-  @param inputSLCIO: input slcio file list
-  @type inputSLCIO: list of strings
-  @param numberofevts: number of events to process
-  @type numberofevts: int
-  @param outputREC: file name of REC
-  @type outputREC: string
-  @param outputDST: file name of DST
-  @type outputDST: string
-  @param debug: set to True to use given mode, otherwise set verbosity to SILENT
-  @type debug: bool
-  @return: S_OK()
-  
+  :param string finalxml: name of the xml file that will be used by Marlin
+  :param string inputXML: name of the provided input XML file
+  :param string inputGEAR: name of the Gear file
+  :param inputSLCIO: input slcio file list
+  :type inputSLCIO: list of strings
+  :param int numberofevts: number of events to process
+  :param string outputFile: name of the outputfile
+  :param string outputREC: file name of REC
+  :param string outputDST: file name of DST
+  :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
+  :return: S_OK
   """
   tree = ElementTree()
   try:
@@ -491,25 +475,20 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
                    outputlcio = None, debug = False):
   """Writes out a mac file for SLIC
   
-  Takes the parameters passed from L{SLICAnalysis} to define a new mac file if none was provided
+  Takes the parameters passed from :any:`SLICAnalysis` to define a new mac file if none was provided
   
-  @param inputmac: name of the specified mac file
-  @type inputmac: string
-  @param outputmac: name of the final mac file used by SLIC
-  @type outputmac: string
-  @param stdhep: name of the generator file to use
-  @type stdhep: string
-  @param nbevts: number of events to process
-  @type nbevts: string
-  @param startfrom: event nu,ber to start from in the generator file
-  @type startfrom: string
-  @param detector: Detector model to use.  
-  @type detector: string
-  @param outputlcio: name of the produced output slcio file, this is useful when combined with setOutputData of ILCJob class
-  @type outputlcio: string
-
-  @return: S_OK()
+  :param string inputmac: name of the specified mac file
+  :param string outputmac: name of the final mac file used by SLIC
+  :param string stdhep: name of the generator file to use
+  :param int nbevts: number of events to process
+  :param int startfrom: event nu,ber to start from in the generator file
+  :param string detector: Detector model to use.
+  :param int randomseed: random seed to use for simulation
+  :param string outputlcio: name of the produced output slcio file, this is useful when combined with :func:`setOutputData() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
+  :param bool debug: UNUSED
+  :return: S_OK
   """
+
   inputmacfile = file(inputmac, 'r')
   output = file(outputmac, 'w')
   listtext = []
@@ -563,26 +542,23 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
                      debug = False):
   """Writes out a lcsim file for LCSIM
   
-  Takes the parameters passed from LCSIMAnalysis
+  Takes the parameters passed from :any:`LCSIMAnalysis`
   
-  @param inputlcsim: name of the provided lcsim
-  @type inputlcsim: string
-  @param outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in L{LCSIMAnalysis}
-  @type outputlcsim: string
-  @param numberofevents: Number of events to process
-  @type numberofevents: int 
-  @param inputslcio: list of slcio files on which LCSIM should run
-  @type inputslcio: list of string
-  @param jars: list of jar files that should be added in the classpath definition
-  @type jars: list of strings
-  @param cachedir: folder that holds the cache directory, instead of Home
-  @type cachedir: string
-  @param outputFile: File name of the output
-  @type outputFile: string
-  @param debug: By default set verbosity to true
-  @type debug: bool
+  :param string inputlcsim: name of the provided lcsim
+  :param string outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in :any:`LCSIMAnalysis`
+  :param int numberofevents: Number of events to process
+  :param string trackingstrategy: trackingstrategy file to use, can be empty
+  :param inputslcio: list of slcio files on which LCSIM should run
+  :type inputslcio: list of strings
+  :param jars: list of jar files that should be added in the classpath definition
+  :type jars: list of strings
+  :param string cachedir: folder that holds the cache directory, instead of Home
+  :param string outputFile: File name of the output
+  :param string outputDSTFile: filename of the DST file
+  :param string outputRECFile: filename of the REC file
+  :param bool debug: By default set verbosity to true
   
-  @return: S_OK(string)
+  :return: S_OK(string)
   """
   printtext = ''
 
@@ -816,6 +792,14 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 
 def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   """ Prepare the proper steering file for Tomato
+
+  :param string inputxml: name of the xml steering file
+  :param string outputxml: name of the final tomato steering file
+  :param string inputSLCIO: inputSLCIO
+  :param string outputFile: name of the produced output slcio file, this is useful when combined with :func:`setOutputData() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
+  :param string collection: collection to be analysed
+
+  :return: S_OK
   """
   if not inputxml:
     inputxmlf = file('default.xml',"w")

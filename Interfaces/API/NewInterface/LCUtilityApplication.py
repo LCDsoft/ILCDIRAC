@@ -1,7 +1,7 @@
 '''
 Created on Nov 7, 2013
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"

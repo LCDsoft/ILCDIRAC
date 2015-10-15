@@ -1,7 +1,7 @@
 '''
 Created on Apr 7, 2010
 
-@author: sposs
+:author: sposs
 '''
 import DIRAC
 

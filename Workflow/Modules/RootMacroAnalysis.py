@@ -1,9 +1,8 @@
 '''
 Module to run root macros
 
-@since:  Apr 29, 2010
-
-@author: Stephane Poss
+:since:  Apr 29, 2010
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 
@@ -27,7 +26,8 @@ class RootMacroAnalysis(ModuleBase):
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
     return S_OK('Parameters resolved') 
   
