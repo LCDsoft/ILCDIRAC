@@ -33,7 +33,7 @@ import os, string, sys, re, types, urllib
 from random import choice
 
 def generateRandomString(length=8, chars = string.letters + string.digits):
-  """Return random string of 8 chars, used by :any:`PythiaAnalysis` and :any:`MokkaAnalysis`
+  """Return random string of 8 chars, used by :mod:`~ILCDIRAC.Workflow.Modules.PythiaAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
   """
   return ''.join([choice(chars) for _ in xrange(length)])
 
@@ -684,7 +684,7 @@ class ModuleBase(object):
     return S_OK()
 
   def treatILDConfigPackage(self):
-    """treat the :any:`ILDConfig` package"""
+    """treat the ILDConfig software package"""
     config_dir = self.workflow_commons['ILDConfigPackage']
     ildConfigVersion = config_dir.replace("ILDConfig", "")
     resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))

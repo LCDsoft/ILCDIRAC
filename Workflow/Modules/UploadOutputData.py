@@ -20,7 +20,7 @@ import DIRAC
 import os, random, time
 
 class UploadOutputData(ModuleBase):
-  """ As name suggest: upload output data. For Production only: See :any:`UserJobFinalization` for User job upload.
+  """ As name suggest: upload output data. For Production only: See :mod:`~ILCDIRAC.Workflow.Modules.UserJobFinalization` for User job upload.
   """
   #############################################################################
   def __init__(self):

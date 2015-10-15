@@ -1,6 +1,11 @@
-#!/bin/env python
 """
 Add a number of tasks to a production, can only be used on prods that use the Limited Plugin
+
+Options:
+
+   -p, --ProductionID <value>   Production ID to extend
+   -t, --Tasks <value>          Number of tasks to add (-1 for all)
+
 :since: Mar 26, 2013
 :author: S Poss
 """
@@ -9,7 +14,7 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR
 
-class Params(object):
+class _Params(object):
   def __init__(self):
     self.prod = 0
     self.tasks = 0
@@ -33,9 +38,9 @@ class Params(object):
     Script.registerSwitch("t:", "Tasks=", "Number of tasks to add (-1 for all)", self.setNbTasks)
     Script.setUsageMessage("%s -p 2145 -t 200" % Script.scriptName)
     
-def extend():
+def _extend():
   """Extends all the tasks"""
-  clip = Params()
+  clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine()
   
@@ -74,4 +79,4 @@ def extend():
   dexit(0)
 
 if __name__=='__main__':
-  extend()
+  _extend()

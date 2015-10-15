@@ -66,7 +66,7 @@ class DiracILC(Dirac):
     :param job: job definition.
     :param mode: submission mode, not used here.
 
-    :return: **S_OK()** , **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     
     if not job.oktosubmit:
@@ -90,7 +90,7 @@ class DiracILC(Dirac):
     Actually checks that all input are available and checks that the required software packages are available in the CS
 
     :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
-    :return: **S_OK()** , **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     try:
       formulationErrors = job._getErrors()
@@ -141,7 +141,7 @@ class DiracILC(Dirac):
     """ Main method for checks
 
     :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
-    :return: **S_OK()** , **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     #Start by taking care of sandbox
     if hasattr(job, "inputsandbox") and type( job.inputsandbox ) == list and len( job.inputsandbox ):
@@ -193,10 +193,11 @@ class DiracILC(Dirac):
   
   def _checkapp(self, platform, appName, appVersion):
     """ Check availability of application in CS
+
     :param string platform: System platform
     :param string appName: Application name
     :param string appVersion: Application version
-    :return: **S_OK()** or **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` or :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     csPathTarBall = "/AvailableTarBalls/%s/%s/%s/TarBall" %(platform, appName, appVersion)
     csPathCVMFS   ="/AvailableTarBalls/%s/%s/%s/CVMFSPath"%(platform, appName, appVersion)
@@ -216,7 +217,7 @@ class DiracILC(Dirac):
     """ Validate the outputpath specified for the application
 
     :param string path: Path of output data
-    :return: **S_OK()** , **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     if path.find("//") > -1 or path.find("/./") > -1 or path.find("/../") > -1:
       self.log.error("OutputPath of setOutputData() contains invalid characters, please remove any //, /./, or /../")
@@ -232,7 +233,7 @@ class DiracILC(Dirac):
 
     :param list useroutputdata: List of files set in the outputdata
     :param list useroutputsandbox: List of files set in the output sandbox
-    :return: **S_OK()** , **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     useroutputdata = useroutputdata.split(";")
     for data in useroutputdata:
@@ -249,7 +250,7 @@ class DiracILC(Dirac):
     """ Check that LFNs in the InputSandbox exist in the FileCatalog
 
     :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
-    :return: **S_OK()** , **S_ERROR()**
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     lfns = []
     inputsb = job.workflow.findParameter("InputSandbox")

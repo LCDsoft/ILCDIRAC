@@ -1,10 +1,9 @@
-'''
+"""
 Module to run root executables
 
 :since:  Apr 29, 2010
-
 :author: Stephane Poss
-'''
+"""
 __RCSID__ = "$Id$"
 
 import os

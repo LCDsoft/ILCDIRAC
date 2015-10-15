@@ -18,14 +18,14 @@ class _Root(LCApplication):
 
 
   def setScript(self, script):
-    """ Base method, overloaded in :any:`RootScript`
+    """ Base method, overloaded in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`
     """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
 
   def setMacro(self, macro):
-    """ Base method, overloaded in :any`RootMacro`
+    """ Base method, overloaded in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`
     """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")

@@ -1,14 +1,19 @@
-'''
-Created on Mar 24, 2010
+"""
+Download the output data for the jobs in the repository file created during job submission
 
+Options:
+
+  -r repoLocation       Path to repository file
+
+:since: Mar 24, 2010
 :author: sposs
-'''
+"""
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, exit as dexit
 
 __RCSID__ = "$Id$"
 
-class Params(object):
+class _Params(object):
   """ CLI params class
   """
   def __init__( self ):
@@ -25,8 +30,8 @@ class Params(object):
                                          '  %s [option|cfgfile] ' % Script.scriptName] ) )
 
 
-def getOutputData():
-  cliParams = Params()
+def _getOutputData():
+  cliParams = _Params()
   cliParams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
   if not cliParams.repo:
@@ -43,4 +48,4 @@ def getOutputData():
   dexit(exitCode)
 
 if __name__=="__main__":
-  getOutputData()
+  _getOutputData()

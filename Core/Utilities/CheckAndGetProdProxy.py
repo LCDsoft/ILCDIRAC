@@ -1,5 +1,5 @@
 '''
-Checks and potentially provides production proxy, called from :any:`ProductionJob`
+Checks and potentially provides production proxy, called from :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`
 
 Created on Feb 10, 2011
 

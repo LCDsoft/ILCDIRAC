@@ -195,7 +195,7 @@ class ILDProductionJob( ProductionJob ):
         return S_OK()        
         
     def _addRealFinalization( self ):
-        """ See :any:`ProductionJob` for definition
+        """ See :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob` for definition
         """
         importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
         dataUpload = ModuleDefinition( 'UploadOutputData' )

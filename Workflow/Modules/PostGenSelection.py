@@ -1,5 +1,5 @@
 '''
-Run the Post generation filter, not the same as :any:`StdHepCut`
+Run the Post generation filter, not the same as :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepCut`
 
 :since: Dec 20, 2010
 

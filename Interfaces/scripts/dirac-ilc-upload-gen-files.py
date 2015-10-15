@@ -1,7 +1,33 @@
-#!/bin/env python
+#!/usr/bin/env python
 '''
-Created on Mar 21, 2013
 
+Upload generator files to the grid and add metadata
+
+  dirac-ilc-upload-gen-files -P /some/path/ -E 1000 -M B1b_ws -I 35945 etc.
+
+
+Options:
+
+  -P, --Path <value>                 Path where the file(s) are (directory or single file)
+  -S, --SE <value>                   Storage element(s) to use ex: DESY-SRM
+  -M, --MachineParams <value>        Machine Parameters, default: B1b_ws
+  -E, --Energy <value>               Energy in GeV, e.g. 1000
+  -I, --EvtID <value>                Process ID, like 35945
+  -C, --EvtClass <value>             Process class, like 6f_ttbar
+  -T, --EvtType <value>              Process type, like 6f_yyyyee
+  -L, --Luminosity <value>           Luminosity of the sample
+  -N, --NumberOfEvents <value>       Number of events per file
+  --BeamParticle1 <value>            Particle of beam 1, e.g. e1
+  --BeamParticle2 <value>            Particle of beam 2, e.g. E1
+  --PolarisationBeam1 <value>        Polarisation for particle of beam 1: L, R, W
+  --PolarisationBeam2 <value>        Polarisation for particle of beam 2: L, R, W
+  --XSection <value>                 Cross section in fb
+  --XSectionError <value>            Cross section error in fb
+  --Software <value>                 Software and version, e.g. whizard-1.95
+  -f, --force                        Do not stop for confirmation
+
+
+:since: Mar 21, 2013
 :author: stephane
 '''
 __RCSID__ = "$Id$"
@@ -12,7 +38,7 @@ import os
 MANDATORY_KEYS = ['GenProcessID','GenProcessName','NumberOfEvents','BeamParticle1','BeamParticle2',
                   'PolarizationB1','PolarizationB2', 'ProgramNameVersion','CrossSection','CrossSectionError']
 
-class Params(object):
+class _Params(object):
   def __init__(self):
     self.dir = ''
     self.storageElement = ''
@@ -130,7 +156,7 @@ class Params(object):
     Script.registerSwitch('S:', "SE=", 'Storage element(s) to use ex: DESY-SRM', self.setSE)
     Script.registerSwitch('M:', "MachineParams=", 'Machine Parameters, default: %s' % self.machineParams, 
                           self.setMachineParams)
-    Script.registerSwitch("E:", "Energy=", "Energy in gev, e.g. 1000", self.setEnergy)
+    Script.registerSwitch("E:", "Energy=", "Energy in GeV, e.g. 1000", self.setEnergy)
     Script.registerSwitch("I:", "EvtID=","Process ID, like 35945",self.setProcessID)
     Script.registerSwitch("C:", "EvtClass=","Process class, like 6f_ttbar",self.setEvtClass)
     Script.registerSwitch("T:", "EvtType=",'Process type, like 6f_yyyyee',self.setEvtType)
@@ -146,9 +172,9 @@ class Params(object):
     Script.registerSwitch('f', 'force', "Do not stop for confirmation", self.setForce)
     Script.setUsageMessage('\n%s -P /some/path/ -E 1000 -M B1b_ws -I 35945 etc.\n' % Script.scriptName)  
   
-def uploadGenFiles():
+def _uploadGenFiles():
   """uploads the generator files"""
-  clip = Params()
+  clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine()
 
@@ -261,4 +287,4 @@ def uploadGenFiles():
   dexit(0)
 
 if __name__ == '__main__':
-  uploadGenFiles()
+  _uploadGenFiles()

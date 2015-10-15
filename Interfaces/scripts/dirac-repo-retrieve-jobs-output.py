@@ -1,16 +1,19 @@
-'''
+"""
 Retrieve the output sandboxes of jobs created using the API, stored in the repository file
 
-Created on Mar 24, 2010
+Options:
+  -r repoLocation             Path to repository file
+  -O, --Outputdata            retrieve also the outputdata
 
+:since: Mar 24, 2010
 :author: sposs
-'''
+"""
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, exit as dexit
 
-class Params(object):
+class _Params(object):
   def __init__(self):
     self.outputdata = False
     self.repo = ''
@@ -30,9 +33,9 @@ class Params(object):
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] )  )
     
-def getOutputs():
+def _getOutputs():
   repoLocation = ''
-  clip = Params()
+  clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
   repoLocation = clip.repo
@@ -62,4 +65,4 @@ def getOutputs():
   dexit(exitCode)
 
 if __name__=="__main__":
-  getOutputs()
+  _getOutputs()

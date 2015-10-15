@@ -89,7 +89,7 @@ class CombinedSoftwareInstallation(object):
 
     Executes the following:
       - look for the compatible platforms in the CS, see if one matches request
-      - install the applications, calls :any:`TARsoft`
+      - install the applications, calls :mod:`~ILCDIRAC.Core.Utilities.TARsoft`
 
     :return: S_OK(), S_ERROR()
     """

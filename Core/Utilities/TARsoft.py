@@ -1,5 +1,5 @@
 '''
-Function to download and untar the applications, called from :any:`CombinedSoftwareInstallation`
+Function to download and untar the applications, called from :mod:`~ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation`
 
 Also installs all dependencies for the applications
 
@@ -425,7 +425,7 @@ def clean(area, res_from_install):
   return S_OK()
 
 def remove():
-  """ For the moment, this is done in :any:`RemoveSoft`
+  """ For the moment, this is done in :mod:`~ILCDIRAC.Core.Utilities.RemoveSoft`
   """
   pass
     

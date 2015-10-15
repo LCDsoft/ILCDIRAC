@@ -1,6 +1,6 @@
 '''
 New Job class, for the new interface. This job class should not be used to create jobs. 
-Use :any:`UserJob` or :any:`ProductionJob`.
+Use :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` or :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`.
 
 :author: Stephane Poss
 :author: Remi Ete
@@ -96,7 +96,8 @@ class Job(DiracJob):
   def checkparams(self, dirac = None):
     """ Check job consistency instead of submitting
 
-    :param DiracILC dirac: DiracILC instance
+    :param dirac: DiracILC instance
+    :type dirac: :mod:`~ILCDIRAC.Interfaces.API.DiracILC`
     """
     if not dirac:
       return S_ERROR("Missing dirac instance")
@@ -109,7 +110,7 @@ class Job(DiracJob):
   def _askUser(self):
     """ Private function
     
-    Called from :any:`DiracILC` class to prompt the user
+    Called from :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class to prompt the user
     """
     if not self.check:
       return S_OK()
@@ -131,7 +132,8 @@ class Job(DiracJob):
     
     This is the main part: call for every application
 
-    :param Application application: Application instance
+    :param application: Application instance
+    :type application: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Application`
     """
     
     res = application._analyseJob(self)

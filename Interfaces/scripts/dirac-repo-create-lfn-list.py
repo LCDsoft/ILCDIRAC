@@ -1,15 +1,20 @@
-#!/bin/env python
-'''
-Created on Apr 22, 2010
+#!/usr/bin/env python
+"""
+Create a list of lfns form a repository file created during job submission
 
+Options:
+
+  -r repoLocation       Path to repository file
+
+:since: Apr 22, 2010
 :author: Stephane Poss
-'''
+"""
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import exit as dexit
 from DIRAC import S_OK
-class Params(object):
+class _Params(object):
   """dummy"""
   def __init__(self):
     self.repo = ''
@@ -22,9 +27,9 @@ class Params(object):
                                         '\nUsage:',
                                         '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
     
-def createLFNList():
+def _createLFNList():
   """create the LFnList"""
-  cliparams = Params()
+  cliparams = _Params()
   cliparams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
   from DIRAC import gLogger
@@ -45,5 +50,5 @@ def createLFNList():
   gLogger.notice("]")
   dexit(0)
 
-if __name__=="__main":
-  createLFNList()
+if __name__=="__main__":
+  _createLFNList()

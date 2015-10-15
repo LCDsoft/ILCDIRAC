@@ -87,7 +87,7 @@ def getNewPATH(platform, application, applicationVersion):
 def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, output_in):
   """Prepares the whizard.in file to run
   
-  Using specified parameters in the job definition passed from :any:`WhizardAnalysis`
+  Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.WhizardAnalysis`
   
   :param string input_in: input whizard.in to modify
   :param string evttype: process type that will prepend stdhep output name
@@ -127,7 +127,7 @@ def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
 def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   """Prepares the whizard.in file to run
   
-  Using specified parameters in the job definition passed from :any:`WhizardAnalysis`
+  Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.WhizardAnalysis`
   
   :param string input_in: input whizard.in to modify
   :param string evttype: process type that will prepend stdhep output name
@@ -193,7 +193,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
                         filemeta = {}):
   """Writes out a steering file for Mokka
   
-  Using specified parameters in the job definition passed from :any:`MokkaAnalysis`
+  Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
   
   :param string inputSteering: input steering file name
   :param string outputSteering: new steering file that will be used by Mokka
@@ -312,7 +312,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug):
   """Write out a xml file for Marlin
   
-  Takes in input the specified job parameters for Marlin application given from :any:`MarlinAnalysis`
+  Takes in input the specified job parameters for Marlin application given from :mod:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis`
   
   :param string finalxml: name of the xml file that will be used by Marlin
   :param string inputXML: name of the provided input XML file
@@ -475,7 +475,7 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
                    outputlcio = None, debug = False):
   """Writes out a mac file for SLIC
   
-  Takes the parameters passed from :any:`SLICAnalysis` to define a new mac file if none was provided
+  Takes the parameters passed from :mod:`~ILCDIRAC.Workflow.Modules.SLICAnalysis` to define a new mac file if none was provided
   
   :param string inputmac: name of the specified mac file
   :param string outputmac: name of the final mac file used by SLIC
@@ -542,10 +542,10 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
                      debug = False):
   """Writes out a lcsim file for LCSIM
   
-  Takes the parameters passed from :any:`LCSIMAnalysis`
+  Takes the parameters passed from :mod:`~ILCDIRAC.Workflow.Modules.LCSIMAnalysis`
   
   :param string inputlcsim: name of the provided lcsim
-  :param string outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in :any:`LCSIMAnalysis`
+  :param string outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in :mod:`~ILCDIRAC.Workflow.Modules.LCSIMAnalysis`
   :param int numberofevents: Number of events to process
   :param string trackingstrategy: trackingstrategy file to use, can be empty
   :param inputslcio: list of slcio files on which LCSIM should run

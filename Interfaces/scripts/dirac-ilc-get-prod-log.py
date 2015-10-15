@@ -1,17 +1,28 @@
-#!/bin/env python
+#!/usr/bin/env python
 '''
-Get production logs
+Download the production log files from the Log storage element
+See the JDL of production jobs for the log file location
 
-Created on Mar 21, 2013
+One can also download a full directory of log files
 
-:author: stephane
+Example
+
+  dirac-ilc-get-prod-log -F /ilc/prod/clic/..../1225_23.tar.gz
+
+Options:
+   -D, --LogFileDir lfnDirectory      Production log dir to download
+   -F, --LogFile lfn                  Production log to download
+   -O, --OutputDir localDir           Output directory (default ./)
+
+:since: Mar 21, 2013
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR, exit as dexit
 
-class Params(object):
+class _Params(object):
   """Parameter object"""
   def __init__(self):
     self.logD = ''
@@ -35,7 +46,7 @@ class Params(object):
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
-def printErrorReport(res):
+def _printErrorReport(res):
   """Print the failures for the call to getFile or Directory"""
   if res['Value'] and res['Value']['Failed']:
     for lfn in res['Value']['Failed']:
@@ -43,9 +54,9 @@ def printErrorReport(res):
       return S_ERROR()
   return S_OK()
 
-def getProdLogs():
+def _getProdLogs():
   """get production log files from LogSE"""
-  clip = Params()
+  clip = _Params()
   clip.registerSwitch()
   Script.parseCommandLine()
   if not clip.logF and not clip.logD:
@@ -66,11 +77,11 @@ def getProdLogs():
     if choice.lower()=='n':
       dexit(0)
     res = logSE.getDirectory(clip.logD, localPath=clip.outputdir)
-    printErrorReport(res)
+    _printErrorReport(res)
 
   if clip.logF:
     res = logSE.getFile(clip.logF, localPath = clip.outputdir)
-    printErrorReport(res)
+    _printErrorReport(res)
 
 if __name__ == '__main__':
-  getProdLogs()
+  _getProdLogs()

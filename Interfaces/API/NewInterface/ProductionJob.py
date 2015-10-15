@@ -1,7 +1,7 @@
 '''
 Production Job class. Used to define new productions. 
 
-Mostly similar to :any:`UserJob`, but cannot be (and should not be) used like the :any:`UserJob` class.
+Mostly similar to :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`, but cannot be (and should not be) used like the :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` class.
 
 :author: Stephane Poss
 :author: Remi Ete
@@ -295,7 +295,7 @@ class ProductionJob(Job):
     return S_OK()
 
   def getBasePath(self):
-    """ Return the base path. Updated by :any`setInputDataQuery`.
+    """ Return the base path. Updated by :any:`setInputDataQuery`.
     """
     return self.basepath
   

@@ -14,15 +14,14 @@ class Marlin(LCApplication):
 
   Usage:
 
-  >>> mo = Mokka()
   >>> marlin = Marlin()
   >>> marlin.getInputFromApp(mo)
   >>> marlin.setSteeringfile('SteeringFile.xml')
   >>> marlin.setOutputRecFile('MyOutputRecFile.rec')
   >>> marlin.setOutputDstFile('MyOutputDstFile.dst')
 
-  Use setExtraCLIArguments if you want to get CLI parameters
-  Needed for easy parameter scan, and passing non-standard strings (like cuts)
+  Use :func:`setExtraCLIArguments` if you want to add command line parameters
+  needed for easy parameter scans and passing non-standard strings (like cuts)
 
   """
   def __init__(self, paramdict = None):
@@ -94,7 +93,8 @@ class Marlin(LCApplication):
 
     >>> ma.setProcessorsToUse(['libMarlinTPC.so','libMarlinReco.so','libOverlay.so','libMarlinTrkProcessors.so'])
 
-    :param list processorlist: list of processors to use
+    :param processorlist: list of processors to use
+    :type processorlist: python:list
     """
     self._checkArgs( { 'processorlist' : types.ListType } )
     self.processorsToUse = processorlist
@@ -106,7 +106,8 @@ class Marlin(LCApplication):
 
     >>> ma.setProcessorsToExclude(['libLCFIVertex.so'])
 
-    :param list processorlist: list of processors to exclude
+    :param processorlist: list of processors to exclude
+    :type processorlist: python:list
     """
     self._checkArgs( { 'processorlist' : types.ListType } )
     self.processorsToExclude = processorlist

@@ -115,7 +115,7 @@ class LCSIM(LCApplication):
     self.extraParams = extraparams
 
   def willRunSLICPandora(self):
-    """ You need this if you plan on running :any:`SLICPandora`
+    """ You need this if you plan on running :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLICPandora`
     """
     self.willBeCut = True
 
