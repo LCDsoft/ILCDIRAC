@@ -3,7 +3,7 @@
 
 Find files in the dirac file catalog based on meta data
 
-Usage:
+Usage::
 
    dirac-ilc-find-in-FC [-D] PATH Constraint1 [Constraint2 [...]]
 
@@ -11,11 +11,11 @@ It is also possible to use any of these operators >=, <=, >, <, !=, = when using
 The list of metadata options can be obtained from the :mod:`DIRAC:dirac-dms-filecatalog-cli`
 by typing: "meta show"
 
-For example:
+For example::
 
    dirac-ilc-find-in-FC /ilc ProdID>1234 Datatype=DST
 
-to list only the directories containing the files use the "-D" flag
+to list only the directories containing the files use the "-D" flag::
 
    dirac-ilc-find-in-FC -D /ilc ProdID>1234 Datatype=DST
 
