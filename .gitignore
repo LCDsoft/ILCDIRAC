@@ -8,3 +8,6 @@ Doc/crarr.png
 .coverage
 cover
 htmlcov
+docs/source/DOC
+docs/DOC
+docs/build
