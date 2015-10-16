@@ -1,5 +1,8 @@
 ''' The Workflow Task Agent takes workflow tasks created in the
     transformation database and submits to the workload management system.
+
+.. deprecated:: 23.1
+
 '''
 
 __RCSID__ = "$Id$"

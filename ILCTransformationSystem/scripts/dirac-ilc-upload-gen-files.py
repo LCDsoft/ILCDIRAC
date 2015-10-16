@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 
-Upload generator files to the grid and add metadata
+Upload generator files to the grid and add metadata::
 
   dirac-ilc-upload-gen-files -P /some/path/ -E 1000 -M B1b_ws -I 35945 etc.
 

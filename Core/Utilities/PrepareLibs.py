@@ -13,6 +13,7 @@ def removeLibc(libraryPath):
   """ Remove libraries that can be problematic, like libc.so
 
   :param string libraryPath: libraryPath to look for libraries to remove
+  :returns: True on Success, False in case of error
   """
 
   gLogger.debug("RemoveLibC: Trying to remove these libraries:")
@@ -39,6 +40,7 @@ def removeLibc(libraryPath):
   return True
 
 def getLibsToIgnore():
+  """ :returns: static list of system libraries """
   return files_to_remove
 
 if __name__ == "__main__":

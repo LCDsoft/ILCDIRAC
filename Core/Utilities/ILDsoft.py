@@ -1,6 +1,5 @@
 '''
-Created on Apr 7, 2010
-
+:since: Apr 7, 2010
 :author: sposs
 '''
 import DIRAC

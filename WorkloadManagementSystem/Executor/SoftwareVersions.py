@@ -1,13 +1,28 @@
-""" Executor to check which Sites have the proper software installed
+""" Executor to check which Sites have the proper software installed for any given job
 
 Based on some part of the SoftwarePackage name we ban a lists of sites.
-Arbitrary number of BanLists can be created.
-In the CS:
+
+Arbitrary number of BanLists can be created. In the CS:
 BanLists is a list of strings, for each string create two more options.
-<string>Reason
-<string>Sites
+
+  * <string>Reason
+  * <string>Sites
+
 Where Reason is the substring of the softwarePackage that is looked for and Sites is a lists of sites to be banned if the software package includes the substring
 
+Example:
+
++----------------------------+--------------------------------------------+---------------------------------------+
+|  **Option**                |    **Description**                         |  **Example**                          |
++----------------------------+--------------------------------------------+---------------------------------------+
+| BanLists                   | List of Reason/Sites combinations          | BanLists=CVMFS                        |
+|                            |                                            |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
+| CVMFSReason                | String matched in software version names   | CVMFSReason=ILCSoft                   |
++----------------------------+--------------------------------------------+---------------------------------------+
+| CVMFSSites                 | Sites added to the ban lists of the        | CVMFSSites=LCG.SomeSite.cern          |
+|                            | software version matches                   |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
 """
 
 __RCSID__ = "$Id$"

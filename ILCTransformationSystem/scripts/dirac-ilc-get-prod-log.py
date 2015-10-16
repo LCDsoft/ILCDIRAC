@@ -1,11 +1,10 @@
-#!/usr/bin/env python
 '''
 Download the production log files from the Log storage element
 See the JDL of production jobs for the log file location
 
 One can also download a full directory of log files
 
-Example
+Example::
 
   dirac-ilc-get-prod-log -F /ilc/prod/clic/..../1225_23.tar.gz
 
