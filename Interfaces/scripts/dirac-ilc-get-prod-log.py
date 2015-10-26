@@ -86,11 +86,14 @@ def getProdLogs():
     printErrorReport(res)
 
 def _getLogFolderFromID( clip ):
-  """Obtain the folder of the logfiles from the prodID"""
+  """Obtain the folder of the logfiles from the prodID
+
+  Fills the clip.logD variable
+  """
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
   from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 
-  ## Check if transformation exists and its type
+  ## Check if transformation exists and get its type
   server = TransformationClient()
   result = server.getTransformation( clip.prodid )
   if not result['OK']:
