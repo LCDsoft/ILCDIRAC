@@ -93,7 +93,11 @@ def _getLogFolderFromID( clip ):
   result = server.getTransformation( clip.prodid )
   if not result['OK']:
     return result
+  transType = result['Value']['Type']
   query = { 'ProdID' : clip.prodid }
+  if 'Reconstruction' in transType:
+    query['Datatype'] = 'REC'
+
   fc = FileCatalogClient()
   result = fc.findFilesByMetadata(query, '/')
   if not result['OK']:
