@@ -73,9 +73,9 @@ def getProdLogs():
       gLogger.error( result['Message'] )
       return S_ERROR()
 
-    query = "{ 'ProdID' : " + "'" + clip.prodid + "' }"
+    query = { 'ProdID' : clip.prodid }
     fc = FileCatalogClient()
-    result = fc.findFilesByMetadata(eval(query), '/')
+    result = fc.findFilesByMetadata(query, '/')
     if not result['OK']:
       gLogger.error( result['Message'] )
       return S_ERROR()
