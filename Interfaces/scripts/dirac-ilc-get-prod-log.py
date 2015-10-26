@@ -92,23 +92,23 @@ def _getLogFolderFromID( clip ):
   server = TransformationClient()
   result = server.getTransformation( clip.prodid )
   if not result['OK']:
-    gLogger.error( result['Message'] )
-    return S_ERROR()
-
+    return result
   query = { 'ProdID' : clip.prodid }
   fc = FileCatalogClient()
   result = fc.findFilesByMetadata(query, '/')
   if not result['OK']:
-    gLogger.error( result['Message'] )
-    return S_ERROR()
+    return result
+
   elif result['Value']:
     lfn = result['Value'][0]
     lfn_split = lfn.split('/')[:-2]
     lfn_split.extend( ['LOG', lfn.split('/')[-2] ])
     clip.logD = '/'.join(lfn_split)
-    print 'Set logdir to %s' %clip.logD
+    gLogger.notice( 'Set logdir to %s' %clip.logD )
   else:
-    print "Cannot discover the LogFilePath: No output files yet"
+    return S_ERROR( "Cannot discover the LogFilePath: No output files yet" )
+
+  return S_OK()
 
 if __name__ == '__main__':
   getProdLogs()
