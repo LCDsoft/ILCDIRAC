@@ -17,6 +17,7 @@ class Params(object):
     self.logD = ''
     self.logF = ''
     self.outputdir = './'
+    self.prodid = ''
   def setLogFileD(self,opt):
     self.logD = opt
     return S_OK()
@@ -26,12 +27,17 @@ class Params(object):
   def setOutputDir(self,opt):
     self.outputdir = opt
     return S_OK()
+  def setProdID(self,opt):
+    self.prodid = opt
+    return S_OK()
   def registerSwitch(self):
     """registers switches"""
     Script.registerSwitch('D:', 'LogFileDir=', 'Production log dir to download', self.setLogFileD)
     Script.registerSwitch('F:', 'LogFile=', 'Production log to download', self.setLogFileF)
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
+    Script.registerSwitch('I:', 'ProdID=', 'Production ID (default %s)' % self.prodid, 
+                          self.setProdID)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
@@ -48,7 +54,7 @@ def getProdLogs():
   clip = Params()
   clip.registerSwitch()
   Script.parseCommandLine()
-  if not clip.logF and not clip.logD:
+  if not ( clip.logF or clip.logD or clip.prodid ):
     Script.showHelp()
     dexit(1)
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
@@ -58,6 +64,30 @@ def getProdLogs():
   logSE = StorageElement(storageElementName)
 
   from DIRAC.Core.Utilities.PromptUser import promptUser
+  if clip.prodid and not ( clip.logD or clip.logF ):
+    from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+    from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+    server = TransformationClient()
+    result = server.getTransformation( clip.prodid )
+    if not result['OK']:
+      gLogger.error( result['Message'] )
+      return S_ERROR()
+
+    query = "{ 'ProdID' : " + "'" + clip.prodid + "' }"
+    fc = FileCatalogClient()
+    result = fc.findFilesByMetadata(eval(query), '/')
+    if not result['OK']:
+      gLogger.error( result['Message'] )
+      return S_ERROR()
+    elif result['Value']:
+      lfn = result['Value'][0]
+      lfn_split = lfn.split('/')[:-2]
+      lfn_split.extend( ['LOG', lfn.split('/')[-2] ])
+      clip.logD = '/'.join(lfn_split)
+      print 'Set logdir to %s' %clip.logD
+    else:
+      print "Cannot discover the LogFilePath: No output files yet"
+
   if clip.logD:
     res = promptUser('Are you sure you want to get ALL the files in this directory?')
     if not res['OK']:
