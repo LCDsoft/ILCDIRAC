@@ -10,6 +10,7 @@ __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR, exit as dexit
+from DIRAC.Core.Utilities.PromptUser import promptUser
 
 class Params(object):
   """Parameter object"""
@@ -62,30 +63,11 @@ def getProdLogs():
   from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
   logSE = StorageElement(storageElementName)
 
-  from DIRAC.Core.Utilities.PromptUser import promptUser
   if clip.prodid and not ( clip.logD or clip.logF ):
-    from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-    from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-    server = TransformationClient()
-    result = server.getTransformation( clip.prodid )
+    result = _getLogFolderFromID( clip )
     if not result['OK']:
       gLogger.error( result['Message'] )
-      return S_ERROR()
-
-    query = { 'ProdID' : clip.prodid }
-    fc = FileCatalogClient()
-    result = fc.findFilesByMetadata(query, '/')
-    if not result['OK']:
-      gLogger.error( result['Message'] )
-      return S_ERROR()
-    elif result['Value']:
-      lfn = result['Value'][0]
-      lfn_split = lfn.split('/')[:-2]
-      lfn_split.extend( ['LOG', lfn.split('/')[-2] ])
-      clip.logD = '/'.join(lfn_split)
-      print 'Set logdir to %s' %clip.logD
-    else:
-      print "Cannot discover the LogFilePath: No output files yet"
+      dexit(1)
 
   if clip.logD:
     res = promptUser('Are you sure you want to get ALL the files in this directory?')
@@ -100,6 +82,33 @@ def getProdLogs():
   if clip.logF:
     res = logSE.getFile(clip.logF, localPath = clip.outputdir)
     printErrorReport(res)
+
+def _getLogFolderFromID( clip ):
+  """Obtain the folder of the logfiles from the prodID"""
+  from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+  from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+
+  ## Check if transformation exists and its type
+  server = TransformationClient()
+  result = server.getTransformation( clip.prodid )
+  if not result['OK']:
+    gLogger.error( result['Message'] )
+    return S_ERROR()
+
+  query = { 'ProdID' : clip.prodid }
+  fc = FileCatalogClient()
+  result = fc.findFilesByMetadata(query, '/')
+  if not result['OK']:
+    gLogger.error( result['Message'] )
+    return S_ERROR()
+  elif result['Value']:
+    lfn = result['Value'][0]
+    lfn_split = lfn.split('/')[:-2]
+    lfn_split.extend( ['LOG', lfn.split('/')[-2] ])
+    clip.logD = '/'.join(lfn_split)
+    print 'Set logdir to %s' %clip.logD
+  else:
+    print "Cannot discover the LogFilePath: No output files yet"
 
 if __name__ == '__main__':
   getProdLogs()
