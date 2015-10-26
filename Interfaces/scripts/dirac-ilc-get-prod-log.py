@@ -36,8 +36,7 @@ class Params(object):
     Script.registerSwitch('F:', 'LogFile=', 'Production log to download', self.setLogFileF)
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
-    Script.registerSwitch('I:', 'ProdID=', 'Production ID (default %s)' % self.prodid, 
-                          self.setProdID)
+    Script.registerSwitch('P:', 'ProdID=', 'Production ID', self.setProdID)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
