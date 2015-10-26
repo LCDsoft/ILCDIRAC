@@ -8,6 +8,8 @@ Created on Mar 21, 2013
 '''
 __RCSID__ = "$Id$"
 
+import os
+
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR, exit as dexit
 from DIRAC.Core.Utilities.PromptUser import promptUser
@@ -105,10 +107,10 @@ def _getLogFolderFromID( clip ):
 
   elif result['Value']:
     lfn = result['Value'][0]
-    lfn_split = lfn.split('/')[:-2]
-    lfn_split.extend( ['LOG', lfn.split('/')[-2] ])
-    clip.logD = '/'.join(lfn_split)
-    gLogger.notice( 'Set logdir to %s' %clip.logD )
+    baseLFN = "/".join( lfn.split( '/' )[:-2] )
+    subFolderNumber = lfn.split( '/' )[-2]
+    clip.logD = os.path.join( baseLFN, 'LOG', subFolderNumber )
+    gLogger.notice( 'Setting logdir to %s' % clip.logD )
   else:
     return S_ERROR( "Cannot discover the LogFilePath: No output files yet" )
 
