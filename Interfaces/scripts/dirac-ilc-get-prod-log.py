@@ -103,8 +103,7 @@ def _getLogFolderFromID( clip ):
   if 'Reconstruction' in transType:
     query['Datatype'] = 'REC'
 
-  fc = FileCatalogClient()
-  result = fc.findFilesByMetadata(query, '/')
+  result = FileCatalogClient().findFilesByMetadata( query, '/' )
   if not result['OK']:
     return result
 
