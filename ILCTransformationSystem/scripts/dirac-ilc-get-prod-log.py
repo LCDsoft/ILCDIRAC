@@ -12,6 +12,7 @@ Options:
    -D, --LogFileDir lfnDirectory      Production log dir to download
    -F, --LogFile lfn                  Production log to download
    -O, --OutputDir localDir           Output directory (default ./)
+   -P, --ProdID prodID                Download the log folder 000 for this production ID
 
 :since: Mar 21, 2013
 :author: Stephane Poss
