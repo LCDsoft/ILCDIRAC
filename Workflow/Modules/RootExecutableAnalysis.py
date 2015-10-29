@@ -10,6 +10,7 @@ __RCSID__ = "$Id$"
 import os
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
 class RootExecutableAnalysis(ModuleBase):
@@ -53,14 +54,17 @@ class RootExecutableAnalysis(ModuleBase):
     if not self.result['OK']:
       self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
-    
+
+    res = getEnvironmentScript(self.platform, "root", self.applicationVersion, self._getEnvScript)
+    self.log.notice("Got the environment script: %s" % res )
+    if not res['OK']:
+      self.log.error("Error getting the env script: ", res['Message'])
+      return res
+    envScriptPath = res['Value']
+
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('ROOT should not proceed as previous step did not end properly')
-
-    if not os.environ.has_key("ROOTSYS"):
-      self.log.error("Environment variable ROOTSYS was not defined, cannot do anything")
-      return S_ERROR("Environment variable ROOTSYS was not defined, cannot do anything")
 
     #rootDir = 'root'
     #mySoftwareRoot = ''
@@ -86,18 +90,11 @@ class RootExecutableAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
 
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
-    else:
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
-      
+    script.write('source %s\n' % envScriptPath )
+
     if os.path.exists("./lib"):
-      if 'LD_LIBRARY_PATH' in os.environ:
-        script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
-      else:
-        script.write('declare -x LD_LIBRARY_PATH=./lib\n')
-        
-    script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
+      script.write('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n')
+
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
@@ -107,8 +104,12 @@ class RootExecutableAnalysis(ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    script.write("chmod u+x %s\n" % self.script)
-    comm = "./%s %s %s\n" % (self.script, self.arguments, self.extraCLIarguments)
+
+    ## if the script exists in this folder we add ./ to be sure we execute the local one, otherwise we rely on the PATH
+    comm = "%s %s %s\n" % (self.script, self.arguments, self.extraCLIarguments)
+    if os.path.exists(self.script):
+      script.write("chmod u+x %s\n" % self.script)
+      comm = "./" + comm
     self.log.info("Will run %s" % (comm))
     script.write(comm)
     
@@ -139,3 +140,32 @@ class RootExecutableAnalysis(ModuleBase):
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
     return self.finalStatusReport(status)
+
+  def _getEnvScript( self, _platform, _appname, _appversion ):
+    """create the environment script if it is not already available
+
+    As this is only called when we are not CVMFS native the ROOTSYS must have
+    been set by `configureRoot`
+
+    Need to set LD_LIBRARY_PATH and PATH based on ROOTSYS
+
+    :param string _platform: Software platform
+    :param string _appname: application name
+    :param string _appversion: application version
+    :returns: S_OK( pathToScript )
+
+    """
+    if 'ROOTSYS' not in os.environ:
+      self.log.error( "ROOTSYS is not set" )
+      return S_ERROR( "ROOTSYS is not set" )
+    self.log.info( "Creating RootEnv.sh with ROOTSYS: %s " % os.environ['ROOTSYS'] )
+
+    scriptName = "rootEnv.sh"
+    with open(scriptName, "w") as script:
+      if 'LD_LIBRARY_PATH' in os.environ:
+        script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH\n' )
+      else:
+        script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
+      script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
+
+    return S_OK( os.path.join( os.getcwd(), scriptName ) )
