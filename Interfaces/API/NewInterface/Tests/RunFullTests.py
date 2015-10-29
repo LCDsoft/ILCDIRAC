@@ -33,6 +33,7 @@ def runTests():
                         backgroundType="gghad",
                         energy=1400,
                         marlinVersion="v0111Prod",
+                        rootVersion="5.34",
                         marlinSteeringFile=myMarlinSteeringFile,
                         marlinInputdata = "/ilc/user/s/sailer/testFiles/prod_clic_ild_e2e2_o_sim_2214_26.slcio",
                         gearFile='clic_ild_cdr.gear',
