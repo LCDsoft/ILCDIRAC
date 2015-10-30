@@ -27,7 +27,7 @@ from collections import defaultdict
 import time
 import itertools
 
-from DIRAC                                                     import gLogger, S_OK, S_ERROR
+from DIRAC                                                     import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule                               import AgentModule
 
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
@@ -176,7 +176,7 @@ class DataRecoveryAgent( AgentModule ):
                         ),
                  ]
                 }
-
+    self.jobCache = defaultdict( lambda: (0, 0) )
     ##Notification
     self.notesToSend = ""
     self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch"] )
@@ -205,7 +205,7 @@ class DataRecoveryAgent( AgentModule ):
     """ The main execution method.
     """  
     self.log.notice( "Will ignore the following productions: %s" % self.productionsToIgnore )
-
+    self.log.notice( " Job Cache: %s " % self.jobCache )
     transformations = self.getEligibleTransformations( self.transformationStatus, self.transformationTypes )
     if not transformations['OK']:
       self.log.error( "Failure to get transformations", transformations['Message'] )
@@ -217,12 +217,11 @@ class DataRecoveryAgent( AgentModule ):
       self.__resetCounters()
       transType, transName = values
       self.log.notice( "Running over Production: %s " % prodID )
-      if transType == "MCGeneration":
-        self.treatMCGeneration( int(prodID), transName, transType )
-      else:
-        self.treatProduction( int(prodID), transName, transType )
+      self.treatProduction( int(prodID), transName, transType )
 
       if self.notesToSend:
+        ##remove from the jobCache because something happened
+        self.jobCache.pop( int(prodID), None )
         notification = NotificationClient()
         for address in self.addressTo:
           result = notification.sendMail( address, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
@@ -245,24 +244,26 @@ class DataRecoveryAgent( AgentModule ):
       transformations[str(prodID)] = (prod['Type'], prodName)
     return S_OK(transformations)
 
-  def treatMCGeneration( self, prodID, transName, transType ):
-    """deal with MCGeneration jobs, where there is no inputFile"""
-    tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
-                                self.tClient, self.fcClient, self.jobMon )
-    jobs = tInfo.getJobs(statusList=self.jobStatus)
-    self.checkAllJobs( jobs, tInfo )
-    self.printSummary()
-
   def treatProduction( self, prodID, transName, transType ):
     """run this thing for given production"""
 
     tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
                                 self.tClient, self.fcClient, self.jobMon )
-    jobs = tInfo.getJobs(statusList=self.jobStatus)
+    jobs, nDone, nFailed = tInfo.getJobs(statusList=self.jobStatus)
 
-    self.log.notice( "Getting tasks...")
-    tasksDict = tInfo.checkTasksStatus()
-    lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
+    if self.jobCache[prodID][0] == nDone and self.jobCache[prodID][1] == nFailed:
+      self.log.notice( "Skipping production %s because nothing changed" % prodID )
+      return
+
+    self.jobCache[prodID] = (nDone, nFailed)
+
+    tasksDict=None
+    lfnTaskDict=None
+
+    if transType != "MCGeneration":
+      self.log.notice( "Getting tasks...")
+      tasksDict = tInfo.checkTasksStatus()
+      lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
 
     self.checkAllJobs( jobs, tInfo, tasksDict, lfnTaskDict )
     self.printSummary()
@@ -317,9 +318,9 @@ class DataRecoveryAgent( AgentModule ):
       message = "%s: %s" % ( do['ShortMessage'].ljust(56), str(do['Counter']).rjust(5) )
       self.log.notice( message )
       if self.notesToSend:
-        self.notesToSend += str(message)+'\n'
+        self.notesToSend = str(message)+'\n' + self.notesToSend
 
   def __resetCounters( self ):
-    for name,checks in self.todo.iteritems():
+    for _name,checks in self.todo.iteritems():
       for do in checks:
         do['Counter'] = 0

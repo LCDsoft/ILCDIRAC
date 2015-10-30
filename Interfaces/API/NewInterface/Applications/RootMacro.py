@@ -16,7 +16,7 @@ class RootMacro(_Root):
   >>> rootmac.setMacro("mymacro.C")
   >>> rootmac.setArguments("some command line arguments")
 
-  The setExtraCLIArguments is not available here, use the Arguments
+  The :func:`setExtraCLIArguments` is not available here, use the :func:`setArguments`
   """
   def __init__(self, paramdict = None):
     super(RootMacro, self).__init__( paramdict )

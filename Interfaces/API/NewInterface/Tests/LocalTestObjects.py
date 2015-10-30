@@ -30,7 +30,9 @@ class CLIParams( object ):
     self.testLCSIM = False
     self.testSlicPandora = False
     self.testChain = False
+    self.testRoot = False
     self.testall  = False
+    self.nocleanup = False
 
   def setSubmitMode(self, opt):
     """ Define the submit mode
@@ -100,6 +102,18 @@ class CLIParams( object ):
     self.testChain = True
     return S_OK()
 
+  def setTestRoot(self, dummy_opt):
+    """ Test the chaining of apps
+    """
+    self.testRoot = True
+    return S_OK()
+
+  def setNoCleanup(self, dummy_opt):
+    """ Test the chaining of apps
+    """
+    self.nocleanup = True
+    return S_OK()
+
   def setTestAll(self, dummy_opt):
     """ As name suggests, test everything
     """
@@ -129,7 +143,9 @@ class CLIParams( object ):
     Script.registerSwitch("", 'overlay', "Test the overlay", self.setTestOverlay)
     Script.registerSwitch("", 'inputdata', "Test the InputData resolution", self.setTestInputData)
     Script.registerSwitch("", "utilities", "Test the utilities: cut, split, concatenate", self.setTestUtilities)
+    Script.registerSwitch("", 'root', 'Test the root application', self.setTestRoot)
     Script.registerSwitch("", 'chain', 'Test the chaining of applications', self.setTestChain)
+    Script.registerSwitch("", 'nocleanup', 'Do not clean the tmp directories', self.setNoCleanup)
     Script.registerSwitch("a", "all", "Test them ALL!", self.setTestAll)
     Script.setUsageMessage("%s --all --submitmode=local" % Script.scriptName)
 
@@ -154,6 +170,7 @@ class TestCreater(object):
     self.gearFile = params.get( "gearFile" )
     self.lcsimVersion = params.get( "lcsimVersion" )
     self.steeringFileVersion = params.get( "steeringFileVersion", None )
+    self.rootVersion = params["rootVersion"]
 
     self.energy = params.get("energy")
     self.backgroundType = params.get("backgroundType")
@@ -179,7 +196,7 @@ class TestCreater(object):
       self.log.notice("Applications RCSID:", apprcsid )
       self.log.notice("")
 
-    self.diracInstance = DiracILC(True, 'tests.rep')
+    self.diracInstance = DiracILC(False, 'tests.rep')
     self.jobList = {}
 
   def createMokkaTest(self):
@@ -213,6 +230,43 @@ class TestCreater(object):
     self.jobList['Mokka1'] = jobmo
     return S_OK(jobmo)
 
+  def createRootScriptTest(self):
+    """create a job running root"""
+    self.log.notice("Creating jobs for Root")
+    jobRoot = self.getJob()
+    root = self.getRoot()
+    res = jobRoot.append(root)
+    if not res['OK']:
+      self.log.error("Failed adding Root:", res['Message'])
+      return S_ERROR("Failed adding Root to Job")
+    self.jobList['Root'] = jobRoot
+    return S_OK(jobRoot)
+
+  def createRootHaddTest(self):
+    """create a job running root"""
+    self.log.notice("Creating jobs for Root")
+    jobRoot = self.getJob()
+    root = self.getRoot()
+    root.setScript("hadd")
+    res = jobRoot.append(root)
+    if not res['OK']:
+      self.log.error("Failed adding Root:", res['Message'])
+      return S_ERROR("Failed adding Root to Job")
+    self.jobList['Root'] = jobRoot
+    return S_OK(jobRoot)
+
+  def createRootMacroTest(self):
+    """create a job running root"""
+    self.log.notice("Creating jobs for Root")
+    jobRoot = self.getJob()
+    root = self.getRootMacro()
+    root.setScript("hadd")
+    res = jobRoot.append(root)
+    if not res['OK']:
+      self.log.error("Failed adding Root:", res['Message'])
+      return S_ERROR("Failed adding Root to Job")
+    self.jobList['Root'] = jobRoot
+    return S_OK(jobRoot)
 
   def getOverlay(self, nbevts):
     """ Create an overlay step
@@ -251,6 +305,27 @@ class TestCreater(object):
     if self.steeringFileVersion:
       mokka.setSteeringFileVersion(self.steeringFileVersion)
     return mokka
+
+  def getRoot(self):
+    """ Define a root app
+    """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import RootScript
+    root = RootScript()
+    root.setScript("root.sh")
+    root.setArguments("output.root input.root input2.root")
+    root.setVersion(self.rootVersion)
+    root.setOutputFile("output.root")
+    return root
+
+  def getRootMacro(self):
+    """ Define a root app
+    """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import RootMacro
+    root = RootMacro()
+    root.setMacro("func.C")
+    root.setArguments(r"\"input.root\"")
+    root.setVersion(self.rootVersion)
+    return root
 
   @staticmethod
   def getSLIC():
@@ -718,17 +793,35 @@ class TestCreater(object):
     curdir = os.getcwd()
     tmpdir = tempfile.mkdtemp("", dir = "./")
     os.chdir(tmpdir)
+
+    if 'root' in jobName.lower():
+      with open("root.sh", "w") as rScript:
+        rScript.write( "echo $ROOTSYS" )
+      with open("func.C", "w") as rMacro:
+        rMacro.write( '''
+                      void func( TString string ) {
+                        std::cout << string << std::endl;
+                        TFile* file = TFile::Open(string);
+                        file->ls();
+                      }
+                      ''' )
+
+      for fileName in ['input.root', 'input2.root']:
+        shutil.copy( os.path.join( curdir, fileName), os.getcwd() )
+        print os.path.join( curdir, "input2.root"), os.getcwd()
+
     resJob = self.runJob(job, jobName)
     os.chdir(curdir)
     if not resJob['OK']:
       return resJob
     os.chdir(curdir)
-    cleanup(tmpdir)
+    if not self.clip.nocleanup:
+      cleanup(tmpdir)
     return S_OK()
 
   def run(self):
     """submit and run all the tests in jobList"""
-
+    res = S_ERROR()
     for name, finjob in self.jobList.iteritems():
       if self.clip.submitMode == 'local':
         res = self.runJobLocally(finjob, name)
@@ -784,6 +877,19 @@ class TestCreater(object):
     if self.clip.testUtilities:
       resUtil = self.createUtilityTests()
       if not resUtil['OK']:
+        return S_ERROR()
+
+    if self.clip.testRoot:
+      resRoot = self.createRootScriptTest()
+      if not resRoot['OK']:
+        return S_ERROR()
+
+      resRoot = self.createRootHaddTest()
+      if not resRoot['OK']:
+        return S_ERROR()
+
+      resRoot = self.createRootMacroTest()
+      if not resRoot['OK']:
         return S_ERROR()
 
     return S_OK()
