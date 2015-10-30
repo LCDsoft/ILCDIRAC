@@ -18,6 +18,22 @@ NEW: Based on Dirac v6r13p8
 *Core
 NEW: Based on Dirac v6r13p7
 
+[v23r0p11]
+
+*DIRAC
+NEW: Based von v6r12p52
+http://lhcbproject.web.cern.ch/lhcbproject/dist/Dirac_project/installSource/releasehistory.DIRAC.v6r12p52.html
+
+*Workflow
+
+FIX: RootMacro and RootScripts can now use the software versions natively installed on CVMFS
+FIX: RootScript can now also be used to run binaries located in the PATH, e.g., 'hadd' to join root files
+
+*ILCTransformationSystem
+
+NEW: dirac-ilc-get-prod-logs now accepts -P prodID to get log files for given productionID (C. Calancha)
+FIX: DataRecoveryAgent now ignores productions where nothing has changed since the last cycle
+
 [v23r0p10]
 
 *DIRAC
