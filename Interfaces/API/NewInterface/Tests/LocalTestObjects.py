@@ -255,6 +255,19 @@ class TestCreater(object):
     self.jobList['Root'] = jobRoot
     return S_OK(jobRoot)
 
+  def createRootMacroTest(self):
+    """create a job running root"""
+    self.log.notice("Creating jobs for Root")
+    jobRoot = self.getJob()
+    root = self.getRootMacro()
+    root.setScript("hadd")
+    res = jobRoot.append(root)
+    if not res['OK']:
+      self.log.error("Failed adding Root:", res['Message'])
+      return S_ERROR("Failed adding Root to Job")
+    self.jobList['Root'] = jobRoot
+    return S_OK(jobRoot)
+
   def getOverlay(self, nbevts):
     """ Create an overlay step
     """
@@ -302,6 +315,16 @@ class TestCreater(object):
     root.setArguments("output.root input.root input2.root")
     root.setVersion(self.rootVersion)
     root.setOutputFile("output.root")
+    return root
+
+  def getRootMacro(self):
+    """ Define a root app
+    """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import RootMacro
+    root = RootMacro()
+    root.setMacro("func.C")
+    root.setArguments(r"\"input.root\"")
+    root.setVersion(self.rootVersion)
     return root
 
   @staticmethod
@@ -774,6 +797,15 @@ class TestCreater(object):
     if 'root' in jobName.lower():
       with open("root.sh", "w") as rScript:
         rScript.write( "echo $ROOTSYS" )
+      with open("func.C", "w") as rMacro:
+        rMacro.write( '''
+                      void func( TString string ) {
+                        std::cout << string << std::endl;
+                        TFile* file = TFile::Open(string);
+                        file->ls();
+                      }
+                      ''' )
+
       for fileName in ['input.root', 'input2.root']:
         shutil.copy( os.path.join( curdir, fileName), os.getcwd() )
         print os.path.join( curdir, "input2.root"), os.getcwd()
@@ -853,6 +885,10 @@ class TestCreater(object):
         return S_ERROR()
 
       resRoot = self.createRootHaddTest()
+      if not resRoot['OK']:
+        return S_ERROR()
+
+      resRoot = self.createRootMacroTest()
       if not resRoot['OK']:
         return S_ERROR()
 

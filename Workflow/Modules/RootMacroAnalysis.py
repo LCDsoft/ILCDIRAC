@@ -91,7 +91,11 @@ class RootMacroAnalysis(RootMixin, ModuleBase):
     script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')      
     script.write('echo =============================\n')
-    comm = "root -b -q %s\(%s\) \n" % (self.script, self.arguments)
+    comm = "root -b -q %s" % self.script
+    if self.arguments:
+      ## need rawstring for arguments so we don't lose escaped quotation marks for string arguments
+      comm = comm + r'\(%s\)' % self.arguments
+    comm = comm + "\n"
     self.log.info("Will run %s" % (comm))
     script.write(comm)
     

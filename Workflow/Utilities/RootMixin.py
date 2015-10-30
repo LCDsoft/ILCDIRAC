@@ -1,11 +1,11 @@
-""" Shared functionality for `RootMacroAnalysis` and `RootExecutableAnalysis`"""
+""" Shared functionality for :mod:`~ILCDIRAC.Workflow.Modules.RootMacroAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.RootExecutableAnalysis`"""
 
 import os
 
 from DIRAC import S_OK, S_ERROR
 
 class RootMixin( object ):
-  """ Mixin class for `RootMacroAnalysis` and `RootExecutableAnalysis` """
+  """ Mixin class for :mod:`~ILCDIRAC.Workflow.Modules.RootMacroAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.RootExecutableAnalysis`"""
   def getRootEnvScript( self, _platform, _appname, _appversion ):
     """create the environment script if it is not already available
 

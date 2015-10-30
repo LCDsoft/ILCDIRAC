@@ -37,6 +37,12 @@ class _Root(LCApplication):
     @param args: Arguments to pass to the command line call
     @type args: string
 
+    Note for RootMacro string arguments need to be passed as a raw string with the quotation marks escaped.
+    E.g.:
+
+    >>> root = RootMacro()
+    >>> root.setArguments(r"\\"myString\\"")
+
     """
     self._checkArgs( { 'args' : types.StringTypes } )
     self.arguments = args
