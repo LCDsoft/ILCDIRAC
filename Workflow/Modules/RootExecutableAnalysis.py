@@ -11,9 +11,11 @@ import os
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
+from ILCDIRAC.Workflow.Utilities.RootMixin                import RootMixin
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
-class RootExecutableAnalysis(ModuleBase):
+
+class RootExecutableAnalysis(RootMixin, ModuleBase):
   """Run Root executable
   
   """
@@ -55,7 +57,7 @@ class RootExecutableAnalysis(ModuleBase):
       self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
-    res = getEnvironmentScript(self.platform, "root", self.applicationVersion, self._getEnvScript)
+    res = getEnvironmentScript(self.platform, "root", self.applicationVersion, self.getRootEnvScript)
     self.log.notice("Got the environment script: %s" % res )
     if not res['OK']:
       self.log.error("Error getting the env script: ", res['Message'])
@@ -66,21 +68,12 @@ class RootExecutableAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('ROOT should not proceed as previous step did not end properly')
 
-    #rootDir = 'root'
-    #mySoftwareRoot = ''
-    #localArea = LocalArea()
-    #sharedArea = SharedArea()
-    #if os.path.exists('%s%s%s' %(localArea,os.sep,rootDir)):
-    #  mySoftwareRoot = localArea
-    #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
-    #  mySoftwareRoot = sharedArea
     if len(self.script) < 1:
       self.log.error('Executable file not defined, should not happen!')
       return S_ERROR("Executable file not defined")
      
     self.script = os.path.basename(self.script)
 
-    
     scriptName = 'Root_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName): 
       os.remove(scriptName)
@@ -140,32 +133,3 @@ class RootExecutableAnalysis(ModuleBase):
     self.log.info( "Status after the application execution is %s" % str( status ) )
 
     return self.finalStatusReport(status)
-
-  def _getEnvScript( self, _platform, _appname, _appversion ):
-    """create the environment script if it is not already available
-
-    As this is only called when we are not CVMFS native the ROOTSYS must have
-    been set by `configureRoot`
-
-    Need to set LD_LIBRARY_PATH and PATH based on ROOTSYS
-
-    :param string _platform: Software platform
-    :param string _appname: application name
-    :param string _appversion: application version
-    :returns: S_OK( pathToScript )
-
-    """
-    if 'ROOTSYS' not in os.environ:
-      self.log.error( "ROOTSYS is not set" )
-      return S_ERROR( "ROOTSYS is not set" )
-    self.log.info( "Creating RootEnv.sh with ROOTSYS: %s " % os.environ['ROOTSYS'] )
-
-    scriptName = "rootEnv.sh"
-    with open(scriptName, "w") as script:
-      if 'LD_LIBRARY_PATH' in os.environ:
-        script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH\n' )
-      else:
-        script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
-      script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
-
-    return S_OK( os.path.join( os.getcwd(), scriptName ) )

@@ -10,9 +10,11 @@ __RCSID__ = "$Id$"
 import os
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
+from ILCDIRAC.Workflow.Utilities.RootMixin                import RootMixin
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
-class RootMacroAnalysis(ModuleBase):
+class RootMacroAnalysis(RootMixin, ModuleBase):
   """Run Root macro
   """
   def __init__(self):
@@ -48,29 +50,23 @@ class RootMacroAnalysis(ModuleBase):
     if not self.result['OK']:
       self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
-    
+
+    res = getEnvironmentScript(self.platform, "root", self.applicationVersion, self.getRootEnvScript)
+    self.log.notice("Got the environment script: %s" % res )
+    if not res['OK']:
+      self.log.error("Error getting the env script: ", res['Message'])
+      return res
+    envScriptPath = res['Value']
+
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('ROOT should not proceed as previous step did not end properly')
 
-    if not os.environ.has_key("ROOTSYS"):
-      self.log.error("Environment variable ROOTSYS was not defined, cannot do anything")
-      return S_ERROR("Environment variable ROOTSYS was not defined, cannot do anything")
-
-    #rootDir = 'root'
-    #mySoftwareRoot = ''
-    #localArea = LocalArea()
-    #sharedArea = SharedArea()
-    #if os.path.exists('%s%s%s' %(localArea,os.sep,rootDir)):
-    #  mySoftwareRoot = localArea
-    #if os.path.exists('%s%s%s' %(sharedArea,os.sep,rootDir)):
-    #  mySoftwareRoot = sharedArea
     if len(self.script) < 1:
       self.log.error('Macro file not defined, should not happen!')
       return S_ERROR("Macro file not defined")
      
     self.script = os.path.basename(self.script)
-
     
     scriptName = 'Root_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName): 
@@ -81,18 +77,11 @@ class RootMacroAnalysis(ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
 
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
-    else:
-      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib\n')
-      
+    script.write('source %s\n' % envScriptPath )
+
     if os.path.exists("./lib"):
-      if os.environ.has_key('LD_LIBRARY_PATH'):
-        script.write('declare -x LD_LIBRARY_PATH=./lib:%s\n' % (os.environ['LD_LIBRARY_PATH']))
-      else:
-        script.write('declare -x LD_LIBRARY_PATH=./lib\n')
-        
-    script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
+      script.write('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n')
+
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')
     script.write('echo $LD_LIBRARY_PATH | tr ":" "\n"\n')
