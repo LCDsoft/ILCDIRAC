@@ -29,6 +29,8 @@ class SLCIOSplit(LCUtilityApplication):
 
   def setNumberOfEventsPerFile(self, numberofevents):
     """ Number of events to have in each file
+
+    "param int numberofevents: number of events in the output files
     """
     self._checkArgs( { 'numberofevents' : types.IntType } )
     self.numberOfEventsPerFile = numberofevents

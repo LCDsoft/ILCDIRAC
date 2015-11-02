@@ -1,7 +1,7 @@
 """
 StdhepCutJava: apply generator level cuts after pythia or whizard
 """
-__RCSID__ = "$Id"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdhepCut
 

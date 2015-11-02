@@ -8,7 +8,7 @@ Usage::
    dirac-ilc-find-in-FC [-D] PATH Constraint1 [Constraint2 [...]]
 
 It is also possible to use any of these operators >=, <=, >, <, !=, = when using metadata constraints.
-The list of metadata options can be obtained from the :mod:`DIRAC:dirac-dms-filecatalog-cli`
+The list of metadata options can be obtained from the `dirac-dms-filecatalog-cli <http://diracgrid.org/files/docs/UserGuide/CommandReference/dirac-dms-filecatalog-cli.html>`_
 by typing: "meta show"
 
 For example::

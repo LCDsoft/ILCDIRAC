@@ -23,7 +23,7 @@ class Mokka(LCApplication):
   >>> mo.setMacFile('MyMacFile.mac')
   >>> mo.setStartFrom(10)
 
-  Use setExtraCLIArguments if you want to pass CLI arguments to Mokka
+  Use :func:`setExtraCLIArguments` if you want to pass command line arguments to Mokka
 
   """
   def __init__(self, paramdict = None):
@@ -47,7 +47,7 @@ class Mokka(LCApplication):
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is JobID.
 
-    Also used as mcRunNumber.
+    Also used as *mcRunNumber*.
 
     :param int randomSeed: Seed to use during integration and generation. Default is Job ID.
     """
@@ -91,7 +91,7 @@ class Mokka(LCApplication):
   def setStartFrom(self, startfrom):
     """ Optional: Define from where mokka starts to read in the generator file
 
-    :param int startfrom: from how mokka start to read the input file
+    :param int startfrom: from which event mokka starts to read the input file
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
     self.startFrom = startfrom

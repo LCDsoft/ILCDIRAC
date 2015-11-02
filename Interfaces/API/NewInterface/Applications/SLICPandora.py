@@ -21,7 +21,7 @@ class SLICPandora(LCApplication):
   >>> slicpandora.setPandoraSettings("~/GreatPathToHeaven/MyPandoraSettings.xml")
   >>> slicpandora.setStartFrom(10)
 
-  Use setExtraCLIArguments if you want to add arguments to the PandoraFrontend call
+  Use :func:`setExtraCLIArguments` if you want to add arguments to the PandoraFrontend call
 
   """
   def __init__(self, paramdict = None):

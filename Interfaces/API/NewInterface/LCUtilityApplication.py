@@ -25,6 +25,9 @@ class LCUtilityApplication( Application ):
     
   def setNbEvts(self, numberOfEvents):
     """ Set the number of events to process
+
+    .. deprecated:: v23r0p0
+       use :func:`setNumberOfEvents`
     
     :param int numberOfEvents: Number of events to process (or generate)
     """
@@ -33,11 +36,10 @@ class LCUtilityApplication( Application ):
     return S_OK()  
 
   def setNumberOfEvents(self, numberOfEvents):
-    """ Set the number of events to process, alias to setNbEvts
+    """ Set the number of events to process, alias to :func:`setNbEvts`
     """
     return self.setNbEvts(numberOfEvents)
     
-
   def setEnergy(self, energy):
     """ Set the energy to use
     

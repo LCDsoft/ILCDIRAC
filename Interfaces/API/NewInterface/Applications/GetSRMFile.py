@@ -1,5 +1,5 @@
 """
- GetSRMFile: as its name suggests...
+Download files directly from an SRM. Use this to download files not available in the DiracFileCatalog
 """
 __RCSID__ = "$Id$"
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
@@ -26,8 +26,8 @@ class GetSRMFile(LCUtilityApplication):
   def setFiles(self, fdict):
     """ Specify the files you need
 
-    :param fdict: file dictionary: {file:site}, can be also [{},{}] etc.
-    :type fdict: dict or list
+    :param fdict: file dictionary: {'file':'site'}, can be also [{},{}] etc.
+    :type fdict: :class:`python:dict`, or :any:`python:list` of :class:`python:dict`
     """
     kwargs = {"fdict":fdict}
     if not type(fdict) == type({}) and not type(fdict) == type([]):
