@@ -202,5 +202,5 @@ completeDocumentation:
 	@echo "Build finished. Now you just have to copy the files to the web"
 
 install: completeDocumentation
-	rsync -delete -artvu build/html/ /afs/cern.ch/eng/clic/data/doc/ilcdiracDocNew/
+	rsync -delete -artvu build/html/ /afs/cern.ch/eng/clic/data/doc/ilcdiracdoc/
 	@echo "Copied documentation to the web"
