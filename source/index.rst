@@ -27,34 +27,44 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class
 Scripts
 -------
 
-Some scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRAC.Interfaces.scripts>` and
-:mod:`Core <ILCDIRAC.Core.scripts>` modules.
+Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRAC.Interfaces.scripts>` module
 
 .. toctree::
    :maxdepth: 2
 
    DOC/ILCDIRAC/Interfaces/scripts/scripts.rst
-   DOC/ILCDIRAC/Core/scripts/scripts.rst
 
 Production Scripts
 ==================
 
-Some scripts used to control productions are available for production managers
+Some scripts used to control and check productions are only useful for production managers
 
 .. toctree::
    :maxdepth: 2
 
    DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
 
-Contents:
-=========
+Contents
+========
 
 This is the full table of contents for the documentation
 
 .. toctree::
    :maxdepth: 2
 
-   /DOC/ILCDIRAC/ILCDIRAC
+   DOC/ILCDIRAC/ILCDIRAC
+
+
+Release Notes
+=============
+
+Release notes can be found here
+
+.. toctree::
+   :maxdepth: 1
+
+   Latest Version <releasenotes>
+   Complete history <relnotes>
 
 
 Indices and tables

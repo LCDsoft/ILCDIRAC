@@ -193,6 +193,7 @@ pseudoxml:
 
 completeDocumentation:
 	rm -rf DOC
+	python CompileReleaseNotes.py
 	python MakeDoc.py
 	rsync --delete -artv DOC/ source/DOC
 	make clean

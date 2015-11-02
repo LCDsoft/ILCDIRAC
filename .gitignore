@@ -11,3 +11,5 @@ htmlcov
 docs/source/DOC
 docs/DOC
 docs/build
+docs/source/releasehistory.rst
+docs/source/releasenotes.rst
