@@ -3,8 +3,8 @@ Checks the validity of the provided XML files at job submission
 
 Created on Feb 24, 2011
 
-@author: S. Poss
-@since: Feb 24, 2011
+:author: S. Poss
+:since: Feb 24, 2011
 '''
 
 __RCSID__ = "$Id$"
@@ -14,7 +14,8 @@ from xml.etree.ElementTree                                import ElementTree
 
 def checkXMLValidity(xmlfile):
   """ Check that the xml parsing of the specified xml will not fail when running on the GRID
-  @param xmlfile: path to xml file
+
+  :param string xmlfile: path to xml file
   """
   tree = ElementTree()
   try:

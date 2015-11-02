@@ -18,19 +18,31 @@ NEW: Based on Dirac v6r13p8
 *Core
 NEW: Based on Dirac v6r13p7
 
-[v23r0p10]
+[v23r0p11]
 
-*DIRAC
-NEW: Based on v6r12p51
+Based von DIRAC v6r12p53, see also v6r12p52
+
+*Workflow
+
+FIX: :any:`RootMacro` and :any:`RootScript` can now use the software versions natively installed on CVMFS (ILCDIRAC-582)
+FIX: :any:`RootScript` can now also be used to run binaries located in the PATH, e.g., 'hadd' to join root files
+
+*ILCTransformationSystem
+
+NEW: :any:`dirac-ilc-get-prod-log` now accepts -P prodID to get log files for given productionID (C. Calancha, ILCDIRAC-585)
+FIX: :any:`DataRecoveryAgent` now ignores productions where nothing has changed since the last cycle, (ILCDIRAC-588)
+
+[v23r0p10]
+Based on DIRAC v6r12p51
 
 *WorkloadManagement
-NEW: SoftwareVersion Executor: Takes care to ban sites which are not compatible with the SofwarePackages required for any given job
+NEW: :any:`SoftwareVersions` Executor: Takes care to ban sites which are not compatible with the SofwarePackages required for any given job
 
 *ILCTransformation
-FIX: DataRecoveryAgent: Fixes for notification, updates configuration before every cycle
+FIX: :any:`DataRecoveryAgent`: Fixes for notification, updates configuration before every cycle
 
 *RequestManagement
-FIX: RestartReqExeAgent deal with multiple PIDs
+FIX: :any:`RestartReqExeAgent` deal with multiple PIDs
 
 [v23r0p9]
 
@@ -43,15 +55,15 @@ FIX: DIRAC FileCatalog CLI: fixes for path arguments
 [v23r0p8]
 
 *Workflow
-FIX: Set OMP_NUM_THREADS=1 for all in Modulebase and in the execution of the Script in ApplicationScript
+FIX: Set OMP_NUM_THREADS=1 for all in :any:`ModuleBase` and in the execution of the Script in :any:`ApplicationScript`
 
 *ILCTransformation
-NEW: Rewrite of the DataRecoveryAgent
+NEW: Rewrite of the :any:`DataRecoveryAgent`
 
 [v23r0p6]
 
 *Interfaces
-FIX: dirac-ilc-upload-gen-files: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
+FIX: :any:`dirac-ilc-upload-gen-files`: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
 
 *RequestManagement
 NEW: RestartReqExeAgent to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
@@ -427,27 +439,27 @@ NEW: Same as for v21r0p0, but using Dirac v6r10 instead of v6r9
 
 [v21r0p0]
 
-*General
-  Kept changes to RCSID and HeadURL and whitespace for pylint, tried to exclude everything related to (Set)Required
+*Workflow:
+FIX: Kept changes to RCSID and HeadURL and whitespace for pylint
+FIX: tried to exclude everything related to (Set)Required
 
 *Interfaces
-  COPIED: LCApplication class, between Application and Applications. Allows the definition of the steering files per application
-  COPIED: LCUtilityApplication: Needed for the steeringfiles handling Refactoring of Application classes
+CHANGE: LCApplication class, between Application and Applications. Allows the definition of the steering files per application
+CHANGE: LCUtilityApplication: Needed for the steeringfiles handling Refactoring of Application classes
 
 *Scripts
 FIX: dirac-ilc-show-software: If an application has additional sections (AdditionalEnvVar) but no Dependencies dirac-ilc-show-software would crash.
 FIX: dirac-ilc-add-whizard: Fix passing full path to the tar call instead of the relative path
 FIX: dirac-ilc-add-software: cleanup
+
 *Core
-COPIED: Include functionality for CVMFS (S.Poss)
+NEW: Include functionality for CVMFS (S.Poss)
 
 *Workflow
-
 NEW: StdHepCut: Allowing to specify cuts inline (S.Poss)
-DELETE: HandleProdOutputData, was not used
+NEW: HandleProdOutputData removed, was not used
 
 *ILCTransformationSystem
-
 FIX: Cleanup of DataRecoveryAgent
 
 [v20r1p10]
@@ -455,22 +467,22 @@ FIX: Cleanup of DataRecoveryAgent
 *Core
 FIX: small problem in fullCopy
 
-*ModuleBase
-CHANGE: leave the fullCopy decide if the file is here of not.
+*Workflow
+CHANGE: ModuleBase: leave the fullCopy decide if the file is here of not.
 
 [v20r1p9]
 
 *Core
-NEW: fullCopy now accepts *items. Will not copy all items from the base directory, nor all items from all
+NEW: fullCopy now accepts \*items. Will not copy all items from the base directory, nor all items from all
 sub directories
 
-*ModuleBase
-CHANGE: Use new fullCopy signature.
+*Workflow
+CHANGE: ModuleBase: Use new fullCopy signature.
 
 [v20r1p8]
 
-*ModuleBase
-FIX: in case there are no required items.
+*Workflow:
+FIX: ModuleBase: in case there are no required items.
 
 [v20r1p7]
 
@@ -482,13 +494,13 @@ FIX: dirac-ilc-show-software: If an application has additional sections (Additio
 
 [v20r1p6]
 
-*MarlinAnalysis
-FIX: Marlin dll in case of user libs
+*Worfklow
+FIX: MarlinAnalysis: Marlin dll in case of user libs
 
 [v20r1p5]
 
-*MokkaAnalysis
-FIX: copy the mac file to the run directory
+*Workflow
+FIX: MokkaAnalysis: copy the mac file to the run directory
 
 [v20r1p4]
 
@@ -533,7 +545,7 @@ FIX: bad tag name
 [v20r0p6]
 
 *Core
-FIX: CheckCVMFS method
+FIX: :any:`checkCVMFS` method
 
 *Interfaces
 FIX: LCApplication: only add the steering files to the soft to install if it's been defined

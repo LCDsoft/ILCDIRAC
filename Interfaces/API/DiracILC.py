@@ -1,10 +1,10 @@
 """
 API to use to submit jobs in the ILC VO
 
-@since:  Apr 13, 2010
-
-@author: Stephane Poss
+:since:  Apr 13, 2010
+:author: Stephane Poss
 """
+
 from DIRAC.Interfaces.API.Dirac                     import Dirac
 from DIRAC.Core.Utilities.List                      import sortList
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
@@ -21,7 +21,7 @@ COMPONENT_NAME = 'DiracILC'
 class DiracILC(Dirac):
   """DiracILC is VO specific API Dirac
   
-  Adding specific ILC functionalities to the Dirac class, and implement the L{preSubmissionChecks} method
+  Adding specific ILC functionalities to the Dirac class, and implement the :func:`preSubmissionChecks` method
   """
   def __init__(self, withRepo = False, repoLocation = ''):
     """Internal initialization of the ILCDIRAC API.
@@ -36,9 +36,11 @@ class DiracILC(Dirac):
     self.ops = Operations()
     
   def getProcessList(self): 
-    """ Get the L{ProcessList} needed by L{Whizard}.
-    @return: process list object
-    """   
+    """ Get the :mod:`ProcessList <ILCDIRAC.Core.Utilities.ProcessList.ProcessList>`
+    needed by :mod:`Whizard <ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard>`.
+
+    :return: process list object
+    """
     processlistpath = gConfig.getValue("/LocalSite/ProcessListPath", "")
     if not processlistpath:
       gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to \
@@ -57,13 +59,14 @@ class DiracILC(Dirac):
     return self.processList
     
   def preSubmissionChecks(self, job, mode = None):
-    """Overridden method from DIRAC.Interfaces.API.Dirac
+    """Overridden method from :mod:`DIRAC.Interfaces.API.Dirac`
     
     Checks from CS that required software packages are available.
-    @param job: job definition.
-    @param mode: submission mode, not used here. 
     
-    @return: S_OK() or S_ERROR()
+    :param job: job definition.
+    :param mode: submission mode, not used here.
+
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     
     if not job.oktosubmit:
@@ -85,8 +88,9 @@ class DiracILC(Dirac):
     Method used for stand alone checks of job integrity. Calls the formulation error checking of the job
     
     Actually checks that all input are available and checks that the required software packages are available in the CS
-    @param job: job object
-    @return: S_OK() or S_ERROR()  
+
+    :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     try:
       formulationErrors = job._getErrors()
@@ -110,9 +114,9 @@ class DiracILC(Dirac):
     
     Get the list of uploaded output data for a set of jobs in a repository
     
-    @param requestedStates: List of states requested for filtering the list
-    @type requestedStates: list of strings
-    @return: list
+    :param requestedStates: List of states requested for filtering the list
+    :type requestedStates: list of strings
+    :return: list
     """
     if requestedStates is None:
       requestedStates = ['Done']
@@ -135,8 +139,9 @@ class DiracILC(Dirac):
   
   def _do_check(self, job):
     """ Main method for checks
-    @param job: job object
-    @return: S_OK() or S_ERROR()
+
+    :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     #Start by taking care of sandbox
     if hasattr(job, "inputsandbox") and type( job.inputsandbox ) == list and len( job.inputsandbox ):
@@ -188,10 +193,11 @@ class DiracILC(Dirac):
   
   def _checkapp(self, platform, appName, appVersion):
     """ Check availability of application in CS
-    @param platform: System platform
-    @param appName: Application name
-    @param appVersion: Application version
-    @return: S_OK() or S_ERROR()
+
+    :param string platform: System platform
+    :param string appName: Application name
+    :param string appVersion: Application version
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` or :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     csPathTarBall = "/AvailableTarBalls/%s/%s/%s/TarBall" %(platform, appName, appVersion)
     csPathCVMFS   ="/AvailableTarBalls/%s/%s/%s/CVMFSPath"%(platform, appName, appVersion)
@@ -209,8 +215,9 @@ class DiracILC(Dirac):
   
   def _checkoutputpath(self, path):
     """ Validate the outputpath specified for the application
-    @param path: Path of output data
-    @return: S_OK() or S_ERROR()
+
+    :param string path: Path of output data
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     if path.find("//") > -1 or path.find("/./") > -1 or path.find("/../") > -1:
       self.log.error("OutputPath of setOutputData() contains invalid characters, please remove any //, /./, or /../")
@@ -223,9 +230,10 @@ class DiracILC(Dirac):
   
   def _checkdataconsistency(self, useroutputdata, useroutputsandbox):
     """ Make sure the files are either in OutpuSandbox or OutputData but not both
-    @param useroutputdata: List of files set in the outputdata
-    @param useroutputsandbox: List of files set in the output sandbox
-    @return: S_OK() or S_ERROR()
+
+    :param list useroutputdata: List of files set in the outputdata
+    :param list useroutputsandbox: List of files set in the output sandbox
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     useroutputdata = useroutputdata.split(";")
     for data in useroutputdata:
@@ -239,9 +247,10 @@ class DiracILC(Dirac):
     return S_OK()
 
   def checkInputSandboxLFNs(self, job):
-    """ Check that LFNs in ISB exist in the FileCatalog
-    @param job: job object
-    @return: S_OK() or S_ERROR()
+    """ Check that LFNs in the InputSandbox exist in the FileCatalog
+
+    :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
+    :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     lfns = []
     inputsb = job.workflow.findParameter("InputSandbox")

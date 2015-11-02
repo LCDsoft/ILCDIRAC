@@ -3,10 +3,10 @@ Run Marlin
 
 ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
 
-@since: Feb 9, 2010
+:since: Feb 9, 2010
 
-@author: Stephane Poss 
-@author: Przemyslaw Majewski
+:author: Stephane Poss
+:author: Przemyslaw Majewski
 '''
 
 __RCSID__ = "$Id$"
@@ -46,7 +46,8 @@ class MarlinAnalysis(ModuleBase):
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
 
     if self.workflow_commons.has_key('ParametricInputSandbox'):
@@ -107,9 +108,10 @@ class MarlinAnalysis(ModuleBase):
     Execute the following:
       - resolve where the soft was installed
       - prepare the list of file to feed Marlin with
-      - create the XML file on which Marlin has to run, done by L{PrepareXMLFile}
+      - create the XML file on which Marlin has to run, done by :any:`prepareXMLFile`
       - run Marlin and catch the exit code
-    @return: S_OK(), S_ERROR()
+
+    :return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
     if not self.platform:

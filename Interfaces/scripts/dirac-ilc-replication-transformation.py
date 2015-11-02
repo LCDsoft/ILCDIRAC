@@ -1,9 +1,18 @@
 #!/bin/env python
-'''
-Created on May 18, 2015
+"""
+Create a production to replicate files from one storage elment to another
 
-@author: A. Sailer
-'''
+Example
+
+  dirac-ilc-replication-transformation <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName
+
+
+Options:
+   -N, --Extraname string      String to append to transformation name in case one already exists with that name
+
+:since:  May 18, 2015
+:author: A. Sailer
+"""
 __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
@@ -11,7 +20,7 @@ from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
 VALIDDATATYPES = ('GEN','SIM','REC','DST')
 
-class Params(object):
+class _Params(object):
   """Parameter Object"""
   def __init__(self):
     self.prodID = None
@@ -87,7 +96,7 @@ class Params(object):
       return False
     return True
 
-def createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
+def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
   """Creates the replication transformation based on the given parameters"""
 
   from DIRAC.TransformationSystem.Client.Transformation import Transformation
@@ -130,19 +139,19 @@ def createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
     return S_ERROR("Failed to create transformation")
 
 
-def createTrafo():
+def _createTrafo():
   """reads command line parameters, makes check and creates replication transformation"""
   from DIRAC import exit as dexit
-  clip = Params()
+  clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine()
   if not clip.checkSettings()['OK']:
     gLogger.error("ERROR: Missing settings")
     dexit(1)
-  resCreate = createReplication( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
+  resCreate = _createReplication( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
   if not resCreate['OK']:
     dexit(1)
   dexit(0)
   
 if __name__ == '__main__':
-  createTrafo()
+  _createTrafo()

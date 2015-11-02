@@ -27,7 +27,7 @@ class Pythia(LCApplication):
     self.datatype = 'gen'
 
   def willCut(self):
-    """ You need this if you plan on cutting using L{StdhepCut}
+    """ You need this if you plan on cutting using :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`
     """
     self.willBeCut = True
 

@@ -5,8 +5,8 @@ For SUSY special treatment of the pythia parameters have to be thought of: if th
 IMSS(1)=11; IMSS(21)=71; IMSS(22)=71;
 
 This is currently done on the job definition side
-@since:  Nov 3, 2011
-@author: Stephane Poss
+:since:  Nov 3, 2011
+:author: Stephane Poss
 '''
 
 from xml.etree.ElementTree                                import ElementTree, fromstring

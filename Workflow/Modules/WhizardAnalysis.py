@@ -3,9 +3,9 @@ Whizard analysis module.
 
 Called by Job Agent. 
 
-@since: Sep 22, 2010
+:since: Sep 22, 2010
 
-@author: S. Poss
+:author: S. Poss
 '''
 
 __RCSID__ = "$Id$"
@@ -69,7 +69,8 @@ class WhizardAnalysis(ModuleBase):
     """Internal function
     
     Get the process list from storage if whizard.in was not provided
-    @return: S_OK(), S_ERROR()
+
+    :return: S_OK(), S_ERROR()
     """
     
     res = self.ops.getValue("/ProcessList/Location", "")
@@ -86,7 +87,8 @@ class WhizardAnalysis(ModuleBase):
     
   def applicationSpecificInputs(self):
     """Resolve module input
-    @return: S_OK()
+
+    :return: S_OK()
     """
     self.parameters['ENERGY'] = self.energy
 
@@ -181,7 +183,7 @@ class WhizardAnalysis(ModuleBase):
       - prepare whizard.in
       - make magic
       
-    @return: S_OK(), S_ERROR()
+    :return: S_OK(), S_ERROR()
     """
     self.result = S_OK()
     if not self.platform:
@@ -515,7 +517,8 @@ class WhizardAnalysis(ModuleBase):
 
   def makeWhizardDotCut1(self):
     """ When users need whizard cuts, this is called to prepare the file
-    @return: S_OK()
+
+    :return: S_OK()
     """
     cutf = open("whizard.cut1","w")
     for key, values in self.genlevelcuts.items():

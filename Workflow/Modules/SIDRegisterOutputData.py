@@ -3,8 +3,8 @@ SID DBD specific registration of file meta data
 
 Created on Sep 8, 2010
 
-@author: sposs
-@author: jmccormi
+:author: sposs
+:author: jmccormi
 '''
 __RCSID__ = "$Id$"
 

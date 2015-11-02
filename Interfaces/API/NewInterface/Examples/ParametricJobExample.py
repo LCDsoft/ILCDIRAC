@@ -1,9 +1,9 @@
 '''
 Example on how to submit jobs using parametric input data.
 
-Created on Nov 6, 2013
+:since: Nov 6, 2013
 
-@author: sposs
+:author: sposs
 '''
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()

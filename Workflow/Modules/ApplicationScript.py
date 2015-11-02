@@ -1,9 +1,8 @@
 '''
 Run any application provided by the user. Is used when a specific environment is needed (e.g. ROOT).
 
-@since: Jul 12, 2010
-
-@author: sposs
+:since: Jul 12, 2010
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

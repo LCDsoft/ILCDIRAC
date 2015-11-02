@@ -1,8 +1,8 @@
 """
 SID DBD specific production job utility
 
-@author: S. Poss
-@since: Jul 01, 2012
+:author: S. Poss
+:since: Jul 01, 2012
 """
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
@@ -118,7 +118,7 @@ class SIDProductionJob(ProductionJob):
     return S_OK()    
     
   def _addRealFinalization(self):
-    """ See L{ProductionJob} for definition
+    """ See :any:`ProductionJob` for definition
     """
     importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
     dataUpload = ModuleDefinition('UploadOutputData')

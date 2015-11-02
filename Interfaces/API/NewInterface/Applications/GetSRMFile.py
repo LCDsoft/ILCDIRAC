@@ -26,8 +26,8 @@ class GetSRMFile(LCUtilityApplication):
   def setFiles(self, fdict):
     """ Specify the files you need
 
-    @param fdict: file dictionary: {file:site}, can be also [{},{}] etc.
-    @type fdict: dict or list
+    :param fdict: file dictionary: {file:site}, can be also [{},{}] etc.
+    :type fdict: dict or list
     """
     kwargs = {"fdict":fdict}
     if not type(fdict) == type({}) and not type(fdict) == type([]):

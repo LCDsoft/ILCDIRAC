@@ -21,8 +21,8 @@ class OverlayInput(LCUtilityApplication):
   >>> over = OverlayInput()
   >>> over.setBXOverlay(300)
   >>> over.setGGToHadInt(3.2)
-  >>> over.setNbSigEvtsPerJob(10)
-  >>> over.setBkgEvtType("gghad")
+  >>> over.setNumberOfSignalEventsPerJob(10)
+  >>> over.setBackgroundType("gghad")
 
   """
   def __init__(self, paramdict = None):
@@ -62,8 +62,7 @@ class OverlayInput(LCUtilityApplication):
     Sets the flag to use the energy meta data in the search of the background files.
     Disable the energy when you want to use files created for a different energy than the signal events
 
-    @param useEnergyForFileLookup: Use the Energy in the metadata search or not
-    @type useEnergyForFileLookup: bool
+    :param bool useEnergyForFileLookup: Use the Energy in the metadata search or not
     """
     self._checkArgs( {'useEnergyForFileLookup': types.BooleanType } )
     self.useEnergyForFileLookup = useEnergyForFileLookup
@@ -73,9 +72,9 @@ class OverlayInput(LCUtilityApplication):
     """ Define number bunch crossings to overlay for each signal event.
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
+    Alias for :func:`setBXOverlay`
 
-    @param bxoverlay: Bunch crossings to overlay.
-    @type bxoverlay: float
+    :param int bxoverlay: Bunch crossings to overlay.
     """
     self._checkArgs( { 'bxoverlay' : types.IntType } )
     self.bxToOverlay = bxoverlay
@@ -86,8 +85,7 @@ class OverlayInput(LCUtilityApplication):
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
-    @param bxoverlay: Bunch crossings to overlay.
-    @type bxoverlay: float
+    :param int bxoverlay: Bunch crossings to overlay.
     """
     return self.setOverlayBXPerSigEvt( bxoverlay )
 
@@ -96,8 +94,7 @@ class OverlayInput(LCUtilityApplication):
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
-    @param ggtohadint: optional number of overlay events interactions per bunch crossing
-    @type ggtohadint: float
+    :param float ggtohadint: optional number of overlay events interactions per bunch crossing
 
     """
     self._checkArgs( { 'ggtohadint' : types.FloatType } )
@@ -109,9 +106,9 @@ class OverlayInput(LCUtilityApplication):
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
-    @param ggtohadint: optional number of overlay events interactions per bunch crossing
-    @type ggtohadint: float
+    Alias for :func:`setOverlayEvtsPerBX`
 
+    :param float ggtohadint: optional number of overlay events interactions per bunch crossing
     """
     return self.setOverlayEvtsPerBX( ggtohadint )
 
@@ -120,8 +117,7 @@ class OverlayInput(LCUtilityApplication):
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
-    @param nbsigevtsperjob: Number of signal events per job
-    @type nbsigevtsperjob: int
+    :param int nbsigevtsperjob: Number of signal events per job
 
     """
     self._checkArgs( { 'nbsigevtsperjob' : types.IntType } )
@@ -131,10 +127,10 @@ class OverlayInput(LCUtilityApplication):
 
 
   def setDetectorModel(self, detectormodel):
-    """ Set the detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
+    """ Set the detector type for the background files.
+    Files are defined in the ConfigurationSystem: Operations/Overlay/<Accelerator>/<energy>/<Detector>
 
-    @param detectormodel: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3'
-    @type detectormodel: string
+    :param string detectormodel: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3' or 'ILD_o1_v05'
 
     """
     self._checkArgs( { 'detectormodel' : types.StringTypes } )
@@ -146,19 +142,20 @@ class OverlayInput(LCUtilityApplication):
     """ Sets the path to where the overlay files are located.
     Setting this option will ignore all other settings!
 
-    @param path: LFN path to the folder containing the overlay files
-    @type path: string
-
+    :param string path: LFN path to the folder containing the overlay files
     """
     self._checkArgs( { 'path' : types.StringTypes } )
     self.pathToOverlayFiles = path
     return S_OK()
 
   def setBkgEvtType(self, backgroundEventType):
-    """ Define the background type.
+    """    Define the background type.
 
-    @param backgroundEventType: Background type.
-    @type backgroundEventType: string
+    .. deprecated:: 23r0
+
+    Use :func:`setBackgroundType` instead
+
+    :param string backgroundEventType: Background type.
 
     """
     self._checkArgs( { 'backgroundEventType' : types.StringTypes } )
@@ -169,28 +166,25 @@ class OverlayInput(LCUtilityApplication):
 
 
   def setBackgroundType(self, backgroundType):
-    """Alternative to L{setBkgEvtType}
+    """Define the background type
 
-    @param backgroundType: Background type.
-    @type backgroundType: string
+    :param string backgroundType: Background type.
 
     """
     return self.setBkgEvtType(backgroundType)
 
   def setNumberOfSignalEventsPerJob(self, numberSignalEvents):
-    """Alternative to L{setNbSigEvtsPerJob}
+    """Alternative to :func:`setNbSigEvtsPerJob`
+    Number used to determine the number of background files needed.
 
-    @param numberSignalEvents: Number of signal events per job
-    @type numberSignalEvents: int
-
+    :param int numberSignalEvents: Number of signal events per job
     """
     return self.setNbSigEvtsPerJob(numberSignalEvents)
 
 #  def setProdIDToUse(self,prodid):
 #    """ Optional parameter: Define the production ID to use as input
 #
-#    @param prodid: Production ID
-#    @type prodid: int
+#    :param int prodid: Production ID
 #    """
 #    self._checkArgs({"prodid" : types.IntType})
 #    self.prodid = prodid

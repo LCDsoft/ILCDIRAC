@@ -18,14 +18,14 @@ class _Root(LCApplication):
 
 
   def setScript(self, script):
-    """ Base method, overloaded in L{RootScript}
+    """ Base method, overloaded in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`
     """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
 
   def setMacro(self, macro):
-    """ Base method, overloaded in L{RootMacro}
+    """ Base method, overloaded in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`
     """
     self._log.error("Don't use this!")
     return S_ERROR("Not allowed here")
@@ -34,8 +34,13 @@ class _Root(LCApplication):
   def setArguments(self, args):
     """ Optional: Define the arguments of the script
 
-    @param args: Arguments to pass to the command line call
-    @type args: string
+    :param string args: Arguments to pass to the command line call
+
+    Note for RootMacro string arguments need to be passed as a raw string with the quotation marks escaped.
+    E.g.:
+
+    >>> root = RootMacro()
+    >>> root.setArguments(r"\\"myString\\"")
 
     """
     self._checkArgs( { 'args' : types.StringTypes } )

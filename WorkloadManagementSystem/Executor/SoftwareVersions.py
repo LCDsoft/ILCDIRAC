@@ -19,8 +19,8 @@ from DIRAC.WorkloadManagementSystem.Executor.Base.OptimizerExecutor import Optim
 class SoftwareVersions( OptimizerExecutor ):
   """
   The specific Optimizer must provide the following methods:
-  - initializeOptimizer() before each execution cycle
-  - optimizeJob() - the main method called for each job
+    - initializeOptimizer() before each execution cycle
+    - optimizeJob() - the main method called for each job
   """
 
   @classmethod

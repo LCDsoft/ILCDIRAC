@@ -3,7 +3,7 @@ ILD specific registration of file meta data
 
 Created on Mar 21, 2013
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

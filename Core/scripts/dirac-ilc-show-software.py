@@ -4,7 +4,7 @@ Get all software registered in the Configuration service
 
 Created on Dec 17, 2010
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

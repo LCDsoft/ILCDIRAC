@@ -41,8 +41,7 @@ class SLIC(LCApplication):
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
 
-    @param RandomSeed: Seed to use during simulation.
-    @type RandomSeed: int
+    :param int randomSeed: Seed to use during simulation.
     """
     self._checkArgs( { 'randomSeed' : types.IntType } )
 
@@ -51,8 +50,7 @@ class SLIC(LCApplication):
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for Slic simulation
 
-    @param detectorModel: Detector Model to use for Slic simulation. Default is ??????
-    @type detectorModel: string
+    :param string detectorModel: Detector Model to use for Slic simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
     if detectorModel.lower().count("lfn:"):
@@ -70,8 +68,7 @@ class SLIC(LCApplication):
   def setStartFrom(self, startfrom):
     """ Optional: Define from how slic start to read in the input file
 
-    @param startfrom: from how slic start to read the input file
-    @type startfrom: int
+    :param int startfrom: from how slic start to read the input file
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
     self.startFrom = startfrom

@@ -8,5 +8,12 @@ import ILCDIRAC
 
 __RCSID__ = "$Id$"
 
-print "ILCDirac Version:", ILCDIRAC.version
-print "With DIRAC version:", DIRAC.version
+
+def printVersions():
+  """prints the ILCDIRAC and DIRAC versions"""
+  print "ILCDirac Version:", ILCDIRAC.version
+  print "With DIRAC version:", DIRAC.version
+
+
+if __name__ == "__main__":
+  printVersions()

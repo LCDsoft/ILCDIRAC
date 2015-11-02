@@ -16,7 +16,7 @@ class RootMacro(_Root):
   >>> rootmac.setMacro("mymacro.C")
   >>> rootmac.setArguments("some command line arguments")
 
-  The setExtraCLIArguments is not available here, use the Arguments
+  The :func:`setExtraCLIArguments` is not available here, use the :func:`setArguments`
   """
   def __init__(self, paramdict = None):
     super(RootMacro, self).__init__( paramdict )
@@ -28,8 +28,7 @@ class RootMacro(_Root):
   def setMacro(self, macro):
     """ Define macro to use
 
-    @param macro: Macro to run on. Must be a local C file.
-    @type macro: string
+    :param string macro: Macro to run on. Must be a local C file.
     """
     self._checkArgs( { 'macro' : types.StringTypes } )
 

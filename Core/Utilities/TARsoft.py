@@ -1,11 +1,10 @@
 '''
-Function to download and untar the applications, called from CombinedSoftwareInstallation
+Function to download and untar the applications, called from :mod:`~ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation`
 
 Also installs all dependencies for the applications
 
-@since:  Apr 7, 2010
-
-@author: Stephane Poss
+:since:  Apr 7, 2010
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 
@@ -426,7 +425,7 @@ def clean(area, res_from_install):
   return S_OK()
 
 def remove():
-  """ For the moment, this is done in L{RemoveSoft}
+  """ For the moment, this is done in :mod:`~ILCDIRAC.Core.Utilities.RemoveSoft`
   """
   pass
     

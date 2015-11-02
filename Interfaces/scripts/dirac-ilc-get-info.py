@@ -1,5 +1,14 @@
 #!/bin/env python
-"""Print information for productions"""
+"""Print production properties and more information for given production
+
+Example
+dirac-ilc-get-info -p 5678
+
+Options:
+  -p, --ProductionID prodID      ProductionID
+  -f, --File lfn                 LFN from the Production
+
+"""
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, exit as dexit
@@ -7,7 +16,7 @@ import pprint, types
 
 __RCSID__ = "$Id$"
 
-class Params(object):
+class _Params(object):
   def __init__(self):
     self.filename = ""
     self.prodid = 0
@@ -28,7 +37,7 @@ class Params(object):
     Script.registerSwitch('f:', "File=", "File name", self.setFilename)
     Script.setUsageMessage("%s -p 12345" % Script.scriptName)
 
-def createTransfoInfo(trans):
+def _createTransfoInfo(trans):
   """creates information for Transformation"""
   info = []
   parametersToShow = ['Type', 'LongDescription', 'TransformationGroup','Status',
@@ -53,7 +62,7 @@ def createTransfoInfo(trans):
   info.append("")
   return info
 
-def createFileInfo(fmeta):
+def _createFileInfo(fmeta):
   """creates information for file"""
   from DIRAC.Core.Utilities import DEncode
   if 'ProdID' in fmeta:
@@ -73,7 +82,10 @@ def createFileInfo(fmeta):
   datatypes.setdefault("Unknown Datatype")
   maxLength = len(max(parametersToShow, key=len))
 
-  for parameter in parametersToShow and parameter in fmeta:
+  for parameter in parametersToShow:
+    if parameter not in fmeta:
+      continue
+
     value = fmeta[parameter]
     if parameter == 'Datatype':
       value = datatypes[value]
@@ -93,7 +105,7 @@ def createFileInfo(fmeta):
   if "AdditionalInfo" in fmeta:
     try:
       dinfo = DEncode.decode(fmeta["AdditionalInfo"])
-    except Exception: ##cannot do anything else because decode raises base Exception
+    except Exception: ##cannot do anything else because decode raises base Exception #pylint: disable=W0703
       dinfo = eval(fmeta["AdditionalInfo"])
     info.append(" - There is some additional info:")
     if type(dinfo) == types.TupleType:
@@ -142,9 +154,9 @@ def createFileInfo(fmeta):
 
   return info
 
-def getInfo():
+def _getInfo():
   """gets info about transformation"""
-  clip = Params()
+  clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine()
 
@@ -202,11 +214,11 @@ def getInfo():
     #here we have trans and fmeta
     info.append("")
     info.append("Production %s has the following parameters:" % trans['TransformationID'])
-    info.extend(createTransfoInfo(trans))
+    info.extend(_createTransfoInfo(trans))
 
     if fmeta:
       info.append('The files created by this production have the following metadata:')
-      info.extend(createFileInfo(fmeta))
+      info.extend(_createFileInfo(fmeta))
       info.append("It's possible that some meta data was not brought back,")
       info.append("in particular file level metadata, so check some individual files")
 
@@ -255,6 +267,10 @@ def getInfo():
           gLogger.error("This file does not follow the ILCDIRAC production conventions!")
           gLogger.error("Please specify a prod ID directly or check the file.")
           dexit(0)
+      if not pid:
+        gLogger.error("This file does not follow the ILCDIRAC production conventions!")
+        gLogger.error("Please specify a prod ID directly or check the file.")
+        dexit(0)
       #as task follows the prod id, to get it we need
       tid = fitems[fitems.index(pid)+1]
       last_folder = str(int(tid)/1000).zfill(3)
@@ -301,15 +317,15 @@ def getInfo():
         trans['AddParams'] = res['Value']
     info.append("")
     info.append("Input file has the following properties:")
-    info.extend(createFileInfo(fmeta))
+    info.extend(_createFileInfo(fmeta))
     info.append("")
     info.append('It was created with the production %s:' % pid)
     if trans:
-      info.extend(createTransfoInfo(trans))
+      info.extend(_createTransfoInfo(trans))
 
   gLogger.notice("\n".join(info))
 
   dexit(0)
 
 if __name__ == "__main__":
-  getInfo()
+  _getInfo()

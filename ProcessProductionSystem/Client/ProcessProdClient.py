@@ -1,7 +1,7 @@
 '''
 Created on Apr 19, 2011
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 

@@ -1,8 +1,8 @@
 '''
 Module to remove software. Not used if using the ProcessProductionSystem
 
-@author: Stephane Poss
-@since: Jul 14, 2011
+:author: Stephane Poss
+:since: Jul 14, 2011
 '''
 __RCSID__ = "$Id$"
 

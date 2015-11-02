@@ -29,8 +29,7 @@ class RootScript(_Root):
   def setScript(self, executable):
     """ Define executable to use
 
-    @param executable: Script to run on. Can be shell or root executable. Must be a local file.
-    @type executable: string
+    :param string executable: Script to run on. Can be shell or root executable. Must be a local file.
     """
     self._checkArgs( { 'executable' : types.StringTypes } )
 

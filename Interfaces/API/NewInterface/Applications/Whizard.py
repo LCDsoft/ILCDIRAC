@@ -63,10 +63,9 @@ class Whizard(LCApplication):
     return getDict()
 
   def setEvtType(self, evttype):
-    """ Define process. If the process given is not found, when calling job.append a full list is printed.
+    """ Define process. If the process given is not found, when calling :func:`UserJob.append() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.append>` a full list is printed.
 
-    @param evttype: Process to generate
-    @type evttype: string
+    :param string evttype: Process to generate
     """
     self._checkArgs( { 'evttype' : types.StringTypes } )
     if self.addedtojob:
@@ -76,7 +75,7 @@ class Whizard(LCApplication):
 
   def setGlobalEvtType(self, globalname):
     """ When producing multiple process in one job, it is needed to define this for the output file name.
-    It's mandatory to use the L{setFullParameterDict} method when using this.
+    It's mandatory to use the :any:`setFullParameterDict` method when using this.
     """
     self._checkArgs( { 'globalname' : types.StringTypes } )
     self.globalEventType = globalname
@@ -84,8 +83,7 @@ class Whizard(LCApplication):
   def setLuminosity(self, lumi):
     """ Optional: Define luminosity to generate
 
-    @param lumi: Luminosity to generate. Not available if cross section is not known a priori. Use with care.
-    @type lumi: float
+    :param float lumi: Luminosity to generate. Not available if cross section is not known a priori. Use with care.
     """
     self._checkArgs( { 'lumi' : types.FloatType } )
     self.luminosity = lumi
@@ -93,8 +91,7 @@ class Whizard(LCApplication):
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is Job ID.
 
-    @param randomSeed: Seed to use during integration and generation.
-    @type randomSeed: int
+    :param int randomSeed: Seed to use during integration and generation.
     """
     self._checkArgs( { 'randomSeed' : types.IntType } )
 
@@ -103,8 +100,7 @@ class Whizard(LCApplication):
   def setParameterDict(self, paramdict):
     """ Parameters for Whizard steering files
 
-    @param paramdict: Dictionary of parameters for the whizard templates. Most parameters are set on the fly.
-    @type paramdict: dict
+    :param dict paramdict: Dictionary of parameters for the whizard templates. Most parameters are set on the fly.
     """
     self._checkArgs( { 'paramdict' : types.DictType } )
     self.parameterDict = paramdict
@@ -112,12 +108,11 @@ class Whizard(LCApplication):
   def setGeneratorLevelCuts(self, cutsdict):
     """ Define generator level cuts (to be put in whizard.cut1)
 
-    Refer to U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc12} for details about how to set cuts.
+    Refer to http://whizard.hepforge.org/manual_w1/manual005.html#toc12 for details about how to set cuts.
 
     >>> wh.setGeneratorLevelCuts({'e1e1_o':["cut M of  3 within 10 99999","cut E of  3 within  5 99999"]})
 
-    @param cutsdict: Dictionary of cuts
-    @type cutsdict: dict
+    :param dict cutsdict: Dictionary of cuts
     """
     self._checkArgs( { 'cutsdict' : types.DictType } )
     self.generatorLevelCuts = cutsdict
@@ -141,11 +136,9 @@ class Whizard(LCApplication):
     >>> wh.setFullParameterDict(pdict)
 
     The first key corresponds to the sections of the whizard.in, while the second corresponds to the possible parameters.
-    All keys/values can be found in the WHIZARD documentation:
-    U{http://projects.hepforge.org/whizard/manual_w1/manual005.html#toc11}
+    All keys/values can be found in the WHIZARD documentation: http://whizard.hepforge.org/manual_w1/manual005.html#toc11
 
-    @param pdict: Dictionnary of parameters
-    @type pdict: dict
+    :param dict pdict: Dictionnary of parameters
     """
     self._checkArgs( { 'pdict' : types.DictType } )
 
@@ -155,15 +148,14 @@ class Whizard(LCApplication):
   def setModel(self, model):
     """ Optional: Define Model
 
-    @param model: Model to use for generation. Predefined list available in GeneratorModels class.
-    @type model: string
+    :param string model: Model to use for generation. Predefined list available in the :mod:`GeneratorModels<ILCDIRAC.Core.Utilities.GeneratorModels.GeneratorModels>` class.
     """
     self._checkArgs( { 'model' : types.StringTypes } )
 
     self.model = model
 
   def willCut(self):
-    """ You need this if you plan on cutting using L{StdhepCut}
+    """ You need this if you plan on cutting using :mod:`StdhepCut <ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut.StdhepCut>`
     """
     self.willBeCut = True
 
@@ -177,8 +169,7 @@ class Whizard(LCApplication):
   def setJobIndex(self, index):
     """ Optional: Define Job Index. Added in the file name between the event type and the extension.
 
-    @param index: Index to use for generation
-    @type index: string
+    :param string index: Index to use for generation
     """
     self._checkArgs( { 'index' : types.StringTypes } )
 

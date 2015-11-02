@@ -49,8 +49,7 @@ class Mokka(LCApplication):
 
     Also used as mcRunNumber.
 
-    @param randomSeed: Seed to use during integration and generation. Default is Job ID.
-    @type randomSeed: int
+    :param int randomSeed: Seed to use during integration and generation. Default is Job ID.
     """
     self._checkArgs( { 'randomSeed' : types.IntType } )
 
@@ -59,8 +58,7 @@ class Mokka(LCApplication):
   def setmcRunNumber(self, runnumber):
     """ Optional: Define mcRunNumber to use. Default is 0. In Production jobs, is equal to RandomSeed
 
-    @param runnumber: mcRunNumber parameter of Mokka
-    @type runnumber: int
+    :param int runnumber: mcRunNumber parameter of Mokka
     """
     self._checkArgs( { 'runnumber' : types.IntType } )
 
@@ -69,8 +67,7 @@ class Mokka(LCApplication):
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for Mokka simulation
 
-    @param detectorModel: Detector Model to use for Mokka simulation. Default is ??????
-    @type detectorModel: string
+    :param string detectorModel: Detector Model to use for Mokka simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
@@ -79,8 +76,7 @@ class Mokka(LCApplication):
   def setMacFile(self, macfile):
     """ Optional: Define Mac File. Useful if using particle gun.
 
-    @param macfile: Mac file for Mokka
-    @type macfile: string
+    :param string macfile: Macro file for Mokka
     """
     self._checkArgs( { 'macfile' : types.StringTypes } )
     self.macFile = macfile
@@ -95,8 +91,7 @@ class Mokka(LCApplication):
   def setStartFrom(self, startfrom):
     """ Optional: Define from where mokka starts to read in the generator file
 
-    @param startfrom: from how mokka start to read the input file
-    @type startfrom: int
+    :param int startfrom: from how mokka start to read the input file
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
     self.startFrom = startfrom
@@ -105,8 +100,8 @@ class Mokka(LCApplication):
   def setProcessID(self, processID):
     """ Optional: Define the processID. This is added to the event header.
 
-    @param processID: ID's process
-    @type processID: string
+    :param string processID: process ID string
+
     """
     self._checkArgs( { 'processID' : types.StringTypes } )
     self.processID = processID
@@ -115,8 +110,8 @@ class Mokka(LCApplication):
   def setDbSlice(self, dbSlice):
     """ Optional: Define the data base that will use mokka
 
-    @param dbSlice: data base used by mokka
-    @type dbSlice: string
+    :param string dbSlice: database used by Mokka
+
     """
     self._checkArgs( { 'dbSlice' : types.StringTypes } )
     self.dbSlice = dbSlice

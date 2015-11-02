@@ -1,9 +1,9 @@
 '''
 Register the meta data of the production files
 
-@since: Sep 8, 2010
+:since: Sep 8, 2010
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

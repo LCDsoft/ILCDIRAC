@@ -1,7 +1,7 @@
 '''
 Created on Nov 7, 2013
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"
@@ -26,8 +26,7 @@ class LCUtilityApplication( Application ):
   def setNbEvts(self, numberOfEvents):
     """ Set the number of events to process
     
-    @param nbevts: Number of events to process (or generate)
-    @type nbevts: int
+    :param int numberOfEvents: Number of events to process (or generate)
     """
     self._checkArgs({ 'numberOfEvents' : IntType })
     self.numberOfEvents = numberOfEvents
@@ -42,8 +41,7 @@ class LCUtilityApplication( Application ):
   def setEnergy(self, energy):
     """ Set the energy to use
     
-    @param energy: Energy used in GeV
-    @type energy: float
+    :param float energy: Energy used in GeV
     """
     if not type(energy) == type(1.1):
       energy = float(energy)

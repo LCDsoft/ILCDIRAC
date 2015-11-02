@@ -3,7 +3,7 @@ Several utilities
    
 Created on Jan 15, 2010
 
-@author: sposs
+:author: sposs
 '''
 
 __RCSID__ = "$Id$"

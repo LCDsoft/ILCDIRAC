@@ -28,8 +28,7 @@ class PostGenSelection(LCUtilityApplication):
   def setNbEvtsToKeep(self, numberOfEventsToKeep):
     """ Set the number of events to keep in the input file
 
-    @param numberOfEventsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
-    @type numberOfEventsToKeep: int
+    :param int numberOfEventsToKeep: number of events to keep in the input file. Must be inferior to the number of events.
 
     """
     self._checkArgs( { 'numberOfEventsToKeep' : types.IntType } )

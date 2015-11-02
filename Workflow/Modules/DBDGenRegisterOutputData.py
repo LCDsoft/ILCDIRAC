@@ -1,9 +1,9 @@
 '''
 Goes with DBDGeneration, not used
 
-@since: Jan 26, 2012
+:since: Jan 26, 2012
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase

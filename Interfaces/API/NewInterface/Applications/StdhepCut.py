@@ -37,8 +37,7 @@ class StdhepCut(LCApplication):
   def setMaxNbEvts(self, nbevts):
     """ Max number of events passing cuts to write (number of events in the final file)
 
-    @param nbevts: Maximum number of events passing cuts to write
-    @type nbevts: int
+    :param int nbevts: Maximum number of events passing cuts to write
     """
     self._checkArgs( { 'nbevts' : types.IntType } )
     self.maxNumberOfEvents = nbevts
@@ -46,8 +45,7 @@ class StdhepCut(LCApplication):
   def setNbEvtsPerFile(self, nbevts):
     """ Number of events per file (not used)
 
-    @param nbevts: Number of events to keep in each file.
-    @type nbevts: int
+    :param int nbevts: Number of events to keep in each file.
     """
     self._checkArgs( { 'nbevts' : types.IntType } )
     self.numberOfEventsPerFile = nbevts
@@ -55,16 +53,14 @@ class StdhepCut(LCApplication):
   def setSelectionEfficiency(self, efficiency):
     """ Selection efficiency of your cuts, needed to determine the number of files that will be created
 
-    @param efficiency: Cut efficiency
-    @type efficiency: float
+    :param float efficiency: Cut efficiency
     """
     self._checkArgs( { 'efficiency' : types.FloatType } )
     self.selectionEfficiency = efficiency
 
   def setInlineCuts(self, cutsstring):
     """ Define cuts directly, not by specifying a file
-    @param cutsstring: Cut string. Can be multiline
-    @type cutsstring: string
+    :param string cutsstring: Cut string. Can be multiline
     """
     self._checkArgs( { 'cutsstring' : types.StringTypes } )
 

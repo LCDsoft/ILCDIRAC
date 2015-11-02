@@ -2,8 +2,8 @@
 Module to upload specified job output files according to the parameters
 defined in the production workflow.
 
-@author: S. Poss
-@since: Sep 01, 2010
+:author: S. Poss
+:since: Sep 01, 2010
 """
 
 __RCSID__ = "$Id$"
@@ -20,7 +20,7 @@ import DIRAC
 import os, random, time
 
 class UploadOutputData(ModuleBase):
-  """ As name suggest: upload output data. For Production only: See L{UserJobFinalization} for User job upload.
+  """ As name suggest: upload output data. For Production only: See :mod:`~ILCDIRAC.Workflow.Modules.UserJobFinalization` for User job upload.
   """
   #############################################################################
   def __init__(self):

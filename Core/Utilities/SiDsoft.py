@@ -2,9 +2,8 @@
 
 Install SiD software
 
-Created on Apr 7, 2010
-
-@author: sposs
+:since: Apr 7, 2010
+:author: sposs
 '''
 from DIRAC import S_OK
 

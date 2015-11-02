@@ -1,22 +1,37 @@
-#!/bin/env python
+#!/usr/bin/env python
 '''
-Get production logs
+Download the production log files from the Log storage element
+See the JDL of production jobs for the log file location
 
-Created on Mar 21, 2013
+One can also download a full directory of log files
 
-@author: stephane
+Example
+
+  dirac-ilc-get-prod-log -F /ilc/prod/clic/..../1225_23.tar.gz
+
+Options:
+   -D, --LogFileDir lfnDirectory      Production log dir to download
+   -F, --LogFile lfn                  Production log to download
+   -O, --OutputDir localDir           Output directory (default ./)
+
+:since: Mar 21, 2013
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 
+import os
+
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR, exit as dexit
+from DIRAC.Core.Utilities.PromptUser import promptUser
 
-class Params(object):
+class _Params(object):
   """Parameter object"""
   def __init__(self):
     self.logD = ''
     self.logF = ''
     self.outputdir = './'
+    self.prodid = ''
   def setLogFileD(self,opt):
     self.logD = opt
     return S_OK()
@@ -26,16 +41,20 @@ class Params(object):
   def setOutputDir(self,opt):
     self.outputdir = opt
     return S_OK()
+  def setProdID(self,opt):
+    self.prodid = opt
+    return S_OK()
   def registerSwitch(self):
     """registers switches"""
     Script.registerSwitch('D:', 'LogFileDir=', 'Production log dir to download', self.setLogFileD)
     Script.registerSwitch('F:', 'LogFile=', 'Production log to download', self.setLogFileF)
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
+    Script.registerSwitch('P:', 'ProdID=', 'Production ID', self.setProdID)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
-def printErrorReport(res):
+def _printErrorReport(res):
   """Print the failures for the call to getFile or Directory"""
   if res['Value'] and res['Value']['Failed']:
     for lfn in res['Value']['Failed']:
@@ -43,12 +62,12 @@ def printErrorReport(res):
       return S_ERROR()
   return S_OK()
 
-def getProdLogs():
+def _getProdLogs():
   """get production log files from LogSE"""
-  clip = Params()
+  clip = _Params()
   clip.registerSwitch()
   Script.parseCommandLine()
-  if not clip.logF and not clip.logD:
+  if not ( clip.logF or clip.logD or clip.prodid ):
     Script.showHelp()
     dexit(1)
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
@@ -57,7 +76,12 @@ def getProdLogs():
   from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
   logSE = StorageElement(storageElementName)
 
-  from DIRAC.Core.Utilities.PromptUser import promptUser
+  if clip.prodid and not ( clip.logD or clip.logF ):
+    result = _getLogFolderFromID( clip )
+    if not result['OK']:
+      gLogger.error( result['Message'] )
+      dexit(1)
+
   if clip.logD:
     res = promptUser('Are you sure you want to get ALL the files in this directory?')
     if not res['OK']:
@@ -66,11 +90,44 @@ def getProdLogs():
     if choice.lower()=='n':
       dexit(0)
     res = logSE.getDirectory(clip.logD, localPath=clip.outputdir)
-    printErrorReport(res)
+    _printErrorReport(res)
 
   if clip.logF:
     res = logSE.getFile(clip.logF, localPath = clip.outputdir)
-    printErrorReport(res)
+    _printErrorReport(res)
+
+def _getLogFolderFromID( clip ):
+  """Obtain the folder of the logfiles from the prodID
+
+  Fills the clip.logD variable
+  """
+  from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+  from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+
+  ## Check if transformation exists and get its type
+  server = TransformationClient()
+  result = server.getTransformation( clip.prodid )
+  if not result['OK']:
+    return result
+  transType = result['Value']['Type']
+  query = { 'ProdID' : clip.prodid }
+  if 'Reconstruction' in transType:
+    query['Datatype'] = 'REC'
+
+  result = FileCatalogClient().findFilesByMetadata( query, '/' )
+  if not result['OK']:
+    return result
+
+  elif result['Value']:
+    lfn = result['Value'][0]
+    baseLFN = "/".join( lfn.split( '/' )[:-2] )
+    subFolderNumber = lfn.split( '/' )[-2]
+    clip.logD = os.path.join( baseLFN, 'LOG', subFolderNumber )
+    gLogger.notice( 'Setting logdir to %s' % clip.logD )
+  else:
+    return S_ERROR( "Cannot discover the LogFilePath: No output files yet" )
+
+  return S_OK()
 
 if __name__ == '__main__':
-  getProdLogs()
+  _getProdLogs()
