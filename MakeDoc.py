@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+""" create rst files for documentation of ILCDIRAC """
 import os
 
 BASEPATH = "DOC"
@@ -109,7 +109,7 @@ def getsubpackages( abspath, direc):
   #print "packages",packages
   return packages
 
-def getmodules( abspath, direc, files ):
+def getmodules( _abspath, _direc, files ):
   """return list of subpackages with full path"""
   packages = []
   for filename in files:
@@ -122,7 +122,7 @@ def getmodules( abspath, direc, files ):
 
 
 def createDoc():
-  """create the rst files for all the things we want them  for"""
+  """create the rst files for all the things we want them for"""
   mkdir(BASEPATH)
   os.chdir(BASEPATH)
 
@@ -153,7 +153,7 @@ def createDoc():
       mkModuleRest( filename.split(".py")[0], fullclassname.split(".py")[0] )
 
     os.chdir(BASEPATH)
-
+  return 0
 
 
     
@@ -172,4 +172,4 @@ def createDoc():
 # #sphinx-apidoc -F -H Interfaces -V 23.0 -R 10 -e -M -d 1 -f -o source/rsts/Interfaces ../Interfaces/API/NewInterface/
 
 if __name__ == "__main__":
-  createDoc()
+  exit(createDoc())

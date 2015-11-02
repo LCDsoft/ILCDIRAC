@@ -195,8 +195,12 @@ completeDocumentation:
 	rm -rf DOC
 	python CompileReleaseNotes.py
 	python MakeDoc.py
-	rsync --delete -artv DOC/ source/DOC
+	rsync --delete -art DOC/ source/DOC
 	make clean
 	make html
 	@echo
 	@echo "Build finished. Now you just have to copy the files to the web"
+
+install: completeDocumentation
+	rsync -delete -artvu build/html/ /afs/cern.ch/eng/clic/data/doc/ilcdiracDocNew/
+	@echo "Copied documentation to the web"

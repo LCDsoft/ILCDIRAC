@@ -10,7 +10,11 @@ import re
 
 def doit():
   """compile release notes rst file"""
-  __generateReleaseNotes( "v23r0p10" )
+  res = __generateReleaseNotes( "v23r0p11" )
+  if not res['OK']:
+    print res['Message']
+    return 1
+  return 0
 
 
 def __loadReleaseNotesFile( ):
@@ -30,9 +34,9 @@ def __loadReleaseNotesFile( ):
   feature = False
   lastKey = False
   for rawLine in relaseContents:
+    rawLine = makeJiraLink( rawLine )
+    rawLine = makeDIRACLink( rawLine )
     line = rawLine.strip()
-    line = makeJiraLink( line )
-    line = makeDIRACLink( line )
     if not line:
       continue
     if line[0] == "[" and line[-1] == "]":
@@ -79,14 +83,7 @@ def __loadReleaseNotesFile( ):
 def makeJiraLink( text ):
   """ turn ILCDIRAC-XYZ into a link to jira """
   jiraBaseLink = "https://its.cern.ch/jira/browse/"
-  check = False
-  if "ILCDIRAC-" in text:
-    print "Before",text
-    check=True
   text = re.sub( "(ILCDIRAC-[0-9]+)" , r"`\g<1> <%s\g<1>>`_" % jiraBaseLink, text )
-  if check:
-    print "After",text
-#    exit(1)
   return text
 
 def makeDIRACLink( text ):
@@ -154,4 +151,4 @@ def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
   
   
 if __name__=="__main__":
-  doit()
+  exit(doit())
