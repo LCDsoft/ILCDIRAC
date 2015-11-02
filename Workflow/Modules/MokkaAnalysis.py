@@ -3,10 +3,10 @@ Mokka analysis module.
 
 Called by Job Agent.
 
-@since:  Jan 29, 2010
+:since:  Jan 29, 2010
 
-@author: Stephane Poss
-@author: Przemyslaw Majewski
+:author: Stephane Poss
+:author: Przemyslaw Majewski
 '''
 
 __RCSID__ = "$Id$"
@@ -51,7 +51,8 @@ class MokkaAnalysis(ModuleBase):
 #############################################################################
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
 
     if self.WorkflowStartFrom:
@@ -107,13 +108,13 @@ class MokkaAnalysis(ModuleBase):
   def runIt(self):
     """ Called by ModuleBase
       
-      Executes the following:
-        - read the application parameters that where defined in ILCJob, and stored in the job definition
-        - setup the SQL server and run it in the background
-        - prepare the steering file using L{prepareSteeringFile}
-        - run Mokka and catch its return status
-      @return: S_OK(), S_ERROR()
-      
+    Executes the following:
+      - read the application parameters that where defined in ILCJob, and stored in the job definition
+      - setup the SQL server and run it in the background
+      - prepare the steering file using :any:`prepareSteeringFile`
+      - run Mokka and catch its return status
+
+    :return: S_OK(), S_ERROR()
     """
     
     #if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
@@ -490,8 +491,8 @@ done
 
 
   def determineDBSlice(self):
-    """Figure out where the dbSlice is located and what it is called
-     dbSlice is module parameter, set directly via workflow
+    """ Figure out where the dbSlice is located and what it is called
+    dbSlice is module parameter, set directly via workflow
 
     if it is not set and we do not use native CVMFS installation, then we assume
     the SQL file should be called CLICMOkkaDB.sql, but if we are using a native

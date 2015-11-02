@@ -1,10 +1,9 @@
-'''
-Checks and potentially provides production proxy, called from L{ProductionJob}
+"""
+Checks and potentially provides production proxy, called from :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`
 
-Created on Feb 10, 2011
-
-@author: sposs
-'''
+:since: Feb 10, 2011
+:author: sposs
+"""
 
 __RCSID__ = "$Id$"
 
@@ -14,11 +13,15 @@ from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
 def getNewProxy(): 
   """ Get a new production proxy
+
+  :returns: statuscode of the dirac-proxy-init call: 0 success, otherwise error!
   """
   print 'Getting production proxy ...'
   return call( [ 'dirac-proxy-init', '-g', 'ilc_prod' ] )
 def checkAndGetProdProxy():
-  """ Check if current proxy is a production one, and if not call the L{getNewProxy} method.
+  """ Check if current proxy is a production one, and if not call the :any:`getNewProxy` method.
+
+  :returns: :func:`S_OK() <DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK>`, :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
   """
   result = getProxyInfo()
   if not result['OK']:
@@ -34,7 +37,6 @@ def checkAndGetProdProxy():
 
   if not group == 'ilc_prod':
     print 'You do not have a valid group'
-    getNewProxy()  
     if getNewProxy():
       return S_ERROR("dirac-proxy-init failed")
   return S_OK()

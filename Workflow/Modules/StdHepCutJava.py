@@ -3,9 +3,9 @@ Run the StdHepCutJava utility
 
 Apply a set of cuts on input stdhep files
 
-@since: Apr 10, 2013
+:since: Apr 10, 2013
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 

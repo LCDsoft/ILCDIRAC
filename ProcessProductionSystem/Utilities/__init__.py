@@ -1,6 +1,5 @@
 '''
-Created on Feb 17, 2012
-
-@author: Stephane Poss
+:since: Feb 17, 2012
+:author: Stephane Poss
 '''
-__RCSID__ ="$Id"
+__RCSID__ ="$Id$"

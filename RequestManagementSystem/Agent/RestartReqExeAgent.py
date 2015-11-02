@@ -1,8 +1,24 @@
-""" :mod: RestartReqExeAgent
-    =====================
+"""Restart the an agent in case it gets stuck
 
-    .. module: RestartReqExeAgent
-    :synopsis: restart the RequestExecutingAgent in case it gets stuck
+This agent was intially designed to supervise the RequestExecutingAgent and
+retart it in case it gets stuck.  At the moment the RequestExecutingAgent is the
+only agent to really get stuck on a normal basis.  Can be extend to restart any
+given agent of so desired.
+
+The agent checks the age of the log file and if it is deemed too old will kill
+the agent so that it is restarted automatically.
+
++----------------------------------------+-----------------------------------------+---------------------------------------+
+|  **Option**                            |    **Description**                      |  **Example**                          |
++----------------------------------------+-----------------------------------------+---------------------------------------+
+|  MaxLogAge                             | maximum Age of the log file in minues   | MaxLogAge = 60                        |
+|                                        |                                         |                                       |
++----------------------------------------+-----------------------------------------+---------------------------------------+
+|  AgentNames                            | name of the agent to monitor            | AgentNames=RequestExecutingAgent      |
+|                                        |                                         |                                       |
+|                                        |                                         |                                       |
++----------------------------------------+-----------------------------------------+---------------------------------------+
+
 
 """
 __RCSID__ = "$Id$"

@@ -1,6 +1,16 @@
 #!/bin/env python
 """
 Prepare the production summary tables
+
+
+
+Options:
+   -P, --prods prodID            Productions: greater than with gt1234, range with 32-56, list with 34,56
+   -p, --precise_detail          Precise detail, slow
+   -v, --verbose                 Verbose output
+   -t, --types prodTypeList      Production Types, comma separated, default all
+   -S, --Statuses statusList     Statuses, comma separated, default all
+
 """
 __RCSID__ = "$Id$"
 
@@ -8,7 +18,7 @@ from DIRAC.Core.Base import Script
 from DIRAC import S_OK, exit as dexit
 import os
 
-def getFileInfo(lfn):
+def _getFileInfo(lfn):
   """ Retrieve the file info
   """
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
@@ -34,7 +44,7 @@ def getFileInfo(lfn):
     nbevts += int(res['Value']['NumberOfEvents'])
   return (float(lumi),int(nbevts),addinfo)
 
-def translate(detail):
+def _translate(detail):
   """ Replace whizard naming convention by human conventions
   """
   detail = detail.replace('v','n1:n2:n3:N1:N2:N3')
@@ -90,7 +100,7 @@ def translate(detail):
 #    else:
 #      return S_OK(ancestor)
 
-class Params(object):
+class _Params(object):
   """ CLI Parameters class
   """
   def __init__(self):
@@ -161,8 +171,8 @@ class Params(object):
                                          '\nUsage:',
                                          '  %s [option|cfgfile] ...\n' % Script.scriptName ] ) )
 
-def getProductionSummary():
-  clip = Params()
+def _getProductionSummary():
+  clip = _Params()
   clip.registerSwitch()
   Script.parseCommandLine()
   from ILCDIRAC.Core.Utilities.HTML                             import Table
@@ -246,7 +256,7 @@ def getProductionSummary():
     xsec = 0.0
     if not full_detail:
       lfn  = lfns[0]
-      info = getFileInfo(lfn)
+      info = _getFileInfo(lfn)
       nbevts = info[1]*len(lfns)
       lumi = info[0]*len(lfns)
       addinfo = info[2]
@@ -257,7 +267,7 @@ def getProductionSummary():
             files += 1
     else:
       for lfn in lfns:
-        info = getFileInfo(lfn)
+        info = _getFileInfo(lfn)
         lumi += info[0]
         nbevts += info[1]
         addinfo = info[2]
@@ -284,7 +294,7 @@ def getProductionSummary():
       depList = list(depSet)
       depList.sort()
       for ancestor in depthDict[depList[-1]]:
-        info = getFileInfo(ancestor)
+        info = _getFileInfo(ancestor)
         lumi += info[0]
         addinfo = info[2]
         if 'xsection' in addinfo:
@@ -332,7 +342,7 @@ def getProductionSummary():
           dirmeta['MomProdID']=res['Value']['ProdID']
     if not dirmeta.has_key('MomProdID'):
       dirmeta['MomProdID']=0
-    dirmeta['detail']= translate(detail)
+    dirmeta['detail']= _translate(detail)
 
     metadata.append(dirmeta)
   
@@ -434,4 +444,4 @@ def getProductionSummary():
   dexit(0)
 
 if __name__=="__main__":
-  getProductionSummary()
+  _getProductionSummary()

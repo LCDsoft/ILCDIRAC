@@ -1,8 +1,8 @@
 '''
 List of files in the SteeringFiles tar ball.
 
-@author: S. Poss
-@since: Nov 8, 2011
+:author: S. Poss
+:since: Nov 8, 2011
 '''
 from DIRAC import S_OK, S_ERROR
 

@@ -3,9 +3,9 @@ Base class for ILC workflow modules.
 
 Stolen by S. Poss from LHCbSystem.Workflow.Modules
 
-@since: Feb 02, 2010
-@author: S. Poss
-@author: S. Paterson
+:since: Feb 02, 2010
+:author: S. Poss
+:author: S. Paterson
 """
 import shutil
 
@@ -33,14 +33,14 @@ import os, string, sys, re, types, urllib
 from random import choice
 
 def generateRandomString(length=8, chars = string.letters + string.digits):
-  """Return random string of 8 chars, used by Pythia and Mokka
+  """Return random string of 8 chars, used by :mod:`~ILCDIRAC.Workflow.Modules.PythiaAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
   """
   return ''.join([choice(chars) for _ in xrange(length)])
 
 class ModuleBase(object):
   """ Base class of the ILCDIRAC modules. Several common utilities are defined here.
-  In particular, all sub classes should call the L{resolveInputVariables} method, and implement
-  the L{applicationSpecificInputs}.
+  In particular, all sub classes should call the :func:`resolveInputVariables` method, and implement
+  the :func:`applicationSpecificInputs`.
   """
   #############################################################################
   def __init__(self):
@@ -132,10 +132,11 @@ class ModuleBase(object):
   #############################################################################
   def setJobParameter(self, name, value, sendFlag = True):
     """Wraps around setJobParameter of state update client
-    @param name: job parameter
-    @param value: value of the job parameter
-    @param sendFlag: passed to setJobParameter
-    @return: S_OK(), S_ERROR()
+
+    :param string name: job parameter
+    :param value: value of the job parameter
+    :param bool sendFlag: passed to setJobParameter
+    :return: S_OK, S_ERROR
     """
     if not self.jobID:
       return S_OK('JobID not defined') # e.g. running locally prior to submission
@@ -174,10 +175,10 @@ class ModuleBase(object):
   def setFileStatus(self, production, lfn, status):
     """ Set the file status for the given production in the Production Database
 
-    @param production: production ID
-    @param lfn: logical file name of the file that needs status change
-    @param status: status to set
-    @return: S_OK(), S_ERROR()
+    :param int production: production ID
+    :param string lfn: logical file name of the file that needs status change
+    :param string status: status to set
+    :return: S_OK(), S_ERROR()
     """
     self.log.verbose('setFileStatus(%s,%s,%s)' %(production, lfn, status))
 
@@ -193,11 +194,11 @@ class ModuleBase(object):
   #############################################################################
 #  def setReplicaProblematic(self, lfn, se, pfn = '', reason = 'Access failure'):
 #    """ Set replica status to Problematic in the File Catalog
-#    @param lfn: lfn of the problematic file
-#    @param se: storage element
-#    @param pfn: physical file name
-#    @param reason: as name suggests...
-#    @return: S_OK()
+#    :param lfn: lfn of the problematic file
+#    :param se: storage element
+#    :param pfn: physical file name
+#    :param reason: as name suggests...
+#    :return: S_OK()
 #    """
 #
 #    dm = DataManager()
@@ -221,14 +222,10 @@ class ModuleBase(object):
   def getCandidateFiles(self, outputList, outputLFNs, dummy_fileMask):
     """ Returns list of candidate files to upload, check if some outputs are missing.
 
-      @param outputList: has the following structure:
-      [ ('outputFile':'','outputDataSE':'','outputPath':'') , (...) ]
-
-      @param outputLFNs: list of output LFNs for the job
-
-      @param fileMask:  UNUSED output file extensions to restrict the outputs to
-
-      @return: S_OK with dictionary containing type, SE and LFN for files [NOT: restricted by mask]
+      :param outputList: has the following structure: [ ('outputFile':'','outputDataSE':'','outputPath':'') , (...) ]
+      :param outputLFNs: list of output LFNs for the job
+      :param dummy_fileMask:  UNUSED output file extensions to restrict the outputs to
+      :return: S_OK with dictionary containing type, SE and LFN for files [NOT: restricted by mask]
     """
     fileInfo = {}
     for outputFile in outputList:
@@ -289,11 +286,9 @@ class ModuleBase(object):
   def getFileMetadata(self, candidateFiles):
     """Returns the candidate file dictionary with associated metadata.
 
-    @param candidateFiles: The input candidate files dictionary has the structure:
-    {'lfn':'','path':'','workflowSE':''}
-
-    This also assumes the files are in the current working directory.
-    @return: File Metadata
+    :param dict candidateFiles: The input candidate files dictionary has the structure: {'lfn':'','path':'','workflowSE':''}
+       This also assumes the files are in the current working directory.
+    :return: S_OK with File Metadata, S_ERROR
     """
     #Retrieve the POOL File GUID(s) for any final output files
     self.log.info('Will search for POOL GUIDs for: %s' %(', '.join(candidateFiles.keys())))
@@ -689,7 +684,7 @@ class ModuleBase(object):
     return S_OK()
 
   def treatILDConfigPackage(self):
-    """treat the ILDConfig package"""
+    """treat the ILDConfig software package"""
     config_dir = self.workflow_commons['ILDConfigPackage']
     ildConfigVersion = config_dir.replace("ILDConfig", "")
     resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))

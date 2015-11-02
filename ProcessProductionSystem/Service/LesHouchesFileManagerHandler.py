@@ -2,9 +2,9 @@
 this service was intended to provide the dowload of the LesHouches files. But in fact, we 
 should use the DIRAC StorageElement
 
-Created on Apr 18, 2012
+:since: Apr 18, 2012
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 #pylint: skip-file
 

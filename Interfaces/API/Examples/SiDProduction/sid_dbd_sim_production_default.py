@@ -2,7 +2,7 @@
 Created on Feb 8, 2012
 Modified on Aug 17, 2012
 
-@author: Stephane Poss, Christian Grefe
+:author: Stephane Poss, Christian Grefe
 '''
 
 from DIRAC.Core.Base import Script

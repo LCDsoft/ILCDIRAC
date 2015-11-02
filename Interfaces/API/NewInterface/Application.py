@@ -1,9 +1,33 @@
-'''
-Base application class. All applications inherit this class.
+'''Base application class. All applications
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckCollections`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.LCSIM`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Mokka`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.PostGenSelection`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Pythia`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications._Root`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOConcatenate`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLICPandora`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLIC`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard`
 
-@author: Stephane Poss
-@author: Remi Ete
-@author: Ching Bon Lam
+inherit from this class.
+
+:author: Stephane Poss
+:author: Remi Ete
+:author: Ching Bon Lam
+
 '''
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
@@ -25,8 +49,7 @@ class Application(object):
     >>> app = Application({"appname":"marlin","version":"v0111Prod",
     ...                    "steeringFile":"My_file.xml","numberOfEvents":1000})
     
-    @param paramdict: Dictionary of parameters that can be set. Will throw an exception if one of them does not exist.
-    @type paramdict: dict
+    :param dict paramdict: Dictionary of parameters that can be set. Will throw an exception if one of them does not exist.
     
     """
     super(Application, self).__init__()
@@ -139,8 +162,7 @@ class Application(object):
   def setName(self, name):
     """ Define name of application
     
-    @param name: Name of the application. Normally, every application defines its own, so no need to call that one
-    @type name: string 
+    :param string name: Name of the application. Normally, every application defines its own, so no need to call that one
     """
     self._checkArgs({ 'name' : types.StringTypes } )
     self.appname = name
@@ -149,18 +171,16 @@ class Application(object):
   def setVersion(self, version):
     """ Define version to use
     
-    @param version: Version of the application to use
-    @type version: string
+    :param string version: Version of the application to use
     """
     self._checkArgs({ 'version' : types.StringTypes } )
     self.version = version
     return S_OK()  
     
   def setSteeringFile(self, steeringfile):
-    """ Set the steering file, and add it to sandbox
+    """ Set the steering file, and add it to the sandbox
     
-    @param steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
-    @type steeringfile: string
+    :param string steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
     """
     self._checkArgs({ 'steeringfile' : types.StringTypes } )
     self.steeringFile = steeringfile
@@ -171,8 +191,7 @@ class Application(object):
   def setLogFile(self, logfile):
     """ Define application log file
     
-    @param logfile: Log file to use. Set by default if not set.
-    @type logfile: string
+    :param string logfile: Log file to use. Set by default if not set.
     """
     self._checkArgs({ 'logfile' : types.StringTypes } )
     self.logFile = logfile
@@ -182,10 +201,8 @@ class Application(object):
   def setOutputFile(self, ofile, path = None):
     """ Set the output file
     
-    @param ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using L{getInputFromApp})
-    @type ofile: string
-    @param path: Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
-    @type path: string
+    :param string ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using :any:`getInputFromApp`)
+    :param string path: Set the output path for the output file to go. Will not do anything in a :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`. Use :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData` of the job for that functionality.
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
     
@@ -205,8 +222,7 @@ class Application(object):
   def setOutputSE(self, se):
     """ Set the output storage element for all files produced by this application.
     
-    @param se: Storage element name. Example CERN-SRM, IN2P3-SRM, RAL-SRM, IMPERIAL-SRM
-    @type se: string
+    :param string se: Storage element name. Example CERN-SRM, IN2P3-SRM, RAL-SRM, IMPERIAL-SRM
   
     """
     self._checkArgs({ 'se' : types.StringTypes } )
@@ -216,8 +232,8 @@ class Application(object):
   def setInputFile(self, inputfile):
     """ Set the input file to use: stdhep, slcio, root, whatever
     
-    @param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
-    @type inputfile: string or list
+    :param inputfile: Input file (data, not steering) to pass to the application. Can be local file of LFN:
+    :type inputfile: string or list
     """
     kwargs = { "inputfile" : inputfile}
     if not type(inputfile) in types.StringTypes and not type(inputfile) == type([]):
@@ -239,8 +255,8 @@ class Application(object):
     >>> marlin = Marlin()
     >>> marlin.getInputFromApp(mokka)
     
-    @param application: Application to link against.
-    @type application: application
+    :param application: Application to link against.
+    :type application: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Application`
     """
     self._inputapp.append(application)
     return S_OK()  
@@ -251,15 +267,16 @@ class Application(object):
     >>> app = Application()
     >>> app.setDebug()
     
-    @param debug: Set the application to debug mode. Default is True when called. If not, then it's false.
-    @type debug: bool
+    :param bool debug: Set the application to debug mode. Default is True when called. If not, then it's false.
     """
     self._checkArgs({ "debug": types.BooleanType} )
     self.debug = debug
     return S_OK()
 
   def setExtraCLIArguments(self, arguments):
-    """ Pass any CLI argument as a string to the application
+    """ Pass any command line arguments as a string to the application
+
+    :param string arguments:
     """
     self._checkArgs({ "arguments": types.StringTypes} )
     self.extraCLIArguments = arguments
@@ -393,12 +410,12 @@ class Application(object):
   def _checkWorkflowConsistency(self):
     """ Called from Job Class, overloaded by every class. Used to check the workflow consistency: linking between 
     applications
-    Should also call L{_checkRequiredApp} when needed.
+    Should also call :any:`_checkRequiredApp` when needed.
     """
     return S_OK()
 
   def _checkRequiredApp(self):
-    """ Called by L{_checkWorkflowConsistency} when relevant
+    """ Called by :any:`_checkWorkflowConsistency` when relevant
     """
     if self._inputapp:
       for app in self._inputapp:
@@ -486,7 +503,7 @@ class Application(object):
       
   def _addParametersToStep(self, stepdefinition):
     """ Method to be overloaded by every application. Add the parameters to the given step. 
-    Should call L{_addBaseParameters}.
+    Should call any:`_addBaseParameters`.
     Called from Job
     """
     return self._addBaseParameters(stepdefinition)
@@ -500,7 +517,7 @@ class Application(object):
 
   def _resolveLinkedStepParameters(self, stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. 
-    OuputFile and InputFile). See L{StdhepCut} for example.
+    OuputFile and InputFile). See :any:`StdHepCut` for example.
     Called from Job.
     """
     return S_OK()

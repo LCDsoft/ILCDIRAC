@@ -1,7 +1,6 @@
 """ Module that converts stdhep files to slcio. Goes usually before Tomato
 
-@author: Ching Bon Lam
-
+:author: Ching Bon Lam
 """
 __RCSID__ = "$Id$"
 

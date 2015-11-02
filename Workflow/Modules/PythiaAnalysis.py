@@ -1,9 +1,9 @@
 '''
 Run Pythia, but only specific versions (the CDR ttbar ones)
 
-@since:  Jun 3, 2011
+:since:  Jun 3, 2011
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 from DIRAC.Core.Utilities.Subprocess                       import shellCall

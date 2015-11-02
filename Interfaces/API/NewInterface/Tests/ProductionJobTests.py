@@ -1,6 +1,9 @@
-#!/usr/env python
+#!/usr/local/env python
 
-"""Test user jobfinalization"""
+"""
+Test user jobfinalization
+
+"""
 __RCSID__ = "$Id$"
 
 

@@ -1,9 +1,8 @@
 '''
 Module that gets a file from its SRM definition
 
-@since: Aug 27, 2010
-
-@author: sposs
+:since: Aug 27, 2010
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 

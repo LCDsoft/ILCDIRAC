@@ -21,7 +21,7 @@ class SLICPandora(LCApplication):
   >>> slicpandora.setPandoraSettings("~/GreatPathToHeaven/MyPandoraSettings.xml")
   >>> slicpandora.setStartFrom(10)
 
-  Use setExtraCLIArguments if you want to add arguments to the PandoraFrontend call
+  Use :func:`setExtraCLIArguments` if you want to add arguments to the PandoraFrontend call
 
   """
   def __init__(self, paramdict = None):
@@ -41,8 +41,7 @@ class SLICPandora(LCApplication):
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for SlicPandora simulation
 
-    @param detectorModel: Detector Model to use for SlicPandora simulation.
-    @type detectorModel: string
+    :param string detectorModel: Detector Model to use for SlicPandora simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
@@ -53,8 +52,7 @@ class SLICPandora(LCApplication):
   def setStartFrom(self, startfrom):
     """ Optional: Define from where slicpandora start to read in the input file
 
-    @param startfrom: from how slicpandora start to read the input file
-    @type startfrom: int
+    :param int startfrom: from how slicpandora start to read the input file
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
     self.startFrom = startfrom
@@ -62,8 +60,7 @@ class SLICPandora(LCApplication):
   def setPandoraSettings(self, pandoraSettings):
     """ Optional: Define the path where pandora settings are
 
-    @param pandoraSettings: path where pandora settings are
-    @type pandoraSettings: string
+    :param string pandoraSettings: path where pandora settings are
     """
     self._checkArgs( { 'pandoraSettings' : types.StringTypes } )
     self.pandoraSettings = pandoraSettings

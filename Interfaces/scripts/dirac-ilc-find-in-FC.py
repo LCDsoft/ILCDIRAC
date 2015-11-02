@@ -1,9 +1,27 @@
-#!/bin/env python
-'''
-Created on Mar 20, 2013
+#!/usr/bin/env python
+"""
 
-@author: stephane
-'''
+Find files in the dirac file catalog based on meta data
+
+Usage::
+
+   dirac-ilc-find-in-FC [-D] PATH Constraint1 [Constraint2 [...]]
+
+It is also possible to use any of these operators >=, <=, >, <, !=, = when using metadata constraints.
+The list of metadata options can be obtained from the `dirac-dms-filecatalog-cli <http://diracgrid.org/files/docs/UserGuide/CommandReference/dirac-dms-filecatalog-cli.html>`_
+by typing: "meta show"
+
+For example::
+
+   dirac-ilc-find-in-FC /ilc ProdID>1234 Datatype=DST
+
+to list only the directories containing the files use the "-D" flag::
+
+   dirac-ilc-find-in-FC -D /ilc ProdID>1234 Datatype=DST
+
+:since: Mar 20, 2013
+:author: stephane
+"""
 __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
@@ -14,7 +32,7 @@ from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 OPLIST = ['>=','<=','>','<','!=','=']
 SCRIPTNAME = "dirac-ilc-find-in-FC"
 
-class Params(object):
+class _Params(object):
   """Parameter Object"""
   def __init__(self):
     self.printOnlyDirectories = False
@@ -29,7 +47,7 @@ class Params(object):
     Script.setUsageMessage("""%s [-D] path meta1=A meta2=B etc.\nPossible operators for metadata: %s""" % (SCRIPTNAME, OPLIST ) )
 
 
-def createQueryDict(argss):
+def _createQueryDict(argss):
   """
   Create a proper dictionary, stolen from FC CLI
   """  
@@ -141,10 +159,10 @@ def createQueryDict(argss):
   
   return metaDict
 
-def findInFC():
+def _findInFC():
   """Find something in the FileCatalog"""
   from DIRAC import exit as dexit
-  clip = Params()
+  clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine()
 
@@ -166,7 +184,7 @@ def findInFC():
 
   gLogger.verbose("Path:", path)
   metaQuery = args[1:]
-  metaDataDict = createQueryDict(metaQuery)
+  metaDataDict = _createQueryDict(metaQuery)
   gLogger.verbose("Query:",str(metaDataDict))
   if not metaDataDict:
     gLogger.info("No query")
@@ -193,4 +211,4 @@ def findInFC():
   dexit(0)
 
 if __name__ == '__main__':
-  findInFC()
+  _findInFC()

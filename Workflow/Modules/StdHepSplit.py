@@ -1,8 +1,8 @@
 """
 Module to concatenate LCIO files
 
-@author: S. Poss
-@since: Mar 09, 2012
+:author: S. Poss
+:since: Mar 09, 2012
 """
 
 __RCSID__ = "$Id$"

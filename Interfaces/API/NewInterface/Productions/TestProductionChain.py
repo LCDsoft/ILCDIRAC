@@ -1,7 +1,7 @@
 '''
 Created on Feb 8, 2012
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 #pylint: disable=C0103
@@ -120,7 +120,7 @@ extraargs= Script.getPositionalArgs()
 if len(extraargs) == 0:
   print "ERROR: ExtraName not defined"
   Script.showHelp()
-  exit(1)
+  raise RuntimeError("1")
 additional_name = extraargs[0]
 
 
@@ -252,7 +252,7 @@ for proddict in prodlist:
     spectrum = 20
   else:
     print "No spectrum defined, cannot proceed"
-    exit(1)
+    raise RuntimeError("1")
 
 
   ##Start by defining the whizard application
@@ -334,7 +334,7 @@ for proddict in prodlist:
     stdhepc.setVersion("V7")
   if cut and not cutfile:
     print "No cut file defined, cannot proceed"
-    exit(1)
+    raise RuntimeError("1")
   stdhepc.setSteeringFile(cutfile)
   stdhepc.setMaxNbEvts(n_keep)
   stdhepc.setSelectionEfficiency(seleff)
@@ -542,13 +542,13 @@ for proddict in prodlist:
     res = pwh.append(wh)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
 
     if cut:
       res = pwh.append(stdhepc)
       if not res['OK']:
         print res['Message']
-        exit(1)
+        raise RuntimeError("1")
 
     pwh.addFinalization(True,True,True,True)
     descrp = "CLIC %s BeamSpread, ISR ON, whizard"%energy
@@ -571,7 +571,7 @@ for proddict in prodlist:
     res = pwh.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pwh.setNbOfTasks(1)
     ##The production is created, one can now take care of the second step:
     #For that we will use the metadata of the previous production as input
@@ -587,7 +587,7 @@ for proddict in prodlist:
     res = pstdhepsplit.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pstdhepsplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
@@ -598,7 +598,7 @@ for proddict in prodlist:
     res = pstdhepsplit.append(stdhepsplit)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pstdhepsplit.addFinalization(True,True,True,True)
     descrp = "Splitting stdhep files"
 
@@ -617,7 +617,7 @@ for proddict in prodlist:
     res = pstdhepsplit.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = pstdhepsplit.getMetadata()
 
@@ -634,7 +634,7 @@ for proddict in prodlist:
     res = pmo.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pmo.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_sim"
     wname += prod_name
@@ -644,7 +644,7 @@ for proddict in prodlist:
     res = pmo.append(mo)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pmo.addFinalization(True,True,True,True)
     if energy >550.:
       descrp = "CLIC_ILD_CDR model"
@@ -664,7 +664,7 @@ for proddict in prodlist:
     res = pmo.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = pmo.getMetadata()
 
@@ -680,7 +680,7 @@ for proddict in prodlist:
     res = psl.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psl.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_sim"
     wname += prod_name
@@ -690,7 +690,7 @@ for proddict in prodlist:
     res = psl.append(slic)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psl.addFinalization(True,True,True,True)
     descrp = "CLIC_SID_CDR model"
     if prod_name:
@@ -707,7 +707,7 @@ for proddict in prodlist:
     res = psl.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = psl.getMetadata()
 
@@ -725,7 +725,7 @@ for proddict in prodlist:
     res = psplit.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psplit.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_split"
     wname += prod_name
@@ -736,7 +736,7 @@ for proddict in prodlist:
     res = psplit.append(split)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psplit.addFinalization(True,True,True,True)
     descrp = "Splitting slcio files"
     if prod_name:
@@ -752,7 +752,7 @@ for proddict in prodlist:
     res = psplit.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = psplit.getMetadata()
 
@@ -769,7 +769,7 @@ for proddict in prodlist:
     res = pma.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pma.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec"
     wname += prod_name
@@ -780,7 +780,7 @@ for proddict in prodlist:
     res = pma.append(ma)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pma.addFinalization(True,True,True,True)
     if energy >550.:
       descrp = "CLIC_ILD_CDR, No overlay"
@@ -799,7 +799,7 @@ for proddict in prodlist:
     res = pma.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
 
   if sid_rec and meta:
     #######################
@@ -814,7 +814,7 @@ for proddict in prodlist:
     res = psidrec.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psidrec.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec"
     wname += prod_name
@@ -823,15 +823,15 @@ for proddict in prodlist:
     res = psidrec.append(lcsim_prepandora)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     res = psidrec.append(slicpandora)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     res = psidrec.append(lcsim_postpandora)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psidrec.addFinalization(True,True,True,True)
     descrp = "CLIC_SID_CDR, No overlay"
     if prod_name:
@@ -848,7 +848,7 @@ for proddict in prodlist:
     res = psidrec.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
 
   if ild_rec_ov and meta:
     #######################
@@ -862,7 +862,7 @@ for proddict in prodlist:
     res = pmao.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pmao.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_ild_rec_overlay"
     wname += prod_name
@@ -873,12 +873,12 @@ for proddict in prodlist:
     res = pmao.append(overlay)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     #Add the application
     res = pmao.append(mao)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     pmao.addFinalization(True,True,True,True)
     if energy >550.:
       descrp = "CLIC_ILD_CDR, Overlay"
@@ -897,7 +897,7 @@ for proddict in prodlist:
     res = pmao.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
 
   if sid_rec_ov and meta:
     #######################
@@ -912,7 +912,7 @@ for proddict in prodlist:
     res = psidreco.setInputDataQuery(meta)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psidreco.setOutputSE(prodOutputSE)
     wname = process+"_"+str(energy)+"_sid_rec_overlay"
     wname += prod_name
@@ -921,19 +921,19 @@ for proddict in prodlist:
     res = psidreco.append(overlay_sid)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     res = psidreco.append(lcsim_prepandora_ov)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     res = psidreco.append(slicpandora_ov)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     res = psidreco.append(lcsim_postpandora_ov)
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
     psidreco.addFinalization(True,True,True,True)
     descrp = "CLIC_SID_CDR, overlay"
     if prod_name:
@@ -949,6 +949,6 @@ for proddict in prodlist:
     res = psidreco.finalizeProd()
     if not res['OK']:
       print res['Message']
-      exit(1)
+      raise RuntimeError("1")
 
   ##In principle nothing else is needed.

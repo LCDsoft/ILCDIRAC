@@ -1,7 +1,6 @@
 '''
-@since: Mar 12, 2013
-
-@author: sposs
+:since: Mar 12, 2013
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
@@ -30,7 +29,8 @@ class MoveInFC(ModuleBase):
     
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
-    @return: S_OK()
+
+    :return: S_OK()
     """
     
     if not len(self.InputFile) and len(self.InputData):

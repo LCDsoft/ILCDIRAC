@@ -4,8 +4,8 @@ software name, version and platform
 
 Created on Feb 10, 2012
 
-@author: Stephane Poss
-@since: Feb 10, 2012
+:author: Stephane Poss
+:since: Feb 10, 2012
 '''
 
 __RCSID__ = "$Id$"

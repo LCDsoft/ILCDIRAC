@@ -3,9 +3,9 @@
 Run many different applications as a test. Creates a temp directory and runs in there.
 Stops at any error.
 
-@since: Nov 8, 2013
+:since: Nov 8, 2013
 
-@author: sposs
+:author: sposs
 '''
 __RCSID__ = "$Id$"
 
@@ -29,6 +29,7 @@ class JobTestCase( unittest.TestCase ):
     clip.testWhizard = True
     clip.testUtilities = True
     overlayrun = clip.testOverlay
+    clip.testRoot = True
     myMarlinSteeringFile = "bbudsc_3evt_stdreco.xml"
 
     myLCSimPreSteeringFile = "clic_cdr_prePandoraOverlay_1400.0.lcsim" if overlayrun else "clic_cdr_prePandora.lcsim"
@@ -46,7 +47,8 @@ class JobTestCase( unittest.TestCase ):
                           ildConfig = "v01-16-p10_250",
                           gearFile='GearOutput.xml',
                           lcsimPreSteeringFile=myLCSimPreSteeringFile,
-                          lcsimPostSteeringFile=myLCSimPostSteeringFile
+                          lcsimPostSteeringFile=myLCSimPostSteeringFile,
+                          rootVersion="ILCSoft-01-17-08",
                         )
 
     self.myTests = TestCreater(clip, parameterDict)
@@ -85,6 +87,20 @@ class JobTestCase( unittest.TestCase ):
       res = self.myTests.runJobLocally(thisJob,"Utility")
       self.assertTrue ( res['OK'] )
 
+  def test_root(self):
+    """create test for mokka"""
+    jobs = self.myTests.createRootScriptTest()
+    self.assertTrue ( jobs['OK'] )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "Root")
+    self.assertTrue ( res['OK'] )
+
+  def test_root2(self):
+    jobs = self.myTests.createRootHaddTest()
+    self.assertTrue ( jobs['OK'] )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "Root")
+    self.assertTrue ( res['OK'] )
 
 def runTests():
   """runs the tests"""

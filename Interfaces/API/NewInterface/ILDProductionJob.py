@@ -1,8 +1,8 @@
 """
 ILD DBD specific production job utility
 
-@author: S. Poss
-@since: Jul 01, 2012
+:author: S. Poss
+:since: Jul 01, 2012
 """
 
 __RCSID__ = "$Id$"
@@ -195,7 +195,7 @@ class ILDProductionJob( ProductionJob ):
         return S_OK()        
         
     def _addRealFinalization( self ):
-        """ See L{ProductionJob} for definition
+        """ See :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob` for definition
         """
         importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
         dataUpload = ModuleDefinition( 'UploadOutputData' )

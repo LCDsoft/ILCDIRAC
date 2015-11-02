@@ -20,7 +20,7 @@ class SLIC(LCApplication):
   >>> slic.setSteeringFile("mymacrofile.mac")
   >>> slic.setStartFrom(10)
 
-  Use setExtraCLIArguments in case you want to use CLI parameters
+  Use :func:`setExtraCLIArguments` in case you want to use command line parameters
 
   """
   def __init__(self, paramdict = None):
@@ -39,20 +39,18 @@ class SLIC(LCApplication):
 
 
   def setRandomSeed(self, randomSeed):
-    """ Optional: Define random seed to use. Default is Job ID.
+    """ Optional: Define random seed to use. Default is 0.
 
-    @param RandomSeed: Seed to use during simulation.
-    @type RandomSeed: int
+    :param int randomSeed: Seed to use during simulation.
     """
     self._checkArgs( { 'randomSeed' : types.IntType } )
 
     self.randomSeed = randomSeed
 
   def setDetectorModel(self, detectorModel):
-    """ Define detector to use for Slic simulation
+    """ Define detector model to use for Slic simulation
 
-    @param detectorModel: Detector Model to use for Slic simulation. Default is ??????
-    @type detectorModel: string
+    :param string detectorModel: Detector Model to use for Slic simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
     if detectorModel.lower().count("lfn:"):
@@ -68,10 +66,9 @@ class SLIC(LCApplication):
 
 
   def setStartFrom(self, startfrom):
-    """ Optional: Define from how slic start to read in the input file
+    """ Optional: Define from where slic starts to read in the input file
 
-    @param startfrom: from how slic start to read the input file
-    @type startfrom: int
+    :param int startfrom: from where slic starts to read the input file
     """
     self._checkArgs( { 'startfrom' : types.IntType } )
     self.startFrom = startfrom

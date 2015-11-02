@@ -9,9 +9,9 @@ Deletes the tar files.
 The LFN path is given in the CS, Operations, under Transformations/BaseLogLFN
 
 
-@since: Nov 2, 2013
-
-@author: sposs
+:since: Nov 2, 2013
+:author: sposs
+:author: sailer
 '''
 
 from DIRAC.Core.Base.AgentModule                                import AgentModule

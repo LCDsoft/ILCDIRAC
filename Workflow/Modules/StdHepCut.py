@@ -3,9 +3,8 @@ Run the StdHepCut utility
 
 Apply a set of cuts on input stdhep files
 
-@since: May 11, 2011
-
-@author: Stephane Poss
+:since: May 11, 2011
+:author: Stephane Poss
 '''
 __RCSID__ = "$Id$"
 from DIRAC                                                import S_OK, S_ERROR, gLogger

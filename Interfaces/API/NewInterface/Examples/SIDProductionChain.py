@@ -1,7 +1,7 @@
 '''
 Created on Feb 10, 2012
 
-@author: Stephane Poss
+:author: Stephane Poss
 '''
 
 from DIRAC.Core.Base import Script

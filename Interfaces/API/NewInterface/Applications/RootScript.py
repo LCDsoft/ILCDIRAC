@@ -17,7 +17,13 @@ class RootScript(_Root):
   >>> rootsc.setScript("myscript.exe")
   >>> rootsc.setArguments("some command line arguments")
 
-  The ExtraCLIArguments is not used here, only use the Arguments
+  Or use an executable in the PATH, for example *hadd* to merge root files:
+
+  >>> rootsc = RootScript()
+  >>> rootsc.setScript("hadd")
+  >>> rootsc.setArguments("output.root input1.root input2.root")
+
+  The :func:`setExtraCLIArguments` is not available here, use the :func:`setArguments`
   """
   def __init__(self, paramdict = None):
     super(RootScript, self).__init__( paramdict )
@@ -27,10 +33,12 @@ class RootScript(_Root):
 
 
   def setScript(self, executable):
-    """ Define executable to use
+    """Define executable to use
 
-    @param executable: Script to run on. Can be shell or root executable. Must be a local file.
-    @type executable: string
+    :param string executable: Script to run on. Can be shell or root
+      executable. Must be a local file or in the PATH when using CVMFS based
+      software.
+
     """
     self._checkArgs( { 'executable' : types.StringTypes } )
 

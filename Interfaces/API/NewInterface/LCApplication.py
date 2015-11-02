@@ -2,8 +2,8 @@
 
 Allows setting the Steering File dependency, as well as other LC community things
 
-@author: sposs
-@since: Nov 1st, 2013
+:author: sposs
+:since: Nov 1st, 2013
 """
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
@@ -26,13 +26,17 @@ class LCApplication(LCUtilityApplication):
     
   def setSteeringFileVersion(self, version):
     """ Define the SteeringFile version to use
+
+    :param string version:
     """
     self.steeringFileVersion = version
     
     return S_OK()
   
   def setForgetAboutInput(self, flag = True):
-    """ Do not overwrite the input set in the SteeringFile
+    """ Do not overwrite the input file set in the SteeringFile
+
+    :param bool flag: True or False
     """
     
     self.forgetAboutInput = flag

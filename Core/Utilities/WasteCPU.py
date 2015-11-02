@@ -1,8 +1,8 @@
 '''
 This is the worst piece of code ever NEEDED: just run some CPU intensive code to waste CPU time.
 
-@author: Stephane Poss
-@since: Jul 26, 2011
+:author: Stephane Poss
+:since: Jul 26, 2011
 '''
 __RCSID__ = "$Id$"
 import time

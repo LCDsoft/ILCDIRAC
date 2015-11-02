@@ -31,8 +31,7 @@ class CheckCollections(LCUtilityApplication):
   def setCollections(self, collectionList):
     """ Set collections. Must be a list
 
-    @param collectionList: Collections. Must be a list
-    @type collectionList: list
+    :param list collectionList: Collections. Must be a list
 
     """
     self._checkArgs( { 'collectionList' : types.ListType } )
