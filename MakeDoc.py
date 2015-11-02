@@ -93,6 +93,8 @@ def mkModuleRest( classname, fullclassname ):
     lines.append("   :inherited-members:" )
     lines.append("   :undoc-members:" )
     lines.append("   :show-inheritance:" )
+    if classname.startswith("_"):
+      lines.append( "   :private-members:" )
     rst.write("\n".join(lines))
 
   
