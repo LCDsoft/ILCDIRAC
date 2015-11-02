@@ -5,6 +5,7 @@ For SUSY special treatment of the pythia parameters have to be thought of: if th
 IMSS(1)=11; IMSS(21)=71; IMSS(22)=71;
 
 This is currently done on the job definition side
+
 :since:  Nov 3, 2011
 :author: Stephane Poss
 '''
@@ -33,6 +34,10 @@ class WhizardOptions(object):
   """ Class that provides an interface to the xml representation of the whizard options.
   """
   def __init__(self, model = "sm"):
+    """
+    :param string model: physics model to be used by whizard, default "sm"
+    """
+
     self.genmodel = GeneratorModels()
     self.paramdict = {}
     modelparams = self.modelParams(model)

@@ -1,11 +1,9 @@
 '''
 Try some fancy splitting, DO NOT USE
 
-Based on Dirac.SplitByFiles idea, but doing the splitting by number of events
-Gives a list of dictionaries
+Based on :func:`DIRAC.SplitByFiles` idea, but doing the splitting by number of events
 
-Created on Feb 10, 2010
-
+:since: Feb 10, 2010
 :author: sposs
 '''
 
@@ -15,7 +13,12 @@ from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
 from DIRAC import S_OK, S_ERROR
 
 def SplitByFilesAndEvents(listoffiles, evtsperjob):
-  """ Group the input files 
+  """ Group the input files to have equal number of events per job
+  files must have metadata number of events
+
+  :param listoffiles: list of inputfiles
+  :param int eventsperjob: desired number of events per job
+  :returns: S_OK with a list of dictionaries
   """
   mylist = [] 
   total_evts = 0
