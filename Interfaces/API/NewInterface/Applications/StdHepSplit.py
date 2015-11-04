@@ -18,7 +18,7 @@ class StdHepSplit(LCUtilityApplication):
   >>> stdhepsplit.setNumberOfEventsPerFile(100)
   >>> stdhepsplit.setOutputFile("somefile.stdhep")
 
-  The outpufiles will then be somefile_X.stdhep, where X corresponds to the slice index
+  The outpufiles will then be *somefile_X.stdhep*, where *X* corresponds to the slice index
 
   """
   def __init__(self, paramdict = None):
@@ -32,6 +32,8 @@ class StdHepSplit(LCUtilityApplication):
 
   def setNumberOfEventsPerFile(self, numberofevents):
     """ Number of events to have in each file
+
+    :param int numberofevents: number of events in each output file
     """
     self._checkArgs( { 'numberofevents' : types.IntType } )
     self.numberOfEventsPerFile = numberofevents

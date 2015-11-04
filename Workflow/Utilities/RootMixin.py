@@ -11,9 +11,11 @@ class RootMixin( object ):
 
     Need to set LD_LIBRARY_PATH and PATH based on ROOTSYS
 
-    As this is only called when we are not CVMFS native the ROOTSYS must have been
-    set by `configureRoot`. Function signature must conform to getEnvScripts, but
-    none of the arguments are used.
+    As this is only called when we are not CVMFS native the ROOTSYS must have
+    been set by :func:`~ILCDIRAC.Core.Utilities.TARsoft.configureRoot`. Function
+    signature must conform to
+    :func:`~ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation.getEnvironmentScript`,
+    but none of the arguments are used.
 
     :param string _platform: Unused, Software platform
     :param string _appname: Unused, application name

@@ -1,9 +1,33 @@
-'''
-Base application class. All applications inherit this class.
+'''Base application class. All applications
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckCollections`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.LCSIM`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Mokka`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.PostGenSelection`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Pythia`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications._Root`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOConcatenate`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLICPandora`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLIC`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard`
+
+inherit from this class.
 
 :author: Stephane Poss
 :author: Remi Ete
 :author: Ching Bon Lam
+
 '''
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
@@ -154,7 +178,7 @@ class Application(object):
     return S_OK()  
     
   def setSteeringFile(self, steeringfile):
-    """ Set the steering file, and add it to sandbox
+    """ Set the steering file, and add it to the sandbox
     
     :param string steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
     """
@@ -178,7 +202,7 @@ class Application(object):
     """ Set the output file
     
     :param string ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using :any:`getInputFromApp`)
-    :param string path: Set the output path for the output file to go. Will not do anything in a UserJob. Use setOutputData of the job for that functionality.
+    :param string path: Set the output path for the output file to go. Will not do anything in a :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`. Use :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData` of the job for that functionality.
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
     
@@ -231,7 +255,8 @@ class Application(object):
     >>> marlin = Marlin()
     >>> marlin.getInputFromApp(mokka)
     
-    :param application application: Application to link against.
+    :param application: Application to link against.
+    :type application: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Application`
     """
     self._inputapp.append(application)
     return S_OK()  
@@ -249,7 +274,9 @@ class Application(object):
     return S_OK()
 
   def setExtraCLIArguments(self, arguments):
-    """ Pass any CLI argument as a string to the application
+    """ Pass any command line arguments as a string to the application
+
+    :param string arguments:
     """
     self._checkArgs({ "arguments": types.StringTypes} )
     self.extraCLIArguments = arguments

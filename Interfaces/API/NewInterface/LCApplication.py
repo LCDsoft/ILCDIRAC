@@ -26,13 +26,17 @@ class LCApplication(LCUtilityApplication):
     
   def setSteeringFileVersion(self, version):
     """ Define the SteeringFile version to use
+
+    :param string version:
     """
     self.steeringFileVersion = version
     
     return S_OK()
   
   def setForgetAboutInput(self, flag = True):
-    """ Do not overwrite the input set in the SteeringFile
+    """ Do not overwrite the input file set in the SteeringFile
+
+    :param bool flag: True or False
     """
     
     self.forgetAboutInput = flag

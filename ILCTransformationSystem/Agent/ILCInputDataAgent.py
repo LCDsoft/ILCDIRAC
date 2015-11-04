@@ -4,6 +4,9 @@ Update the transformation files of active transformations given an InputDataQuer
 Possibility to speedup the query time by only fetching files that were added since the last iteration.
 Use the CS option RefreshOnly (False by default) and set the DateKey (empty by default) to the meta data
 key set in the DIRAC FileCatalog.
+
+.. deprecated:: 23.1
+
 '''
 
 import time, datetime

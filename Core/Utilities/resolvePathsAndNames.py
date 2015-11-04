@@ -1,5 +1,6 @@
 '''
 Several utilities to "guess" the files names and the paths
+
 :author: sposs
 :since: March 13th, 2013
 '''

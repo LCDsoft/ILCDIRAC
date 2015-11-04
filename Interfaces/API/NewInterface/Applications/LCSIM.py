@@ -21,7 +21,7 @@ class LCSIM(LCApplication):
   >>> lcsim.setSteeringFile("MySteeringFile.xml")
   >>> lcsim.setStartFrom(10)
 
-  Use setExtraCLIArguments to add CLI arguments to the lcsim call
+  Use :func:`setExtraCLIArguments` to add command line arguments to the lcsim call
 
   """
   def __init__(self, paramdict = None):

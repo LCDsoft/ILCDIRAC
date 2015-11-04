@@ -8,6 +8,18 @@ given agent of so desired.
 The agent checks the age of the log file and if it is deemed too old will kill
 the agent so that it is restarted automatically.
 
++----------------------------------------+-----------------------------------------+---------------------------------------+
+|  **Option**                            |    **Description**                      |  **Example**                          |
++----------------------------------------+-----------------------------------------+---------------------------------------+
+|  MaxLogAge                             | maximum Age of the log file in minues   | MaxLogAge = 60                        |
+|                                        |                                         |                                       |
++----------------------------------------+-----------------------------------------+---------------------------------------+
+|  AgentNames                            | name of the agent to monitor            | AgentNames=RequestExecutingAgent      |
+|                                        |                                         |                                       |
+|                                        |                                         |                                       |
++----------------------------------------+-----------------------------------------+---------------------------------------+
+
+
 """
 __RCSID__ = "$Id$"
 

@@ -1,5 +1,5 @@
 """
- ROOT master class
+ ROOT class for common functionality of :doc:`RootScript` and :doc:`RootMacro`.
 """
 __RCSID__ = "$Id"
 
@@ -8,7 +8,7 @@ from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
 import types
 class _Root(LCApplication):
-  """ Root principal class. Will inherit in RootExe and RootMacro classes, so don't use this (you can't anyway)!
+  """ Root principal class. Will inherit in :doc:`RootScript` and :doc:`RootMacro` classes, so don't use this (you can't anyway)!
   """
 
   def __init__(self, paramdict = None):

@@ -182,8 +182,12 @@ def log( n, line ):
 def getSharedAreaLocation():
   """
   Discover location of Shared SW area
-  based on the list of "Operations/Software/SharedAreaLocations"
+  based on the list of "Operations/Software/SharedAreaLocations". Environment variables are allowed as well.
+  First match is returned. Default list is:
+  "/cvmfs/ilc.desy.de/clic", "$VO_ILC_SW_DIR", "$OSG_APP", "/cvmfs/oasis.opensciencegrid.org/ilc/clic"
 
+  :returns: path to shared area
+  :rtype: string
   """
 
   listOfSharedAreas = Operations().getValue( "Software/SharedAreaLocations",
@@ -288,6 +292,11 @@ def getLocalAreaLocation():
 def getSoftwareFolder(platform, appname, appversion):
   """ 
   Discover location of a given folder, either the local or the shared area
+
+  :param string platform: platform
+  :param string appname: name of the application
+  :param string appversion: version of the application
+
   """
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
@@ -313,7 +322,17 @@ def getSoftwareFolder(platform, appname, appversion):
   return S_OK(mySoftDir)
 
 def getEnvironmentScript(platform, appname, appversion, fcn_env):
-  """ Return the path to the environment script, either from CVMFS, or from the fcn_env function
+  """Return the path to the environment script, either from CVMFS, or from the fcn_env function
+
+  :param string platform: platform
+  :param string appname: name of the application
+  :param string appversion: version of the application
+
+  :param function fcn_env: function provided by the Application daughter class
+    to create its own environment in case there is no environment script in the
+    application version. Signature has to be *fcn_env(platform, appname,
+    appversion)* and has to return *S_OK(pathToScript)*
+
   """
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
@@ -325,7 +344,11 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   return fcn_env(platform, appname, appversion)
 
 def checkCVMFS(platform, app):
-  """ Check the existence of the CVMFS path, returns S_OK tuple of path and envscript
+  """ Check the existence of the CVMFS path for given platform and application
+
+  :param string platform: platform
+  :param tuple app: tuple off application name and version
+  :returns: S_OK of tuple of path and environmen stript
   """
   name, version = app
   csPath = "/AvailableTarBalls/%s/%s/%s" % (platform, name, version)

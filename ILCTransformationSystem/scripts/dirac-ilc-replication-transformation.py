@@ -2,10 +2,9 @@
 """
 Create a production to replicate files from one storage elment to another
 
-Example
+Example::
 
   dirac-ilc-replication-transformation <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName
-
 
 Options:
    -N, --Extraname string      String to append to transformation name in case one already exists with that name

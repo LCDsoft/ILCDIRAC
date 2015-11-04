@@ -152,8 +152,7 @@ class OverlayInput(LCUtilityApplication):
     """    Define the background type.
 
     .. deprecated:: 23r0
-
-    Use :func:`setBackgroundType` instead
+       Use :func:`setBackgroundType` instead
 
     :param string backgroundEventType: Background type.
 

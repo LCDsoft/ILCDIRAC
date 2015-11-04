@@ -1,6 +1,10 @@
 """
-Interface for GenericApplication
-use a script in an application framework
+Interface for a GenericApplication
+use a script in an application framework.
+Can also use a compiled executable as long as all the libraries and supplemental files are available.
+
+See here for more information about running your own executable: https://twiki.cern.ch/twiki/bin/view/CLIC/IlcdiracUserLibraries
+
 """
 __RCSID__ = "$Id$"
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
@@ -18,8 +22,8 @@ class GenericApplication(LCApplication):
   >>> ga.setArguments("some command line arguments")
   >>> ga.setDependency({"root":"5.26"})
 
-  In case you also use the setExtraCLIArguments method, whatever you put
-  in there will be added at the end of the CLI, i.e. after the Arguments
+  In case you also use the :func:`setExtraCLIArguments` method, whatever you put
+  in there will be added at the end of the command line, i.e., after the Arguments
 
   """
   def __init__(self, paramdict = None):
@@ -37,7 +41,7 @@ class GenericApplication(LCApplication):
   def setScript(self, script):
     """ Define script to use
 
-    :param string script: Script to run on. Can be shell or python. Can be local file or LFN.
+    :param string script: Script to run. Can be shell or python or compiled executable. Can be local file or LFN.
     """
     self._checkArgs( { 'script' : types.StringTypes } )
     if os.path.exists(script) or script.lower().count("lfn:"):
@@ -48,7 +52,7 @@ class GenericApplication(LCApplication):
   def setArguments(self, args):
     """ Optional: Define the arguments of the script
 
-    :param string args: Arguments to pass to the command line call
+    :param string args: Arguments to pass to the command call
     """
     self._checkArgs( { 'args' : types.StringTypes } )
     self.arguments = args

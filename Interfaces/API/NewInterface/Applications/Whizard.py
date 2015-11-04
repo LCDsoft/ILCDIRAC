@@ -22,7 +22,7 @@ class Whizard(LCApplication):
   >>> wh.setNumberOfEvents(1000)
   >>> wh.setModel("sm")
 
-  use setExtraArguments to overwrite the content of the whizard.in
+  use :func:`setExtraArguments` to overwrite the content of the whizard.in
   in case you use something not standard (parameter scan for exmple)
   """
   def __init__(self, processlist = None, paramdict = None):
@@ -177,6 +177,8 @@ class Whizard(LCApplication):
 
   def dumpWhizardDotIn(self, fname = 'whizard.in'):
     """ Dump the content of the whizard.in file requested for this application
+
+    :param string fname: filename in which whizard.in is written
     """
     if self.addedtojob:
       self._wo.toWhizardDotIn(fname)
