@@ -20,8 +20,8 @@ class TransformationPlugin(DTP):
     Extend by the number of tasks if needed to reach MaxNumberOfTasks
     """
     max_tasks = self.params['MaxNumberOfTasks']
-    res = self.transClient.getCounters( 'TransformationFiles', ['Status'], 
-                                        {'TransformationID':self.params['TransformationID']} )
+    res = self.util.transClient.getCounters( 'TransformationFiles', ['Status'],
+                                             {'TransformationID':self.params['TransformationID']} )
     if not res['OK']:
       return res
     total_used = 0
@@ -30,7 +30,7 @@ class TransformationPlugin(DTP):
         total_used += statustup[1]
     if total_used >= max_tasks and max_tasks > 0:
       return S_ERROR('Too many tasks for this transformation')
-    res = self._groupByReplicas()
+    res = self.util.groupByReplicas( self.data, self.params['Status'] )
     if not res['OK']:
       return res
     newTasks = []
@@ -63,8 +63,8 @@ class TransformationPlugin(DTP):
     Extend by the number of tasks if needed to reach MaxNumberOfTasks
     """
     max_tasks = self.params['MaxNumberOfTasks']
-    res = self.transClient.getCounters( 'TransformationFiles', ['Status'], 
-                                        {'TransformationID':self.params['TransformationID']} )
+    res = self.util.transClient.getCounters( 'TransformationFiles', ['Status'],
+                                             {'TransformationID':self.params['TransformationID']} )
     if not res['OK']:
       return res
     total_used = 0
