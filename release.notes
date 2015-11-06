@@ -1,3 +1,13 @@
+
+[v25-pre1]
+
+*Core
+NEW: Based on Dirac v6r14p10
+
+*ILCTransformation
+FIX: Adapt to interface changes in DIRAC/Transformation, ILCDIRAC-599
+
+
 [v24-pre5]
 
 *Core
@@ -17,6 +27,8 @@ NEW: Based on Dirac v6r13p8
 
 *Core
 NEW: Based on Dirac v6r13p7
+
+############################################################
 
 [v23r0p11]
 
