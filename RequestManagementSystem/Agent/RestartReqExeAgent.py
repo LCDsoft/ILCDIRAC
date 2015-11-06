@@ -40,7 +40,7 @@ MINUTES = 60
 SECONDS = 1
 
 ########################################################################
-class RestartReqExeAgent( AgentModule ):
+class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
   """
   .. class:: RestartReqExeAgent
 
@@ -122,7 +122,7 @@ class RestartReqExeAgent( AgentModule ):
     try:
       pids.append( int( pid[0] ) )
     except ValueError as e:
-      self.log.error( "Could not create int from PID: ", "PID %s: %s" (pid, e) )
+      self.log.error( "Could not create int from PID: ", "PID %s: %s" % (pid, e) )
       return S_ERROR( "Could not create int from PID" )
 
     return S_OK( pids )
