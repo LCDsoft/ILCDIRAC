@@ -4,13 +4,11 @@ tests for InputFilesUtilities
 """
 __RCSID__ = "$Id$"
 import unittest
-
+import importlib
+from mock import Mock
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
 
-from DIRAC import gLogger
-from DIRAC.Core.Base import Script
-Script.parseCommandLine()
-
+from DIRAC import gLogger, S_OK, S_ERROR
 
 class TestgetNumberOfEvents( unittest.TestCase ):
   """tests of getNumberOfEvents"""
@@ -19,9 +17,12 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     Make fake files for the test
     """
     self.inputfile = "/ilc/prod/ilc/mc-dbd/generated/500-TDR_ws/6f_eeWW/v01-16-p05_500/00005160/000/E500-TDR_ws.I108640.P6f_eexyev.eL.pR_gen_5160_2_065.stdhep"
-
+    self.utils = importlib.import_module( 'ILCDIRAC.Core.Utilities.InputFilesUtilities' )
+    self.utils.FileCatalogClient.getDirectoryUserMetadata = Mock(return_value=S_OK({"NumberOfEvents":500}))
+    self.utils.FileCatalogClient.getFileUserMetadata = Mock(return_value=S_OK({"NumberOfEvents":500}))
+    #self.utils.FileCatalogClient.getDirectoryUserMetadata.return_value(S_OK())
     self.inputfiles = [ self.inputfile, self.inputfile ]
-    gLogger.setLevel("INFO")
+    gLogger.setLevel("DEBUG")
 
   def tearDown(self):
     """ Remove the fake files
@@ -36,12 +37,15 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     res = getNumberOfEvents([self.inputfile])
     self.assertEqual(res['Value']['nbevts'],500)
 
-
   def test_getNumberOfEvents_Fail(self):
+    self.utils.FileCatalogClient.getDirectoryUserMetadata = Mock(return_value=S_ERROR("No Such File"))
+    self.utils.FileCatalogClient.getFileUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     res = getNumberOfEvents(['/no/such/file'])
     self.assertFalse(res['OK'])
 
   def test_getNumberOfEvents_Fail2(self):
+    self.utils.FileCatalogClient.getDirectoryUserMetadata = Mock(return_value=S_ERROR("No Such File"))
+    self.utils.FileCatalogClient.getFileUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     res = getNumberOfEvents(['/no/such/file', '/no/such2/file2'])
     self.assertFalse(res['OK'])
 
