@@ -10,8 +10,9 @@ from mock import MagicMock as Mock
 
 from DIRAC import gLogger, S_ERROR, S_OK
 
-from DIRAC.Core.Base import Script
-Script.parseCommandLine()
+# from DIRAC.Core.Base import Script
+# Script.parseCommandLine()
+
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.RequestManagementSystem.Client.Request import Request
 
@@ -331,6 +332,28 @@ class TestModuleBase( ModulesTestCase ):
 
 class TestUploadLogFile( ModulesTestCase ):
   """ test UploadLogFile """
+
+  def setUp( self ):
+    """create logfile"""
+    super(TestUploadLogFile, self).setUp()
+    with open("MyLogFile.log", "w") as logFile:
+      logFile.write("soemthing")
+    with open("MyOtherLogFile.log", "w") as logFile:
+      logFile.write("soemthing")
+    try:
+      os.makedirs( "./my/log/folder" )
+    except OSError:
+      pass
+    with open("./my/log/folder/MyLogFile.log", "w") as logFile:
+      logFile.write("something else")
+
+  def tearDown( self ):
+    super(TestUploadLogFile, self).tearDown()
+    try:
+      os.remove("MyLogFile.log")
+      shutil.rmtree( "./my" )
+    except OSError:
+      pass
 
   def test_ULF_ASI_NoLogFiles( self ):
     """ULF.applicationSpecificInputs: no log files present.........................................."""
