@@ -248,7 +248,7 @@ class TestModuleBase( ModulesTestCase ):
   """ Tests for ModuleBase functions"""
     
   def test_generateFailoverFile( self ):
-    """run the generateFailoverFile function and see what happens"""
+    """run the generateFailoverFile function and see what happens..................................."""
     dummy_res = self.mbase.generateFailoverFile()
     #print res
 
@@ -451,13 +451,13 @@ class TestUploadLogFile( ModulesTestCase ):
 class UploadOutputDataSuccess( ModulesTestCase ):
   """ test UploadLogFile """
   def test_execute( self ):
-    """ tests execute function"""
+    """tests execute function......................................................................."""
     pass
 
 class UploadOutputDataFailure( ModulesTestCase ):
   """ test UploadLogFile """
   def test_execute( self ):
-    """ tests execute function"""
+    """tests execute function......................................................................."""
     pass
 
 #############################################################################

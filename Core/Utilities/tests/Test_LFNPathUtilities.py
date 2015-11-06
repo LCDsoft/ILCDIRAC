@@ -19,7 +19,7 @@ class LFNPathUtilitiesTests( unittest.TestCase ):
 class TestJoinPathForMetaData( LFNPathUtilitiesTests ):
   """Test joinPathForMetaData"""
   def test_success( self ):
-    """test for joinPathForMetaData"""
+    """test for joinPathForMetaData................................................................."""
     self.assertEqual ( joinPathForMetaData ( "/ilc" , "grid" , "softwareVersion", "/" ) , "/ilc/grid/softwareVersion/" )
     self.assertEqual ( joinPathForMetaData ( "/ilc//grid","/" , "softwareVersion", "/" ) , "/ilc/grid/softwareVersion/" )
     self.assertEqual ( joinPathForMetaData ( "/ilc//grid","/" , "softwareVersion/", "/" ) , "/ilc/grid/softwareVersion/" )
@@ -28,7 +28,7 @@ class TestJoinPathForMetaData( LFNPathUtilitiesTests ):
 class TestCleanLFNPath( LFNPathUtilitiesTests ):
   """Test cleanUpLFNPath"""
   def test_succes( self ):
-    """Test cleanUpLFNPath"""
+    """Test cleanUpLFNPath.........................................................................."""
     return self.assertEqual ( cleanUpLFNPath ('%s/%s' % (self.logPath, str(int(self.jobID)/1000).zfill(3))),
                               "/ilc/prod/ilc/mc-dbd/ild/000")
 

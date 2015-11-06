@@ -13,11 +13,13 @@ class ProductionOutputDataTestCase( unittest.TestCase ):
     pass
   
   def test_contructProductionLFNBad(self):
+    """test ProductionOutputData construct Bad LFN.................................................."""
     commons = {}
     result = constructProductionLFNs(commons)
     self.assertEqual( result['OK'], False)
     
   def test_contructProductionLFNstdhep(self):
+    """test ProductionOutputData construct stdhep LFN..............................................."""
     commons = {}
     commons['PRODUCTION_ID'] = 12345
     commons['JOB_ID'] = 1234
@@ -29,6 +31,7 @@ class ProductionOutputDataTestCase( unittest.TestCase ):
 
 
   def test_contructProductionLFNsim(self):
+    """test ProductionOutputData construct sim LFN.................................................."""
     commons = {}
     commons['PRODUCTION_ID'] = 12345
     commons['JOB_ID'] = 1234
@@ -38,6 +41,7 @@ class ProductionOutputDataTestCase( unittest.TestCase ):
     self.assertEqual( result['OK'], True)
     
   def test_contructProductionLFNrec(self):
+    """test ProductionOutputData construct rec LFN.................................................."""
     commons = {}
     commons['PRODUCTION_ID'] = 12345
     commons['JOB_ID'] = 1234
@@ -49,6 +53,7 @@ class ProductionOutputDataTestCase( unittest.TestCase ):
     self.assertEqual( result['OK'], True)
 
   def test_contructProductionLFNoutput(self):
+    """test ProductionOutputData construct out LFN.................................................."""
     commons = {}
     commons['PRODUCTION_ID'] = 12345
     commons['JOB_ID'] = 1234

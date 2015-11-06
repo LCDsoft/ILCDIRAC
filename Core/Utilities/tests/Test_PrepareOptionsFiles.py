@@ -83,7 +83,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     return res
     
   def test_prepMacFile1(self):
-    """test with start, events, stdhep """
+    """test with start, events, stdhep.............................................................."""
 
     self.createInputMacFile()
     startfrom = 10
@@ -94,7 +94,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     self.assertTrue( self.compareMacFiles() )
 
   def test_prepMacFile2(self):
-    """test with start, events, stdhep and outputfile"""
+    """test with start, events, stdhep and outputfile..............................................."""
     self.createInputMacFile()
     startfrom = 10
     nbevents = 10
@@ -108,7 +108,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     self.assertTrue( self.compareMacFiles() )
 
   def test_prepMacFile3(self):
-    """test with start, events, stdhep and detector"""
+    """test with start, events, stdhep and detector................................................."""
     self.createInputMacFile()
     startfrom = 10
     nbevents = 10
@@ -129,7 +129,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
 
   def test_prepMacFile4(self):
-    """test with start, events, stdhep and randomseed"""
+    """test with start, events, stdhep and randomseed..............................................."""
     self.createInputMacFile()
     startfrom = 10
     nbevents = 10

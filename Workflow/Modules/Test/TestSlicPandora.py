@@ -40,7 +40,7 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
     os.remove(self.zipfile)
     
   def test_Unzip_file_into_dir(self):
-    """test unzip_file_into_dir............................................................"""
+    """test unzip_file_into_dir....................................................................."""
     
     from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import unzip_file_into_dir
     if not os.path.exists(self.mydir):

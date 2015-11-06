@@ -30,20 +30,24 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     pass
 
   def test_getNumberOfEvents(self):
+    """test getNumberOfEvents Single File Success..................................................."""
     res = getNumberOfEvents(self.inputfiles)
     self.assertEqual(res['Value']['nbevts'],1000)
 
   def test_getNumberOfEvents_2(self):
+    """test getNumberOfEvents Multiple File Success................................................."""
     res = getNumberOfEvents([self.inputfile])
     self.assertEqual(res['Value']['nbevts'],500)
 
   def test_getNumberOfEvents_Fail(self):
+    """test getNumberOfEvents Single File Failure..................................................."""
     self.utils.FileCatalogClient.getDirectoryUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     self.utils.FileCatalogClient.getFileUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     res = getNumberOfEvents(['/no/such/file'])
     self.assertFalse(res['OK'])
 
   def test_getNumberOfEvents_Fail2(self):
+    """test getNumberOfEvents Multiple File Failure................................................."""
     self.utils.FileCatalogClient.getDirectoryUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     self.utils.FileCatalogClient.getFileUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     res = getNumberOfEvents(['/no/such/file', '/no/such2/file2'])

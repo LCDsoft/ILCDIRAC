@@ -26,10 +26,12 @@ class ResolvePathsAndNamesTests( unittest.TestCase ):
       print "failed to remove file"
     
   def test_getnames(self):
+    """test ResolvePathsAndNames getNames..........................................................."""
     res = getProdFilename("toto_gen.stdhep", 12345,123)
     self.assertEqual(res,'toto_gen_12345_123.stdhep')
   
   def test_resolvepaths(self):
+    """test ResolvePathsAndNames resolvePaths......................................................."""
     res = resolveIFpaths(self.inputfiles)
     self.assertTrue('OK' in res)
     self.assertEqual(res['OK'], True, res)
@@ -38,6 +40,6 @@ class ResolvePathsAndNamesTests( unittest.TestCase ):
     
     
 if __name__ == "__main__":
-  suite = unittest.defaultTestLoader.loadTestsFromTestCase( ResolvePathsAndNamesTests )
-  testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
+  SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( ResolvePathsAndNamesTests )
+  TESTRESULT = unittest.TextTestRunner( verbosity = 2 ).run( SUITE )
   
