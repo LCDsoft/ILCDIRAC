@@ -5,13 +5,11 @@ Test generateFailoverFile
 """
 __RCSID__ = "$Id$"
 #pylint: disable=W0212,R0904
-import unittest, copy, os, shutil
-from mock import MagicMock as Mock
+import unittest, copy, os, shutil, sys
+import importlib #pylint: disable=F0401
 
+from mock import MagicMock as Mock, patch
 from DIRAC import gLogger, S_ERROR, S_OK
-
-# from DIRAC.Core.Base import Script
-# Script.parseCommandLine()
 
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.RequestManagementSystem.Client.Request import Request
@@ -70,6 +68,7 @@ class ModulesTestCase ( unittest.TestCase ):
     self.rc_mock.isEmpty.return_value = {'OK': True, 'Value': ''}
     self.rc_mock.toXML.return_value = {'OK': True, 'Value': 'Ex Em El'}
     self.rc_mock.getDigest.return_value = {'OK': True, 'Value': 'Indigestion'}
+    self.rc_mock.toJSON.return_value = S_OK("JSON Bieber requests your presence")
     self.rc_mock.__len__.return_value = 1
 
     self.ar_mock = Mock()
@@ -186,9 +185,6 @@ class ModulesTestCase ( unittest.TestCase ):
     self.uod = UploadOutputData()
     self.uod.workflow_commons = self.mbase.workflow_commons
 
-    self.freq = FailoverRequest()
-    self.freq.workflow_commons = self.mbase.workflow_commons
-
     self.ulf = UploadLogFile()
 
     ### create some dummy files
@@ -199,8 +195,11 @@ class ModulesTestCase ( unittest.TestCase ):
     path="test3.stdhep"
     with open(path, 'a'):
       pass
+    try:
+      os.makedirs("myILDConfig")
+    except OSError:
+      pass
 
-        
   def tearDown( self ):
     removeFile = ["E1000-B1b_ws.Ptth-ln4q-hnonbb.eL.pR.Gphyssim_dbd-01-01.I106411_3evt.stdhep",
                   "README",
@@ -230,7 +229,7 @@ class ModulesTestCase ( unittest.TestCase ):
                   "h_nunu_gen_4191_0007.stdhep",
                   "test3.stdhep",
                  ]
-    removeDirs = ["my", "job"]
+    removeDirs = ["my", "job", "myILDConfig"]
     for tempFile in removeFile:
       try:
         os.remove(tempFile)
@@ -243,13 +242,14 @@ class ModulesTestCase ( unittest.TestCase ):
       except OSError:
         pass
 
-        
+
 class TestModuleBase( ModulesTestCase ):
   """ Tests for ModuleBase functions"""
-    
+
   def test_generateFailoverFile( self ):
     """run the generateFailoverFile function and see what happens..................................."""
-    dummy_res = self.mbase.generateFailoverFile()
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      dummy_res = self.mbase.generateFailoverFile()
     #print res
 
   def test_CreateRemoveRequest( self ):
@@ -317,13 +317,15 @@ class TestModuleBase( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     self.mbase.logWorkingDirectory()
 
-
   def test_MB_treatILDConfigPackage( self ):
     """ModuleBase: treatILDConfigPackage............................................................"""
     gLogger.setLevel("ERROR")
     self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
     self.mbase.workflow_commons['ILDConfigPackage'] = "ILDConfigv01-16-p03"
-    res = self.mbase.treatILDConfigPackage()
+    with patch( "ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation.checkCVMFS",
+                Mock( return_value=S_OK(("myILDConfig", "init.sh"))) #needs tuple
+    ):
+      res = self.mbase.treatILDConfigPackage()
     self.assertTrue(res['OK'])
 
 #############################################################################
@@ -351,6 +353,7 @@ class TestUploadLogFile( ModulesTestCase ):
     super(TestUploadLogFile, self).tearDown()
     try:
       os.remove("MyLogFile.log")
+      os.remove("MyOtherLogFile.log")
       shutil.rmtree( "./my" )
     except OSError:
       pass
@@ -416,24 +419,28 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFile.log', 'MyOtherLogFile.log'],
                                                          Message="Ekke Ekke Ekke Ekke")))
     self.mbase.workflow_commons['Request']  = Request()
+    self.mbase.workflow_commons['Request'].RequestName = "MockingRequest"
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mbase.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
+    self.ulf._getRequestContainer = self.rc_mock
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf.applicationSpecificInputs()
     res = self.ulf.execute()
     self.assertTrue( res['OK'] )
 
-
   def test_ULF_finalize_move( self ):
     """ULF.Finalize: move to new folder............................................................."""
     gLogger.setLevel("ERROR")
+    with patch("DIRAC.Resources.Storage.StorageElement.StorageElementItem", Mock() ):
+      self.ulf = UploadLogFile()
+    self.ulf.logSE = Mock()
     self.ulf.workflow_commons = copy.deepcopy(self.mbase.workflow_commons)
     self.ulf.log = gLogger.getSubLogger("ULF-FinalMove")
     self.ulf.jobID = 12345
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log','MyOtherLogFile.log']))
     #self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],
     #                                                     Message="Ekke Ekke Ekke Ekke")))
-    self.mbase.workflow_commons['Request']  = Request()
+    self.mbase.workflow_commons['Request']  = self.rc_mock
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.mbase.workflow_commons['Request'],
                                                               'uploadedSE': 'CERN-SRM'}))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
@@ -447,7 +454,7 @@ class TestUploadLogFile( ModulesTestCase ):
 # UploadOutputData.py
 #############################################################################
 
-    
+
 class UploadOutputDataSuccess( ModulesTestCase ):
   """ test UploadLogFile """
   def test_execute( self ):
@@ -473,7 +480,9 @@ class TestFailoverRequest( ModulesTestCase ):
   def test_ASI_Enabled( self ):
     """applicationSpecificInputs: control flag is enabled..........................................."""
     gLogger.setLevel("ERROR")
-    self.frq = FailoverRequest()
+    with patch("DIRAC.RequestManagementSystem.private.RequestValidator.RequestValidator", Mock() ), \
+         patch("DIRAC.RequestManagementSystem.private.RequestValidator.RequestValidator.validate", return_value=S_OK() ):
+      self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
     os.environ['JOBID']="12345"
@@ -484,7 +493,9 @@ class TestFailoverRequest( ModulesTestCase ):
   def test_ASI_Disable( self ):
     """applicationSpecificInputs: control flag is enabled with non boolean.........................."""
     gLogger.setLevel("ERROR")
-    self.frq = FailoverRequest()
+    with patch("DIRAC.RequestManagementSystem.private.RequestValidator.RequestValidator", return_value=S_OK() ), \
+         patch("DIRAC.RequestManagementSystem.private.RequestValidator.RequestValidator.validate", return_value=S_OK() ):
+      self.frq = FailoverRequest()
     self.frq.workflow_commons = dict( )
     self.frq.log = gLogger.getSubLogger("testASI")
     os.environ['JOBID']="12345"
@@ -569,13 +580,15 @@ class TestFailoverRequest( ModulesTestCase ):
   def test_Exe_Success( self ):
     """execute: succeeds............................................................................"""
     gLogger.setLevel("ERROR")
-    self.frq = FailoverRequest()
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
     self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
     self.frq.jobID = 12345
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    res = self.frq.execute()
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
     self.assertTrue( res['OK'] )
 
   def test_Exe_genDisetRequest( self ):
@@ -591,7 +604,8 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.fileReport.generateForwardDISET.return_value = S_OK("Spanish Inquisition")
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.frq.fileReport,
                                       Request = self.rc_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
-    self.frq.execute()
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq.execute()
     self.assertTrue( self.frq.workflow_commons['Request'] )
 
   def test_set_registrationRequest( self ):
@@ -813,7 +827,9 @@ class TestUploadOutputData( ModulesTestCase ):
     from DIRAC.DataManagementSystem.Client.FailoverTransfer import FailoverTransfer
     FailoverTransfer.transferAndRegisterFile = Mock(return_value=S_ERROR("IT ACTUALLY WORKS!!!!!!1eleven!!"))
     _resUodExe = self.uod.execute()
-    res = self.uod.generateFailoverFile( )
+    with patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', Mock() ), \
+         patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.uod.generateFailoverFile( )
     self.uod.log.info("RequestValidation: %s " % res)
 
 #############################################################################
@@ -824,7 +840,8 @@ class TestUserJobFinalization( ModulesTestCase ):
   """ test UserJobFinalization """
   def setUp( self ):
     super(TestUserJobFinalization, self).setUp()
-    self.ujf = UserJobFinalization()
+    with patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', Mock() ):
+      self.ujf = UserJobFinalization()
 
 
   def test_UJF_execute_isLastStep(self):
@@ -901,7 +918,7 @@ def runTests():
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestFailoverRequest ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUserJobFinalization ) )
-  
+
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
   print testResult
 
