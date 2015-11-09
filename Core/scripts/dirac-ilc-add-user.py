@@ -19,7 +19,7 @@ try:
   from suds.client import Client
 except ImportError:
   print "suds module missing: Install it with [sudo] easy_install suds"
-  exit(1)
+  raise
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, gConfig, exit as dexit

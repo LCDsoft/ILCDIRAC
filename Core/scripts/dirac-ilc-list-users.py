@@ -12,7 +12,7 @@ try:
   import suds #pylint: disable=W0611
 except ImportError:
   print "Run [sudo] easy_install suds"
-  exit(1)
+  raise
 
 class Params(object):
   """Parameter Object"""
