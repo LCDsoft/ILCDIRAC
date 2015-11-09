@@ -46,7 +46,8 @@ class ModulesTestCase ( unittest.TestCase ):
 #    self.jr_mock.setJobApplicationStatus.return_value = {'OK': True, 'Value': 'pippo'}
 
     self.fr_mock = Mock()
-    self.fr_mock.getFiles.return_value = {}
+    self.fr_mock.getFiles.return_value = {"/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep":"ApplicationCrash",
+                                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep":"ARG"}
     self.fr_mock.setFileStatus.return_value = {'OK': True, 'Value': ''}
     self.fr_mock.commit.return_value = {'OK': True, 'Value': ''}
     self.fr_mock.generateRequest.return_value = {'OK': True, 'Value': ''}
@@ -228,6 +229,7 @@ class ModulesTestCase ( unittest.TestCase ):
                   "h_nunu_gen_4191_0006.stdhep",
                   "h_nunu_gen_4191_0007.stdhep",
                   "test3.stdhep",
+                  "43321_12345_request.json",
                  ]
     removeDirs = ["my", "job", "myILDConfig"]
     for tempFile in removeFile:
@@ -590,6 +592,143 @@ class TestFailoverRequest( ModulesTestCase ):
     with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
       res = self.frq.execute()
     self.assertTrue( res['OK'] )
+
+  def test_Exe_Success_input( self ):
+    """execute: succeeds inputdata.................................................................."""
+    gLogger.setLevel("ERROR")
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
+    self.frq.fileReport = self.fr_mock
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep"]
+    self.frq.productionID = 43321
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
+    self.assertTrue( res['OK'] )
+
+  def test_Exe_Success_input_no( self ):
+    """execute: succeeds inputdata.................................................................."""
+    gLogger.setLevel("ERROR")
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
+    self.frq.fileReport = self.fr_mock
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep",
+                        ]
+    self.frq.productionID = 43321
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
+    self.assertTrue( res['OK'] )
+
+  def test_Exe_statusFalse( self ):
+    """execute: workflowStatus not OK..............................................................."""
+    gLogger.setLevel("ERROR")
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
+    self.frq.fileReport = self.fr_mock
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep",
+                        ]
+    self.frq.productionID = 43321
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.workflowStatus['OK'] = False
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
+    self.assertTrue( not res['OK'] )
+
+  def test_Exe_statusFalse_diset_err( self ):
+    """execute: workflowStatus not OK diset error..................................................."""
+    gLogger.setLevel("ERROR")
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep",
+                        ]
+    self.frq.productionID = 43321
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.workflowStatus['OK'] = False
+    self.frq.jobType = "NotSplit"
+    fr_mock = Mock(self.fr_mock)
+    fr_mock.commit.return_value = S_ERROR()
+    fr_mock.generateForwardDISET = Mock( return_value=S_ERROR("EKKE") )
+    self.frq.fileReport = fr_mock
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
+    self.assertTrue( not res['OK'] )
+
+  def test_Exe_statusFalse_diset_ok( self ):
+    """execute: workflowStatus not OK diset success................................................."""
+    gLogger.setLevel("ERROR")
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep",
+                        ]
+    self.frq.productionID = 43321
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.workflowStatus['OK'] = False
+    fr_mock = Mock(self.fr_mock)
+    fr_mock.commit.return_value = S_ERROR()
+    fr_mock.generateForwardDISET = Mock( return_value=S_OK(None) )
+    self.frq.fileReport = fr_mock
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
+    self.assertTrue( not res['OK'] )
+
+  def test_Exe_statusFalse_failoverFail( self ):
+    """execute: workflowStatus not OK failoverfailure..............................................."""
+    gLogger.setLevel("ERROR")
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      self.frq = FailoverRequest()
+    self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
+    self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0001.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0002.stdhep",
+                          "/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0003.stdhep",
+                        ]
+    self.frq.productionID = 43321
+    self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
+    self.frq.jobID = 12345
+    self.frq.generateFailoverFile = Mock(return_value=S_ERROR("No can do"))
+    self.frq.workflowStatus['OK'] = False
+    fr_mock = Mock(self.fr_mock)
+    fr_mock.commit.return_value = S_ERROR()
+    fr_mock.generateForwardDISET = Mock( return_value=S_OK(None) )
+    self.frq.fileReport = fr_mock
+    self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
+    self.frq.workflow_commons['Request'] = self.rc_mock
+    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+      res = self.frq.execute()
+    self.assertTrue( not res['OK'] )
 
   def test_Exe_genDisetRequest( self ):
     """execute: Generate Diset Request.............................................................."""

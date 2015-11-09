@@ -81,9 +81,9 @@ class FailoverRequest(ModuleBase):
     if self.InputData:
       inputFiles = self.fileReport.getFiles()
       for lfn in self.InputData:
-        if not lfn in inputFiles:
+        if lfn not in inputFiles:
           self.log.verbose('No status populated for input data %s, setting to "Unused"' % lfn)
-          result = self.fileReport.setFileStatus(int(self.productionID), lfn, 'Unused')
+          self.fileReport.setFileStatus(int(self.productionID), lfn, 'Unused')
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       self.log.info('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
@@ -108,7 +108,7 @@ class FailoverRequest(ModuleBase):
       self.log.error('Request will be generated.')
       disetResult = self.fileReport.generateForwardDISET()
       if not disetResult['OK']:
-        self.log.warn( "Could not generate Operation for file report with result:\n%s" % disetResult['Value'] )
+        self.log.warn( "Could not generate Operation for file report with result:\n%s" % disetResult['Message'] )
       else:
         if disetResult['Value'] is None:
           self.log.info( "Files correctly reported to TransformationDB" )
