@@ -5,3 +5,5 @@ Doc/*.html
 Doc/epydoc*
 Doc/api-objects.txt
 Doc/crarr.png
+.coverage
+cover
