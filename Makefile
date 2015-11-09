@@ -191,15 +191,18 @@ pseudoxml:
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
-completeDocumentation:
-	rm -rf DOC
+releasenotes:
 	python CompileReleaseNotes.py
+
+completeDocumentation: releasenotes
+	rm -rf DOC
 	python MakeDoc.py
 	rsync --delete -art DOC/ source/DOC
 	make clean
 	make html
 	@echo
 	@echo "Build finished. Now you just have to copy the files to the web"
+	@echo "or run make install"
 
 install: completeDocumentation
 	rsync -delete -artvu build/html/ /afs/cern.ch/eng/clic/data/doc/ilcdiracdoc/
