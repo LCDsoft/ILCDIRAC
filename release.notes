@@ -1,4 +1,3 @@
-
 [v25-pre1]
 
 *Core
@@ -29,6 +28,28 @@ NEW: Based on Dirac v6r13p8
 NEW: Based on Dirac v6r13p7
 
 ############################################################
+
+[v23r1p1]
+
+*Note
+
+CHANGE: Moved many scripts to different locations (ILCDIRAC-581) for easier
+  automatic generation of the documentation. This requires a re-installation of
+  the ILCDIRAC client to remove outdated files. Apart from this
+
+*Interfaces
+
+CHANGE: Removed RemoveFileAndDaughtersWhenFileHasNoAncestor.py, script superseded by one in ILCDIRAC-Ops and `DataRecoveryAgent`
+CHANGE: Moved :any:`dirac-ilc-get-info` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
+CHANGE: Moved `dirac-ilc-get-prod-log` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
+CHANGE: Moved `dirac-ilc-production-summary` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
+CHANGE: Moved `dirac-ilc-replication-transformation` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
+CHANGE: Moved `dirac-ilc-upload-gen-files` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
+
+*Core
+CHANGE: Moved `ilcdirac-version` to `Interfaces <ILCDIRAC.Interfaces.scripts>`
+CHANGE: Moved `dirac-ilc-show-software` to `Interfaces <ILCDIRAC.Interfaces.scripts>`
+CHANGE: The log file failover location was changed so that log files are not picked up by the InputDataAgent for productions
 
 [v23r0p11]
 

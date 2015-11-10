@@ -57,8 +57,7 @@ class ProductionOutputDataTestCase( unittest.TestCase ):
     result = constructProductionLFNs(commons)
     res = {'ProductionOutputData' : ["/ilc/prod/clic/test/gen/00012345/001/something_gen_12345_1234.stdhep"], 
            'LogFilePath' : ["/ilc/prod/clic/test/gen/00012345/LOG/001"],
-           'LogTargetPath' : ["/ilc/prod/clic/test/gen/00012345/LOG/00012345_1234.tar"],
-           'DebugLFNs' : []}
+           'LogTargetPath' : ["/ilc/prod/clic/test/gen/LOG/00012345/00012345_1234.tar"]}
     for key in res.keys():
       self.assertEqual( result['Value'][key], res[key])
         

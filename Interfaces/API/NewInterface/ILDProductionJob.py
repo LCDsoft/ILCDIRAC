@@ -1,5 +1,6 @@
 """
 ILD DBD specific production job utility
+Only used to submit Transformations, not usable for individual jobs
 
 :author: S. Poss
 :since: Jul 01, 2012
