@@ -1,3 +1,12 @@
+[v25-pre2]
+
+*Core
+NEW: Based on Dirac v6r14p11
+FIX: XRootStorage is working again thanks to v6r14p20
+CHANGE: Removed some deprecated and unused packages
+NEW: Added many tests and made them compatible with nosetests
+
+
 [v25-pre1]
 
 *Core
