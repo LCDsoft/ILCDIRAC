@@ -19,7 +19,8 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
     super(TestSlicPandoraAnalysis, self).setUp()
     self.spa = SLICPandoraAnalysis()
     self.mydir = "temp_dir"
-    detURL = "http://www.lcsim.org/detectors/clic_sid_cdr.zip"
+    #detURL = "http://www.lcsim.org/detectors/clic_sid_cdr.zip"
+    detURL = "https://lcd-data.web.cern.ch/lcd-data/ILCDIRACTars/testfiles/clic_sid_cdr.zip"
     self.zipfile = "clic_sid_cdr.zip"
 
     attempts = 0
