@@ -1,28 +1,31 @@
-'''Base application class. All applications
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckCollections`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.LCSIM`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Mokka`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.PostGenSelection`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Pythia`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications._Root`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOConcatenate`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLICPandora`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLIC`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard`
+'''Base application class. All applications inherit from this class.
 
-inherit from this class.
+The interfaces for the currently available applications can be found here:
+
+.. hlist::
+   :columns: 3
+
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckCollections`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.LCSIM`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Mokka`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.PostGenSelection`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Pythia`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOConcatenate`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLICPandora`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.SLIC`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato`,
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard`
 
 :author: Stephane Poss
 :author: Remi Ete

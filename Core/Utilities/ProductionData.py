@@ -8,7 +8,7 @@ according to LHCb conventions.
 
 __RCSID__ = "$Id$"
 
-import string, re, os, types, datetime
+import string, os, types, datetime
 
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames import getProdFilename
 from ILCDIRAC.Core.Utilities.LFNPathUtilities import cleanUpLFNPath
@@ -20,8 +20,11 @@ gLogger = gLogger.getSubLogger('ProductionData')
 #############################################################################
 def constructProductionLFNs(paramDict):
   """ Used for local testing of a workflow, a temporary measure until
-      LFN construction is tidied.  This works using the workflow commons for
-      on the fly construction.
+  LFN construction is tidied.  This works using the workflow commons for
+  on the fly construction.
+
+  :param dict paramDict: dictionary with at least the keys ``PRODUCTION_ID``, ``JOB_ID``, ``outputList``
+  :returns: S_OK with ``ProductionOutputData``, ``LogFilePath``, ``LogTargetPath``
   """
   result = checkForMandatoryKeys(paramDict, ['PRODUCTION_ID', 'JOB_ID', 'outputList'])
   if not result['OK']:
@@ -29,94 +32,42 @@ def constructProductionLFNs(paramDict):
   
   productionID = paramDict['PRODUCTION_ID']
   jobID = paramDict['JOB_ID']
-#  wfMode = paramDict['dataType']
-  #wfLfnprefix=paramDict['lfnprefix']
-  #wfLfnpostfix=paramDict['lfnpostfix']
-  wfMask = ""
-  # wfMask = paramDict['outputDataFileMask']
-  if not type(wfMask) == type([]):
-    wfMask = [i.lower().strip() for i in wfMask.split(';')]
   outputList = paramDict['outputList']
 
-  res = getVOfromProxyGroup()
-  #res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
-  if not res['OK']:
-    gLogger.error('Could not get VO from CS, assuming ilc')
-    vo = 'ilc'
-  else:
-    vo = res['Value']
   fileTupleList = []
-  #gLogger.verbose('wfLfnprefix = %s, wfLfnpostfix = %s, wfMask = %s, wfType=%s' %(wfLfnprefix,wfLfnpostfix,wfMask,wfType))
   gLogger.verbose('outputList %s' % (outputList))
   for info in outputList:
     #Nasty check on whether the created code parameters were not updated e.g. when changing defaults in a workflow
     fileName = info['outputFile']
     #rename to take care of correct path
     fileName = getProdFilename(fileName, int(productionID), int(jobID))
-    #index=0
-    #if not re.search('^\d',fileName[index]):
-    #  index+=1
-    #if not fileName[index]==str(productionID).zfill(8):
-    #  fileName[index]=str(productionID).zfill(8)
-    #if not fileName[index+1]==str(jobID).zfill(8):
-    #  fileName[index+1]=str(jobID).zfill(8)
     fileTupleList.append((info['outputPath'], fileName))
 
-  debugRoot = ''
-  #if inputData:
-  #  gLogger.verbose('Making lfnRootPath for job with inputdata: %s' %(inputData))
-  #  lfnRoot = _getLFNRoot(inputData,wfLfnpostfix)
-  #  debugRoot= _getLFNRoot('','debug',wfLfnpostfix)   
-  #else:
-  #  lfnRoot = _getLFNRoot('',wfLfnprefix,wfLfnpostfix)
-  #  gLogger.verbose('lfnRootPath is: %s' %(lfnRoot))
-  #  debugRoot= _getLFNRoot('','debug',wfLfnpostfix)
-  #lfnRoot = 
-  #gLogger.verbose('lfnRootPath is: %s' %(lfnRoot))
-  #if not lfnRoot:
-  #  return S_ERROR('LFN root could not be constructed')
-
-  #Get all LFN(s) to both output data and BK lists at this point (fine for BK)
+  #Get all LFN(s) to output data
   outputData = []
-  #bkLFNs = []
-  debugLFNs = []
   for fileTuple in fileTupleList:
-    #lfn = _makeProductionLfn(str(jobID).zfill(8),lfnRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8))
     lfn = fileTuple[0] + "/" + str(productionID).zfill(8) + "/" + str(int(jobID)/1000).zfill(3) + "/" + fileTuple[1]
     lfn = cleanUpLFNPath(lfn)
     outputData.append(lfn)
-    #bkLFNs.append(lfn)
-    if debugRoot:
-      #debugLFNs.append(_makeProductionLfn(str(jobID).zfill(8),debugRoot,fileTuple,wfLfnprefix,str(productionID).zfill(8)))
-      debugLFNs.append("/" + vo + "/prod/debug/" + str(productionID).zfill(8))
-  #if debugRoot:
-  # debugLFNs.append(_makeProductionLfn(str(jobID).zfill(8),debugRoot,('%s_core' % str(jobID).zfill(8) ,'core'),wfLfnprefix,str(productionID).zfill(8)))
 
   #Get log file path - unique for all modules
-  #logPath = _makeProductionPath(str(jobID).zfill(8),lfnRoot,'LOG',wfLfnprefix,str(productionID).zfill(8),log=True)
-  logPathtemp = fileTupleList[0][0]
-  #logPathroot = string.join(logPathtemp[0:len(logPathtemp)-1], "/")
-  #TODO adjust for ILD
-  logPath = logPathtemp + "/" + str(productionID).zfill(8) + "/LOG"
-  logFilePath = [cleanUpLFNPath('%s/%s' % (logPath, str(int(jobID)/1000).zfill(3)))]
-  logTargetPath = [cleanUpLFNPath('%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3)))]
-  #[ aside, why does makeProductionPath not append the jobID itself ????
-  #  this is really only used in one place since the logTargetPath is just written to a text file (should be reviewed)... ]
 
-  #Strip output data according to file mask
-  if wfMask:
-    newOutputData = []
-    #newBKLFNs = []
-    for od in outputData:
-      for i in wfMask:
-        if re.search('.%s$' % i, od):
-          if not od in newOutputData:
-            newOutputData.append(od)
-            
-    #for bk in bkLFNs:
-    #  newBKLFNs.append(bk)
-    outputData = newOutputData
-    #bkLFNs = newBKLFNs
+  ## get First outputfile
+  basePath = fileTupleList[0][0]
+  #TODO adjust for ILD
+  logPath = basePath + "/" + str(productionID).zfill(8) + "/LOG"
+
+  #used for logFile upload to the LogSE
+  logFilePath = [cleanUpLFNPath('%s/%s' % (logPath, str(int(jobID)/1000).zfill(3)))]
+
+  resLogs = getLogPath( dict(PRODUCTION_ID=productionID,
+                             JOB_ID=jobID,
+                             LogFilePath=logFilePath), basePath=basePath )
+  gLogger.error(resLogs)
+  if not resLogs['OK']:
+    return resLogs
+  logTargetPath = resLogs['Value']['LogTargetPath']
+  logFilePath = resLogs['Value']['LogFilePath']
 
   if not outputData:
     gLogger.info('No output data LFN(s) constructed')
@@ -124,17 +75,17 @@ def constructProductionLFNs(paramDict):
     gLogger.verbose('Created the following output data LFN(s):\n%s' % (string.join(outputData,'\n')))
   gLogger.verbose('Log file path is:\n%s' % logFilePath[0])
   gLogger.verbose('Log target path is:\n%s' % logTargetPath[0])
-  #if bkLFNs:
-  #  gLogger.verbose('BookkeepingLFN(s) are:\n%s' %(string.join(bkLFNs,'\n')))
-  if debugLFNs:
-    gLogger.verbose('DebugLFN(s) are:\n%s' % (string.join(debugLFNs, '\n')))
-  jobOutputs = {'ProductionOutputData' : outputData, 'LogFilePath' : logFilePath,
-                'LogTargetPath' : logTargetPath, 'DebugLFNs' : debugLFNs}
+  jobOutputs = {'ProductionOutputData' : outputData, 'LogFilePath' : logFilePath, 'LogTargetPath' : logTargetPath}
   return S_OK(jobOutputs)
 
 #############################################################################
-def getLogPath(paramDict):
+def getLogPath(paramDict, basePath=None):
   """ Can construct log file paths even if job fails e.g. no output files available.
+
+  :param dict paramDict: dictionary with at least the keys ``PRODUCTION_ID``, ``JOB_ID``, ``LogFilePath``
+  :param string basePath: Optional, base path for the log file failover, of not set LogFilePath
+    from paramDict is used as a base
+  :returns: S_OK with dict with LogFilePath and LogTargetPath
   """
   result = checkForMandatoryKeys(paramDict, ['PRODUCTION_ID', 'JOB_ID', 'LogFilePath'])
   if not result['OK']:
@@ -142,13 +93,17 @@ def getLogPath(paramDict):
 
   productionID = paramDict['PRODUCTION_ID']
   jobID = paramDict['JOB_ID']
-  #need to built logPath from logFilePath, as it's not there, and must be as in method above
-  logPathtemp = cleanUpLFNPath(paramDict['LogFilePath']).split("/")
-  logPath = "/"+os.path.join(*logPathtemp[0:-1])
-  logFilePath = paramDict['LogFilePath']
-  logTargetPath = ['%s/%s_%s.tar' % (logPath, str(productionID).zfill(8), str(int(jobID)/1000).zfill(3))]
-  #Get log file path - unique for all modules
+  logFileName = "%s_%s.tar" %( str(productionID).zfill(8), str(int(jobID)).zfill(4) )
+  if basePath:
+    logTargetPath = [ cleanUpLFNPath( os.path.join( basePath, "LOG", str(productionID).zfill(8), logFileName ) ) ]
+  else:
+    #need to built logPath from logFilePath, as it's not there, and must be as in method above
+    logPathtemp = cleanUpLFNPath(paramDict['LogFilePath']).split("/")
+    logPath = "/"+os.path.join(*logPathtemp[0:-1])
+    logTargetPath = ['%s/%s_%s.tar' % ( logPath, str(productionID).zfill(8), str(int(jobID)).zfill(3))]
 
+  #this is not doing anything except return the same string as was passed into the function
+  logFilePath = paramDict['LogFilePath']
   gLogger.verbose('Log file path is: %s' % logFilePath)
   gLogger.verbose('Log target path is: %s' % logTargetPath)
   jobOutputs = {'LogFilePath' : logFilePath, 'LogTargetPath' : logTargetPath}
@@ -157,11 +112,19 @@ def getLogPath(paramDict):
 #############################################################################
 def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
   """ This method is used to supplant the standard job wrapper output data policy
-      for ILC.  The initial convention adopted for user output files is the following:
-      If outputpath is not defined:
-      <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<yearMonth e.g. 2010_02>/<subdir>/<fileName>
-      Otherwise:
-      <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<outputPath>/<fileName>
+  for ILC.  The initial convention adopted for user output files is the following:
+
+  If outputpath is not defined:
+   * <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<yearMonth e.g. 2010_02>/<subdir>/<fileName>
+  Otherwise:
+   * <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<outputPath>/<fileName>
+
+  :param int jobID: the jobID
+  :param string vo: the vo of the owners proxy
+  :param string owner: the username
+  :param list outputFiles: the list of outputfiles found for the job
+  :param string outputPath: the outputpath defined for the job
+  :returns: S_OK with list of output file lfns
   """
   initial = owner[:1]
   subdir = str(jobID/1000)  
@@ -169,7 +132,6 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
   yearMonth = '%s_%s' % (timeTup[0], string.zfill(str(timeTup[1]), 2))
   outputLFNs = {}
   if not vo:
-    #res = gConfig.getOption("/DIRAC/VirtualOrganization", "ilc")
     res = getVOfromProxyGroup()
     if not res['OK']:
       gLogger.error('Could not get VO from CS, assuming ilc')
@@ -276,7 +238,12 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
 
 
 def checkForMandatoryKeys(paramDict, keys):
-  """checks for Mandatory Keys in the paramdict"""
+  """checks for mandatory keys in the paramDict
+
+  :param dict paramDict: dictionary to check for mandatory ``keys``
+  :param list keys: list of keys that need to be in ``paramDict``
+  :returns: S_OK, S_ERROR
+  """
   for k in keys:
     if not k in paramDict:
       return S_ERROR('%s not defined' % k)
