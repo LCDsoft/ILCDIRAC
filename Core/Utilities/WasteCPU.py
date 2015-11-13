@@ -19,8 +19,6 @@ def wasteCPUCycles(timecut):
       number = log(number)
     except ValueError as x:
       return S_ERROR("Failed to waste %s CPU seconds:%s" % (timecut, str(x)))
-    if number < 0:
-      number = -number
-    if number == 0:
-      number = 4
+    if number <= 0:
+      number = -number + 4
   return S_OK("Successfully wasted %s seconds" % timecut)
