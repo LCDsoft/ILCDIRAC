@@ -104,7 +104,7 @@ class UserJob(Job):
     """ Add files to the input sandbox, can be on the local machine or on the grid
 
     >>> job = UserJob()
-    >>> job.setInputSandBox( ['LFN:/ilc/user/u/username/libraries.tar.gz',
+    >>> job.setInputSandbox( ['LFN:/ilc/user/u/username/libraries.tar.gz',
     >>>                       'mySteeringFile.xml'] )
 
     :param flist: Files for the inputsandbox
