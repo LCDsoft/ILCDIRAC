@@ -57,7 +57,7 @@ class Marlin(LCApplication):
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
 
-    :param string gearFile: input gear file for Marlin reconstrcutor
+    :param string gearFile: input gear file for Marlin reconstructor
     """
     self._checkArgs( { 'gearFile' : types.StringTypes } )
 

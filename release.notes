@@ -36,6 +36,9 @@ CHANGE: Moved `dirac-ilc-production-summary` to `ILCTransformationSystem <ILCDIR
 CHANGE: Moved `dirac-ilc-replication-transformation` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 CHANGE: Moved `dirac-ilc-upload-gen-files` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 
+FIX: Updated `Marlin` documentation
+FIX: Fix a typo `UserJob.setInputSandbox` documentation
+
 *Core
 CHANGE: Moved `ilcdirac-version` to `Interfaces <ILCDIRAC.Interfaces.scripts>`
 CHANGE: Moved `dirac-ilc-show-software` to `Interfaces <ILCDIRAC.Interfaces.scripts>`
