@@ -363,11 +363,4 @@ def unzip_file_into_dir(myfile, mydir):
   """Used to unzip the downloaded detector model
   """
   zfobj = zipfile.ZipFile(myfile)
-  for name in zfobj.namelist():
-    newPath = os.path.join(mydir, name)
-    if name.endswith('/'):
-      if not os.path.exists(newPath):
-        os.mkdir(newPath)
-    else:
-      with open(newPath, 'wb') as outfile:
-        outfile.write(zfobj.read(name))
+  zfobj.extractall(path=mydir)
