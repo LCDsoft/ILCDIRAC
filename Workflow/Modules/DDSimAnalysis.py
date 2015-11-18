@@ -196,7 +196,7 @@ class DDSimAnalysis(ModuleBase):
     env_name = "DDSimEnv.sh"
 
     script = []
-    script.append("#/bin/bash")
+    script.append("#!/bin/bash")
     script.append("##########################")
     script.append("## Env script for DDSim ##")
     script.append("##########################")
@@ -205,11 +205,16 @@ class DDSimAnalysis(ModuleBase):
     script.append('declare -x PATH=%s/bin:$PATH' % mySoftwareRoot )
 
     ## ROOTSYS
-    script.append('declare -x ROOTSYS=%s/ROOT' % mySoftwareRoot )
-    
+    #FIXME: Get rootversion from the CS and CVMFS
+    script.append('declare -x ROOTSYS=/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30' )
+
+    ##G4INSTALL
+    #FIXME Get Geant4 version from the CS
+    script.append('declare -x G4INSTALL=/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01' )
+
     ##Python objects, pyroot
     script.append('declare -x PYTHONPATH=%s/lib/python:$PYTHONPATH' % mySoftwareRoot )
-    script.append('declare -x PYTHONPATH=%s/ROOT/lib:$PYTHONPATH' % mySoftwareRoot )
+    script.append('declare -x PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH' )
 
     ##Libraries
     if new_ld_lib_path:
@@ -219,10 +224,14 @@ class DDSimAnalysis(ModuleBase):
     if os.path.exists("%s/lib" % (mySoftwareRoot)):
       script.append('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH' % (mySoftwareRoot))
 
+    script.append('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH')
+    script.append('declare -x PATH=$ROOTSYS/bin:$PATH')
+
+    script.append('declare -x LD_LIBRARY_PATH=$G4INSTALL/lib64:$LD_LIBRARY_PATH')
+
     #FIXME: get DataFolder from the ConfigSystem
     ## Geant 4 datafiles
-    geantDataFolder="/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data/"
-    script.append('declare -x GEANT4_DATA_ROOT=%s' % geantDataFolder )
+    script.append('declare -x GEANT4_DATA_ROOT=$G4INSTALL/share/Geant4-10.1.0/data' )
     ###mandatory geant 4 data
     script.append('declare -x G4LEDATA=$(ls -d $GEANT4_DATA_ROOT/G4EMLOW*)')
     script.append('declare -x G4LEVELGAMMADATA=$(ls -d $GEANT4_DATA_ROOT/PhotonEvaporation*)')
@@ -242,7 +251,7 @@ class DDSimAnalysis(ModuleBase):
   def _getDetectorXML( self ):
     """return the path to the detector XML file"""
     #FIXME
-    return S_OK("/data/sailer/DiracLocalArea/ddsimtestVersion/%s/%s"% (self.detectorModel,self.detectorModel+".xml") )
+    return S_OK("/data/sailer/DiracLocalArea/ddsimtestVersion/detectors/%s/%s"% (self.detectorModel,self.detectorModel+".xml") )
 
     if not os.path.exists(self.detectorModel + ".zip"):
       self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
