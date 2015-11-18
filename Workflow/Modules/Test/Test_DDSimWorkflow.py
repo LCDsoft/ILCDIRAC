@@ -145,6 +145,17 @@ class TestDDSimAnalysis( unittest.TestCase ):
     self.ddsim.applicationSpecificInputs()
     self.assertEqual( int(self.ddsim.randomSeed), 0)
 
+  @patch.dict(os.environ, {"JOBID": "12345"} )
+  def test_DDSim_ASI_InputFiles( self ):
+    """DDSim.applicationSpecificInputs: check setting inputData....................................."""
+    gLogger.setLevel("ERROR")
+    self.ddsim = DDSimAnalysis()
+    self.ddsim.InputData = ["myslcio.slcio","mystdhep.HEPEvt","my.notforsimulation"]
+    self.ddsim.workflow_commons = dict()
+    self.ddsim.resolveInputVariables()
+    self.ddsim.applicationSpecificInputs()
+    self.assertEqual( self.ddsim.InputFile, ["myslcio.slcio","mystdhep.HEPEvt"] )
+
 def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysis )
