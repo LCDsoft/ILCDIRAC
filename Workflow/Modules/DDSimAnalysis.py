@@ -49,7 +49,7 @@ class DDSimAnalysis(ModuleBase):
     ##Move below to ModuleBase as common to Mokka
     self.randomSeed = self.determineRandomSeed()
 
-    if self.workflow_commons.has_key("IS_PROD") and self.workflow_commons["IS_PROD"]:
+    if "IS_PROD" in self.workflow_commons and self.workflow_commons["IS_PROD"]:
       self.OutputFile = getProdFilename(self.OutputFile,
                                         int(self.workflow_commons["PRODUCTION_ID"]),
                                         int(self.workflow_commons["JOB_ID"]))
