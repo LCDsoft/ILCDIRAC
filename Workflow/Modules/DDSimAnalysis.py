@@ -98,6 +98,7 @@ class DDSimAnalysis(ModuleBase):
     #get the path to the detector model, either local or from the software
     resXML = self._getDetectorXML()
     if not resXML['OK']:
+      self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
       return resXML
     compactFile = resXML['Value']
 
@@ -175,7 +176,7 @@ class DDSimAnalysis(ModuleBase):
       self.log.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed to produce log file' % (self.applicationName))
       if not self.ignoreapperrors:
-        return S_ERROR('%s did not produce the expected log' % (self.applicationName))
+        return S_ERROR('%s did not produce the expected log %s' % (self.applicationName, self.applicationLog))
     status = resultTuple[0]
 
     self.log.info( "Status after the application execution is %s" % status )
