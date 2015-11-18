@@ -184,6 +184,50 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Value'], xmlPath )
 
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  def test_DDSim_getDetectorXML_relPatg( self ):
+    """DDSim.applicationSpecificInputs: getDetectorXML from CS with relative path..................."""
+    gLogger.setLevel("ERROR")
+    xmlPath = "rel/path/to/camelot.xml"
+    self.ddsim.detectorModel = "camelot"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(camelot=xmlPath ) ) )
+    self.ddsim.workflow_commons = dict()
+    res = self.ddsim._getDetectorXML()
+    self.assertEqual( res['Value'], os.path.join("/win32",xmlPath) )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  def test_DDSim_getDetectorXML_Fail( self ):
+    """DDSim.applicationSpecificInputs: getDetectorXML Failure......................................"""
+    gLogger.setLevel("ERROR")
+    xmlPath = "/path/to/camelot.xml"
+    self.ddsim.detectorModel = "fortressOfSolitude"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(camelot=xmlPath ) ) )
+    self.ddsim.workflow_commons = dict()
+    res = self.ddsim._getDetectorXML()
+    self.assertFalse( res['OK'] )
+    self.assertEqual( res['Message'], "Detector model was not found" )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR("Windows not supported") ) )
+  def test_DDSim_getDetectorXML_NoSoftFolder( self ):
+    """DDSim.applicationSpecificInputs: getDetectorXML Error no SoftwareFolder......................"""
+    gLogger.setLevel("ERROR")
+    xmlPath = "/path/to/camelot.xml"
+    self.ddsim.detectorModel = "camelot"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(camelot=xmlPath ) ) )
+    self.ddsim.workflow_commons = dict()
+    res = self.ddsim._getDetectorXML()
+    self.assertEqual( res['Message'], "Windows not supported" )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32" ) ))
+  def test_DDSim_getDetectorXML_NoDetModels( self ):
+    """DDSim.applicationSpecificInputs: getDetectorXML Error no detectorModels......................"""
+    gLogger.setLevel("ERROR")
+    self.ddsim.detectorModel = "camelot"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_ERROR("Nothing to see" ) )
+    self.ddsim.workflow_commons = dict()
+    res = self.ddsim._getDetectorXML()
+    self.assertEqual( res['Message'], "Failed to get list of DetectorModels from the ConfigSystem" )
+
 class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
   """tests for _getDetectorXML """
   def setUp( self ):
