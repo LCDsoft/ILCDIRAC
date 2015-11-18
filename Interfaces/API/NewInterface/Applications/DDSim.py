@@ -46,7 +46,7 @@ class DDSim( LCApplication ):
 
 
   def setRandomSeed(self, randomSeed):
-    """ Optional: Define random seed to use. Default is 0.
+    """ Optional: Define random seed to use. Default is the jobID.
 
     :param int randomSeed: Seed to use during simulation.
     """
@@ -155,7 +155,7 @@ class DDSim( LCApplication ):
   def _applicationModule(self):
 
     md1 = self._createModuleDefinition()
-    md1.addParameter(Parameter("RandomSeed",           0,    "int", "", "", False, False,
+    md1.addParameter(Parameter("randomSeed",           0,    "int", "", "", False, False,
                                "Random seed for the generator"))
     md1.addParameter(Parameter("detectorModel",       "", "string", "", "", False, False,
                                "Detecor model for simulation"))

@@ -32,7 +32,7 @@ class DDSimAnalysis(ModuleBase):
     self.result = S_ERROR()
     self.applicationName = 'ddsim'
     self.startFrom = 0
-    self.randomSeed = 0
+    self.randomSeed = -1
     self.detectorModel = ''
     self.eventstring = ['BeginEvent'] #FIXME
 
@@ -46,10 +46,7 @@ class DDSimAnalysis(ModuleBase):
       self.startFrom = self.WorkflowStartFrom
 
     ##Move below to ModuleBase as common to Mokka
-    if "IS_PROD" in self.workflow_commons:
-      self.randomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
-    elif self.jobID:
-      self.randomSeed = self.jobID
+    self.randomSeed = self.determineRandomSeed()
 
     if self.workflow_commons.has_key("IS_PROD") and self.workflow_commons["IS_PROD"]:
       self.OutputFile = getProdFilename(self.OutputFile,
@@ -140,6 +137,8 @@ class DDSimAnalysis(ModuleBase):
 
     if self.NumberOfEvents:
       self.extraCLIarguments += " --numberOfEvents %s" % self.NumberOfEvents
+
+    self.extraCLIarguments += " --random.seed %s" % self.randomSeed
 
     scriptName = 'DDSim_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName):
@@ -298,3 +297,12 @@ class DDSimAnalysis(ModuleBase):
       pass
 
     return S_ERROR("getDetectorXML: how did we get this far")
+
+
+  def determineRandomSeed(self):
+    """determine what the randomSeed should be, depends on production or not"""
+    if self.randomSeed == -1:
+      self.randomSeed = self.jobID
+    if "IS_PROD" in self.workflow_commons:
+      self.randomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
+    return self.randomSeed
