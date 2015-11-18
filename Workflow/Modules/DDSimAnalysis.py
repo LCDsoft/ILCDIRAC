@@ -19,7 +19,7 @@ from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFile
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
-DDSIMINPUTFORMATS = ('.stdhep', '.hepevt', '.HEPEvt', '.slcio')
+DDSIMINPUTFORMATS = ('.stdhep', '.hepevt', '.HEPEvt', '.slcio', '.hepmc')
 
 class DDSimAnalysis(ModuleBase):
   """
