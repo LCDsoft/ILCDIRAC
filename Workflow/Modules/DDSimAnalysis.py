@@ -278,21 +278,20 @@ class DDSimAnalysis(ModuleBase):
       self.log.info( "Found path for DetectorModel %s in CS: %s "  % ( self.detectorModel, detModelPath ) )
       return S_OK(detModelPath)
 
-    if not os.path.exists(self.detectorModel + ".zip") and not os.path.exists(self.detectorModel + ".tar.gz"):
-      self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
-      return S_ERROR('Detector model was not found')
-
     if os.path.exists(self.detectorModel + ".zip"):
       return self._extractZip()
     elif os.path.exists(self.detectorModel + ".tar.gz"):
       return self._extractTar()
+    elif os.path.exists(self.detectorModel + ".tgz"):
+      return self._extractTar( extension=".tgz" )
+    else:
+      self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
+      return S_ERROR('Detector model was not found')
 
-    return S_ERROR("getDetectorXML: how did we get this far")
-
-  def _extractTar( self ):
+  def _extractTar( self, extension=".tar.gz" ):
     """ extract the detector tarball for the detectorModel """
     try:
-      detTar = tarfile.open(self.detectorModel + ".tar.gz", "r:gz")
+      detTar = tarfile.open(self.detectorModel + extension, "r:gz")
       detTar.extractall()
       xmlPath = os.path.abspath(os.path.join(self.detectorModel, self.detectorModel+".xml") )
       return S_OK(xmlPath)

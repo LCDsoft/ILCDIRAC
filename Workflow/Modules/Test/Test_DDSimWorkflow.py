@@ -2,6 +2,8 @@
 """Test the DDSim WorkflowModule"""
 __RCSID__ = "$Id$"
 
+#pylint: disable=R0904, W0212
+
 import unittest
 import os
 import shutil
@@ -71,7 +73,7 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
     appversion = "Vista"
     self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(KNIGHTSWORD="Ni",
                                                                     WHEN="Always"
-                                                                  )
+                                                                   )
                                                              )
                                         )
     res = self.ddsim.getEnvScript( platform, appname, appversion )
@@ -87,7 +89,7 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
     appversion = "Vista"
     self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(KNIGHTSWORK="Ni",
                                                                     WHEN="Always"
-                                                                  )
+                                                                   )
                                                              )
                                         )
     with patch("os.path.exists", new=Mock(return_value=True ) ):
@@ -171,7 +173,6 @@ class TestDDSimAnalysisASI( TestDDSimAnalysis ):
 class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
   """tests for _getDetectorXML """
 
-  @patch.dict(os.environ, {"JOBID": "12345"} )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML( self ):
     """DDSim.applicationSpecificInputs: getDetectorXML from CS......................................"""
@@ -197,7 +198,6 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
       tar.add(xmlPath)
     cleanup(self.ddsim.detectorModel)
 
-  @patch.dict(os.environ, {"JOBID": "12345"} )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ( self ):
     """DDSim.applicationSpecificInputs: getDetectorXML with local tar.gz............................"""
@@ -211,7 +211,6 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
     self.assertEqual( res['Value'], expectedPath )
     self.assertTrue( os.path.exists( expectedPath ) )
 
-  @patch.dict(os.environ, {"JOBID": "12345"} )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ_2( self ):
     """DDSim.applicationSpecificInputs: getDetectorXML with local tar.gz run twice.................."""
@@ -221,6 +220,20 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
     self.ddsim.workflow_commons = dict()
     res = self.ddsim._extractTar()
     res = self.ddsim._extractTar()
+    gLogger.error( " res " , res )
+    expectedPath = os.path.join(os.getcwd(), self.ddsim.detectorModel, self.ddsim.detectorModel+".xml" )
+    self.assertEqual( res['Value'], expectedPath )
+    self.assertTrue( os.path.exists( expectedPath ) )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  def test_DDSim_getDetectorXML_Local_TGZ_2( self ):
+    """DDSim.applicationSpecificInputs: getDetectorXML with local tgz..............................."""
+    gLogger.setLevel("ERROR")
+    self.ddsim.detectorModel = "myDet"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(camelot="/dev/null" ) ) )
+    self.ddsim.workflow_commons = dict()
+    os.rename( "myDet.tar.gz", "myDet.tgz" )
+    res = self.ddsim._getDetectorXML()
     gLogger.error( " res " , res )
     expectedPath = os.path.join(os.getcwd(), self.ddsim.detectorModel, self.ddsim.detectorModel+".xml" )
     self.assertEqual( res['Value'], expectedPath )
@@ -241,7 +254,6 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
       zipF.write(xmlPath)
     cleanup(self.ddsim.detectorModel)
 
-  @patch.dict(os.environ, {"JOBID": "12345"} )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ( self ):
     """DDSim.applicationSpecificInputs: getDetectorXML with local zip..............................."""
@@ -255,7 +267,6 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
     self.assertEqual( res['Value'], expectedPath )
     self.assertTrue( os.path.exists( expectedPath ) )
 
-  @patch.dict(os.environ, {"JOBID": "12345"} )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ_2( self ):
     """DDSim.applicationSpecificInputs: getDetectorXML with local zip run twice....................."""
@@ -273,9 +284,9 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
 def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysis )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisDetXMLTar ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisDetXMLZip ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisDetXMLCS ) )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisDetXMLTar ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisEnv ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisASI ) )
 
