@@ -30,7 +30,7 @@ class DDSimAnalysis(ModuleBase):
     self.STEP_NUMBER = ''
     self.log = gLogger.getSubLogger( "DDSimAnalysis" )
     self.result = S_ERROR()
-    self.applicationName = 'SLIC'
+    self.applicationName = 'ddsim'
     self.startFrom = 0
     self.randomSeed = 0
     self.detectorModel = ''
@@ -182,18 +182,19 @@ class DDSimAnalysis(ModuleBase):
 
     return self.finalStatusReport(status)
 
-  def getEnvScript(self, sysconfig, appname, appversion):
-    """ This is called in case CVMFS is not there.
-    FIXME
+  def getEnvScript(self, platform, appname, appversion):
+    """ Create an environment script for ddsim. Only used when CVMFS native installation not available
+
+    We need ROOTSYS, G4INSTALL and G4DATA as additional environment variables in the CS
+
     """
     ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = getNewLDLibs(sysconfig, appname, appversion)
-    softwareFolder = getSoftwareFolder("x86_64-slc5-gcc43-opt", appname, appversion)
+    newLDLibraryPath = getNewLDLibs(platform, appname, appversion)
+    softwareFolder = getSoftwareFolder(platform, appname, appversion)
     if not softwareFolder['OK']:
       return softwareFolder
-    mySoftwareRoot = softwareFolder['Value']
-    print "mySoftwareRoot",mySoftwareRoot
-    env_name = "DDSimEnv.sh"
+    softwareRoot = softwareFolder['Value']
+    envName = "DDSimEnv.sh"
 
     script = []
     script.append("#!/bin/bash")
@@ -201,67 +202,99 @@ class DDSimAnalysis(ModuleBase):
     script.append("## Env script for DDSim ##")
     script.append("##########################")
 
+    addEnv = self.ops.getOptionsDict("/AvailableTarBalls/%s/%s/%s/AdditionalEnvVar" % (platform,
+                                                                                       appname,
+                                                                                       appversion))
+
+    if addEnv['OK']:
+      for variable, value in addEnv['Value'].iteritems():
+        script.append('declare -x %s=%s' % (variable, value))
+    else:
+      self.log.verbose("No additional environment variables needed for this application")
+
     ##Executable:
-    script.append('declare -x PATH=%s/bin:$PATH' % mySoftwareRoot )
-
-    ## ROOTSYS
-    #FIXME: Get rootversion from the CS and CVMFS
-    script.append('declare -x ROOTSYS=/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30' )
-
-    ##G4INSTALL
-    #FIXME Get Geant4 version from the CS
-    script.append('declare -x G4INSTALL=/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01' )
+    script.append('declare -x PATH=%s/bin:$PATH' % softwareRoot )
 
     ##Python objects, pyroot
-    script.append('declare -x PYTHONPATH=%s/lib/python:$PYTHONPATH' % mySoftwareRoot )
+    script.append('declare -x PYTHONPATH=%s/lib/python:$PYTHONPATH' % softwareRoot )
     script.append('declare -x PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH' )
 
     ##Libraries
-    if new_ld_lib_path:
-      script.append('declare -x LD_LIBRARY_PATH=%s' % new_ld_lib_path)
+    if newLDLibraryPath:
+      script.append('declare -x LD_LIBRARY_PATH=%s' % newLDLibraryPath)
 
-    #FIXME: Setup LD_LIBRARY_PATH FOR Extensions
-    if os.path.exists("%s/lib" % (mySoftwareRoot)):
-      script.append('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH' % (mySoftwareRoot))
+    ## user provided libraries are in lib in the job working directory
+    if os.path.exists( "%s/lib" % os.getcwd() ):
+      script.append('declare -x LD_LIBRARY_PATH=%s/lib:$LD_LIBRARY_PATH' % os.getcwd() )
 
-    script.append('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH')
+    ##Root Path, just in case
     script.append('declare -x PATH=$ROOTSYS/bin:$PATH')
 
+    ##Root and Geant4 Library Path
+    script.append('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH')
     script.append('declare -x LD_LIBRARY_PATH=$G4INSTALL/lib64:$LD_LIBRARY_PATH')
 
-    #FIXME: get DataFolder from the ConfigSystem
-    ## Geant 4 datafiles
-    script.append('declare -x GEANT4_DATA_ROOT=$G4INSTALL/share/Geant4-10.1.0/data' )
     ###mandatory geant 4 data
-    script.append('declare -x G4LEDATA=$(ls -d $GEANT4_DATA_ROOT/G4EMLOW*)')
-    script.append('declare -x G4LEVELGAMMADATA=$(ls -d $GEANT4_DATA_ROOT/PhotonEvaporation*)')
-    script.append('declare -x G4NEUTRONXSDATA=$(ls -d $GEANT4_DATA_ROOT/G4NEUTRONXS*)')
-    script.append('declare -x G4SAIDXSDATA=$(ls -d $GEANT4_DATA_ROOT/G4SAIDDATA*)')
+    script.append('declare -x G4LEDATA=$(ls -d $G4DATA/G4EMLOW*)')
+    script.append('declare -x G4LEVELGAMMADATA=$(ls -d $G4DATA/PhotonEvaporation*)')
+    script.append('declare -x G4NEUTRONXSDATA=$(ls -d $G4DATA/G4NEUTRONXS*)')
+    script.append('declare -x G4SAIDXSDATA=$(ls -d $G4DATA/G4SAIDDATA*)')
     ### not mandatory, needed for Neutron HP
-    script.append('declare -x G4RADIOACTIVEDATA=$(ls -d $GEANT4_DATA_ROOT/RadioactiveDecay*)')
-    script.append('declare -x G4NEUTRONHPDATA=$(ls -d $GEANT4_DATA_ROOT/G4NDL*)')
+    script.append('declare -x G4RADIOACTIVEDATA=$(ls -d $G4DATA/RadioactiveDecay*)')
+    script.append('declare -x G4NEUTRONHPDATA=$(ls -d $G4DATA/G4NDL*)')
 
-    with open(env_name,"w") as scriptFile:
+    with open(envName,"w") as scriptFile:
       scriptFile.write( "\n".join(script) )
       scriptFile.write( "\n" )
 
-    os.chmod(env_name, 0755)
-    return S_OK(os.path.abspath(env_name))
+    os.chmod(envName, 0755)
+    return S_OK(os.path.abspath(envName))
 
   def _getDetectorXML( self ):
-    """return the path to the detector XML file"""
-    #FIXME
-    return S_OK("/data/sailer/DiracLocalArea/ddsimtestVersion/detectors/%s/%s"% (self.detectorModel,self.detectorModel+".xml") )
+    """returns the path to the detector XML file
 
-    if not os.path.exists(self.detectorModel + ".zip"):
+    Checks the Configurartion System for the Path to DetectorModels or extracts the input sandbox detector xml files
+
+    :returns: S_OK(PathToXMLFile), S_ERROR
+    """
+
+    detectorModels = self.ops.getOptionsDict("/AvailableTarBalls/%s/%s/%s/DetectorModels" % (self.platform,
+                                                                                             self.applicationName,
+                                                                                             self.applicationVersion))
+
+    softwareFolder = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
+    if not softwareFolder['OK']:
+      return softwareFolder
+    softwareRoot = softwareFolder['Value']
+
+    if not detectorModels['OK']:
+      self.log.error("Failed to get list of DetectorModels from the ConfigSystem", detectorModels['Message'])
+      return S_ERROR("Failed to get list of DetectorModels from the ConfigSystem")
+
+    if self.detectorModel in detectorModels['Value']:
+      detModelPath = detectorModels['Value'][self.detectorModel]
+      if not detModelPath.startswith("/"):
+        detModelPath = os.path.join( softwareRoot, detModelPath )
+      self.log.info( "Found path for DetectorModel %s in CS: %s "  % ( self.detectorModel, detModelPath ) )
+      return S_OK(detModelPath)
+
+    if not os.path.exists(self.detectorModel + ".zip") and not os.path.exists(self.detectorModel + ".tar.gz"):
       self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
       return S_ERROR('Detector model was not found')
 
-    try:
-      unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
-    except (RuntimeError, OSError) as err: #RuntimeError is for zipfile
-      os.unlink(self.detectorModel + ".zip")
-      self.log.error('Failed to unzip detector model: ', str(err))
-      return S_ERROR('Failed to unzip detector model')
-    #unzip detector model
-    #self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
+    if os.path.exists(self.detectorModel + ".zip"):
+      try:
+        unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
+        return S_OK( os.path.join(os.getcwd(), self.detectorModel) )
+      except (RuntimeError, OSError) as err: #RuntimeError is for zipfile
+        os.unlink(self.detectorModel + ".zip")
+        self.log.error('Failed to unzip detector model: ', str(err))
+        return S_ERROR('Failed to unzip detector model')
+
+      #unzip detector model
+      #self.unzip_file_into_dir(open(self.detectorModel+".zip"),os.getcwd())
+    elif os.path.exists(self.detectorModel + ".tar.gz"):
+      #FIXME: implement tarballs
+      pass
+
+    return S_ERROR("getDetectorXML: how did we get this far")
