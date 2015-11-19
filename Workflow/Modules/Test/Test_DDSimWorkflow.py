@@ -32,6 +32,10 @@ def cleanup(tempdir):
 class TestDDSimAnalysis( unittest.TestCase ):
   """ test DDSimAnalysis """
 
+  def assertIn(self, *args, **kwargs):
+    """make this existing to placate pylint"""
+    return super(TestDDSimAnalysis, self).assertIn(*args, **kwargs)
+
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   def setUp( self ):
@@ -90,6 +94,7 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
     self.assertEqual( self.ddsim.InputFile, "pairs.hepmc" )
+    self.assertIn( " --inputFile pairs.hepmc " , self.ddsim.extraCLIarguments )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
@@ -118,6 +123,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
     self.assertEqual( self.ddsim.SteeringFile, "mySteering.py" )
+    steerFlag = " --steeringFile %s " % self.ddsim.SteeringFile
+    self.assertIn( steerFlag, self.ddsim.extraCLIarguments )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
@@ -132,7 +139,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
-    self.assertEqual( self.ddsim.SteeringFile, os.path.join("SteerFold", "mySteering.py" ) )
+    fullPath = os.path.join("SteerFold", "mySteering.py" )
+    self.assertEqual( self.ddsim.SteeringFile, fullPath )
+    steerFlag = " --steeringFile %s " % fullPath
+    self.assertIn( steerFlag,  self.ddsim.extraCLIarguments )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
@@ -163,6 +173,45 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertFalse( res['OK'] )
     self.assertEqual( res['Message'], "Could not find steering file" )
+
+
+  #######################
+  # Test NumberOfEvents #
+  #######################
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  def test_DDSim_runIt_success_numberOfEvents_1(self):
+    """DDSim.runit success with NumberOfEvents set.................................................."""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.SteeringFile = "mySteering.py"
+    self.ddsim.NumberOfEvents = 123
+    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+      res = self.ddsim.runIt()
+    self.assertTrue( res['OK'] )
+    self.assertIn( " --numberOfEvents 123 ", self.ddsim.extraCLIarguments )
+
+  ###################
+  # Test OutputFile #
+  ###################
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  def test_DDSim_runIt_success_OutputFile_1(self):
+    """DDSim.runit success with OutputFile set......................................................"""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.SteeringFile = "mySteering.py"
+    self.ddsim.OutputFile = "grailDiary.root"
+    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+      res = self.ddsim.runIt()
+    self.assertTrue( res['OK'] )
+    self.assertIn( " --outputFile grailDiary.root ", self.ddsim.extraCLIarguments )
 
   def test_DDSim_runIt_fail_1(self):
     """DDSim.runit failure platform................................................................."""
