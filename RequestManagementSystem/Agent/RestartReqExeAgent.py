@@ -100,7 +100,7 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
       ## kill the agent
       if self.enabled:
         for pid in pids:
-          os.kill( pid, signal.SIGTERM )
+          os.kill( pid, signal.SIGKILL )
           self.log.info( "Killed the %s Agent with PID %s" % (agentName, pid) )
       else:
         self.log.info( "Would have killed the %s Agent" % agentName )
@@ -119,10 +119,10 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
     pid = pidRes['Value'][1].strip()
     pid = pid.split("\n")
     pids = []
-    try:
-      pids.append( int( pid[0] ) )
-    except ValueError as e:
-      self.log.error( "Could not create int from PID: ", "PID %s: %s" % (pid, e) )
-      return S_ERROR( "Could not create int from PID" )
+    for pi in pid:
+      try:
+        pids.append( int( pi ) )
+      except ValueError as e:
+        self.log.error( "Could not create int from PID: ", "PID %s: %s" % (pi, e) )
 
     return S_OK( pids )
