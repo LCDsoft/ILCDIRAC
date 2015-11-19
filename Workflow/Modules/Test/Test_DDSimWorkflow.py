@@ -82,7 +82,7 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(["pairs.hepmc"]) ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_success_inputFile(self):
     """DDSim.runit success with inputFile..........................................................."""
@@ -93,7 +93,7 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     with patch("os.path.exists", new=Mock(side_effect=[False, False, True] ) ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
-    self.assertEqual( self.ddsim.InputFile, "pairs.hepmc" )
+    self.assertEqual( self.ddsim.InputFile, ["pairs.hepmc"] )
     self.assertIn( " --inputFile pairs.hepmc " , self.ddsim.extraCLIarguments )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
@@ -267,6 +267,16 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
     res = self.ddsim.getEnvScript( platform, appname, appversion )
     self.assertEqual( res['Value'], os.path.abspath("DDSimEnv.sh") )
     self.assertTrue( os.path.exists(os.path.abspath("DDSimEnv.sh")) )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR("no softFolder") ) )
+  def test_DDSim_getEnvScript_noSoftFolder( self ):
+    """DDSim.getEnvScript fail softfolder..........................................................."""
+    platform = "Windows"
+    appname = "ddsim"
+    appversion = "Vista"
+    res = self.ddsim.getEnvScript( platform, appname, appversion )
+    self.assertFalse( res['OK'] )
+    self.assertEqual( res['Message'], "no softFolder" )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   @patch("os.path.exists", new=Mock(return_value=True ) )
