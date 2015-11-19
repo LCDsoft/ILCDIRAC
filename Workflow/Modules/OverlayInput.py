@@ -313,9 +313,7 @@ class OverlayInput (ModuleBase):
 #      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
 #      jobpropdict['Site']=self.site
 #      max_concurrent_running = res['Value']
-    if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
-        checkFile.write('Dont look at cpu')
+    self.__disableWatchDog()
     overlaymon = RPCClient('Overlay/Overlay', timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
@@ -350,9 +348,8 @@ class OverlayInput (ModuleBase):
         if count % 10 == 0 :
           self.setApplicationStatus("Overlay standby number %s" % count)
         time.sleep(60)
-        
-    if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+
+    self.__enableWatchDog()
 
     self.setApplicationStatus('Getting overlay files')
 
@@ -389,9 +386,7 @@ class OverlayInput (ModuleBase):
         elif  self.site == 'LCG.KEK.jp':
           res = self.getKEKFile(self.lfns[fileindex])
         else:
-          if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-            with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
-              checkFile.write('Dont look at cpu')
+          self.__disableWatchDog()
           res = self.datMan.getFile(self.lfns[fileindex])
           triedDataManager = True
 
@@ -533,9 +528,7 @@ fi\n""" % (basename, lfile))
       lfile = lfn
     self.log.info("Getting %s" % file)
     ###Don't check for CPU time as other wise, job can get killed
-    if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
-        checkFile.write('Dont look at cpu')
+    self.__disableWatchDog()
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
@@ -573,9 +566,7 @@ fi\n""" % (basename, lfile))
       lfile = lfn
     self.log.info("Getting %s" % lfile)
     ###Don't check for CPU time as other wise, job can get killed
-    if not os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      with open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w') as checkFile:
-        checkFile.write('Dont look at cpu')
+    self.__disableWatchDog()
     
     #command = "rfcp %s ./"%file
     #comm = []
@@ -628,6 +619,7 @@ fi\n""" % (basename, lfile))
     prependpath = '/grid'
     lfile = os.path.join(prependpath, lfn)
     self.log.info("Getting %s" % lfile)
+    self.__disableWatchDog()
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
@@ -689,8 +681,7 @@ fi\n""" % (basename, lfile))
 
     res = self.__getFilesLocaly()
     ###Now that module is finished,resume CPU time checks
-    if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
-      os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+    self.__enableWatchDog()
 
     if not res['OK']:
       self.log.error("Overlay failed with", res['Message'])
@@ -699,3 +690,17 @@ fi\n""" % (basename, lfile))
     self.setApplicationStatus('OverlayInput finished getting all files successfully')
     return S_OK('OverlayInput finished successfully')
 
+  def __disableWatchDog( self ):
+    """create the watchdog disable if it does not exists"""
+    watchDogFilename = 'DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'
+    fullPath = os.path.join( self.curdir, watchDogFilename )
+    if not os.path.exists( fullPath ):
+      with open( fullPath, 'w' ) as checkFile:
+        checkFile.write('Dont look at cpu')
+
+  def __enableWatchDog( self ):
+    """remove the watchdog disable file if it exists"""
+    watchDogFilename = 'DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'
+    fullPath = os.path.join( self.curdir, watchDogFilename )
+    if os.path.exists( fullPath ):
+      os.remove( fullPath )
