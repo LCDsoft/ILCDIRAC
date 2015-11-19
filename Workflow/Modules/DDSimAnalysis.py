@@ -46,8 +46,7 @@ class DDSimAnalysis(ModuleBase):
     if self.WorkflowStartFrom:
       self.startFrom = self.WorkflowStartFrom
 
-    ##Move below to ModuleBase as common to Mokka
-    self.randomSeed = self.determineRandomSeed()
+    self.randomSeed = self._determineRandomSeed()
 
     if "IS_PROD" in self.workflow_commons and self.workflow_commons["IS_PROD"]:
       self.OutputFile = getProdFilename(self.OutputFile,
@@ -140,7 +139,8 @@ class DDSimAnalysis(ModuleBase):
     if self.NumberOfEvents:
       self.extraCLIarguments += " --numberOfEvents %s" % self.NumberOfEvents
 
-    self.extraCLIarguments += " --random.seed %s" % self.randomSeed
+    self.extraCLIarguments += " --random.seed %s " % self.randomSeed
+
 
     scriptName = 'DDSim_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName):
@@ -312,8 +312,13 @@ class DDSimAnalysis(ModuleBase):
       self.log.error('Failed to unzip detector model: ', str(err))
       return S_ERROR('Failed to unzip detector model')
 
-  def determineRandomSeed(self):
-    """determine what the randomSeed should be, depends on production or not"""
+  def _determineRandomSeed(self):
+    """determine what the randomSeed should be, depends on production or not
+
+    .. Note::
+      DDSim we use *randomSeed* and not *RandomSeed* as in the other workflow modules
+
+    """
     if self.randomSeed == -1:
       self.randomSeed = self.jobID
     if "IS_PROD" in self.workflow_commons:
