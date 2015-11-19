@@ -93,7 +93,7 @@ class DDSimAnalysis(ModuleBase):
     if not res['OK']:
       self.log.error("Could not obtain the environment script: ", res["Message"])
       return res
-    env_script_path = res["Value"]
+    envScriptPath = res["Value"]
 
     #get the path to the detector model, either local or from the software
     resXML = self._getDetectorXML()
@@ -145,26 +145,28 @@ class DDSimAnalysis(ModuleBase):
     scriptName = 'DDSim_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName):
       os.remove(scriptName)
-    with open(scriptName, 'w') as script:
-      script.write('#!/bin/bash \n')
-      script.write('#####################################################################\n')
-      script.write('# Dynamically generated script to run a production or analysis job. #\n')
-      script.write('#####################################################################\n')
-      script.write("source %s\n" % (env_script_path))
-      script.write('echo =========\n')
-      script.write('env | sort >> localEnv.log\n')
-      script.write('echo ddsim:\n')
-      script.write("which ddsim\n")
-      script.write('echo =========\n')
-      comm = 'ddsim --compactFile %(compactFile)s %(extraArgs)s\n' % dict(compactFile=compactFile,
-                                                                          extraArgs=self.extraCLIarguments)
-      self.log.info("Command:", comm)
-      script.write(comm)
-      script.write('declare -x appstatus=$?\n')
-      script.write('exit $appstatus\n')
+    script = []
+    script.append('#!/bin/bash')
+    script.append('#####################################################################')
+    script.append('# Dynamically generated script to run a production or analysis job. #')
+    script.append('#####################################################################')
+    script.append('source %s' % envScriptPath)
+    script.append('echo =========')
+    script.append('env | sort >> localEnv.log')
+    script.append('echo ddsim:`which ddsim`')
+    script.append('echo =========')
+    comm = 'ddsim --compactFile %(compactFile)s %(extraArgs)s' % dict(compactFile=compactFile,
+                                                                      extraArgs=self.extraCLIarguments)
+    self.log.info("Command:", comm)
+    script.append(comm)
+    script.append('declare -x appstatus=$?')
+    script.append('exit $appstatus')
 
-      if os.path.exists(self.applicationLog):
-        os.remove(self.applicationLog)
+    with open(scriptName, 'w') as scriptFile:
+      scriptFile.write( "\n".join(script) )
+
+    if os.path.exists(self.applicationLog):
+      os.remove(self.applicationLog)
 
     os.chmod(scriptName, 0755)
     comm = 'sh -c "./%s"' % scriptName
