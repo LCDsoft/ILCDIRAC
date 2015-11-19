@@ -526,7 +526,7 @@ fi\n""" % (basename, lfile))
       lfile = prependpath + lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s" % file)
+    self.log.info("Getting %s" % lfile)
     ###Don't check for CPU time as other wise, job can get killed
     self.__disableWatchDog()
 
