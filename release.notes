@@ -18,6 +18,12 @@ NEW: Based on Dirac v6r13p8
 *Core
 NEW: Based on Dirac v6r13p7
 
+[v23r0p12]
+
+*Workflow
+FIX: ILCDIRAC-612: Watchdog was not disabled properly when downloading overlay files
+FIX: ILCDIRAC-612: Logging output was wrong when copying overlay files at IMPERIAL
+
 [v23r0p11]
 
 Based von DIRAC v6r12p53, see also v6r12p52
