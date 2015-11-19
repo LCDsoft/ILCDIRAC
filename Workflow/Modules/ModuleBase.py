@@ -589,29 +589,36 @@ class ModuleBase(object):
 
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
+    print `message` to stdout and to the `self.applicationLog` file
+
+    * If `self.eventstring` is None print everything.
+    * If it is an empty list, an empty string, or an empty string in a list print nothing
+    * If it is a string or a list of strings print only matching strings
+
+    :param file fd: file descriptor ???
+    :param string message: message string
+    :returns: None
     """
     sys.stdout.flush()
     if message:
-      if type(self.eventstring) == type(' '):
+      if isinstance(self.eventstring, basestring):
         self.eventstring = [self.eventstring]
-      if len(self.eventstring):
-        if len(self.eventstring[0]):
-          for mystring in self.eventstring:
-            if re.search(re.escape(mystring), message):
-              print message
-      else:
+      if self.eventstring is None:
         print message
+      elif len(self.eventstring) and len(self.eventstring[0]):
+        for mystring in self.eventstring:
+          if re.search(re.escape(mystring), message):
+            print message
+
       if self.applicationLog:
-        log = open(self.applicationLog, 'a')
-        if self.excludeAllButEventString:
-          if len(self.eventstring):
-            if len(self.eventstring[0]):
+        with open(self.applicationLog, 'a') as log:
+          if self.excludeAllButEventString:
+            if self.eventstring is not None and len(self.eventstring) and len(self.eventstring[0]):
               for mystring in self.eventstring:
                 if re.search(re.escape(mystring), message):
                   log.write(message+'\n')
-        else:
-          log.write(message+'\n')
-        log.close()
+          else:
+            log.write(message+'\n')
       else:
         self.log.error("Application Log file not defined")
     if fd == 1:

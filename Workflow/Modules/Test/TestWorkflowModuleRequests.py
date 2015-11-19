@@ -7,6 +7,8 @@ __RCSID__ = "$Id$"
 #pylint: disable=W0212,R0904
 import unittest, copy, os, shutil
 import tempfile
+import sys
+from StringIO import StringIO
 
 from mock import MagicMock as Mock, patch
 from DIRAC import gLogger, S_ERROR, S_OK
@@ -309,8 +311,11 @@ class TestModuleBase( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     self.mbase.eventstring = "+++ Event String"
     message = "+++ Event String 123"
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       self.mbase.redirectLogOutput(fd, message)
+    self.assertEqual( message, out.getvalue().strip().splitlines()[0] )
 
   def test_MB_redirectLogOutput_2( self ):
     """ModuleBase: redirectLogOutput 2.............................................................."""
@@ -318,11 +323,14 @@ class TestModuleBase( ModulesTestCase ):
     self.mbase.eventstring = "+++ Event String"
     self.mbase.applicationLog = "grailDiary.log"
     message = ["+++ Event String 123","andSomeOtherString"]
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       for mes in message:
         self.mbase.redirectLogOutput(fd, mes)
     with open(self.mbase.applicationLog, "r") as logF:
       self.assertEqual( logF.read().strip(), "\n".join(message) )
+    self.assertEqual( message[0], out.getvalue().strip().splitlines()[0] )
 
   def test_MB_redirectLogOutput_3( self ):
     """ModuleBase: redirectLogOutput 3.............................................................."""
@@ -331,11 +339,14 @@ class TestModuleBase( ModulesTestCase ):
     self.mbase.applicationLog = "grailDiary.log"
     self.mbase.excludeAllButEventString = True
     message = ["+++ Event String 123","andSomeOtherString"]
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       for mes in message:
         self.mbase.redirectLogOutput(fd, mes)
     with open(self.mbase.applicationLog, "r") as logF:
       self.assertEqual( logF.read().strip(), message[0] )
+    self.assertEqual( message[0], out.getvalue().strip().splitlines()[0] )
 
   def test_MB_redirectLogOutput_4( self ):
     """ModuleBase: redirectLogOutput 4.............................................................."""
@@ -344,11 +355,14 @@ class TestModuleBase( ModulesTestCase ):
     self.mbase.applicationLog = "grailDiary.log"
     self.mbase.excludeAllButEventString = True
     message = ["+++ Event String 123","andSomeOtherString"]
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       for mes in message:
         self.mbase.redirectLogOutput(fd, mes)
     with open(self.mbase.applicationLog, "r") as logF:
       self.assertEqual( logF.read().strip(), "" )
+    self.assertEqual( "", out.getvalue().strip() )
 
   def test_MB_redirectLogOutput_noMes( self ):
     """ModuleBase: redirectLogOutput no message....................................................."""
@@ -356,9 +370,12 @@ class TestModuleBase( ModulesTestCase ):
     self.mbase.eventstring = "+++ Event String"
     self.mbase.applicationLog = "grailDiary.log"
     message = ""
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       self.mbase.redirectLogOutput(fd, message)
     self.assertFalse( os.path.exists( self.mbase.applicationLog ) )
+    self.assertEqual( "", out.getvalue().strip() )
 
   def test_MB_redirectLogOutput_noES( self ):
     """ModuleBase: redirectLogOutput no eventstring................................................."""
@@ -366,10 +383,13 @@ class TestModuleBase( ModulesTestCase ):
     self.mbase.eventstring = []
     self.mbase.applicationLog = "grailDiary.log"
     message = "some message"
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       self.mbase.redirectLogOutput(fd, message)
     with open(self.mbase.applicationLog, "r") as logF:
       self.assertEqual( logF.read().strip(), message )
+    self.assertEqual( "", out.getvalue().strip() )
 
   def test_MB_redirectLogOutput_noES_2( self ):
     """ModuleBase: redirectLogOutput no eventstring 2..............................................."""
@@ -377,10 +397,28 @@ class TestModuleBase( ModulesTestCase ):
     self.mbase.eventstring = ''
     self.mbase.applicationLog = "grailDiary.log"
     message = "some message"
+    out = StringIO()
+    sys.stdout = out
     with open("logFile", "w") as fd:
       self.mbase.redirectLogOutput(fd, message)
     with open(self.mbase.applicationLog, "r") as logF:
       self.assertEqual( logF.read().strip(), message )
+    self.assertEqual( "", out.getvalue().strip() )
+
+  def test_MB_redirectLogOutput_ESNone( self ):
+    """ModuleBase: redirectLogOutput eventstring is None............................................"""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = None
+    self.mbase.applicationLog = "grailDiary.log"
+    message = ["some message", "and some other message"]
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      for mes in message:
+        self.mbase.redirectLogOutput(fd, mes)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip().splitlines(), message )
+    self.assertEqual( message, out.getvalue().strip().splitlines() )
 
 
   def test_MB_treatILDConfigPackage( self ):
