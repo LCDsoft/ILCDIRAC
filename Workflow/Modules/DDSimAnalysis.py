@@ -35,7 +35,7 @@ class DDSimAnalysis(ModuleBase):
     self.startFrom = 0
     self.randomSeed = -1
     self.detectorModel = ''
-    self.eventstring = ['BeginEvent'] #FIXME
+    self.eventstring = ['+++ Initializing event']
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
