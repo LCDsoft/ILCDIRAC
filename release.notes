@@ -18,7 +18,6 @@ NEW: Based on Dirac v6r13p8
 *Core
 NEW: Based on Dirac v6r13p7
 
-
 [v23r1p1]
 
 *Note
@@ -43,6 +42,14 @@ FIX: Fix a typo `UserJob.setInputSandbox` documentation
 CHANGE: Moved `ilcdirac-version` to `Interfaces <ILCDIRAC.Interfaces.scripts>`
 CHANGE: Moved `dirac-ilc-show-software` to `Interfaces <ILCDIRAC.Interfaces.scripts>`
 CHANGE: The log file failover location was changed so that log files are not picked up by the InputDataAgent for productions
+
+################################################################################
+
+[v23r0p12]
+
+*Workflow
+FIX: ILCDIRAC-612: Watchdog was not disabled properly when downloading overlay files
+FIX: ILCDIRAC-612: Logging output was wrong when copying overlay files at IMPERIAL
 
 [v23r0p11]
 
