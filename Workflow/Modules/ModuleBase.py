@@ -597,7 +597,7 @@ class ModuleBase(object):
       if len(self.eventstring):
         if len(self.eventstring[0]):
           for mystring in self.eventstring:
-            if re.search(mystring, message):
+            if re.search(re.escape(mystring), message):
               print message
       else:
         print message
@@ -607,7 +607,7 @@ class ModuleBase(object):
           if len(self.eventstring):
             if len(self.eventstring[0]):
               for mystring in self.eventstring:
-                if re.search(mystring, message):
+                if re.search(re.escape(mystring), message):
                   log.write(message+'\n')
         else:
           log.write(message+'\n')
