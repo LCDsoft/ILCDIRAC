@@ -600,29 +600,35 @@ class ModuleBase(object):
     :returns: None
     """
     sys.stdout.flush()
-    if message:
-      if isinstance(self.eventstring, basestring):
-        self.eventstring = [self.eventstring]
-      if self.eventstring is None:
-        print message
-      elif len(self.eventstring) and len(self.eventstring[0]):
-        for mystring in self.eventstring:
-          if re.search(re.escape(mystring), message):
-            print message
-
-      if self.applicationLog:
-        with open(self.applicationLog, 'a') as log:
-          if self.excludeAllButEventString:
-            if self.eventstring is not None and len(self.eventstring) and len(self.eventstring[0]):
-              for mystring in self.eventstring:
-                if re.search(re.escape(mystring), message):
-                  log.write(message+'\n')
-          else:
-            log.write(message+'\n')
-      else:
-        self.log.error("Application Log file not defined")
+    if not message:
+      return
     if fd == 1:
       self.stdError += message
+
+    if isinstance(self.eventstring, basestring):
+      self.eventstring = [self.eventstring]
+
+    if self.eventstring is None:
+      print message
+
+    elif len(self.eventstring) and len(self.eventstring[0]):
+      for mystring in self.eventstring:
+        if re.search(re.escape(mystring), message):
+          print message
+          break
+
+    if not self.applicationLog:
+      self.log.error("Application Log file not defined")
+      return
+
+    with open(self.applicationLog, 'a') as log:
+      if self.excludeAllButEventString and self.eventstring is not None and len(self.eventstring) and len(self.eventstring[0]):
+        for mystring in self.eventstring:
+          if re.search(re.escape(mystring), message):
+            log.write(message+'\n')
+            break
+      elif not self.excludeAllButEventString:
+        log.write(message+'\n')
 
   def addRemovalRequests(self, lfnList):
     """Create removalRequests for lfns in lfnList and add it to the common request"""
