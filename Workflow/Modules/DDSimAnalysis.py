@@ -68,8 +68,8 @@ class DDSimAnalysis(ModuleBase):
 
     Execute the following:
       - get the environment variables that should have been set during installation
-      - download the detector model, using CS query to fetch the address
-      - prepare the steering file
+      - find the detector model xml, using CS query to obtain the path
+      - prepare the steering file and command line parameters
       - run DDSim on this steering file and catch the exit status
 
     :return: S_OK(), S_ERROR()
@@ -122,25 +122,20 @@ class DDSimAnalysis(ModuleBase):
       if not os.path.exists(self.SteeringFile):
         self.log.error("Missing steering file")
         return S_ERROR("Could not find steering file")
+      self.extraCLIarguments += " --steeringFile %s " % self.SteeringFile
 
     ##Same as for mokka: using ParticleGun does not imply InputFile
-    if not len(self.InputFile):
-      self.InputFile = ['']
-    # macok = prepareDDSimFile(self.SteeringFile, slicmac, self.InputFile[0],
-    #                          self.NumberOfEvents, self.startFrom, self.detectorModel,
-    #                          self.randomSeed, self.OutputFile, self.debug)
-    # if not macok['OK']:
-    #   self.log.error('Failed to create SLIC mac file')
-    #   return S_ERROR('Error when creating SLIC mac file')
-
     if self.InputFile:
-      self.extraCLIarguments += " --inputFile %s" % self.InputFile[0]
+      self.InputFile = [self.InputFile] if isinstance(self.InputFile, basestring) else self.InputFile
+      self.extraCLIarguments += " --inputFile %s " % self.InputFile[0]
 
     if self.NumberOfEvents:
-      self.extraCLIarguments += " --numberOfEvents %s" % self.NumberOfEvents
+      self.extraCLIarguments += " --numberOfEvents %s " % self.NumberOfEvents
 
     self.extraCLIarguments += " --random.seed %s " % self.randomSeed
 
+    if self.OutputFile:
+      self.extraCLIarguments += " --outputFile %s " % self.OutputFile
 
     scriptName = 'DDSim_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName):
