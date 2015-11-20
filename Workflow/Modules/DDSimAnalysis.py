@@ -124,6 +124,12 @@ class DDSimAnalysis(ModuleBase):
         return S_ERROR("Could not find steering file")
       self.extraCLIarguments += " --steeringFile %s " % self.SteeringFile
 
+    if self.startFrom:
+      self.extraCLIarguments += " --skipNEvents %s " % self.startFrom
+
+    if self.debug:
+      self.extraCLIarguments += " --printLevel DEBUG "
+
     ##Same as for mokka: using ParticleGun does not imply InputFile
     if self.InputFile:
       self.InputFile = [self.InputFile] if isinstance(self.InputFile, basestring) else self.InputFile

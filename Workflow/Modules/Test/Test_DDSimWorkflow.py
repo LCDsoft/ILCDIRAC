@@ -48,12 +48,6 @@ class TestDDSimAnalysis( unittest.TestCase ):
     os.chdir(self.curdir)
     cleanup(self.tempdir)
 
-  # @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  # @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  # def test_DDSim_init( self ):
-  #   """test initialisation only ...................................................................."""
-  #   self.assertTrue( self.ddsim.enable )
-
 class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
   """ test DDSim runtIt """
 
@@ -63,12 +57,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     with open(self.logFileName, "w") as logF:
       logF.write("logged the logging logs")
 
-  # def tearDown( self ):
-  #   os.chdir(self.curdir)
-
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  #@patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_success(self):
     """DDSim.runit ................................................................................."""
@@ -110,7 +100,6 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertEqual( res['Message'], "no pairs.hepmc" )
 
-
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
@@ -141,8 +130,6 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
 
-
-
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
@@ -161,7 +148,6 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     with patch("os.path.exists", new=Mock(side_effect=[True, True, True] ) ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
-
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
@@ -246,6 +232,46 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertTrue( res['OK'] )
     self.assertIn( " --numberOfEvents 123 ", self.ddsim.extraCLIarguments )
+
+  ##############################
+  # Test skipNEvents/startFrom #
+  ##############################
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  def test_DDSim_runIt_success_skipNevents(self):
+    """DDSim.runit success with startFrom..........................................................."""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.SteeringFile = "mySteering.py"
+    self.ddsim.NumberOfEvents = 123
+    self.ddsim.startFrom = 22
+    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+      res = self.ddsim.runIt()
+    self.assertTrue( res['OK'] )
+    self.assertIn( " --skipNEvents 22 ", self.ddsim.extraCLIarguments )
+
+  ##############
+  # Test Debug #
+  ##############
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  def test_DDSim_runIt_success_Debug(self):
+    """DDSim.runit success with startFrom..........................................................."""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.SteeringFile = "mySteering.py"
+    self.ddsim.NumberOfEvents = 123
+    self.ddsim.debug = True
+    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+      res = self.ddsim.runIt()
+    self.assertTrue( res['OK'] )
+    self.assertIn( " --printLevel DEBUG ", self.ddsim.extraCLIarguments )
 
   ###################
   # Test OutputFile #
