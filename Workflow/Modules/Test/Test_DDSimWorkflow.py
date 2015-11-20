@@ -142,6 +142,27 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.assertTrue( res['OK'] )
 
 
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  def test_DDSim_runIt_success_LogAndScriptPresent(self):
+    """DDSim.runit success log and script exist....................................................."""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.InputFile = "pairs.hepmc"
+    self.ddsim.ignoreapperrors = True
+    with open("DDSim__Run_.sh", "w") as scr:
+      scr.write("content")
+    with open(self.logFileName, "w") as scr:
+      scr.write("content")
+    ## side effect for Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[True, True, True] ) ):
+      res = self.ddsim.runIt()
+    self.assertTrue( res['OK'] )
+
+
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
