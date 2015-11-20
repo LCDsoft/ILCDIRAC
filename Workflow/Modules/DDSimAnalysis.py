@@ -7,7 +7,6 @@ Run DDSim
 
 __RCSID__ = "$Id$"
 
-
 import os
 import tarfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
@@ -23,7 +22,7 @@ DDSIMINPUTFORMATS = ('.stdhep', '.hepevt', '.HEPEvt', '.slcio', '.hepmc')
 
 class DDSimAnalysis(ModuleBase):
   """
-  Specific Module to run a SLIC job.
+  Specific Module to run a DDSim job.
   """
   def __init__(self):
     super(DDSimAnalysis, self).__init__()

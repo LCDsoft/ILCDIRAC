@@ -11,7 +11,6 @@ Usage:
 >>> ddsim.setInputFile("LFN:/ilc/prod/clic/500gev/Z_uds/gen/0/00.stdhep")
 >>> ddsim.setNumberOfEvents(30)
 
-
 Use :func:`setExtraCLIArguments` in case you want to use command line parameters
 
 
