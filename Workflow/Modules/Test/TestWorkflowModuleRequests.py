@@ -1,10 +1,9 @@
-#!/usr/env python
-
+#!/usr/bin/env python
 """
-Test generateFailoverFile
+Test WorkflowModules
 """
 __RCSID__ = "$Id$"
-#pylint: disable=W0212,R0904
+#pylint: disable=W0212,R0904,C0302
 import unittest, copy, os, shutil
 import tempfile
 import sys
@@ -36,7 +35,6 @@ def cleanup(tempdir):
     shutil.rmtree(tempdir)
   except OSError:
     pass
-
 
 class ModulesTestCase ( unittest.TestCase ):
   """ ILCDirac version of Workflow module tests"""
@@ -251,8 +249,7 @@ class TestModuleBase( ModulesTestCase ):
     mob.addRemovalRequests(lfnList)
     request = mob.workflow_commons['Request']
     mob.log.notice(request)
-    self.assertTrue( len(request) == 1 )
-
+    self.assertEqual( len(request), 1 )
 
   def test_MB_getCandidateFiles( self ):
     """ModuleBase: getCandidateFiles: files exist..................................................."""
@@ -281,7 +278,7 @@ class TestModuleBase( ModulesTestCase ):
     outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_NSF.stdhep']
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    self.assertTrue( "Output Data Not Found" in result['Message'] )
+    self.assertIn( "Output Data Not Found", result['Message'] )
 
   def test_MB_getCandidateFiles_FileTooLong( self ):
     """ModuleBase: getCandidateFiles: File Too Long................................................."""
@@ -290,7 +287,7 @@ class TestModuleBase( ModulesTestCase ):
     outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/'+'a'*128]
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    self.assertTrue( "Filename too long" in result['Message'] )
+    self.assertIn( "Filename too long", result['Message'] )
 
   def test_MB_getCandidateFiles_PathTooLong( self ):
     """ModuleBase: getCandidateFiles: Path Too Long................................................."""
@@ -299,7 +296,7 @@ class TestModuleBase( ModulesTestCase ):
     outputLFNs = ['/bbbbbbbbbb'*26+'/'+'a'*127]
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    self.assertTrue( "LFN too long" in result['Message'] )
+    self.assertIn( "LFN too long", result['Message'] )
 
   def test_MB_logWorkingDirectory( self ):
     """ModuleBase: logWorkingDirectory.............................................................."""
@@ -419,7 +416,6 @@ class TestModuleBase( ModulesTestCase ):
     with open(self.mbase.applicationLog, "r") as logF:
       self.assertEqual( logF.read().strip().splitlines(), message )
     self.assertEqual( message, out.getvalue().strip().splitlines() )
-
 
   def test_MB_treatILDConfigPackage( self ):
     """ModuleBase: treatILDConfigPackage............................................................"""
@@ -541,7 +537,6 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK([]))
     _res = self.ulf.applicationSpecificInputs()
     self.assertEqual(self.ulf.experiment, "ILC_SID" )
-
 
   def test_ULF_ASI_expILD( self ):
     """ULF.applicationSpecificInputs: experiment ILD................................................"""
@@ -778,7 +773,7 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.enable = False
     self.frq.workflow_commons = dict( )
     res = self.frq.execute()
-    self.assertTrue( "Module is disabled" in res['Value'] )
+    self.assertIn( "Module is disabled",  res['Value'] )
 
   def test_Exe_WFFail( self ):
     """execute: WF Failed..........................................................................."""
@@ -1054,7 +1049,7 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.workflow_commons = dict( )
     self.uod.log = gLogger.getSubLogger("testASI")
     self.uod.applicationSpecificInputs()
-    self.assertTrue( self.uod.enable == False )
+    self.assertFalse( self.uod.enable )
 
   def test_ASI_AllVariables( self ):
     """UOD.applicationSpecificInputs: checks if all variables have been properly set after this call"""
@@ -1074,7 +1069,7 @@ class TestUploadOutputData( ModulesTestCase ):
     os.environ['JOBID']="12345"
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
-    self.assertTrue( type(self.uod.outputDataFileMask) == type([]) )
+    self.assertIsInstance( self.uod.outputDataFileMask, list )
     self.assertTrue( self.uod.outputMode )
     self.assertTrue( self.uod.outputList )
     self.assertTrue( self.uod.productionID )
@@ -1090,7 +1085,6 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
     self.assertFalse( self.uod.jobReport or self.uod.productionID )
-
 
   def test_ASI_OutputListCorrect( self ):
     """UOD.applicationSpecificInputs: check outputfile list is treated properly....................."""
@@ -1114,7 +1108,7 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
     self.uod.log.debug([ o['outputFile'] for o in self.uod.outputList] )
-    self.assertTrue( len(self.uod.outputList) == 4 )
+    self.assertEqual( len(self.uod.outputList), 4 )
 
   def test_GOL_Reco( self ):
     """outputList properly formated for reconstruction jobs........................................."""
@@ -1150,7 +1144,6 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
-
   def test_GOL_gen( self ):
     """outputList properly formated for reconstruction jobs........................................."""
     gLogger.setLevel("ERROR")
@@ -1178,7 +1171,6 @@ class TestUploadOutputData( ModulesTestCase ):
                                        'h_nunu_gen_4191_0007') ]
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
-
 
   @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock() )
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", new=Mock() )
@@ -1222,7 +1214,6 @@ class TestUserJobFinalization( ModulesTestCase ):
     super(TestUserJobFinalization, self).setUp()
     with patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', Mock() ):
       self.ujf = UserJobFinalization()
-
 
   def test_UJF_execute_isLastStep(self):
     """UJF.execute: is last step...................................................................."""
@@ -1287,5 +1278,4 @@ class TestUserJobFinalization( ModulesTestCase ):
     self.assertTrue( res['Value']['cleanUp'] and not filesUploaded )
 
 if __name__ == '__main__':
-  ## verbosity was added in python 2.7
-  unittest.main(verbosity=2) #pylint: disable=E1123
+  unittest.main(verbosity=2)
