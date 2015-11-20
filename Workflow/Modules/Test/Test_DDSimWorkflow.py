@@ -110,6 +110,38 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertEqual( res['Message'], "no pairs.hepmc" )
 
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  def test_DDSim_runIt_failure_LogFile(self):
+    """DDSim.runit failure with applicationLog......................................................"""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.InputFile = "pairs.hepmc"
+    self.ddsim.ignoreapperrors = False
+    ## side effect for Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, False, False] ) ):
+      res = self.ddsim.runIt()
+    self.assertIn( "did not produce the expected log", res['Message'] )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  def test_DDSim_runIt_failure_LogFile_ignore(self):
+    """DDSim.runit failure with applicationLog but ignore..........................................."""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.InputFile = "pairs.hepmc"
+    self.ddsim.ignoreapperrors = True
+    ## side effect for Script, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, False, False] ) ):
+      res = self.ddsim.runIt()
+    self.assertTrue( res['OK'] )
+
+
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
@@ -484,6 +516,17 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
     self.assertEqual( res['Value'], expectedPath )
     self.assertTrue( os.path.exists( expectedPath ) )
 
+  def test_DDSim_extractTar_Raise( self ):
+    """DDSim._extractTar raised exception..........................................................."""
+    gLogger.setLevel("ERROR")
+    self.ddsim.detectorModel = "myDet"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(camelot="/dev/null" ) ) )
+    self.ddsim.workflow_commons = dict()
+    with patch("tarfile.open", side_effect=RuntimeError("This is what happens") ):
+      res = self.ddsim._extractTar()
+    self.assertFalse( res['OK'] )
+    self.assertEqual( res['Message'], "Failed to untar detector model" )
+
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TGZ_2( self ):
     """DDSim.getDetectorXML with local tgz.........................................................."""
@@ -539,6 +582,18 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
     expectedPath = os.path.join(os.getcwd(), self.ddsim.detectorModel, self.ddsim.detectorModel+".xml" )
     self.assertEqual( res['Value'], expectedPath )
     self.assertTrue( os.path.exists( expectedPath ) )
+
+  def test_DDSim_extractZip_Raise( self ):
+    """DDSim._extractZip raised exception..........................................................."""
+    gLogger.setLevel("ERROR")
+    self.ddsim.detectorModel = "myDet"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(camelot="/dev/null" ) ) )
+    self.ddsim.workflow_commons = dict()
+    ## myDet.zip does not exist
+    os.remove( "myDet.zip" )
+    res = self.ddsim._extractZip()
+    self.assertFalse( res['OK'] )
+    self.assertEqual( res['Message'], "Failed to unzip detector model" )
 
 def runTests():
   """Runs our tests"""

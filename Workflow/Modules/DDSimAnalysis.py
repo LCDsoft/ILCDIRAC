@@ -293,7 +293,7 @@ class DDSimAnalysis(ModuleBase):
       detTar.extractall()
       xmlPath = os.path.abspath(os.path.join(self.detectorModel, self.detectorModel+".xml") )
       return S_OK(xmlPath)
-    except (RuntimeError, OSError) as e:
+    except (RuntimeError, OSError, IOError) as e:
       self.log.error( "Failed to untar detector model", str(e) )
       return S_ERROR( "Failed to untar detector model" )
 
@@ -303,7 +303,7 @@ class DDSimAnalysis(ModuleBase):
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
       xmlPath = os.path.join(os.getcwd(), self.detectorModel, self.detectorModel+".xml")
       return S_OK( xmlPath )
-    except (RuntimeError, OSError) as err: #RuntimeError is for zipfile
+    except (RuntimeError, OSError, IOError) as err: #RuntimeError is for zipfile
       self.log.error('Failed to unzip detector model: ', str(err))
       return S_ERROR('Failed to unzip detector model')
 
