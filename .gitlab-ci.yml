@@ -1,0 +1,36 @@
+installDirac:
+  stage: install
+  script:
+    #pre-installation script
+    - shopt -s extglob
+    - cd ..
+    - rm -rf ILCDIRAC_commit
+    - mv ILCDIRAC ILCDIRAC_commit
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - chmod +x dirac-install
+    - ./dirac-install -V ILCDIRAC -r v25-pre3
+    - rm -rf ILCDIRAC
+    - mv ILCDIRAC_commit ILCDIRAC
+    - source bashrc
+    - dirac-deploy-scripts
+#   - dirac-proxy-init -x
+#   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
+
+pylint:
+  stage: build
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nose:
+  type: test
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
+
+
+stages:
+  - install
+  - build
+  - test
+
