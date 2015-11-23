@@ -10,8 +10,8 @@ class TransformationPlugin(DTP):
   This plugin is ONLY used when willing to limit the number of tasks to a certain number of files.
   """
   def __init__(self, plugin, transClient = None, dataManager = None):
-    DTP.__init__(self, plugin, transClient, dataManager)
-    
+    super(TransformationPlugin, self).__init__(plugin, transClient, dataManager)
+
   def _Limited(self):
     """
     Limit the number of tasks created to the MaxNumberOfTasks 
