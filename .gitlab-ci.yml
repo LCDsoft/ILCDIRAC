@@ -1,3 +1,5 @@
+image: cern/cc7-base
+
 test:
   script:
   # test
