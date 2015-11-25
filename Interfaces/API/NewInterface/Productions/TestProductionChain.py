@@ -23,12 +23,12 @@ class Params(object):
   """command line parameters to create test productions"""
 
   def __init__(self):
-    self.knownModels = ['CLIC_ILD_CDR', 'ILD_o1_v05']
+    self.knownModels = ['CLIC_ILD_CDR', 'ILD_o1_v05', "CLIC_o2_v03"]
 
     self.energy = 250
-    self.detectorModel = "CLIC_ILD_CDR"
+    self.detectorModel = "CLIC_o2_v03"
     self.outputSE = "CERN-DIP-4"
-    self.ildConfig = "CLICSteeringFilesV22"
+    self.ildConfig = "DDSim"
     self.onlyDestination = []
     self.logLevel = "INFO"
     self.numberOfEvents = 10
@@ -155,7 +155,7 @@ detectormodel=PARAMS.detectorModel
 #Here get the prod list: initial particles combinasions
 prodlist = getdicts(process)
 
-beamrecoil = True
+beamrecoil = False
 
 #Do generation
 gen = True
@@ -177,8 +177,9 @@ if activesplitstdhep:
 nbevtsperfilestdhep = 10
 
 #Do Sim
-ild_sim = True
+ild_sim = False
 sid_sim = False
+dd_sim = True
 
 #DoSplit
 activesplit = False
@@ -191,7 +192,7 @@ nbevtsperfile = 10
 ild_rec = False
 sid_rec = False
 #Do Reco with Overlay
-ild_rec_ov = True
+ild_rec_ov = False
 sid_rec_ov = False
 
 n_events = PARAMS.numberOfEvents
@@ -362,6 +363,15 @@ for proddict in prodlist:
   if detectormodel=='ILD_o1_v05':
     mo.setSteeringFile("bbudsc_3evt.steer")
 
+  ##Simulation DDSim
+  dd = DDSim()
+  dd.setVersion("testVersion")
+  dd.setNbEvts(10)
+  # if energy in [500., 420., 375., 350., 250.,3000., 1400.]:
+  #   mo.setSteeringFile("dssimsteering.py")
+  # else:
+  #   print 'SteeringFile Model for DDSim undefined for this energy'
+  dd.setDetectorModel(detectormodel)
 
   ##Simulation SID
   slic = SLIC()
@@ -404,7 +414,7 @@ for proddict in prodlist:
     else:
       print "Overlay CLIC_ILD: No overlay parameters defined for this energy"
 
-  if detectormodel in (ILDDetectorModels):
+  if detectormodel in ILDDetectorModels:
     overlay.setMachine("ilc_dbd")
     overlay.setBackgroundType("aa_lowpt")
     overlay.setBXOverlay(1)
@@ -659,17 +669,55 @@ for proddict in prodlist:
     res = pmo.createProduction()
     if not res['OK']:
       print res['Message']
-
     pmo.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
-
-
     res = pmo.finalizeProd()
     if not res['OK']:
       print res['Message']
       raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = pmo.getMetadata()
+
+  if dd_sim and meta:
+    ####################
+    ##Define the second production (simulation). Notice the setInputDataQuery call
+    pdd = ProductionJob()
+    pdd.setDryRun(PARAMS.dryrun)
+    pdd.setLogLevel(logLevel)
+    if onlyDestination:
+      pdd.setDestination(onlyDestination)
+    pdd.setProdType('MCSimulation')
+    pdd.setConfig(ILDCONFIG)
+    res = pdd.setInputDataQuery(meta)
+    if not res['OK']:
+      print res['Message']
+      raise RuntimeError("1")
+    pdd.setOutputSE(prodOutputSE)
+    wname = process+"_"+str(energy)+"_ild_sim"
+    wname += prod_name
+    pdd.setWorkflowName(wname)
+    pdd.setProdGroup(analysis+"_"+str(energy))
+    #Add the application
+    res = pdd.append(dd)
+    if not res['OK']:
+      print res['Message']
+      raise RuntimeError("1")
+    pdd.addFinalization(True,True,True,True)
+    descrp = "DDSim model"
+    if prod_name:
+      descrp += ", %s"%prod_name
+    pdd.setDescription(descrp)
+    res = pdd.createProduction()
+    if not res['OK']:
+      print res['Message']
+    pdd.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
+                                 "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
+    res = pdd.finalizeProd()
+    if not res['OK']:
+      print res['Message']
+      raise RuntimeError("1")
+    #As before: get the metadata for this production to input into the next
+    meta = pdd.getMetadata()
 
   if sid_sim and meta:
     ####################
