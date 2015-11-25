@@ -165,7 +165,7 @@ class DDSim( LCApplication ):
 
   def _applicationModuleValues(self, moduleinstance):
 
-    moduleinstance.setValue("RandomSeed",      self.randomSeed)
+    moduleinstance.setValue("randomSeed",      self.randomSeed)
     moduleinstance.setValue("detectorModel",   self.detectorModel)
     moduleinstance.setValue("startFrom",       self.startFrom)
     moduleinstance.setValue("debug",           self.debug)
