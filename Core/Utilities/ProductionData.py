@@ -63,7 +63,6 @@ def constructProductionLFNs(paramDict):
   resLogs = getLogPath( dict(PRODUCTION_ID=productionID,
                              JOB_ID=jobID,
                              LogFilePath=logFilePath), basePath=basePath )
-  gLogger.error(resLogs)
   if not resLogs['OK']:
     return resLogs
   logTargetPath = resLogs['Value']['LogTargetPath']
