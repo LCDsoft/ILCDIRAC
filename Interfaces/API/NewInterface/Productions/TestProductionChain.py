@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Created on Feb 8, 2012
 
@@ -5,18 +6,11 @@ Created on Feb 8, 2012
 '''
 __RCSID__ = "$Id$"
 #pylint: disable=C0103
-#pylint: skip-file
+
 from DIRAC.Core.Base import Script
-
-from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard, Mokka, Marlin, OverlayInput, StdhepCut, StdhepCutJava
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC, LCSIM, SLICPandora, SLCIOSplit, StdHepSplit
-from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-
 
 from DIRAC import S_OK, S_ERROR
 
-dirac = DiracILC()
 
 ###As it's a full chain, we start at generation
 ##so we need to define the process and the energy
@@ -122,6 +116,14 @@ if len(extraargs) == 0:
   Script.showHelp()
   raise RuntimeError("1")
 additional_name = extraargs[0]
+
+
+
+from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard, Mokka, Marlin, OverlayInput, StdhepCut, StdhepCutJava, DDSim
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLIC, LCSIM, SLICPandora, SLCIOSplit, StdHepSplit
+from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+
 
 
 energy = float(PARAMS.energy)
@@ -230,6 +232,7 @@ exchange_lines = False
 
 
 
+dirac = DiracILC()
 
 
 
