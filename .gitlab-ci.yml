@@ -1,4 +1,4 @@
-image: cern/cc7-base
+image: cern/slc6-base
 
 test:
   script:
