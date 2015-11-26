@@ -63,3 +63,4 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.SLCIOSplit import SLCIOSp
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit import StdHepSplit
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato import Tomato
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs import CheckWNs
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim import DDSim

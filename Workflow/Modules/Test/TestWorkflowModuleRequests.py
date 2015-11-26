@@ -1,11 +1,13 @@
-#!/usr/env python
-
+#!/usr/bin/env python
 """
-Test generateFailoverFile
+Test WorkflowModules
 """
 __RCSID__ = "$Id$"
-#pylint: disable=W0212,R0904
+#pylint: disable=W0212,R0904,C0302
 import unittest, copy, os, shutil
+import tempfile
+import sys
+from StringIO import StringIO
 
 from mock import MagicMock as Mock, patch
 from DIRAC import gLogger, S_ERROR, S_OK
@@ -25,6 +27,15 @@ from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 gLogger.setLevel("DEBUG")
 gLogger.showHeaders(True)
 
+def cleanup(tempdir):
+  """
+  Remove files after run
+  """
+  try:
+    shutil.rmtree(tempdir)
+  except OSError:
+    pass
+
 class ModulesTestCase ( unittest.TestCase ):
   """ ILCDirac version of Workflow module tests"""
 
@@ -38,6 +49,10 @@ class ModulesTestCase ( unittest.TestCase ):
   @patch("DIRAC.Resources.Storage.StorageFactory.StorageFactory", new=Mock() )
   def setUp( self ): #pylint: disable=R0915
     """Set up the objects"""
+    self.curdir = os.getcwd()
+    self.tempdir = tempfile.mkdtemp("", dir = "./")
+    os.chdir(self.tempdir)
+
     self.log = gLogger.getSubLogger("MODULEBASE")
 
     self.prod_id = 123
@@ -210,48 +225,8 @@ class ModulesTestCase ( unittest.TestCase ):
       pass
 
   def tearDown( self ):
-    removeFile = ["E1000-B1b_ws.Ptth-ln4q-hnonbb.eL.pR.Gphyssim_dbd-01-01.I106411_3evt.stdhep",
-                  "README",
-                  "GearOutput.xml",
-                  "PandoraLikelihoodData9EBin.xml",
-                  "PandoraSettingsDefault.xml",
-                  "PandoraSettingsMuon.xml",
-                  "PandoraSettings_README.txt",
-                  "bbudsc_3evt.g4macro",
-                  "bbudsc_3evt.stdhep",
-                  "bbudsc_3evt.steer",
-                  "bbudsc_3evt_stdreco.xml",
-                  "bbudsc_3evt_viewer.xml",
-                  "bbudsc_3evt_viewerDST.xml",
-                  "bg_aver.sv01-14-01-p00.mILD_o1_v05.E500-TDR_ws.PBeamstr-pairs.I230000.root",
-                  "bg_aver.sv01-14-p00.mILD_o1_v05.E1000-B1b_ws.PBeamstr-pairs.I210000.root",
-                  "particle.tbl",
-                  "None_12345_request.json",
-                  "0_0_request.json",
-                  "h_nunu_gen_4191_0000.stdhep",
-                  "h_nunu_gen_4191_0001.stdhep",
-                  "h_nunu_gen_4191_0002.stdhep",
-                  "h_nunu_gen_4191_0003.stdhep",
-                  "h_nunu_gen_4191_0004.stdhep",
-                  "h_nunu_gen_4191_0005.stdhep",
-                  "h_nunu_gen_4191_0006.stdhep",
-                  "h_nunu_gen_4191_0007.stdhep",
-                  "test3.stdhep",
-                  "43321_12345_request.json",
-                 ]
-    removeDirs = ["my", "job", "myILDConfig"]
-    for tempFile in removeFile:
-      try:
-        os.remove(tempFile)
-      except OSError:
-        pass
-
-    for tempDir in removeDirs:
-      try:
-        shutil.rmtree(tempDir)
-      except OSError:
-        pass
-
+    os.chdir(self.curdir)
+    cleanup(self.tempdir)
 
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
 @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -274,8 +249,7 @@ class TestModuleBase( ModulesTestCase ):
     mob.addRemovalRequests(lfnList)
     request = mob.workflow_commons['Request']
     mob.log.notice(request)
-    self.assertTrue( len(request) == 1 )
-
+    self.assertEqual( len(request), 1 )
 
   def test_MB_getCandidateFiles( self ):
     """ModuleBase: getCandidateFiles: files exist..................................................."""
@@ -304,7 +278,7 @@ class TestModuleBase( ModulesTestCase ):
     outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_NSF.stdhep']
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    self.assertTrue( "Output Data Not Found" in result['Message'] )
+    self.assertIn( "Output Data Not Found", result['Message'] )
 
   def test_MB_getCandidateFiles_FileTooLong( self ):
     """ModuleBase: getCandidateFiles: File Too Long................................................."""
@@ -313,7 +287,7 @@ class TestModuleBase( ModulesTestCase ):
     outputLFNs = ['/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/'+'a'*128]
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    self.assertTrue( "Filename too long" in result['Message'] )
+    self.assertIn( "Filename too long", result['Message'] )
 
   def test_MB_getCandidateFiles_PathTooLong( self ):
     """ModuleBase: getCandidateFiles: Path Too Long................................................."""
@@ -322,12 +296,126 @@ class TestModuleBase( ModulesTestCase ):
     outputLFNs = ['/bbbbbbbbbb'*26+'/'+'a'*127]
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    self.assertTrue( "LFN too long" in result['Message'] )
+    self.assertIn( "LFN too long", result['Message'] )
 
   def test_MB_logWorkingDirectory( self ):
     """ModuleBase: logWorkingDirectory.............................................................."""
     gLogger.setLevel("ERROR")
     self.mbase.logWorkingDirectory()
+
+  def test_MB_redirectLogOutput_1( self ):
+    """ModuleBase: redirectLogOutput 1.............................................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = "+++ Event String"
+    message = "+++ Event String 123"
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      self.mbase.redirectLogOutput(fd, message)
+    self.assertEqual( message, out.getvalue().strip().splitlines()[0] )
+
+  def test_MB_redirectLogOutput_2( self ):
+    """ModuleBase: redirectLogOutput 2.............................................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = "+++ Event String"
+    self.mbase.applicationLog = "grailDiary.log"
+    message = ["+++ Event String 123","andSomeOtherString"]
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      for mes in message:
+        self.mbase.redirectLogOutput(fd, mes)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip(), "\n".join(message) )
+    self.assertEqual( message[0], out.getvalue().strip().splitlines()[0] )
+
+  def test_MB_redirectLogOutput_3( self ):
+    """ModuleBase: redirectLogOutput 3.............................................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = "+++ Event String"
+    self.mbase.applicationLog = "grailDiary.log"
+    self.mbase.excludeAllButEventString = True
+    message = ["+++ Event String 123","andSomeOtherString"]
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      for mes in message:
+        self.mbase.redirectLogOutput(fd, mes)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip(), message[0] )
+    self.assertEqual( message[0], out.getvalue().strip().splitlines()[0] )
+
+  def test_MB_redirectLogOutput_4( self ):
+    """ModuleBase: redirectLogOutput 4.............................................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = ""
+    self.mbase.applicationLog = "grailDiary.log"
+    self.mbase.excludeAllButEventString = True
+    message = ["+++ Event String 123","andSomeOtherString"]
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      for mes in message:
+        self.mbase.redirectLogOutput(fd, mes)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip(), "" )
+    self.assertEqual( "", out.getvalue().strip() )
+
+  def test_MB_redirectLogOutput_noMes( self ):
+    """ModuleBase: redirectLogOutput no message....................................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = "+++ Event String"
+    self.mbase.applicationLog = "grailDiary.log"
+    message = ""
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      self.mbase.redirectLogOutput(fd, message)
+    self.assertFalse( os.path.exists( self.mbase.applicationLog ) )
+    self.assertEqual( "", out.getvalue().strip() )
+
+  def test_MB_redirectLogOutput_noES( self ):
+    """ModuleBase: redirectLogOutput no eventstring................................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = []
+    self.mbase.applicationLog = "grailDiary.log"
+    message = "some message"
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      self.mbase.redirectLogOutput(fd, message)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip(), message )
+    self.assertEqual( "", out.getvalue().strip() )
+
+  def test_MB_redirectLogOutput_noES_2( self ):
+    """ModuleBase: redirectLogOutput no eventstring 2..............................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = ''
+    self.mbase.applicationLog = "grailDiary.log"
+    message = "some message"
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      self.mbase.redirectLogOutput(fd, message)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip(), message )
+    self.assertEqual( "", out.getvalue().strip() )
+
+  def test_MB_redirectLogOutput_ESNone( self ):
+    """ModuleBase: redirectLogOutput eventstring is None............................................"""
+    gLogger.setLevel("ERROR")
+    self.mbase.eventstring = None
+    self.mbase.applicationLog = "grailDiary.log"
+    message = ["some message", "and some other message"]
+    out = StringIO()
+    sys.stdout = out
+    with open("logFile", "w") as fd:
+      for mes in message:
+        self.mbase.redirectLogOutput(fd, mes)
+    with open(self.mbase.applicationLog, "r") as logF:
+      self.assertEqual( logF.read().strip().splitlines(), message )
+    self.assertEqual( message, out.getvalue().strip().splitlines() )
 
   def test_MB_treatILDConfigPackage( self ):
     """ModuleBase: treatILDConfigPackage............................................................"""
@@ -368,15 +456,6 @@ class TestUploadLogFile( ModulesTestCase ):
       pass
     with open("./my/log/folder/MyLogFile.log", "w") as logFile:
       logFile.write("something else")
-
-  def tearDown( self ):
-    super(TestUploadLogFile, self).tearDown()
-    try:
-      os.remove("MyLogFile.log")
-      os.remove("MyOtherLogFile.log")
-      shutil.rmtree( "./my" )
-    except OSError:
-      pass
 
   def test_ULF_ASI_NoLogFiles( self ):
     """ULF.applicationSpecificInputs: no log files present.........................................."""
@@ -458,7 +537,6 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK([]))
     _res = self.ulf.applicationSpecificInputs()
     self.assertEqual(self.ulf.experiment, "ILC_SID" )
-
 
   def test_ULF_ASI_expILD( self ):
     """ULF.applicationSpecificInputs: experiment ILD................................................"""
@@ -695,7 +773,7 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.enable = False
     self.frq.workflow_commons = dict( )
     res = self.frq.execute()
-    self.assertTrue( "Module is disabled" in res['Value'] )
+    self.assertIn( "Module is disabled",  res['Value'] )
 
   def test_Exe_WFFail( self ):
     """execute: WF Failed..........................................................................."""
@@ -971,7 +1049,7 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.workflow_commons = dict( )
     self.uod.log = gLogger.getSubLogger("testASI")
     self.uod.applicationSpecificInputs()
-    self.assertTrue( self.uod.enable == False )
+    self.assertFalse( self.uod.enable )
 
   def test_ASI_AllVariables( self ):
     """UOD.applicationSpecificInputs: checks if all variables have been properly set after this call"""
@@ -991,7 +1069,7 @@ class TestUploadOutputData( ModulesTestCase ):
     os.environ['JOBID']="12345"
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
-    self.assertTrue( type(self.uod.outputDataFileMask) == type([]) )
+    self.assertIsInstance( self.uod.outputDataFileMask, list )
     self.assertTrue( self.uod.outputMode )
     self.assertTrue( self.uod.outputList )
     self.assertTrue( self.uod.productionID )
@@ -1007,7 +1085,6 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
     self.assertFalse( self.uod.jobReport or self.uod.productionID )
-
 
   def test_ASI_OutputListCorrect( self ):
     """UOD.applicationSpecificInputs: check outputfile list is treated properly....................."""
@@ -1031,7 +1108,7 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
     self.uod.log.debug([ o['outputFile'] for o in self.uod.outputList] )
-    self.assertTrue( len(self.uod.outputList) == 4 )
+    self.assertEqual( len(self.uod.outputList), 4 )
 
   def test_GOL_Reco( self ):
     """outputList properly formated for reconstruction jobs........................................."""
@@ -1067,7 +1144,6 @@ class TestUploadOutputData( ModulesTestCase ):
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
-
   def test_GOL_gen( self ):
     """outputList properly formated for reconstruction jobs........................................."""
     gLogger.setLevel("ERROR")
@@ -1095,7 +1171,6 @@ class TestUploadOutputData( ModulesTestCase ):
                                        'h_nunu_gen_4191_0007') ]
     self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
-
 
   @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock() )
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", new=Mock() )
@@ -1139,7 +1214,6 @@ class TestUserJobFinalization( ModulesTestCase ):
     super(TestUserJobFinalization, self).setUp()
     with patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', Mock() ):
       self.ujf = UserJobFinalization()
-
 
   def test_UJF_execute_isLastStep(self):
     """UJF.execute: is last step...................................................................."""
@@ -1203,27 +1277,5 @@ class TestUserJobFinalization( ModulesTestCase ):
     self.log.debug(res)
     self.assertTrue( res['Value']['cleanUp'] and not filesUploaded )
 
-#############################################################################
-# Run Tests
-#############################################################################
-def runTests():
-  """Runs our tests"""
-  suite = unittest.defaultTestLoader.loadTestsFromTestCase( ModulesTestCase )
-
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadLogFile ) )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestModuleBase ) )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUploadOutputData ) )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestFailoverRequest ) )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestUserJobFinalization ) )
-
-  testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
-
-  ## Test from Dirac Proper
-  # suite = unittest.defaultTestLoader.loadTestsFromTestCase( DiracModulesTestCase )
-  # suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( Test_Modules.ModuleBaseSuccess ) )
-  # suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( Test_Modules.FailoverRequestSuccess ) )
-  # testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-
 if __name__ == '__main__':
-  runTests()
+  unittest.main(verbosity=2)
