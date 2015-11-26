@@ -1,3 +1,11 @@
+[v25-pre3]
+
+*Interfaces
+NEW: Added :any:`DDSim` Interfaces, ILCDIRAC-507
+
+*Workflow
+NEW: Added :any:`DDSimAnalysis` Workflow Module, ILCDIRAC-507
+
 [v25-pre1]
 
 *Core
