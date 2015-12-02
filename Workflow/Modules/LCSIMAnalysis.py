@@ -13,6 +13,7 @@ __RCSID__ = "$Id$"
 import os, shutil, types
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
+from ILCDIRAC.Workflow.Utilities.CompactMixin                import CompactMixin
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles              import prepareLCSIMFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames            import resolveIFpaths, getProdFilename
@@ -21,7 +22,7 @@ from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringF
 
 from DIRAC                                                   import S_OK, S_ERROR, gLogger
 
-class LCSIMAnalysis(ModuleBase):
+class LCSIMAnalysis(CompactMixin, ModuleBase):
   """Define the LCSIM analysis part of the workflow
   """
   def __init__(self):
@@ -66,7 +67,12 @@ class LCSIMAnalysis(ModuleBase):
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
       self.InputFile = inputf
-      
+
+    #FIXME: hardcode default detector model add check for detectorModel when submitting lcsim jobs!
+      #because currently no detectormodel is required!
+    if "IS_PROD" in self.workflow_commons:
+      if not self.detectorModel:
+        self.detectorModel = "clic_sid_cdr.zip"
       
     if self.step_commons.has_key('ExtraParams'):
       self.extraparams = self.step_commons['ExtraParams']    
@@ -155,6 +161,10 @@ class LCSIMAnalysis(ModuleBase):
     #  self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
     #  runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
 
+
+    retMod = self.downloadDetectorZip()
+    if not retMod:
+      return retMod
 
     ##Collect jar files to put in classspath
     jars = []
