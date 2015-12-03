@@ -24,8 +24,8 @@ from DIRAC import S_OK
 import types
 
 __RCSID__ = "$Id$"
-#pylint: disable=W0142
-class UserJob(Job): #pylint: disable=R0904
+
+class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
   def __init__(self, script = None):
