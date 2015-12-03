@@ -16,6 +16,11 @@ before_script:
     - mv ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
+    - pip install --upgrade --force-reinstall pip
+    - pip install --upgrade --force-reinstall pylint
+    - pip install --upgrade --force-reinstall nose
+    - pip install --upgrade --force-reinstall mock
+    - cd ILCDIRAC
 #   - dirac-proxy-init -x
 #   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
