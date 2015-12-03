@@ -558,7 +558,7 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
     self.ulf.logSE = Mock()
-    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'])))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK({'Request': self.rc_mock,
                                                               'uploadedSE': 'CERN-SRM'}))
@@ -574,7 +574,22 @@ class TestUploadLogFile( ModulesTestCase ):
     self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
     self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
     self.ulf.logSE = Mock()
-    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'],Message="Ekke Ekke Ekke Ekke")))
+    self.ulf.logSE.putFile = Mock(return_value=S_OK(dict(Failed=['MyLogFiles.tar.gz'])))
+    self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
+    self.ulf._tryFailoverTransfer = Mock(return_value = S_OK())
+    self.ulf.applicationSpecificInputs()
+    res = self.ulf.execute()
+    self.assertTrue( res['OK'] )
+
+  def test_ULF_ASI_FailedputFile( self ):
+    """ULF.applicationSpecificInputs: putfile failed completely....................................."""
+    gLogger.setLevel("ERROR")
+    self.ulf = UploadLogFile()
+    self.ulf.log = gLogger.getSubLogger("ULF-OneLogFile")
+    self.ulf.workflow_commons = copy.deepcopy(self.wf_commons[0])
+    self.ulf._determineRelevantFiles = Mock(return_value=S_OK(['MyLogFile.log']))
+    self.ulf.logSE = Mock()
+    self.ulf.logSE.putFile = Mock(return_value=S_ERROR("Ekke Ekke Ekke Ekke"))
     self.ulf.logLFNPath = getLogPath(self.ulf.workflow_commons)['Value']['LogTargetPath'][0]
     self.ulf._tryFailoverTransfer = Mock(return_value = S_OK())
     self.ulf.applicationSpecificInputs()
