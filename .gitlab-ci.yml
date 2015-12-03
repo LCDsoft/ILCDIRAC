@@ -20,6 +20,7 @@ before_script:
     - pip install --upgrade --force-reinstall pylint
     - pip install --upgrade --force-reinstall nose
     - pip install --upgrade --force-reinstall mock
+    - pip install --upgrade --force-reinstall coverage
     - cd ILCDIRAC
 #   - dirac-proxy-init -x
 #   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
