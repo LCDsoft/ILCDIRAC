@@ -1,21 +1,25 @@
 #!/bin/env python
 """
-Create a production to replicate files from one storage elment to another
+Create a production to move files from one storage elment to another
 
 Example::
 
-  dirac-ilc-replication-transformation <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName
+  dirac-ilc-moving-transformation <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName
 
 Options:
    -N, --Extraname string      String to append to transformation name in case one already exists with that name
 
-:since:  May 18, 2015
+:since:  Dec 4, 2015
 :author: A. Sailer
 """
-__RCSID__ = "$Id$"
+
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
-from DIRAC.Core.Security.ProxyInfo import getProxyInfo
+
+from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkAndGetProdProxy
+
+
+__RCSID__ = "$Id$"
 
 VALIDDATATYPES = ('GEN','SIM','REC','DST')
 
@@ -41,9 +45,9 @@ class _Params(object):
     self.targetSE = [tSE.strip() for tSE in targetSE.split(",")]
     gLogger.always("TargetSEs: %s" % str(self.targetSE) )
     return S_OK()
-    
+
   def setDatatype(self, datatype):
-    if not datatype.upper() in VALIDDATATYPES:
+    if datatype.upper() not in VALIDDATATYPES:
       self.errorMessages.append("ERROR: Unknown Datatype, use %s " % (",".join(VALIDDATATYPES),) )
       return S_ERROR()
     self.datatype = datatype.upper()
@@ -52,7 +56,7 @@ class _Params(object):
   def setExtraname(self, extraname):
     self.extraname = extraname
     return S_OK()
-    
+
   def registerSwitches(self):
     Script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
     Script.setUsageMessage("""%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName""" % Script.scriptName)
@@ -69,31 +73,15 @@ class _Params(object):
       self.setSourceSE( args[2] )
       self.setDatatype( args[3] )
 
-    self.checkProxy()
-      
+    ret = checkAndGetProdProxy()
+    if not ret['OK']:
+      self.errorMessages.append( ret['Message'] )
+
     if not self.errorMessages:
       return S_OK()
     gLogger.error("\n".join(self.errorMessages))
     Script.showHelp()
     return S_ERROR()
-
-  def checkProxy(self):
-    """checks if the proxy belongs to ilc_prod"""
-    proxyInfo = getProxyInfo()
-    if not proxyInfo['OK']:
-      self.errorMessages.append( "ERROR: No Proxy present" )
-      return False
-    proxyValues = proxyInfo.get( 'Value', {} )
-    group = proxyValues.get( 'group' )
-
-    if group:
-      if not group == "ilc_prod":
-        self.errorMessages.append("ERROR: Not allowed to create production, you need a ilc_prod proxy.")
-        return False
-    else:
-      self.errorMessages.append("ERROR: Could not determine group, you do not have the right proxy.")
-      return False
-    return True
 
 def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
   """Creates the replication transformation based on the given parameters"""
@@ -101,19 +89,26 @@ def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
   from DIRAC.TransformationSystem.Client.Transformation import Transformation
   from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
   metadata = {"Datatype":datatype, "ProdID":prodID}
-  
+
   trans = Transformation()
-  transName = 'replicate_%s_%s' % ( str(prodID), ",".join(targetSE) )
+  transName = 'Move_%s_%s_%s' % ( datatype, str(prodID), ",".join(targetSE) )
   if extraname:
     transName += "_%s" % extraname
 
   trans.setTransformationName( transName )
-  description = 'Replicate files for prodID %s to %s' % ( str(prodID), ",".join(targetSE) )
+  description = 'Move files for prodID %s to %s' % ( str(prodID), ",".join(targetSE) )
   trans.setDescription( description )
   trans.setLongDescription( description )
   trans.setType( 'Replication' )
-  trans.setGroup( 'Replication' )
+  trans.setGroup( 'Moving' )
   trans.setPlugin( 'Broadcast' )
+
+  transBody = [ ("ReplicateAndRegister", { "SourceSE":sourceSE, "TargetSE":targetSE }),
+                ("RemoveReplica", { "TargetSE":sourceSE } ),
+              ]
+
+  trans.setBody( transBody )
+
   res = trans.setSourceSE( sourceSE )
   if not res['OK']:
     exit(1)
@@ -152,6 +147,6 @@ def _createTrafo():
   if not resCreate['OK']:
     dexit(1)
   dexit(0)
-  
+
 if __name__ == '__main__':
   _createTrafo()
