@@ -3,7 +3,7 @@
 Test WorkflowModules
 """
 __RCSID__ = "$Id$"
-#pylint: disable=W0212,R0904,C0302
+#pylint: disable=W0212,R0904,C0302,C0410,C0412,C0413
 import unittest, copy, os, shutil
 import tempfile
 import sys
@@ -754,7 +754,7 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.log = gLogger.getSubLogger("testASI")
 
     self.frq.applicationSpecificInputs()
-    self.assertTrue ( self.frq.enable == False )
+    self.assertFalse( self.frq.enable )
 
   def test_ASI_AllVariables( self ):
     """applicationSpecificInputs: checks if all variables have been properly set after this call...."""
