@@ -372,6 +372,7 @@ class TestCreater(object):
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import LCSIM
     lcsim = LCSIM()
     lcsim.setVersion('CLIC_CDR')
+    lcsim.setDetectorModel('clic_sid_cdr.zip')
     if prepandora:
       lcsim.setSteeringFile(self.lcsimPreSteeringFile)
       lcsim.setOutputFile("testlcsim.slcio")
