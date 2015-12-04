@@ -26,6 +26,7 @@ The interfaces for the currently available applications can be found here:
    * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit`,
    * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato`,
    * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard`
+   * :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim`
 
 :author: Stephane Poss
 :author: Remi Ete

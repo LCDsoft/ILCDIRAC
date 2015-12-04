@@ -6,6 +6,7 @@ import unittest
 import os
 import shutil
 import urllib2
+import tempfile
 
 from DIRAC import gLogger
 from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
@@ -13,9 +14,22 @@ from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
 gLogger.setLevel("ERROR")
 gLogger.showHeaders(True)
 
+def cleanup(tempdir):
+  """
+  Remove files after run
+  """
+  try:
+    shutil.rmtree(tempdir)
+  except OSError:
+    pass
+
 class TestSlicPandoraAnalysis( unittest.TestCase ):
   """ test SlicPandoraAnalysis """
   def setUp( self ):
+    self.curdir = os.getcwd()
+    self.tempdir = tempfile.mkdtemp("", dir = "./")
+    os.chdir(self.tempdir)
+
     super(TestSlicPandoraAnalysis, self).setUp()
     self.spa = SLICPandoraAnalysis()
     self.mydir = "temp_dir"
@@ -37,9 +51,9 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
         print type(e)
 
   def tearDown(self):
-    shutil.rmtree(self.mydir)
-    os.remove(self.zipfile)
-    
+    os.chdir(self.curdir)
+    cleanup(self.tempdir)
+
   def test_Unzip_file_into_dir(self):
     """test unzip_file_into_dir....................................................................."""
     
@@ -48,7 +62,7 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
       os.mkdir(self.mydir)
     unzip_file_into_dir( self.zipfile, self.mydir )
     unzip_file_into_dir( self.zipfile, self.mydir )
-    self.assertTrue ( True )
+    self.assertTrue ( os.path.exists( os.path.join( self.mydir, "compact.xml" ) ) )
 
 def runTests():
   """Runs our tests"""

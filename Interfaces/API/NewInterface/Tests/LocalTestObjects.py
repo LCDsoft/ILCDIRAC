@@ -234,6 +234,7 @@ class TestCreater(object):
     """create a job running root"""
     self.log.notice("Creating jobs for Root")
     jobRoot = self.getJob()
+    jobRoot.setInputSandbox(["root.sh", "input.root","input2.root"])
     root = self.getRoot()
     res = jobRoot.append(root)
     if not res['OK']:
@@ -246,6 +247,7 @@ class TestCreater(object):
     """create a job running root"""
     self.log.notice("Creating jobs for Root")
     jobRoot = self.getJob()
+    jobRoot.setInputSandbox(["input.root","input2.root"])
     root = self.getRoot()
     root.setScript("hadd")
     res = jobRoot.append(root)
@@ -259,8 +261,9 @@ class TestCreater(object):
     """create a job running root"""
     self.log.notice("Creating jobs for Root")
     jobRoot = self.getJob()
+    jobRoot.setInputSandbox(["func.C", "input.root","input2.root"])
     root = self.getRootMacro()
-    root.setScript("hadd")
+    root.setScript("func.C")
     res = jobRoot.append(root)
     if not res['OK']:
       self.log.error("Failed adding Root:", res['Message'])
@@ -443,6 +446,7 @@ class TestCreater(object):
     myjob.setPlatform("x86_64-slc5-gcc43-opt")
     myjob.setOutputSandbox(["*.log","*.xml", "*.sh"])
     myjob._addParameter( myjob.workflow, 'TestFailover', 'String', True, 'Test failoverRequest')
+    myjob._addParameter( myjob.workflow, 'Platform', 'String', "x86_64-slc5-gcc43-opt", 'Test failoverRequest')
     if self.ildConfig:
       myjob.setILDConfig(self.ildConfig)
     return myjob

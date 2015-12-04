@@ -33,6 +33,9 @@ def getProdFilename(filename, prodID, jobID):
 def resolveIFpaths(inputfiles):
   """ Try to find out in which sub-directory are each file. In the future, should be useless if
   PoolXMLCatalog can be used.
+
+  :param list inputfiles: list of inputfiles
+  :returns: S_OK(listOfFilePaths), S_ERROR
   """
   log = gLogger.getSubLogger("ResolveInputFiles")
   listoffiles = []

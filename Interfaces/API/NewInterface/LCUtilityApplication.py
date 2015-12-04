@@ -1,7 +1,6 @@
 '''
-Created on Nov 7, 2013
-
 :author: sposs
+:since: Nov 7, 2013
 '''
 
 __RCSID__ = "$Id$"
@@ -22,18 +21,6 @@ class LCUtilityApplication( Application ):
     #Energy to use (duh! again)
     self.energy = 0
     self._importLocation = "ILCDIRAC.Workflow.Modules"
-    
-  def setNbEvts(self, numberOfEvents):
-    """ Set the number of events to process
-
-    .. deprecated:: v23r0p0
-       use :func:`setNumberOfEvents`
-    
-    :param int numberOfEvents: Number of events to process (or generate)
-    """
-    self._checkArgs({ 'numberOfEvents' : IntType })
-    self.numberOfEvents = numberOfEvents
-    return S_OK()  
 
   def setNumberOfEvents(self, numberOfEvents):
     """ Set the number of events to process, alias to :func:`setNbEvts`
@@ -51,3 +38,17 @@ class LCUtilityApplication( Application ):
     self.energy = energy
     return S_OK()  
 
+
+#### DEPRECATED ################################################################
+
+  def setNbEvts(self, numberOfEvents):
+    """ Set the number of events to process
+
+    .. deprecated:: v23r0p0
+       use :func:`setNumberOfEvents`
+
+    :param int numberOfEvents: Number of events to process (or generate)
+    """
+    self._checkArgs({ 'numberOfEvents' : IntType })
+    self.numberOfEvents = numberOfEvents
+    return S_OK()

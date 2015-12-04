@@ -5,22 +5,22 @@ directory.
 :author: S. Poss
 :since: Sep 01, 2010
 """
-
-__RCSID__ = "$Id$"
+import os
+import shutil
+import glob
+import random
+import tarfile
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
+from DIRAC.RequestManagementSystem.Client.Operation        import Operation
+from DIRAC.RequestManagementSystem.Client.File             import File
+from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
+from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
 
-from DIRAC.RequestManagementSystem.Client.Operation        import Operation
-from DIRAC.RequestManagementSystem.Client.File             import File
-
-from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
-
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig
-
-import os, shutil, glob, random, tarfile
+__RCSID__ = "$Id$"
 
 class UploadLogFile(ModuleBase):
   """ Handle log file uploads in the production jobs
@@ -53,11 +53,11 @@ class UploadLogFile(ModuleBase):
     """resolves the module parameters"""
 
     self.enable = self.step_commons.get('Enable', self.enable)
-    if not type(self.enable) == type(True):
+    if not isinstance(self.enable, bool):
       self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
       self.enable = False
 
-    if not type(self.failoverTest) == type(True):
+    if not isinstance(self.failoverTest, bool):
       self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
       self.failoverTest = False
 
@@ -79,9 +79,9 @@ class UploadLogFile(ModuleBase):
       self.logFilePath = result['Value']['LogFilePath'][0]
       self.logLFNPath = result['Value']['LogTargetPath'][0]
 
-    if not type(self.logFilePath) == type(' '):
+    if not isinstance(self.logFilePath, basestring):
       self.logFilePath = self.logFilePath[0]
-    if not type(self.logLFNPath) == type(' '):
+    if not isinstance(self.logLFNPath, basestring):
       self.logLFNPath = self.logLFNPath[0]
       
     #FIXME: What if experiments change path, pick this up from the CS instead, or find a better way
@@ -179,17 +179,20 @@ class UploadLogFile(ModuleBase):
       self.log.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
       resTransfer = self.logSE.putFile({ tarFileLFN : tarFileLocal })
       self.log.debug("putFile result: %s" % resTransfer)
-      if len(resTransfer['Value']['Failed']) == 0:
+      if not resTransfer['OK']:
+        self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
+                       resTransfer['Message'])
+      elif resTransfer['OK'] and len(resTransfer['Value']['Failed']) == 0:
         self.log.info('Successfully upload log tarball to %s' % self.logSE.name)
         self.setJobParameter('Log LFN', tarFileLFN)
         self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % tarFileLFN)
         return S_OK()
       else:
-        resTransfer = S_ERROR ( resTransfer['Value'] )
+        self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
+                       resTransfer['Value'])
+
     #########################################
     # Recover the logs to a failover storage element
-    self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
-                   resTransfer['Message'])
 
     
     #if res['Value'][0]: #i.e. non-zero status

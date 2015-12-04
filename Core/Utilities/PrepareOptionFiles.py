@@ -353,36 +353,36 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
       if param.attrib['name'] == 'LCIOInputFiles' and inputSLCIO:
         lciolistfound = True
         com = Comment("input file list changed")
-        glob.insert(0, com)
+        glob.insert(0, com) #pylint: disable=E1101
         param.text = inputSLCIO
       if numberofevts > 0:
         if param.attrib['name'] == 'MaxRecordNumber':
           if param.attrib.has_key('value'):
             param.attrib['value'] = str(numberofevts)
             com = Comment("MaxRecordNumber changed")
-            glob.insert(0, com)
+            glob.insert(0, com) #pylint: disable=E1101
             
       if param.attrib['name'] == "GearXMLFile":
         if param.attrib.has_key('value'):
           param.attrib['value'] = inputGEAR
           com = Comment("input gear changed")
-          glob.insert(0, com)
+          glob.insert(0, com) #pylint: disable=E1101
         else:
           param.text = inputGEAR
           com = Comment("input gear changed")
-          glob.insert(0, com)
+          glob.insert(0, com) #pylint: disable=E1101
       if not debug:
         if param.attrib['name'] == 'Verbosity':
           param.text = "SILENT"
           com = Comment("verbosity changed")
-          glob.insert(0, com)
+          glob.insert(0, com) #pylint: disable=E1101
   if not lciolistfound and inputSLCIO:
     name = {}
     name["name"] = "LCIOInputFiles"
     lciolist = Element("parameter", name)
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
-    globparams.append(lciolist)
+    globparams.append(lciolist) #pylint: disable=E1101
 
   params = tree.findall('processor')
   for param in params:
@@ -562,7 +562,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
   if filesinlcsim is not None:
-    filesinlcsim.clear()
+    filesinlcsim.clear() #pylint: disable=E1101
   else:
     baseelem = tree.getroot()
     if not baseelem is None:
@@ -581,7 +581,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     if len(jars) > 0:
       classpath = tree.find("classpath")
       if not classpath is None:
-        classpath.clear()
+        classpath.clear() #pylint: disable=E1101
       else:
         baseelem = tree.getroot()
         classpath = Element("classpath")    
@@ -599,7 +599,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       control = tree.find('control')
       nbevtselm = Element("numberOfEvents")
       nbevtselm.text = str(numberofevents)
-      control.append(nbevtselm)
+      control.append(nbevtselm) #pylint: disable=E1101
   #handle verbosity
   if debug:
     debugline = tree.find("control/verbose")
@@ -609,7 +609,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       control = tree.find('control')
       debugelem = Element('verbose')
       debugelem.text = 'true'
-      control.append(debugelem)        
+      control.append(debugelem) #pylint: disable=E1101
 
   if cachedir:
     cachedirline = tree.find("control/cacheDirectory")
@@ -619,14 +619,14 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       control = tree.find('control')
       cachedirelem = Element("cacheDirectory")
       cachedirelem.text = cachedir
-      control.append(cachedirelem)
+      control.append(cachedirelem) #pylint: disable=E1101
       
   res = gConfig.getOption("/LocalSite/LcsimPrintEveryEvent", 1)
   lcsimPrintEveryEvent = 1 if not res['OK'] else res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
   if not eventInterval is None:
-    evtint = eventInterval.text
+    evtint = eventInterval.text #pylint: disable=E1101
     if int(evtint) < 10:    
       eventInterval.text = "%s" % lcsimPrintEveryEvent
   else:
@@ -647,13 +647,13 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       eventInterval = Element("eventInterval")
       eventInterval.text = "%s" % lcsimPrintEveryEvent
       eventmarker.append(eventInterval)
-      drivers.append(eventmarker)
+      drivers.append(eventmarker) #pylint: disable=E1101
       execut = tree.find("execute")
       if execut:
         evtmarkattrib = {}
         evtmarkattrib['name'] = "evtMarker"
         evtmark = Element("driver", evtmarkattrib)
-        execut.append(evtmark)
+        execut.append(evtmark) #pylint: disable=E1101
         
   #drivers = tree.findall("drivers/driver")      
 
@@ -668,7 +668,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 
   mark = tree.find("drivers/driver/marker")
   if not mark is None:
-    printtext = mark.text
+    printtext = mark.text #pylint: disable=E1101
   else:
     for driver in drivers:
       if driver.attrib.has_key("type"):
@@ -735,13 +735,13 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     outputelem = Element("outputFilePath")
     outputelem.text = outputFile
     output.append(outputelem)
-    drivers.append(output)
+    drivers.append(output) #pylint: disable=E1101
     execut = tree.find("execute")
     if execut:
       outputattrib = {}
       outputattrib['name'] = "Writer"
       outputmark = Element("driver", outputattrib)
-      execut.append(outputmark)
+      execut.append(outputmark) #pylint: disable=E1101
   if not recwriterfound and outputRECFile:
     #drivers = tree.find("drivers")
     #propdict = {}
@@ -835,7 +835,7 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
       if param.attrib['name'] == 'LCIOInputFiles':
         lciolistfound = True
         com = Comment("input file list changed")
-        glob.insert(0, com)
+        glob.insert(0, com) #pylint: disable=E1101
         param.text = inputSLCIO
   if not lciolistfound:
     name = {}
@@ -843,7 +843,7 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
     lciolist = Element("parameter", name)
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
-    globparams.append(lciolist)
+    globparams.append(lciolist) #pylint: disable=E1101
 
   params = tree.findall('processor')
   for param in params:

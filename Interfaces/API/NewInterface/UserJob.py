@@ -24,8 +24,7 @@ from DIRAC import S_OK
 import types
 
 __RCSID__ = "$Id$"
-#pylint: disable=R0904
-#pylint: disable=W0142
+
 class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
@@ -42,6 +41,10 @@ class UserJob(Job):
 
     :param diracinstance: :any:`DiracILC <ILCDIRAC.Interfaces.API.DiracILC.DiracILC>` instance
     :param string mode: "wms" (default), "agent", or "local"
+
+    .. note ::
+      The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
+
     """
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
@@ -70,9 +73,9 @@ class UserJob(Job):
     
   #############################################################################
   def setInputData( self, lfns ):
-    """Helper function.
+    """Specify input data by Logical File Name (LFN).
 
-    Specify input data by Logical File Name (LFN).
+    Input files specified via this function will be automatically staged if necessary.
 
     Example usage:
 
@@ -104,7 +107,7 @@ class UserJob(Job):
     """ Add files to the input sandbox, can be on the local machine or on the grid
 
     >>> job = UserJob()
-    >>> job.setInputSandBox( ['LFN:/ilc/user/u/username/libraries.tar.gz',
+    >>> job.setInputSandbox( ['LFN:/ilc/user/u/username/libraries.tar.gz',
     >>>                       'mySteeringFile.xml'] )
 
     :param flist: Files for the inputsandbox
@@ -119,9 +122,7 @@ class UserJob(Job):
 
   #############################################################################
   def setOutputData(self, lfns, OutputPath = '', OutputSE = ''):
-    """Helper function, used in preference to Job.setOutputData() for ILC.
-
-    For specifying output data to be registered in Grid storage.  If a list
+    """For specifying output data to be registered in Grid storage.  If a list
     of OutputSEs are specified the job wrapper will try each in turn until
     successful.
 
@@ -171,19 +172,23 @@ class UserJob(Job):
   
   #############################################################################
   def setOutputSandbox( self, files ):
-    """Helper function.
+    """Specify output sandbox files.  If specified files are over 10MB, these
+    may be uploaded to Grid storage with a notification returned in the
+    output sandbox.
 
-       Specify output sandbox files.  If specified files are over 10MB, these
-       may be uploaded to Grid storage with a notification returned in the
-       output sandbox.
+    .. Note ::
+       Sandbox files are removed after 2 weeks.
 
-       Example usage:
+    Example usage:
 
-       >>> job = UserJob()
-       >>> job.setOutputSandbox(['*.log','myfile.slcio'])
+    >>> job = UserJob()
+    >>> job.setOutputSandbox(['*.log','*.sh', 'myfile.txt'])
 
-       :param files: Output sandbox files
-       :type files: Single string or list of strings ['','']
+    Use the output sandbox only for small files. Larger files should be stored
+    on the grid and downloaded later if necessary. See :func:`setOutputData`
+
+    :param files: Output sandbox files
+    :type files: Single string or list of strings ['','']
 
     """
     if type( files ) == list and len( files ):

@@ -10,7 +10,7 @@ from DIRAC.Core.Workflow.Parameter import Parameter
 import types, os
 
 class Marlin(LCApplication):
-  """ Call Marlin reconstructor (after Mokka simulator)
+  """Call Marlin reconstructor (after Mokka simulator)
 
   Usage:
 
@@ -22,6 +22,19 @@ class Marlin(LCApplication):
 
   Use :func:`setExtraCLIArguments` if you want to add command line parameters
   needed for easy parameter scans and passing non-standard strings (like cuts)
+
+  >>> marlin = Marlin()
+  >>> ...
+  >>> marlin.setExtraCLIArguments( "--myProcessor.myParameter=someValue" )
+  >>> ...
+
+  The output file for marlin is changed automatically if the xml
+  steering file contains a processor called *MyLCIOOutputProcessor*
+
+  >>> marlin = Marlin()
+  >>> ...
+  >>> marlin.setOutputFile( "output_job123.slcio" )
+  >>> ...
 
   """
   def __init__(self, paramdict = None):
@@ -44,7 +57,7 @@ class Marlin(LCApplication):
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
 
-    :param string gearFile: input gear file for Marlin reconstrcutor
+    :param string gearFile: input gear file for Marlin reconstructor
     """
     self._checkArgs( { 'gearFile' : types.StringTypes } )
 
