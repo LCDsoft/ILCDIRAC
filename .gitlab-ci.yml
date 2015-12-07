@@ -64,3 +64,20 @@ nosetest6:
     - .gitlab-ci.d/run-nosetests.sh
 
 
+
+
+pylint7:
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nosetest7:
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
