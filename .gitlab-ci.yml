@@ -3,6 +3,7 @@ before_script:
     - cd ..
     - shopt -s extglob
     - rm -rf !(ILCDIRAC)
+    - ls -lart
     - mv ILCDIRAC ILCDIRAC_commit
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
