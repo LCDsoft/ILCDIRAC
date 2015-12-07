@@ -4,7 +4,6 @@ before_script:
     - shopt -s extglob
     - rm -rf !(ILCDIRAC)
     - rm -rf .installCache
-    - ls -lart
     - mv ILCDIRAC ILCDIRAC_commit
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
@@ -17,7 +16,6 @@ before_script:
     - cd ..
     - rm -rf ILCDIRAC
     - mv ILCDIRAC_commit ILCDIRAC
-    - cat bashrc
     - source bashrc
     - dirac-deploy-scripts
     - pip install --upgrade --force-reinstall pip
