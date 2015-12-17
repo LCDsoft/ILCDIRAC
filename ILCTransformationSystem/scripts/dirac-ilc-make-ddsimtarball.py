@@ -15,6 +15,8 @@ DDHEP_ENV="DD4hep_DIR"
 
 RSYNCBASE="rsync --exclude '.svn'"
 
+DETMODELS = {}
+
 def killRPath( folder ):
   """remove rpath from all libraries in folder and below"""
   for root,_dirs,files in os.walk(folder, followlinks=True):
@@ -64,10 +66,15 @@ def getLibraryPath( basePath ):
 
 def copyDetectorModels( basePath, folder, targetFolder ):
   """copy the compact folders to the targetFolder """
+  #global DETMODELS
   for root,dirs,_files in os.walk( os.path.join(basePath, folder) ):
     for direct in dirs:
       if root.endswith("compact"):
-        copyFolder( os.path.join(root, direct),  targetFolder )
+        ## the main xml file must have the same name as the folder, ILD and CLIC follow this convention already
+        xmlPath = os.path.join( root, direct, direct+".xml")
+        if os.path.exists( xmlPath ):
+          DETMODELS[direct] = direct+"/"+direct+".xml"
+          copyFolder( os.path.join(root, direct), targetFolder )
   
 
 def copyFolder( basePath, targetFolder ):
