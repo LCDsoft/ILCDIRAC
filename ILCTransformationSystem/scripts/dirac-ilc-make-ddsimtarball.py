@@ -39,7 +39,7 @@ def copyLibraries( files, targetFolder, ):
   print "Copying files to",targetFolder
   listOfFiles = " ".join(files)
   status, copyOut = commands.getstatusoutput( RSYNCBASE+" -avzL  %s %s " % ( listOfFiles, targetFolder) )
-  if not status == 0:
+  if status != 0:
     print copyOut
     raise RuntimeError( "Error during rsync" )
 
@@ -82,7 +82,7 @@ def copyFolder( basePath, targetFolder ):
   commandString = RSYNCBASE+" -avzL  %s %s " % ( basePath, targetFolder)
   print commandString
   status, copyOut = commands.getstatusoutput( commandString )
-  if not status == 0:
+  if status != 0:
     print copyOut
     raise RuntimeError( "Error during rsync" )
   
@@ -124,20 +124,6 @@ def getDependentLibraries( library ):
     if match:
       libraries.add(match.group(1))
   return libraries
-
-
-def cleanRPath( folder ):
-  """ remove rpath from all libraries and executables in the folder
-    # for file in $( ls --color=never $LIBFOLDER/* ); do
-    # 	chrpath -d $file
-    # 	readelf -d $file | grep RPATH
-    # 	if [ $? == 0 ]; then
-    # 	    echo "FOUND RPATH Aborting!!"
-    # 	    exit 1
-    # 	fi
-    # done
-  """
-  pass
   
 def createTarBall( name, version, folder ):
   """create a tar ball from the folder
@@ -148,9 +134,9 @@ def createTarBall( name, version, folder ):
 def getRootStuff( rootsys, targetFolder ):
   """copy the root stuff we need """
   print "Copying Root"
-  status, copyOut = commands.getstatusoutput( RSYNCBASE+" -av %(rootsys)s/lib %(rootsys)s/etc %(rootsys)s/bin %(rootsys)s/cint  %(targetFolder)s" % dict(rootsys=rootsys,
-                                                                                                                                                                     targetFolder=targetFolder) )
-  if not status == 0:
+  status, copyOut = commands.getstatusoutput( RSYNCBASE+" -av %(rootsys)s/lib %(rootsys)s/etc %(rootsys)s/bin %(rootsys)s/cint  %(targetFolder)s" % dict( rootsys=rootsys,
+                                                                                                                                                          targetFolder=targetFolder) )
+  if status != 0:
     print copyOut
     raise RuntimeError( "Error during rsync" )
 
@@ -177,11 +163,31 @@ def getGeant4DataFolders( variable, targetFolder ):
   path = os.environ[variable]
   copyFolder(path, targetFolder)
 
+def createCSEntry():
+  """add the entries for this version into the Configuration System
+  <version>
+          {
+            TarBall = ddsim<version>.tgz
+            DetectorModels
+            {
+              CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
+              ...
+            }
+            AdditionalEnvVar
+            {
+              ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
+              G4INSTALL = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01
+              G4DATA = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data
+            }
+            Overwrite = True
+          }
+  """
+  pass
   
 def createDDSimTarBall():
   """ do everything to create the DDSim tarball"""
   name, version = parseArgs()
-  ddBase, lcgeoBase, rootsys = checkEnvironment()
+  ddBase, lcgeoBase, _rootsys = checkEnvironment()
 
   realTargetFolder = os.path.join( os.getcwd(), name+version )
   targetFolder = os.path.join( os.getcwd(), "temp", name+version )
