@@ -37,6 +37,7 @@ from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 
 from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo
+from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import TaskInfoException
 
 AGENT_NAME = 'ILCTransformation/DataRecoveryAgent'
 
@@ -303,7 +304,11 @@ class DataRecoveryAgent( AgentModule ):
           job.getJobInformation( self.jobMon )
           job.checkFileExistance( self.fcClient )
           if tasksDict and lfnTaskDict:
-            job.getTaskInfo( tasksDict, lfnTaskDict )
+            try:
+              job.getTaskInfo( tasksDict, lfnTaskDict )
+            except TaskInfoException as e:
+              self.log.error(" Skip Task, due to TaskInfoException: %s" % e )
+              break
             fileJobDict[job.inputFile].append( job.jobID )
           self.checkJob( job, tInfo )
           break # get out of the while loop
