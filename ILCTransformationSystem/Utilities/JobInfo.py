@@ -163,6 +163,7 @@ class JobInfo( object ):
         lfn = re.search('".*"', val)
         lfn = lfn.group(0).strip('"')
         return [lfn]
+    return []
 
   @staticmethod
   def __getMultiLFN( jdlList ):

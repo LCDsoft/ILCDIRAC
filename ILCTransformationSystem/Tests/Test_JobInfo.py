@@ -628,6 +628,9 @@ class TestJI( unittest.TestCase ):
     self.jbi._JobInfo__getInputFile( jdlList )
     self.assertEqual( self.jbi.inputFile , "/ilc/prod/clic/3tev/e1e1_o/gen/00006300/004/e1e1_o_gen_6300_4077.stdhep" )
 
+    ret = self.jbi._JobInfo__getSingleLFN( [] )
+    self.assertEqual( ret, [] )
+
   def test_checkRequests( self ):
     """ILCTransformation.Utilities.JobInfo.checkRequests............................................"""
 
