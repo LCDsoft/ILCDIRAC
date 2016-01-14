@@ -56,7 +56,7 @@ class TransformationInfo( object ):
       return
     self.__setTaskStatus( job, 'Failed' )
     if job.status != 'Failed':
-      self.__updateJobStatus( job.jobID, "Failed", minorstatus="Job forced to Failed" )
+      self.__updateJobStatus( job.jobID, "Failed", "Job forced to Failed" )
 
   def setInputUnused( self, job ):
     """set the inputfile to unused"""
@@ -87,6 +87,8 @@ class TransformationInfo( object ):
 
   def __updateJobStatus( self, jobID , status, minorstatus = None ):
     """ This method updates the job status in the JobDB
+
+    FIXME: Use the JobStateUpdate service instead of the JobDB
     """
     self.log.verbose( "self.jobDB.setJobAttribute(%s,'Status','%s',update=True)" % ( jobID, status ) )
     from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
@@ -101,7 +103,7 @@ class TransformationInfo( object ):
         self.log.verbose( "self.jobDB.setJobAttribute(%s,'MinorStatus','%s',update=True)" % ( jobID, minorstatus ) )
         result = jobDB.setJobAttribute( jobID, 'MinorStatus', minorstatus, update = True )
 
-    if not minorstatus: #Retain last minor status for stalled jobs
+    if minorstatus is None: #Retain last minor status for stalled jobs
       result = jobDB.getJobAttributes( jobID, ['MinorStatus'] )
       if result['OK']:
         minorstatus = result['Value']['MinorStatus']
@@ -111,6 +113,7 @@ class TransformationInfo( object ):
 
     result = JobLoggingDB().addLoggingRecord( jobID, status = logStatus, minor = minorstatus, source = 'DataRecoveryAgent' )
     if not result['OK']:
+      ## just the logging entry, no big loss so no exception
       self.log.warn( result )
 
     return result
@@ -145,6 +148,7 @@ class TransformationInfo( object ):
     successfullyRemoved = 0
 
     for lfnList in breakListIntoChunks( filesToDelete, 200 ):
+      ## this is needed to remove the file with the Shifter credentials and not with the server credentials
       gConfigurationData.setOptionInCFG( '/DIRAC/Security/UseServerCertificate', 'false' )
       result = DataManager().removeFile( lfnList )
       gConfigurationData.setOptionInCFG( '/DIRAC/Security/UseServerCertificate', 'true' )
@@ -153,7 +157,7 @@ class TransformationInfo( object ):
         raise RuntimeError( "Failed to remove LFNs: %s" % result['Message'] )
       for lfn, err in result['Value']['Failed'].items():
         reason = str(err)
-        if not reason in errorReasons.keys():
+        if reason not in errorReasons.keys():
           errorReasons[reason] = []
         errorReasons[reason].append( lfn )
       successfullyRemoved += len( result['Value']['Successful'].keys() )
@@ -181,12 +185,12 @@ class TransformationInfo( object ):
     done = done['Value']
     failed = failed['Value']
 
-    jobs = {}
+    jobsUnsorted = {}
     for job in done:
-      jobs[int(job)] = JobInfo( job, "Done", self.tID, self.transType )
+      jobsUnsorted[int(job)] = JobInfo( job, "Done", self.tID, self.transType )
     for job in failed:
-      jobs[int(job)] = JobInfo( job, "Failed", self.tID, self.transType )
-    jobs = OrderedDict( sorted(jobs.items(), key=lambda t: t[0]) )
+      jobsUnsorted[int(job)] = JobInfo( job, "Failed", self.tID, self.transType )
+    jobs = OrderedDict( sorted(jobsUnsorted.items(), key=lambda t: t[0]) )
 
     self.log.notice( "Found %d Done Jobs " % len(done) )
     self.log.notice( "Found %d Failed Jobs " % len(failed) )
