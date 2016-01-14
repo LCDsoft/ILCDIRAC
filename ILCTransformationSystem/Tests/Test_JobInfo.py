@@ -15,9 +15,7 @@ gLogger.setLevel("DEBUG")
 __RCSID__ = "$Id$"
 #pylint: disable=W0212, E1101
 class TestJI( unittest.TestCase ):
-  """Test the DataRecoveryAgent"""
-  dra = None
-
+  """Test the JobInfo Module"""
 
   def setUp( self ):
     self.jbi = JobInfo( jobID=123, status="Failed", tID=1234, tType = "MCReconstruction" )
