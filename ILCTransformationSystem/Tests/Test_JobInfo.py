@@ -7,6 +7,7 @@ from StringIO import StringIO
 from mock import MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR, gLogger
+import DIRAC
 
 from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import TaskInfoException, JobInfo
 
@@ -19,8 +20,8 @@ class TestJI( unittest.TestCase ):
 
   def setUp( self ):
     self.jbi = JobInfo( jobID=123, status="Failed", tID=1234, tType = "MCReconstruction" )
-    self.jobMonMock = Mock()
-
+    self.jobMonMock=Mock( name="jobMonMock", spec=DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient.JobMonitoringClient)
+    self.jobMonMock.getJobJDL = Mock()
     self.jdl2 = """
 [
   LogTargetPath = "/ilc/prod/clic/500gev/yyveyx_o/ILD/REC/00006326/LOG/00006326_015.tar";
@@ -635,7 +636,7 @@ class TestJI( unittest.TestCase ):
     ## no request
     reqMock = Mock()
     reqMock.Status = "Done"
-    reqClient = Mock( name="ReqMock" )
+    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
     reqClient.readRequestsForJobs.return_value = S_OK( {"Successful":{ } } )
     self.jbi.jobID = 1234
     self.jbi.checkRequests( reqClient )
@@ -644,7 +645,7 @@ class TestJI( unittest.TestCase ):
     ## no pending request
     reqMock = Mock()
     reqMock.Status = "Done"
-    reqClient = Mock( name="ReqMock" )
+    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
     reqClient.readRequestsForJobs.return_value = S_OK( {"Successful":{1234: reqMock } } )
     self.jbi.jobID = 1234
     self.jbi.checkRequests( reqClient )
@@ -653,7 +654,7 @@ class TestJI( unittest.TestCase ):
     ## pending request
     reqMock = Mock()
     reqMock.Status = "Waiting"
-    reqClient = Mock( name="ReqMock" )
+    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
     reqClient.readRequestsForJobs.return_value = S_OK( {"Successful":{1234: reqMock } } )
     self.jbi.jobID = 1234
     self.jbi.checkRequests( reqClient )
@@ -662,7 +663,7 @@ class TestJI( unittest.TestCase ):
     ## Failed to get Request
     reqMock = Mock()
     reqMock.Status = "Waiting"
-    reqClient = Mock( name="ReqMock" )
+    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
     reqClient.readRequestsForJobs.return_value = S_ERROR( "Request Denied" )
     with self.assertRaises( RuntimeError) as cme:
       self.jbi.checkRequests( reqClient )
@@ -670,13 +671,13 @@ class TestJI( unittest.TestCase ):
 
   def test_checkFileExistance( self ):
     """ILCTransformation.Utilities.JobInfo.checkFileExistance......................................."""
+    fcMock = Mock( name="fcMock", spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
 
     ## input and output files
     repStatus = { "Successful": { "inputFile": True, "outputFile1": False, "outputFile2": True } }
     self.jbi.inputFile = "inputFile"
     self.jbi.outputFiles = ["outputFile1", "outputFile2", "unknownFile"]
-    fcMock = Mock()
-    fcMock.exists.return_value = S_OK( repStatus )
+    fcMock.exists = Mock( return_value = S_OK( repStatus ) )
     self.jbi.checkFileExistance( fcMock )
     self.assertTrue( self.jbi.inputFileExists )
     self.assertEqual( self.jbi.outputFileStatus, ["Missing", "Exists", "Unknown"] )
@@ -686,7 +687,6 @@ class TestJI( unittest.TestCase ):
     repStatus = { "Successful": { "inputFile": True, "outputFile1": False, "outputFile2": True } }
     self.jbi.inputFile = ""
     self.jbi.outputFiles = ["outputFile1", "outputFile2", "unknownFile"]
-    fcMock = Mock()
     fcMock.exists.return_value = S_OK( repStatus )
     self.jbi.checkFileExistance( fcMock )
     self.assertEqual( self.jbi.outputFileStatus, ["Missing", "Exists", "Unknown"] )
@@ -696,7 +696,6 @@ class TestJI( unittest.TestCase ):
     repStatus = { "Successful": { "inputFile": True, "outputFile1": False, "outputFile2": True } }
     self.jbi.inputFile = ""
     self.jbi.outputFiles = ["outputFile1", "outputFile2", "unknownFile"]
-    fcMock = Mock()
     fcMock.exists.return_value = S_ERROR( "No FC" )
     with self.assertRaises( RuntimeError ) as cme:
       self.jbi.checkFileExistance( fcMock )
