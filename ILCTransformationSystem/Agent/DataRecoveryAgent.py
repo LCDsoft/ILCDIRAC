@@ -34,7 +34,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 
-from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo
+from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
 from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import TaskInfoException
 
 __RCSID__ = "$Id$"
