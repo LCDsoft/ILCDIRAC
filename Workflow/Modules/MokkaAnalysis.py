@@ -141,6 +141,8 @@ class MokkaAnalysis(ModuleBase):
     self.log.info( "Executing Mokka %s" % ( self.applicationVersion ))
 
     if self.dbSlice:
+      if self.dbSlice.lower().startswith("lfn"):
+        self.dbSlice = os.path.basename(self.dbSlice)
       self.db_dump_name = self.dbSlice
     else:
       self.db_dump_name = "CLICMokkaDB.sql"

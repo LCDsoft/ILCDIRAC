@@ -1,7 +1,9 @@
 before_script:
     #pre-installation script
     - cd ..
-    - rm -rf ILCDIRAC_commit
+    - shopt -s extglob
+    - rm -rf !(ILCDIRAC)
+    - rm -rf .installCache
     - mv ILCDIRAC ILCDIRAC_commit
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
@@ -26,8 +28,29 @@ before_script:
 #   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
 
+
+
+pylint5:
+  tags:
+    - docker
+  image: ilcdirac/slc5-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nosetest5:
+  tags:
+    - docker
+  image: ilcdirac/slc5-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
+
+
+
+
 pylint6:
-  tags: 
+  tags:
     - docker
   image: ilcdirac/slc6-base
   script:
@@ -38,6 +61,25 @@ nosetest6:
   tags:
     - docker
   image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
+
+
+
+
+pylint7:
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nosetest7:
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
   script:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
