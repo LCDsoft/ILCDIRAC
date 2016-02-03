@@ -10,7 +10,7 @@ import re
 
 def doit():
   """compile release notes rst file"""
-  res = __generateReleaseNotes( "v23r1p1" )
+  res = __generateReleaseNotes( "v25r0p0" )
   if not res['OK']:
     print res['Message']
     return 1
