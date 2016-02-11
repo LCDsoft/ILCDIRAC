@@ -1,3 +1,18 @@
+[v25r0p0]
+
+*Core
+NEW: These release notes are the summary of every pre-release after the last v23r1 release
+NEW: Based on dirac v6r14p18, many changes in Dirac
+
+*Interfaces
+NEW: Added :any:`DDSim` Interfaces, ILCDIRAC-507
+
+*Workflow
+NEW: Added :any:`DDSimAnalysis` Workflow Module, ILCDIRAC-507
+
+*ILCTransformation
+FIX: Adapt to interface changes in DIRAC/Transformation, ILCDIRAC-599
+
 [v25-pre3]
 
 *Interfaces
