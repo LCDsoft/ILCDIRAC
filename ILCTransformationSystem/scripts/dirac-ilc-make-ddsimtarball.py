@@ -6,15 +6,23 @@ Needs the chrpath and readelf utilities
 
 import sys
 import os
+import tarfile
+
+try:
+  import hashlib as md5
+except ImportError:
+  import md5
 
 from pprint import pprint
+
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
 
-from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
-
 Script.parseCommandLine( ignoreErrors = False )
+
+from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
+from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
 
 class DDSimTarMaker( object ):
   """ create a tarball of the DDSim release """
@@ -27,6 +35,9 @@ class DDSimTarMaker( object ):
     self.platform = 'x86_64-slc5-gcc43-opt'
     self.comment = ""
     self.name = "ddsim"
+    self.csapi = None
+    self.tarBallName = None
+    self.md5sum = None
 
   def copyDetectorModels( self, basePath, folder, targetFolder ):
     """copy the compact folders to the targetFolder """
@@ -39,12 +50,22 @@ class DDSimTarMaker( object ):
             self.detmodels[direct] = "detectors/"+direct+"/"+direct+".xml"
             copyFolder( os.path.join(root, direct), targetFolder )
 
-  def createTarBall( self, name, version, folder ):
+  def createTarBall( self, folder ):
     """create a tar ball from the folder
       tar zcf $TARBALLNAME $LIBFOLDER/*
     """
-    pass
+    ##Create the Tarball
+    if os.path.exists(self.tarBallName):
+      os.shutil.rm(self.tarBallName)
+    gLogger.notice("Creating Tarball...")
+    myappTar = tarfile.open(self.tarBallName, "w:gz")
+    myappTar.add(folder)
+    myappTar.close()
 
+    self.md5sum = md5.md5(open( self.tarBallName, 'r' ).read()).hexdigest()
+
+    gLogger.notice("...Done")
+    return S_OK( "Created Tarball")
 
   def parseArgs( self ):
     """ parse the command line arguments"""
@@ -52,6 +73,7 @@ class DDSimTarMaker( object ):
     #   raise RuntimeError( "Wrong number of arguments in call: '%s'" % " ".join(sys.argv) )
     self.name = sys.argv[1]
     self.version = sys.argv[2]
+    self.tarBallName = "%s%s.tgz" % (self.name, self.version)
 
 
   def checkEnvironment( self ):
@@ -80,8 +102,8 @@ class DDSimTarMaker( object ):
               Overwrite = True
             }
     """
-
-    csParameter = { "TarBall": "%s%s.tgz" % (self.name, self.version),
+    #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
+    csParameter = { "TarBall": self.tarBallName,
                     "DetectorModels": self.detmodels,
                     "AdditionalEnvVar": {
                       "ROOTSYS" : "/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30",
@@ -100,6 +122,13 @@ class DDSimTarMaker( object ):
     csPath = os.path.join( self.softSec , "%(platform)s/%(name)s/%(version)s/" % pars )
     result = self.insertCSSection( csPath, csParameter )
 
+    if self.csapi is not None:
+      resProxy = checkOrGetGroupProxy( "diracAdmin" )
+      if not resProxy['OK']:
+        gLogger.error( "Failed to get AdminProxy", resProxy['Message'] )
+        raise RuntimeError( "Failed to get diracAdminProxy" )
+      self.csapi.commit()
+
     if not result['OK']:
       gLogger.error( "Failed to create CS Section", result['Message'] )
       raise RuntimeError( "Failed to create CS Section" )
@@ -108,14 +137,15 @@ class DDSimTarMaker( object ):
     """ insert a section and values (or subsections) into the CS
 
     :param str path: full path of the new section
-    :param str pardict: dictionary of key values in the new section, can also be dictionary
+    :param str pardict: dictionary of key values in the new section, values can also be dictionaries
+    :return: S_OK(), S_ERROR()
     """
     from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
     self.csapi = CSAPI()
 
     for key, value in pardict.iteritems():
-      gLogger.notice( "adding to cs %s/%s : %s " % ( path, key, value ) )
       newSectionPath = os.path.join(path,key)
+      gLogger.debug( "Adding to cs %s : %s " % ( newSectionPath, value ) )
       self.csapi.createSection( path )
       if isinstance( value, dict ):
         res = self.insertCSSection( newSectionPath, value )
@@ -191,7 +221,10 @@ class DDSimTarMaker( object ):
     #removeSystemLibraries( realTargetFolder+"/ROOT/lib" )
     print self.detmodels
 
-    self.createCSEntry()
+
+    self.createTarBall( realTargetFolder )
+
+    #self.createCSEntry()
 
 if __name__=="__main__":
   print "Creating Tarball for DDSim"
