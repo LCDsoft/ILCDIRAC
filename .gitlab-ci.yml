@@ -23,6 +23,7 @@ before_script:
     - pip install --upgrade --force-reinstall nose
     - pip install --upgrade --force-reinstall mock
     - pip install --upgrade --force-reinstall coverage
+    - pip install --upgrade --force-reinstall MySQL-python
     - cd ILCDIRAC
 #   - dirac-proxy-init -x
 #   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
