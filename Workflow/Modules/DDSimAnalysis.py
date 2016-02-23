@@ -5,18 +5,17 @@ Run DDSim
 :since:  November 16, 2015
 '''
 
-__RCSID__ = "$Id$"
-
 import os
 import tarfile
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, unzip_file_into_dir, getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger
+__RCSID__ = "$Id$"
 
 DDSIMINPUTFORMATS = ('.stdhep', '.hepevt', '.HEPEvt', '.slcio', '.hepmc')
 
