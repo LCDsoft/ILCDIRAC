@@ -260,18 +260,22 @@ class DDSimAnalysis(ModuleBase):
     :returns: S_OK(PathToXMLFile), S_ERROR
     """
 
-    detectorModels = self.ops.getOptionsDict("/AvailableTarBalls/%s/%s/%s/DetectorModels" % (self.platform,
-                                                                                             self.applicationName,
-                                                                                             self.applicationVersion))
+    if os.path.exists(self.detectorModel + ".zip"):
+      return self._extractZip()
+    elif os.path.exists(self.detectorModel + ".tar.gz"):
+      return self._extractTar()
+    elif os.path.exists(self.detectorModel + ".tgz"):
+      return self._extractTar( extension=".tgz" )
+
+    detectorModels = self.ops.getOptionsDict("/DDSimDetectorModels/%s" % ( self.applicationVersion ) )
+    if not detectorModels['OK']:
+      self.log.error("Failed to get list of DetectorModels from the ConfigSystem", detectorModels['Message'])
+      return S_ERROR("Failed to get list of DetectorModels from the ConfigSystem")
 
     softwareFolder = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not softwareFolder['OK']:
       return softwareFolder
     softwareRoot = softwareFolder['Value']
-
-    if not detectorModels['OK']:
-      self.log.error("Failed to get list of DetectorModels from the ConfigSystem", detectorModels['Message'])
-      return S_ERROR("Failed to get list of DetectorModels from the ConfigSystem")
 
     if self.detectorModel in detectorModels['Value']:
       detModelPath = detectorModels['Value'][self.detectorModel]
@@ -280,15 +284,9 @@ class DDSimAnalysis(ModuleBase):
       self.log.info( "Found path for DetectorModel %s in CS: %s "  % ( self.detectorModel, detModelPath ) )
       return S_OK(detModelPath)
 
-    if os.path.exists(self.detectorModel + ".zip"):
-      return self._extractZip()
-    elif os.path.exists(self.detectorModel + ".tar.gz"):
-      return self._extractTar()
-    elif os.path.exists(self.detectorModel + ".tgz"):
-      return self._extractTar( extension=".tgz" )
-    else:
-      self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
-      return S_ERROR('Detector model was not found')
+
+    self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
+    return S_ERROR('Detector model was not found')
 
   def _extractTar( self, extension=".tar.gz" ):
     """ extract the detector tarball for the detectorModel """
