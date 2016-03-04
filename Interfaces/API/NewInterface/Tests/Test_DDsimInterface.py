@@ -4,17 +4,20 @@
 Test user jobfinalization
 
 """
-__RCSID__ = "$Id$"
 
 import unittest
-from mock import MagicMock as Mock, patch
+from mock import MagicMock as Mock, patch, create_autospec
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
+__RCSID__ = "$Id$"
+
 gLogger.setLevel("DEBUG")
 gLogger.showHeaders(True)
+
+#pylint: disable=protected-access
 
 class TestDDSim( unittest.TestCase ):
   """tests for the DDSim interface"""
@@ -28,7 +31,7 @@ class TestDDSim( unittest.TestCase ):
 
 
   @patch( "ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim.getKnownDetectorModels",
-          new = Mock(return_value=S_OK(['CLIC_o2_v03'])))
+          new = Mock(return_value=S_OK({'CLIC_o2_v03':"/some/path"})))
   def test_setDetectorModel1( self ):
     """test DDSIm setDetectorModel part of software................................................."""
     detModel = "CLIC_o2_v03"
@@ -45,6 +48,17 @@ class TestDDSim( unittest.TestCase ):
     res = ddsim.setDetectorModel( detModel )
     self.assertEqual( res['Message'], "No known models" )
 
+  @patch( "ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim.getKnownDetectorModels",
+          new = Mock(return_value=S_OK({'CLIC_o2_v04':"/some/path"})))
+  def test_setDetectorModel3( self ):
+    """test DDSIm setDetectorModel is not known....................................................."""
+    detModel = "ATLAS"
+    ddsim = DDSim()
+    ret = ddsim.setDetectorModel( detModel )
+    self.assertEqual( ddsim.detectorModel, '' )
+    self.assertFalse( ret['OK'] )
+    self.assertIn( "Unknown detector model in ddsim: ATLAS", ret['Message'] )
+
   @patch( "os.path.exists", new = Mock(return_value=True ) )
   def test_setDetectorModel_TB_success( self ):
     """test DDSIm setDetectorModel tarBall success.................................................."""
@@ -59,9 +73,11 @@ class TestDDSim( unittest.TestCase ):
   def test_setDetectorModel_TB_notLocal( self ):
     """test DDSIm setDetectorModel tarBall notLocal................................................."""
     detModel = "CLIC_o2_v03"
+    ext = ".tgz"
     ddsim = DDSim()
-    ddsim.setDetectorModel( detModel )
+    ddsim.setDetectorModel( detModel+ext )
     self.assertEqual( ddsim.inputSB, [] )
+    self.assertEqual( ddsim.detectorModel, detModel )
 
   def test_setDetectorModel_LFN_succcess( self ):
     """test DDSIm setDetectorModel lfn success......................................................"""
@@ -83,6 +99,23 @@ class TestDDSim( unittest.TestCase ):
     ddsim.setStartFrom( 42 )
     self.assertEqual( ddsim.startFrom, 42 )
 
+  def test_getKnownDetModels1( self ):
+    """test getKnownDetectorModels failure no version..............................................."""
+    ddsim = DDSim()
+    ret = ddsim.getKnownDetectorModels()
+    self.assertFalse( ret['OK'] )
+    self.assertEqual( "No software version defined", ret['Message'] )
+
+  def test_getKnownDetModels2( self ):
+    """test getKnownDetectorModels success.........................................................."""
+    ddsim = DDSim()
+    ddsim.version = "test"
+    import DIRAC
+    ddsim._ops = create_autospec(DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations, spec_set=True)
+    ddsim._ops.getOptionsDict.return_value = S_OK({"detModel1":"/path", "detModel2":"/path2"})
+    ret = ddsim.getKnownDetectorModels()
+    self.assertIn( "detModel1", ret['Value'] )
+    self.assertTrue( ret['OK'] )
 
 def runTests():
   """Runs our tests"""

@@ -45,7 +45,7 @@ class DDSim( LCApplication ):
     self.datatype = 'SIM'
     self.detectortype = ''
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
-
+    self._ops = Operations()
 
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is the jobID.
@@ -63,6 +63,8 @@ class DDSim( LCApplication ):
     the complete XML needs to be passed as a tarball in the input sandbox or on the grid
 
     The tarball name must be detectorModel plus extension
+    The tarball must contain all xml files inside a folder called detectorModel.
+    That is the main file is located in detectorModel/detectorModel.xml
     
     :param string detectorModel: Detector Model to use for DDSim simulation. Can
       be on CVMFS, tarball LFN or inputSandbox tarball
@@ -201,9 +203,5 @@ class DDSim( LCApplication ):
     """
     if version is None and not self.version:
       return S_ERROR( "No software version defined" )
-    platform="x86_64-slc5-gcc43-opt"
-    detectorModels = Operations().getOptionsDict("/AvailableTarBalls/%s/%s/%s/DetectorModels" % (platform,
-                                                                                                 "ddsim",
-                                                                                                 self.version))
-
+    detectorModels = self._ops.getOptionsDict("/DDSimDetectorModels/%s" % (self.version))
     return detectorModels
