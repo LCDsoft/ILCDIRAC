@@ -524,7 +524,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Message'], "Failed to get list of DetectorModels from the ConfigSystem" )
 
-  @patch("os.path.exists", new=Mock(return_value=True ) )
+  @patch("os.path.exists", new=Mock(return_value=True) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.unzip_file_into_dir", new=Mock() )
   def test_DDSim_getDetectorXML_CustomWithOfficialName( self ):
     """DDSim.getDetectorXML CustomTarball with official name........................................"""
@@ -536,7 +536,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     with patch.object(__builtin__, 'open', mock_open(read_data="RoundTable")):
       res = self.ddsim._getDetectorXML()
     print res
-    self.assertEqual( res['Value'], os.path.join( os.getcwd(), "Camelot", "Camelot.xml" ) )
+    self.assertEqual( res['Value'], os.path.join( "Camelot", "Camelot.xml" ) )
 
 class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
   """tests for _getDetectorXML """

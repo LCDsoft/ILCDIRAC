@@ -260,11 +260,17 @@ class DDSimAnalysis(ModuleBase):
     :returns: S_OK(PathToXMLFile), S_ERROR
     """
 
-    if os.path.exists(self.detectorModel + ".zip"):
+    if os.path.exists( os.path.join( self.detectorModel, self.detectorModel+ ".xml" ) ):
+      self.log.notice( "Found detector model: %s" % os.path.join( self.detectorModel, self.detectorModel+ ".xml" ) )
+      return S_OK( os.path.join( self.detectorModel, self.detectorModel+ ".xml" ) )
+    elif os.path.exists(self.detectorModel + ".zip"):
+      self.log.notice( "Found detector model zipFile: %s" % self.detectorModel+ ".zip" )
       return self._extractZip()
     elif os.path.exists(self.detectorModel + ".tar.gz"):
+      self.log.notice( "Found detector model tarball: %s" % self.detectorModel+ ".tar.gz" )
       return self._extractTar()
     elif os.path.exists(self.detectorModel + ".tgz"):
+      self.log.notice( "Found detector model tarball: %s" % self.detectorModel+ ".tgz" )
       return self._extractTar( extension=".tgz" )
 
     detectorModels = self.ops.getOptionsDict("/DDSimDetectorModels/%s" % ( self.applicationVersion ) )
@@ -302,6 +308,7 @@ class DDSimAnalysis(ModuleBase):
   def _extractZip( self ):
     """ extract the detector zip file for the detectorModel """
     try:
+      self.log.notice("Exracting zip file")
       unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
       xmlPath = os.path.join(os.getcwd(), self.detectorModel, self.detectorModel+".xml")
       return S_OK( xmlPath )
