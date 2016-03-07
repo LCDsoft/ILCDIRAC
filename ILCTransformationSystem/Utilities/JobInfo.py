@@ -1,8 +1,14 @@
 """Job Information"""
-__RCSID__ = "$Id$"
 
 from itertools import izip_longest
 import re
+
+__RCSID__ = "$Id$"
+
+class TaskInfoException( Exception ):
+  """Exception when the task info is not recoverable"""
+  def __init__( self, message ):
+    super( TaskInfoException, self ).__init__( message )
 
 class JobInfo( object ):
   """ hold information about jobs"""
@@ -48,6 +54,8 @@ class JobInfo( object ):
 
   def allFilesMissing( self ):
     """check if all files are missing"""
+    if not self.outputFileStatus:
+      return False
     return all( "Missing" in status for status in self.outputFileStatus )
 
   def someFilesMissing( self ):
@@ -72,7 +80,7 @@ class JobInfo( object ):
 
     #dict( FileID=fileID, LFN=lfn, Status=status )
     if self.inputFile != taskDict['LFN']:
-      raise RuntimeError("Task info does not fit with job info: \n %s" % str(self) )
+      raise TaskInfoException("InputFiles do not agree: %s vs . %s : \n %s" % ( self.inputFile, taskDict['LFN'], str(self) ) )
     self.fileStatus = taskDict['Status']
     self.taskFileID = taskDict['FileID']
     
@@ -155,6 +163,7 @@ class JobInfo( object ):
         lfn = re.search('".*"', val)
         lfn = lfn.group(0).strip('"')
         return [lfn]
+    return []
 
   @staticmethod
   def __getMultiLFN( jdlList ):

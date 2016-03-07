@@ -21,8 +21,6 @@ Send notification about changes
 
 """
 
-__RCSID__ = "$Id$"
-
 from collections import defaultdict
 import time
 import itertools
@@ -36,7 +34,10 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 
-from ILCDIRAC.ILCTransformationSystem.Utilities import TransformationInfo
+from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
+from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import TaskInfoException
+
+__RCSID__ = "$Id$"
 
 AGENT_NAME = 'ILCTransformation/DataRecoveryAgent'
 
@@ -177,6 +178,7 @@ class DataRecoveryAgent( AgentModule ):
                  ]
                 }
     self.jobCache = defaultdict( lambda: (0, 0) )
+    self.printEveryNJobs = self.am_getOption( 'PrintEvery', 200 )
     ##Notification
     self.notesToSend = ""
     self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch"] )
@@ -198,6 +200,7 @@ class DataRecoveryAgent( AgentModule ):
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
     self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch"] )
     self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
+    self.printEveryNJobs = self.am_getOption( 'PrintEvery', 200 )
 
     return S_OK()
   #############################################################################
@@ -292,7 +295,7 @@ class DataRecoveryAgent( AgentModule ):
     self.log.notice( "Running over all the jobs" )
     for job in jobs.values():
       counter += 1
-      if counter % 200 == 0:
+      if counter % self.printEveryNJobs == 0:
         self.log.notice( "%d/%d: %3.1fs " % (counter, nJobs, float(time.time() - startTime) ) )
       while True:
         try:
@@ -303,7 +306,11 @@ class DataRecoveryAgent( AgentModule ):
           job.getJobInformation( self.jobMon )
           job.checkFileExistance( self.fcClient )
           if tasksDict and lfnTaskDict:
-            job.getTaskInfo( tasksDict, lfnTaskDict )
+            try:
+              job.getTaskInfo( tasksDict, lfnTaskDict )
+            except TaskInfoException as e:
+              self.log.error(" Skip Task, due to TaskInfoException: %s" % e )
+              break
             fileJobDict[job.inputFile].append( job.jobID )
           self.checkJob( job, tInfo )
           break # get out of the while loop

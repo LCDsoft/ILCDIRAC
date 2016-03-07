@@ -1,18 +1,16 @@
 """TransformationInfo class to be used by ILCTransformation System"""
-__RCSID__ = "$Id$"
-
-from DIRAC import gLogger, S_OK
-from DIRAC.Core.Workflow.Workflow                              import fromXMLString
-from DIRAC.ConfigurationSystem.Client.ConfigurationData import gConfigurationData
-from DIRAC.DataManagementSystem.Client.DataManager import DataManager
-
-from ILCDIRAC.Core.Utilities.ProductionData                    import constructProductionLFNs
-from DIRAC.Core.Utilities.List import breakListIntoChunks
-from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
 
 from collections import OrderedDict
 from itertools import izip_longest
 
+from DIRAC                                                     import gLogger, S_OK
+from DIRAC.ConfigurationSystem.Client.ConfigurationData        import gConfigurationData
+from DIRAC.DataManagementSystem.Client.DataManager             import DataManager
+from DIRAC.Core.Utilities.List                                 import breakListIntoChunks
+
+from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo        import JobInfo
+
+__RCSID__ = "$Id$"
 
 class TransformationInfo( object ):
   """ hold information about transformations """
@@ -25,55 +23,14 @@ class TransformationInfo( object ):
     self.tClient = tClient
     self.jobMon = jobMon
     self.fcClient = fcClient
-    self.olist = self.__getOutputList()
     self.transType = transType
-
-  def __getTransformationWorkflow( self ):
-    """return the workflow for the transformation"""
-    res = self.tClient.getTransformationParameters( self.tID, ['Body'] )
-    if not res['OK']:
-      self.log.error( 'Could not get Body from TransformationDB' )
-      return res
-    body = res['Value']
-    workflow = fromXMLString( body )
-    workflow.resolveGlobalVars()
-    return S_OK( workflow )
-
-  def __getOutputList( self ):
-    """Get list of outputfiles"""
-    resWorkflow = self.__getTransformationWorkflow()
-    if not resWorkflow['OK']:
-      self.log.error("Failed to get Transformation Workflow")
-      raise RuntimeError( "Failed to get outputlist" )
-
-    workflow = resWorkflow['Value']
-    olist = []
-    for step in workflow.step_instances:
-      param = step.findParameter('listoutput')
-      if not param:
-        continue
-      olist.extend(param.value)
-    return olist
-
-  def getOutputFiles( self, taskID ):
-    """returns list of expected lfns for given task"""
-    commons = { 'outputList': self.olist,
-                'PRODUCTION_ID': int(self.tID),
-                'JOB_ID': int(taskID),
-              }
-    resFiles = constructProductionLFNs( commons )
-    if not resFiles['OK']:
-      raise RuntimeError( "Failed to create productionLFNs" )
-    expectedlfns = resFiles['Value']['ProductionOutputData']
-    return expectedlfns 
-
 
   def checkTasksStatus( self ):
     """Check the status for the task of given transformation and taskID"""
 
     res = self.tClient.getTransformationFiles( condDict = { 'TransformationID': self.tID } )
     if not res['OK']:
-      raise RuntimeError( "Failed to get transformation tasks", res['Message'] )
+      raise RuntimeError( "Failed to get transformation tasks: %s" % res['Message'] )
 
     tasksDict = {}
     for task in res['Value']:
@@ -99,7 +56,7 @@ class TransformationInfo( object ):
       return
     self.__setTaskStatus( job, 'Failed' )
     if job.status != 'Failed':
-      self.__updateJobStatus( job.jobID, "Failed", minorstatus="Job forced to Failed" )
+      self.__updateJobStatus( job.jobID, "Failed", "Job forced to Failed" )
 
   def setInputUnused( self, job ):
     """set the inputfile to unused"""
@@ -130,6 +87,8 @@ class TransformationInfo( object ):
 
   def __updateJobStatus( self, jobID , status, minorstatus = None ):
     """ This method updates the job status in the JobDB
+
+    FIXME: Use the JobStateUpdate service instead of the JobDB
     """
     self.log.verbose( "self.jobDB.setJobAttribute(%s,'Status','%s',update=True)" % ( jobID, status ) )
     from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
@@ -139,21 +98,27 @@ class TransformationInfo( object ):
     else:
       return S_OK( 'DisabledMode' )
 
-    if result['OK']:
-      if minorstatus:
-        self.log.verbose( "self.jobDB.setJobAttribute(%s,'MinorStatus','%s',update=True)" % ( jobID, minorstatus ) )
-        result = jobDB.setJobAttribute( jobID, 'MinorStatus', minorstatus, update = True )
+    if not result['OK']:
+      self.log.error( "Failed to update job status", result['Message'] )
+      raise RuntimeError( "Failed to update job status" )
 
-    if not minorstatus: #Retain last minor status for stalled jobs
+    if minorstatus is None: #Retain last minor status for stalled jobs
       result = jobDB.getJobAttributes( jobID, ['MinorStatus'] )
       if result['OK']:
         minorstatus = result['Value']['MinorStatus']
+      else:
+        self.log.error( "Failed to get Minor Status", result['Message'] )
+        raise RuntimeError( "Failed to get Minorstatus" )
+    else:
+      self.log.verbose( "self.jobDB.setJobAttribute(%s,'MinorStatus','%s',update=True)" % ( jobID, minorstatus ) )
+      result = jobDB.setJobAttribute( jobID, 'MinorStatus', minorstatus, update = True )
 
     logStatus = status
     from DIRAC.WorkloadManagementSystem.DB.JobLoggingDB import JobLoggingDB
 
     result = JobLoggingDB().addLoggingRecord( jobID, status = logStatus, minor = minorstatus, source = 'DataRecoveryAgent' )
     if not result['OK']:
+      ## just the logging entry, no big loss so no exception
       self.log.warn( result )
 
     return result
@@ -188,6 +153,7 @@ class TransformationInfo( object ):
     successfullyRemoved = 0
 
     for lfnList in breakListIntoChunks( filesToDelete, 200 ):
+      ## this is needed to remove the file with the Shifter credentials and not with the server credentials
       gConfigurationData.setOptionInCFG( '/DIRAC/Security/UseServerCertificate', 'false' )
       result = DataManager().removeFile( lfnList )
       gConfigurationData.setOptionInCFG( '/DIRAC/Security/UseServerCertificate', 'true' )
@@ -196,7 +162,7 @@ class TransformationInfo( object ):
         raise RuntimeError( "Failed to remove LFNs: %s" % result['Message'] )
       for lfn, err in result['Value']['Failed'].items():
         reason = str(err)
-        if not reason in errorReasons.keys():
+        if reason not in errorReasons.keys():
           errorReasons[reason] = []
         errorReasons[reason].append( lfn )
       successfullyRemoved += len( result['Value']['Successful'].keys() )
@@ -217,19 +183,15 @@ class TransformationInfo( object ):
     if 'Failed' in statusList:
       self.log.notice( "Getting 'Failed' Jobs..." )
       failed = self.__getJobs( ["Failed"] )
-    if not done['OK']:
-      raise RuntimeError( "Failed to get Done Jobs" )
-    if not failed['OK']:
-      raise RuntimeError( "Failed to get Failed Jobs" )
     done = done['Value']
     failed = failed['Value']
 
-    jobs = {}
+    jobsUnsorted = {}
     for job in done:
-      jobs[int(job)] = JobInfo( job, "Done", self.tID, self.transType )
+      jobsUnsorted[int(job)] = JobInfo( job, "Done", self.tID, self.transType )
     for job in failed:
-      jobs[int(job)] = JobInfo( job, "Failed", self.tID, self.transType )
-    jobs = OrderedDict( sorted(jobs.items(), key=lambda t: t[0]) )
+      jobsUnsorted[int(job)] = JobInfo( job, "Failed", self.tID, self.transType )
+    jobs = OrderedDict( sorted(jobsUnsorted.items(), key=lambda t: t[0]) )
 
     self.log.notice( "Found %d Done Jobs " % len(done) )
     self.log.notice( "Found %d Failed Jobs " % len(failed) )
@@ -246,10 +208,9 @@ class TransformationInfo( object ):
     #   appStates.remove( "Job Finished Successfully" )
     #   attrDict['ApplicationStatus'] = appStates
     res = self.jobMon.getJobs( attrDict )
-
     if res['OK']:
       self.log.debug("Found Prod jobs: %s" % res['Value'] )
+      return res
     else:
       self.log.error("Error finding jobs: ", res['Message'] )
       raise RuntimeError( "Failed to get jobs" )
-    return res
