@@ -1,3 +1,9 @@
+[v25r0p1]
+
+* Interfaces:
+
+FIX: Correctly handle DDSim detector models
+
 [v25r0p0]
 
 *Core
