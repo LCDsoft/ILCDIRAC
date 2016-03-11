@@ -1,6 +1,7 @@
 """
  This is the XROOTD StorageClass
  """
+#pylint: skip-file
 
 __RCSID__ = "$Id$"
 
