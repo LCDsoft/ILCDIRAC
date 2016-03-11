@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 """Test the DDSim WorkflowModule"""
-__RCSID__ = "$Id$"
 
-#pylint: disable=R0904, W0212
-
+import __builtin__
 import unittest
 import os
 import shutil
 import tempfile
 import tarfile
 from zipfile import ZipFile
-from mock import patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock, mock_open
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.DDSimAnalysis import DDSimAnalysis
+
+__RCSID__ = "$Id$"
+
+#pylint: disable=R0904, W0212
 
 gLogger.setLevel("ERROR")
 gLogger.showHeaders(True)
@@ -521,6 +523,20 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     self.ddsim.workflow_commons = dict()
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Message'], "Failed to get list of DetectorModels from the ConfigSystem" )
+
+  @patch("os.path.exists", new=Mock(return_value=True) )
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.unzip_file_into_dir", new=Mock() )
+  def test_DDSim_getDetectorXML_CustomWithOfficialName( self ):
+    """DDSim.getDetectorXML CustomTarball with official name........................................"""
+    gLogger.setLevel("ERROR")
+    self.ddsim.detectorModel = "Camelot"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( {"Camelot": "/path/to/camelot.xml"} ) )
+    self.ddsim.workflow_commons = dict()
+    #only works for python 2
+    with patch.object(__builtin__, 'open', mock_open(read_data="RoundTable")):
+      res = self.ddsim._getDetectorXML()
+    print res
+    self.assertEqual( res['Value'], os.path.join( "Camelot", "Camelot.xml" ) )
 
 class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
   """tests for _getDetectorXML """

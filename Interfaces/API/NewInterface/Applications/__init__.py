@@ -39,7 +39,7 @@ __all__ = ['GenericApplication', 'GetSRMFile', '_Root', 'RootScript', 'RootMacro
            'Whizard', 'Pythia', 'PostGenSelection', 'StdhepCut', 'StdhepCutJava',
            'Mokka', 'SLIC', 'OverlayInput', 'Marlin', 'LCSIM', 'SLICPandora',
            'CheckCollections', 'SLCIOConcatenate', 'SLCIOSplit', 'StdHepSplit',
-           'Tomato', 'CheckWNs']
+           'Tomato', 'CheckWNs', 'DDSim']
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication import GenericApplication
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile import GetSRMFile

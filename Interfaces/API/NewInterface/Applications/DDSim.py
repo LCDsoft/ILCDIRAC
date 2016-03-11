@@ -19,13 +19,16 @@ Use :func:`setExtraCLIArguments` in case you want to use command line parameters
    * Handle user provided plugins for detector models or other things
 
 """
-__RCSID__ = "$Id$"
+import types
+import os
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+
+__RCSID__ = "$Id$"
 
 class DDSim( LCApplication ):
   """ DDSim Application Class """
@@ -42,7 +45,7 @@ class DDSim( LCApplication ):
     self.datatype = 'SIM'
     self.detectortype = ''
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
-
+    self._ops = Operations()
 
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is the jobID.
@@ -60,6 +63,8 @@ class DDSim( LCApplication ):
     the complete XML needs to be passed as a tarball in the input sandbox or on the grid
 
     The tarball name must be detectorModel plus extension
+    The tarball must contain all xml files inside a folder called detectorModel.
+    That is the main file is located in detectorModel/detectorModel.xml
     
     :param string detectorModel: Detector Model to use for DDSim simulation. Can
       be on CVMFS, tarball LFN or inputSandbox tarball
@@ -94,10 +99,12 @@ class DDSim( LCApplication ):
     else:
       knownDetectors = self.getKnownDetectorModels()
       if not knownDetectors['OK']:
+        self._log.error("Failed to get knownDetectorModels", knownDetectors["Message"] )
         return knownDetectors
       elif detectorModel in knownDetectors['Value']:
         self.detectorModel = detectorModel
       else:
+        self._log.error("Unknown detector model: ", detectorModel )
         return S_ERROR( "Unknown detector model in ddsim: %s" % detectorModel )
     return S_OK()
 
@@ -133,6 +140,9 @@ class DDSim( LCApplication ):
         res = Exists(self.steeringFile)
         if not res['OK']:
           return res
+
+    if not self.detectorModel:
+      return S_ERROR("No detectorModel set")
 
     #res = self._checkRequiredApp()
     #if not res['OK']:
@@ -193,5 +203,5 @@ class DDSim( LCApplication ):
     """
     if version is None and not self.version:
       return S_ERROR( "No software version defined" )
-
-    return S_OK( ["CLIC_o2_v03"] )
+    detectorModels = self._ops.getOptionsDict("/DDSimDetectorModels/%s" % (self.version))
+    return detectorModels
