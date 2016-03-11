@@ -215,7 +215,7 @@ class XROOTStorage( StorageBase ):
     failed = {}
     successful = {}
     for src_url in urls:
-      fileName = os.path.basename( src_url )#.split("?")[0]
+      fileName = os.path.basename( src_url ).split("?")[0]
       if localPath:
         dest_file = "%s/%s" % ( localPath, fileName )
       else:
