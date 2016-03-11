@@ -26,6 +26,7 @@ class JobInfo( object ):
     self.taskFileID = None
     self.pendingRequest = False
     self.otherTasks = None
+    self.errorCount = 0
 
   def __str__( self ):
     info = "%d: %s" % ( self.jobID, self.status )
@@ -83,7 +84,8 @@ class JobInfo( object ):
       raise TaskInfoException("InputFiles do not agree: %s vs . %s : \n %s" % ( self.inputFile, taskDict['LFN'], str(self) ) )
     self.fileStatus = taskDict['Status']
     self.taskFileID = taskDict['FileID']
-    
+    self.errorCount = taskDict['ErrorCount']
+
   def checkFileExistance( self, fcClient ):
     """check if input and outputfile still exist"""
     lfns = []
@@ -197,6 +199,10 @@ class JobInfo( object ):
   def setInputProcessed( self, tInfo ):
     """mark input file as Processed"""
     tInfo.setInputProcessed( self )
+
+  def setInputMaxReset( self, tInfo ):
+    """mark input file as MaxReset"""
+    tInfo.setInputMaxReset( self )
 
   def setInputDeleted( self, tInfo ):
     """mark input file as Deleted"""

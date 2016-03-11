@@ -541,7 +541,7 @@ class TestJI( unittest.TestCase ):
     ## task is only one
     self.jbi.taskID = 1234
     self.jbi.inputFile = "lfn"
-    tasksDict = { 1234:  dict( FileID=123456, LFN="lfn", Status="Assigned" ) }
+    tasksDict = { 1234:  dict( FileID=123456, LFN="lfn", Status="Assigned", ErrorCount=7 ) }
     lfnTaskDict = {}
     self.jbi.getTaskInfo( tasksDict, lfnTaskDict )
     self.assertEqual( self.jbi.fileStatus, "Assigned" )
@@ -551,7 +551,7 @@ class TestJI( unittest.TestCase ):
     ## there are other tasks
     self.jbi.taskID = 1234
     self.jbi.inputFile = "lfn"
-    tasksDict = { 12:  dict( FileID=123456, LFN="lfn", Status="Processed" ) }
+    tasksDict = { 12: dict( FileID=123456, LFN="lfn", Status="Processed", ErrorCount=7 ) }
     lfnTaskDict = { "lfn": 12 }
     self.jbi.getTaskInfo( tasksDict, lfnTaskDict )
     self.assertEqual( self.jbi.fileStatus, "Processed" )
