@@ -6,236 +6,240 @@ Needs the chrpath and readelf utilities
 
 import sys
 import os
-import commands
-import re
+import tarfile
+import shutil
+
+try:
+  import hashlib as md5
+except ImportError:
+  import md5
+
 from pprint import pprint
 
-LCGEO_ENV="lcgeo_DIR"
-DDHEP_ENV="DD4hep_DIR"
 
-RSYNCBASE="rsync --exclude '.svn'"
+from DIRAC.Core.Base import Script
+from DIRAC import gLogger, S_OK
 
-def killRPath( folder ):
-  """remove rpath from all libraries in folder and below"""
-  for root,_dirs,files in os.walk(folder, followlinks=True):
-    for fil in files:
-      if fil.count(".so"):
-        commands.getstatusoutput( "chrpath -d %s " % os.path.join(root, fil) )
+Script.parseCommandLine( ignoreErrors = False )
 
-def getFiles( folder, ext ):
-  """ return a list of files with ext in the folder """
-  libraries = set()
-  for root,_dirs,files in os.walk(folder, followlinks=True):
-    for fil in files:
-      if fil.count(ext):
-        fullPath = os.path.join(root, fil )
-        libraries.add(fullPath)
-  return libraries
+from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
+from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
 
-def copyLibraries( files, targetFolder, ):
-  """rsync all the files to the targetFolder """
-  print "Copying files to",targetFolder
-  listOfFiles = " ".join(files)
-  status, copyOut = commands.getstatusoutput( RSYNCBASE+" -avzL  %s %s " % ( listOfFiles, targetFolder) )
-  if not status == 0:
-    print copyOut
-    raise RuntimeError( "Error during rsync" )
+class DDSimTarMaker( object ):
+  """ create a tarball of the DDSim release """
+  def __init__( self ):
+    self.detmodels = {}
+    self.lcgeo_env="lcgeo_DIR"
+    self.ddhep_env="DD4HEP"
+    self.softSec = "/Operations/Defaults/AvailableTarBalls"
+    self.version = ''
+    self.platform = 'x86_64-slc5-gcc43-opt'
+    self.comment = ""
+    self.name = "ddsim"
+    self.csapi = None
+    self.tarBallName = None
+    self.md5sum = None
 
+  def copyDetectorModels( self, basePath, folder, targetFolder ):
+    """copy the compact folders to the targetFolder """
+    for root,dirs,_files in os.walk( os.path.join(basePath, folder) ):
+      for direct in dirs:
+        if root.endswith("compact"):
+          ## the main xml file must have the same name as the folder, ILD and CLIC follow this convention already
+          xmlPath = os.path.join( root, direct, direct+".xml")
+          if os.path.exists( xmlPath ):
+            self.detmodels[direct] = "detectors/"+direct+"/"+direct+".xml"
+            copyFolder( os.path.join(root, direct), targetFolder )
 
-def resolveLinks( targetFolder ):
-  """ if library is there twice make a link from one to the other """
-  cwd = os.getcwd()
-  os.chdir(targetFolder)
-  files = getFiles( targetFolder, ".so" )
-  print files
-  files = [ os.path.basename(fil) for fil in files ]
-  print "files",files
-  for lib in files:
-    matchingLib = next(( x for x in files if lib+"." in x), None)
-    if matchingLib:
-      print "going to link",lib,"with", matchingLib
-      os.remove(lib)
-      os.symlink( os.path.basename(matchingLib), os.path.basename(lib) )
-  os.chdir(cwd)
+  def createTarBall( self, folder ):
+    """create a tar ball from the folder
+      tar zcf $TARBALLNAME $LIBFOLDER/*
+    """
+    ##Create the Tarball
+    if os.path.exists(self.tarBallName):
+      os.remove(self.tarBallName)
+    gLogger.notice("Creating Tarball...")
+    myappTar = tarfile.open(self.tarBallName, "w:gz")
+    myappTar.add(folder)
+    myappTar.close()
 
-def getLibraryPath( basePath ):
-  """ return the path to the libraryfolder """
-  return os.path.join( basePath, "lib")
+    self.md5sum = md5.md5(open( self.tarBallName, 'r' ).read()).hexdigest()
 
-def copyDetectorModels( basePath, folder, targetFolder ):
-  """copy the compact folders to the targetFolder """
-  for root,dirs,_files in os.walk( os.path.join(basePath, folder) ):
-    for direct in dirs:
-      if root.endswith("compact"):
-        copyFolder( os.path.join(root, direct),  targetFolder )
-  
+    gLogger.notice("...Done")
+    return S_OK( "Created Tarball")
 
-def copyFolder( basePath, targetFolder ):
-  """copy folder basePath to targetFolder """
-  commandString = RSYNCBASE+" -avzL  %s %s " % ( basePath, targetFolder)
-  print commandString
-  status, copyOut = commands.getstatusoutput( commandString )
-  if not status == 0:
-    print copyOut
-    raise RuntimeError( "Error during rsync" )
-  
-def getPythonStuff( basePath, targetFolder ):
-  """ copy the python stuff from basePath to targetFolder """
-  copyFolder( basePath, targetFolder )
-
-  
-def removeSystemLibraries( folder ):
-  """remove the system libraries from the folder
-  #FIXME: get this from ILCDIRAC
-    for file in libc.so* libc-2.5.so* libm.so* libpthread.so* libdl.so* libstdc++.so* libgcc_s.so.1*; do
-	rm $LIBFOLDER/$file 2> /dev/null
-    done
-  """
-  systemLibraires = ['libc.so', 'libc-2.5.so', 'libm.so', 'libpthread.so', 'libdl.so',
-                     'libstdc++.so', 'libgcc_s.so.1' ]
-
-  for root,_dirs,files in os.walk(folder):
-    for fil in files:
-      if any( lib in fil for lib in systemLibraires):
-        fullPath = os.path.join( root, fil )
-        print "Removing:",fullPath
-        try:
-          os.remove( fullPath )
-        except OSError:
-          print "Error to remove",fullPath
+  def parseArgs( self ):
+    """ parse the command line arguments"""
+    if len(sys.argv) != 3:
+      raise RuntimeError( "Wrong number of arguments in call: '%s'" % " ".join(sys.argv) )
+    self.name = sys.argv[1]
+    self.version = sys.argv[2]
+    self.tarBallName = "%s%s.tgz" % (self.name, self.version)
 
 
-  
-def getDependentLibraries( library ):
-  """ get all shared objects the library depends on
-    string1=$(ldd $programpath | grep "=>" | sed 's/.*=>//g' | sed "s/(.*)//g")
-  """
-  libraries=set()
-  _status, lddOutput = commands.getstatusoutput( " ".join(["ldd", library]) )
-  for line in lddOutput.splitlines():
-    match = re.match(r'\t.*=> (.*) \(0x', line)
-    if match:
-      libraries.add(match.group(1))
-  return libraries
+  def checkEnvironment( self ):
+    """ check if dd4hep and lcgeo are in the environment """
+    for var in [ self.ddhep_env, self.lcgeo_env , 'ROOTSYS' ]:
+      if var not in os.environ:
+        raise RuntimeError( "%s is not set" % var )
+    return os.environ[self.ddhep_env], os.environ[self.lcgeo_env], os.environ['ROOTSYS']
+
+  def createCSEntry( self ):
+    """add the entries for this version into the Configuration System
+    <version>
+            {
+              TarBall = ddsim<version>.tgz
+              AdditionalEnvVar
+              {
+                ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
+                G4INSTALL = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01
+                G4DATA = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data
+              }
+              Overwrite = True
+            }
+    Operations/DDSimDetectorModels/<Version>
+              {
+                CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
+                ...
+              }
+
+    """
+
+    #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
+    csParameter = { "TarBall": self.tarBallName,
+                    "AdditionalEnvVar": {
+                      "ROOTSYS" :   os.environ.get("ROOTSYS"),
+                      "G4INSTALL" : os.environ.get("G4INSTALL"),
+                      "G4DATA" :    os.environ.get("G4DATA"),
+                    },
+                    "Md5Sum": self.md5sum,
+                  }
 
 
-def cleanRPath( folder ):
-  """ remove rpath from all libraries and executables in the folder
-    # for file in $( ls --color=never $LIBFOLDER/* ); do
-    # 	chrpath -d $file
-    # 	readelf -d $file | grep RPATH
-    # 	if [ $? == 0 ]; then
-    # 	    echo "FOUND RPATH Aborting!!"
-    # 	    exit 1
-    # 	fi
-    # done
-  """
-  pass
-  
-def createTarBall( name, version, folder ):
-  """create a tar ball from the folder
-    tar zcf $TARBALLNAME $LIBFOLDER/*
-  """
-  pass
+    pars = dict( platform=self.platform,
+                 name="ddsim",
+                 version=self.version
+               )
 
-def getRootStuff( rootsys, targetFolder ):
-  """copy the root stuff we need """
-  print "Copying Root"
-  status, copyOut = commands.getstatusoutput( RSYNCBASE+" -av %(rootsys)s/lib %(rootsys)s/etc %(rootsys)s/bin %(rootsys)s/cint  %(targetFolder)s" % dict(rootsys=rootsys,
-                                                                                                                                                                     targetFolder=targetFolder) )
-  if not status == 0:
-    print copyOut
-    raise RuntimeError( "Error during rsync" )
+    csPath = os.path.join( self.softSec , "%(platform)s/%(name)s/%(version)s/" % pars )
+    pprint(csParameter)
+    result = self.insertCSSection( csPath, csParameter )
 
-  libraries = getFiles( targetFolder+"/lib", ".so" )
-  allLibs = set()
-  for lib in libraries:
-    allLibs.update( getDependentLibraries(lib) )
-  copyLibraries( allLibs, targetFolder+"/lib" )
+    csPathModels = "Operations/Defaults/DDSimDetectorModels"
+    csModels = { self.version : self.detmodels }
+    pprint(csModels)
 
+    result = self.insertCSSection( csPathModels, csModels )
 
-def parseArgs():
-  """ parse the command line arguments"""
-  if len(sys.argv) != 3:
-    raise RuntimeError( "Wrong number of arguments in call: '%s'" % " ".join(sys.argv) )
-  return (sys.argv[1], sys.argv[2])
+    if self.csapi is not None:
+      resProxy = checkOrGetGroupProxy( "diracAdmin" )
+      if not resProxy['OK']:
+        gLogger.error( "Failed to get AdminProxy", resProxy['Message'] )
+        raise RuntimeError( "Failed to get diracAdminProxy" )
+      self.csapi.commit()
 
-def checkEnvironment():
-  """ check if dd4hep and lcgeo are in the environment """
-  if not ( DDHEP_ENV in os.environ and LCGEO_ENV in os.environ and 'ROOTSYS' in os.environ):
-    raise RuntimeError( "ROOTSYS, or %s or %s not set" % (DDHEP_ENV, LCGEO_ENV) )
-  return os.environ[DDHEP_ENV], os.environ[LCGEO_ENV], os.environ['ROOTSYS']
+    if not result['OK']:
+      gLogger.error( "Failed to create CS Section", result['Message'] )
+      raise RuntimeError( "Failed to create CS Section" )
 
-def getGeant4DataFolders( variable, targetFolder ):
-  path = os.environ[variable]
-  copyFolder(path, targetFolder)
+  def insertCSSection( self, path, pardict ):
+    """ insert a section and values (or subsections) into the CS
 
-  
-def createDDSimTarBall():
-  """ do everything to create the DDSim tarball"""
-  name, version = parseArgs()
-  ddBase, lcgeoBase, rootsys = checkEnvironment()
+    :param str path: full path of the new section
+    :param str pardict: dictionary of key values in the new section, values can also be dictionaries
+    :return: S_OK(), S_ERROR()
+    """
+    from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
+    self.csapi = CSAPI()
 
-  realTargetFolder = os.path.join( os.getcwd(), name+version )
-  targetFolder = os.path.join( os.getcwd(), "temp", name+version )
-  for folder in (targetFolder, targetFolder+"/lib"):
-    try:
-      os.makedirs( folder )
-    except OSError:
-      pass
+    for key, value in pardict.iteritems():
+      newSectionPath = os.path.join(path,key)
+      gLogger.debug( "Adding to cs %s : %s " % ( newSectionPath, value ) )
+      self.csapi.createSection( path )
+      if isinstance( value, dict ):
+        res = self.insertCSSection( newSectionPath, value )
+      else:
+        res = self.csapi.setOption( newSectionPath, value )
 
-  libraries = set()
-  rootmaps = set()
+      if not res['OK']:
+        return res
+      else:
+        gLogger.notice( "Added to CS: %s " % res['Value'] )
 
-  dd4hepLibPath = getLibraryPath( ddBase )
-  lcgeoPath = getLibraryPath( lcgeoBase )
+    return S_OK("Added all things to cs")
 
+  def createDDSimTarBall( self ):
+    """ do everything to create the DDSim tarball"""
+    self.parseArgs()
+    ddBase, lcgeoBase, _rootsys = self.checkEnvironment()
 
-  copyDetectorModels( lcgeoBase, "CLIC" , targetFolder+"/detectors" )
-  copyDetectorModels( lcgeoBase, "ILD"  , targetFolder+"/detectors" )
+    realTargetFolder = os.path.join( os.getcwd(), self.name+self.version )
+    targetFolder = os.path.join( os.getcwd(), "temp", self.name+self.version )
+    for folder in (targetFolder, targetFolder+"/lib"):
+      try:
+        os.makedirs( folder )
+      except OSError:
+        pass
 
-  
-  libraries.update( getFiles( dd4hepLibPath, ".so") )
-  libraries.update( getFiles( lcgeoPath, ".so" ) )
+    libraries = set()
+    rootmaps = set()
 
-  rootmaps.update( getFiles( dd4hepLibPath, ".rootmap") )
-  rootmaps.update( getFiles( lcgeoPath, ".rootmap" ) )
-  
-  pprint( libraries )
-  pprint( rootmaps )
-
-  
-  allLibs = set()
-  for lib in libraries:
-    allLibs.update( getDependentLibraries(lib) )
-  ### remote root and geant4 libraries, we pick them up from
-  allLibs = set( [ lib for lib in allLibs if not ( "/geant4/" in lib.lower() or "/root/" in lib.lower()) ] )
-
-  print allLibs
-  
-  copyLibraries( libraries, targetFolder+"/lib" )
-  copyLibraries( allLibs, targetFolder+"/lib" )
-  copyLibraries( rootmaps, targetFolder+"/lib" )
-
-  getPythonStuff( ddBase+"/python"       , targetFolder+"/lib/")
-  getPythonStuff( lcgeoBase+"/lib/python", targetFolder+"/lib/" )
-  getPythonStuff( lcgeoBase+"/bin/ddsim", targetFolder+"/bin/" )
+    dd4hepLibPath = getLibraryPath( ddBase )
+    lcgeoPath = getLibraryPath( lcgeoBase )
 
 
-  ##Should get this from CVMFS
-  #getRootStuff( rootsys, targetFolder+"/ROOT" )
+    self.copyDetectorModels( lcgeoBase, "CLIC" , targetFolder+"/detectors" )
+    self.copyDetectorModels( lcgeoBase, "ILD"  , targetFolder+"/detectors" )
 
-  copyFolder( targetFolder+"/", realTargetFolder.rstrip("/") )
 
-  killRPath( realTargetFolder )
-  resolveLinks( realTargetFolder+"/lib" )
-  removeSystemLibraries( realTargetFolder+"/lib" )
-  #removeSystemLibraries( realTargetFolder+"/ROOT/lib" )
-  
+    libraries.update( getFiles( dd4hepLibPath, ".so") )
+    libraries.update( getFiles( lcgeoPath, ".so" ) )
+
+    rootmaps.update( getFiles( dd4hepLibPath, ".rootmap") )
+    rootmaps.update( getFiles( lcgeoPath, ".rootmap" ) )
+
+    pprint( libraries )
+    pprint( rootmaps )
+
+
+    allLibs = set()
+    for lib in libraries:
+      allLibs.update( getDependentLibraries(lib) )
+    ### remote root and geant4 libraries, we pick them up from
+    allLibs = set( [ lib for lib in allLibs if not ( "/geant4/" in lib.lower() or "/root/" in lib.lower()) ] )
+
+    print allLibs
+
+    copyLibraries( libraries, targetFolder+"/lib" )
+    copyLibraries( allLibs, targetFolder+"/lib" )
+    copyLibraries( rootmaps, targetFolder+"/lib" )
+
+    getPythonStuff( ddBase+"/python"       , targetFolder+"/lib/")
+    getPythonStuff( lcgeoBase+"/lib/python", targetFolder+"/lib/" )
+    getPythonStuff( lcgeoBase+"/bin/ddsim", targetFolder+"/bin/" )
+
+
+    ##Should get this from CVMFS
+    #getRootStuff( rootsys, targetFolder+"/ROOT" )
+
+    copyFolder( targetFolder+"/", realTargetFolder.rstrip("/") )
+
+    killRPath( realTargetFolder )
+    resolveLinks( realTargetFolder+"/lib" )
+    removeSystemLibraries( realTargetFolder+"/lib" )
+    #removeSystemLibraries( realTargetFolder+"/ROOT/lib" )
+    print self.detmodels
+
+
+    self.createTarBall( realTargetFolder )
+
+    self.createCSEntry()
+
 if __name__=="__main__":
   print "Creating Tarball for DDSim"
   try:
-    createDDSimTarBall()
+    DDSIMMAKER = DDSimTarMaker()
+    DDSIMMAKER.createDDSimTarBall()
   except RuntimeError as e:
     print "ERROR during tarball creation: %s " % e
     exit(1)
