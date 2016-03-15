@@ -43,7 +43,7 @@ def checkOrGetGroupProxy( group ):
     if result['Value']['group'] == group:
       return S_OK()
     else:
-      print "You don't have an ilc_prod proxy, trying to get one..."
+      print "You don't have an %s proxy, trying to get one..." % group
   else:
     print "Error to get proxy information, trying to get proxy"
 
