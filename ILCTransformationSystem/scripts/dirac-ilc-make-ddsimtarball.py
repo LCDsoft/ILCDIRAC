@@ -60,7 +60,7 @@ class DDSimTarMaker( object ):
       os.remove(self.tarBallName)
     gLogger.notice("Creating Tarball...")
     myappTar = tarfile.open(self.tarBallName, "w:gz")
-    myappTar.add(folder)
+    myappTar.add(folder, self.tarBallName[:-4])
     myappTar.close()
 
     self.md5sum = md5.md5(open( self.tarBallName, 'r' ).read()).hexdigest()
@@ -150,7 +150,8 @@ class DDSimTarMaker( object ):
     :return: S_OK(), S_ERROR()
     """
     from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
-    self.csapi = CSAPI()
+    if self.csapi is None:
+      self.csapi = CSAPI()
 
     for key, value in pardict.iteritems():
       newSectionPath = os.path.join(path,key)
