@@ -7,6 +7,7 @@ Needs the chrpath and readelf utilities
 import sys
 import os
 import tarfile
+import shutil
 
 try:
   import hashlib as md5
@@ -56,7 +57,7 @@ class DDSimTarMaker( object ):
     """
     ##Create the Tarball
     if os.path.exists(self.tarBallName):
-      os.shutil.rm(self.tarBallName)
+      os.remove(self.tarBallName)
     gLogger.notice("Creating Tarball...")
     myappTar = tarfile.open(self.tarBallName, "w:gz")
     myappTar.add(folder)
@@ -69,8 +70,8 @@ class DDSimTarMaker( object ):
 
   def parseArgs( self ):
     """ parse the command line arguments"""
-    # if len(sys.argv) != 3:
-    #   raise RuntimeError( "Wrong number of arguments in call: '%s'" % " ".join(sys.argv) )
+    if len(sys.argv) != 3:
+      raise RuntimeError( "Wrong number of arguments in call: '%s'" % " ".join(sys.argv) )
     self.name = sys.argv[1]
     self.version = sys.argv[2]
     self.tarBallName = "%s%s.tgz" % (self.name, self.version)
@@ -88,11 +89,6 @@ class DDSimTarMaker( object ):
     <version>
             {
               TarBall = ddsim<version>.tgz
-              DetectorModels
-              {
-                CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
-                ...
-              }
               AdditionalEnvVar
               {
                 ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
@@ -101,15 +97,22 @@ class DDSimTarMaker( object ):
               }
               Overwrite = True
             }
+    Operations/DDSimDetectorModels/<Version>
+              {
+                CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
+                ...
+              }
+
     """
+
     #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
     csParameter = { "TarBall": self.tarBallName,
-                    "DetectorModels": self.detmodels,
                     "AdditionalEnvVar": {
-                      "ROOTSYS" : "/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30",
-                      "G4INSTALL" : "/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01",
-                      "G4DATA" : "/cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data",
-                    }
+                      "ROOTSYS" :   os.environ.get("ROOTSYS"),
+                      "G4INSTALL" : os.environ.get("G4INSTALL"),
+                      "G4DATA" :    os.environ.get("G4DATA"),
+                    },
+                    "Md5Sum": self.md5sum,
                   }
 
 
@@ -118,9 +121,15 @@ class DDSimTarMaker( object ):
                  version=self.version
                )
 
-
     csPath = os.path.join( self.softSec , "%(platform)s/%(name)s/%(version)s/" % pars )
+    pprint(csParameter)
     result = self.insertCSSection( csPath, csParameter )
+
+    csPathModels = "Operations/Defaults/DDSimDetectorModels"
+    csModels = { self.version : self.detmodels }
+    pprint(csModels)
+
+    result = self.insertCSSection( csPathModels, csModels )
 
     if self.csapi is not None:
       resProxy = checkOrGetGroupProxy( "diracAdmin" )
@@ -224,7 +233,7 @@ class DDSimTarMaker( object ):
 
     self.createTarBall( realTargetFolder )
 
-    #self.createCSEntry()
+    self.createCSEntry()
 
 if __name__=="__main__":
   print "Creating Tarball for DDSim"
