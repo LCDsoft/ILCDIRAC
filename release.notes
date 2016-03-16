@@ -1,3 +1,13 @@
+[v25r0p2]
+
+* Core:
+
+NEW: Based on dirac v6r14p24
+
+* Workflow:
+
+FIX: DDSim: correctly handle the tarball
+
 [v25r0p1]
 
 * Interfaces:

@@ -188,7 +188,7 @@ class DDSimAnalysis(ModuleBase):
     """ Create an environment script for ddsim. Only used when CVMFS native installation not available
 
     We need ROOTSYS, G4INSTALL and G4DATA as additional environment variables in the CS
-
+    We need to set DD4hepINSTALL !
     """
     ##Need to fetch the new LD_LIBRARY_PATH
     newLDLibraryPath = getNewLDLibs(platform, appname, appversion)
@@ -216,6 +216,7 @@ class DDSimAnalysis(ModuleBase):
 
     ##Executable:
     script.append('declare -x PATH=%s/bin:$PATH' % softwareRoot )
+    script.append('declare -x DD4hepINSTALL=%s' % softwareRoot )
 
     ##Python objects, pyroot
     script.append('declare -x PYTHONPATH=%s/lib/python:$PYTHONPATH' % softwareRoot )
