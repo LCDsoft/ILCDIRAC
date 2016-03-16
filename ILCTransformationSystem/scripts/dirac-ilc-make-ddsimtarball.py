@@ -192,6 +192,8 @@ class DDSimTarMaker( object ):
     self.copyDetectorModels( lcgeoBase, "CLIC" , targetFolder+"/detectors" )
     self.copyDetectorModels( lcgeoBase, "ILD"  , targetFolder+"/detectors" )
 
+    copyFolder( ddBase+"/DDDetectors/compact", realTargetFolder.rstrip("/")+"/DDDetectors")
+
 
     libraries.update( getFiles( dd4hepLibPath, ".so") )
     libraries.update( getFiles( lcgeoPath, ".so" ) )

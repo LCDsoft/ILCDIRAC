@@ -62,6 +62,10 @@ def copyFolder( basePath, targetFolder ):
   """copy folder basePath to targetFolder """
   commandString = RSYNCBASE+" -avzL  %s %s " % ( basePath, targetFolder)
   print commandString
+  try:
+    os.makedirs( targetFolder )
+  except OSError:
+    pass
   status, copyOut = commands.getstatusoutput( commandString )
   if status != 0:
     print copyOut
@@ -101,6 +105,8 @@ def getDependentLibraries( library ):
   libraries=set()
   _status, lddOutput = commands.getstatusoutput( " ".join(["ldd", library]) )
   for line in lddOutput.splitlines():
+    if "not found" in line:
+      raise RuntimeError( "Environment is not complete!: %s" % line )
     match = re.match(r'\t.*=> (.*) \(0x', line)
     if match:
       libraries.add(match.group(1))
