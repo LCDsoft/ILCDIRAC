@@ -195,10 +195,9 @@ class DDSim( LCApplication ):
     """return a list of known detectorModels
 
     Depends on the version of the software though...
-    TODO: Pick this up from the ConfigSystem by version
 
     :param string version: Optional: Software version for which to print the detector models. If not given the version of the application instance is used.
-    :returns: list of detector models known for this software version
+    :returns: S_OK with list of detector models known for this software version, S_ERROR
     
     """
     if version is None and not self.version:
