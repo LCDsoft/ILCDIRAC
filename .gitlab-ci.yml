@@ -25,7 +25,7 @@ before_script:
     - pip install --upgrade --force-reinstall coverage
     - pip install --upgrade --force-reinstall MySQL-python
     - cd ILCDIRAC
-#   - dirac-proxy-init -x
+    - dirac-proxy-init -x
 #   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
 
@@ -47,6 +47,13 @@ nosetest5:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
+cvmfstests5:
+  tags:
+    - docker
+  image: ilcdirac/slc5-base
+  script:
+    - source ../bashrc
+    - python .gitlab-ci.d/run-cvmfstests.py
 
 
 
@@ -66,6 +73,14 @@ nosetest6:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
+cvmfstests6:
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - python .gitlab-ci.d/run-cvmfstests.py
+
 
 
 
@@ -84,3 +99,11 @@ nosetest7:
   script:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
+
+cvmfstests7:
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - python .gitlab-ci.d/run-cvmfstests.py
