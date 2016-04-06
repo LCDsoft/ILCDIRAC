@@ -25,7 +25,7 @@ before_script:
     - pip install --upgrade --force-reinstall coverage
     - pip install --upgrade --force-reinstall MySQL-python
     - cd ILCDIRAC
-    - { echo $CERT_PASSPHRASE } dirac-proxy-init -x
+    - { echo $CERT_PASSPHRASE } | dirac-proxy-init -x
 #   - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
 
