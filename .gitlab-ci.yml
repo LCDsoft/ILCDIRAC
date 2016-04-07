@@ -26,8 +26,8 @@ before_script:
     - pip install --upgrade --force-reinstall MySQL-python
     - cd ILCDIRAC
     - source ../bashrc
-    - cp /root/.globus/user*.pem $X509_USER_CERT/
     - echo $X509_USER_CERT
+    - echo $HOME
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
