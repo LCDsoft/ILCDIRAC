@@ -25,9 +25,9 @@ before_script:
     - pip install --upgrade --force-reinstall coverage
     - pip install --upgrade --force-reinstall MySQL-python
     - cd ILCDIRAC
+    - ls /root/.globus/
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
-
 
 
 
@@ -53,7 +53,7 @@ cvmfstests5:
   image: ilcdirac/slc5-base
   script:
     - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.py
+    - python .gitlab-ci.d/run-cvmfstests.py -o /LocalSite/LocalArea=./cvmfstests
 
 
 
@@ -79,7 +79,7 @@ cvmfstests6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.py
+    - python .gitlab-ci.d/run-cvmfstests.py -o /LocalSite/LocalArea=./cvmfstests
 
 
 
@@ -100,10 +100,11 @@ nosetest7:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
-cvmfstests7:
-  tags:
-    - docker
-  image: ilcdirac/cc7-base
-  script:
-    - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.py
+# disabled because cert is missing on cc7
+# cvmfstests7:
+#  tags:
+#    - docker
+#  image: ilcdirac/cc7-base
+#  script:
+#    - source ../bashrc
+#    - python .gitlab-ci.d/run-cvmfstests.py
