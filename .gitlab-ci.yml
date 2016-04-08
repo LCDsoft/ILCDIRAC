@@ -56,7 +56,7 @@ cvmfstests5:
   image: ilcdirac/slc5-base
   script:
     - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.sh
+    - .gitlab-ci.d/run-cvmfstests.sh
 
 
 
