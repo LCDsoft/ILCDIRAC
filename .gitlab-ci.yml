@@ -1,3 +1,5 @@
+
+
 before_script:
     #pre-installation script
     - cd ..
@@ -101,7 +103,7 @@ nosetest7:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
- cvmfstests7:
+cvmfstests7:
   tags:
     - docker
   image: ilcdirac/cc7-base
