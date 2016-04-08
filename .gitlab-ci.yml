@@ -53,7 +53,7 @@ cvmfstests5:
   image: ilcdirac/slc5-base
   script:
     - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.py -o /LocalSite/LocalArea = ./cvmfstests
+    - python .gitlab-ci.d/run-cvmfstests.py -o /LocalSite/LocalArea=./cvmfstests
 
 
 

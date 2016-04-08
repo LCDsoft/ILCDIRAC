@@ -11,8 +11,8 @@ __RCSID__ = "$Id$"
 
 import unittest
 from mock import patch, MagicMock as Mock
-#from DIRAC.Core.Base import Script
-from DIRAC import S_OK
+from DIRAC.Core.Base import Script
+from DIRAC import S_OK, gConfig
 from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
 
 class JobTestCase( unittest.TestCase ):
@@ -50,9 +50,13 @@ class JobTestCase( unittest.TestCase ):
                           lcsimPreSteeringFile=myLCSimPreSteeringFile,
                           lcsimPostSteeringFile=myLCSimPostSteeringFile,
                           rootVersion="ILCSoft-01-17-08",
+                          lcioVersion="ILCSoft-01-17-08",
                         )
 
     self.myTests = TestCreater(clip, parameterDict)
+
+    gConfig.setOptionValue( '/LocalSite/LocalArea', "/home/jebbing/cvmfstests" )
+    gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
 
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
@@ -88,6 +92,7 @@ class JobTestCase( unittest.TestCase ):
       res = self.myTests.runJobLocally(thisJob,"Whizard")
       self.assertTrue ( res['OK'] )
 
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -137,12 +142,25 @@ def runTests():
   """runs the tests"""
   clip = CLIParams()
   clip.registerSwitches()
-  #Script.parseCommandLine()
+  Script.parseCommandLine()
 
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( JobTestCase )
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
   print testResult
 
 
+def runUtilitiesTest():
+  """runs the utilities test only"""
+  clip = CLIParams()
+  clip.registerSwitches()
+  Script.parseCommandLine()
+
+  suite = unittest.TestSuite()
+  suite.addTest(JobTestCase('test_utilities'))
+  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
+  print testResult
+
+
 if __name__ == '__main__':
-  runTests()
+#  runTests()
+  runUtilitiesTest()

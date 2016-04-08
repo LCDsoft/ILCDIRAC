@@ -171,7 +171,7 @@ class TestCreater(object):
     self.lcsimVersion = params.get( "lcsimVersion" )
     self.steeringFileVersion = params.get( "steeringFileVersion", None )
     self.rootVersion = params["rootVersion"]
-
+    self.lcioVersion = params["lcioVersion"]
     self.energy = params.get("energy")
     self.backgroundType = params.get("backgroundType")
     self.machine = params.get("machine")
@@ -421,6 +421,8 @@ class TestCreater(object):
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOSplit
     lciosplit = SLCIOSplit()
+    if self.lcioVersion:
+      lciosplit.setVersion(self.lcioVersion)
     lciosplit.setNumberOfEventsPerFile(events_per_file)
     lciosplit.setOutputFile("testlciosplit.slcio")
     return lciosplit
@@ -431,6 +433,8 @@ class TestCreater(object):
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOConcatenate
     lcioconcat = SLCIOConcatenate()
+    if self.lcioVersion:
+      lcioconcat.setVersion(self.lcioVersion)
     lcioconcat.setOutputFile("testlcioconcat.slcio")
     return lcioconcat
 
@@ -724,6 +728,7 @@ class TestCreater(object):
 
   def createUtilityTests(self):
     """Create tests for utility applications"""
+    print "here"
     self.log.notice("Creating tests for utility applications")
     jobwsplit = self.getJob()
     whsplit = self.getWhizard(10)
@@ -759,6 +764,7 @@ class TestCreater(object):
     # joblciosplit.setInputData("/ilc/prod/clic/1.4tev/e2e2_o/ILD/DST/00002215/000/e2e2_o_dst_2215_46.slcio")
     joblciosplit.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_ild_e2e2_o_sim_2214_26.slcio")
     mylciosplit = self.getLCIOSplit(100)
+    mylciosplit.setVerison
     res = joblciosplit.append(mylciosplit)
     if not res['OK']:
       self.log.error("Failed adding SLCIOSplit:", res['Message'])
