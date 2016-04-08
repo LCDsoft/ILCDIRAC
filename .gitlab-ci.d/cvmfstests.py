@@ -7,13 +7,17 @@ Stops at any error.
 
 :author: sposs
 '''
-__RCSID__ = "$Id$"
 
 import unittest
+import os
 from mock import patch, MagicMock as Mock
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, gConfig
 from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
+
+
+__RCSID__ = "$Id$"
+
 
 class JobTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
@@ -61,7 +65,8 @@ class JobTestCase( unittest.TestCase ):
 
     self.myTests = TestCreater(clip, parameterDict)
 
-    gConfig.setOptionValue( '/LocalSite/LocalArea', "/home/jebbing/cvmfstests" )
+    gConfig.setOptionValue( '/LocalSite/LocalArea', os.path.join(os.getcwd(), "cvmfstests" ))
+
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
 
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
