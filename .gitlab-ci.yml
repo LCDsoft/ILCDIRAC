@@ -101,7 +101,6 @@ nosetest7:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
- disabled because cert is missing on cc7
  cvmfstests7:
   tags:
     - docker
