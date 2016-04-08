@@ -18,7 +18,14 @@ from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCrea
 class JobTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
   """
-
+  
+  @classmethod
+  def setUpClass(cls):
+    """Read in parameters etc."""
+ #   #clip = CLIParams()
+ #   #clip.registerSwitches()
+    Script.parseCommandLine()
+  
   def setUp(self):
     """set up the objects"""
     super(JobTestCase, self).setUp()
@@ -49,8 +56,7 @@ class JobTestCase( unittest.TestCase ):
                           gearFile='GearOutput.xml',
                           lcsimPreSteeringFile=myLCSimPreSteeringFile,
                           lcsimPostSteeringFile=myLCSimPostSteeringFile,
-                          rootVersion="ILCSoft-01-17-08",
-                          lcioVersion="ILCSoft-01-17-08",
+                          rootVersion="ILCSoft-01-17-08"
                         )
 
     self.myTests = TestCreater(clip, parameterDict)
@@ -140,9 +146,9 @@ class JobTestCase( unittest.TestCase ):
 
 def runTests():
   """runs the tests"""
-  clip = CLIParams()
-  clip.registerSwitches()
-  Script.parseCommandLine()
+  #clip = CLIParams()
+  #clip.registerSwitches()
+  #Script.parseCommandLine()
 
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( JobTestCase )
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
@@ -151,9 +157,9 @@ def runTests():
 
 def runUtilitiesTest():
   """runs the utilities test only"""
-  clip = CLIParams()
-  clip.registerSwitches()
-  Script.parseCommandLine()
+  #clip = CLIParams()
+  #clip.registerSwitches()
+  #Script.parseCommandLine()
 
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_utilities'))

@@ -24,6 +24,8 @@ before_script:
     - pip install --upgrade --force-reinstall mock
     - pip install --upgrade --force-reinstall coverage
     - pip install --upgrade --force-reinstall MySQL-python
+    - pip install --upgrade --force-reinstall pytest
+    - pip install --upgrade --force-reinstall pytest-cov
     - cd ILCDIRAC
     - export HOME=/root/
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
@@ -53,7 +55,7 @@ cvmfstests5:
   image: ilcdirac/slc5-base
   script:
     - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.py -o /LocalSite/LocalArea=./cvmfstests
+    - python .gitlab-ci.d/run-cvmfstests.sh
 
 
 
@@ -79,8 +81,7 @@ cvmfstests6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
-    - python .gitlab-ci.d/run-cvmfstests.py -o /LocalSite/LocalArea = ./cvmfstests
-
+    - .gitlab-ci.d/run-cvmfstests.sh
 
 
 
@@ -100,11 +101,11 @@ nosetest7:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
-# disabled because cert is missing on cc7
-# cvmfstests7:
-#  tags:
-#    - docker
-#  image: ilcdirac/cc7-base
-#  script:
-#    - source ../bashrc
-#    - python .gitlab-ci.d/run-cvmfstests.py
+ disabled because cert is missing on cc7
+ cvmfstests7:
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-cvmfstests.sh
