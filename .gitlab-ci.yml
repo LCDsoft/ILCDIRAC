@@ -27,7 +27,6 @@ before_script:
     - pip install --upgrade --force-reinstall coverage
     - pip install --upgrade --force-reinstall MySQL-python
     - pip install --upgrade --force-reinstall pytest
-    - pip install --upgrade --force-reinstall pytest-cov
     - cd ILCDIRAC
     - export HOME=/root/
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
