@@ -65,8 +65,14 @@ class JobTestCase( unittest.TestCase ):
 
     self.myTests = TestCreater(clip, parameterDict)
 
-    gConfig.setOptionValue( '/LocalSite/LocalArea', os.path.join(os.getcwd(), "cvmfstests" ))
+    # Differentiate between local execution and execution in docker
+    localsitelocalarea = ''
+    if os.path.exists("/home/jebbing/"):
+      localsitelocalarea = "/home/jebbing/cvmfstests"
+    else:
+      localsitelocalarea = os.path.join(os.getcwd(), "cvmfstests" )
 
+    gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea)
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
 
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
