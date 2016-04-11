@@ -28,6 +28,7 @@ before_script:
     - pip install --upgrade --force-reinstall MySQL-python
     - pip install --upgrade --force-reinstall pytest
     - cd ILCDIRAC
+    - java -version
     - export HOME=/root/
     - java -version
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
