@@ -236,6 +236,7 @@ class DDSimAnalysis(ModuleBase):
     ##Root and Geant4 Library Path
     script.append('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH')
     script.append('declare -x LD_LIBRARY_PATH=$G4INSTALL/lib64:$LD_LIBRARY_PATH')
+    script.append('declare -x LD_LIBRARY_PATH=$DD4hepINSTALL/lib:$LD_LIBRARY_PATH')
 
     ###mandatory geant 4 data
     script.append('declare -x G4LEDATA=$(ls -d $G4DATA/G4EMLOW*)')
