@@ -43,7 +43,6 @@ class JobTestCase( unittest.TestCase ):
     overlayrun = clip.testOverlay
     clip.testRoot = True
     myMarlinSteeringFile = "bbudsc_3evt_stdreco.xml"
-
     myLCSimPreSteeringFile = "clic_cdr_prePandoraOverlay_1400.0.lcsim" if overlayrun else "clic_cdr_prePandora.lcsim"
     myLCSimPostSteeringFile = "clic_cdr_postPandoraOverlay.lcsim"
     parameterDict = dict( mokkaVersion="ILCSoft-01-17-06",
@@ -64,26 +63,30 @@ class JobTestCase( unittest.TestCase ):
                         )
 
     self.myTests = TestCreater(clip, parameterDict)
-
     # Differentiate between local execution and execution in docker
     localsitelocalarea = ''
     if os.path.exists("/home/jebbing/"):
       localsitelocalarea = "/home/jebbing/cvmfstests"
     else:
       localsitelocalarea = os.path.join(os.getcwd(), "cvmfstests" )
-
     gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea)
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
-    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False')
+    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False' )
     gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
     gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/stdhepcutjava/1.0/Overwrite', 'False' )
-    gConfig.setOptionValue('/Resources/Countries/local/AssignedTo', 'ch')
+    gConfig.setOptionValue( '/Resources/Countries/local/AssignedTo' , 'ch' )
 
-
+  
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  #@patch("DIRAC.Core.Utilities.Network.getFQDN", new=Mock(return_value='pclcd32docker.cern.ch'))
+  #@patch("ILCDIRAC.Workflow.Modules.UserJobFinalization.siteName", new=Mock(return_value='MyCustomValue'))
+  #@patch("DIRAC.siteName", new=Mock(return_value='MyCustomValue'))
+  #@patch("DIRAC.Core.Utilities.Network.socket.getfqdn", new=Mock(return_value='pclcd32docker.cern.ch'))
+  #@patch("socket.getfqdn", new=Mock(return_value='pclcd32docker.cern.ch'))
+  #@patch("socket.gethostbyaddr", new=Mock(return_value=('pclcd32docker.cern.ch', [], ['172.17.0.1'])))
   def test_mokka(self):
     """create test for mokka"""
     jobs = self.myTests.createMokkaTest()
@@ -192,7 +195,20 @@ def runUtilitiesTest():
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
   print testResult
 
+def runMokkaTest():
+  """runs the utilities test only"""
+  #clip = CLIParams()
+  #clip.registerSwitches()
+  #Script.parseCommandLine()
+
+  suite = unittest.TestSuite()
+  suite.addTest(JobTestCase('test_mokka'))
+  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
+  print testResult
+  
 
 if __name__ == '__main__':
   runTests()
   #runUtilitiesTest()
+  #runMokkaTest()
+  
