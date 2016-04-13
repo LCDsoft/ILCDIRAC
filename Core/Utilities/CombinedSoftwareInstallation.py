@@ -52,7 +52,7 @@ class CombinedSoftwareInstallation(object):
       self.jobConfig = self.job['Platform']
     else:
       self.jobConfig = natOS.CMTSupportedConfig()[0]
-
+    
     self.apps = []
     for app in apps:
       DIRAC.gLogger.verbose( 'Requested Package %s' % app )
@@ -68,8 +68,7 @@ class CombinedSoftwareInstallation(object):
         depapp = (dep['app'], dep['version'])
         self.apps.append(depapp)
       self.apps.append(app)
-
-      
+    
     self.ceConfigs = []
     if 'CompatiblePlatforms' in self.ce:
       self.ceConfigs = self.ce['CompatiblePlatforms']
@@ -78,7 +77,7 @@ class CombinedSoftwareInstallation(object):
     #else:
     ### Use always the list of compatible platform.
     self.ceConfigs = natOS.CMTSupportedConfig()
-
+    
     self.sharedArea = getSharedAreaLocation()
     DIRAC.gLogger.info("SharedArea is %s" % self.sharedArea)
     self.localArea  = getLocalAreaLocation()
@@ -196,10 +195,13 @@ def getSharedAreaLocation():
                                                "$OSG_APP",
                                                "/cvmfs/oasis.opensciencegrid.org/ilc/clic",
                                              ] )
+  
   if not isinstance( listOfSharedAreas , list ):
     listOfSharedAreas = [ listOfSharedAreas ]
+    
   DIRAC.gLogger.debug( "ListOfSharedAreas: %s " % ", ".join(listOfSharedAreas) )
   sharedArea = ''
+  
   for area in listOfSharedAreas:
     DIRAC.gLogger.debug( "Checking SharedArea %s " % area )
     if area.startswith( "$" ): ## is an environment variable
@@ -208,7 +210,7 @@ def getSharedAreaLocation():
         sharedArea = os.path.join( os.environ[envVar], 'clic' )
     else:
       sharedArea = area
-
+    
     if os.path.exists( sharedArea ):
       DIRAC.gLogger.info( "Using shared area %s based on %s " %( sharedArea, area ) )
       break
@@ -216,13 +218,13 @@ def getSharedAreaLocation():
   if DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
     sharedArea = DIRAC.gConfig.getValue('/LocalSite/SharedArea')
     DIRAC.gLogger.debug( 'Using CE SharedArea at "%s"' % sharedArea )
-    
+  
   if len(sharedArea):
     # if defined, check that it really exists
     if not os.path.isdir( sharedArea ):
       DIRAC.gLogger.warn( 'Missing Shared Area Directory:', sharedArea )
       sharedArea = ''
-
+  
   return sharedArea
 
 def createSharedArea():
@@ -303,6 +305,8 @@ def getSoftwareFolder(platform, appname, appversion):
     return S_OK(res['Value'][0])
   
   app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
+  DIRAC.gLogger.error('Looking in /AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion))
+  
   if not app_tar:
     return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
   if app_tar.count("gz"):
@@ -312,6 +316,7 @@ def getSoftwareFolder(platform, appname, appversion):
     
   localArea = getLocalAreaLocation()
   sharedArea = getSharedAreaLocation()
+  DIRAC.gLogger.error('Expecting stdhepcut in ' + os.path.join(localArea, folder))
   if os.path.exists(os.path.join(localArea, folder)):
     mySoftwareRoot = localArea
   elif os.path.exists(os.path.join(sharedArea, folder)):

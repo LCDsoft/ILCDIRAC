@@ -52,16 +52,6 @@ nosetest5:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 
-cvmfstests5:
-  tags:
-    - docker
-  image: ilcdirac/slc5-base
-  script:
-    - source ../bashrc
-    - .gitlab-ci.d/run-cvmfstests.sh
-
-
-
 pylint6:
   tags:
     - docker
@@ -81,7 +71,7 @@ nosetest6:
 cvmfstests6:
   tags:
     - docker
-  image: ilcdirac/slc6-base
+  image: ilcdirac/slc6-extra
   script:
     - source ../bashrc
     - .gitlab-ci.d/run-cvmfstests.sh
@@ -103,11 +93,3 @@ nosetest7:
   script:
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
-
-cvmfstests7:
-  tags:
-    - docker
-  image: ilcdirac/cc7-base
-  script:
-    - source ../bashrc
-    - .gitlab-ci.d/run-cvmfstests.sh

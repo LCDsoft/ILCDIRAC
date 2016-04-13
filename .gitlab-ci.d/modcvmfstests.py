@@ -74,7 +74,15 @@ class JobTestCase( unittest.TestCase ):
 
     gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea)
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
+    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False')
+    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
+    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/stdhepcutjava/1.0/Overwrite', 'False' )
+    #gConfig.setOptionValue( '/Operations/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False')
+    #gConfig.setOptionValue( '/Operations/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
+    #gConfig.setOptionValue( '/Operations/AvailableTarBalls/x86_64-slc5-gcc43-opt/stdhepcutjava/1.0/Overwrite', 'False' )
 
+
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -86,6 +94,7 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Mokka")
     self.assertTrue ( res['OK'] )
 
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -96,7 +105,8 @@ class JobTestCase( unittest.TestCase ):
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Marlin")
     self.assertTrue ( res['OK'] )
-
+  
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -115,13 +125,18 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_utilities(self):
     """create test for utilities"""
+    print "Creating Test"
     jobs = self.myTests.createUtilityTests()
     self.assertTrue ( jobs['OK'] )
+    print "Creation OK"
     theseJobs = jobs['Value']
     for thisJob in theseJobs:
+      print "Running a Job"
       res = self.myTests.runJobLocally(thisJob,"Utility")
       self.assertTrue ( res['OK'] )
-
+      print "Job executed correctly"
+      
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -133,6 +148,7 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Root")
     self.assertTrue ( res['OK'] )
 
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -144,6 +160,7 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Root")
     self.assertTrue ( res['OK'] )
 
+  #@unittest.skip("Temporarily disabled due to length") 
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -180,4 +197,4 @@ def runUtilitiesTest():
 
 if __name__ == '__main__':
   runTests()
-  #  runUtilitiesTest()
+  #runUtilitiesTest()

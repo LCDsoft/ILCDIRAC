@@ -60,7 +60,6 @@ class UserJob(Job):
     else:
       self.log.error("Could not determine group, you do not have the right proxy.")       
       return self._reportError("Could not determine group, you do not have the right proxy.")
-    
     res = self._addToWorkflow()
     if not res['OK']:
       return res

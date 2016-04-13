@@ -815,6 +815,7 @@ class TestCreater(object):
         print os.path.join( curdir, "input2.root"), os.getcwd()
 
     resJob = self.runJob(job, jobName)
+
     os.chdir(curdir)
     if not resJob['OK']:
       return resJob
