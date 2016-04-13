@@ -809,9 +809,9 @@ class TestCreater(object):
                         file->ls();
                       }
                       ''' )
-
+      testfiledir = 'Testfiles'
       for fileName in ['input.root', 'input2.root']:
-        shutil.copy( os.path.join( curdir, fileName), os.getcwd() )
+        shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
         print os.path.join( curdir, "input2.root"), os.getcwd()
 
     resJob = self.runJob(job, jobName)
