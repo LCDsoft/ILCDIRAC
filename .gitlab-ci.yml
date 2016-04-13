@@ -29,11 +29,8 @@ before_script:
     - pip install --upgrade --force-reinstall pytest
     - cd ILCDIRAC
     - export HOME=/root/
-    - cat /etc/passwd
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
-
-
 
 pylint5:
   tags:
@@ -73,7 +70,7 @@ cvmfstests6:
   image: ilcdirac/slc6-extra
   script:
     - source ../bashrc
-    - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - echo "mysql:x:0:0:"MySQL Server":/var/lib/mysql:/bin/bash" >> /etc/passwd
     - .gitlab-ci.d/run-cvmfstests.sh
 
 

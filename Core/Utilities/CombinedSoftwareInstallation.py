@@ -305,7 +305,6 @@ def getSoftwareFolder(platform, appname, appversion):
     return S_OK(res['Value'][0])
   
   app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
-  DIRAC.gLogger.error('Looking in /AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion))
   
   if not app_tar:
     return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
@@ -316,7 +315,6 @@ def getSoftwareFolder(platform, appname, appversion):
     
   localArea = getLocalAreaLocation()
   sharedArea = getSharedAreaLocation()
-  DIRAC.gLogger.error('Expecting stdhepcut in ' + os.path.join(localArea, folder))
   if os.path.exists(os.path.join(localArea, folder)):
     mySoftwareRoot = localArea
   elif os.path.exists(os.path.join(sharedArea, folder)):
