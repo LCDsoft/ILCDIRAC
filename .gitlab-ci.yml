@@ -73,6 +73,7 @@ cvmfstests6:
   image: ilcdirac/slc6-extra
   script:
     - source ../bashrc
+    - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - .gitlab-ci.d/run-cvmfstests.sh
 
 
