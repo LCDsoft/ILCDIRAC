@@ -1,5 +1,6 @@
 stages:
-    - setUp
+    - setUp1
+    - setUp2
     - pylinttests
     - nose56
     - nose7AndCVMFS
@@ -7,7 +8,7 @@ stages:
 
 setUpJob1:
   image: ilcdirac/slc5-base
-  stage: setUp
+  stage: setUp1
   tags:
     - docker
   script:
@@ -37,7 +38,7 @@ setUpJob1:
 
 setUpJob2:
   image: ilcdirac/slc6-base
-  stage: setUp
+  stage: setUp1
   tags:
     - docker
   script:
@@ -75,7 +76,7 @@ setUpJob2:
 
 setUpJob3:
   image: ilcdirac/cc7-base
-  stage: setUp
+  stage: setUp2
   tags:
     - docker
   script:
@@ -112,7 +113,7 @@ setUpJob3:
 
 setUpJob4:
   image: ilcdirac/slc6-extra
-  stage: setUp
+  stage: setUp2
   tags:
     - docker
   script:
