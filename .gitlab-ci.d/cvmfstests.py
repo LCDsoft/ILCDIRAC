@@ -10,6 +10,7 @@ Stops at any error.
 
 import unittest
 import os
+import pwd
 from mock import patch, MagicMock as Mock
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, gConfig
@@ -26,9 +27,9 @@ class JobTestCase( unittest.TestCase ):
   @classmethod
   def setUpClass(cls):
     """Read in parameters etc."""
-    #clip = CLIParams()
+    #clip = CLIParams()       # Already in setUp
     #clip.registerSwitches()
-    Script.parseCommandLine()
+    Script.parseCommandLine() # Perform only once, multiple invocations probably don't hurt
   
   def setUp(self):
     """set up the objects"""
@@ -65,11 +66,15 @@ class JobTestCase( unittest.TestCase ):
     self.myTests = TestCreater(clip, parameterDict)
     # Differentiate between local execution and execution in docker
     localsitelocalarea = ''
-    if os.path.exists("/home/jebbing/"):
-      localsitelocalarea = "/home/jebbing/cvmfstests"
+    uid = os.getuid()
+    user_info = pwd.getpwuid( uid )
+    homedir = os.path.join( 'home', user_info.pw_name )
+    cvmfstestsdir = 'cvmfstests'
+    if os.path.exists( homedir ):
+      localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
     else:
-      localsitelocalarea = os.path.join(os.getcwd(), "cvmfstests" )
-    gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea)
+      localsitelocalarea = os.path.join( os.getcwd(), cvmfstestsdir )
+    gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea )
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
     gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False' )
     gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
@@ -81,12 +86,6 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
-  #@patch("DIRAC.Core.Utilities.Network.getFQDN", new=Mock(return_value='pclcd32docker.cern.ch'))
-  #@patch("ILCDIRAC.Workflow.Modules.UserJobFinalization.siteName", new=Mock(return_value='MyCustomValue'))
-  #@patch("DIRAC.siteName", new=Mock(return_value='MyCustomValue'))
-  #@patch("DIRAC.Core.Utilities.Network.socket.getfqdn", new=Mock(return_value='pclcd32docker.cern.ch'))
-  #@patch("socket.getfqdn", new=Mock(return_value='pclcd32docker.cern.ch'))
-  #@patch("socket.gethostbyaddr", new=Mock(return_value=('pclcd32docker.cern.ch', [], ['172.17.0.1'])))
   def test_mokka(self):
     """create test for mokka"""
     jobs = self.myTests.createMokkaTest()
@@ -175,7 +174,7 @@ class JobTestCase( unittest.TestCase ):
 
 def runTests():
   """runs the tests"""
-  #clip = CLIParams()
+  #clip = CLIParams()          # See setUpClass
   #clip.registerSwitches()
   #Script.parseCommandLine()
 

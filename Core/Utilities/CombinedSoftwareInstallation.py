@@ -68,7 +68,8 @@ class CombinedSoftwareInstallation(object):
         depapp = (dep['app'], dep['version'])
         self.apps.append(depapp)
       self.apps.append(app)
-    
+
+
     self.ceConfigs = []
     if 'CompatiblePlatforms' in self.ce:
       self.ceConfigs = self.ce['CompatiblePlatforms']
@@ -194,14 +195,11 @@ def getSharedAreaLocation():
                                                "$VO_ILC_SW_DIR",
                                                "$OSG_APP",
                                                "/cvmfs/oasis.opensciencegrid.org/ilc/clic",
-                                             ] )
-  
+                                             ] )  
   if not isinstance( listOfSharedAreas , list ):
     listOfSharedAreas = [ listOfSharedAreas ]
-    
   DIRAC.gLogger.debug( "ListOfSharedAreas: %s " % ", ".join(listOfSharedAreas) )
   sharedArea = ''
-  
   for area in listOfSharedAreas:
     DIRAC.gLogger.debug( "Checking SharedArea %s " % area )
     if area.startswith( "$" ): ## is an environment variable
@@ -304,8 +302,7 @@ def getSoftwareFolder(platform, appname, appversion):
   if res["OK"]:
     return S_OK(res['Value'][0])
   
-  app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')
-  
+  app_tar = Operations().getValue('/AvailableTarBalls/%s/%s/%s/TarBall'%(platform, appname, appversion), '')  
   if not app_tar:
     return S_ERROR("Could not find %s, %s name from CS" % (appname, appversion) )
   if app_tar.count("gz"):
