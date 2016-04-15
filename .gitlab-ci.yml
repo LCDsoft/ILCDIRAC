@@ -4,7 +4,9 @@ stages:
     - nose56
     - nose7AndCVMFS
 
-.setUpJobTemplate: &setUpScript  # Hidden job, used to define the setupscript
+
+setUpJob1:
+  image: ilcdirac/slc5-base
   stage: setUp
   tags:
     - docker
@@ -32,21 +34,118 @@ stages:
     - cd ILCDIRAC
     - export HOME=/root/
 
-setUpJob1:
-  image: ilcdirac/slc5-base
-  <<: *setUpScript
 
 setUpJob2:
   image: ilcdirac/slc6-base
-  <<: *setUpScript
+  stage: setUp
+  tags:
+    - docker
+  script:
+    #pre-installation script
+    - cd ..
+    - shopt -s extglob
+    - rm -rf !(ILCDIRAC)
+    - rm -rf .installCache
+    - mv ILCDIRAC ILCDIRAC_commit
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - chmod +x dirac-install
+    - ./dirac-install -V ILCDIRAC -r v25r0p0
+    - rm -rf DIRAC
+    - mkdir DIRAC
+    - cd DIRAC
+    - git clone https://github.com/DIRACGrid/DIRAC.git .
+    - git checkout origin/rel-v6r14
+    - cd ..
+    - rm -rf ILCDIRAC
+    - mv ILCDIRAC_commit ILCDIRAC
+    - source bashrc
+    - dirac-deploy-scripts
+    - pip install --upgrade --force-reinstall pip
+    - pip install --upgrade --force-reinstall pylint
+    - pip install --upgrade --force-reinstall nose
+    - pip install --upgrade --force-reinstall mock
+    - pip install --upgrade --force-reinstall coverage
+    - pip install --upgrade --force-reinstall MySQL-python
+    - pip install --upgrade --force-reinstall pytest
+    - cd ILCDIRAC
+    - export HOME=/root/
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
+
 
 setUpJob3:
   image: ilcdirac/cc7-base
-  <<: *setUpScript
+  stage: setUp
+  tags:
+    - docker
+  script:
+    #pre-installation script
+    - cd ..
+    - shopt -s extglob
+    - rm -rf !(ILCDIRAC)
+    - rm -rf .installCache
+    - mv ILCDIRAC ILCDIRAC_commit
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - chmod +x dirac-install
+    - ./dirac-install -V ILCDIRAC -r v25r0p0
+    - rm -rf DIRAC
+    - mkdir DIRAC
+    - cd DIRAC
+    - git clone https://github.com/DIRACGrid/DIRAC.git .
+    - git checkout origin/rel-v6r14
+    - cd ..
+    - rm -rf ILCDIRAC
+    - mv ILCDIRAC_commit ILCDIRAC
+    - source bashrc
+    - dirac-deploy-scripts
+    - pip install --upgrade --force-reinstall pip
+    - pip install --upgrade --force-reinstall pylint
+    - pip install --upgrade --force-reinstall nose
+    - pip install --upgrade --force-reinstall mock
+    - pip install --upgrade --force-reinstall coverage
+    - pip install --upgrade --force-reinstall MySQL-python
+    - pip install --upgrade --force-reinstall pytest
+    - cd ILCDIRAC
+    - export HOME=/root/
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
 setUpJob4:
   image: ilcdirac/slc6-extra
-  <<: *setUpScript
+  stage: setUp
+  tags:
+    - docker
+  script:
+    #pre-installation script
+    - cd ..
+    - shopt -s extglob
+    - rm -rf !(ILCDIRAC)
+    - rm -rf .installCache
+    - mv ILCDIRAC ILCDIRAC_commit
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - chmod +x dirac-install
+    - ./dirac-install -V ILCDIRAC -r v25r0p0
+    - rm -rf DIRAC
+    - mkdir DIRAC
+    - cd DIRAC
+    - git clone https://github.com/DIRACGrid/DIRAC.git .
+    - git checkout origin/rel-v6r14
+    - cd ..
+    - rm -rf ILCDIRAC
+    - mv ILCDIRAC_commit ILCDIRAC
+    - source bashrc
+    - dirac-deploy-scripts
+    - pip install --upgrade --force-reinstall pip
+    - pip install --upgrade --force-reinstall pylint
+    - pip install --upgrade --force-reinstall nose
+    - pip install --upgrade --force-reinstall mock
+    - pip install --upgrade --force-reinstall coverage
+    - pip install --upgrade --force-reinstall MySQL-python
+    - pip install --upgrade --force-reinstall pytest
+    - cd ILCDIRAC
+    - export HOME=/root/
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
 
 pylint5:
