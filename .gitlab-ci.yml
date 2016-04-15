@@ -141,6 +141,23 @@ setUpJob4:
     - export HOME=/root/
 
 
+setUpJob1:
+  image: ilcdirac/slc5-base
+  <<: *setUpScript
+
+setUpJob2:
+  image: ilcdirac/slc6-base
+  <<: *setUpScript
+
+setUpJob3:
+  image: ilcdirac/cc7-base
+  <<: *setUpScript
+
+setUpJob4:
+  image: ilcdirac/slc6-extra
+  <<: *setUpScript
+
+
 pylint5:
   stage: pylinttests
   tags:
