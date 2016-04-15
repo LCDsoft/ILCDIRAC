@@ -1,6 +1,14 @@
+stages:
+    - setUp
+    - pylinttests
+    - nose56
+    - nose7AndCVMFS
 
-
-before_script:
+.setUpJobTemplate: &setUpScript  # Hidden job, used to define the setupscript
+  stage: setUp
+  tags:
+    - docker
+  script:
     #pre-installation script
     - cd ..
     - shopt -s extglob
@@ -24,7 +32,25 @@ before_script:
     - cd ILCDIRAC
     - export HOME=/root/
 
+setUpJob1:
+  image: ilcdirac/slc5-base
+  <<: *setUpScript
+
+setUpJob2:
+  image: ilcdirac/slc6-base
+  <<: *setUpScript
+
+setUpJob3:
+  image: ilcdirac/cc7-base
+  <<: *setUpScript
+
+setUpJob4:
+  image: ilcdirac/slc6-extra
+  <<: *setUpScript
+
+
 pylint5:
+  stage: pylinttests
   tags:
     - docker
   image: ilcdirac/slc5-base
@@ -33,6 +59,7 @@ pylint5:
     - .gitlab-ci.d/run-pylint.sh
 
 nosetest5:
+  stage: nose56
   tags:
     - docker
   image: ilcdirac/slc5-base
@@ -41,6 +68,7 @@ nosetest5:
     - .gitlab-ci.d/run-nosetests.sh
 
 pylint6:
+  stage: pylinttests
   tags:
     - docker
   image: ilcdirac/slc6-base
@@ -49,6 +77,7 @@ pylint6:
     - .gitlab-ci.d/run-pylint.sh
 
 nosetest6:
+  stage: nose56
   tags:
     - docker
   image: ilcdirac/slc6-base
@@ -57,6 +86,7 @@ nosetest6:
     - .gitlab-ci.d/run-nosetests.sh
 
 cvmfstests6:
+  stage: nose7AndCVMFS
   tags:
     - docker
   image: ilcdirac/slc6-extra
@@ -68,6 +98,7 @@ cvmfstests6:
     - .gitlab-ci.d/run-cvmfstests.sh
 
 pylint7:
+  stage: pylinttests
   tags:
     - docker
   image: ilcdirac/cc7-base
@@ -76,6 +107,7 @@ pylint7:
     - .gitlab-ci.d/run-pylint.sh
 
 nosetest7:
+  stage: nose7AndCVMFS
   tags:
     - docker
   image: ilcdirac/cc7-base
