@@ -861,9 +861,8 @@ class TestCreater(object):
                           std::cout << string << std::endl;
                           TFile* file = TFile::Open(string);
                         file->ls();
-                      }
-                      ''' )
-
+                        }
+                        ''' )
       testfiledir = 'Testfiles'
       for fileName in ['input.root', 'input2.root']:
         shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
