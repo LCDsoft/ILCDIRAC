@@ -867,8 +867,6 @@ class TestCreater(object):
       for fileName in ['input.root', 'input2.root']:
         shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
         print os.path.join( curdir, "input2.root"), os.getcwd()
-
-      testfiledir = 'Testfiles'
       if specialName in jobName.lower():
         for fileName in filesForJob[specialName]:
           shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
