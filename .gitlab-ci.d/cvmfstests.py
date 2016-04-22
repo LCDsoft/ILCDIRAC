@@ -12,9 +12,8 @@ import unittest
 import os
 import pwd
 from mock import patch, MagicMock as Mock
-from DIRAC.Core.Base import Script
-from DIRAC import S_OK, gConfig
-from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
+from DIRAC import S_OK, gLogger#, gConfig
+#from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
 
 
 __RCSID__ = "$Id$"
@@ -29,11 +28,14 @@ class JobTestCase( unittest.TestCase ):
     """Read in parameters etc."""
     #clip = CLIParams()       # Already in setUp
     #clip.registerSwitches()
-    Script.parseCommandLine() # Perform only once, multiple invocations probably don't hurt
+    from DIRAC.Core.Base import Script
+    Script.parseCommandLine() # Perform only once, multiple invocations can cause small issues
   
   def setUp(self):
     """set up the objects"""
     super(JobTestCase, self).setUp()
+    from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import CLIParams
+
     clip = CLIParams()
     clip.testOverlay=True
     clip.testChain = True
@@ -60,28 +62,33 @@ class JobTestCase( unittest.TestCase ):
                           gearFile='GearOutput.xml',
                           lcsimPreSteeringFile=myLCSimPreSteeringFile,
                           lcsimPostSteeringFile=myLCSimPostSteeringFile,
+                          ddsimVersion="ILCSoft-01-17-09",
+                          ddsimDetectorModel="CLIC_o2_v03",
+                          ddsimInputFile="qq_ln_gen_6701_975.stdhep",
+                          inputFilesPath = 'LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
                           rootVersion="ILCSoft-01-17-08"
                         )
-
+    from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater
     self.myTests = TestCreater(clip, parameterDict)
     # Differentiate between local execution and execution in docker
     localsitelocalarea = ''
     uid = os.getuid()
     user_info = pwd.getpwuid( uid )
-    homedir = os.path.join( 'home', user_info.pw_name )
+    homedir = os.path.join( os.sep + 'home', user_info.pw_name )
     cvmfstestsdir = 'cvmfstests'
     if os.path.exists( homedir ):
       localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
     else:
       localsitelocalarea = os.path.join( os.getcwd(), cvmfstestsdir )
+    from DIRAC import gConfig
     gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea )
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
-    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False' )
-    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
-    gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/stdhepcutjava/1.0/Overwrite', 'False' )
+    #gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False' )
+    #gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
+    #gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/stdhepcutjava/1.0/Overwrite', 'False' )
     gConfig.setOptionValue( '/Resources/Countries/local/AssignedTo' , 'ch' )
 
-  
+    
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
@@ -94,6 +101,31 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Mokka")
     self.assertTrue ( res['OK'] )
 
+
+  #@unittest.skip("Temporarily disabled due to length")
+  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  def test_ddsim(self):
+    """create tests for ddsim"""
+    # First run, all files available
+    jobs = self.myTests.createDDSimTest()
+    self.assertTrue ( jobs['OK'] )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "DDSim")
+    self.assertTrue ( res['OK'] )
+
+    ddsimInputFile="qq_ln_gen_6701_975.stdhep"
+    ddsimTarball="FCalTB.tar.gz"
+    
+    # Replace inputfile with 00.stdhep
+    jobs = self.myTests.createDDSimTest(ddsimInputFile, ddsimTarball)
+    self.assertTrue ( jobs['OK'] )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "DDSim")
+    self.assertTrue ( res['OK'] )
+
+    
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
@@ -101,6 +133,18 @@ class JobTestCase( unittest.TestCase ):
   def test_marlin(self):
     """create test for marlin"""
     jobs = self.myTests.createMarlinTest()
+    self.assertTrue ( jobs['OK'] )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "Marlin")
+    self.assertTrue ( res['OK'] )
+
+  #@unittest.skip("Temporarily disabled due to length")
+  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  def test_marlin2(self):
+    """create test for marlin"""
+    jobs = self.myTests.createMarlinTest( True )
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Marlin")
@@ -204,10 +248,21 @@ def runMokkaTest():
   suite.addTest(JobTestCase('test_mokka'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
   print testResult
+
+def runDDSimTest():
+  """runs the ddsim test only"""
+  #Script.parseCommandLine()
+  suite = unittest.TestSuite()
+  suite.addTest(JobTestCase('test_ddsim'))
+  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
+  print testResult
   
 
 if __name__ == '__main__':
-  runTests()
+  #runTests()
   #runUtilitiesTest()
   #runMokkaTest()
+  gLogger.error("Main")
+  runDDSimTest()
+  
   

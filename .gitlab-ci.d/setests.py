@@ -134,7 +134,7 @@ class SETestCase( unittest.TestCase ):
   def replicateTo( self, site ):
     """Replicates the random file to another storage element and checks if it worked
     """
-    result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile[4:], site])
+    result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile[4:], site, "-ddd"])
     self.assertOperationSuccessful(result, "Failed replicating file")
 
   def removeFileAllowFailing ( self ):
