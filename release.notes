@@ -1,3 +1,9 @@
+[v25r0p4]
+
+* WorkloadManagement:
+
+FIX: Copy DownloadInputData from DIRAC and fix ILCDIRAC-655
+
 [v25r0p3]
 
 * Core:
