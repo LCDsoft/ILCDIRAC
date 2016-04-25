@@ -300,12 +300,15 @@ class DownloadInputData:
     result = StorageElement( seName ).getFile( lfn, localPath = downloadDir )
     if not result['OK']:
       self.log.warn( 'Problem getting %s from %s:\n%s' % ( lfn, seName, result['Message'] ) )
+      self.__cleanFailedFile( lfn, downloadDir )
       return result
     if lfn in result['Value']['Failed']:
       self.log.warn( 'Problem getting %s from %s:\n%s' % ( lfn, seName, result['Value']['Failed'][lfn] ) )
+      self.__cleanFailedFile( lfn, downloadDir )
       return S_ERROR( result['Value']['Failed'][lfn] )
     if lfn not in result['Value']['Successful']:
       self.log.warn( "%s got from %s not in Failed nor Successful???\n" % ( lfn, seName ) )
+      self.__cleanFailedFile( lfn, downloadDir )
       return S_ERROR( "Return from StorageElement.getFile() incomplete" )
 
     if os.path.exists( localFile ):
@@ -335,5 +338,16 @@ class DownloadInputData:
       self.log.warn( jobParam['Message'] )
 
     return jobParam
+
+  def __cleanFailedFile( self, lfn, downloadDir ):
+    """ Try to remove a file after a failed download attempt """
+    filePath = os.path.join( downloadDir, os.path.basename( lfn ) )
+    self.log.error( "Trying to remove file after failed download", "Local path: %s " % filePath )
+    if os.path.exists( filePath ):
+      try:
+        os.remove( filePath )
+        self.log.error( "Removed file remnant after failed download", "Local path: %s " % filePath )
+      except OSError as e:
+        self.log.error( "Failed to remove file after failed download", repr(e) )
 
 # EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#
