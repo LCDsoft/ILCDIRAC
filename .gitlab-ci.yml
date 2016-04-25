@@ -136,17 +136,9 @@ setUpJob4:
     - mv ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
-    - pip install --upgrade --force-reinstall pip
-    - pip install --upgrade --force-reinstall pylint
-    - pip install --upgrade --force-reinstall nose
-    - pip install --upgrade --force-reinstall mock
-    - pip install --upgrade --force-reinstall coverage
-    - pip install --upgrade --force-reinstall MySQL-python
-    - pip install --upgrade --force-reinstall pytest
+    - pip install --upgrade pip pylint nose mock coverage MySQL-python pytest
     - cd ILCDIRAC
     - export HOME=/root/
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
 
 
 pylint5:
