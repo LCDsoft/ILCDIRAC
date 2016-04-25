@@ -103,15 +103,13 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Mokka")
     self.assertTrue ( res['OK'] )
 
-
-<<<<<<< HEAD
-=======
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_ddsim(self):
     """create tests for ddsim"""
+    print "ddsimtest"
     # First run, all files available
     jobs = self.myTests.createDDSimTest()
     self.assertTrue ( jobs['OK'] )
@@ -130,7 +128,6 @@ class JobTestCase( unittest.TestCase ):
     self.assertTrue ( res['OK'] )
 
     
->>>>>>> Rework tests for SEs, add 2 DDSim Tests (with local files and tarball) to CVMFS Tests.
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
@@ -169,20 +166,13 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Marlin")
     self.assertTrue ( res['OK'] )
 
-<<<<<<< HEAD
-  @unittest.skip("Temporarily disabled due to length")
-=======
   #@unittest.skip("Temporarily disabled due to length")
->>>>>>> Rework tests for SEs, add 2 DDSim Tests (with local files and tarball) to CVMFS Tests.
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_marlin2(self):
     """create test for marlin"""
-<<<<<<< HEAD
     print "marlin test2"
-=======
->>>>>>> Rework tests for SEs, add 2 DDSim Tests (with local files and tarball) to CVMFS Tests.
     jobs = self.myTests.createMarlinTest( True )
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
@@ -302,10 +292,6 @@ if __name__ == '__main__':
   #runTests()
   #runUtilitiesTest()
   #runMokkaTest()
-<<<<<<< HEAD
-=======
-  gLogger.error("Main")
->>>>>>> Rework tests for SEs, add 2 DDSim Tests (with local files and tarball) to CVMFS Tests.
   runDDSimTest()
   
   

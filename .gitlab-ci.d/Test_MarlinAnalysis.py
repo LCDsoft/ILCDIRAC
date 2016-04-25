@@ -184,3 +184,4 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
     # TODO: add case for undefined steering file
     self.assertTrue(result['OK'])
+
