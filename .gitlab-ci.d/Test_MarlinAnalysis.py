@@ -75,8 +75,113 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.assertTrue(result['OK'])
     self.assertTrue("should not proceed" in result['Value'].lower())
 
-  #def test_runit
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
+  def test_runit_getEnvScriptFails( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    self.assertFalse( result['OK'])
+    msg = result['Message'].lower()
+    self.assertIn('env script', msg)
+  #Test 2 errors by mocking  getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript) and self.GetInputFiles() 
 
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_ERROR()))
+  def test_runit_getInputFilesFails( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    self.assertFalse( result['OK'])
 
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, False, True, False, False]))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_OK('testdir')))
+  def test_runit_handlepandorasettings_no_log( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    # TODO: add assertion shutil.copy was called on the pandorasettings.xml
+    # TODO: add case for undefined steering file
+    self.assertFalse(result['OK'])
+    self.assertIn('not produce the expected log', result['Message'].lower())
     
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, False, True, False]))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_ERROR('prepxml')))
+  def test_runit_xmlgenerationfails( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    self.assertFalse(result['OK'])
+    self.assertIn('prepxml', result['Message'].lower())
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, False, True, False]))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_ERROR('mardll')))
+  def test_runit_marlindllfails( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    self.assertFalse(result['OK'])
+    self.assertIn('wrong with software installation', result['Message'].lower())
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, False, True, False]))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_ERROR('marlin failed')))
+  def test_runit_runmarlinfails( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    # TODO: add assertion shutil.copy was called on the pandorasettings.xml
+    # TODO: add case for undefined steering file
+    self.assertFalse(result['OK'])
+    self.assertIn('failed to run', result['Message'].lower())
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, True, True, True, True]))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_OK([""])))
+  def test_runit_complete( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    # TODO: add assertion shutil.copy was called on the pandorasettings.xml
+    # TODO: add case for undefined steering file
+    self.assertTrue(result['OK'])
 

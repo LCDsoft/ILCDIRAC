@@ -75,6 +75,7 @@ class JobTestCase( unittest.TestCase ):
     uid = os.getuid()
     user_info = pwd.getpwuid( uid )
     homedir = os.path.join( os.sep + 'home', user_info.pw_name )
+    os.chdir(homedir)
     cvmfstestsdir = 'cvmfstests'
     if os.path.exists( homedir ):
       localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
@@ -95,6 +96,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_mokka(self):
     """create test for mokka"""
+    print "mokka test"
     jobs = self.myTests.createMokkaTest()
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
@@ -108,6 +110,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_ddsim(self):
     """create tests for ddsim"""
+    print "ddsimtest"
     # First run, all files available
     jobs = self.myTests.createDDSimTest()
     self.assertTrue ( jobs['OK'] )
@@ -126,24 +129,26 @@ class JobTestCase( unittest.TestCase ):
     self.assertTrue ( res['OK'] )
 
     
-  #@unittest.skip("Temporarily disabled due to length")
+  @unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_marlin(self):
     """create test for marlin"""
+    print "marlin test"
     jobs = self.myTests.createMarlinTest()
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Marlin")
     self.assertTrue ( res['OK'] )
 
-  #@unittest.skip("Temporarily disabled due to length")
+  @unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_marlin2(self):
     """create test for marlin"""
+    print "marlin test2"
     jobs = self.myTests.createMarlinTest( True )
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
@@ -156,6 +161,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_whizard(self):
     """create test for whizard"""
+    print "whizard test"
     jobs = self.myTests.createWhizardTest()
     self.assertTrue ( jobs['OK'] )
     theseJobs = jobs['Value']
@@ -169,16 +175,13 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_utilities(self):
     """create test for utilities"""
-    print "Creating Test"
+    print "Utilities test"
     jobs = self.myTests.createUtilityTests()
     self.assertTrue ( jobs['OK'] )
-    print "Creation OK"
     theseJobs = jobs['Value']
     for thisJob in theseJobs:
-      print "Running a Job"
       res = self.myTests.runJobLocally(thisJob,"Utility")
       self.assertTrue ( res['OK'] )
-      print "Job executed correctly"
       
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -186,6 +189,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_root(self):
     """create test for root 1"""
+    print "test root"
     jobs = self.myTests.createRootScriptTest()
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
@@ -198,6 +202,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_root2(self):
     """create test for root 2"""
+    print "test root2"
     jobs = self.myTests.createRootHaddTest()
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
@@ -210,6 +215,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
   def test_root3(self):
     """create test for root 3"""
+    print "test root3"
     jobs = self.myTests.createRootMacroTest()
     self.assertTrue ( jobs['OK'] )
     thisJob = jobs['Value']
@@ -262,7 +268,6 @@ if __name__ == '__main__':
   #runTests()
   #runUtilitiesTest()
   #runMokkaTest()
-  gLogger.error("Main")
   runDDSimTest()
   
   

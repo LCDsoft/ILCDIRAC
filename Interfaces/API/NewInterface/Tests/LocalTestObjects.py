@@ -244,7 +244,7 @@ class TestCreater(object):
         self.log.error("Failed adding Whizard:", res['Message'])
         return S_ERROR("Failed adding Whizard")
     elif self.clip.testInputData:
-      jobmo.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+      jobmo.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
     else:
       self.log.error("Mokka does not know where to get its input from")
       return S_ERROR("Mokka does not know where to gets its input from")
@@ -604,7 +604,7 @@ class TestCreater(object):
         self.log.error("Failed adding Whizard:", res['Value'])
         return S_ERROR()
     elif self.clip.testInputData:
-      jobslic.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+      jobslic.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
     else:
       self.log.error("SLIC does not know where to get its input from")
       return S_ERROR()
@@ -636,7 +636,7 @@ class TestCreater(object):
           return S_ERROR()
         moma.getInputFromApp(whma)
       else:
-        jobma.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+        jobma.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
         moma.setNumberOfEvents(2)
       res = jobma.append(moma)
       if not res['OK']:
