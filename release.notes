@@ -1,3 +1,23 @@
+[v25r0p4]
+
+* WorkloadManagement:
+
+FIX: Copy DownloadInputData from DIRAC and fix ILCDIRAC-655
+
+[v25r0p3]
+
+* Core:
+
+NEW: Based on dirac v6r14p26
+
+* ILCTransformationSystem:
+
+FIX: DataRecoveryAgent now properly sets MaxReset for files with a large ErrorCoutn
+
+* Workflow:
+
+FIX: DDSim Add DD4hepInstall environment variable to script for TarBallBased installations,, Fixes problem for running these jobs locally.
+
 [v25r0p2]
 
 * Core:

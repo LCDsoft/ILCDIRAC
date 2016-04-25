@@ -171,7 +171,6 @@ class TestCreater(object):
     self.lcsimVersion = params.get( "lcsimVersion" )
     self.steeringFileVersion = params.get( "steeringFileVersion", None )
     self.rootVersion = params["rootVersion"]
-
     self.energy = params.get("energy")
     self.backgroundType = params.get("backgroundType")
     self.machine = params.get("machine")
@@ -810,12 +809,13 @@ class TestCreater(object):
                         file->ls();
                       }
                       ''' )
-
+      testfiledir = 'Testfiles'
       for fileName in ['input.root', 'input2.root']:
-        shutil.copy( os.path.join( curdir, fileName), os.getcwd() )
+        shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
         print os.path.join( curdir, "input2.root"), os.getcwd()
 
     resJob = self.runJob(job, jobName)
+
     os.chdir(curdir)
     if not resJob['OK']:
       return resJob

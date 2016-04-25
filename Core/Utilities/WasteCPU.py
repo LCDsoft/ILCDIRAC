@@ -24,6 +24,6 @@ def wasteCPUCycles(timecut):
         return S_ERROR("Failed to waste %s CPU seconds:%s" % (timecut, str(x)))
       if number <= 0:
         number = -number + 4
-  except Exception as e:
+  except Exception as e: #pylint: disable=broad-except
     return S_ERROR("Failed to waste %s CPU seconds, OtherException: %r" % (timecut, e))
   return S_OK("Successfully wasted %s seconds" % timecut)
