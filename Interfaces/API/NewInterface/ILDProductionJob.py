@@ -1,12 +1,11 @@
 """
-ILD DBD specific production job utility
-Only used to submit Transformations, not usable for individual jobs
+ILD DBD specific  job utility
 
-:author: S. Poss
-:since: Jul 01, 2012
+@author: S. Poss
+@since: Jul 01, 2012
 """
 
-__RCSID__ = "$Id$"
+__RCSID__ = "235f82e (2014-10-20 17:03:09 +0200) Andre Sailer <andre.philippe.sailer@cern.ch>"
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Core.Workflow.Module import ModuleDefinition
@@ -300,7 +299,7 @@ class ILDProductionJob( ProductionJob ):
         return S_OK()        
         
     def _addRealFinalization( self ):
-        """ See :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob` for definition
+        """ See L{ProductionJob} for definition
         """
         importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
         dataUpload = ModuleDefinition( 'UploadOutputData' )
@@ -356,8 +355,8 @@ class ILDProductionJob( ProductionJob ):
         if self.created:
             return S_ERROR( "The production was created, you cannot add new applications to the job." )
 
-        if not application.logFile:
-            logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
+        if not application.LogFile:
+            logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
             res = application.setLogFile( logf )
             if not res['OK']:
                 return res
@@ -365,11 +364,11 @@ class ILDProductionJob( ProductionJob ):
             # in fact a bit more tricky as the log files have the prodID and jobID in them
         
         if "SoftwareTag" in self.prodparameters:
-            curpackage = "%s.%s" % ( application.appname, application.version )
+            curpackage = "%s.%s" % ( application.appname, application.Version )
             if not self.prodparameters["SoftwareTag"].count( curpackage ):
                 self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
         else :
-            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.version )
+            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.Version )
             
         # softwarepath = application.appname+application.Version
         if 'ILDConfigVersion' in self.prodparameters:
@@ -385,11 +384,11 @@ class ILDProductionJob( ProductionJob ):
                  print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
 
         if not self.energy:
-            if application.energy:
-                self.energy = Decimal( str( application.energy ) )
+            if application.Energy:
+                self.energy = Decimal( str( application.Energy ) )
             else:
                 return S_ERROR( "Could not find the energy defined, it is needed for the production definition." )
-        elif not application.energy:
+        elif not application.Energy:
             res = application.setEnergy( float( self.energy ) )
             if not res['OK']:
                 return res
@@ -398,8 +397,8 @@ class ILDProductionJob( ProductionJob ):
             self.prodparameters["Energy"] = float( self.energy )
             
         if not self.evttype:
-            if hasattr( application, 'eventType' ):
-                self.evttype = application.eventType
+            if hasattr( application, 'EvtType' ):
+                self.evttype = application.evtType
             else:
                 return S_ERROR( "Event type not found nor specified, it's mandatory for the production paths." )    
             
@@ -419,8 +418,8 @@ class ILDProductionJob( ProductionJob ):
             return res
         
         if not self.detector:
-            if hasattr( application, "detectorModel" ):
-                self.detector = application.detectorModel
+            if hasattr( application, "DetectorModel" ):
+                self.detector = application.DetectorModel            
                 if not self.detector:
                     return S_ERROR( "Application does not know which model to use, so the production does not either." )
             # else:
