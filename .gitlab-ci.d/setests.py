@@ -47,7 +47,9 @@ class SETestCase( unittest.TestCase ):
 #print proc.communicate()[0]
 
   def test_storing_all( self ):
+    print "Testing on sites:"
     for site in self.storageelements:
+      print site
       self.storing_test(site)
     #DISABLED: For tearDown()
     #self.uploadFile(self.storageelements[0])
