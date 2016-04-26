@@ -41,6 +41,9 @@ setUpJob1:
     - pip install --upgrade pip pylint nose mock coverage MySQL-python pytest
     - cd ILCDIRAC
     - export HOME=/root/
+    - ls /builds/jebbing
+    - echo pwd
+
 
 
 setUpJob2:
@@ -71,6 +74,9 @@ setUpJob2:
     - pip install --upgrade pip pylint nose mock coverage MySQL-python pytest
     - cd ILCDIRAC
     - export HOME=/root/
+    - ls /builds/jebbing/
+    - echo pwd
+
 
 
 setUpJob3:
@@ -101,6 +107,8 @@ setUpJob3:
     - pip install --upgrade pip pylint nose mock coverage MySQL-python pytest
     - cd ILCDIRAC
     - export HOME=/root/
+    - ls /builds/jebbing/
+
 
 setUpJob4:
   image: ilcdirac/slc6-extra
@@ -131,6 +139,8 @@ setUpJob4:
     - cd ILCDIRAC
     - export HOME=/root/
     - ls /builds/jebbing/
+    - echo pwd
+
 
 
 pylint5:
