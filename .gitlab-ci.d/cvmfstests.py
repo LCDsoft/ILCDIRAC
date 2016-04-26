@@ -12,7 +12,7 @@ import unittest
 import os
 import pwd
 from mock import patch, MagicMock as Mock
-from DIRAC import S_OK, gLogger#, gConfig
+from DIRAC import S_OK
 #from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
 
 
@@ -153,7 +153,7 @@ class JobTestCase( unittest.TestCase ):
     self.assertTrue ( res['OK'] )
 
     
-  @unittest.skip("Temporarily disabled due to length")
+  #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
@@ -290,8 +290,8 @@ def runDDSimTest():
 
 if __name__ == '__main__':
   #runTests()
-  #runUtilitiesTest()
+  runUtilitiesTest()
   #runMokkaTest()
-  runDDSimTest()
+  #runDDSimTest()
   
   

@@ -8,7 +8,10 @@ from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from DIRAC import S_OK, S_ERROR
 
 
+expected_diff_err = "Expected different error message"
 
+
+# TODO: add case for undefined steering file
 class MarlinAnalysisTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
   """
@@ -65,7 +68,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = { 'OK' : False }
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
-    self.assertTrue("should not proceed" in result['Value'].lower())
+    self.assertIn("should not proceed", result['Value'].lower(), expected_diff_err)
 
   def test_runit_stepbad( self ):
     self.marAna.platform = "Testplatform123"
@@ -73,7 +76,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.stepStatus = { 'OK' : False }
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
-    self.assertTrue("should not proceed" in result['Value'].lower())
+    self.assertIn("should not proceed", result['Value'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
   def test_runit_getEnvScriptFails( self ):
@@ -84,8 +87,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     result = self.marAna.runIt()
     self.assertFalse( result['OK'])
     msg = result['Message'].lower()
-    self.assertIn('env script', msg)
-  #Test 2 errors by mocking  getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript) and self.GetInputFiles() 
+    self.assertIn('env script', msg, expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_ERROR()))
@@ -95,7 +97,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.stepStatus = S_OK()
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
-    self.assertFalse( result['OK'])
+    self.assertFalse( result['OK'] )
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -112,9 +114,8 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
-    # TODO: add case for undefined steering file
     self.assertFalse(result['OK'])
-    self.assertIn('not produce the expected log', result['Message'].lower())
+    self.assertIn('not produce the expected log', result['Message'].lower(), expected_diff_err)
     
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
@@ -130,7 +131,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.assertIn('prepxml', result['Message'].lower())
+    self.assertIn('prepxml', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -146,7 +147,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.assertIn('wrong with software installation', result['Message'].lower())
+    self.assertIn('wrong with software installation', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -163,9 +164,8 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
-    # TODO: add case for undefined steering file
     self.assertFalse(result['OK'])
-    self.assertIn('failed to run', result['Message'].lower())
+    self.assertIn('failed to run', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -182,6 +182,5 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
-    # TODO: add case for undefined steering file
     self.assertTrue(result['OK'])
 
