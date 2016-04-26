@@ -24,14 +24,15 @@ before_script:
 
 
 stages:
+    - cvmfs
+    - setests
     - pylint5
     - pylint6
     - pylint7
     - nose5
     - nose6
     - nose7
-    - cvmfs
-    - setests
+
 
 
 pylint5:

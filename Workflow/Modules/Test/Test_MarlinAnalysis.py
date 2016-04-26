@@ -12,6 +12,7 @@ expected_diff_err = "Expected different error message"
 
 
 # TODO: add case for undefined steering file
+# TODO: add 2 tests for getInputFiles
 class MarlinAnalysisTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
   """
@@ -183,4 +184,33 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     result = self.marAna.runIt()
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
     self.assertTrue(result['OK'])
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR('')))
+  def test_getenvscript_getsoftwarefolderfails( self ):
+    self.assertFalse(self.marAna.getEnvScript(None, None, None)['OK'])
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value=None))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=False))
+  def test_getenvscript_pathexists( self ):
+    result = self.marAna.getEnvScript(None, None, None)
+    self.assertFalse(result['OK'])
+    self.assertIn('MARLIN_DLL folder not found', result['Message'])
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value=None))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=True))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.listdir", new=Mock(return_value=['testdir']))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.open", new=Mock())
+  def test_getenvscript( self ):
+    result = self.marAna.getEnvScript(None, None, None)
+    self.assertTrue(result['OK'])
+
+    
+    
+    
+    
+  
 
