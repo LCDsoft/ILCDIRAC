@@ -166,6 +166,7 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Marlin")
     self.assertTrue ( res['OK'] )
 
+
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
@@ -293,5 +294,4 @@ if __name__ == '__main__':
   runUtilitiesTest()
   #runMokkaTest()
   #runDDSimTest()
-  
-  
+

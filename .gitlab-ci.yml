@@ -130,6 +130,8 @@ setUpJob4:
     - pip install --upgrade pip pylint nose mock coverage MySQL-python pytest
     - cd ILCDIRAC
     - export HOME=/root/
+    - ls /builds/jebbing/
+
 
 pylint5:
   stage: pylint5
