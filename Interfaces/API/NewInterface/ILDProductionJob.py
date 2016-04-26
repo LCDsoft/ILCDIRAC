@@ -1,11 +1,12 @@
 """
-ILD DBD specific  job utility
+ILD DBD specific production job utility
+Only used to submit Transformations, not usable for individual jobs
 
-@author: S. Poss
-@since: Jul 01, 2012
+:author: S. Poss
+:since: Jul 01, 2012
 """
 
-__RCSID__ = "235f82e (2014-10-20 17:03:09 +0200) Andre Sailer <andre.philippe.sailer@cern.ch>"
+__RCSID__ = "$Id$"
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from DIRAC.Core.Workflow.Module import ModuleDefinition
@@ -159,7 +160,7 @@ class ILDProductionJob( ProductionJob ):
 
             dir_found = True
             print '[debug tino] Found mdir %s' %mdir
-            res = self.fc.getDirectoryMetadata( mdir )
+            res = self.fc.getDirectoryUserMetadata( mdir )
             if not res['OK']:
                 return self._reportError( "Error looking up the catalog for directory metadata" )
             compatmeta = res['Value'] # this reset compatmeta for each iteration (do we want this?)
@@ -299,7 +300,7 @@ class ILDProductionJob( ProductionJob ):
         return S_OK()        
         
     def _addRealFinalization( self ):
-        """ See L{ProductionJob} for definition
+        """ See :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob` for definition
         """
         importLine = 'from ILCDIRAC.Workflow.Modules.<MODULE> import <MODULE>'
         dataUpload = ModuleDefinition( 'UploadOutputData' )
@@ -355,8 +356,8 @@ class ILDProductionJob( ProductionJob ):
         if self.created:
             return S_ERROR( "The production was created, you cannot add new applications to the job." )
 
-        if not application.LogFile:
-            logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
+        if not application.logFile:
+            logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
             res = application.setLogFile( logf )
             if not res['OK']:
                 return res
@@ -364,11 +365,11 @@ class ILDProductionJob( ProductionJob ):
             # in fact a bit more tricky as the log files have the prodID and jobID in them
         
         if "SoftwareTag" in self.prodparameters:
-            curpackage = "%s.%s" % ( application.appname, application.Version )
+            curpackage = "%s.%s" % ( application.appname, application.version )
             if not self.prodparameters["SoftwareTag"].count( curpackage ):
                 self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
         else :
-            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.Version )
+            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.version )
             
         # softwarepath = application.appname+application.Version
         if 'ILDConfigVersion' in self.prodparameters:
@@ -384,11 +385,11 @@ class ILDProductionJob( ProductionJob ):
                  print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
 
         if not self.energy:
-            if application.Energy:
-                self.energy = Decimal( str( application.Energy ) )
+            if application.energy:
+                self.energy = Decimal( str( application.energy ) )
             else:
                 return S_ERROR( "Could not find the energy defined, it is needed for the production definition." )
-        elif not application.Energy:
+        elif not application.energy:
             res = application.setEnergy( float( self.energy ) )
             if not res['OK']:
                 return res
@@ -397,8 +398,8 @@ class ILDProductionJob( ProductionJob ):
             self.prodparameters["Energy"] = float( self.energy )
             
         if not self.evttype:
-            if hasattr( application, 'EvtType' ):
-                self.evttype = application.evtType
+            if hasattr( application, 'eventType' ):
+                self.evttype = application.eventType
             else:
                 return S_ERROR( "Event type not found nor specified, it's mandatory for the production paths." )    
             
@@ -418,8 +419,8 @@ class ILDProductionJob( ProductionJob ):
             return res
         
         if not self.detector:
-            if hasattr( application, "DetectorModel" ):
-                self.detector = application.DetectorModel            
+            if hasattr( application, "detectorModel" ):
+                self.detector = application.detectorModel
                 if not self.detector:
                     return S_ERROR( "Application does not know which model to use, so the production does not either." )
             # else:
@@ -594,7 +595,7 @@ class ILDProductionJob( ProductionJob ):
             self.finalpaths.append( pathDst )
 
             path = pathDst
-        elif hasattr( application, "OutputFile" ) and hasattr( application, 'datatype' ) and ( not application.OutputFile ) and ( not application.willBeCut ):
+        elif hasattr( application, "outputFile" ) and hasattr( application, 'datatype' ) and ( not application.outputFile ) and ( not application.willBeCut ):
             if ( not application.datatype ) and self.datatype:
                 application.datatype = self.datatype
             # if application.datatype == 'gen':
