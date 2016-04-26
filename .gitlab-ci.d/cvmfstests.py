@@ -126,32 +126,6 @@ class JobTestCase( unittest.TestCase ):
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "DDSim")
     self.assertTrue ( res['OK'] )
-
-    
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
-  def test_ddsim(self):
-    """create tests for ddsim"""
-    print "ddsimtest"
-    # First run, all files available
-    jobs = self.myTests.createDDSimTest()
-    self.assertTrue ( jobs['OK'] )
-    thisJob = jobs['Value']
-    res = self.myTests.runJobLocally(thisJob, "DDSim")
-    self.assertTrue ( res['OK'] )
-
-    ddsimInputFile="qq_ln_gen_6701_975.stdhep"
-    ddsimTarball="FCalTB.tar.gz"
-    
-    # Replace inputfile with 00.stdhep
-    jobs = self.myTests.createDDSimTest(ddsimInputFile, ddsimTarball)
-    self.assertTrue ( jobs['OK'] )
-    thisJob = jobs['Value']
-    res = self.myTests.runJobLocally(thisJob, "DDSim")
-    self.assertTrue ( res['OK'] )
-
     
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -290,8 +264,8 @@ def runDDSimTest():
   
 
 if __name__ == '__main__':
-  #runTests()
-  runUtilitiesTest()
+  runTests()
+  #runUtilitiesTest()
   #runMokkaTest()
   #runDDSimTest()
 
