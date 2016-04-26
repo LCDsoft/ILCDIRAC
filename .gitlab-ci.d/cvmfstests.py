@@ -75,10 +75,10 @@ class JobTestCase( unittest.TestCase ):
     uid = os.getuid()
     user_info = pwd.getpwuid( uid )
     homedir = os.path.join( os.sep + 'home', user_info.pw_name )
-    os.chdir(homedir)
     cvmfstestsdir = 'cvmfstests'
     if os.path.exists( homedir ):
       localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
+      os.chdir(homedir)
     else:
       localsitelocalarea = os.path.join( os.getcwd(), cvmfstestsdir )
     from DIRAC import gConfig
