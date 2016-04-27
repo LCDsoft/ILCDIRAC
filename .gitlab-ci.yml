@@ -24,8 +24,8 @@ before_script:
 
 
 stages:
-    - cvmfs
     - setests
+    - cvmfs
     - pylint5
     - pylint6
     - pylint7
@@ -113,4 +113,5 @@ setests6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
+    - kdestroy
     - .gitlab-ci.d/run-setests.sh
