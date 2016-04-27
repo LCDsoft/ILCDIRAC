@@ -264,8 +264,8 @@ def runDDSimTest():
   
 
 if __name__ == '__main__':
-  #runTests()
+  runTests()
   #runUtilitiesTest()
   #runMokkaTest()
-  runDDSimTest()
+  #runDDSimTest()
 

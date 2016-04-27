@@ -25,56 +25,56 @@ before_script:
 
 stages:
     - cvmfs
-#    - setests
-#    - pylint5
-#    - pylint6
-#    - pylint7
-#    - nose5
-#    - nose6
-#    - nose7
-#
-#
-#
-#pylint5:
-#  stage: pylint5
-#  tags:
-#    - docker
-#  image: ilcdirac/slc5-base
-#  script:
-#    - ls ..
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-pylint.sh
-#
-#nosetest5:
-#  stage: nose5
-#  tags:
-#    - docker
-#  image: ilcdirac/slc5-base
-#  script:
-#    - ls ..
-#    - pwd
-#    - ls
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-nosetests.sh
-#
-#pylint6:
-#  stage: pylint6
-#  tags:
-#    - docker
-#  image: ilcdirac/slc6-base
-#  script:
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-pylint.sh
-#
-#nosetest6:
-#  stage: nose6
-#  tags:
-#    - docker
-#  image: ilcdirac/slc6-base
-#  script:
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-nosetests.sh
-#
+    - setests
+    - pylint5
+    - pylint6
+    - pylint7
+    - nose5
+    - nose6
+    - nose7
+
+
+
+pylint5:
+  stage: pylint5
+  tags:
+    - docker
+  image: ilcdirac/slc5-base
+  script:
+    - ls ..
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nosetest5:
+  stage: nose5
+  tags:
+    - docker
+  image: ilcdirac/slc5-base
+  script:
+    - ls ..
+    - pwd
+    - ls
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
+
+pylint6:
+  stage: pylint6
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nosetest6:
+  stage: nose6
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
+
 cvmfstests6:
   stage: cvmfs
   tags:
@@ -85,32 +85,32 @@ cvmfstests6:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
-    - python .gitlab-ci.d/cvmfstests.py
-#
-#pylint7:
-#  stage: pylint7
-#  tags:
-#    - docker
-#  image: ilcdirac/cc7-base
-#  script:
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-pylint.sh
-#
-#nosetest7:
-#  stage: nose7
-#  tags:
-#    - docker
-#  image: ilcdirac/cc7-base
-#  script:
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-nosetests.sh
-#
-#
-#setests6:
-#  stage: setests
-#  tags:
-#    - docker
-#  image: ilcdirac/slc6-base
-#  script:
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-setests.sh
+    - .gitlab-ci.d/run-cvmfstests.sh
+
+pylint7:
+  stage: pylint7
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-pylint.sh
+
+nosetest7:
+  stage: nose7
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-nosetests.sh
+
+
+setests6:
+  stage: setests
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - .gitlab-ci.d/run-setests.sh

@@ -178,9 +178,6 @@ class DDSimAnalysis(ModuleBase):
       self.setApplicationStatus('%s failed to produce log file' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log %s' % (self.applicationName, self.applicationLog))
-    with open(self.applicationLog) as logfile:
-      for line in logfile:
-        print line
     status = resultTuple[0]
 
     self.log.info( "Status after the application execution is %s" % status )
