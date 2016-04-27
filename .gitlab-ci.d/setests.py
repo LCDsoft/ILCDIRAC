@@ -61,6 +61,7 @@ class SETestCase( unittest.TestCase ):
     self.uploadFile(site)
     # get file from SE, check for equivalence
     result = subprocess.check_output(["dirac-dms-get-file", "-ddd", self.lfntestfile])
+    print result
     self.assertOperationSuccessful(result, "Retrieval of random file from storage element to local failed: " + result)
     
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename), "Received wrong file")
@@ -119,6 +120,7 @@ class SETestCase( unittest.TestCase ):
     """Adds the local random file to the storage elements
     """
     result = subprocess.check_output(["dirac-dms-add-file", "-ddd", self.lfntestfile, self.localtestfile, site])
+    print result
     self.assertTrue(result.count("Successfully uploaded ") == 1, "Upload of random file failed")
 
   def removeFile ( self ):
@@ -137,6 +139,7 @@ class SETestCase( unittest.TestCase ):
     """Replicates the random file to another storage element and checks if it worked
     """
     result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile[4:], site, "-ddd"])
+    print result
     self.assertOperationSuccessful(result, "Failed replicating file")
 
   def removeFileAllowFailing ( self ):

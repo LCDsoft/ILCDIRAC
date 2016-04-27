@@ -113,5 +113,4 @@ setests6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
-    - kdestroy
     - .gitlab-ci.d/run-setests.sh
