@@ -1,5 +1,7 @@
 import subprocess, unittest, os, tempfile, shutil, filecmp, sys
 from mock import patch, MagicMock as Mock
+from DIRAC.Core.Security import ProxyInfo
+from DIRAC.Core.Base import Script
 
 __RCSID__ = "$Id$"
 
@@ -7,17 +9,31 @@ __RCSID__ = "$Id$"
 class SETestCase( unittest.TestCase ):
   """ Base class for the test cases of the storage elements.
 
+  
+  
   requires dirac proxy
   """
+
+
+  localtestfile = 'testfile'
+  lfntestfilename = "testfile.txt"
+  lfntestfilepath = "lfn:/ilc/user/"
+  lfntestfile = ''
+  storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
+
+
+  @classmethod
+  def setUpClass( cls ):
+    # Constants for the tests
+    Script.parseCommandLine()
+    user = ProxyInfo.getProxyInfo()['Value']['username']
+    SETestCase.lfntestfilepath += '%s/%s/' % (user[0], user)
+    print "Using lfn %s" % SETestCase.lfntestfilepath
+    SETestCase.lfntestfile = SETestCase.lfntestfilepath + SETestCase.lfntestfilename
+
+
   def setUp( self ):
     """set up the objects"""
-
-    # Constants for the tests
-    self.localtestfile = 'testfile'
-    self.lfntestfilename = "testfile.txt"
-    self.lfntestfilepath = "lfn:/ilc/user/j/jebbing/"
-    self.lfntestfile = self.lfntestfilepath + self.lfntestfilename
-    self.storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
     
     # Check if file exists already
     try:
@@ -51,8 +67,6 @@ class SETestCase( unittest.TestCase ):
     for site in self.storageelements:
       print site
       self.storing_test(site)
-    #DISABLED: For tearDown()
-    #self.uploadFile(self.storageelements[0])
 
 
   def storing_test( self, site ):
@@ -72,9 +86,6 @@ class SETestCase( unittest.TestCase ):
       self.replication_test( site1, site2 )
       self.removeFile()
         
-    #DISABLED: For tearDown()
-    #self.uploadFile(self.storageelements[0])
-
   def replication_test( self, site1, site2 ):
     """Replicates file to other SE, checks if it is replicated there.
     """
@@ -94,13 +105,10 @@ class SETestCase( unittest.TestCase ):
     for (site1, site2) in self.getDistinctPairsOfSites():
       print "Testing for sites %s, %s" % (site1, site2)
       self.removal_test(site1, site2)
-    #DISABLED: So that tearDown() doesnt fail
-    #self.uploadFile(self.storageelements[0])
         
   def removal_test( self, site1, site2 ):
     """Uploads file to SE1, replicates to SE2, removes file and checks if retreive fails
     """
-    # Replicate file to SE2, remove file from all SE, try to get it back ==> Error
     self.uploadFile(site1)
     self.replicateTo(site2)
  
@@ -139,7 +147,11 @@ class SETestCase( unittest.TestCase ):
   def replicateTo( self, site ):
     """Replicates the random file to another storage element and checks if it worked
     """
-    result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile[4:], site, "-ddd"])
+    try:
+      result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile[4:], site, "-ddd"])
+    except subprocess.CalledProcessError as err:
+      print err.output
+      raise subprocess.CalledProcessError("1", "substitute cmd")
     self.assertOperationSuccessful(result, "Failed replicating file")
 
   def removeFileAllowFailing ( self ):
@@ -157,3 +169,5 @@ class SETestCase( unittest.TestCase ):
     """
     return [(site1, site2) for site1 in self.storageelements for site2 in self.storageelements if site1 != site2]
 
+  #def parseProxyString( self, proxystring ):
+  #  result = ""
