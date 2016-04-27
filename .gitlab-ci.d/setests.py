@@ -8,9 +8,6 @@ __RCSID__ = "$Id$"
 
 class SETestCase( unittest.TestCase ):
   """ Base class for the test cases of the storage elements.
-
-  
-  
   requires dirac proxy
   """
 
@@ -34,7 +31,6 @@ class SETestCase( unittest.TestCase ):
 
   def setUp( self ):
     """set up the objects"""
-    
     # Check if file exists already
     try:
       subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile])
@@ -168,6 +164,6 @@ class SETestCase( unittest.TestCase ):
     Contains (a,b) and (b,a)
     """
     return [(site1, site2) for site1 in self.storageelements for site2 in self.storageelements if site1 != site2]
-
+  
   #def parseProxyString( self, proxystring ):
   #  result = ""

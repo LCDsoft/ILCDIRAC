@@ -24,7 +24,7 @@ before_script:
 
 
 stages:
-    - setests
+#    - setests
     - cvmfs
     - pylint5
     - pylint6
@@ -106,14 +106,14 @@ nosetest7:
     - .gitlab-ci.d/run-nosetests.sh
 
 
-setests6:
-  stage: setests
-  tags:
-    - docker
-  image: ilcdirac/slc6-base
-  script:
-    - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
-    - dirac-proxy-init <<< $CERT_PASSPHRASE
-    - .gitlab-ci.d/run-setests.sh
+#setests6:
+#  stage: setests
+#  tags:
+#    - docker
+#  image: ilcdirac/slc6-base
+#  script:
+#    - source ../bashrc
+#    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+#    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
+#    - dirac-proxy-init <<< $CERT_PASSPHRASE
+#    - .gitlab-ci.d/run-setests.sh
