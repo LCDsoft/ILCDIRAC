@@ -113,4 +113,6 @@ setests6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
     - .gitlab-ci.d/run-setests.sh
