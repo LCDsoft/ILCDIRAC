@@ -168,7 +168,7 @@ class DDSimAnalysis(ModuleBase):
       os.remove(self.applicationLog)
 
     os.chmod(scriptName, 0755)
-    comm = 'sh -c "./%s"' % scriptName
+    comm = 'bash "./%s"' % scriptName
     self.setApplicationStatus('DDSim %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
@@ -178,6 +178,9 @@ class DDSimAnalysis(ModuleBase):
       self.setApplicationStatus('%s failed to produce log file' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log %s' % (self.applicationName, self.applicationLog))
+    with open(self.applicationLog) as logfile:
+      for line in logfile:
+        print line
     status = resultTuple[0]
 
     self.log.info( "Status after the application execution is %s" % status )
