@@ -85,7 +85,7 @@ cvmfstests6:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
-    - .gitlab-ci.d/run-cvmfstests.sh
+    - python .gitlab-ci.d/cvmfstests.py
 #
 #pylint7:
 #  stage: pylint7
