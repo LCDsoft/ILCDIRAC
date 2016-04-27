@@ -12,7 +12,6 @@ expected_diff_err = "Expected different error message"
 
 
 # TODO: add case for undefined steering file
-# TODO: add 2 tests for getInputFiles
 class MarlinAnalysisTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
   """
@@ -196,7 +195,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
   def test_getenvscript_pathexists( self ):
     result = self.marAna.getEnvScript(None, None, None)
     self.assertFalse(result['OK'])
-    self.assertIn('MARLIN_DLL folder not found', result['Message'])
+    self.assertIn('marlin_dll folder not found', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
@@ -207,6 +206,22 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
   def test_getenvscript( self ):
     result = self.marAna.getEnvScript(None, None, None)
     self.assertTrue(result['OK'])
+
+  def test_getinputfiles_ignore( self ):
+    self.marAna.ignoremissingInput = True
+    self.assertTrue(self.marAna.GetInputFiles()['OK'])
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_ERROR()))
+  def test_getinputfiles_resolvepathsfails( self ):
+    res = self.marAna.GetInputFiles()
+    self.assertFalse(res['OK'])
+    self.assertIn('missing slcio', res['Message'].lower(), expected_diff_err)
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(['1.slcio', '2.slcio'])))
+  def test_getinputfiles_complete( self ):
+    res = self.marAna.GetInputFiles()
+    self.assertTrue(res['OK'])
+    print res['Value']
 
     
     
