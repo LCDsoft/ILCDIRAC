@@ -119,8 +119,11 @@ class SETestCase( unittest.TestCase ):
   def uploadFile( self, site ):
     """Adds the local random file to the storage elements
     """
-    result = subprocess.check_output(["dirac-dms-add-file", "-ddd", self.lfntestfile, self.localtestfile, site])
-    print result
+    result = ""
+    try:
+      result = subprocess.check_output(["dirac-dms-add-file", "-ddd", self.lfntestfile, self.localtestfile, site])
+    except subprocess.CalledProcessError as err:
+      print err.output
     self.assertTrue(result.count("Successfully uploaded ") == 1, "Upload of random file failed")
 
   def removeFile ( self ):
