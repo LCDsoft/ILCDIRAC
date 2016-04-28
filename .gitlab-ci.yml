@@ -25,13 +25,13 @@ before_script:
 
 stages:
 #    - setests
-    - cvmfs
     - pylint5
     - pylint6
     - pylint7
     - nose5
     - nose6
     - nose7
+    - cvmfs
 
 
 
