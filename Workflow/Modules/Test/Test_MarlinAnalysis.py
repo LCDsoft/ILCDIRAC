@@ -2,7 +2,7 @@
 Unit tests for the MarlinAnalysis.py file
 """
 
-import unittest
+import unittest, os
 from mock import patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from DIRAC import S_OK, S_ERROR
@@ -40,6 +40,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflow_commons[ "JOB_ID" ] = 456
     
     self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
+    self.assertFalse(self.marAna.InputFile or self.marAna.InputData)
 
     
   def test_resolveinput_productionjob3( self ):
@@ -55,12 +56,16 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
 
   def test_runit_noplatform( self ):
     self.marAna.platform = None
-    self.assertFalse( self.marAna.runIt()['OK'] )
+    result = self.marAna.runIt()
+    self.assertFalse( result['OK'] )
+    self.expectOutcome('no ilc platform selected', result['Message'].lower(), expected_diff_err)
 
   def test_runit_noapplog( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = None
-    self.assertFalse( self.marAna.runIt()['OK'] )
+    result = self.marAna.runIt()
+    self.assertFalse( result['OK'] )
+    self.expectOutcome('no log', result['Message'].lower(), expected_diff_err)
 
   def test_runit_workflowbad( self ):
     self.marAna.platform = "Testplatform123"
@@ -68,7 +73,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = { 'OK' : False }
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
-    self.assertIn("should not proceed", result['Value'].lower(), expected_diff_err)
+    self.expectOutcome("should not proceed", result['Value'].lower(), expected_diff_err)
 
   def test_runit_stepbad( self ):
     self.marAna.platform = "Testplatform123"
@@ -76,7 +81,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.stepStatus = { 'OK' : False }
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
-    self.assertIn("should not proceed", result['Value'].lower(), expected_diff_err)
+    self.expectOutcome("should not proceed", result['Value'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
   def test_runit_getEnvScriptFails( self ):
@@ -85,19 +90,22 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.stepStatus = S_OK()
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
-    self.assertFalse( result['OK'])
+    self.assertFalse( result['OK'] )
     msg = result['Message'].lower()
-    self.assertIn('env script', msg, expected_diff_err)
+    self.expectOutcome('env script', msg, expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_ERROR()))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_ERROR('missing slcio file')))
   def test_runit_getInputFilesFails( self ):
+    # TODO Fix test
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
     self.marAna.stepStatus = S_OK()
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse( result['OK'] )
+    #Only checks that the patch annotation is passed as the result
+    self.expectOutcome('missing slcio file', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -115,7 +123,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     result = self.marAna.runIt()
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
     self.assertFalse(result['OK'])
-    self.assertIn('not produce the expected log', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('not produce the expected log', result['Message'].lower(), expected_diff_err)
     
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
@@ -131,7 +139,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.assertIn('prepxml', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('prepxml', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -147,7 +155,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.assertIn('wrong with software installation', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('wrong with software installation', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -165,7 +173,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     result = self.marAna.runIt()
     # TODO: add assertion shutil.copy was called on the pandorasettings.xml
     self.assertFalse(result['OK'])
-    self.assertIn('failed to run', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('failed to run', result['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -195,17 +203,27 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
   def test_getenvscript_pathexists( self ):
     result = self.marAna.getEnvScript(None, None, None)
     self.assertFalse(result['OK'])
-    self.assertIn('marlin_dll folder not found', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('marlin_dll folder not found', result['Message'].lower(), expected_diff_err)
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('aFolder')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value=None))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value='bFolder'))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=True))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.listdir", new=Mock(return_value=['testdir']))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.open", new=Mock())
+  #Let it write to disk and check the output
+  #@patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.open", new=Mock())
   def test_getenvscript( self ):
+    open_name = '%s.open' % __name__
+    #with patch(open_name, create=True) as mock_open:
+      #mock_open.return_value = Mock(spec=file)
     result = self.marAna.getEnvScript(None, None, None)
     self.assertTrue(result['OK'])
+    self.expectOutcome('/MarlinEnv.sh', result['Value'])
+    check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH', 'declare -x ROOTSYS=aFolder/ROOT', 'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder', "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir", "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
+    scriptfile = 'MarlinEnv.sh'
+    self.check_content(scriptfile, check_in_script)
+    os.remove(scriptfile)
+
 
   def test_getinputfiles_ignore( self ):
     self.marAna.ignoremissingInput = True
@@ -215,7 +233,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
   def test_getinputfiles_resolvepathsfails( self ):
     res = self.marAna.GetInputFiles()
     self.assertFalse(res['OK'])
-    self.assertIn('missing slcio', res['Message'].lower(), expected_diff_err)
+    self.expectOutcome('missing slcio', res['Message'].lower(), expected_diff_err)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(['1.slcio', '2.slcio'])))
   def test_getinputfiles_complete( self ):
@@ -223,9 +241,22 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.assertTrue(res['OK'])
     print res['Value']
 
-    
-    
-    
-    
-  
+  def expectOutcome( self, expected, actual, message = '' ):
+    """Checks if the string /actual/ is contained in the string /expected/, else a useful message is printed out
+    """
+    output = message + ', got %s instead of %s' % (actual, expected)
+    self.assertIn(expected, actual, output)
+
+#TODO Better naming
+  def check_content( self, script_file, content ):
+    """Checks for the given file handle if every entry in args was written to the mock'ed file
+    """
+    filecontent = []
+    with open(script_file) as scriptfile:
+      filecontent = scriptfile.read().splitlines()
+
+    for argument in content:
+      contained = any(argument in line for line in filecontent)
+      self.assertTrue(contained, expected_diff_err + ', did not find %s in %s' % (argument, filecontent))
+      
 
