@@ -615,7 +615,8 @@ class ILDProductionJob( ProductionJob ):
                 # path_gen_or_sim = joinPathForMetaData( '/ilc/prod/ilc/mc-dbd/' , 'generated' , energypath , self.evttype, self.detector , softwarepath)
                 # path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/' , 'generated' , energypath , self.evttype, self.detector , softwarepath)
                 # mc-dbd.generated already include 'generated'
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/' ,  energypath , self.evttype, self.detector , softwarepath)
+                #path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/' ,  energypath , self.evttype, self.detector , softwarepath)
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/' ,  energypath , self.evttype, self.detector , softwarepath)
 
             elif application.datatype == 'SIM':
                 # path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype , str( self.processID ) , self.detector , softwarepath)

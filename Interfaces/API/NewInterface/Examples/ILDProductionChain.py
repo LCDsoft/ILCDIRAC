@@ -11,16 +11,21 @@ C. Calancha
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
+
+
 from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import Mokka, Marlin, OverlayInput
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLCIOSplit, StdHepSplit
 from decimal import Decimal
 
+
+
 # TODO: add evttype to the ProdGroup
 analysis         = 'ILD-DBD' ##Some analysis: the prods will belong to the ProdGroup
 my_evttype       = 'higgs_ffh'
 my_evtclass      = 'higgs'
-selectedfile     = 0
+selectedfile     = 1
 prodid           = 6556
 genprocessname   = 'qqh_ww_4q'
 process          = '106730'
@@ -67,11 +72,13 @@ additional_name   = '_' + genprocessname + '_20160215_3_' + str(selectedfile) + 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
 # as input for the same production. Also speed up the job submission.
-matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
-matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype + '/' + ILDConfig
-matchToInput_marlin      = '/ilc/prod/ilc/mc-dbd/ild/sim/' + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + my_mokka_conf_dbd
+basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc/mc-dbd/ild/' )
 
-SE        = "KEK-SRM"
+matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
+matchToInput_mokka       = basepath + "splitted/" + energyMachinePars + '/' + my_evttype + '/' + ILDConfig
+matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + my_mokka_conf_dbd
+
+SE        = "CERN-DST-EOS"
 ###LCG_SITE  = "LCG.KEK.jp"
 input_sand_box = [""]
 ##This is where magic happens
@@ -99,7 +106,7 @@ else:
   meta['ProdID']        = prodid
     
 #DoSplit at stdhep level
-activesplitstdhep   = False
+activesplitstdhep   = True
 nbevtsperfilestdhep = 500
 nbtasks_split       = -1 # To run ove rall input stdhep
 if activesplitstdhep:
@@ -202,7 +209,7 @@ if ild_rec:
 ### HERE WE DEFINE THE PRODUCTIONS
 if activesplitstdhep and meta:
   pstdhepsplit = ILDProductionJob()
-  pstdhepsplit.basepath = '/ilc/prod/ilc/mc-dbd.generated/ild/' # Sailer suggestion
+  pstdhepsplit.basepath = basepath + "splitted/"
   pstdhepsplit.matchToInput = matchToInput_stdhepsplit
   pstdhepsplit.setDryRun(dryrun)
   pstdhepsplit.setILDConfig(ILDConfig)
