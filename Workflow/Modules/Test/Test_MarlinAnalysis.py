@@ -53,7 +53,28 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     
     self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
     self.assertEquals([inputlist[0], inputlist[1]], self.marAna.InputFile)
-
+    
+  def test_resolveinput_productionjob4( self ):
+    self.marAna.workflow_commons[ "IS_PROD" ] = True
+    self.marAna.OutputFile = ''
+    prodId = "123"
+    self.marAna.workflow_commons[ "PRODUCTION_ID" ] = prodId
+    jobId = "456"
+    self.marAna.workflow_commons[ "JOB_ID" ] = jobId
+    self.marAna.workflow_commons.pop('ProductionOutputData', None) #default value needed, else maybe KeyError
+    self.marAna.InputFile = 'in3.slcio'
+    self.marAna.outputREC = 'out1.stdhep'
+    self.marAna.outputDST = 'test2.stdhep'
+    
+    self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
+    files = [self.marAna.outputREC, self.marAna.outputDST, self.marAna.InputFile[0]]
+    for filename in files:
+      # TODO: check for file extension, differentiate 'test'/'test2' in filename...
+      self.assertInMultiple([prodId,jobId], filename)
+    self.assertInMultiple(['in3', '.slcio'], self.marAna.InputFile[0])
+    self.assertInMultiple(['out1', '.stdhep'], self.marAna.outputREC)
+    self.assertInMultiple(['test2', '.stdhep'], self.marAna.outputDST)
+      
   def test_runit_noplatform( self ):
     self.marAna.platform = None
     result = self.marAna.runIt()
@@ -258,5 +279,10 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     for argument in content:
       contained = any(argument in line for line in filecontent)
       self.assertTrue(contained, expected_diff_err + ', did not find %s in %s' % (argument, filecontent))
-      
+
+  def assertInMultiple( self, listOfStrings, bigString):
+    """Checks if every string in listOfStrings is contained in bigString.
+    """
+    for string in listOfStrings:
+      self.expectOutcome(string, bigString, expected_diff_err)
 
