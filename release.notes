@@ -1,3 +1,9 @@
+[v25r0p5]
+
+* WorkloadManagement:
+
+FIX: Copy getCPUNormalization from DIRAC and reduce memory footprint ILCDIRAC-661
+
 [v25r0p4]
 
 * WorkloadManagement:
