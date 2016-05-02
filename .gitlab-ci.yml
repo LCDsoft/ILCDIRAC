@@ -41,7 +41,6 @@ pylint5:
     - docker
   image: ilcdirac/slc5-base
   script:
-    - ls ..
     - source ../bashrc
     - .gitlab-ci.d/run-pylint.sh
 
@@ -51,9 +50,6 @@ nosetest5:
     - docker
   image: ilcdirac/slc5-base
   script:
-    - ls ..
-    - pwd
-    - ls
     - source ../bashrc
     - .gitlab-ci.d/run-nosetests.sh
 

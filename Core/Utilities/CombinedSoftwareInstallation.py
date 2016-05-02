@@ -69,6 +69,7 @@ class CombinedSoftwareInstallation(object):
         self.apps.append(depapp)
       self.apps.append(app)
 
+      
 
     self.ceConfigs = []
     if 'CompatiblePlatforms' in self.ce:

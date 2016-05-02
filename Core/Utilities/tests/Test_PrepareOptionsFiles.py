@@ -3,6 +3,8 @@ tests for PrepareOptionFiles
 
 """
 __RCSID__ = "$Id$"
+from DIRAC import S_OK, S_ERROR
+from mock import patch, MagicMock as Mock
 import unittest
 import os
 import filecmp
@@ -69,19 +71,19 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     lines.append("")
     lines.append("/generator/filename dummy.stdhep")
     lines.append("/generator/skipEvents %d" % startfrom )
-    lines.append("/random/seed %d" % randomseed) 
+    lines.append("/random/seed %d" % randomseed)
     lines.append("/run/beamOn %d" % nbevents )
 
     with open(self.referenceMacfile, "w") as ifile:
       ifile.write( "\n".join(lines) )
       ifile.write( "\n" )
-      
+
   def compareMacFiles(self):
     """create the new macfile with the expected one"""
     res = filecmp.cmp( self.outputmac, self.referenceMacfile )
     print "Compare mac files" , res
     return res
-    
+
   def test_prepMacFile1(self):
     """test with start, events, stdhep.............................................................."""
 
@@ -145,7 +147,34 @@ class TestPrepareOptionsFile( unittest.TestCase ):
                   )
     self.assertTrue( self.compareMacFiles() )
 
-    
+  dep1 = { 'app' : True, 'version' : True }
+  dep2 = { 'app' : True, 'version' : True }
+  dep3 = { 'app' : True, 'version' : True }
+
+  @unittest.skip("test")
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(side_effect=[[dep1, dep2, dep3]]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(return_value=[True, False, False, True]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  def test_getnewldlibs_cornercase( self ):
+    # TODO: Understand method
+    reference = os.environ['LD_LIBRARY_PATH']
+    from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+    self.assertEquals('reference', PrepareOptionFiles.getNewLDLibs(None, None, None))
+    #TODO Fix reference string
+
+  @unittest.skip("test")
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(side_effect=[dep1, dep2, dep3]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(return_value=[True, False, False, True]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  def test_getnewldlibs_nochange( self ):
+    reference = os.environ['LD_LIBRARY_PATH']
+    # TODO fix patches
+    from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+    self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None, None))
+
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareOptionsFile )
   TESTRESULT = unittest.TextTestRunner( verbosity = 2 ).run( SUITE )
