@@ -162,7 +162,6 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     mock_removelibc.return_value=True
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
     self.assertEquals("%s:%s" % ('bFolder/LDLibs', reference), PrepareOptionFiles.getNewLDLibs(None, None, None))
-    print "Calls: %s" % mock_removelibc.mock_calls
     mock_removelibc.assert_any_call("aFolder/lib")
     mock_removelibc.assert_any_call("bFolder/LDLibs")
 
@@ -204,22 +203,14 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       # mock_open doesn't properly handle iterating over the open file with for line in file:
       # but if we set the return value like this, it works.
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
-      from ILCDIRAC.Core.Utilities import PrepareOptionFiles
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
       self.assertEquals(S_OK(True), result)
     file_mocker.assert_any_call('in', 'r')
     file_mocker.assert_any_call('out', 'w')
     mocker_handle = file_mocker()
     expected = [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']
-    print "Mocked write calls: %s" % mocker_handle.write.mock_calls
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
-
-
-def splitkeepsep(line, sep):
-  """Splits a line at a given separator sep but keeps the separator in the returned list
-  """
-  return reduce(lambda acc, elem: acc[:-1] + [acc[-1] + elem] if elem == sep else acc + [elem], re.split("(%s)" % re.escape(sep), line), [])
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareOptionsFile )
