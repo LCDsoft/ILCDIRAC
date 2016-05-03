@@ -428,6 +428,80 @@ class TestModuleBase( ModulesTestCase ):
       res = self.mbase.treatILDConfigPackage()
     self.assertTrue(res['OK'])
 
+  def test_MB_resolveParametricInputData_1( self ):
+    """ModuleBase: resolveInputVariables parametric list success ..................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['ParametricInputData'] = ["LFN:/first/file/path.ext","LFN:/second/file/path.ext"]
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+  def test_MB_resolveParametricInputData_2( self ):
+    """ModuleBase: resolveInputVariables parametric string success ................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['ParametricInputData'] = "LFN:/first/file/path.ext;LFN:/second/file/path.ext"
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+  def test_MB_resolveParametricInputData_3( self ):
+    """ModuleBase: resolveInputVariables parametric list success no lfn............................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['ParametricInputData'] = ["/first/file/path.ext","/second/file/path.ext"]
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+  def test_MB_resolveParametricInputData_4( self ):
+    """ModuleBase: resolveInputVariables parametric string success no lfn..........................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['ParametricInputData'] = "/first/file/path.ext;/second/file/path.ext"
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+
+  def test_MB_resolveInputData_1( self ):
+    """ModuleBase: resolveInputVariables list success .............................................."""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['InputData'] = ["LFN:/first/file/path.ext","LFN:/second/file/path.ext"]
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+  def test_MB_resolveInputData_2( self ):
+    """ModuleBase: resolveInputVariables string success ............................................"""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['InputData'] = "LFN:/first/file/path.ext;LFN:/second/file/path.ext"
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+  def test_MB_resolveInputData_3( self ):
+    """ModuleBase: resolveInputVariables list success no lfn........................................"""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['InputData'] = ["/first/file/path.ext","/second/file/path.ext"]
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+  def test_MB_resolveInputData_4( self ):
+    """ModuleBase: resolveInputVariables string success no lfn......................................"""
+    gLogger.setLevel("ERROR")
+    self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
+    self.mbase.workflow_commons['InputData'] = "/first/file/path.ext;/second/file/path.ext"
+    res = self.mbase.resolveInputVariables()
+    self.assertTrue( res['OK'] )
+    self.assertEqual( ["/first/file/path.ext","/second/file/path.ext"] , self.mbase.InputData )
+
+
 #############################################################################
 # UploadLogFile.py
 #############################################################################
