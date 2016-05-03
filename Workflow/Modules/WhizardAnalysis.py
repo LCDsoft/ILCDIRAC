@@ -406,31 +406,31 @@ class WhizardAnalysis(ModuleBase):
     message = ""
     success = False
     ###Analyse log file
-    logfile = file(self.applicationLog)
-    for line in logfile:
-      if line.count('! Event sample corresponds to luminosity'):
-        elems = line.split()
-        lumi = elems[-1]
-      if line.count("*** Fatal error:"):
-        status = 1
-        message = line
-        break
-      elif line.count("PYSTOP"):
-        status = 1
-        message = line
-        break
-      elif line.count("No matrix element available"):
-        status = 1
-        message = line
-        break
-      elif line.count("Floating point exception"):
-        status = 1
-        message = line
-        break
-      elif line.count("Event generation finished."):
-        success = True
-      else:
-        status = 0
+    with open(self.applicationLog) as logfile:
+      for line in logfile:
+        if line.count('! Event sample corresponds to luminosity'):
+          elems = line.split()
+          lumi = elems[-1]
+        if line.count("*** Fatal error:"):
+          status = 1
+          message = line
+          break
+        elif line.count("PYSTOP"):
+          status = 1
+          message = line
+          break
+        elif line.count("No matrix element available"):
+          status = 1
+          message = line
+          break
+        elif line.count("Floating point exception"):
+          status = 1
+          message = line
+          break
+        elif line.count("Event generation finished."):
+          success = True
+        else:
+          status = 0
     if success:
       status = 0
     else:

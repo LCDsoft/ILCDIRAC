@@ -752,50 +752,50 @@ class WhizardOptions(object):
           val = '\n 1 20000\n 10 20000\n 1 20000'
         lines.append(' %s = %s' % (subelem.tag, val))
       lines.append('/')
-    of = file(fname, "w")
-    of.write("\n".join(lines))
-    of.write("\n")
+    with open(fname, "w") as of:
+      of.write("\n".join(lines))
+      of.write("\n")
     return S_OK(True)
   
   def fromWhizardDotIn(self, filename):
     """ Given a whizard.in, create the parameter dict used for the production definition
     """
     pdict = {}
-    whizin = file(filename,"r")
     beam_input_idx = 0
     curkey = ""
-    for line in whizin:
-      line = line.rstrip().lstrip()
-      if not line or line[0] in ["!","/"]:
-        continue
-      
-      if line[0]=="&":
-        key = line.split("&")[1].rstrip().lstrip()
-        if key.count("beam_input"):
-          if not beam_input_idx:
-            curkey = key+"_1"
-            beam_input_idx += 1
+    with open(filename,"r") as whizin:
+      for line in whizin:
+        line = line.rstrip().lstrip()
+        if not line or line[0] in ["!","/"]:
+          continue
+
+        if line[0]=="&":
+          key = line.split("&")[1].rstrip().lstrip()
+          if key.count("beam_input"):
+            if not beam_input_idx:
+              curkey = key+"_1"
+              beam_input_idx += 1
+            else:
+              curkey = key+"_2"
           else:
-            curkey = key+"_2"
-        else:
-          curkey = key
-        pdict[curkey] = {}
-      elif line.count("="):
-        elems = line.split("=")
-        key = elems[0].lstrip().rstrip()
-        val = str("=".join(elems[1:])).lstrip().rstrip().lstrip('"').rstrip('"')
-        if not val.count("T") and not val.count("F"):
-          if val.count("."):
-            try:
-              val = float(val)
-            except:
-              pass
-          else:
-            try:
-              val = int(val)
-            except:
-              pass
-        pdict[curkey][key] = val
+            curkey = key
+          pdict[curkey] = {}
+        elif line.count("="):
+          elems = line.split("=")
+          key = elems[0].lstrip().rstrip()
+          val = str("=".join(elems[1:])).lstrip().rstrip().lstrip('"').rstrip('"')
+          if not val.count("T") and not val.count("F"):
+            if val.count("."):
+              try:
+                val = float(val)
+              except:
+                pass
+            else:
+              try:
+                val = int(val)
+              except:
+                pass
+          pdict[curkey][key] = val
     return self.changeAndReturn(pdict)
 
 if __name__=="__main__":

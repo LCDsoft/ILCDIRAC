@@ -4,10 +4,11 @@ tests for PrepareOptionFiles
 """
 __RCSID__ = "$Id$"
 from DIRAC import S_OK, S_ERROR
-from mock import patch, MagicMock as Mock
+from mock import mock_open, patch, MagicMock as Mock
 import unittest
 import os
 import filecmp
+import re
 
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareMacFile
 
@@ -151,29 +152,74 @@ class TestPrepareOptionsFile( unittest.TestCase ):
   dep2 = { 'app' : True, 'version' : True }
   dep3 = { 'app' : True, 'version' : True }
 
-  @unittest.skip("test")
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(side_effect=[[dep1, dep2, dep3]]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(return_value=[True, False, False, True]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
-  def test_getnewldlibs_cornercase( self ):
-    # TODO: Understand method
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK('aFolder'), S_OK('bFolder')]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[True, False, False, True]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc")
+  def test_getnewldlibs_cornercase( self, mock_removelibc ):
+    # TODO: Understand method: Currently this method ignores every library path except the last one in the list and just ignores if getSoftwareFolder fails
     reference = os.environ['LD_LIBRARY_PATH']
+    mock_removelibc.return_value=True
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
-    self.assertEquals('reference', PrepareOptionFiles.getNewLDLibs(None, None, None))
-    #TODO Fix reference string
+    self.assertEquals("%s:%s" % ('bFolder/LDLibs', reference), PrepareOptionFiles.getNewLDLibs(None, None, None))
+    print "Calls: %s" % mock_removelibc.mock_calls
+    mock_removelibc.assert_any_call("aFolder/lib")
+    mock_removelibc.assert_any_call("bFolder/LDLibs")
 
-  @unittest.skip("test")
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(side_effect=[dep1, dep2, dep3]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(return_value=[True, False, False, True]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[False, False, False, False]))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
   def test_getnewldlibs_nochange( self ):
     reference = os.environ['LD_LIBRARY_PATH']
-    # TODO fix patches
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
     self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None, None))
 
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK('bFolder')]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[True, False, False, True]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  def test_getnewpath_cornercase( self ):
+    # TODO: Understand method: Currently this method ignores every path except the last one in the list and just ignores if getSoftwareFolder fails
+    reference = os.environ['PATH']
+    from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+    self.assertEquals("%s:%s" % ('bFolder/bin', reference), PrepareOptionFiles.getNewPATH(None, None, None))
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[False, False]))
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  def test_getnewpath_nochange( self ):
+    reference = os.environ['PATH']
+    from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+    self.assertEquals(reference, PrepareOptionFiles.getNewPATH(None, None, None))
+
+  def test_prepareWhizFile( self ):
+    from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
+    file_contents = ['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']
+    text_file_data = '\n'.join(file_contents)
+    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+      # mock_open doesn't properly handle iterating over the open file with for line in file:
+      # but if we set the return value like this, it works.
+      file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
+      from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+      result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
+      self.assertEquals(S_OK(True), result)
+    file_mocker.assert_any_call('in', 'r')
+    file_mocker.assert_any_call('out', 'w')
+    mocker_handle = file_mocker()
+    expected = [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']
+    print "Mocked write calls: %s" % mocker_handle.write.mock_calls
+    for entry in expected:
+      mocker_handle.write.assert_any_call(entry)
+
+
+def splitkeepsep(line, sep):
+  """Splits a line at a given separator sep but keeps the separator in the returned list
+  """
+  return reduce(lambda acc, elem: acc[:-1] + [acc[-1] + elem] if elem == sep else acc + [elem], re.split("(%s)" % re.escape(sep), line), [])
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareOptionsFile )

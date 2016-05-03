@@ -382,64 +382,63 @@ def _getProductionSummary():
                                                                               channel['MomProdID'],
                                                                               str(channel['proddetail'])))
   
-  of = file("tables.html","w")
-  of.write("""<!DOCTYPE html>
+  with open("tables.html","w") as of:
+    of.write("""<!DOCTYPE html>
 <html>
  <head>
 <title> Production summary </title>
 </head>
 <body>
 """)
-  if len(detectors['gen']):           
-    of.write("<h1>gen prods</h1>\n")
-    table = Table(header_row = ('Channel', 'Energy','ProdID','Tasks','Average Evts/task','Statistics','Cross Section (fb)','Comment'))
-    for item in detectors['gen']:
-      table.rows.append( item )
-    of.write(str(table))
-    gLogger.info("Gen prods")
-    gLogger.info(str(table))
+    if len(detectors['gen']):
+      of.write("<h1>gen prods</h1>\n")
+      table = Table(header_row = ('Channel', 'Energy','ProdID','Tasks','Average Evts/task','Statistics','Cross Section (fb)','Comment'))
+      for item in detectors['gen']:
+        table.rows.append( item )
+      of.write(str(table))
+      gLogger.info("Gen prods")
+      gLogger.info(str(table))
 
-  if len(detectors['ILD']):           
-    of.write("<h1>ILD prods</h1>\n")
-    for ptype in detectors['ILD'].keys():
-      if len(detectors['ILD'][ptype]):
-        of.write("<h2>%s</h2>\n"%ptype)
-        table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
-        for item in detectors['ILD'][ptype]:
-          table.rows.append( item )
-        of.write(str(table))
-        gLogger.info("ILC CDR prods %s" % ptype)
-        gLogger.info(str(table))
-  
-  if len(detectors['SID']):           
-    of.write("<h1>SID prods</h1>\n")
-    for ptype in detectors['SID'].keys():
-      if len(detectors['SID'][ptype]):
-        of.write("<h2>%s</h2>\n"%ptype)
-        table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
-        for item in detectors['SID'][ptype]:
-          table.rows.append( item )
-        of.write(str(table))
-        gLogger.info("SID CDR prods %s"%ptype)
-        gLogger.info(str(table))
+    if len(detectors['ILD']):
+      of.write("<h1>ILD prods</h1>\n")
+      for ptype in detectors['ILD'].keys():
+        if len(detectors['ILD'][ptype]):
+          of.write("<h2>%s</h2>\n"%ptype)
+          table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+          for item in detectors['ILD'][ptype]:
+            table.rows.append( item )
+          of.write(str(table))
+          gLogger.info("ILC CDR prods %s" % ptype)
+          gLogger.info(str(table))
 
-  if len(detectors['sid']):           
-    of.write("<h1>sid dbd prods</h1>\n")
-    for ptype in detectors['sid'].keys():
-      if len(detectors['sid'][ptype]):
-        of.write("<h2>%s</h2>\n"%ptype)
-        table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
-        for item in detectors['sid'][ptype]:
-          table.rows.append( item )
-        of.write(str(table))
-        gLogger.info("sid DBD prods %s"%ptype)
-        gLogger.info(str(table))
-  
-  of.write("""
+    if len(detectors['SID']):
+      of.write("<h1>SID prods</h1>\n")
+      for ptype in detectors['SID'].keys():
+        if len(detectors['SID'][ptype]):
+          of.write("<h2>%s</h2>\n"%ptype)
+          table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+          for item in detectors['SID'][ptype]:
+            table.rows.append( item )
+          of.write(str(table))
+          gLogger.info("SID CDR prods %s"%ptype)
+          gLogger.info(str(table))
+
+    if len(detectors['sid']):
+      of.write("<h1>sid dbd prods</h1>\n")
+      for ptype in detectors['sid'].keys():
+        if len(detectors['sid'][ptype]):
+          of.write("<h2>%s</h2>\n"%ptype)
+          table = Table(header_row = ('Channel', 'Energy','Detector','ProdID','Number of Files','Events/File','Statistics','Cross Section (fb)','Origin ProdID','Comment'))
+          for item in detectors['sid'][ptype]:
+            table.rows.append( item )
+          of.write(str(table))
+          gLogger.info("sid DBD prods %s"%ptype)
+          gLogger.info(str(table))
+
+    of.write("""
 </body>
 </html>
 """)
-  of.close()
   gLogger.notice("Check ./tables.html in any browser for the results")
   dexit(0)
 
