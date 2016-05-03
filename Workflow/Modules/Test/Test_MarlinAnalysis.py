@@ -2,13 +2,14 @@
 Unit tests for the MarlinAnalysis.py file
 """
 
-import unittest, os
+import unittest
+import os
 from mock import mock_open, patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from DIRAC import S_OK, S_ERROR
 
 
-expected_diff_err = "Expected different error message"
+EXPECTED_DIFF_ERR = "Expected different error message"
 
 
 # TODO: add case for undefined steering file
@@ -79,14 +80,14 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.platform = None
     result = self.marAna.runIt()
     self.assertFalse( result['OK'] )
-    self.expectOutcome('no ilc platform selected', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('no ilc platform selected', result['Message'].lower(), EXPECTED_DIFF_ERR)
 
   def test_runit_noapplog( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = None
     result = self.marAna.runIt()
     self.assertFalse( result['OK'] )
-    self.expectOutcome('no log', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('no log', result['Message'].lower(), EXPECTED_DIFF_ERR)
 
   def test_runit_workflowbad( self ):
     self.marAna.platform = "Testplatform123"
@@ -94,7 +95,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = { 'OK' : False }
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
-    self.expectOutcome("should not proceed", result['Value'].lower(), expected_diff_err)
+    self.expectOutcome("should not proceed", result['Value'].lower(), EXPECTED_DIFF_ERR)
 
   def test_runit_stepbad( self ):
     self.marAna.platform = "Testplatform123"
@@ -102,7 +103,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.stepStatus = { 'OK' : False }
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
-    self.expectOutcome("should not proceed", result['Value'].lower(), expected_diff_err)
+    self.expectOutcome("should not proceed", result['Value'].lower(), EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
   def test_runit_getEnvScriptFails( self ):
@@ -113,7 +114,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     result = self.marAna.runIt()
     self.assertFalse( result['OK'] )
     msg = result['Message'].lower()
-    self.expectOutcome('env script', msg, expected_diff_err)
+    self.expectOutcome('env script', msg, EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_ERROR('missing slcio file')))
@@ -125,7 +126,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     result = self.marAna.runIt()
     self.assertFalse( result['OK'] )
     #Only checks that the patch annotation is passed as the result
-    self.expectOutcome('missing slcio file', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('missing slcio file', result['Message'].lower(), EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -142,7 +143,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.expectOutcome('not produce the expected log', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('not produce the expected log', result['Message'].lower(), EXPECTED_DIFF_ERR)
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
@@ -158,7 +159,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.expectOutcome('prepxml', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('prepxml', result['Message'].lower(), EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -174,7 +175,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.expectOutcome('wrong with software installation', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('wrong with software installation', result['Message'].lower(), EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
@@ -191,7 +192,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     result = self.marAna.runIt()
     self.assertFalse(result['OK'])
-    self.expectOutcome('failed to run', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('failed to run', result['Message'].lower(), EXPECTED_DIFF_ERR)
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
 
@@ -224,14 +225,13 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
   def test_getenvscript_pathexists( self ):
     result = self.marAna.getEnvScript(None, None, None)
     self.assertFalse(result['OK'])
-    self.expectOutcome('marlin_dll folder not found', result['Message'].lower(), expected_diff_err)
+    self.expectOutcome('marlin_dll folder not found', result['Message'].lower(), EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('aFolder')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value='bFolder'))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=True))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.listdir", new=Mock(return_value=['testdir']))
-  #TODO mock properly
   def test_getenvscript( self ):
     moduleName = "ILCDIRAC.Workflow.Modules.MarlinAnalysis"
     file_contents = []
@@ -257,7 +257,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
   def test_getinputfiles_resolvepathsfails( self ):
     res = self.marAna.GetInputFiles()
     self.assertFalse(res['OK'])
-    self.expectOutcome('missing slcio', res['Message'].lower(), expected_diff_err)
+    self.expectOutcome('missing slcio', res['Message'].lower(), EXPECTED_DIFF_ERR)
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(['1.slcio', '2.slcio'])))
   def test_getinputfiles_complete( self ):
@@ -271,21 +271,9 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     output = message + ', got %s instead of %s' % (actual, expected)
     self.assertIn(expected, actual, output)
 
-#TODO Better naming
-  def check_content( self, script_file, content ):
-    """Checks for the given file handle if every entry in args was written to the mock'ed file
-    """
-    filecontent = []
-    with open(script_file) as scriptfile:
-      filecontent = scriptfile.read().splitlines()
-
-    for argument in content:
-      contained = any(argument in line for line in filecontent)
-      self.assertTrue(contained, expected_diff_err + ', did not find %s in %s' % (argument, filecontent))
-
   def assertInMultiple( self, listOfStrings, bigString):
     """Checks if every string in listOfStrings is contained in bigString.
     """
     for string in listOfStrings:
-      self.expectOutcome(string, bigString, expected_diff_err)
+      self.expectOutcome(string, bigString, EXPECTED_DIFF_ERR)
 
