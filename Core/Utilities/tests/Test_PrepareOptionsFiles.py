@@ -209,6 +209,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     expected = [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
+    self.assertEquals(len(expected), mocker_handle.__enter__.return_value.write.call_count)
+    #self.mocked_calls_match_expected_automated(expected, mocker_handle.mock_calls)
 
   def test_prepareWhizFileTemplate( self ):
     parameters = { }
@@ -250,6 +252,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     expected = [' seed = 135431\n', ' sqrts = 1tev\n', ' beam_recoil = 134\n', ' n_events = 23\n', ' luminosity=13\n', ' keep_initials = JE\n', " particle_name = 'electron_hans'\n", " particle_name = 'proton_peter'\n", ' polarization = plus\n', ' polarization = minus\n', ' USER_spectrum_on = spectrumA\n', ' USER_spectrum_on = SpectrumB\n', ' USER_spectrum_mode = mode1234\n', ' USER_spectrum_mode = -mode1234\n', ' ISR_on = PSDL\n', ' ISR_on = FVikj\n', ' EPA_on = 234\n', ' EPA_on = asf31\n', ' write_events_file = "typeA" \n', 'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82']
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
+    self.assertEquals(len(expected), mocker_handle.__enter__.return_value.write.call_count)
+    #self.mocked_calls_match_expected_automated(expected, mocker_handle.mock_calls)
 
   def test_prepareSteeringFile_full( self ):
     # Any open() call removes the first element of this list and uses it as its content
@@ -287,31 +291,11 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
     for i in range(0, len(file_contents)):
       cur_handle = handles[i].__enter__()
-      self.mocked_calls_match_expected(expected[i], handles[i].mock_calls)
+      #self.mocked_calls_match_expected_automated(expected[i], handles[i].mock_calls)
+      self.assertEquals(len(expected[i]), handles[i].__enter__.return_value.write.call_count)
       for entry in expected[i]:
         cur_handle.write.assert_any_call(entry)
     self.assertEquals(expected_return_value, result)
-
-  def mocked_calls_match_expected(self, expected, actual):
-    """Checks if the amount of mocked calls matches the expected amount of calls, minus an offset for calls necessary for mocking (enter, exit, etc)
-    """
-    # if file is written to, the calls are enter, exit, enter + all write calls
-    offset = 3
-    # If file is read from, the calls are enter, iter, exit, enter
-    if expected == []:
-      offset = 4
-    self.assert_same_length(expected, actual, offset)
-
-  def assert_same_length(self, list1, list2, offset = 0):
-    """Checks if the 2 provided lists have the same length.
-    """
-    print list1
-    print list2
-    len1 = len(list1)
-    len2 = len(list2) - offset
-    self.assertEquals(len1, len2, "Error: Lists differ in length: List 1 has %s elements, List 2 %s!" % (len1, len2))
-
-
 
 def get_multiple_read_handles(file_contents):
   full_file_contents = ['\n'.join(x) for x in file_contents]
