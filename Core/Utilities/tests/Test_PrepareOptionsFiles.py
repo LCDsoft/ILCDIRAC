@@ -210,7 +210,24 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
     self.assertEquals(len(expected), mocker_handle.__enter__.return_value.write.call_count)
-    #self.mocked_calls_match_expected_automated(expected, mocker_handle.mock_calls)
+
+  def test_prepareWhizFile_luminosity( self ):
+    from ILCDIRAC.Core.Utilities import PrepareOptionFiles
+    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
+    file_contents = ['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi', 'luminosity']
+    text_file_data = '\n'.join(file_contents)
+    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+      file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
+      result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", "684", "out")
+      self.assertEquals(S_OK(True), result)
+    file_mocker.assert_any_call('in', 'r')
+    file_mocker.assert_any_call('out', 'w')
+    mocker_handle = file_mocker()
+    expected = [' seed = 89741\n', ' sqrts = 1tev\n', 'n_events143417', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi', ' luminosity = 684\n']
+    for entry in expected:
+      mocker_handle.write.assert_any_call(entry)
+    self.assertEquals(len(expected), mocker_handle.__enter__.return_value.write.call_count)
+
 
   def test_prepareWhizFileTemplate( self ):
     parameters = { }

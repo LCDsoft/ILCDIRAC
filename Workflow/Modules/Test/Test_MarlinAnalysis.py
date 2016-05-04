@@ -247,6 +247,7 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     print mocker_handle.write.mock_calls
     for expected in check_in_script:
       mocker_handle.write.assert_any_call(expected)
+    self.assertEquals(len(check_in_script), mocker_handle.__enter__.return_value.write.call_count - 4)
 
 
   def test_getinputfiles_ignore( self ):
