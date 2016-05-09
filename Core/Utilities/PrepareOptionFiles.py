@@ -258,7 +258,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
       output.write("/Mokka/init/lcioEventParameter float Energy %s\n" % float(filemeta['Energy']))
     if 'PolarizationB1' in filemeta:
       polb1 = filemeta['PolarizationB1']
-      if not polb1.count('L') or not polb1.count('R'):
+      if not polb1.count('L') and not polb1.count('R'):
         polb1 = '0.'
       else:
         polb1 = polb1.replace("L","-").replace("R","")
@@ -271,7 +271,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
       output.write("/Mokka/init/lcioEventParameter float Pol_ep %s\n" % float(polb1))
     if 'PolarizationB2' in filemeta:
       polb2 = filemeta['PolarizationB2']
-      if not polb2.count('L') or not polb2.count('R'):
+      if not polb2.count('L') and not polb2.count('R'):
         polb2 = '0.'
       else:
         polb2 = polb2.replace("L","-").replace("R","")
@@ -280,7 +280,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
         elif polb2 == '':
           polb2 = '1.0'
         else:
-          polb2 = str(float(polb1)/100.)
+          polb2 = str(float(polb2)/100.)
       output.write("/Mokka/init/lcioEventParameter float Pol_em %s\n" % float(polb2))
 
     output.write("#Set event start number to value given as job parameter\n")
