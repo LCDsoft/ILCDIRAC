@@ -283,6 +283,58 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     exp_retval = S_OK(True)
     self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
 
+  def test_prepareSteeringFile_othercases( self ):
+    # Any open() call removes the first element of this list and uses it as its content
+    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
+    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '1.3', 'Energy' : '186', 'PolarizationB1' : '', 'PolarizationB2' : 'L' }
+    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
+    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+
+    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
+    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n", "/Mokka/init/lcioEventParameter float Energy 186.0\n", "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n", "/Mokka/init/lcioEventParameter float Pol_em -1.0\n"]]
+    exp_retval = S_OK(True)
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+
+    #TODO Test with outputlcio false, detectormodel false
+
+  def test_prepareSteeringFile_polarization1( self ):
+    # Any open() call removes the first element of this list and uses it as its content
+    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
+    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '9.2', 'Energy' : '-91', 'PolarizationB1' : 'R', 'PolarizationB2' : '' }
+    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, '', False, "testslciooutput.te", metadict ]
+    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+
+    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
+    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testgenID\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 9.2\n", "/Mokka/init/lcioEventParameter float Energy -91.0\n", "/Mokka/init/lcioEventParameter float Pol_ep 1.0\n", "/Mokka/init/lcioEventParameter float Pol_em 0.0\n"]]
+    exp_retval = S_OK(True)
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+
+
+  def test_prepareSteeringFile_polarization2( self ):
+    # Any open() call removes the first element of this list and uses it as its content
+    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
+    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '5.7', 'Energy' : '0', 'PolarizationB1' : 'L', 'PolarizationB2' : 'R' }
+    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
+    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+
+    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
+    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 5.7\n", "/Mokka/init/lcioEventParameter float Energy 0.0\n", "/Mokka/init/lcioEventParameter float Pol_ep -1.0\n", "/Mokka/init/lcioEventParameter float Pol_em 1.0\n" ]]
+    exp_retval = S_OK(True)
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+
+
+  def test_prepareSteeringFile_polarization3( self ):
+    # Any open() call removes the first element of this list and uses it as its content
+    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
+    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '0.0', 'Energy' : '3.7', 'PolarizationB1' : 'L13', 'PolarizationB2' : 'R98' }
+    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
+    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+
+    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
+    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 0.0\n", "/Mokka/init/lcioEventParameter float Energy 3.7\n", "/Mokka/init/lcioEventParameter float Pol_ep -13.0\n", "/Mokka/init/lcioEventParameter float Pol_em 98.0\n"]]
+    exp_retval = S_OK(True)
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+
 
   def helper_test_prepareSteeringFile( self, file_contents, args, expected_file_tuples, expected, expected_return_value):
     """Helper function to test prepareSteeringFile.
@@ -309,6 +361,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     for i in range(0, len(file_contents)):
       cur_handle = handles[i].__enter__()
       #self.mocked_calls_match_expected_automated(expected[i], handles[i].mock_calls)
+      print expected[i]
+      print handles[i].__enter__.return_value.write.mock_calls
       self.assertEquals(len(expected[i]), handles[i].__enter__.return_value.write.call_count)
       for entry in expected[i]:
         cur_handle.write.assert_any_call(entry)
