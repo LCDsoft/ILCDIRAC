@@ -80,7 +80,7 @@ cvmfstests6:
     - yum -y install which fontconfig libpng
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - .gitlab-ci.d/run-cvmfstests.sh
 
@@ -111,6 +111,6 @@ nosetest7:
 #  script:
 #    - source ../bashrc
 #    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-#    - dirac-configure -S ILC-Production -C dips://voilcdirac01.cern.ch:9135/Configuration/Server --SkipCAChecks
+#    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
 #    - dirac-proxy-init <<< $CERT_PASSPHRASE
 #    - .gitlab-ci.d/run-setests.sh
