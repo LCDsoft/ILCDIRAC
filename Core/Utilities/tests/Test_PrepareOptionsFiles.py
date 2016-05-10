@@ -284,8 +284,6 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
     resulttree = createXMLTestTree()
     import xml.etree.ElementTree as ET
-    print resulttree.getroot()
-    print ET.tostring(resulttree.getroot())
     #with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree", autospec=True) as et_mock:
     #  et_mock.__new__.return_value=resulttree
     #  et_mock.parse.return_value=1

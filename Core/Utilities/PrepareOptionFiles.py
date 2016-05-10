@@ -345,7 +345,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
         lciolistfound = True
         com = Comment("input file list changed")
         glob.insert(0, com) #pylint: disable=E1101
-        param.text = inputSLCIO
+        param.text = str(inputSLCIO)
       if numberofevts > 0:
         if param.attrib['name'] == 'MaxRecordNumber':
           if param.attrib.has_key('value'):
@@ -359,7 +359,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
           com = Comment("input gear changed")
           glob.insert(0, com) #pylint: disable=E1101
         else:
-          param.text = inputGEAR
+          param.text = str(inputGEAR)
           com = Comment("input gear changed")
           glob.insert(0, com) #pylint: disable=E1101
       if not debug:
@@ -371,7 +371,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     name = {}
     name["name"] = "LCIOInputFiles"
     lciolist = Element("parameter", name)
-    lciolist.text = inputSLCIO
+    lciolist.text = str(inputSLCIO)
     globparams = tree.find("global")
     globparams.append(lciolist) #pylint: disable=E1101
 
