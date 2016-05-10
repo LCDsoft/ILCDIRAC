@@ -28,9 +28,9 @@ stages:
     - pylint5
     - pylint6
     - pylint7
-    - nose5
-    - nose6
-    - nose7
+    - unit5
+    - unit6
+    - unit7
     - cvmfs
 
 
@@ -44,14 +44,14 @@ pylint5:
     - source ../bashrc
     - .gitlab-ci.d/run-pylint.sh
 
-nosetest5:
-  stage: nose5
+unittest5:
+  stage: unit5
   tags:
     - docker
   image: ilcdirac/slc5-base
   script:
     - source ../bashrc
-    - .gitlab-ci.d/run-nosetests.sh
+    - .gitlab-ci.d/run-unittests.sh
 
 pylint6:
   stage: pylint6
@@ -62,14 +62,14 @@ pylint6:
     - source ../bashrc
     - .gitlab-ci.d/run-pylint.sh
 
-nosetest6:
-  stage: nose6
+unittest6:
+  stage: unit6
   tags:
     - docker
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
-    - .gitlab-ci.d/run-nosetests.sh
+    - .gitlab-ci.d/run-unittests.sh
 
 cvmfstests6:
   stage: cvmfs
@@ -93,14 +93,14 @@ pylint7:
     - source ../bashrc
     - .gitlab-ci.d/run-pylint.sh
 
-nosetest7:
-  stage: nose7
+unittest7:
+  stage: unit7
   tags:
     - docker
   image: ilcdirac/cc7-base
   script:
     - source ../bashrc
-    - .gitlab-ci.d/run-nosetests.sh
+    - .gitlab-ci.d/run-unittests.sh
 
 
 setests6:
