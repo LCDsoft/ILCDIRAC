@@ -200,7 +200,7 @@ class SoftwareAdder(object):
   def addMD5SumToCS(self):
     """adds the MD5Sum of the Tarball fo the CS"""
     gLogger.notice("Adding MD5Sum to CS")
-    md5sum = md5.md5(file(self.appTar).read()).hexdigest()
+    md5sum = md5.md5(open(self.appTar).read()).hexdigest()
     result = self.diracAdmin.csSetOption("%(softSec)s/%(platform)s/%(appname)s/%(appVersion)s/Md5Sum" % self.parameter,
                                          md5sum)
     if result['OK']:

@@ -157,7 +157,6 @@ exit $?
       self.log.error("Cannot access log file, cannot proceed")
       return S_ERROR("Failed reading the log file")
 
-    logf = file(self.applicationLog,"r")
     baseinputfilename = os.path.basename(runonslcio).split(".slcio")[0]
     output_file_base_name = ''
     if self.OutputFile:
@@ -165,19 +164,20 @@ exit $?
     self.log.info("Will rename all files using '%s' as base." % output_file_base_name)
     numberofeventsdict = {}
     fname = ''
-    for line in logf:
-      line = line.rstrip()
-      if line.count(baseinputfilename):
-        #First, we need to rename those guys
-        current_file = os.path.basename(line).replace(".slcio", "")
-        current_file_extension = current_file.replace(baseinputfilename, "")
-        newfile = output_file_base_name + current_file_extension + ".slcio"
-        os.rename(line, newfile)
-        fname = newfile
-        numberofeventsdict[fname] = 0
-      elif line.count("events"):
-        numberofeventsdict[fname] = int(line.split()[0])
-    
+    with open(self.applicationLog,"r") as logf:
+      for line in logf:
+        line = line.rstrip()
+        if line.count(baseinputfilename):
+          #First, we need to rename those guys
+          current_file = os.path.basename(line).replace(".slcio", "")
+          current_file_extension = current_file.replace(baseinputfilename, "")
+          newfile = output_file_base_name + current_file_extension + ".slcio"
+          os.rename(line, newfile)
+          fname = newfile
+          numberofeventsdict[fname] = 0
+        elif line.count("events"):
+          numberofeventsdict[fname] = int(line.split()[0])
+
     self.log.verbose("Number of eventsdict dict: %s" % numberofeventsdict)   
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for 

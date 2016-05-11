@@ -25,9 +25,8 @@ def createLock(lockname):
   """ Need to lock the area to prevent 2 jobs to write in the same area
   """
   try:
-    lock = file(lockname,"w")
-    lock.write("Locking this directory\n")
-    lock.close()
+    with open(lockname,"w") as lock:
+      lock.write("Locking this directory\n")
   except IOError as e:
     gLogger.error("Failed creating lock")
     return S_ERROR("Not allowed to write here: IOError %s" % (str(e)))
@@ -340,32 +339,32 @@ def check(app, area, res_from_install):
     return S_OK([basefolder])
   
   if os.path.exists(os.path.join(basefolder,'md5_checksum.md5')):
-    md5file = file(os.path.join(basefolder,'md5_checksum.md5'), 'r')
-    for line in md5file:
-      line = line.rstrip()
-      md5sum, fin = line.split()
-      if fin=='-' or fin.count("md5_checksum.md5"):
-        continue
-      found_lib_to_ignore = False
-      for lib in getLibsToIgnore():
-        if fin.count(lib):
-          found_lib_to_ignore = True
-      if found_lib_to_ignore:
-        continue
-      fin = os.path.join(basefolder, fin.replace("./",""))
-      if not os.path.exists(fin):
-        gLogger.error("File missing :", fin)
-        return S_ERROR("Incomplete install: The file %s is missing" % fin)
-      fmd5 = ''
-      try:
-        fmd5 = md5.md5(file(fin).read()).hexdigest()
-      except IOError:
-        gLogger.error("Failed to compute md5 sum")
-        return S_ERROR("Failed to compute md5 sum")
-      if md5sum != fmd5:
-        gLogger.error("File has wrong checksum :", fin)
-        gLogger.error("Found %s, expected %s" % ( fmd5, md5sum ))
-        return S_ERROR("Corrupted install: File %s has a wrong sum" % fin)
+    with open(os.path.join(basefolder,'md5_checksum.md5'), 'r') as md5file:
+      for line in md5file:
+        line = line.rstrip()
+        md5sum, fin = line.split()
+        if fin=='-' or fin.count("md5_checksum.md5"):
+          continue
+        found_lib_to_ignore = False
+        for lib in getLibsToIgnore():
+          if fin.count(lib):
+            found_lib_to_ignore = True
+        if found_lib_to_ignore:
+          continue
+        fin = os.path.join(basefolder, fin.replace("./",""))
+        if not os.path.exists(fin):
+          gLogger.error("File missing :", fin)
+          return S_ERROR("Incomplete install: The file %s is missing" % fin)
+        fmd5 = ''
+        try:
+          fmd5 = md5.md5(open(fin).read()).hexdigest()
+        except IOError:
+          gLogger.error("Failed to compute md5 sum")
+          return S_ERROR("Failed to compute md5 sum")
+        if md5sum != fmd5:
+          gLogger.error("File has wrong checksum :", fin)
+          gLogger.error("Found %s, expected %s" % ( fmd5, md5sum ))
+          return S_ERROR("Corrupted install: File %s has a wrong sum" % fin)
   else:
     gLogger.warn("The application does not come with md5 checksum file:", app)
   

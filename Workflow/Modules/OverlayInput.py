@@ -376,7 +376,7 @@ class OverlayInput (ModuleBase):
         triedDataManager = False
 
         if self.site == 'LCG.CERN.ch':
-          res = self.getCASTORFile(self.lfns[fileindex])
+          res = self.getEOSFile(self.lfns[fileindex])
         elif self.site == 'LCG.IN2P3-CC.fr':
           res = self.getLyonFile(self.lfns[fileindex])
         elif self.site == 'LCG.UKI-LT2-IC-HEP.uk':
@@ -448,25 +448,56 @@ class OverlayInput (ModuleBase):
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
-    script = file("overlayinput.sh","w")
-    script.write('#!/bin/sh \n')
-    script.write('###############################\n')
-    script.write('# Dynamically generated scrip #\n')
-    script.write('###############################\n')
-    if 'X509_USER_PROXY' in os.environ:
-      script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
-    script.write('declare -x STAGE_SVCCLASS=ilcdata\n')
-    script.write('declare -x STAGE_HOST=castorpublic\n')
-    script.write("xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
-    #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
-    script.write("""
+    with open("overlayinput.sh","w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('###############################\n')
+      script.write('# Dynamically generated scrip #\n')
+      script.write('###############################\n')
+      if 'X509_USER_PROXY' in os.environ:
+        script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
+      script.write('declare -x STAGE_SVCCLASS=ilcdata\n')
+      script.write('declare -x STAGE_HOST=castorpublic\n')
+      script.write("xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
+      #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
+      script.write("""
 if [ ! -s %s ]; then
   echo "Using rfcp instead"
   rfcp %s ./
 fi\n""" % (basename, lfile))
-    script.write('declare -x appstatus=$?\n')
-    script.write('exit $appstatus\n')
-    script.close()
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
+    os.chmod("overlayinput.sh", 0755)
+    comm = 'sh -c "./overlayinput.sh"'
+    self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
+
+    localfile = os.path.basename(lfile)
+    if os.path.exists(localfile):
+      return S_OK(localfile)
+
+    return S_ERROR("Failed")
+
+  def getEOSFile(self, lfn):
+    """ Use xrdcp to get the files from EOS
+    """
+    prependpath = "/eos/clicdp/grid"
+    if not lfn.startswith(prependpath):
+      lfile = prependpath + lfn
+    else:
+      lfile = lfn
+    self.log.info("Getting %s" % lfile)
+
+    if os.path.exists("overlayinput.sh"):
+      os.unlink("overlayinput.sh")
+    with open("overlayinput.sh","w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('################################\n')
+      script.write('# Dynamically generated script #\n')
+      script.write('################################\n')
+      if 'X509_USER_PROXY' in os.environ:
+        script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
+      script.write("xrdcp -s root://eospublic.cern.ch/%s ./ \n" % lfile.rstrip() )
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
@@ -492,22 +523,21 @@ fi\n""" % (basename, lfile))
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
-    script = file("overlayinput.sh", "w")
-    script.write('#!/bin/sh \n')
-    script.write('###############################\n')
-    script.write('# Dynamically generated scrip #\n')
-    script.write('###############################\n')
-    script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
-    script.write(". /afs/in2p3.fr/grid/profiles/lcg_env.sh\n")
-    script.write("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s\n" % lfile.rstrip())
-    #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
-    #script.write("""
+    with open("overlayinput.sh", "w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('###############################\n')
+      script.write('# Dynamically generated scrip #\n')
+      script.write('###############################\n')
+      script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
+      script.write(". /afs/in2p3.fr/grid/profiles/lcg_env.sh\n")
+      script.write("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s\n" % lfile.rstrip())
+      #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
+      #script.write("""
 #if [ ! -s %s ]; then
 #  rfcp %s ./
 #fi\n"""%(basename,lfile))
-    script.write('declare -x appstatus=$?\n')
-    script.write('exit $appstatus\n')
-    script.close()
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
@@ -532,20 +562,19 @@ fi\n""" % (basename, lfile))
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
-    script = file("overlayinput.sh","w")
-    script.write('#!/bin/sh \n')
-    script.write('###############################\n')
-    script.write('# Dynamically generated scrip #\n')
-    script.write('###############################\n')
-    script.write("dccp dcap://%s%s ./\n" % (os.environ['VO_ILC_DEFAULT_SE'], lfile.rstrip()))
-    #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
-    #script.write("""
+    with open("overlayinput.sh","w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('###############################\n')
+      script.write('# Dynamically generated scrip #\n')
+      script.write('###############################\n')
+      script.write("dccp dcap://%s%s ./\n" % (os.environ['VO_ILC_DEFAULT_SE'], lfile.rstrip()))
+      #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
+      #script.write("""
 #if [ ! -s %s ]; then
 #  rfcp %s ./
 #fi\n"""%(basename,lfile))
-    script.write('declare -x appstatus=$?\n')
-    script.write('exit $appstatus\n')
-    script.close()
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
@@ -594,15 +623,14 @@ fi\n""" % (basename, lfile))
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
-    script = file("overlayinput.sh","w")
-    script.write('#!/bin/sh \n')
-    script.write('###############################\n')
-    script.write('# Dynamically generated scrip #\n')
-    script.write('###############################\n')
-    script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n" % (lfile, basename))
-    script.write('declare -x appstatus=$?\n')
-    script.write('exit $appstatus\n')
-    script.close()
+    with open("overlayinput.sh","w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('###############################\n')
+      script.write('# Dynamically generated scrip #\n')
+      script.write('###############################\n')
+      script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n" % (lfile, basename))
+      script.write('declare -x appstatus=$?\n')
+      script.write('exit $appstatus\n')
     os.chmod("overlayinput.sh", 0755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
@@ -623,7 +651,7 @@ fi\n""" % (basename, lfile))
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
-    with file("overlayinput.sh", "w") as script:
+    with open("overlayinput.sh", "w") as script:
       script.write('#!/bin/sh \n')
       script.write('###############################\n')
       script.write('# Dynamically generated scrip #\n')

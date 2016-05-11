@@ -126,16 +126,15 @@ class StdHepCut(ModuleBase):
     nbevtswritten = -1
     nbevtspassing = 0
     nbevtsread = 0
-    logf = file(self.applicationLog, 'r')
-    for line in logf:
-      line = line.rstrip()
-      if line.count('Events kept'):
-        nbevtswritten = int(line.split()[-1])
-      if line.count('Events passing cuts'):
-        nbevtspassing = int(line.split()[-1])
-      if line.count('Events total'):
-        nbevtsread = int(line.split()[-1])
-    logf.close()
+    with open(self.applicationLog, 'r') as logf:
+      for line in logf:
+        line = line.rstrip()
+        if line.count('Events kept'):
+          nbevtswritten = int(line.split()[-1])
+        if line.count('Events passing cuts'):
+          nbevtspassing = int(line.split()[-1])
+        if line.count('Events total'):
+          nbevtsread = int(line.split()[-1])
     if nbevtswritten > 0 and nbevtspassing > 0 and nbevtsread > 0:
       cut_eff = 1. * nbevtspassing / nbevtsread
       self.log.info('Selection cut efficiency : %s%%' % (100 * cut_eff))

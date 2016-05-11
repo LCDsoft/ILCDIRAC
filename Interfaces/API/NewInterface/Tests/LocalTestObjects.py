@@ -3,8 +3,8 @@
 __RCSID__ ="$Id$"
 
 
-from DIRAC.Core.Base import Script
-import os, shutil, tempfile
+#from DIRAC.Core.Base import Script
+import os, shutil, tempfile, sys
 from DIRAC import S_OK, S_ERROR, gLogger
 
 def cleanup(tempdir):
@@ -133,6 +133,7 @@ class CLIParams( object ):
   def registerSwitches(self):
     """ Register the switches
     """
+    from DIRAC.Core.Base import Script
     Script.registerSwitch("", "submitmode=", "Submission mode: local or WMS", self.setSubmitMode)
     Script.registerSwitch('', 'whizard', "Test Whizard", self.setTestWhizard)
     Script.registerSwitch("", "mokka", 'Test Mokka', self.setTestMokka)
@@ -150,9 +151,13 @@ class CLIParams( object ):
     Script.setUsageMessage("%s --all --submitmode=local" % Script.scriptName)
 
 
+# pylint: disable=too-many-public-methods
+# Test parameters, necessary due to amount of tests in this class.
 class TestCreater(object):
   """contains all the versions and parameters to create all theses tests"""
 
+  # pylint: disable=too-many-instance-attributes
+  # Test parameters, necessary due to amount of tests in this class.
   def __init__( self,
                 clip,
                 params
@@ -166,11 +171,15 @@ class TestCreater(object):
     self.detectorModel = params.get( "detectorModel" )
     self.marlinVersion = params.get( "marlinVersion" )
     self.marlinSteeringFile = params.get( "marlinSteeringFile" )
+    self.ddsimVersion = params.get( "ddsimVersion" )
+    self.ddsimDetectorModel = params.get( "ddsimDetectorModel")
+    self.ddsimInputFile = params.get( "ddsimInputFile" )
     self.marlinInputdata = params.get ( "marlinInputdata" )
     self.gearFile = params.get( "gearFile" )
     self.lcsimVersion = params.get( "lcsimVersion" )
     self.steeringFileVersion = params.get( "steeringFileVersion", None )
     self.rootVersion = params["rootVersion"]
+
     self.energy = params.get("energy")
     self.backgroundType = params.get("backgroundType")
     self.machine = params.get("machine")
@@ -198,6 +207,31 @@ class TestCreater(object):
     self.diracInstance = DiracILC(False, 'tests.rep')
     self.jobList = {}
 
+    
+  def createDDSimTest( self, inputfile = None, detectorModel = None):
+    """Create a job running ddsim"""
+    if inputfile is None:
+      inputfile = self.ddsimInputFile
+    sandbox = [ inputfile ]
+    if detectorModel is None:
+      detectorModel = self.ddsimDetectorModel
+    else:
+      sandbox.append(detectorModel)
+    jobdd = self.getJob()
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim import DDSim
+    ddsim = DDSim()
+    ddsim.setVersion(self.ddsimVersion)
+    ddsim.setDetectorModel(detectorModel)
+    ddsim.setNumberOfEvents(1)
+    ddsim.setInputFile(inputfile)
+    jobdd.setInputSandbox(sandbox)
+    res = jobdd.append(ddsim)
+    if not res['OK']:
+      self.log.error("Failed adding DDSim:", res['Message'])
+      return S_ERROR("Failed adding DDSim to Job")
+    
+    return S_OK(jobdd)
+
   def createMokkaTest(self):
     """create a job running mokka, and maybe whizard before"""
     self.log.notice("Creating jobs for Mokka")
@@ -210,7 +244,7 @@ class TestCreater(object):
         self.log.error("Failed adding Whizard:", res['Message'])
         return S_ERROR("Failed adding Whizard")
     elif self.clip.testInputData:
-      jobmo.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+      jobmo.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
     else:
       self.log.error("Mokka does not know where to get its input from")
       return S_ERROR("Mokka does not know where to gets its input from")
@@ -367,6 +401,19 @@ class TestCreater(object):
     marlin.setOutputRecFile("testmarlinREC.slcio")
     marlin.setNumberOfEvents(2)
     return marlin
+
+  def getDD( self ):
+    """ Create a DDSim object
+    """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim import DDSim
+    ddsim = DDSim()
+    ddsim.setVersion(self.ddsimVersion)
+    ddsim.setDetectorModel(self.ddsimDetectorModel)
+    ddsim.setInputFile(self.ddsimInputFile) 
+    ddsim.setNumberOfEvents(30)
+    return ddsim
+  
+
 
   def getLCSIM(self, prepandora = True):
     """ Get some LCSIM
@@ -557,7 +604,7 @@ class TestCreater(object):
         self.log.error("Failed adding Whizard:", res['Value'])
         return S_ERROR()
     elif self.clip.testInputData:
-      jobslic.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+      jobslic.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
     else:
       self.log.error("SLIC does not know where to get its input from")
       return S_ERROR()
@@ -574,7 +621,7 @@ class TestCreater(object):
     return S_OK(jobslic)
 
 
-  def createMarlinTest(self):
+  def createMarlinTest(self , setInputData = False):
     """create tests for marlin"""
     self.log.notice( "Creating test for Marlin" )
         #((Whizard + Mokka +)Overlay+) Marlin
@@ -589,7 +636,7 @@ class TestCreater(object):
           return S_ERROR()
         moma.getInputFromApp(whma)
       else:
-        jobma.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+        jobma.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
         moma.setNumberOfEvents(2)
       res = jobma.append(moma)
       if not res['OK']:
@@ -798,24 +845,33 @@ class TestCreater(object):
     tmpdir = tempfile.mkdtemp("", dir = "./")
     os.chdir(tmpdir)
 
-    if 'root' in jobName.lower():
-      with open("root.sh", "w") as rScript:
-        rScript.write( "echo $ROOTSYS" )
-      with open("func.C", "w") as rMacro:
-        rMacro.write( '''
-                      void func( TString string ) {
-                        std::cout << string << std::endl;
-                        TFile* file = TFile::Open(string);
+    # Jobs that need separate input files
+    specialJobs = ['root', 'ddsim']
+    filesForJob = {
+      'root' :  [ 'input2.root', 'input.root' ],
+      'ddsim' : [ 'FCalTB.tar.gz', 'qq_ln_gen_6701_975.stdhep' ]
+    }
+    for specialName in specialJobs:
+      if "root" in jobName.lower() and specialName is "root":
+        with open("root.sh", "w") as rScript:
+          rScript.write( "echo $ROOTSYS" )
+        with open("func.C", "w") as rMacro:
+          rMacro.write( '''
+                        void func( TString string ) {
+                          std::cout << string << std::endl;
+                          TFile* file = TFile::Open(string);
                         file->ls();
-                      }
-                      ''' )
+                        }
+                        ''' )
       testfiledir = 'Testfiles'
       for fileName in ['input.root', 'input2.root']:
         shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
         print os.path.join( curdir, "input2.root"), os.getcwd()
-
+      if specialName in jobName.lower():
+        for fileName in filesForJob[specialName]:
+          shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
+  
     resJob = self.runJob(job, jobName)
-
     os.chdir(curdir)
     if not resJob['OK']:
       return resJob

@@ -7,6 +7,7 @@ Provides a set of methods to prepare the option files needed by the ILC applicat
 
 __RCSID__ = "$Id$"
 
+import six
 from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
@@ -98,29 +99,25 @@ def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
   :param string output_in: whizard.in output file name (usually whizard.in)
   :return: S_OK
   """
-  inputfile = file(input_in, "r")  
-  outputfile = file(output_in, "w")
   foundprocessid = False
-  for line in inputfile:
-    if line.count("seed"):
-      outputfile.write(" seed = %s\n" % randomseed)
-    elif line.count("sqrts"):
-      outputfile.write(" sqrts = %s\n" % energy)
-    elif line.count("n_events") and not lumi:
-      outputfile.write(" n_events = %s\n" % nevts)
-    elif lumi and line.count("luminosity"):
-      outputfile.write(" luminosity = %s\n" % lumi)
-    elif line.count("write_events_file") and len(evttype):
-      outputfile.write(" write_events_file = \"%s\" \n" % evttype)
-    elif line.count("process_id"):
-      outputfile.write(line)
-      if len(line.split("\"")[1]):
-        foundprocessid = True
-    else:
-      outputfile.write(line)
-
-  inputfile.close()
-  outputfile.close()  
+  with open(input_in, "r") as inputfile, open(output_in, "w") as outputfile:
+    for line in inputfile:
+      if line.count("seed"):
+        outputfile.write(" seed = %s\n" % randomseed)
+      elif line.count("sqrts"):
+        outputfile.write(" sqrts = %s\n" % energy)
+      elif line.count("n_events") and not lumi:
+        outputfile.write(" n_events = %s\n" % nevts)
+      elif lumi and line.count("luminosity"):
+        outputfile.write(" luminosity = %s\n" % lumi)
+      elif line.count("write_events_file") and len(evttype):
+        outputfile.write(" write_events_file = \"%s\" \n" % evttype)
+      elif line.count("process_id"):
+        outputfile.write(line)
+        if len(line.split("\"")[1]):
+          foundprocessid = True
+      else:
+        outputfile.write(line)
 
   return S_OK(foundprocessid)
 
@@ -135,8 +132,6 @@ def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   :param string output_in: whizard.in output file name (usually whizard.in)
   :return: S_OK()
   """
-  inputfile = file(input_in, "r")  
-  outputfile = file(output_in, "w")
   foundprocessid = False
 
   replaceDict = {}
@@ -159,23 +154,22 @@ def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   replaceDict["EPAB1EPAB1"]       = " EPA_on = %s\n"              % parameters['EPAB1']
   replaceDict["EPAB2EPAB2"]       = " EPA_on = %s\n"              % parameters['EPAB2']
 
-  for line in inputfile:
-    written = False
-    for para, value in replaceDict.items():
-      if line.count(para):
-        outputfile.write(value)
-        written = True
-        break # break from looping dict
-    if line.count("write_events_file") and len(evttype):
-      outputfile.write(' write_events_file = "%s" \n' % evttype)
-    elif line.count("process_id"):
-      outputfile.write(line)
-      if len(line.split("\"")[1]):
-        foundprocessid = True
-    elif not written:
-      outputfile.write(line)
-  inputfile.close()
-  outputfile.close()
+  with open(input_in, "r") as inputfile, open(output_in, "w") as outputfile:
+    for line in inputfile:
+      written = False
+      for para, value in replaceDict.items():
+        if line.count(para):
+          outputfile.write(value)
+          written = True
+          break # break from looping dict
+      if line.count("write_events_file") and len(evttype):
+        outputfile.write(' write_events_file = "%s" \n' % evttype)
+      elif line.count("process_id"):
+        outputfile.write(line)
+        if len(line.split("\"")[1]):
+          foundprocessid = True
+      elif not written:
+        outputfile.write(line)
 
   return S_OK(foundprocessid)
 
@@ -208,93 +202,91 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
 
   macname = "mokkamac.mac"
   if len(mac) < 1:
-    macfile = file(macname, "w")
-    if len(stdhepFile) > 0:
-      macfile.write("/generator/generator %s\n" % stdhepFile)
-    macfile.write("/run/beamOn %s\n" % nbOfRuns)
-    macfile.close()
+    with open(macname, "w") as macfile:
+      if len(stdhepFile) > 0:
+        macfile.write("/generator/generator %s\n" % stdhepFile)
+      macfile.write("/run/beamOn %s\n" % nbOfRuns)
   else:
     macname = mac
     
-  inputsteer = file(inputSteering, "r")
-  output = file(str(outputSteering), "w")
-  for line in inputsteer:
-    if not line.count("/Mokka/init/initialMacroFile"):
-      if not line.count("/Mokka/init/BatchMode"):
-        if not line.count("/Mokka/init/randomSeed"):
-          if outputlcio:
-            if not line.count("lcioFilename"):
+  with open(inputSteering, "r") as inputsteer, open(str(outputSteering), "w") as output:
+    for line in inputsteer:
+      if not line.count("/Mokka/init/initialMacroFile"):
+        if not line.count("/Mokka/init/BatchMode"):
+          if not line.count("/Mokka/init/randomSeed"):
+            if outputlcio:
+              if not line.count("lcioFilename"):
+                if detectormodel:
+                  if not line.count("/Mokka/init/detectorModel"):
+                    output.write(line)
+                  else:
+                    output.write(line)
+                else:
+                  output.write(line)
+            else:
               if detectormodel:
                 if not line.count("/Mokka/init/detectorModel"):
                   output.write(line)
-                else:
-                  output.write(line)
               else:
                 output.write(line)
-          else:
-            if detectormodel:
-              if not line.count("/Mokka/init/detectorModel"):
-                output.write(line)
-            else:
-              output.write(line)
-  if detectormodel:
-    output.write("#Set detector model to value specified\n")
-    output.write("/Mokka/init/detectorModel %s\n" % detectormodel)
-  
-  if not debug:
-    output.write("#Set debug level to 1\n")
-    output.write("/Mokka/init/printLevel 1\n")
-  output.write("#Set batch mode to true\n")
-  output.write("/Mokka/init/BatchMode true\n")
-  output.write("#Set mac file to the one created on the site\n")
-  output.write("/Mokka/init/initialMacroFile %s\n" % macname)
-  output.write("#Setting random seed\n")
-  output.write("/Mokka/init/randomSeed %s\n" % (randomseed))
-  output.write("#Setting run number, same as seed\n")
-  output.write("/Mokka/init/mcRunNumber %s\n" % (mcrunnumber))
-  if outputlcio:
-    output.write("#Set outputfile name to job specified\n")
-    output.write("/Mokka/init/lcioFilename %s\n" % outputlcio)
-  if processID:
-    output.write("#Set processID as event parameter\n")
-    output.write("/Mokka/init/lcioEventParameter string Process %s\n" % processID)
-  elif 'GenProcessID' in filemeta:
-    output.write("#Set processID as event parameter\n")
-    output.write("/Mokka/init/lcioEventParameter string Process %s\n" % filemeta['GenProcessID'])
-  if 'CrossSection' in filemeta:
-    output.write("/Mokka/init/lcioEventParameter float CrossSection_fb %s\n" % float(filemeta['CrossSection']))
-  if 'Energy' in filemeta:
-    output.write("/Mokka/init/lcioEventParameter float Energy %s\n" % float(filemeta['Energy']))
-  if 'PolarizationB1' in filemeta:
-    polb1 = filemeta['PolarizationB1']
-    if not polb1.count('L') or not polb1.count('R'):
-      polb1 = '0.'
-    else:
-      polb1 = polb1.replace("L","-").replace("R","")
-      if polb1 == '-':
-        polb1 = '-1.0'
-      elif polb1 == '':
-        polb1 = '1.0'
+    if detectormodel:
+      output.write("#Set detector model to value specified\n")
+      output.write("/Mokka/init/detectorModel %s\n" % detectormodel)
+
+    if not debug:
+      output.write("#Set debug level to 1\n")
+      output.write("/Mokka/init/printLevel 1\n")
+    output.write("#Set batch mode to true\n")
+    output.write("/Mokka/init/BatchMode true\n")
+    output.write("#Set mac file to the one created on the site\n")
+    output.write("/Mokka/init/initialMacroFile %s\n" % macname)
+    output.write("#Setting random seed\n")
+    output.write("/Mokka/init/randomSeed %s\n" % (randomseed))
+    output.write("#Setting run number, same as seed\n")
+    output.write("/Mokka/init/mcRunNumber %s\n" % (mcrunnumber))
+    if outputlcio:
+      output.write("#Set outputfile name to job specified\n")
+      output.write("/Mokka/init/lcioFilename %s\n" % outputlcio)
+    if processID:
+      output.write("#Set processID as event parameter\n")
+      output.write("/Mokka/init/lcioEventParameter string Process %s\n" % processID)
+    elif 'GenProcessID' in filemeta:
+      output.write("#Set processID as event parameter\n")
+      output.write("/Mokka/init/lcioEventParameter string Process %s\n" % filemeta['GenProcessID'])
+    if 'CrossSection' in filemeta:
+      output.write("/Mokka/init/lcioEventParameter float CrossSection_fb %s\n" % float(filemeta['CrossSection']))
+    if 'Energy' in filemeta:
+      output.write("/Mokka/init/lcioEventParameter float Energy %s\n" % float(filemeta['Energy']))
+    if 'PolarizationB1' in filemeta:
+      polb1 = filemeta['PolarizationB1']
+      if not polb1.count('L') and not polb1.count('R'):
+        polb1 = '0.'
       else:
-        polb1 = str(float(polb1)/100.)
-    output.write("/Mokka/init/lcioEventParameter float Pol_ep %s\n" % float(polb1))
-  if 'PolarizationB2' in filemeta:
-    polb2 = filemeta['PolarizationB2']
-    if not polb2.count('L') or not polb2.count('R'):
-      polb2 = '0.'
-    else:
-      polb2 = polb2.replace("L","-").replace("R","")
-      if polb2 == '-':
-        polb2 = '-1.0'
-      elif polb2 == '':
-        polb2 = '1.0'
+        polb1 = polb1.replace("L","-").replace("R","")
+        if polb1 == '-':
+          polb1 = '-1.0'
+        elif polb1 == '':
+          polb1 = '1.0'
+        else:
+          polb1 = str(float(polb1)/100.)
+      output.write("/Mokka/init/lcioEventParameter float Pol_ep %s\n" % float(polb1))
+    if 'PolarizationB2' in filemeta:
+      polb2 = filemeta['PolarizationB2']
+      if not polb2.count('L') and not polb2.count('R'):
+        polb2 = '0.'
       else:
-        polb2 = str(float(polb1)/100.)
-    output.write("/Mokka/init/lcioEventParameter float Pol_em %s\n" % float(polb2))
-      
-  output.write("#Set event start number to value given as job parameter\n")  
-  output.write("/Mokka/init/startEventNumber %d\n" % startFrom)
-  output.close()
+        polb2 = polb2.replace("L","-").replace("R","")
+        if polb2 == '-':
+          polb2 = '-1.0'
+        elif polb2 == '':
+          polb2 = '1.0'
+        else:
+          polb2 = str(float(polb2)/100.)
+      output.write("/Mokka/init/lcioEventParameter float Pol_em %s\n" % float(polb2))
+
+    output.write("#Set event start number to value given as job parameter\n")
+    output.write("/Mokka/init/startEventNumber %d\n" % startFrom)
+
   return S_OK(True)
 
 def fixedXML(element):
@@ -328,6 +320,12 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   except Exception, x:
     print "Found Exception %s %s" % (Exception, x)
     return S_ERROR("Found Exception %s %s" % (Exception, x))
+
+  # Handle inputSLCIO being list or string
+  if isinstance(inputSLCIO, list):
+    inputSLCIO = " ".join(inputSLCIO)
+  elif not isinstance(inputSLCIO, six.string_types):
+    return S_ERROR("inputSLCIO is neither string nor list! Actual type is %s " % type(inputSLCIO))
 
   root = tree.getroot()
   ##Get all processors:
@@ -368,7 +366,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
           com = Comment("input gear changed")
           glob.insert(0, com) #pylint: disable=E1101
         else:
-          param.text = inputGEAR
+          param.text = str(inputGEAR)
           com = Comment("input gear changed")
           glob.insert(0, com) #pylint: disable=E1101
       if not debug:
@@ -459,9 +457,8 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   
   #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
   root_str = fixedXML(tostring(root))
-  of = file(finalxml,"w")
-  of.write(root_str)
-  of.close()
+  with open(finalxml,"w") as of:
+    of.write(root_str)
   #tree.write(finalxml)
   return S_OK(True)
 
@@ -485,8 +482,6 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
   :return: S_OK
   """
 
-  inputmacfile = file(inputmac, 'r')
-  output = file(outputmac, 'w')
   listtext = []
   replacelines = []
   replacelines.append("/generator/filename")
@@ -496,32 +491,32 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
   replacelines.append("/lcio/path")
   replacelines.append("/run/beamOn")
 
-  for line in inputmacfile:
-    if any( rl in line for rl in replacelines ):
-      continue
-    if detector and line.count("/lcdd/url"):
-      continue
-    if outputlcio and line.count("/lcio/filename"):
-      continue
+  with open(inputmac, 'r') as inputmacfile, open(outputmac, 'w') as output:
 
-    listtext.append(line)
+    for line in inputmacfile:
+      if any( rl in line for rl in replacelines ):
+        continue
+      if detector and line.count("/lcdd/url"):
+        continue
+      if outputlcio and line.count("/lcio/filename"):
+        continue
 
-  finaltext = "\n".join(listtext)
-  finaltext += "\n"
-  if detector:
-    output.write("/lcdd/url %s.lcdd\n" % detector)
-  #output.write("/run/initialize\n")
-  if outputlcio:
-    output.write("/lcio/filename %s\n" % outputlcio)
-  output.write("/lcio/runNumber %s\n" % randomseed)
-  output.write(finaltext)
-  if len(stdhep) > 0:
-    output.write("/generator/filename %s\n" % stdhep)
-  output.write("/generator/skipEvents %s\n" % startfrom)
-  output.write("/random/seed %s\n" % (randomseed))
-  output.write("/run/beamOn %s\n" % nbevts)
-  inputmacfile.close()
-  output.close()
+      listtext.append(line)
+
+    finaltext = "\n".join(listtext)
+    finaltext += "\n"
+    if detector:
+      output.write("/lcdd/url %s.lcdd\n" % detector)
+    #output.write("/run/initialize\n")
+    if outputlcio:
+      output.write("/lcio/filename %s\n" % outputlcio)
+    output.write("/lcio/runNumber %s\n" % randomseed)
+    output.write(finaltext)
+    if len(stdhep) > 0:
+      output.write("/generator/filename %s\n" % stdhep)
+    output.write("/generator/skipEvents %s\n" % startfrom)
+    output.write("/random/seed %s\n" % (randomseed))
+    output.write("/run/beamOn %s\n" % nbevts)
   return S_OK(True)
 
 def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
@@ -791,8 +786,8 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   :return: S_OK
   """
   if not inputxml:
-    inputxmlf = file('default.xml',"w")
-    inputxmlf.write("""
+    with open('default.xml',"w") as inputxmlf:
+      inputxmlf.write("""
 <?xml version="1.0" encoding="us-ascii"?>
 <!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
 <!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
@@ -819,7 +814,6 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
 
 </marlin>      
     """)
-    inputxmlf.close()
     inputxml = 'default.xml'
   tree = ElementTree()
   try:

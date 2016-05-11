@@ -419,16 +419,21 @@ class ModuleBase(object):
 
     if 'InputData' in self.workflow_commons:
       inputdata = self.workflow_commons['InputData']
-      if not type(inputdata) == types.ListType:
+      if not isinstance( inputdata, list ):
         if len(inputdata):
           self.InputData = inputdata.split(";")
           self.InputData = [x.replace("LFN:","") for x in self.InputData]
+      else:
+        self.InputData = [x.replace("LFN:","") for x in inputdata]
 
     if 'ParametricInputData' in self.workflow_commons:
       paramdata = self.workflow_commons['ParametricInputData']
-      if not type(paramdata) == types.ListType:
+      if not isinstance( paramdata, list ):
         if len(paramdata):
-          self.InputData = paramdata.split(";")
+          self.InputData = [x.replace("LFN:","") for x in paramdata.split(";")]
+      else:
+        ## paramdata is a list, and we might need to get rid of "LFN:"
+        self.InputData = [x.replace("LFN:","") for x in paramdata]
 
     #only if OutputFile is not set
     if not self.OutputFile:

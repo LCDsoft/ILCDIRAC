@@ -11,10 +11,9 @@ class ResolvePathsAndNamesTests( unittest.TestCase ):
     self.inputfiles = ["toto_gen_12345_123.txt"]
     self.dir = tempfile.mkdtemp(dir = ".")
     self.realloc = os.path.join(self.dir,"toto_gen_12345_123.txt")
-    inputf = file(self.realloc,"w")
-    inputf.write("fake file")
-    inputf.close()
-    
+    with open(self.realloc,"w") as inputf:
+      inputf.write("fake file")
+
   def tearDown(self):
     """ Remove the fake files
     """

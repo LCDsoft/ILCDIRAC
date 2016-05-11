@@ -1,0 +1,4 @@
+report.xml - HTML coverage of py.test coverage plugin
+input*.root - input test files for some of the cvmfstests
+FCalTB.tar.gz - tarball of detector xml files for DDSim
+qq_ln_gen_... - input file for DDSim

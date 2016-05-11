@@ -1,3 +1,20 @@
+[v25r0p6]
+
+* Workflow:
+
+FIX: Mokka outputfile event parameters were not properly set for Polarisation
+CHANGE: Overlay files are taken from cern eos instead of castor, when running at cern  (ILCDIRAC-636)
+
+* Interfaces:
+
+FIX: Files from the ParametricInputData should now be handled correctly
+
+[v25r0p5]
+
+* WorkloadManagement:
+
+FIX: Copy getCPUNormalization from DIRAC and reduce memory footprint ILCDIRAC-661
+
 [v25r0p4]
 
 * WorkloadManagement:

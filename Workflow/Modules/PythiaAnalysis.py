@@ -155,13 +155,13 @@ class PythiaAnalysis(ModuleBase):
         self.log.error("Could not rename, deleting")
         os.unlink("pythiaGen.lpt")
 
-    logf = file(self.applicationLog)  
-    success = False
-    for line in logf:
-      if line.count("Evts Generated= "):
-        success = True
-    if not success:
-      status = 1  
+    with open(self.applicationLog) as logf:
+      success = False
+      for line in logf:
+        if line.count("Evts Generated= "):
+          success = True
+      if not success:
+        status = 1
 
     return self.finalStatusReport(status) 
 

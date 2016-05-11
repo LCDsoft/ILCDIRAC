@@ -168,7 +168,7 @@ class DDSimAnalysis(ModuleBase):
       os.remove(self.applicationLog)
 
     os.chmod(scriptName, 0755)
-    comm = 'sh -c "./%s"' % scriptName
+    comm = 'bash "./%s"' % scriptName
     self.setApplicationStatus('DDSim %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
