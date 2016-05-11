@@ -18,21 +18,21 @@ before_script:
     - mv ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
-    - pip install --upgrade pip pylint nose mock coverage MySQL-python pytest
+    - pip install --upgrade pip pylint mock MySQL-python #coverage Check if we need coverage
+    - easy_install pytest-cov
     - cd ILCDIRAC
     - export HOME=/root/
 
 
 stages:
-    - setests
-    - pylint5
-    - pylint6
-    - pylint7
     - unit5
     - unit6
     - unit7
+    - pylint5
+    - pylint6
+    - pylint7
     - cvmfs
-
+#    - setests
 
 
 pylint5:
@@ -103,14 +103,14 @@ unittest7:
     - .gitlab-ci.d/run-unittests.sh
 
 
-setests6:
-  stage: setests
-  tags:
-    - docker
-  image: ilcdirac/slc6-base
-  script:
-    - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
-    - dirac-proxy-init <<< $CERT_PASSPHRASE
-    - .gitlab-ci.d/run-setests.sh
+#setests6:
+#  stage: setests
+#  tags:
+#    - docker
+#  image: ilcdirac/slc6-base
+#  script:
+#    - source ../bashrc
+#    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+#    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+#    - dirac-proxy-init <<< $CERT_PASSPHRASE
+#    - .gitlab-ci.d/run-setests.sh

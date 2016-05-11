@@ -7,6 +7,7 @@ Provides a set of methods to prepare the option files needed by the ILC applicat
 
 __RCSID__ = "$Id$"
 
+import six
 from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
@@ -320,6 +321,12 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     print "Found Exception %s %s" % (Exception, x)
     return S_ERROR("Found Exception %s %s" % (Exception, x))
 
+  # Handle inputSLCIO being list or string
+  if isinstance(inputSLCIO, list):
+    inputSLCIO = " ".join(inputSLCIO)
+  elif not isinstance(inputSLCIO, six.string_types):
+    return S_ERROR("inputSLCIO is neither string nor list! Actual type is %s " % type(inputSLCIO))
+
   root = tree.getroot()
   ##Get all processors:
   overlay = False
@@ -345,7 +352,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
         lciolistfound = True
         com = Comment("input file list changed")
         glob.insert(0, com) #pylint: disable=E1101
-        param.text = str(inputSLCIO)
+        param.text = inputSLCIO
       if numberofevts > 0:
         if param.attrib['name'] == 'MaxRecordNumber':
           if param.attrib.has_key('value'):
@@ -371,7 +378,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     name = {}
     name["name"] = "LCIOInputFiles"
     lciolist = Element("parameter", name)
-    lciolist.text = str(inputSLCIO)
+    lciolist.text = inputSLCIO
     globparams = tree.find("global")
     globparams.append(lciolist) #pylint: disable=E1101
 
