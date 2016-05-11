@@ -11,6 +11,7 @@ import filecmp
 import re
 
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareMacFile
+from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 
 class TestPrepareOptionsFile( unittest.TestCase ):
@@ -196,19 +197,21 @@ class TestPrepareOptionsFile( unittest.TestCase ):
   def test_prepareWhizFile( self ):
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
-    file_contents = ['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']
-    text_file_data = '\n'.join(file_contents)
-    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
-      file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
+    file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi'], []]
+    handles = FileUtil.get_multiple_read_handles(file_contents)
+    with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
+      file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
       self.assertEquals(S_OK(True), result)
-    file_mocker.assert_any_call('in', 'r')
-    file_mocker.assert_any_call('out', 'w')
-    mocker_handle = file_mocker()
-    expected = [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']
-    for entry in expected:
-      mocker_handle.write.assert_any_call(entry)
-    self.assertEquals(len(expected), mocker_handle.__enter__.return_value.write.call_count)
+    tuples = [('in', 'r'), ('out', 'w')]
+    expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']]
+    FileUtil.check_file_interactions( self, file_mocker, tuples, expected, handles )
+    #file_mocker.assert_any_call('in', 'r')
+    #file_mocker.assert_any_call('out', 'w')
+    #mocker_handle = file_mocker()
+    #for entry in expected:
+    #  mocker_handle.write.assert_any_call(entry)
+    #self.assertEquals(len(expected), mocker_handle.__enter__.return_value.write.call_count)
 
   def test_prepareWhizFile_luminosity( self ):
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
@@ -404,24 +407,23 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     :param list expected: The expected output of the file operations. List of lists, the i-th element represents the output to the i-th file. Lines have to end with \n
     :param expected_return_value: The value the call should return
     """
+    # TODO Give nice error message
+    self.assertEquals(len(file_contents), len(expected))
     from ILCDIRAC.Core.Utilities import PrepareOptionFiles
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     mymock = Mock()
     handles = get_multiple_read_handles(file_contents)
     with patch('%s.open' % moduleName, mock_open(mymock), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
-      for j in range(len(args), 13):
-        args.append(None)
-      i = 0
-      result = PrepareOptionFiles.prepareSteeringFile(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12])
+      args.extend([None] * (13-len(args)))
+      result = PrepareOptionFiles.prepareSteeringFile(*args)
     for (filename, mode) in expected_file_tuples:
       file_mocker.assert_any_call(filename, mode)
 
-    for i in range(0, len(file_contents)):
-      cur_handle = handles[i].__enter__()
-      #self.mocked_calls_match_expected_automated(expected[i], handles[i].mock_calls)
-      self.assertEquals(len(expected[i]), handles[i].__enter__.return_value.write.call_count)
-      for entry in expected[i]:
+    for (index, handle) in enumerate(handles):
+      cur_handle = handle.__enter__()
+      self.assertEquals(len(expected[index]), handle.__enter__.return_value.write.call_count)
+      for entry in expected[index]:
         cur_handle.write.assert_any_call(entry)
     self.assertEquals(expected_return_value, result)
 

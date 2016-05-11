@@ -3,6 +3,7 @@ Provides helper methods to easily mock files in unittests to avoid using the FS.
 """
 
 from mock import MagicMock as Mock
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved
 
 __RCSID__ = "$Id$"
 
@@ -51,21 +52,23 @@ class FileUtil(object):
 
   @staticmethod
   def check_file_interactions( testobject, mockobject, expected_tuples, expected_output, handles ):
-    """Checks if the actual test interaction with the files matches the expected behaviour.
+    """Checks if the actual test interaction with the files matches the expected behaviour. Parameters can be left out, then the respective checks are not performed.
     :param TestCase testobject: Unit Testcase, used to call assert methods
     :param mock_open mockobject: Mock object that mocks the open() method, used to get call information
     :param list expected_tuples: List of tuples of strings ('filename', 'mode') of ALL expected open() calls
     :param list expected_output: List of list of strings containing everything that is written to any file. expected_output[i] is the expected output of the i-th opened file, expected_output[i][j] is one string that is supposed to be written to the i-th file.
     :param Iterable(Mock) handles: return value of the get_multiple_read_handles method, used to get call information
     """
-    # Check if expected open() calls match the actual ones exactly (same amount + each element of expected_tuples is in the calls of the mockobject --- maybe does not work for duplicate calls?)
-    testobject.assertEquals(len(expected_tuples), len(mockobject.mock_calls))
+    # Check if expected open() calls match the actual ones (each element of expected_tuples is in the calls of the mockobject --- #TODO: Check for same amount of calls & maybe does not work for duplicate calls?)
+    #assertEqualsImproved(len(expected_tuples), len(mockobject.mock_calls), testobject)
     for (filename, filemode) in expected_tuples:
       mockobject.assert_any_call(filename, filemode)
-    # Check if expected write() calls match the actual ones exactly (same as above --- think about duplicates #FIXME )
-    testobject.assertEquals(len(expected_output), len(handles))
+    # Check if expected write() calls match the actual ones exactly (same as above + check for same amount of calls --- think about duplicates #FIXME )
+    print expected_output
+    print handles
+    assertEqualsImproved(len(expected_output), len(handles), testobject)
     for (index, handle) in enumerate(handles):
       cur_handle = handle.__enter__()
-      testobject.assertEquals(len(expected_output[index]), handle.__enter__.return_value.write.call_count)
+      assertEqualsImproved(len(expected_output[index]), handle.__enter__.return_value.write.call_count, testobject)
       for entry in expected_output[index]:
         cur_handle.write.assert_any_call(entry)
