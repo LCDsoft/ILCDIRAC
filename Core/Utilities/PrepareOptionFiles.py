@@ -53,7 +53,7 @@ def getNewLDLibs(platform, application, applicationVersion):
     if new_ld_lib_path:
       new_ld_lib_path = new_ld_lib_path + ":%s" % os.environ["LD_LIBRARY_PATH"]
     else:
-      new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]  
+      new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]
   return new_ld_lib_path
 
 def getNewPATH(platform, application, applicationVersion):
@@ -553,17 +553,19 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     return S_ERROR("Found Exception %s %s" % (Exception, x))
   if not len(inputslcio):
     return S_ERROR("Empty input file list")
-  ##handle the input slcio file list
-  filesinlcsim = tree.find("inputFiles")
-  if filesinlcsim is not None:
-    filesinlcsim.clear() #pylint: disable=E1101
-  else:
-    baseelem = tree.getroot()
-    if not baseelem is None:
+  filesinlcsim = None
+  baseelem = tree.getroot()
+  if baseelem is not None:
+    ##handle the input slcio file list
+    filesinlcsim = tree.find("inputFiles")
+    if filesinlcsim is not None:
+      filesinlcsim.clear() #pylint: disable=E1101
+    else:
+      baseelem = tree.getroot()
       filesinlcsim = Element("inputFiles")
       baseelem.append(filesinlcsim)
-    else:
-      return S_ERROR("Invalid lcsim file structure")
+  else:
+    return S_ERROR("Invalid lcsim file structure")
   #set = Element("fileSet")
   for slcio in inputslcio:
     newfile = Element('file')
