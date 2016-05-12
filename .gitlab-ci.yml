@@ -25,18 +25,11 @@ before_script:
 
 
 stages:
-    - unit5
-    - unit6
-    - unit7
-    - pylint5
-    - pylint6
-    - pylint7
-    - cvmfs
-#    - setests
+    - test
 
 
 pylint5:
-  stage: pylint5
+  stage: test
   tags:
     - docker
   image: ilcdirac/slc5-base
@@ -45,7 +38,7 @@ pylint5:
     - .gitlab-ci.d/run-pylint.sh
 
 unittest5:
-  stage: unit5
+  stage: test
   tags:
     - docker
   image: ilcdirac/slc5-base
@@ -54,7 +47,7 @@ unittest5:
     - .gitlab-ci.d/run-unittests.sh
 
 pylint6:
-  stage: pylint6
+  stage: test
   tags:
     - docker
   image: ilcdirac/slc6-base
@@ -63,7 +56,7 @@ pylint6:
     - .gitlab-ci.d/run-pylint.sh
 
 unittest6:
-  stage: unit6
+  stage: test
   tags:
     - docker
   image: ilcdirac/slc6-base
@@ -72,7 +65,7 @@ unittest6:
     - .gitlab-ci.d/run-unittests.sh
 
 cvmfstests6:
-  stage: cvmfs
+  stage: test
   tags:
     - docker
   image: ilcdirac/slc6-extra
@@ -85,7 +78,7 @@ cvmfstests6:
     - .gitlab-ci.d/run-cvmfstests.sh
 
 pylint7:
-  stage: pylint7
+  stage: test
   tags:
     - docker
   image: ilcdirac/cc7-base
@@ -94,7 +87,7 @@ pylint7:
     - .gitlab-ci.d/run-pylint.sh
 
 unittest7:
-  stage: unit7
+  stage: test
   tags:
     - docker
   image: ilcdirac/cc7-base
@@ -103,14 +96,14 @@ unittest7:
     - .gitlab-ci.d/run-unittests.sh
 
 
-#setests6:
-#  stage: setests
-#  tags:
-#    - docker
-#  image: ilcdirac/slc6-base
-#  script:
-#    - source ../bashrc
-#    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-#    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
-#    - dirac-proxy-init <<< $CERT_PASSPHRASE
-#    - .gitlab-ci.d/run-setests.sh
+setests6:
+  stage: test
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - .gitlab-ci.d/run-setests.sh
