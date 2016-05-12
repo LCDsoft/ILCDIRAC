@@ -317,9 +317,9 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   tree = ElementTree()
   try:
     tree.parse(inputXML)
-  except Exception, x:
-    print "Found Exception %s %s" % (Exception, x)
-    return S_ERROR("Found Exception %s %s" % (Exception, x))
+  except Exception as x:
+    gLogger.error( "Found Exception %r" % x )
+    return S_ERROR("Found Exception %r" % x)
 
   # Handle inputSLCIO being list or string
   if isinstance(inputSLCIO, list):
