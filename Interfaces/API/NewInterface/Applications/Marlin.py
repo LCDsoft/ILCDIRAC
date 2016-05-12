@@ -53,6 +53,7 @@ class Marlin(LCApplication):
     self.appname = 'marlin'
     self.datatype = 'REC'
     self.detectortype = 'ILD'
+    self.dd4hepDetectorModel = ''
 
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
@@ -64,6 +65,16 @@ class Marlin(LCApplication):
     self.gearFile = gearFile
     if os.path.exists(gearFile) or gearFile.lower().count("lfn:"):
       self.inputSB.append(gearFile)
+
+  def setDD4hepDetectorModel(self, detectorModel):
+    """ set the detectormodel described in DD4hep Geometry
+
+    :param string detectorModel: Can be path to XML on CVMFS, tarball LFN, or inputsandbox tarball
+
+    """
+
+    self._checkArgs( { 'detectorModel' : types.StringTypes } )
+    self.dd4hepDetectorModel = detectorModel
 
   def setOutputRecFile(self, outputRecFile, path = None):
     """Optional: Define output rec file for Marlin. Used only in production
@@ -191,6 +202,8 @@ class Marlin(LCApplication):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("inputGEAR",              '', "string", "", "", False, False,
                                "Input GEAR file"))
+    md1.addParameter(Parameter("dd4hepGeoFile",          '', "string", "", "", False, False,
+                               "DD4hep Geomtry File"))
     md1.addParameter(Parameter("ProcessorListToUse",     [],   "list", "", "", False, False,
                                "List of processors to use"))
     md1.addParameter(Parameter("ProcessorListToExclude", [],   "list", "", "", False, False,
@@ -202,6 +215,7 @@ class Marlin(LCApplication):
   def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("inputGEAR",              self.gearFile)
+    moduleinstance.setValue("dd4hepGeoFile",          self.dd4hepDetectorModel)
     moduleinstance.setValue('ProcessorListToUse',     self.processorsToUse)
     moduleinstance.setValue('ProcessorListToExclude', self.processorsToExclude)
     moduleinstance.setValue("debug",                  self.debug)

@@ -43,7 +43,8 @@ class MarlinAnalysis(ModuleBase):
     self.envdict = {}
     self.ProcessorListToUse = []
     self.ProcessorListToExclude = []
-    
+    self.dd4hepGeoFile = None
+
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
 
