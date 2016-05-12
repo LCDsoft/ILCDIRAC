@@ -37,6 +37,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.inputXMLFile = "marlininput.xml"
     self.expectedOutput = os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlinExpectedOutput.xml" )
     shutil.copyfile( os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlininput.xml"), self.inputXMLFile )
+    shutil.copyfile( os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlinInputSmall.xml"), "marlinInputSmall.xml" )
     #self.createInputXMLFile()
     self.expectedTree = self.getExpectedXMLTree()
     self.testedTree = None
@@ -107,17 +108,16 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
         if param.get('value') == parameterValue or param.text == parameterValue:
           return True
         else:
-          print "The parameter",parameterName,"does not have the value",parameterValue,"but", \
-            repr(param.get('value')),"or",repr(param.text)
-          return False
-    return False
+          return False, "The parameter"+parameterName+"does not have the value"+parameterValue+"but"+ \
+            repr(param.get('value'))+"or"+repr(param.text)
+    return False, "parameter not found"
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
   def test_createFile( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputfile.xml",
-                          inputXML=self.inputXMLFile,
-                          inputGEAR=None,
+                          inputXML="marlininput.xml",
+                          inputGEAR="gearMyFile.xml",
                           inputSLCIO="mySLCIOInput.slcio",
                           numberofevts=501,
                           outputFile= "mySLCIOOutput.slcio",
@@ -131,7 +131,33 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
     self.assertTrue( self.checkGlobalTag( "MaxRecordNumber", 501 ) )
     self.assertTrue( self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( self.checkGlobalTag( "Verbosity", "SILENT" ) )
+    self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
+
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  def test_createFile_initialParametersMissing( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputfilesmall.xml",
+                          inputXML="marlinInputSmall.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= "mySLCIOOutput.slcio",
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertTrue( res['OK'], res.get('Message') )
+    self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfilesmall.xml" )
+    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
+    self.assertTrue( self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( self.checkGlobalTag( "Verbosity", "WARNING" ) )
     self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
     self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
 

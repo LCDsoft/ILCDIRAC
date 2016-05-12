@@ -26,14 +26,12 @@
   </execute>
 
   <global>
-    <parameter name="LCIOInputFiles">
-    /afs/cern.ch/eng/clic/work/dd4hepEvents/CLIC_o2_v03/ttbar/500/DDSim_HEAD-2015-10-02_CLIC_o2_v03_ttbar_500GeV0_261015142318_0.slcio  </parameter>
     <parameter name="GearXMLFile" value="args" />
     <parameter name="GearXMLFile" > gear.xml </parameter>
     <parameter name="MaxRecordNumber" value="-1" />
     <parameter name="SkipNEvents" value="0" />
     <parameter name="SupressCheck" value="false" />
-    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING  </parameter>
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">WARNING</parameter>
     <parameter name="RandomSeed" value="1234567890" />
   </global>
 
