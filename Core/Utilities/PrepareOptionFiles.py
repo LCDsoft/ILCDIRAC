@@ -330,50 +330,43 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   root = tree.getroot()
   ##Get all processors:
   overlay = False
-  #recoutput=False
-  #dstoutput=False
   processors = tree.findall('execute/processor')
   for processor in processors:
-    if processor.attrib.has_key('name'):
-      if processor.attrib['name'].lower().count('overlaytiming'):
-        overlay = True
-      if processor.attrib['name'].lower().count('bgoverlay'):
-        overlay = True  
-      #if processor.attrib['name'].lower().count('lciooutputprocessor'):
-      #  recoutput=True
-      #if processor.attrib['name'].lower().count('dstoutput'):
-      #  dstoutput=True  
+    if processor.attrib.get('name','').lower().count('overlaytiming'):
+      overlay = True
+    if processor.attrib.get('name','').lower().count('bgoverlay'):
+      overlay = True
+
   params = tree.findall('global/parameter')
   glob = tree.find('global')
   lciolistfound = False
   for param in params:
-    if param.attrib.has_key('name'):
-      if param.attrib['name'] == 'LCIOInputFiles' and inputSLCIO:
-        lciolistfound = True
-        com = Comment("input file list changed")
+    if param.attrib.get('name') == 'LCIOInputFiles' and inputSLCIO:
+      lciolistfound = True
+      com = Comment("input file list changed")
+      glob.insert(0, com) #pylint: disable=E1101
+      param.text = inputSLCIO
+    if numberofevts > 0 and param.attrib.get('name') == 'MaxRecordNumber':
+      if 'value' in param.attrib:
+        param.attrib['value'] = str(numberofevts)
+        com = Comment("MaxRecordNumber changed")
         glob.insert(0, com) #pylint: disable=E1101
-        param.text = inputSLCIO
-      if numberofevts > 0:
-        if param.attrib['name'] == 'MaxRecordNumber':
-          if param.attrib.has_key('value'):
-            param.attrib['value'] = str(numberofevts)
-            com = Comment("MaxRecordNumber changed")
-            glob.insert(0, com) #pylint: disable=E1101
-            
-      if param.attrib['name'] == "GearXMLFile":
-        if param.attrib.has_key('value'):
-          param.attrib['value'] = inputGEAR
-          com = Comment("input gear changed")
-          glob.insert(0, com) #pylint: disable=E1101
-        else:
-          param.text = str(inputGEAR)
-          com = Comment("input gear changed")
-          glob.insert(0, com) #pylint: disable=E1101
-      if not debug:
-        if param.attrib['name'] == 'Verbosity':
-          param.text = "SILENT"
-          com = Comment("verbosity changed")
-          glob.insert(0, com) #pylint: disable=E1101
+    if param.attrib.get('name') == "GearXMLFile":
+      if 'value' in param.attrib:
+        param.attrib['value'] = inputGEAR
+        com = Comment("input gear changed")
+        glob.insert(0, com) #pylint: disable=E1101
+      else:
+        param.text = str(inputGEAR)
+        com = Comment("input gear changed")
+        glob.insert(0, com) #pylint: disable=E1101
+    if not debug:
+      if param.attrib.get('name') == 'Verbosity':
+        param.text = "SILENT"
+        com = Comment("verbosity changed")
+        glob.insert(0, com) #pylint: disable=E1101
+
+  ## Add lcioInputFiles parameter if it was not present before
   if not lciolistfound and inputSLCIO:
     name = {}
     name["name"] = "LCIOInputFiles"
