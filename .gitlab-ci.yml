@@ -69,7 +69,6 @@ cvmfstests6:
     - docker
   image: ilcdirac/slc6-extra
   script:
-    - yum -y install which fontconfig libpng
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
