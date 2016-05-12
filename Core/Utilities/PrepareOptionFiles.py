@@ -296,7 +296,8 @@ def fixedXML(element):
   return fixed_element
 
 def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
-                   numberofevts, outputFile, outputREC, outputDST, debug):
+                   numberofevts, outputFile, outputREC, outputDST, debug,
+                   dd4hepGeoFile=None):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from :mod:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis`
@@ -454,6 +455,15 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 com = Comment("Overlay files changed")
                 param.insert(0, com)
   
+
+      ## Deal with the InitializeDD4hep parameter value for the XML File
+      if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
+        for subparam in param.findall('parameter'):
+          if subparam.attrib.get('name') == "DD4hepXMLFile":
+            subparam.text = dd4hepGeoFile
+            com = Comment("DD4hepGeoFile changed")
+            param.insert(0, com)
+
   #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
   root_str = fixedXML(tostring(root))
   with open(finalxml,"w") as of:
