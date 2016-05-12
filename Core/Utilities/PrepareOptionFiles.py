@@ -368,8 +368,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
 
   ## Add lcioInputFiles parameter if it was not present before
   if not lciolistfound and inputSLCIO:
-    name = {}
-    name["name"] = "LCIOInputFiles"
+    name = {"name": "LCIOInputFiles"}
     lciolist = Element("parameter", name)
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
@@ -379,7 +378,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   for param in params:
     if param.attrib.has_key('name'):
       if len(outputFile) > 0:
-        if param.attrib['name'] == 'MyLCIOOutputProcessor':
+        if param.attrib.get('name') == 'MyLCIOOutputProcessor':
           subparams = param.findall('parameter')
           for subparam in subparams:
             if subparam.attrib.has_key('name'):
@@ -389,65 +388,58 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 param.insert(0, com)
       else:
         if len(outputREC) > 0:
-          if param.attrib['name'] == 'MyLCIOOutputProcessor':
+          if param.attrib.get('name') == 'MyLCIOOutputProcessor':
             subparams = param.findall('parameter')
             for subparam in subparams:
-              if subparam.attrib.has_key('name'):
-                if subparam.attrib['name'] == 'LCIOOutputFile':
-                  subparam.text = outputREC
-                  com = Comment("REC file changed")
-                  param.insert(0, com)
+              if subparam.attrib.get('name') == 'LCIOOutputFile':
+                subparam.text = outputREC
+                com = Comment("REC file changed")
+                param.insert(0, com)
         if len(outputDST) > 0:
-          if param.attrib['name'] == 'DSTOutput':
+          if param.attrib.get('name') == 'DSTOutput':
             subparams = param.findall('parameter')
             for subparam in subparams:
-              if subparam.attrib.has_key('name'):
-                if subparam.attrib['name'] == 'LCIOOutputFile':
-                  subparam.text = outputDST
-                  com = Comment("DST file changed")
-                  param.insert(0, com)
-      if param.attrib['name'].lower().count('overlaytiming'):
+              if subparam.attrib.get('name') == 'LCIOOutputFile':
+                subparam.text = outputDST
+                com = Comment("DST file changed")
+                param.insert(0, com)
+      if param.attrib.get('name', '').lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:
-          if subparam.attrib.has_key('name'):
-            if subparam.attrib['name'] == 'NumberBackground':
-              if subparam.attrib['value'] == '0.0':
-                overlay = False
-            if subparam.attrib['name'] == 'NBunchtrain':
-              if subparam.attrib['value'] == '0':
-                overlay = False          
+          if subparam.attrib.get('name') == 'NumberBackground':
+            if subparam.attrib['value'] == '0.0':
+              overlay = False
+          if subparam.attrib.get('name') == 'NBunchtrain':
+            if subparam.attrib['value'] == '0':
+              overlay = False
         if overlay: 
           files = getOverlayFiles()
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == "BackgroundFileNames":
-                subparam.text = "\n".join(files)
-                com = Comment("Overlay files changed")
-                param.insert(0, com)
-      if param.attrib['name'].lower().count('bgoverlay'):
+            if subparam.attrib.get('name') == "BackgroundFileNames":
+              subparam.text = "\n".join(files)
+              com = Comment("Overlay files changed")
+              param.insert(0, com)
+      if param.attrib.get('name','').lower().count('bgoverlay'):
         bkg_Type = 'aa_lowpt' #specific to ILD_DBD
         subparams = param.findall('parameter')
         for subparam in subparams:
-          if subparam.attrib.has_key('name'):
-            if subparam.attrib['name'] == 'expBG':
-              if subparam.text == '0' or subparam.text == '0.0' :
-                overlay = False
-            if subparam.attrib['name'] == 'NBunchtrain':
-              if subparam.text == '0':
-                overlay = False          
+          if subparam.attrib.get('name') == 'expBG':
+            if subparam.text == '0' or subparam.text == '0.0':
+              overlay = False
+          if subparam.attrib.get('name') == 'NBunchtrain':
+            if subparam.text == '0':
+              overlay = False
         if overlay: 
           files = getOverlayFiles(bkg_Type)
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == "InputFileNames":
-                subparam.text = "\n".join(files)
-                com = Comment("Overlay files changed")
-                param.insert(0, com)
-  
+            if subparam.attrib.get('name') == "InputFileNames":
+              subparam.text = "\n".join(files)
+              com = Comment("Overlay files changed")
+              param.insert(0, com)
 
       ## Deal with the InitializeDD4hep parameter value for the XML File
       if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
