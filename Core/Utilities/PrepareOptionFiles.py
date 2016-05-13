@@ -337,10 +337,9 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     if processor.attrib.get('name','').lower().count('bgoverlay'):
       overlay = True
 
-  params = tree.findall('global/parameter')
   glob = tree.find('global')
   lciolistfound = False
-  for param in params:
+  for param in glob.findall("parameter"):
     if param.attrib.get('name') == 'LCIOInputFiles' and inputSLCIO:
       lciolistfound = True
       com = Comment("input file list changed")
@@ -374,18 +373,16 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     globparams = tree.find("global")
     globparams.append(lciolist) #pylint: disable=E1101
 
-  params = tree.findall('processor')
-  for param in params:
+  for param in tree.findall('processor'):
     if param.attrib.has_key('name'):
       if len(outputFile) > 0:
         if param.attrib.get('name') == 'MyLCIOOutputProcessor':
           subparams = param.findall('parameter')
           for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == 'LCIOOutputFile':
-                subparam.text = outputFile
-                com = Comment("output file changed")
-                param.insert(0, com)
+            if subparam.attrib.get('name') == 'LCIOOutputFile':
+              subparam.text = outputFile
+              com = Comment("output file changed")
+              param.insert(0, com)
       else:
         if len(outputREC) > 0:
           if param.attrib.get('name') == 'MyLCIOOutputProcessor':
@@ -406,12 +403,10 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
       if param.attrib.get('name', '').lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:
-          if subparam.attrib.get('name') == 'NumberBackground':
-            if subparam.attrib['value'] == '0.0':
-              overlay = False
-          if subparam.attrib.get('name') == 'NBunchtrain':
-            if subparam.attrib['value'] == '0':
-              overlay = False
+          if subparam.attrib.get('name') == 'NumberBackground' and subparam.attrib['value'] == '0.0':
+            overlay = False
+          if subparam.attrib.get('name') == 'NBunchtrain' and subparam.attrib['value'] == '0':
+            overlay = False
         if overlay: 
           files = getOverlayFiles()
           if not len(files):
@@ -425,12 +420,8 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
         bkg_Type = 'aa_lowpt' #specific to ILD_DBD
         subparams = param.findall('parameter')
         for subparam in subparams:
-          if subparam.attrib.get('name') == 'expBG':
-            if subparam.text == '0' or subparam.text == '0.0':
-              overlay = False
-          if subparam.attrib.get('name') == 'NBunchtrain':
-            if subparam.text == '0':
-              overlay = False
+          if subparam.attrib.get('name') == 'expBG' and (subparam.text == '0' or subparam.text == '0.0'):
+            overlay = False
         if overlay: 
           files = getOverlayFiles(bkg_Type)
           if not len(files):
