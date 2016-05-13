@@ -553,7 +553,6 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     return S_ERROR("Found Exception %s %s" % (Exception, x))
   if not len(inputslcio):
     return S_ERROR("Empty input file list")
-  filesinlcsim = None
   baseelem = tree.getroot()
   if baseelem is None:
     return S_ERROR("Invalid lcsim file structure")
