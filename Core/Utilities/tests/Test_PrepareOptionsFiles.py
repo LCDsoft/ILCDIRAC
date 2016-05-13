@@ -15,7 +15,7 @@ import collections
 from ILCDIRAC.Core.Utilities import PrepareOptionFiles
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareMacFile
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assert_equals_xml, assertEqualsImproved
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved
 import xml.etree.ElementTree as ET
 
 #TODO split up in separate classes
@@ -217,26 +217,26 @@ class TestPrepareOptionsFile( unittest.TestCase ):
   def test_prepareWhizFile( self ):
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi'], []]
-    handles = FileUtil.get_multiple_read_handles(file_contents)
+    handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
       assertEqualsImproved(S_OK(True), result, self)
     tuples = [('in', 'r'), ('out', 'w')]
     expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']]
-    FileUtil.check_file_interactions( self, file_mocker, tuples, expected, handles )
+    FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
 
   def test_prepareWhizFile_noprocessid( self ):
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id1"', '98u243jrui4fg4289fjh2487rh13urhi'], []]
-    handles = FileUtil.get_multiple_read_handles(file_contents)
+    handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
       assertEqualsImproved(S_OK(False), result, self)
     tuples = [('in', 'r'), ('out', 'w')]
     expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id1"', '98u243jrui4fg4289fjh2487rh13urhi']]
-    FileUtil.check_file_interactions( self, file_mocker, tuples, expected, handles )
+    FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
 
   def test_prepareWhizFile_luminosity( self ):
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
@@ -495,7 +495,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     mymock = Mock()
-    handles = get_multiple_read_handles(file_contents)
+    handles = getMultipleReadHandles(file_contents)
     with patch('%s.open' % moduleName, mock_open(mymock), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       args.extend([None] * (13-len(args)))
@@ -528,7 +528,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       elem_to_check = driver.find('strategyFile')
       expected_element = ET.Element('strategyFile')
       expected_element.text = trackstrat
-      assert_equals_xml( elem_to_check, expected_element, self )
+      assertEqualsXml( elem_to_check, expected_element, self )
       return True
 
     slcio_list = ['list of slcio files', 'anotherEntry.txt']
@@ -543,21 +543,21 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       self.assertEquals(result, S_OK('testtext'))
       current_tree = TestPrepareOptionsFile.current_tree
       # clear is called
-      assert_equals_xml(current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
+      assertEqualsXml(current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
       # element is created for each entry in slcio list
       xml_file_list = current_tree.findall('inputFiles/file')
       assertEqualsImproved(len(slcio_list), len(xml_file_list), self)
       for (slcio_string, treeelem) in zip(slcio_list, xml_file_list):
         expected_element = ET.Element('file')
         expected_element.text = slcio_string
-        assert_equals_xml(treeelem, expected_element, self)
-      assert_equals_xml(current_tree.find('classpath'), ET.Element('classpath'), self)
+        assertEqualsXml(treeelem, expected_element, self)
+      assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self)
       xml_jar_list = current_tree.findall('classpath/jar')
       assertEqualsImproved(len(jar_list), len(xml_jar_list), self)
       for (jar_string, treeelem) in zip(jar_list, xml_jar_list):
         expected_element = ET.Element('jar')
         expected_element.text = jar_string
-        assert_equals_xml(treeelem, expected_element, self)
+        assertEqualsXml(treeelem, expected_element, self)
       nbEvents = current_tree.find('control/numberOfEvents')
       assertEqualsImproved(str(amEvents), nbEvents.text, self)
       cachdir = current_tree.find('control/cacheDirectory')
@@ -575,13 +575,13 @@ class TestPrepareOptionsFile( unittest.TestCase ):
             ovNameFound = True
             expected_element = ET.Element('overlayFiles')
             expected_element.text = 'overlaytestfile1\ntestfile2.txt'
-            assert_equals_xml(d.find('overlayFiles'), expected_element, self)
+            assertEqualsXml(d.find('overlayFiles'), expected_element, self)
           if d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver':
             if d.attrib['name'] == 'Writer':
               ofpNameFound = True
               expected_element = ET.Element('outputFilePath')
               expected_element.text = outputfile
-              assert_equals_xml(d.find('outputFilePath'), expected_element, self)
+              assertEqualsXml(d.find('outputFilePath'), expected_element, self)
       assertEqualsImproved(ovNameFound, ofpNameFound, self)
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
@@ -612,7 +612,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
         if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'RECWriter':
           expected_element = ET.Element('outputFilePath')
           expected_element.text = outputrec
-          assert_equals_xml(d.find('outputFilePath'), expected_element, self)
+          assertEqualsXml(d.find('outputFilePath'), expected_element, self)
           flag = True
       self.assertTrue(flag)
 
@@ -642,7 +642,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
         if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'DSTWriter':
           expected_element = ET.Element('outputFilePath')
           expected_element.text = outputdst
-          assert_equals_xml(d.find('outputFilePath'), expected_element, self)
+          assertEqualsXml(d.find('outputFilePath'), expected_element, self)
           flag = True
       self.assertTrue(flag)
 
@@ -665,7 +665,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       self.assertEquals(result, S_OK('testtext'))
       current_tree = TestPrepareOptionsFile.current_tree
       ex = current_tree.find('execute/driver')
-      assert_equals_xml(ex, ET.Element('driver', name='Writer'), self)
+      assertEqualsXml(ex, ET.Element('driver', name='Writer'), self)
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
@@ -691,7 +691,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
         if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver':
           expected_element = ET.Element('marker')
           expected_element.text = 'LCSIM'
-          assert_equals_xml(d.find('marker'), expected_element, self)
+          assertEqualsXml(d.find('marker'), expected_element, self)
           flag = True
       self.assertTrue(flag)
 
@@ -708,7 +708,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 0, 'trackstrategy', ['list of slcio files'], [], '', 'outputfile', 'outputrec', 'outputdst', True )
       assertEqualsImproved(result, S_OK('testtext'), self)
       # New Elem is created
-      assert_equals_xml(TestPrepareOptionsFile.current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
+      assertEqualsXml(TestPrepareOptionsFile.current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[]))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
@@ -734,7 +734,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
 
 # check classpath elem is cleared
-# assert_equals_xml(TestPrepareOptionsFile.current_tree.find('classpath'), ET.Element('classpath'), self)
+# assertEqualsXml(TestPrepareOptionsFile.current_tree.find('classpath'), ET.Element('classpath'), self)
 
   def test_prepareLCSIM_ioerr( self ):
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", side_effect=IOError('')):
@@ -779,7 +779,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('numberOfEvents')
       expected_element.text = '1'
-      assert_equals_xml(current_tree.find('control/numberOfEvents'), expected_element, self)
+      assertEqualsXml(current_tree.find('control/numberOfEvents'), expected_element, self)
       self.assertTrue(current_tree.find('control/verbose').text == 'true')
       self.assertTrue(current_tree.find('control/cacheDirectory').text == 'cachedir')
       drivers = current_tree.findall('drivers/driver')
@@ -788,7 +788,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
         if d.attrib.has_key("type") and d.attrib["type"] == "org.lcsim.job.EventMarkerDriver":
           expected_element = ET.Element('eventInterval')
           expected_element.text = '1'
-          assert_equals_xml(d.find('eventInterval'), expected_element, self)
+          assertEqualsXml(d.find('eventInterval'), expected_element, self)
           flag = True
       self.assertTrue(flag)
 
@@ -866,7 +866,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], ['jarfile'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertEqualsImproved(S_OK('testtext'), result, self)
       current_tree = TestPrepareOptionsFile.current_tree
-      assert_equals_xml(current_tree.find('classpath'), ET.Element('classpath'), self)
+      assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self)
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
@@ -906,8 +906,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       current_tree = TestPrepareOptionsFile.current_tree
       it = current_tree.find('global').iter()
       it.next()
-      assert_equals_xml(it.next(), ET.Comment("input file list changed"), self)
-      assert_equals_xml(it.next(), ET.Comment("input file list changed"), self)
+      assertEqualsXml(it.next(), ET.Comment("input file list changed"), self)
+      assertEqualsXml(it.next(), ET.Comment("input file list changed"), self)
       for pa in current_tree.findall('global/parameter'):
         if pa.attrib.has_key('name') and pa.attrib['name'] == 'LCIOInputFiles':
           assertEqualsImproved(pa.text, 'inputslcio', self)
@@ -931,7 +931,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('parameter', name='LCIOInputFiles')
       expected_element.text = 'inputslcio'
-      assert_equals_xml(current_tree.findall('global/parameter')[-1], expected_element, self)
+      assertEqualsXml(current_tree.findall('global/parameter')[-1], expected_element, self)
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
   def test_prepareTomato_parsefails( self ):
@@ -976,7 +976,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
     file_contents = [ [] ]
     expected = [[ TestPrepareOptionsFile.teststr ]] # Means 2 files will be opened, nothing is written to first file, and 'firstlineentry' and 'line100' are written (in different calls and exactly these strings) to the second file. If more/less is written this fails!
-    handles = FileUtil.get_multiple_read_handles(file_contents)
+    handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified), patch('%s.open' % moduleName, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
@@ -984,11 +984,11 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('parameter', name='LCIOInputFiles')
       expected_element.text = 'inputslcio'
-      assert_equals_xml(current_tree.findall('global/parameter')[-1], expected_element, self)
+      assertEqualsXml(current_tree.findall('global/parameter')[-1], expected_element, self)
       expected_tuples = [('default.xml', 'w')]
-      FileUtil.check_file_interactions( self, mo, expected_tuples, expected, handles )
+      FileUtil.checkFileInteractions( self, mo, expected_tuples, expected, handles )
 
-def get_multiple_read_handles(file_contents):
+def getMultipleReadHandles(file_contents):
   full_file_contents = ['\n'.join(x) for x in file_contents]
   gens = []
   for filecontent in file_contents:

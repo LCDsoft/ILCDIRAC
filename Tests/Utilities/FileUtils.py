@@ -12,7 +12,7 @@ class FileUtil(object):
 
   #Staticmethod since it doesn't require the class, just logically bound
   @staticmethod
-  def get_multiple_read_handles( file_contents ):
+  def getMultipleReadHandles( file_contents ):
     """ Utility function to mock multiple read and write calls in a method
 
     :param list file_contents: List of list of strings
@@ -21,7 +21,7 @@ class FileUtil(object):
     
     file_contents = [['line1file1', 'line2file1'], ['line1file2', 'line2file2']]
     from ILCDIRAC.Workflow.Modules import WhizardAnalysis
-    handles = FileUtil.get_multiple_read_handles(file_contents)
+    handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = "ILCDIRAC.Workflow.Modules.WhizardAnalysis"
     with patch('%s.open' % moduleName, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
@@ -52,14 +52,14 @@ class FileUtil(object):
     return handles
 
   @staticmethod
-  def check_file_interactions( testobject, mockobject, expected_tuples, expected_output, handles ):
+  def checkFileInteractions( testobject, mockobject, expected_tuples, expected_output, handles ):
     """Checks if the actual test interaction with the files matches the expected behaviour. Parameters can be left out, then the respective checks are not performed.
 
     :param TestCase testobject: Unit Testcase, used to call assert methods
     :param mock_open mockobject: Mock object that mocks the open() method, used to get call information
     :param list expected_tuples: List of tuples of strings ('filename', 'mode') of ALL expected open() calls
     :param list expected_output: List of list of strings containing everything that is written to any file. expected_output[i] is the expected output of the i-th opened file, expected_output[i][j] is one string that is supposed to be written to the i-th file.
-    :param Iterable(Mock) handles: return value of the get_multiple_read_handles method, used to get call information
+    :param Iterable(Mock) handles: return value of the getMultipleReadHandles method, used to get call information
     """
     # Check if expected open() calls match the actual ones (each element of expected_tuples is in the calls of the mockobject --- #TODO: Check for same amount of calls & maybe does not work for duplicate calls?)
     #assertEqualsImproved(len(expected_tuples), len(mockobject.mock_calls), testobject)
