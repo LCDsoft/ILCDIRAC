@@ -21,12 +21,13 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareXMLFile,
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
+from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
 
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 
 
-class MarlinAnalysis(ModuleBase):
+class MarlinAnalysis(DD4hepMixin, ModuleBase):
   """Define the Marlin analysis part of the workflow
   """
   def __init__(self):
@@ -43,7 +44,7 @@ class MarlinAnalysis(ModuleBase):
     self.envdict = {}
     self.ProcessorListToUse = []
     self.ProcessorListToExclude = []
-    self.dd4hepGeoFile = None
+    self.detectorModel = None
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -127,6 +128,15 @@ class MarlinAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
+    #get the path to the detector model, either local or from the software
+    compactFile = None
+    if self.detectorModel is not None:
+      resXML = self._getDetectorXML()
+      if not resXML['OK']:
+        self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
+        return resXML
+      compactFile = resXML['Value']
+
     res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
       self.log.error("Failed to get the env script")
@@ -178,7 +188,7 @@ class MarlinAnalysis(ModuleBase):
     res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
                          self.debug,
-                         dd4hepGeoFile=self.dd4hepGeoFile)
+                         dd4hepGeoFile=compactFile)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')

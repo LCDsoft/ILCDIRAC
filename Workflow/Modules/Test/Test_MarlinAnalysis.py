@@ -102,6 +102,18 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.assertTrue(result['OK'])
     assertInImproved("should not proceed", result['Value'].lower(), self)
 
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis._getDetectorXML",
+         new=Mock(return_value=S_ERROR("zis iz not camelot")))
+  def test_runit_detXMLFails( self ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = { 'OK' : True }
+    self.marAna.detectorModel = "notCamelot.xml"
+    result = self.marAna.runIt()
+    self.assertFalse( result['OK'] )
+    assertInImproved("zis iz not camelot", result['Message'].lower(), self)
+
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
   def test_runit_getEnvScriptFails( self ):
     self.marAna.platform = "Testplatform123"
@@ -206,6 +218,26 @@ class MarlinAnalysisTestCase( unittest.TestCase ):
     self.marAna.applicationLog = "testlog123"
     self.marAna.stepStatus = S_OK()
     self.marAna.workflowStatus = S_OK()
+    result = self.marAna.runIt()
+    self.assertTrue(result['OK'])
+    mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
+
+
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, True, True, True, True]))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_OK([""])))
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy")
+  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis._getDetectorXML", new=Mock(return_value=S_OK("someDetector.xml")))
+  def test_runit_complete_dd( self, mock_copy ):
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    self.marAna.detectorModel = "someDetector.xml"
     result = self.marAna.runIt()
     self.assertTrue(result['OK'])
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())

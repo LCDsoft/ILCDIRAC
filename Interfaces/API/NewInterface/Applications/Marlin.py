@@ -202,7 +202,7 @@ class Marlin(LCApplication):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("inputGEAR",              '', "string", "", "", False, False,
                                "Input GEAR file"))
-    md1.addParameter(Parameter("dd4hepGeoFile",          '', "string", "", "", False, False,
+    md1.addParameter(Parameter("detectorModel",          '', "string", "", "", False, False,
                                "DD4hep Geomtry File"))
     md1.addParameter(Parameter("ProcessorListToUse",     [],   "list", "", "", False, False,
                                "List of processors to use"))
@@ -215,7 +215,7 @@ class Marlin(LCApplication):
   def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("inputGEAR",              self.gearFile)
-    moduleinstance.setValue("dd4hepGeoFile",          self.dd4hepDetectorModel)
+    moduleinstance.setValue("detectorModel",          self.dd4hepDetectorModel)
     moduleinstance.setValue('ProcessorListToUse',     self.processorsToUse)
     moduleinstance.setValue('ProcessorListToExclude', self.processorsToExclude)
     moduleinstance.setValue("debug",                  self.debug)
