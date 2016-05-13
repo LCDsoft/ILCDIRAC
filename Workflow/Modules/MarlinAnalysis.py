@@ -130,7 +130,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
 
     #get the path to the detector model, either local or from the software
     compactFile = None
-    if self.detectorModel is not None:
+    if self.detectorModel:
       resXML = self._getDetectorXML()
       if not resXML['OK']:
         self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
