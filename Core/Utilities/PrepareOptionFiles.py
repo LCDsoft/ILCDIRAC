@@ -555,17 +555,17 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     return S_ERROR("Empty input file list")
   filesinlcsim = None
   baseelem = tree.getroot()
-  if baseelem is not None:
-    ##handle the input slcio file list
-    filesinlcsim = tree.find("inputFiles")
-    if filesinlcsim is not None:
-      filesinlcsim.clear() #pylint: disable=E1101
-    else:
-      baseelem = tree.getroot()
-      filesinlcsim = Element("inputFiles")
-      baseelem.append(filesinlcsim)
-  else:
+  if baseelem is None:
     return S_ERROR("Invalid lcsim file structure")
+  ##handle the input slcio file list
+  filesinlcsim = tree.find("inputFiles")
+  if filesinlcsim is not None:
+    filesinlcsim.clear() #pylint: disable=E1101
+  else:
+    baseelem = tree.getroot()
+    filesinlcsim = Element("inputFiles")
+    baseelem.append(filesinlcsim)
+
   #set = Element("fileSet")
   for slcio in inputslcio:
     newfile = Element('file')
@@ -575,7 +575,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 
   if jars and len(jars) > 0:
     classpath = tree.find("classpath")
-    if not classpath is None:
+    if classpath is not None:
       classpath.clear() #pylint: disable=E1101
     else:
       baseelem = tree.getroot()

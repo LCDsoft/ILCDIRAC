@@ -14,6 +14,7 @@ class FileUtil(object):
   @staticmethod
   def get_multiple_read_handles( file_contents ):
     """ Utility function to mock multiple read and write calls in a method
+
     :param list file_contents: List of list of strings
 
     Usage of this method, both for read() calls and for iteration. WARNING: You cannot mix read() and iteration calls!! (Iteration and read() have separate counters for the files):
@@ -53,6 +54,7 @@ class FileUtil(object):
   @staticmethod
   def check_file_interactions( testobject, mockobject, expected_tuples, expected_output, handles ):
     """Checks if the actual test interaction with the files matches the expected behaviour. Parameters can be left out, then the respective checks are not performed.
+
     :param TestCase testobject: Unit Testcase, used to call assert methods
     :param mock_open mockobject: Mock object that mocks the open() method, used to get call information
     :param list expected_tuples: List of tuples of strings ('filename', 'mode') of ALL expected open() calls

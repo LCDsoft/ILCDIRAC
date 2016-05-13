@@ -22,12 +22,10 @@ before_script:
     - easy_install pytest-cov pytest-randomly
     - cd ILCDIRAC
     - export HOME=/root/
-    - hostname || true
 
 
 stages:
     - test
-
 
 pylint5:
   stage: test
