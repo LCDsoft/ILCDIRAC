@@ -177,7 +177,8 @@ class MarlinAnalysis(ModuleBase):
     
     res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
-                         self.debug)
+                         self.debug,
+                         dd4hepGeoFile=self.dd4hepGeoFile)
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
