@@ -95,6 +95,8 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
               return True
             elif param.attrib.get('value') == str(parameterValue):
               return True
+            elif not parameterValue and not (param.attrib.get('value') or param.text):
+              return True
             else:
               print "Parameter",processorParameter,"value is", \
                 repr(param.attrib.get('value')), \
@@ -141,6 +143,9 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "SILENT" ) )
     self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
     self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
+    ## Make sure these checks are not always true
+    self.assertFalse( *self.checkGlobalTag( "Verbosity", "NotSILENT" ) )
+    self.assertFalse( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "NotTheseFiles") )
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_initialParametersMissing( self ):
@@ -243,6 +248,120 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames", "") )
     self.assertTrue( self.checkProcessorParameter( "BgOverlay", "expBG", "0.0") )
 
+
+  def test_createFile_NoOutputSet( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="marlinNoOutput.xml",
+                          inputXML="marlinInputSmall.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC='',
+                          outputDST='',
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertTrue( res['OK'], res.get('Message') )
+    self.testedTree = TestPrepareMarlinXMLFile.getTree( "marlinNoOutput.xml" )
+    #self.assertTrue( self.findProcessorInTree( "BGoverLay" ), "Problem with InitDD4hep" )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
+    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "") )
+
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[] ) )
+  def test_createFile_overlayTiming_NoFiles( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprod.xml",
+                          inputXML="marlinRecoProd.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertFalse( res['OK'] )
+    self.assertIn( "Could not find any overlay files", res['Message'] )
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[] ) )
+  def test_createFile_bgoverlay_NoFiles( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprod.xml",
+                          inputXML="marlininputild.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertFalse( res['OK'] )
+    self.assertIn( "Could not find any overlay files", res['Message'] )
+
+  def test_createFile_parseError( self ):
+
+    def parseModified( *_args, **_kwargs ):
+      """ throw exception for parse """
+      raise RuntimeError("Parse Failed")
+
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+      res = prepareXMLFile( finalxml="outputprod.xml",
+                            inputXML="marlininputild.xml",
+                            inputGEAR="gearMyFile.xml",
+                            inputSLCIO="mySLCIOInput.slcio",
+                            numberofevts=501,
+                            outputFile= '',
+                            outputREC="outputrec.slcio",
+                            outputDST="outputdst.slcio",
+                            debug=True,
+                            dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertFalse( res['OK'] )
+    self.assertIn( "Found Exception RuntimeError", res['Message'] )
+
+  def test_createFile_inputFaulty( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprod.xml",
+                          inputXML="marlininputild.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO=None,
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertFalse( res['OK'], res['Message'] )
+    self.assertIn( "inputSLCIO is neither", res['Message'] )
+
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  def test_createFile_inputList( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputfile.xml",
+                          inputXML="marlininput.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO=["file1","file2"],
+                          numberofevts=501,
+                          outputFile= "mySLCIOOutput.slcio",
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=False,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertTrue( res['OK'] )
+    self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfile.xml" )
+    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "file1 file2" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "SILENT" ) )
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareMarlinXMLFile )
