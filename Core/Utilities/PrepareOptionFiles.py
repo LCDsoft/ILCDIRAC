@@ -339,7 +339,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
 
   glob = tree.find('global')
   lciolistfound = False
-  for param in glob.findall("parameter"):
+  for param in glob.findall("parameter"): #pylint: disable=E1101
     if param.attrib.get('name') == 'LCIOInputFiles' and inputSLCIO:
       lciolistfound = True
       com = Comment("input file list changed")
