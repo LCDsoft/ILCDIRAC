@@ -1,15 +1,20 @@
 """
 Marlin: Reconstructor after Mokka
 """
-__RCSID__ = "$Id$"
+import types
+import os
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.CheckXMLValidity         import checkXMLValidity
+from ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin import DDInterfaceMixin
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
-class Marlin(LCApplication):
+__RCSID__ = "$Id$"
+
+class Marlin( DDInterfaceMixin, LCApplication ):
   """Call Marlin reconstructor (after Mokka simulator)
 
   Usage:
@@ -53,7 +58,8 @@ class Marlin(LCApplication):
     self.appname = 'marlin'
     self.datatype = 'REC'
     self.detectortype = 'ILD'
-    self.dd4hepDetectorModel = ''
+    self.detectorModel = ''
+    self._ops = Operations()
 
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
@@ -65,16 +71,6 @@ class Marlin(LCApplication):
     self.gearFile = gearFile
     if os.path.exists(gearFile) or gearFile.lower().count("lfn:"):
       self.inputSB.append(gearFile)
-
-  def setDD4hepDetectorModel(self, detectorModel):
-    """ set the detectormodel described in DD4hep Geometry
-
-    :param string detectorModel: Can be path to XML on CVMFS, tarball LFN, or inputsandbox tarball
-
-    """
-
-    self._checkArgs( { 'detectorModel' : types.StringTypes } )
-    self.dd4hepDetectorModel = detectorModel
 
   def setOutputRecFile(self, outputRecFile, path = None):
     """Optional: Define output rec file for Marlin. Used only in production
@@ -215,7 +211,7 @@ class Marlin(LCApplication):
   def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("inputGEAR",              self.gearFile)
-    moduleinstance.setValue("detectorModel",          self.dd4hepDetectorModel)
+    moduleinstance.setValue("detectorModel",          self.detectorModel)
     moduleinstance.setValue('ProcessorListToUse',     self.processorsToUse)
     moduleinstance.setValue('ProcessorListToExclude', self.processorsToExclude)
     moduleinstance.setValue("debug",                  self.debug)
