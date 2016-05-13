@@ -852,7 +852,7 @@ class TestCreater(object):
       'ddsim' : [ 'FCalTB.tar.gz', 'Muon_50GeV_Fixed_cosTheta0.7.stdhep' ]
     }
     for specialName in specialJobs:
-      if "root" in jobName.lower() and specialName is "root":
+      if "root" in jobName.lower() and specialName == "root":
         with open("root.sh", "w") as rScript:
           rScript.write( "echo $ROOTSYS" )
         with open("func.C", "w") as rMacro:

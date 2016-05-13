@@ -196,7 +196,7 @@ class ProcessDB ( DB ):
     fields = ['AppName','AppVersion']
     values = [AppName, AppVersion]
     #extrareqs = ''
-    if not Platform is 'any':
+    if not Platform == 'any':
       #extrareqs = " AND Platform='%s'"%Platform
       fields.append('Platform')
       values.append(Platform)
@@ -223,7 +223,7 @@ class ProcessDB ( DB ):
       return res
     idSoftware = res['Value'][0][0] #This is the first entry of the first tuple
     #extrareqs = ''
-    #if not Platform is 'any':
+    #if not Platform == 'any':
     #  extrareqs = " AND Platform='%s'"%Platform
     
     #req = "SELECT %s FROM Software WHERE idSoftware= %s"%(intListToString( Params ),AppName,AppVersion,extrareqs)

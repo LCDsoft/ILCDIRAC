@@ -19,7 +19,7 @@ before_script:
     - source bashrc
     - dirac-deploy-scripts
     - pip install --upgrade pip pylint mock MySQL-python #coverage Check if we need coverage
-    - easy_install pytest-cov
+    - easy_install pytest-cov pytest-randomly
     - cd ILCDIRAC
     - export HOME=/root/
 
