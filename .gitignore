@@ -7,3 +7,4 @@ Doc/api-objects.txt
 Doc/crarr.png
 .coverage
 cover
+htmlcov

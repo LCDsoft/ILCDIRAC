@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 #TODO split up in separate classes
 
 
+# pylint: disable=E1101
 # pylint: disable=R0904
 class TestPrepareOptionsFile( unittest.TestCase ):
   """tests of PrepareOptionsFile"""
