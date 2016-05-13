@@ -3,7 +3,6 @@ tests for PrepareOptionFiles
 
 """
 
-import filecmp
 import os
 import shutil
 import tempfile
@@ -11,7 +10,7 @@ import unittest
 
 from xml.etree.ElementTree import ElementTree
 
-from mock import mock_open, patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 
@@ -36,8 +35,12 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     os.chdir(self.tmpdir)
     self.inputXMLFile = "marlininput.xml"
     self.expectedOutput = os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlinExpectedOutput.xml" )
-    shutil.copyfile( os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlininput.xml"), self.inputXMLFile )
-    shutil.copyfile( os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlinInputSmall.xml"), "marlinInputSmall.xml" )
+    for xmlFile in ("marlininput.xml",
+                    "marlinInputSmall.xml",
+                    "marlinRecoProd.xml",
+                    "marlininputild.xml",
+                    "marlininputildNoOver.xml"):
+      shutil.copyfile( os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/", xmlFile), xmlFile )
     #self.createInputXMLFile()
     self.expectedTree = self.getExpectedXMLTree()
     self.testedTree = None
@@ -46,7 +49,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     """ Remove the fake files
     """
     os.chdir( self.basedir )
-    #cleanup ( self.tmpdir )
+    cleanup ( self.tmpdir )
 
   def getExpectedXMLTree( self ):
     return TestPrepareMarlinXMLFile.getTree( self.expectedOutput )
@@ -103,14 +106,17 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     """ check if global parameter has correct value in testedTree """
     parameterValue = str(parameterValue)
     params = self.testedTree.findall('global/parameter')
+    print "checking tag",parameterName
     for param in params:
       if param.get('name') == parameterName:
         if param.get('value') == parameterValue or param.text == parameterValue:
-          return True
+          print "found parameter", parameterName, "with",parameterValue
+          return True,None
         else:
-          return False, "The parameter"+parameterName+"does not have the value"+parameterValue+"but"+ \
-            repr(param.get('value'))+"or"+repr(param.text)
-    return False, "parameter not found"
+          message = "The parameter "+parameterName+" does not have the value "+parameterValue+" but "+ \
+            repr(param.get('value'))+" or"+repr(param.text)
+          return False, message
+    return False, "parameter " + parameterName + " not found "
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
   def test_createFile( self ):
@@ -128,14 +134,13 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( res['OK'] )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfile.xml" )
     self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
-    self.assertTrue( self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
-    self.assertTrue( self.checkGlobalTag( "MaxRecordNumber", 501 ) )
-    self.assertTrue( self.checkGlobalTag( "SkipNEvents", 0 ) )
-    self.assertTrue( self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
-    self.assertTrue( self.checkGlobalTag( "Verbosity", "SILENT" ) )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "SILENT" ) )
     self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
     self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
-
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_initialParametersMissing( self ):
@@ -153,13 +158,91 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfilesmall.xml" )
     self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
-    self.assertTrue( self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
-    self.assertTrue( self.checkGlobalTag( "MaxRecordNumber", 501 ) )
-    self.assertTrue( self.checkGlobalTag( "SkipNEvents", 0 ) )
-    self.assertTrue( self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
-    self.assertTrue( self.checkGlobalTag( "Verbosity", "WARNING" ) )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
+    self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "NBunchtrain", "0") )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "NumberBackground", "0.0") )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "") )
+    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "mySLCIOOutput.slcio") )
+
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  def test_createFile_productionOutputFiles( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprod.xml",
+                          inputXML="marlinRecoProd.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertTrue( res['OK'], res.get('Message') )
+    self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprod.xml" )
+    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
     self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
     self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
+    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "outputrec.slcio") )
+    self.assertTrue( self.checkProcessorParameter( "DSTOutput", "LCIOOutputFile", "outputdst.slcio") )
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  def test_createFile_ildRecoFile( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprodild.xml",
+                          inputXML="marlininputild.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertTrue( res['OK'], res.get('Message') )
+    self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprodild.xml" )
+    #self.assertTrue( self.findProcessorInTree( "BGoverLay" ), "Problem with InitDD4hep" )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
+    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames", "file1\nfile2") )
+
+  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  def test_createFile_ildRecoFile_NoOver( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprodildNoOver.xml",
+                          inputXML="marlininputildNoOver.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+    self.assertTrue( res['OK'], res.get('Message') )
+    self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprodildNoOver.xml" )
+    #self.assertTrue( self.findProcessorInTree( "BGoverLay" ), "Problem with InitDD4hep" )
+    self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
+    self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
+    self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
+    self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
+    self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
+    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames", "") )
+    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "expBG", "0.0") )
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareMarlinXMLFile )

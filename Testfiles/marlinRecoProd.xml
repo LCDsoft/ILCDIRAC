@@ -22,6 +22,7 @@
     <processor name="MyTrackChecker"/>
 
     <processor name="MyLCIOOutputProcessor"/>
+    <processor name="DSTOutput"/>
 
   </execute>
 
@@ -432,9 +433,9 @@
 
   <parameter name="MuonEndCapCollection_Integration_Time" type="float" value="10"/>
 
-  <parameter name="NBunchtrain" type="int" value="0"/>
+  <parameter name="NBunchtrain" type="int" value="60"/>
 
-  <parameter name="NumberBackground" type="float" value="0.0"/>
+  <parameter name="NumberBackground" type="float" value="0.3"/>
 
   <parameter name="PhysicsBX" type="int" value="10"/>
 
@@ -457,5 +458,30 @@
   <parameter name="VXDCollection_Integration_Time" type="float" value="10"/>
 
 </processor>
+
+<processor name="DSTOutput" type="LCIOOutputProcessor">
+  <parameter name="LCIOOutputFile" type="string" > Output_AOD.slcio </parameter>
+  <parameter name="DropCollectionTypes" type="StringVec"> 
+    MCParticle 
+    LCRelation 
+    SimTrackerHit 
+    SimCalorimeterHit
+    TrackerHit 
+    CalorimeterHit 
+    Track 
+    ReconstructedParticle
+    LCFloatVec      
+  </parameter>
+  <parameter name="FullSubsetCollections" type="StringVec" value="MCParticlesSkimmed"/>
+  <parameter name="KeepCollectionNames" type="StringVec"> 
+    MCParticlesSkimmed 
+    RecoMCTruthLink
+    LDCTracks 
+    PandoraPFAClusters
+    PandoraPFANewPFOs
+  </parameter>
+  <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW"/>
+</processor>
+
 
 </marlin>

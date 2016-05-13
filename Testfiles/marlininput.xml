@@ -37,6 +37,10 @@
     <parameter name="RandomSeed" value="1234567890" />
   </global>
 
+  <processor withoutname="horse" type="DDCaloDigi">
+  </processor>
+
+
   <processor name="InitDD4hep" type="InitializeDD4hep">
 
     <parameter name="DD4hepXMLFile" type="string"> /afs/cern.ch/eng/clic/work/ilcsoft/HEAD-2015-12-02/lcgeo/HEAD/CLIC/compact/CLIC_o2_v04/CLIC_o2_v04.xml </parameter>
@@ -457,6 +461,9 @@
   <parameter name="TPCSpacePointCollection_Integration_Time" type="float" value="100000"/>
 
   <parameter name="VXDCollection_Integration_Time" type="float" value="10"/>
+
+  <parameter withoutname="justForTesting" type="float" novalue="10"/>
+
 
 </processor>
 
