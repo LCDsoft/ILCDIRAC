@@ -22,6 +22,7 @@ before_script:
     - easy_install pytest-cov pytest-randomly
     - cd ILCDIRAC
     - export HOME=/root/
+    - hostname
 
 
 stages:

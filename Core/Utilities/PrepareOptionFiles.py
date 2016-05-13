@@ -573,19 +573,18 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     filesinlcsim.append(newfile)
   #filesinlcsim.append(set)
 
-  if jars:
-    if len(jars) > 0:
-      classpath = tree.find("classpath")
-      if not classpath is None:
-        classpath.clear() #pylint: disable=E1101
-      else:
-        baseelem = tree.getroot()
-        classpath = Element("classpath")    
-        baseelem.append(classpath)
-      for jar in jars:
-        newjar = Element("jar")
-        newjar.text = jar
-        classpath.append(newjar)
+  if jars and len(jars) > 0:
+    classpath = tree.find("classpath")
+    if not classpath is None:
+      classpath.clear() #pylint: disable=E1101
+    else:
+      baseelem = tree.getroot()
+      classpath = Element("classpath")
+      baseelem.append(classpath)
+    for jar in jars:
+      newjar = Element("jar")
+      newjar.text = jar
+      classpath.append(newjar)
   #handle number of events
   if numberofevents:
     nbevts = tree.find("control/numberOfEvents")     
@@ -645,7 +644,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       eventmarker.append(eventInterval)
       drivers.append(eventmarker) #pylint: disable=E1101
       execut = tree.find("execute")
-      if execut:
+      if execut is not None:
         evtmarkattrib = {}
         evtmarkattrib['name'] = "evtMarker"
         evtmark = Element("driver", evtmarkattrib)
@@ -733,7 +732,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     output.append(outputelem)
     drivers.append(output) #pylint: disable=E1101
     execut = tree.find("execute")
-    if execut:
+    if execut is not None:
       outputattrib = {}
       outputattrib['name'] = "Writer"
       outputmark = Element("driver", outputattrib)
