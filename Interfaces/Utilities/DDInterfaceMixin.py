@@ -6,7 +6,18 @@ import os
 from DIRAC import S_OK, S_ERROR
 
 class DDInterfaceMixin( object ):
-  """ Mixin for DD4hep interface functions """
+  """Mixin for DD4hep interface functions
+
+  This mixin class requires that the main class should be of `Application` type
+  and have the `detectorModel`, `_ops`, `version`, and `log` attributes.
+
+     * `_ops` is an Operations instance
+     * `_log` a gLogger sublogger
+     * `version` is the version of the application
+     * detectorModel is set to the name of the detector model as inferred in the `setDetectorModel` function
+
+  """
+
   def setDetectorModel(self, detectorModel):
     """Define detector model to use for ddsim simulation
 
@@ -57,7 +68,7 @@ class DDInterfaceMixin( object ):
         self.detectorModel = detectorModel
       else:
         self._log.error("Unknown detector model: ", detectorModel )
-        return S_ERROR( "Unknown detector model in ddsim: %s" % detectorModel )
+        return S_ERROR( "Unknown detector model in %s: %s" % ( self.appname, detectorModel ) )
     return S_OK()
 
 
