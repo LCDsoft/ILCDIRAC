@@ -323,7 +323,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
                             debug=True,
                             dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
     self.assertFalse( res['OK'] )
-    self.assertIn( "Found Exception RuntimeError", res['Message'] )
+    self.assertIn( "Found Exception when parsing", res['Message'] )
 
   def test_createFile_inputFaulty( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile

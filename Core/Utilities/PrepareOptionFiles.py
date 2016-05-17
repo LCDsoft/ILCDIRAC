@@ -318,8 +318,8 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   try:
     tree.parse(inputXML)
   except Exception as x:
-    gLogger.error( "Found Exception %r" % x )
-    return S_ERROR("Found Exception %r" % x)
+    gLogger.error( "Found Exception when parsing Marlin input XML", repr(x) )
+    return S_ERROR("Found Exception when parsing Marlin input XML")
 
   # Handle inputSLCIO being list or string
   if isinstance(inputSLCIO, list):
