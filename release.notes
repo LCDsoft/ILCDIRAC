@@ -1,3 +1,9 @@
+[v25r0p7]
+
+* Interface:
+
+NEW: :any:`Marlin` has the new function :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel` that works the same way as the :any:`DDSim` function and can be used to set the dd4hep geometry based model. (ILCDIRAC-659)
+
 [v25r0p6]
 
 * Workflow:
