@@ -569,7 +569,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       ovNameFound = False
       ofpNameFound = False
       for d in drivers:
-        if d.attrib.has_key('type'):
+        if 'type' in d.attrib:
           self.assertTrue(not d.attrib['type'] == 'org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper' or checkstrat(self, d)) # note: short circuit operator
           if d.attrib['type'] == 'org.lcsim.util.OverlayDriver':
             ovNameFound = True
@@ -609,7 +609,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       print 'in test'
       print drivers
       for d in drivers:
-        if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'RECWriter':
+        if 'type' in d.attrib and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'RECWriter':
           expected_element = ET.Element('outputFilePath')
           expected_element.text = outputrec
           assertEqualsXml(d.find('outputFilePath'), expected_element, self)
@@ -639,7 +639,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       drivers = current_tree.findall('drivers/driver')
       flag = False
       for d in drivers:
-        if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'DSTWriter':
+        if 'type' in d.attrib and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'DSTWriter':
           expected_element = ET.Element('outputFilePath')
           expected_element.text = outputdst
           assertEqualsXml(d.find('outputFilePath'), expected_element, self)
@@ -688,7 +688,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       drivers = current_tree.findall('drivers/driver')
       flag = False
       for d in drivers:
-        if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver':
+        if 'type' in d.attrib and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver':
           expected_element = ET.Element('marker')
           expected_element.text = 'LCSIM'
           assertEqualsXml(d.find('marker'), expected_element, self)
@@ -785,7 +785,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       drivers = current_tree.findall('drivers/driver')
       flag = False
       for d in drivers:
-        if d.attrib.has_key("type") and d.attrib["type"] == "org.lcsim.job.EventMarkerDriver":
+        if 'type' in d.attrib and d.attrib["type"] == "org.lcsim.job.EventMarkerDriver":
           expected_element = ET.Element('eventInterval')
           expected_element.text = '1'
           assertEqualsXml(d.find('eventInterval'), expected_element, self)
@@ -826,7 +826,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       drivers = current_tree.findall('drivers/driver')
       flag = False
       for d in drivers:
-        if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver' and d.attrib['name'] == 'evtMarker':
+        if 'type' in d.attrib and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver' and d.attrib['name'] == 'evtMarker':
           assertEqualsImproved(d.find('eventInterval').text, '1', self)
           flag = True
       self.assertTrue(flag)
@@ -847,7 +847,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       drivers = current_tree.findall('drivers/driver')
       flag = False
       for d in drivers:
-        if d.attrib.has_key('type') and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver' and d.attrib['name'] == 'evtMarker':
+        if 'type' in d.attrib and d.attrib['type'] == 'org.lcsim.job.EventMarkerDriver' and d.attrib['name'] == 'evtMarker':
           assertEqualsImproved(d.find('eventInterval').text, '1', self)
           flag = True
       self.assertTrue(flag)
@@ -909,11 +909,11 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       assertEqualsXml(it.next(), ET.Comment("input file list changed"), self)
       assertEqualsXml(it.next(), ET.Comment("input file list changed"), self)
       for pa in current_tree.findall('global/parameter'):
-        if pa.attrib.has_key('name') and pa.attrib['name'] == 'LCIOInputFiles':
+        if 'name' in pa.attrib and pa.attrib['name'] == 'LCIOInputFiles':
           assertEqualsImproved(pa.text, 'inputslcio', self)
       params = current_tree.findall('processor/parameter')
       for pa in params:
-        if pa.attrib.has_key('name'):
+        if 'name' in pa.attrib:
           if pa.attrib['name'] == 'OutputFile':
             assertEqualsImproved(pa.text, 'ofs', self)
           elif pa.attrib['name'] == 'MCCollectionName':
