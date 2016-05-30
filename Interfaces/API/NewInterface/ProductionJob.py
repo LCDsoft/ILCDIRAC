@@ -398,9 +398,8 @@ class ProductionJob(Job):
     except Exception, x:
       self.log.error(x)
       return S_ERROR('Could not create workflow')
-    oFile = open(fileName, 'r')
-    workflowXML = oFile.read()
-    oFile.close()
+    with open(fileName, 'r') as oFile:
+      workflowXML = oFile.read()
     if not name:
       name = workflowName
 
