@@ -745,7 +745,8 @@ class ProductionJob(Job):
 
     if not self.basename:
       self.basename = self.evttype
-    
+
+    evttypepath = ''
     if not self.evttype[-1] == '/':
       evttypepath = self.evttype + '/'
     
