@@ -18,8 +18,7 @@ from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved
 import xml.etree.ElementTree as ET
 
-#TODO split up in separate classes
-
+#TODO split up in separate classes (if too much time, decent for now. Quite some code duplication but hard to remove + unlikely&not too much effort to change)
 
 # pylint: disable=E1101
 # pylint: disable=R0904
@@ -157,6 +156,37 @@ class TestPrepareOptionsFile( unittest.TestCase ):
                   )
     self.assertTrue( self.compareMacFiles() )
 
+class TestPrepareOptionsFilePatch( unittest.TestCase ):
+  """ Class for tests that share several mocks """
+  teststr = """
+<?xml version="1.0" encoding="us-ascii"?>
+<!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
+<!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
+
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+
+   <execute>
+      <processor name="MyTomatoProcessor"/>
+   </execute>
+
+   <global>
+      <parameter name="Verbosity" value="ERROR"/>
+   </global>
+
+ <processor name="MyTomatoProcessor" type="TomatoProcessor">
+ <!--Automated analysis-->
+  <!--Name of the MCParticle collection-->
+  <parameter name="MCCollectionName" type="string" lcioInType="MCParticle"> MCParticle </parameter>
+  <!--Root OutputFile-->
+  <parameter name="OutputFile" type="string" value="tomato.root"/>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string" value=""/-->
+</processor>
+
+</marlin>      
+    """
+
+
   dep1 = { 'app' : True, 'version' : True }
   dep2 = { 'app' : True, 'version' : True }
   dep3 = { 'app' : True, 'version' : True }
@@ -255,32 +285,12 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     assertEqualsImproved(len(expected), mocker_handle.__enter__.return_value.write.call_count, self)
 
   def test_prepareWhizFileTemplate( self ):
-    parameters = { }
-    parameters['SEED'] = '135431'
-    parameters['ENERGY'] = '1tev'
-    parameters['RECOIL'] = '134'
-    parameters['NBEVTS'] = '23'
-    parameters['LUMI'] = '13'
-    parameters['INITIALS'] = 'JE'
-    parameters['PNAME1'] = 'electron_hans'
-    parameters['PNAME2'] = 'proton_peter'
-    parameters['POLAB1'] = 'plus'
-    parameters['POLAB2'] = 'minus'
-    parameters['USERB1'] = 'spectrumA'
-    parameters['USERB2'] = 'SpectrumB'
-    parameters['ISRB1'] = 'PSDL'
-    parameters['ISRB2'] = 'FVikj'
-    parameters['EPAB1'] = '234'
-    parameters['EPAB2'] = 'asf31'
-
+    parameters = create_testdict()
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [ x+x for x in parameters.keys() ] #Fill file contents with template strings
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
-
     parameters['USERSPECTRUM'] = 'mode1234'
-
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
-
     file_contents += ['write_events_file', 'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82']
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
@@ -297,32 +307,12 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
 
   def test_prepareWhizFileTemplate_noprocessid( self ):
-    parameters = { }
-    parameters['SEED'] = '135431'
-    parameters['ENERGY'] = '1tev'
-    parameters['RECOIL'] = '134'
-    parameters['NBEVTS'] = '23'
-    parameters['LUMI'] = '13'
-    parameters['INITIALS'] = 'JE'
-    parameters['PNAME1'] = 'electron_hans'
-    parameters['PNAME2'] = 'proton_peter'
-    parameters['POLAB1'] = 'plus'
-    parameters['POLAB2'] = 'minus'
-    parameters['USERB1'] = 'spectrumA'
-    parameters['USERB2'] = 'SpectrumB'
-    parameters['ISRB1'] = 'PSDL'
-    parameters['ISRB2'] = 'FVikj'
-    parameters['EPAB1'] = '234'
-    parameters['EPAB2'] = 'asf31'
-
+    parameters = create_testdict()
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [ x+x for x in parameters.keys() ] #Fill file contents with template strings
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
-
     parameters['USERSPECTRUM'] = 'mode1234'
-
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
-
     file_contents += ['write_events_file', 'processidaisuydhprocess_id"', 'efiuhifuoejf', '198734y37hrunffuydj82']
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
@@ -879,7 +869,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      assertEqualsImproved(S_ERROR('bkgtesterror'), result, self)
+      self.assertFalse(result['OK'])
+      assertEqualsImproved('bkgtesterror', result['Message'], self)
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
@@ -940,33 +931,6 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       self.assertFalse(result['OK'])
       self.assertIn('found exception', result['Message'].lower())
 
-  teststr = """
-<?xml version="1.0" encoding="us-ascii"?>
-<!-- ?xml-stylesheet type="text/xsl" href="http://ilcsoft.desy.de/marlin/marlin.xsl"? -->
-<!-- ?xml-stylesheet type="text/xsl" href="marlin.xsl"? -->
-
-<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
-
-   <execute>
-      <processor name="MyTomatoProcessor"/>
-   </execute>
-
-   <global>
-      <parameter name="Verbosity" value="ERROR"/>
-   </global>
-
- <processor name="MyTomatoProcessor" type="TomatoProcessor">
- <!--Automated analysis-->
-  <!--Name of the MCParticle collection-->
-  <parameter name="MCCollectionName" type="string" lcioInType="MCParticle"> MCParticle </parameter>
-  <!--Root OutputFile-->
-  <parameter name="OutputFile" type="string" value="tomato.root"/>
-  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
-  <!--parameter name="Verbosity" type="string" value=""/-->
-</processor>
-
-</marlin>      
-    """
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
   def test_prepareTomato_noinputfile( self ):
     #pylint: disable=W0613
@@ -975,7 +939,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       self._root = xml_salad_2().getroot()
 
     file_contents = [ [] ]
-    expected = [[ TestPrepareOptionsFile.teststr ]] # Means 2 files will be opened, nothing is written to first file, and 'firstlineentry' and 'line100' are written (in different calls and exactly these strings) to the second file. If more/less is written this fails!
+    expected = [[ TestPrepareOptionsFilePatch.teststr ]] # Means 2 files will be opened, nothing is written to first file, and 'firstlineentry' and 'line100' are written (in different calls and exactly these strings) to the second file. If more/less is written this fails!
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified), patch('%s.open' % moduleName, mock_open(), create=True) as mo:
@@ -1215,6 +1179,27 @@ def xml_salad_2():
   customargs[0] = True
   return createXMLTreeForSalad(customargs)
 
+def create_testdict():
+  """ Returns a dictionary with the appropriate parameters for the prepareWhizFileTemplate test
+  """
+  parameters = { }
+  parameters['SEED'] = '135431'
+  parameters['ENERGY'] = '1tev'
+  parameters['RECOIL'] = '134'
+  parameters['NBEVTS'] = '23'
+  parameters['LUMI'] = '13'
+  parameters['INITIALS'] = 'JE'
+  parameters['PNAME1'] = 'electron_hans'
+  parameters['PNAME2'] = 'proton_peter'
+  parameters['POLAB1'] = 'plus'
+  parameters['POLAB2'] = 'minus'
+  parameters['USERB1'] = 'spectrumA'
+  parameters['USERB2'] = 'SpectrumB'
+  parameters['ISRB1'] = 'PSDL'
+  parameters['ISRB2'] = 'FVikj'
+  parameters['EPAB1'] = '234'
+  parameters['EPAB2'] = 'asf31'
+  return parameters
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareOptionsFile )
