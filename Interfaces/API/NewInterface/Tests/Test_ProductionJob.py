@@ -236,7 +236,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [[], ["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('__builtin__.open', mock_open(), create=True) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('__builtin__.open', mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -264,7 +264,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [[], ["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('__builtin__.open', mock_open(), create=True) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('__builtin__.open', mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -288,7 +288,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [[], ["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('__builtin__.open', mock_open(), create=True) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('__builtin__.open', mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction()
@@ -302,7 +302,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
         for entry in expected[index]:
           cur_handle.write.assert_any_call(entry)
 
-  @patch('__builtin__.open', mock_open(), create=True)
+  @patch('__builtin__.open', mock_open())
   def test_createproduction_basic_checks( self ):
     job = self.prodJob
     job.proxyinfo = { 'OK' : False, 'Value' : {'group' : 'ilc_prod'}, 'Message' : 'not ok' }
@@ -323,14 +323,14 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertDiracFailsWith( job.createProduction(), 'some_error', self )
     with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.createWorkflow', new=Mock(side_effect=OSError('some_os_error'))):
       assertDiracFailsWith( job.createProduction(), 'could not create workflow', self )
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.Transformation.addTransformation', new=Mock(return_value=S_ERROR('myerror123'))), patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open(), create=True):
+    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.Transformation.addTransformation', new=Mock(return_value=S_ERROR('myerror123'))), patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open()):
       assertDiracFailsWith( job.createProduction(), 'myerror123', self )
     job.trc = Mock()
     job.trc.getTransformationStats.return_value = S_OK('fail this') #S_OK because it means it found a transformation by that name, so the new one cannot be created
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open(), create=True):
+    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open()):
       assertDiracFailsWith( job.createProduction(), 'already exists', self )
 
-  @patch('__builtin__.open', mock_open(), create=True)
+  @patch('__builtin__.open', mock_open())
   def test_createproduction_dryrun( self ):
     job = self.prodJob
     job.proxyinfo = { 'OK' : 'yes, trust me', 'Value' : {'group' : 'ilc_prod'} }
@@ -342,7 +342,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('%s.open' % moduleName, mock_open(), create=True) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('%s.open' % moduleName, mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -469,8 +469,6 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       res = job.finalizeProd( 1387 )
       self.assertTrue( res['OK'] )
 
-#TODO test setprodparameter + jobspecificparams from finalizeProd
-
   def test_getMetadata( self ):
     job = self.prodJob
     reference_dict = { '1' : {'test1' : 1, '09ksrt' : '123tgvda'}, '2' : {'vdunivi' : -135, 21 : 'sdfg', job : 0, 'NumberOfEvents' : 1002 } }
@@ -589,8 +587,19 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
       self.myapp.outputFile = False
       self.myapp.willBeCut = False
       self.myapp.detectortype = 'mydetector'
-      self.assertTrue(self.prodJob.append(self.myapp))
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True])), patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_prodparam_error'))):
+      self.assertTrue(self.prodJob.append(self.myapp)['OK'])
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True])):
+      my_dict = self.prodJob.prodparameters
+      def getitem(name):
+        return my_dict[name]
+      def setitem(name, val):
+        my_dict[name] = val
+      mock_dict = Mock()
+      mock_dict.__getitem__.side_effect = getitem
+      mock_dict.__setitem__.side_effect = setitem
+      mock_dict.update.side_effect = ValueError('some_prodparam_err')
+      self.prodJob.prodparameters = mock_dict
+      self.prodJob.evttype = ''
       self.myapp.outputFile = False
       self.myapp.willBeCut = False
       self.myapp.detectortype = ''
@@ -599,6 +608,73 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
       self.prodJob.detector = 'mycooldetector'
       assertDiracFailsWith( self.prodJob.append(self.myapp), 'some_prodparam_err', self )
 
+  def test_jobSpecificParams_detector_and_datatype( self ):
+    self.myapp.setOutputSE.return_value = S_OK(True)
+    self.prodJob.evttype = ''
+    self.myapp.willBeCut = False
+    self.myapp.outputFile = False
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, False])), patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
+      self.assertTrue( self.prodJob.append(self.myapp)['OK'] )
+    self.prodJob.evttype = ''
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True])):
+      self.myapp.detectortype = 'application_detectortype'
+      self.assertTrue( self.prodJob.append(self.myapp)['OK'] )
+
+  def test_setters_1( self ):
+    import random
+    self.prodJob.setDryRun( True )
+    assertEqualsImproved( self.prodJob.dryrun, True, self )
+    self.prodJob.setProdGroup( 'myprodgroup' )
+    assertEqualsImproved( self.prodJob.prodGroup, 'myprodgroup', self )
+    self.prodJob.setProdPlugin( 'Limited' )
+    assertEqualsImproved( self.prodJob.plugin, 'Limited', self )
+    self.prodJob.setNbEvtsPerSlice(13)
+    assertEqualsImproved( self.prodJob.slicesize, 13, self )
+    myprodtype = random.choice( ALLOWED_PRODTYPES )
+    self.prodJob.setProdType( myprodtype )
+    assertEqualsImproved( self.prodJob.type, myprodtype, self )
+    self.prodJob.setWorkflowName( 'mysuperworkflow' )
+    assertEqualsImproved( self.prodJob.workflow['name'], 'mysuperworkflow', self )
+    assertEqualsImproved( self.prodJob.workflow['name'], self.prodJob.name, self )
+    self.prodJob.setWorkflowDescription( 'this is a test workflow, pls dont execute' )
+    assertEqualsImproved( self.prodJob.workflow['description'], 'this is a test workflow, pls dont execute', self )
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, False])), patch('%s.shutil.move' % MODULE_NAME, new=Mock(return_value=True)) as move_mock, patch('%s.os.remove' % MODULE_NAME, new=Mock(True)) as remove_mock, patch('__builtin__.open', mock_open()) as open_mock:
+      self.prodJob.createWorkflow()
+      assertEqualsImproved( len(move_mock.mock_calls), 1, self )
+      move_mock.assert_called_with( 'mysuperworkflow.xml', 'mysuperworkflow.xml.backup' )
+      assertEqualsImproved( remove_mock.mock_calls, [], self )
+      assertEqualsImproved( len(open_mock.mock_calls), 4, self ) #Open, __enter__, write, __exit__
+    self.assertTrue( self.prodJob.setOutputSE( 'myoutputstorage_for_testing' )['OK'] )
+    assertEqualsImproved( self.prodJob.outputStorage, 'myoutputstorage_for_testing', self )
+
+  def test_setters_2( self ):
+    self.prodJob.setDryRun( False )
+    assertEqualsImproved( self.prodJob.dryrun, False, self )
+    self.prodJob.setProdGroup( '' )
+    assertEqualsImproved( self.prodJob.prodGroup, '', self )
+    self.prodJob.setProdPlugin( '' )
+    assertEqualsImproved( self.prodJob.plugin, '', self )
+    self.prodJob.setNbEvtsPerSlice(0)
+    assertEqualsImproved( self.prodJob.slicesize, 0, self )
+    # Throws exception
+    try:
+      self.prodJob.setProdType( '9i8u1j4tn' )
+      self.fail()
+    except TypeError as myerror:
+      self.assertNotEqual( self.prodJob.type, '9i8u1j4tn' )
+      message = '%s' % myerror
+      self.assertIn( 'prod must be one of', message.lower() )
+    self.prodJob.setWorkflowName( '' )
+    assertEqualsImproved( self.prodJob.workflow['name'], '', self )
+    assertEqualsImproved( self.prodJob.workflow['name'], self.prodJob.name, self )
+    self.prodJob.setWorkflowDescription( '' )
+    assertEqualsImproved( self.prodJob.workflow['description'], '', self )
+    # Skipping createWorkflow
+    self.prodJob.setOutputSE( '' )
+    assertEqualsImproved( self.prodJob.outputStorage, '', self )
+
+
+ALLOWED_PRODTYPES = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge', 'Split']
 def create_application_mock():
   """ Returns a mock object containing all necessary values for being used as an application in ProductionJob
   """
@@ -612,17 +688,6 @@ def create_application_mock():
   myapp.appname = 'coolphysicssimulation'
   myapp.version = 'v3p10'
   return myapp
-
-  # Setters to test in bulk
-  # setDryRun
-  # setProdGroup
-  # setProdPlugin
-  # setNbEvtsPerSlice
-  # setProdType
-  # setWorkflowName
-  # setWorkflowDescription
-  # createWorkflow
-  # setOutputSE
 
 # Constants needed for the tests
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
