@@ -124,10 +124,9 @@ class SETestCase( unittest.TestCase ):
     
     try:
       result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile])
-      self.assertTrue(False, "Get file should not succeed")
+      self.fail("Get file should not succeed")
     except subprocess.CalledProcessError as err:
       self.assertTrue(err.output.count("ERROR") >= 1, "File not removed from SE even though it should be: " + err.output)
-   
 
 
   def uploadFile( self, site ):
@@ -175,6 +174,3 @@ class SETestCase( unittest.TestCase ):
     Contains (a,b) and (b,a)
     """
     return [(site1, site2) for site1 in self.storageelements for site2 in self.storageelements if site1 != site2]
-  
-  #def parseProxyString( self, proxystring ):
-  #  result = ""

@@ -469,7 +469,7 @@ class ProductionJob(Job):
       self.log.error("Meta data selection activated, should not specify the number of jobs")
       return S_ERROR()
     self.nbtasks = nbtasks
-    self.currtrans.setMaxNumberOfTasks(self.nbtasks)
+    self.currtrans.setMaxNumberOfTasks(self.nbtasks) #pylint: disable=E1101
     return S_OK()
 
   def applyInputDataQuery(self, metadata = None, prodid = None):
@@ -477,7 +477,7 @@ class ProductionJob(Job):
     are added corresponding to same query.
     """
     if not self.transfid and self.currtrans:
-      self.transfid = self.currtrans.getTransformationID()['Value']
+      self.transfid = self.currtrans.getTransformationID()['Value'] #pylint: disable=E1101
     elif prodid:
       self.transfid = prodid
     if not self.transfid:
@@ -508,7 +508,7 @@ class ProductionJob(Job):
     currtrans = 0
     if self.currtrans:
       if not self.dryrun:
-        currtrans = self.currtrans.getTransformationID()['Value']
+        currtrans = self.currtrans.getTransformationID()['Value'] #pylint: disable=E1101
       else:
         currtrans = 12345
     if prodid:

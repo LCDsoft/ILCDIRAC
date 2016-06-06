@@ -38,3 +38,31 @@ def assertDiracFailsWith( result, errorstring, assertobject):
   """
   assertobject.assertFalse( result['OK'] )
   assertobject.assertIn( errorstring.lower(), result['Message'].lower() )
+
+def assertDiracSucceeds( result, assertobject ):
+  """Asserts that result, which is the return value of a dirac method call, is an S_OK, else print out the error message.
+
+  :param dict result: Structure (expected to be S_OK) returned by the dirac call
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertobject.assertTrue( result['OK'], result.get('Message', ''))
+
+def assertDiracSucceedsWith( result, expected_val, assertobject ):
+  """Asserts that result, which is the return value of a dirac method call, is an S_OK with expected_val in the returned value.
+
+  :param dict result: Structure (expected to be S_OK) returned by the dirac call
+  :param ? expected_val: Part of the value in the S_OK structure (checked with `in`)
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertDiracSucceeds( result, assertobject )
+  assertobject.assertIn( expected_val, result['Value'] )
+
+def assertDiracSucceedsWith_equals( result, expected_res, assertobject ):
+  """Asserts that result, which is the return value of a dirac method call, is an S_OK containing exactly expected_res.
+
+  :param dict result: Structure (expected to be S_OK) returned by the dirac call
+  :param ? expected_res: Value that should be contained in the result.
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertDiracSucceeds( result, assertobject )
+  assertobject.assertEquals( expected_res, result['Value'] )

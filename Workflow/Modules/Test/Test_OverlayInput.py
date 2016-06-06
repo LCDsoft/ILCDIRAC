@@ -9,7 +9,7 @@ from mock import patch, mock_open, MagicMock as Mock
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.OverlayInput import OverlayInput
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
@@ -65,8 +65,7 @@ class TestOverlayEos( unittest.TestCase ):
     res = self.over.getEOSFile( testLFN )
     print res
     print "self result", self.over.result
-    self.assertTrue( res['OK'] )
-    self.assertEqual( os.path.basename( testLFN ), res['Value'] )
+    assertDiracSucceedsWith_equals( res, os.path.basename( testLFN ), self )
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/clicdp/grid%s" % testLFN , overscript.read() )
 
@@ -77,8 +76,7 @@ class TestOverlayEos( unittest.TestCase ):
     res = self.over.getEOSFile( testLFN )
     print res
     print "self result", self.over.result
-    self.assertTrue( res['OK'] )
-    self.assertEqual( os.path.basename( testLFN ), res['Value'] )
+    assertDiracSucceedsWith_equals( res, os.path.basename( testLFN ), self )
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch/%s" % testLFN , overscript.read() )
 
@@ -89,14 +87,15 @@ class TestOverlayEos( unittest.TestCase ):
     res = self.over.getEOSFile( testLFN )
     print res
     print "self result", self.over.result
-    self.assertFalse( res['OK'] )
-    self.assertEqual( "Failed", res['Message'] )
+    assertDiracFailsWith( res, 'Failed', self )
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/clicdp/grid%s" % testLFN , overscript.read() )
 
 class TestOverlayUnittests( unittest.TestCase ):
   """ Tests the Overlayinput class
   """
+
+  GOOD_EXIT = 'Input variables resolved'
   def setUp( self ):
     self.over = OverlayInput()
     self.over.detectormodel = 'testdetectorv2000'
@@ -109,8 +108,7 @@ class TestOverlayUnittests( unittest.TestCase ):
     reference = OverlayInput()
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)):
       result = self.over.applicationSpecificInputs()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'input variables resolved', self )
+      assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       # Assert nothing has been changed, except the values in setUp (and DataManager/FileCatalogClient since theyre created anew for every object)
       assertEqualsImproved( ( self.over.enable, self.over.STEP_NUMBER, self.over.log, self.over.applicationName, self.over.curdir, self.over.applicationLog, self.over.printoutflag, self.over.prodid, self.over.detector, self.over.energy, self.over.nbofeventsperfile, self.over.lfns, self.over.nbfilestoget, self.over.BkgEvtType, self.over.ggtohadint, self.over.nbsigeventsperfile, self.over.nbinputsigfile, self.over.site, self.over.useEnergyForFileLookup, self.over.machine, self.over.pathToOverlayFiles ), ( reference.enable, reference.STEP_NUMBER, reference.log, reference.applicationName, reference.curdir, reference.applicationLog, reference.printoutflag, reference.prodid, reference.detector, reference.energy, reference.nbofeventsperfile, reference.lfns, reference.nbfilestoget, reference.BkgEvtType, reference.ggtohadint, reference.nbsigeventsperfile, reference.nbinputsigfile, reference.site, reference.useEnergyForFileLookup, reference.machine, reference.pathToOverlayFiles), self )
       if self.over.fcc is None:
@@ -135,23 +133,19 @@ class TestOverlayUnittests( unittest.TestCase ):
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)):
       self.over.energy = 123
       result = self.over.applicationSpecificInputs()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'input variables resolved', self )
+      assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '123gev', self )
       self.over.energy = 6872
       result = self.over.applicationSpecificInputs()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'input variables resolved', self )
+      assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '6.872tev', self )
       self.over.energy = 100000
       result = self.over.applicationSpecificInputs()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'input variables resolved', self )
+      assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '100tev', self )
       self.over.energy = 123.0 #pylint: disable=R0204
       result = self.over.applicationSpecificInputs()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'input variables resolved', self )
+      assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '123gev', self )
 
   def test_applicationSpecificInputs_with_setters( self ):
@@ -161,8 +155,7 @@ class TestOverlayUnittests( unittest.TestCase ):
     self.over.NumberOfEvents = 15
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)):
       result = self.over.applicationSpecificInputs()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'input variables resolved', self )
+      assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( ( self.over.detectormodel, self.over.energytouse, self.over.BXOverlay, self.over.ggtohadint, self.over.prodid, self.over.NbSigEvtsPerJob, self.over.BkgEvtType ), ( 'othertestdetectorv3000', '10000GeV', '651', 9.5, 429875, 94, 'bgoijaf' ), self )
       assertEqualsImproved( self.over.nbsigeventsperfile, 15, self )
       assertEqualsImproved( self.over.nbinputsigfile, 1, self )
@@ -185,7 +178,7 @@ class TestOverlayUnittests( unittest.TestCase ):
     self.over.energy = self.over.energytouse = 0
     self.over.detector = self.over.detectormodel = ''
     result = self.over.applicationSpecificInputs()
-    self.assertTrue(result['OK'])
+    assertDiracSucceeds( result, self )
 
   def test_applicationSpecificInputs_allowedBkgFails_1( self ):
     self.over.pathToOverlayFiles = 'some_path.txt'
@@ -281,8 +274,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       if should_fail_with:
         assertDiracFailsWith( result, should_fail_with, self )
       else:
-        self.assertTrue( result['OK'] )
-        assertEqualsImproved( result['Value'], 'testfile.txt', self )
+        assertDiracSucceedsWith_equals( result, 'testfile.txt', self )
       shell_mock.assert_called_with( 600, 'sh -c "./overlayinput.sh"', bufferLimit = 20971520, callbackFunction = self.over.redirectLogOutput )
       chmod_mock.assert_called_with( 'overlayinput.sh', 0755 )
       if unlink_called:
@@ -325,8 +317,7 @@ class TestOverlayExecute( unittest.TestCase ):
     rpc_mock.canRun.return_value = S_OK(1)
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), patch('%s.FileCatalogClient.findFilesByMetadata' % MODULE_NAME, new=Mock(return_value=S_OK(['file1.txt', 'file2.ppt']))), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value = True)), patch('%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, patch('%s.RPCClient' % MODULE_NAME, new=Mock(return_value=rpc_mock)), patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value = True)), patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value = True)), patch('%s.DataManager.getFile' % MODULE_NAME, new=Mock(return_value=S_OK('Nothing'))), patch('%s.wasteCPUCycles' % MODULE_NAME):
       result = self.over.execute()
-      self.assertTrue( result['OK'] )
-      assertEqualsImproved( result['Value'].lower(), 'overlayinput finished successfully', self )
+      assertDiracSucceedsWith_equals( result, 'OverlayInput finished successfully', self )
       assertEqualsImproved( self.over.applicationLog, os.getcwd() + '/Overlay_input.log', self )
 
   def test_execute_resolve_fails( self ):
@@ -339,8 +330,7 @@ class TestOverlayExecute( unittest.TestCase ):
     self.over.workflowStatus = S_ERROR('myerror167')
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)):
       result = self.over.execute()
-      self.assertTrue(result['OK'])
-      self.assertIn( 'overlayinput should not proceed', result['Value'].lower() )
+      assertDiracSucceedsWith( result, 'OverlayInput should not proceed', self )
       assertEqualsImproved( self.over.applicationLog, os.getcwd() + '/' + log, self )
 
   def test_execute_getfiles_fails( self ):

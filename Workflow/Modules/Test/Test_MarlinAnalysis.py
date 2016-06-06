@@ -6,7 +6,7 @@ import unittest
 import os
 from mock import mock_open, patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, assertDiracFailsWith
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
 from DIRAC import S_OK, S_ERROR
 
 class MarlinAnalysisFixture( object ):
@@ -92,17 +92,14 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.applicationLog = "testlog123"
     self.marAna.workflowStatus = { 'OK' : False }
     result = self.marAna.runIt()
-    self.assertTrue(result['OK'])
-    assertInImproved("should not proceed", result['Value'].lower(), self)
+    assertDiracSucceedsWith( result, 'should not proceed', self )
 
   def test_runit_stepbad( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
     self.marAna.stepStatus = { 'OK' : False }
     result = self.marAna.runIt()
-    self.assertTrue(result['OK'])
-    assertInImproved("should not proceed", result['Value'].lower(), self)
-
+    assertDiracSucceedsWith( result, 'should not proceed', self )
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis._getDetectorXML",
          new=Mock(return_value=S_ERROR("zis iz not camelot")))
@@ -112,8 +109,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.stepStatus = { 'OK' : True }
     self.marAna.detectorModel = "notCamelot.xml"
     result = self.marAna.runIt()
-    self.assertFalse( result['OK'] )
-    assertInImproved("zis iz not camelot", result['Message'].lower(), self)
+    assertDiracFailsWith( result, "zis iz not camelot", self )
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
   def test_runit_getEnvScriptFails( self ):
@@ -159,32 +155,27 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = {}
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
       result = self.marAna.getEnvScript(None, None, None)
-    self.assertTrue(result['OK'])
-    assertInImproved('/MarlinEnv.sh', result['Value'], self)
+    assertDiracSucceedsWith( result, '/MarlinEnv.sh', self )
     check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH\n', 'declare -x ROOTSYS=aFolder/ROOT\n', 'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n', "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n", "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
     file_mocker.assert_called_with('MarlinEnv.sh', 'w')
     mocker_handle = file_mocker()
-    print mocker_handle.write.mock_calls
     for expected in check_in_script:
       mocker_handle.write.assert_any_call(expected)
     self.assertEquals(len(check_in_script), mocker_handle.__enter__.return_value.write.call_count - 4)
 
   def test_getinputfiles_ignore( self ):
     self.marAna.ignoremissingInput = True
-    self.assertTrue(self.marAna.GetInputFiles()['OK'])
+    assertDiracSucceeds( self.marAna.GetInputFiles(), self )
 
   def test_getinputfiles_resolvepathsfails( self ):
     with patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_ERROR())):
       result = self.marAna.GetInputFiles()
-      print 'returned: %s' % result
-      #print 'return value is %s' % result['Value']
       assertDiracFailsWith( result, 'missing slcio', self )
 
   def test_getinputfiles_complete( self ):
     with patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(['1.slcio', '2.slcio']))):
       res = self.marAna.GetInputFiles()
-      self.assertTrue(res['OK'])
-      self.assertEquals(res['Value'], '1.slcio 2.slcio')
+      assertDiracSucceedsWith_equals( res, '1.slcio 2.slcio', self )
 
   def assertInMultiple( self, listOfStrings, bigString):
     """Checks if every string in listOfStrings is contained in bigString.
@@ -265,7 +256,7 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     with patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, True, True, True, True] ) ):
       result = self.marAna.runIt()
-      self.assertTrue(result['OK'])
+      assertDiracSucceeds( result, self )
       mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
@@ -284,7 +275,7 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     self.marAna.detectorModel = "someDetector.xml"
     result = self.marAna.runIt()
-    self.assertTrue(result['OK'])
+    assertDiracSucceeds( result, self )
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
 
@@ -298,8 +289,7 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=False))
   def test_getenvscript_pathexists( self ):
     result = self.marAna.getEnvScript(None, None, None)
-    self.assertFalse(result['OK'])
-    assertInImproved('marlin_dll folder not found', result['Message'].lower(), self)
+    assertDiracFailsWith( result, 'marlin_dll folder not found', self )
 
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('aFolder')))
   @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
@@ -313,12 +303,10 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = {}
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
       result = self.marAna.getEnvScript(None, None, None)
-    self.assertTrue(result['OK'])
-    assertInImproved('/MarlinEnv.sh', result['Value'], self)
+    assertDiracSucceedsWith( result, '/MarlinEnv.sh', self )
     check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH\n', 'declare -x ROOTSYS=aFolder/ROOT\n', 'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n', "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n", "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
     file_mocker.assert_called_with('MarlinEnv.sh', 'w')
     mocker_handle = file_mocker()
-    print mocker_handle.write.mock_calls
     for expected in check_in_script:
       mocker_handle.write.assert_any_call(expected)
     self.assertEquals(len(check_in_script), mocker_handle.__enter__.return_value.write.call_count - 4)

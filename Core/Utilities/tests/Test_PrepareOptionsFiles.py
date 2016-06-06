@@ -15,7 +15,7 @@ import collections
 from ILCDIRAC.Core.Utilities import PrepareOptionFiles
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareMacFile
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved, assertDiracFailsWith
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
 import xml.etree.ElementTree as ET
 
 #TODO split up in separate classes (if too much time, decent for now. Quite some code duplication but hard to remove + unlikely&not too much effort to change)
@@ -251,7 +251,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
-      assertEqualsImproved(S_OK(True), result, self)
+      assertDiracSucceedsWith_equals( result, True, self )
     tuples = [('in', 'r'), ('out', 'w')]
     expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']]
     FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
@@ -263,7 +263,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
-      assertEqualsImproved(S_OK(False), result, self)
+      assertDiracSucceedsWith_equals( result, False, self )
     tuples = [('in', 'r'), ('out', 'w')]
     expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id1"', '98u243jrui4fg4289fjh2487rh13urhi']]
     FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
@@ -275,7 +275,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", "684", "out")
-      assertEqualsImproved(S_OK(True), result, self)
+      assertDiracSucceedsWith_equals( result, True, self )
     file_mocker.assert_any_call('in', 'r')
     file_mocker.assert_any_call('out', 'w')
     mocker_handle = file_mocker()
@@ -296,7 +296,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFileTemplate("in", "typeA", parameters, "out")
-      assertEqualsImproved(S_OK(True), result, self)
+      assertDiracSucceedsWith_equals( result, True, self )
     file_mocker.assert_any_call('in', 'r')
     file_mocker.assert_any_call('out', 'w')
     mocker_handle = file_mocker()
@@ -318,7 +318,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFileTemplate("in", "typeA", parameters, "out")
-      assertEqualsImproved(S_OK(False), result, self)
+      assertDiracSucceedsWith_equals( result, False, self )
     file_mocker.assert_any_call('in', 'r')
     file_mocker.assert_any_call('out', 'w')
     mocker_handle = file_mocker()
@@ -336,7 +336,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
-      assertEqualsImproved(result, S_OK(True), self)
+      assertDiracSucceedsWith_equals( result, True, self )
       mytree = TestPrepareOptionsFile.currenttree
       params = mytree.findall('global/parameter')
       expected_params = ['LCIOInputFiles', 'MaxRecordNumber', 'GearXMLFile', 'GearXMLFile', 'Verbosity']
@@ -382,7 +382,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
-      self.assertTrue( result['OK'] )
+      assertDiracSucceeds( result, self )
       mytree = TestPrepareOptionsFile.currenttree
       procs = mytree.findall('processor')
       procs = [ x for x in procs if x.attrib['name'].lower().count('overlaytiming') ] #Only get the one with overlaytiming
@@ -396,8 +396,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=Mock(side_effect=IOError))
   def test_prepareXMLFile_parsefails( self ):
     result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
-    self.assertFalse(result['OK'])
-    self.assertIn('found exception ', result['Message'].lower())
+    assertDiracFailsWith( result, 'found exception ', self )
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
   def test_prepareXMLFile_slciotypeerror( self ):
@@ -407,9 +406,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = createXMLTreeForXML().getroot()
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', 1, 1, 'outputfile', 'outputREC', 'outputdst', True )
-      self.assertFalse(result['OK'])
-      self.assertIn('inputslcio is neither string nor list!', result['Message'].lower())
-      self.assertIn("actual type is <type 'int'>", result['Message'].lower())
+      assertDiracFailsWith( result, 'inputslcio is neither string nor list!', self )
+      assertDiracFailsWith( result, "actual type is <type 'int'>", self )
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
   def test_prepareXMLFile_nodebug( self ):
@@ -420,7 +418,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', 'input slcio file list', 1, '', 'outputREC', 'outputdst', False )
-      assertEqualsImproved(result, S_OK(True), self)
+      assertDiracSucceedsWith_equals( result, True, self )
 
   def test_prepareSteeringFile_full( self ):
     # Any open() call removes the first element of this list and uses it as its content
@@ -579,7 +577,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, outputfile, 'outputrec', 'outputdst', False )
-      self.assertEquals(result, S_OK('testtext'))
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       # clear is called
       assertEqualsXml(current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
@@ -641,7 +639,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', outputrec, 'outputdst', False )
-      self.assertEquals(result, S_OK('testtext'))
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
       flag = False
@@ -673,7 +671,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     outputdst = 'outputdst'
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', 'outputrec', outputdst, False )
-      self.assertEquals(result, S_OK('testtext'))
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
       flag = False
@@ -701,7 +699,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     cachedir = 'cachedir'
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', '', '', False )
-      self.assertEquals(result, S_OK('testtext'))
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       ex = current_tree.find('execute/driver')
       assertEqualsXml(ex, ET.Element('driver', name='Writer'), self)
@@ -722,7 +720,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     cachedir = 'cachedir'
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', '', '', False )
-      self.assertEquals(result, S_OK('LCSIM'))
+      assertDiracSucceedsWith_equals( result, 'LCSIM', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
       flag = False
@@ -745,7 +743,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 0, 'trackstrategy', ['list of slcio files'], [], '', 'outputfile', 'outputrec', 'outputdst', True )
-      assertEqualsImproved(result, S_OK('testtext'), self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       # New Elem is created
       assertEqualsXml(TestPrepareOptionsFile.current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
 
@@ -766,16 +764,14 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', 'outputrec', 'outputdst', False )
-      self.assertFalse(result['OK'])
-      self.assertIn('could not find any overlay files', result['Message'].lower())
+      assertDiracFailsWith( result, 'could not find any overlay files', self )
       # check classpath elem is cleared
       assertEqualsXml(TestPrepareOptionsFile.current_tree.find('classpath'), ET.Element('classpath'), self)
 
   def test_prepareLCSIM_ioerr( self ):
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", side_effect=IOError('')):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      self.assertFalse(result['OK'])
-      self.assertIn('found exception', result['Message'].lower())
+      assertDiracFailsWith( result, 'found exception', self )
 
   def test_prepareLCSIM_inputlistempty( self ):
     #pylint: disable=W0613
@@ -785,8 +781,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', [], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputdst', 'outputrec', False )
-      self.assertFalse(result['OK'])
-      self.assertIn('empty input file list', result['Message'].lower())
+      assertDiracFailsWith( result, 'empty input file list', self )
 
   def test_prepareLCSIM_emptytree( self ):
     #pylint: disable=W0613
@@ -796,8 +791,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      self.assertFalse(result['OK'])
-      self.assertIn('invalid lcsim file structure', result['Message'].lower())
+      assertDiracFailsWith( result, 'invalid lcsim file structure', self )
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
@@ -810,7 +804,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', True )
-      assertEqualsImproved(S_OK('testtext'), result, self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('numberOfEvents')
       expected_element.text = '1'
@@ -841,7 +835,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, '', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      assertEqualsImproved(S_OK('testtext'), result, self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       assertEqualsImproved(current_tree.find("drivers/driver/eventInterval").text, '135851', self)
 
@@ -856,7 +850,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      assertEqualsImproved(S_OK('testtext'), result, self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
       flag = False
@@ -877,7 +871,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst' , False )
-      assertEqualsImproved(S_OK('testtext'), result, self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
       flag = False
@@ -899,7 +893,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], ['jarfile'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      assertEqualsImproved(S_OK('testtext'), result, self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self)
 
@@ -928,7 +922,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
-      assertEqualsImproved(S_OK('testtext'), result, self)
+      assertDiracSucceedsWith_equals( result, 'testtext', self )
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
   def test_prepareTomato_stdcase( self ):
