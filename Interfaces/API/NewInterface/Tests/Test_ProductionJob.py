@@ -94,200 +94,127 @@ class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
 
 class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   def test_setInputDataQuery( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    self.prodJob.energycat='7'
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracSucceeds( res, self )
-    #TODO check output of method
-    assertEqualsImproved( self.prodJob.energy, Decimal('7'), self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      self.prodJob.energycat='7'
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracSucceeds( res, self )
+      #TODO check output of method
+      assertEqualsImproved( self.prodJob.energy, Decimal('7'), self )
 
   def test_setInputDataQuery_finddirfails( self ):
-    fc_mock = Mock()
-    fc_mock.findDirectoriesByMetadata.return_value=S_ERROR('failed getting metadata fields')
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'failed getting metadata fields', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(return_value=S_ERROR('failed getting metadata fields'))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'failed getting metadata fields', self )
 
   def test_setInputDataQuery_finddirempty( self ):
-    fc_mock = Mock()
-    fc_mock.findDirectoriesByMetadata.return_value=S_OK([])
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'no directories found', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(return_value=S_OK([]))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'no directories found', self )
 
   # TODO fix here
   def test_setInputDataQuery_getmetadatafails( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_ERROR('some_error')
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'could not contact file catalog', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_ERROR('some_error'))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'could not contact file catalog', self )
 
   def test_setInputDataQuery_filecatalogWrongCase( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'prodid' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'key syntax error', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'prodid' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'key syntax error', self )
 
   def test_setInputDataQuery_filecatalogMissingKey( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    # Key not present in getMetadataFields return value
-    randomkey = '09428ituj42itufgm'
-    res = self.prodJob.setInputDataQuery( {'ProdID' : 19872456, randomkey : 'testvalue'} )
-    assertDiracFailsWith( res, 'key %s not found in metadata keys' % randomkey, self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      # Key not present in getMetadataFields return value
+      randomkey = '09428ituj42itufgm'
+      res = self.prodJob.setInputDataQuery( {'ProdID' : 19872456, randomkey : 'testvalue'} )
+      assertDiracFailsWith( res, 'key %s not found in metadata keys' % randomkey, self )
 
   def test_setInputDataQuery_noprodid( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery( {} )
-    assertDiracFailsWith( res, "input metadata dictionary must contain at least a key 'prodid' as reference", self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      res = self.prodJob.setInputDataQuery( {} )
+      assertDiracFailsWith( res, "input metadata dictionary must contain at least a key 'prodid' as reference", self )
 
   def test_setInputDataQuery_second_finddir_fails( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_ERROR('some_error')]
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res,  'error looking up the catalog', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_ERROR('some_error')])):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res,  'error looking up the catalog', self )
 
   def test_setInputDataQuery_second_finddir_invalid( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({})]
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'could not find any directories', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({})])):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'could not find any directories', self )
 
   def test_setInputDataQuery_getdirusermetadata_fails( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_ERROR('some_error')
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'error looking up the catalog for directory metadata', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_ERROR('some_error'))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'error looking up the catalog for directory metadata', self )
 
   def test_setInputDataQuery_getenergyfromcompatmeta_1( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : ['electron party'], 'Energy' : '13gev' })
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.energy, Decimal('13'), self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : ['electron party'], 'Energy' : '13gev' }))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.energy, Decimal('13'), self )
 
   def test_setInputDataQuery_getenergyfromcompatmeta_2( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : ['13tev'] })
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.energy, Decimal('13000'), self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : ['13tev'] }))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.energy, Decimal('13000'), self )
 
   def test_setInputDataQuery_getenergyfromcompatmeta_3( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 })
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.energy, Decimal('13'), self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.energy, Decimal('13'), self )
 
   def test_setInputDataQuery_noevttype( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({})
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
-    assertDiracFailsWith( res, 'evttype is not in the metadata', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({}))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
+      assertDiracFailsWith( res, 'evttype is not in the metadata', self )
 
   def test_setInputDataQuery_numofevts_1( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testsuihe123' }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 })
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'NumberOfEvents' : ['42985']})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved(self.prodJob.nbevts, 42985, self)
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testsuihe123' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'NumberOfEvents' : ['42985']})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved(self.prodJob.nbevts, 42985, self)
 
   def test_setInputDataQuery_numofevts_2( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testabc' }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 })
-    self.prodJob.fc = fc_mock
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'NumberOfEvents' : '968541'})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved(self.prodJob.nbevts, 968541, self)
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testabc' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'NumberOfEvents' : '968541'})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved(self.prodJob.nbevts, 968541, self)
 
   def test_setInputDataQuery_datatype_1( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    self.prodJob.energycat='7'
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'mytype', 'DetectorType' : 'GoodDetector874'})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.datatype, 'mytype', self )
-    assertEqualsImproved( self.prodJob.detector, 'GoodDetector874', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      self.prodJob.energycat='7'
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'mytype', 'DetectorType' : 'GoodDetector874'})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.datatype, 'mytype', self )
+      assertEqualsImproved( self.prodJob.detector, 'GoodDetector874', self )
 
   def test_setInputDataQuery_datatype_2( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    self.prodJob.energycat='7'
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'gen', 'DetectorType' : 'abc'})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.datatype, 'gen', self )
-    assertEqualsImproved( self.prodJob.detector, '', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      self.prodJob.energycat='7'
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'gen', 'DetectorType' : 'abc'})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.datatype, 'gen', self )
+      assertEqualsImproved( self.prodJob.detector, '', self )
 
   def test_setInputDataQuery_datatype_list1( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    self.prodJob.energycat='7'
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['mytype'], 'DetectorType' : ['MyDetector3000']})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.datatype, 'mytype', self )
-    assertEqualsImproved( self.prodJob.detector, 'MyDetector3000', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      self.prodJob.energycat='7'
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['mytype'], 'DetectorType' : ['MyDetector3000']})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.datatype, 'mytype', self )
+      assertEqualsImproved( self.prodJob.detector, 'MyDetector3000', self )
 
   def test_setInputDataQuery_datatype_list2( self ):
-    fc_mock = Mock()
-    fc_mock.getMetadataFields.return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }})
-    fc_mock.findDirectoriesByMetadata.side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})]
-    fc_mock.getDirectoryUserMetadata.return_value=S_OK({ 'EvtType' : 'electron party'})
-    self.prodJob.fc = fc_mock
-    self.prodJob.energycat='7'
-    res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['gen'], 'DetectorType' : '904215fadf'})
-    assertDiracSucceeds( res, self )
-    assertEqualsImproved( self.prodJob.datatype, 'gen', self )
-    assertEqualsImproved( self.prodJob.detector, '', self )
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+      self.prodJob.energycat='7'
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['gen'], 'DetectorType' : '904215fadf'})
+      assertDiracSucceeds( res, self )
+      assertEqualsImproved( self.prodJob.datatype, 'gen', self )
+      assertEqualsImproved( self.prodJob.detector, '', self )
 
   def test_createproduction( self ):
     job = self.prodJob
@@ -314,9 +241,11 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       expected = [[EXPECTED_XML], []]
       self.assertEquals(len(file_contents), len(expected))
       for (index, handle) in enumerate(handles):
-        self.assertEquals(len(expected[index]), handle.write.call_count)
+        cur_handle = handle.__enter__()
+        self.assertEquals(len(expected[index]), handle.__enter__.return_value.write.call_count)
+        print cur_handle.write.mock_calls
         for entry in expected[index]:
-          handle.write.assert_any_call(entry)
+          cur_handle.write.assert_any_call(entry)
 
   def test_createproduction_2( self ):
     job = self.prodJob
@@ -341,9 +270,11 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       expected = [[EXPECTED_XML], []]
       self.assertEquals(len(file_contents), len(expected))
       for (index, handle) in enumerate(handles):
-        self.assertEquals(len(expected[index]), handle.write.call_count)
+        cur_handle = handle.__enter__()
+        self.assertEquals(len(expected[index]), handle.__enter__.return_value.write.call_count)
+        print cur_handle.write.mock_calls
         for entry in expected[index]:
-          handle.write.assert_any_call(entry)
+          cur_handle.write.assert_any_call(entry)
 
   def test_createproduction_nofinalization( self ):
     job = self.prodJob
@@ -364,10 +295,11 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       expected = [[EXPECTED_XML_NOFINAL], []]
       self.assertEquals(len(file_contents), len(expected))
       for (index, handle) in enumerate(handles):
-        print handle.mock_calls
-        self.assertEquals(len(expected[index]), handle.write.call_count)
+        cur_handle = handle.__enter__()
+        self.assertEquals(len(expected[index]), handle.__enter__.return_value.write.call_count)
+        print cur_handle.write.mock_calls
         for entry in expected[index]:
-          handle.write.assert_any_call(entry)
+          cur_handle.write.assert_any_call(entry)
 
   @patch('__builtin__.open', mock_open())
   def test_createproduction_basic_checks( self ):
@@ -457,6 +389,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       instance.createTransformationInputDataQuery.return_value = S_ERROR('mycoolerror')
       assertDiracFailsWith(job.applyInputDataQuery( ' my metadata ', testid ), 'mycoolerror', self )
 
+  #TODO Fix runtime of these tests???
   def test_finalizeProd( self ):
     job = self.prodJob
     job.slicesize = 0
@@ -485,15 +418,12 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
     job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {}, 'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {}, 'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {}, 'othertestpath/many_dirs/file.txt' : {} }
     job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {}, 'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {}, '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
+    class_name = '%s.FileCatalogClient' % MODULE_NAME
     def createdir_sideeffect( value ):
       return CREATEDIR_DICT[value]
     def changepath_sideeffect( val, bool_flag ):
       return CHANGEPATH_DICT[val.iterkeys().next()]
-    fc_mock = Mock()
-    fc_mock.createDirectory.side_effect=createdir_sideeffect
-    fc_mock.changePathMode.side_effect=changepath_sideeffect
-    job.fc = fc_mock
-    with patch('%s.RPCClient' % MODULE_NAME, new=Mock()) as rpc_mock:
+    with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)), patch('%s.RPCClient' % MODULE_NAME, new=Mock()) as rpc_mock:
       rpc_mock.setTransformationParameter.return_value = S_OK(True)
       res = job.finalizeProd( 1387 )
       assertDiracSucceeds( res, self )
@@ -520,6 +450,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job = self.prodJob
     assertDiracFailsWith( job.finalizeProd(), 'no transformation defined', self )
 
+  @patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.FileCatalogClient.setMetadata', new=Mock(return_value=S_OK(True)))
   def test_finalizeProd_setMetaFails( self ):
     job = self.prodJob
     job.slicesize = 0
@@ -529,17 +460,14 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
     job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {}, 'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {}, 'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {}, 'othertestpath/many_dirs/file.txt' : {} }
     job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {}, 'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {}, '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
+    class_name = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.FileCatalogClient'
     def createdir_sideeffect( value ):
       return CREATEDIR_DICT[value]
     def changepath_sideeffect( val, bool_flag ):
       return CHANGEPATH_DICT[val.iterkeys().next()]
-    fc_mock = Mock()
-    fc_mock.createDirectory.side_effect=createdir_sideeffect
-    fc_mock.changePathMode.side_effect=changepath_sideeffect
-    fc_mock.setMetadata.return_value=S_OK(True)
-    job.fc = fc_mock
-    res = job.finalizeProd( 1387 )
-    assertDiracSucceeds( res, self )
+    with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)):
+      res = job.finalizeProd( 1387 )
+      assertDiracSucceeds( res, self )
 
   def test_getMetadata( self ):
     job = self.prodJob
@@ -715,7 +643,7 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
       assertEqualsImproved( len(move_mock.mock_calls), 1, self )
       move_mock.assert_called_with( 'mysuperworkflow.xml', 'mysuperworkflow.xml.backup' )
       assertEqualsImproved( remove_mock.mock_calls, [], self )
-      assertEqualsImproved( len(open_mock.mock_calls), 3, self ) # open, write, close
+      assertEqualsImproved( len(open_mock.mock_calls), 4, self ) #Open, __enter__, write, __exit__
     assertDiracSucceeds( self.prodJob.setOutputSE( 'myoutputstorage_for_testing' ), self )
     assertEqualsImproved( self.prodJob.outputStorage, 'myoutputstorage_for_testing', self )
 
@@ -764,9 +692,9 @@ def create_application_mock():
 # Constants needed for the tests
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
 
-EXPECTED_XML = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricParameters" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input parameters value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output data]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.RegisterOutputData import RegisterOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Module to add in the metadata catalog the relevant info about the files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>RegisterOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output log files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadLogFile</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest]]></body>\n<origin></origin>\n<description><![CDATA[Sends any failover requests]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>FailoverRequest</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<StepDefinition>\n<origin></origin>\n<version>0.0</version>\n<type>Job_Finalization</type>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<ModuleInstance>\n<type>UploadOutputData</type>\n<name>dataUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>RegisterOutputData</type>\n<name>RegisterOutputData</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>UploadLogFile</type>\n<name>logUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>FailoverRequest</type>\n<name>failoverRequest</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n</StepDefinition>\n<StepInstance>\n<type>Job_Finalization</type>\n<name>finalization</name>\n<descr_short></descr_short>\n</StepInstance>\n</Workflow>\n'
+EXPECTED_XML = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="arguments" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Arguments to executable Step"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="Platform" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Platform ( Operating System )"><value><![CDATA[x86_64-slc5-gcc43-opt]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output data]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.RegisterOutputData import RegisterOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Module to add in the metadata catalog the relevant info about the files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>RegisterOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output log files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadLogFile</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest]]></body>\n<origin></origin>\n<description><![CDATA[Sends any failover requests]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>FailoverRequest</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<StepDefinition>\n<origin></origin>\n<version>0.0</version>\n<type>Job_Finalization</type>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<ModuleInstance>\n<type>UploadOutputData</type>\n<name>dataUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>RegisterOutputData</type>\n<name>RegisterOutputData</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>UploadLogFile</type>\n<name>logUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>FailoverRequest</type>\n<name>failoverRequest</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n</StepDefinition>\n<StepInstance>\n<type>Job_Finalization</type>\n<name>finalization</name>\n<descr_short></descr_short>\n</StepInstance>\n</Workflow>\n'
 
-EXPECTED_XML_NOFINAL = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricParameters" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input parameters value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n</Workflow>\n'
+EXPECTED_XML_NOFINAL = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="arguments" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Arguments to executable Step"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="Platform" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Platform ( Operating System )"><value><![CDATA[x86_64-slc5-gcc43-opt]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n</Workflow>\n'
 
 
 CREATEDIR_DICT = {'testpath123/a/b/c' : S_OK( { 'Successful' : { 'testpath123/a/b/c' : 'created' } } ), \
