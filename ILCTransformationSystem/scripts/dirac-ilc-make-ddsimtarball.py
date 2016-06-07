@@ -108,13 +108,27 @@ class DDSimTarMaker( object ):
     #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
     csParameter = { "TarBall": self.tarBallName,
                     "AdditionalEnvVar": {
-                      "ROOTSYS" :   os.environ.get("ROOTSYS"),
-                      "G4INSTALL" : os.environ.get("G4INSTALL"),
-                      "G4DATA" :    os.environ.get("G4DATA"),
+                      "ROOTSYS" :   os.path.realpath( os.environ.get("ROOTSYS") ),
+                      "G4INSTALL" : os.path.realpath( os.environ.get("G4INSTALL") ),
                     },
                     "Md5Sum": self.md5sum,
                   }
 
+    g4datavariables = [ "G4RADIOACTIVEDATA",
+                        "G4NEUTRONHPDATA",
+                        "G4LEDATA",
+                        "G4LEVELGAMMADATA",
+                        "G4RADIOACTIVEDATA",
+                        "G4NEUTRONXSDATA",
+                        "G4PIIDATA",
+                        "G4REALSURFACEDATA",
+                        "G4SAIDXSDATA",
+                        "G4ABLADATA",
+                        "G4ENSDFSTATEDATA",
+                      ]
+    for g4data in  g4datavariables:
+      if os.environ.get(g4data) :
+        csParameter["AdditionalEnvVar"][g4data] = os.path.realpath( os.environ.get(g4data) )
 
     pars = dict( platform=self.platform,
                  name="ddsim",
@@ -188,18 +202,27 @@ class DDSimTarMaker( object ):
     dd4hepLibPath = getLibraryPath( ddBase )
     lcgeoPath = getLibraryPath( lcgeoBase )
 
-
+    ## FIXME: Automatically pick up folders with /compact/ in them
     self.copyDetectorModels( lcgeoBase, "CLIC" , targetFolder+"/detectors" )
     self.copyDetectorModels( lcgeoBase, "ILD"  , targetFolder+"/detectors" )
+    self.copyDetectorModels( lcgeoBase, "SiD"  , targetFolder+"/detectors" )
 
     copyFolder( ddBase+"/DDDetectors/compact", realTargetFolder.rstrip("/")+"/DDDetectors")
 
+    copyFolder( ddBase+"/include", realTargetFolder.rstrip("/")+"")
 
     libraries.update( getFiles( dd4hepLibPath, ".so") )
     libraries.update( getFiles( lcgeoPath, ".so" ) )
 
     rootmaps.update( getFiles( dd4hepLibPath, ".rootmap") )
     rootmaps.update( getFiles( lcgeoPath, ".rootmap" ) )
+
+    rootmaps.update( getFiles( dd4hepLibPath, ".pcm") )
+    rootmaps.update( getFiles( lcgeoPath, ".pcm" ) )
+
+    rootmaps.update( getFiles( dd4hepLibPath, ".components") )
+    rootmaps.update( getFiles( lcgeoPath, ".components" ) )
+
 
     pprint( libraries )
     pprint( rootmaps )

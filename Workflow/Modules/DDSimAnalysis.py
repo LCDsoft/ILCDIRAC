@@ -215,6 +215,17 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     else:
       self.log.verbose("No additional environment variables needed for this application")
 
+    ## if these variables are not given in the configuration system we guess them from the G4DATA folder
+    for var, folder in { "G4LEDATA" : "G4EMLOW",
+                         "G4LEVELGAMMADATA" : "PhotonEvaporation",
+                         "G4NEUTRONXSDATA" : "G4NEUTRONXS",
+                         "G4SAIDXSDATA" : "G4SAIDDATA",
+                         "G4RADIOACTIVEDATA" : "RadioactiveDecay",
+                         "G4NEUTRONHPDATA" : "G4NDL",
+                       }.iteritems():
+      if var not in addEnv.get( 'Value', {} ):
+        script.append( 'declare -x %s=$(ls -d $G4DATA/%s*)' %( var, folder ) )
+
     init = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/InitScript" % (platform,
                                                                          appname,
                                                                          appversion), None)
@@ -228,6 +239,9 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     ##Python objects, pyroot
     script.append('declare -x PYTHONPATH=%s/lib/python:$PYTHONPATH' % softwareRoot )
     script.append('declare -x PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH' )
+
+    ##For ROOT CLING Stuff
+    script.append('declare -x CPATH=%s/include:$CPATH' % softwareRoot )
 
     ##Libraries
     if newLDLibraryPath:
@@ -244,15 +258,6 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     script.append('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH')
     script.append('declare -x LD_LIBRARY_PATH=$G4INSTALL/lib64:$LD_LIBRARY_PATH')
     script.append('declare -x LD_LIBRARY_PATH=$DD4hepINSTALL/lib:$LD_LIBRARY_PATH')
-
-    ###mandatory geant 4 data
-    script.append('declare -x G4LEDATA=$(ls -d $G4DATA/G4EMLOW*)')
-    script.append('declare -x G4LEVELGAMMADATA=$(ls -d $G4DATA/PhotonEvaporation*)')
-    script.append('declare -x G4NEUTRONXSDATA=$(ls -d $G4DATA/G4NEUTRONXS*)')
-    script.append('declare -x G4SAIDXSDATA=$(ls -d $G4DATA/G4SAIDDATA*)')
-    ### not mandatory, needed for Neutron HP
-    script.append('declare -x G4RADIOACTIVEDATA=$(ls -d $G4DATA/RadioactiveDecay*)')
-    script.append('declare -x G4NEUTRONHPDATA=$(ls -d $G4DATA/G4NDL*)')
 
     with open(envName,"w") as scriptFile:
       scriptFile.write( "\n".join(script) )
