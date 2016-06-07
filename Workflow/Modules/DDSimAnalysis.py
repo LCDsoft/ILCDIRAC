@@ -215,6 +215,12 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     else:
       self.log.verbose("No additional environment variables needed for this application")
 
+    init = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/InitScript" % (platform,
+                                                                         appname,
+                                                                         appversion), None)
+    if init:
+      script.append( 'source %s' % init )
+
     ##Executable:
     script.append('declare -x PATH=%s/bin:$PATH' % softwareRoot )
     script.append('declare -x DD4hepINSTALL=%s' % softwareRoot )
@@ -225,7 +231,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
 
     ##Libraries
     if newLDLibraryPath:
-      script.append('declare -x LD_LIBRARY_PATH=%s' % newLDLibraryPath)
+      script.append('declare -x LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH' % newLDLibraryPath)
 
     ## user provided libraries are in lib in the job working directory
     if os.path.exists( "%s/lib" % os.getcwd() ):
