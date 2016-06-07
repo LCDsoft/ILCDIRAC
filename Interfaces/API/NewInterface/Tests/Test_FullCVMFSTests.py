@@ -13,6 +13,7 @@ import os
 import pwd
 from mock import patch, MagicMock as Mock
 from DIRAC import S_OK
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds
 #from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
 
 
@@ -103,10 +104,10 @@ class JobTestCase( unittest.TestCase ):
     """create test for mokka"""
     print "mokka test"
     jobs = self.myTests.createMokkaTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Mokka")
-    self.assertTrue ( res['OK'] )
+    assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -117,21 +118,21 @@ class JobTestCase( unittest.TestCase ):
     print "ddsimtest"
     # First run, all files available
     jobs = self.myTests.createDDSimTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "DDSim")
-    self.assertTrue ( res['OK'] )
+    assertDiracSucceeds( res, self )
 
     ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep"
     ddsimTarball="FCalTB.tar.gz"
     
     # Replace inputfile with 00.stdhep
     jobs = self.myTests.createDDSimTest(ddsimInputFile, ddsimTarball)
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "DDSim")
-    self.assertTrue ( res['OK'] )
-    
+    assertDiracSucceeds( res, self )
+
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
@@ -140,11 +141,10 @@ class JobTestCase( unittest.TestCase ):
     """create test for marlin"""
     print "marlin test"
     jobs = self.myTests.createMarlinTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Marlin")
-    self.assertTrue ( res['OK'] )
-
+    assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -154,10 +154,10 @@ class JobTestCase( unittest.TestCase ):
     """create test for marlin"""
     print "marlin test2"
     jobs = self.myTests.createMarlinTest( True )
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Marlin")
-    self.assertTrue ( res['OK'] )
+    assertDiracSucceeds( res, self )
   
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -167,11 +167,11 @@ class JobTestCase( unittest.TestCase ):
     """create test for whizard"""
     print "whizard test"
     jobs = self.myTests.createWhizardTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     theseJobs = jobs['Value']
     for thisJob in theseJobs:
       res = self.myTests.runJobLocally(thisJob,"Whizard")
-      self.assertTrue ( res['OK'] )
+      assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -181,11 +181,11 @@ class JobTestCase( unittest.TestCase ):
     """create test for utilities"""
     print "Utilities test"
     jobs = self.myTests.createUtilityTests()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     theseJobs = jobs['Value']
     for thisJob in theseJobs:
       res = self.myTests.runJobLocally(thisJob,"Utility")
-      self.assertTrue ( res['OK'] )
+      assertDiracSucceeds( res, self )
       
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -195,10 +195,10 @@ class JobTestCase( unittest.TestCase ):
     """create test for root 1"""
     print "test root"
     jobs = self.myTests.createRootScriptTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Root")
-    self.assertTrue ( res['OK'] )
+    assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -208,10 +208,10 @@ class JobTestCase( unittest.TestCase ):
     """create test for root 2"""
     print "test root2"
     jobs = self.myTests.createRootHaddTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Root")
-    self.assertTrue ( res['OK'] )
+    assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length") 
   @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
@@ -221,10 +221,10 @@ class JobTestCase( unittest.TestCase ):
     """create test for root 3"""
     print "test root3"
     jobs = self.myTests.createRootMacroTest()
-    self.assertTrue ( jobs['OK'] )
+    assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "Root")
-    self.assertTrue ( res['OK'] )
+    assertDiracSucceeds( res, self )
 
 def runTests():
   """runs the tests"""

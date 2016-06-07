@@ -398,9 +398,8 @@ class ProductionJob(Job):
     except Exception, x:
       self.log.error(x)
       return S_ERROR('Could not create workflow')
-    oFile = open(fileName, 'r')
-    workflowXML = oFile.read()
-    oFile.close()
+    with open(fileName, 'r') as oFile:
+      workflowXML = oFile.read()
     if not name:
       name = workflowName
 
@@ -470,7 +469,7 @@ class ProductionJob(Job):
       self.log.error("Meta data selection activated, should not specify the number of jobs")
       return S_ERROR()
     self.nbtasks = nbtasks
-    self.currtrans.setMaxNumberOfTasks(self.nbtasks)
+    self.currtrans.setMaxNumberOfTasks(self.nbtasks) #pylint: disable=E1101
     return S_OK()
 
   def applyInputDataQuery(self, metadata = None, prodid = None):
@@ -478,7 +477,7 @@ class ProductionJob(Job):
     are added corresponding to same query.
     """
     if not self.transfid and self.currtrans:
-      self.transfid = self.currtrans.getTransformationID()['Value']
+      self.transfid = self.currtrans.getTransformationID()['Value'] #pylint: disable=E1101
     elif prodid:
       self.transfid = prodid
     if not self.transfid:
@@ -509,7 +508,7 @@ class ProductionJob(Job):
     currtrans = 0
     if self.currtrans:
       if not self.dryrun:
-        currtrans = self.currtrans.getTransformationID()['Value']
+        currtrans = self.currtrans.getTransformationID()['Value'] #pylint: disable=E1101
       else:
         currtrans = 12345
     if prodid:
@@ -746,7 +745,8 @@ class ProductionJob(Job):
 
     if not self.basename:
       self.basename = self.evttype
-    
+
+    evttypepath = ''
     if not self.evttype[-1] == '/':
       evttypepath = self.evttype + '/'
     

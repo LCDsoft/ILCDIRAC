@@ -645,7 +645,7 @@ fi\n""" % (basename, lfile))
     """ Use cp to get the files from kek-se
     """
     prependpath = '/grid'
-    lfile = os.path.join(prependpath, lfn)
+    lfile = prependpath + lfn
     self.log.info("Getting %s" % lfile)
     self.__disableWatchDog()
 
