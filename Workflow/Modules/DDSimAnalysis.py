@@ -13,13 +13,14 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, unzip_file_into_dir, getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
+from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
 __RCSID__ = "$Id$"
 
 DDSIMINPUTFORMATS = ('.stdhep', '.hepevt', '.HEPEvt', '.slcio', '.hepmc')
 
-class DDSimAnalysis(ModuleBase):
+class DDSimAnalysis(DD4hepMixin, ModuleBase):
   """
   Specific Module to run a DDSim job.
   """
@@ -253,48 +254,6 @@ class DDSimAnalysis(ModuleBase):
 
     os.chmod(envName, 0755)
     return S_OK(os.path.abspath(envName))
-
-  def _getDetectorXML( self ):
-    """returns the path to the detector XML file
-
-    Checks the Configurartion System for the Path to DetectorModels or extracts the input sandbox detector xml files
-
-    :returns: S_OK(PathToXMLFile), S_ERROR
-    """
-
-    if os.path.exists( os.path.join( self.detectorModel, self.detectorModel+ ".xml" ) ):
-      self.log.notice( "Found detector model: %s" % os.path.join( self.detectorModel, self.detectorModel+ ".xml" ) )
-      return S_OK( os.path.join( self.detectorModel, self.detectorModel+ ".xml" ) )
-    elif os.path.exists(self.detectorModel + ".zip"):
-      self.log.notice( "Found detector model zipFile: %s" % self.detectorModel+ ".zip" )
-      return self._extractZip()
-    elif os.path.exists(self.detectorModel + ".tar.gz"):
-      self.log.notice( "Found detector model tarball: %s" % self.detectorModel+ ".tar.gz" )
-      return self._extractTar()
-    elif os.path.exists(self.detectorModel + ".tgz"):
-      self.log.notice( "Found detector model tarball: %s" % self.detectorModel+ ".tgz" )
-      return self._extractTar( extension=".tgz" )
-
-    detectorModels = self.ops.getOptionsDict("/DDSimDetectorModels/%s" % ( self.applicationVersion ) )
-    if not detectorModels['OK']:
-      self.log.error("Failed to get list of DetectorModels from the ConfigSystem", detectorModels['Message'])
-      return S_ERROR("Failed to get list of DetectorModels from the ConfigSystem")
-
-    softwareFolder = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
-    if not softwareFolder['OK']:
-      return softwareFolder
-    softwareRoot = softwareFolder['Value']
-
-    if self.detectorModel in detectorModels['Value']:
-      detModelPath = detectorModels['Value'][self.detectorModel]
-      if not detModelPath.startswith("/"):
-        detModelPath = os.path.join( softwareRoot, detModelPath )
-      self.log.info( "Found path for DetectorModel %s in CS: %s "  % ( self.detectorModel, detModelPath ) )
-      return S_OK(detModelPath)
-
-
-    self.log.error('Detector model %s was not found neither locally nor on the web, exiting' % self.detectorModel)
-    return S_ERROR('Detector model was not found')
 
   def _extractTar( self, extension=".tar.gz" ):
     """ extract the detector tarball for the detectorModel """

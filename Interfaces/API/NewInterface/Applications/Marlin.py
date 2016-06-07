@@ -1,15 +1,20 @@
 """
 Marlin: Reconstructor after Mokka
 """
-__RCSID__ = "$Id$"
+import types
+import os
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.CheckXMLValidity         import checkXMLValidity
+from ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin import DDInterfaceMixin
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
-class Marlin(LCApplication):
+__RCSID__ = "$Id$"
+
+class Marlin( DDInterfaceMixin, LCApplication ):
   """Call Marlin reconstructor (after Mokka simulator)
 
   Usage:
@@ -53,6 +58,8 @@ class Marlin(LCApplication):
     self.appname = 'marlin'
     self.datatype = 'REC'
     self.detectortype = 'ILD'
+    self.detectorModel = ''
+    self._ops = Operations()
 
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
@@ -191,6 +198,8 @@ class Marlin(LCApplication):
     md1 = self._createModuleDefinition()
     md1.addParameter(Parameter("inputGEAR",              '', "string", "", "", False, False,
                                "Input GEAR file"))
+    md1.addParameter(Parameter("detectorModel",          '', "string", "", "", False, False,
+                               "DD4hep Geomtry File"))
     md1.addParameter(Parameter("ProcessorListToUse",     [],   "list", "", "", False, False,
                                "List of processors to use"))
     md1.addParameter(Parameter("ProcessorListToExclude", [],   "list", "", "", False, False,
@@ -202,6 +211,7 @@ class Marlin(LCApplication):
   def _applicationModuleValues(self, moduleinstance):
 
     moduleinstance.setValue("inputGEAR",              self.gearFile)
+    moduleinstance.setValue("detectorModel",          self.detectorModel)
     moduleinstance.setValue('ProcessorListToUse',     self.processorsToUse)
     moduleinstance.setValue('ProcessorListToExclude', self.processorsToExclude)
     moduleinstance.setValue("debug",                  self.debug)

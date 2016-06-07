@@ -7,7 +7,6 @@ Provides a set of methods to prepare the option files needed by the ILC applicat
 
 __RCSID__ = "$Id$"
 
-import six
 from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
@@ -54,7 +53,7 @@ def getNewLDLibs(platform, application, applicationVersion):
     if new_ld_lib_path:
       new_ld_lib_path = new_ld_lib_path + ":%s" % os.environ["LD_LIBRARY_PATH"]
     else:
-      new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]  
+      new_ld_lib_path = os.environ["LD_LIBRARY_PATH"]
   return new_ld_lib_path
 
 def getNewPATH(platform, application, applicationVersion):
@@ -297,7 +296,8 @@ def fixedXML(element):
   return fixed_element
 
 def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
-                   numberofevts, outputFile, outputREC, outputDST, debug):
+                   numberofevts, outputFile, outputREC, outputDST, debug,
+                   dd4hepGeoFile=None):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from :mod:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis`
@@ -317,144 +317,129 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   tree = ElementTree()
   try:
     tree.parse(inputXML)
-  except Exception, x:
-    print "Found Exception %s %s" % (Exception, x)
-    return S_ERROR("Found Exception %s %s" % (Exception, x))
+  except Exception as x:
+    gLogger.error( "Found Exception when parsing Marlin input XML", repr(x) )
+    return S_ERROR("Found Exception when parsing Marlin input XML")
 
   # Handle inputSLCIO being list or string
   if isinstance(inputSLCIO, list):
     inputSLCIO = " ".join(inputSLCIO)
-  elif not isinstance(inputSLCIO, six.string_types):
+  elif not isinstance(inputSLCIO, basestring):
     return S_ERROR("inputSLCIO is neither string nor list! Actual type is %s " % type(inputSLCIO))
 
   root = tree.getroot()
   ##Get all processors:
   overlay = False
-  #recoutput=False
-  #dstoutput=False
   processors = tree.findall('execute/processor')
   for processor in processors:
-    if processor.attrib.has_key('name'):
-      if processor.attrib['name'].lower().count('overlaytiming'):
-        overlay = True
-      if processor.attrib['name'].lower().count('bgoverlay'):
-        overlay = True  
-      #if processor.attrib['name'].lower().count('lciooutputprocessor'):
-      #  recoutput=True
-      #if processor.attrib['name'].lower().count('dstoutput'):
-      #  dstoutput=True  
-  params = tree.findall('global/parameter')
+    if processor.attrib.get('name','').lower().count('overlaytiming'):
+      overlay = True
+    if processor.attrib.get('name','').lower().count('bgoverlay'):
+      overlay = True
+
   glob = tree.find('global')
   lciolistfound = False
-  for param in params:
-    if param.attrib.has_key('name'):
-      if param.attrib['name'] == 'LCIOInputFiles' and inputSLCIO:
-        lciolistfound = True
-        com = Comment("input file list changed")
+  for param in glob.findall("parameter"): #pylint: disable=E1101
+    if param.attrib.get('name') == 'LCIOInputFiles' and inputSLCIO:
+      lciolistfound = True
+      com = Comment("input file list changed")
+      glob.insert(0, com) #pylint: disable=E1101
+      param.text = inputSLCIO
+    if numberofevts > 0 and param.attrib.get('name') == 'MaxRecordNumber':
+      if 'value' in param.attrib:
+        param.attrib['value'] = str(numberofevts)
+        com = Comment("MaxRecordNumber changed")
         glob.insert(0, com) #pylint: disable=E1101
-        param.text = inputSLCIO
-      if numberofevts > 0:
-        if param.attrib['name'] == 'MaxRecordNumber':
-          if param.attrib.has_key('value'):
-            param.attrib['value'] = str(numberofevts)
-            com = Comment("MaxRecordNumber changed")
-            glob.insert(0, com) #pylint: disable=E1101
-            
-      if param.attrib['name'] == "GearXMLFile":
-        if param.attrib.has_key('value'):
-          param.attrib['value'] = inputGEAR
-          com = Comment("input gear changed")
-          glob.insert(0, com) #pylint: disable=E1101
-        else:
-          param.text = str(inputGEAR)
-          com = Comment("input gear changed")
-          glob.insert(0, com) #pylint: disable=E1101
-      if not debug:
-        if param.attrib['name'] == 'Verbosity':
-          param.text = "SILENT"
-          com = Comment("verbosity changed")
-          glob.insert(0, com) #pylint: disable=E1101
+    if param.attrib.get('name') == "GearXMLFile":
+      if 'value' in param.attrib:
+        param.attrib['value'] = inputGEAR
+        com = Comment("input gear changed")
+        glob.insert(0, com) #pylint: disable=E1101
+      else:
+        param.text = str(inputGEAR)
+        com = Comment("input gear changed")
+        glob.insert(0, com) #pylint: disable=E1101
+    if not debug:
+      if param.attrib.get('name') == 'Verbosity':
+        param.text = "SILENT"
+        com = Comment("verbosity changed")
+        glob.insert(0, com) #pylint: disable=E1101
+
+  ## Add lcioInputFiles parameter if it was not present before
   if not lciolistfound and inputSLCIO:
-    name = {}
-    name["name"] = "LCIOInputFiles"
+    name = {"name": "LCIOInputFiles"}
     lciolist = Element("parameter", name)
     lciolist.text = inputSLCIO
     globparams = tree.find("global")
     globparams.append(lciolist) #pylint: disable=E1101
 
-  params = tree.findall('processor')
-  for param in params:
+  for param in tree.findall('processor'):
     if param.attrib.has_key('name'):
       if len(outputFile) > 0:
-        if param.attrib['name'] == 'MyLCIOOutputProcessor':
+        if param.attrib.get('name') == 'MyLCIOOutputProcessor':
           subparams = param.findall('parameter')
           for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == 'LCIOOutputFile':
-                subparam.text = outputFile
-                com = Comment("output file changed")
-                param.insert(0, com)
+            if subparam.attrib.get('name') == 'LCIOOutputFile':
+              subparam.text = outputFile
+              com = Comment("output file changed")
+              param.insert(0, com)
       else:
         if len(outputREC) > 0:
-          if param.attrib['name'] == 'MyLCIOOutputProcessor':
+          if param.attrib.get('name') == 'MyLCIOOutputProcessor':
             subparams = param.findall('parameter')
             for subparam in subparams:
-              if subparam.attrib.has_key('name'):
-                if subparam.attrib['name'] == 'LCIOOutputFile':
-                  subparam.text = outputREC
-                  com = Comment("REC file changed")
-                  param.insert(0, com)
+              if subparam.attrib.get('name') == 'LCIOOutputFile':
+                subparam.text = outputREC
+                com = Comment("REC file changed")
+                param.insert(0, com)
         if len(outputDST) > 0:
-          if param.attrib['name'] == 'DSTOutput':
+          if param.attrib.get('name') == 'DSTOutput':
             subparams = param.findall('parameter')
             for subparam in subparams:
-              if subparam.attrib.has_key('name'):
-                if subparam.attrib['name'] == 'LCIOOutputFile':
-                  subparam.text = outputDST
-                  com = Comment("DST file changed")
-                  param.insert(0, com)
-      if param.attrib['name'].lower().count('overlaytiming'):
+              if subparam.attrib.get('name') == 'LCIOOutputFile':
+                subparam.text = outputDST
+                com = Comment("DST file changed")
+                param.insert(0, com)
+      if param.attrib.get('name', '').lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:
-          if subparam.attrib.has_key('name'):
-            if subparam.attrib['name'] == 'NumberBackground':
-              if subparam.attrib['value'] == '0.0':
-                overlay = False
-            if subparam.attrib['name'] == 'NBunchtrain':
-              if subparam.attrib['value'] == '0':
-                overlay = False          
+          if subparam.attrib.get('name') == 'NumberBackground' and subparam.attrib['value'] == '0.0':
+            overlay = False
+          if subparam.attrib.get('name') == 'NBunchtrain' and subparam.attrib['value'] == '0':
+            overlay = False
         if overlay: 
           files = getOverlayFiles()
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == "BackgroundFileNames":
-                subparam.text = "\n".join(files)
-                com = Comment("Overlay files changed")
-                param.insert(0, com)
-      if param.attrib['name'].lower().count('bgoverlay'):
+            if subparam.attrib.get('name') == "BackgroundFileNames":
+              subparam.text = "\n".join(files)
+              com = Comment("Overlay files changed")
+              param.insert(0, com)
+      if param.attrib.get('name','').lower().count('bgoverlay'):
         bkg_Type = 'aa_lowpt' #specific to ILD_DBD
         subparams = param.findall('parameter')
         for subparam in subparams:
-          if subparam.attrib.has_key('name'):
-            if subparam.attrib['name'] == 'expBG':
-              if subparam.text == '0' or subparam.text == '0.0' :
-                overlay = False
-            if subparam.attrib['name'] == 'NBunchtrain':
-              if subparam.text == '0':
-                overlay = False          
+          if subparam.attrib.get('name') == 'expBG' and (subparam.text == '0' or subparam.text == '0.0'):
+            overlay = False
         if overlay: 
           files = getOverlayFiles(bkg_Type)
           if not len(files):
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
-            if subparam.attrib.has_key('name'):
-              if subparam.attrib['name'] == "InputFileNames":
-                subparam.text = "\n".join(files)
-                com = Comment("Overlay files changed")
-                param.insert(0, com)
-  
+            if subparam.attrib.get('name') == "InputFileNames":
+              subparam.text = "\n".join(files)
+              com = Comment("Overlay files changed")
+              param.insert(0, com)
+
+      ## Deal with the InitializeDD4hep parameter value for the XML File
+      if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
+        for subparam in param.findall('parameter'):
+          if subparam.attrib.get('name') == "DD4hepXMLFile":
+            subparam.text = dd4hepGeoFile
+            com = Comment("DD4hepGeoFile changed")
+            param.insert(0, com)
+
   #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
   root_str = fixedXML(tostring(root))
   with open(finalxml,"w") as of:
@@ -554,17 +539,18 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     return S_ERROR("Found Exception %s %s" % (Exception, x))
   if not len(inputslcio):
     return S_ERROR("Empty input file list")
+  baseelem = tree.getroot()
+  if baseelem is None:
+    return S_ERROR("Invalid lcsim file structure")
   ##handle the input slcio file list
   filesinlcsim = tree.find("inputFiles")
   if filesinlcsim is not None:
     filesinlcsim.clear() #pylint: disable=E1101
   else:
     baseelem = tree.getroot()
-    if not baseelem is None:
-      filesinlcsim = Element("inputFiles")
-      baseelem.append(filesinlcsim)
-    else:
-      return S_ERROR("Invalid lcsim file structure")
+    filesinlcsim = Element("inputFiles")
+    baseelem.append(filesinlcsim)
+
   #set = Element("fileSet")
   for slcio in inputslcio:
     newfile = Element('file')
@@ -572,19 +558,18 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     filesinlcsim.append(newfile)
   #filesinlcsim.append(set)
 
-  if jars:
-    if len(jars) > 0:
-      classpath = tree.find("classpath")
-      if not classpath is None:
-        classpath.clear() #pylint: disable=E1101
-      else:
-        baseelem = tree.getroot()
-        classpath = Element("classpath")    
-        baseelem.append(classpath)
-      for jar in jars:
-        newjar = Element("jar")
-        newjar.text = jar
-        classpath.append(newjar)
+  if jars and len(jars) > 0:
+    classpath = tree.find("classpath")
+    if classpath is not None:
+      classpath.clear() #pylint: disable=E1101
+    else:
+      baseelem = tree.getroot()
+      classpath = Element("classpath")
+      baseelem.append(classpath)
+    for jar in jars:
+      newjar = Element("jar")
+      newjar.text = jar
+      classpath.append(newjar)
   #handle number of events
   if numberofevents:
     nbevts = tree.find("control/numberOfEvents")     
@@ -644,7 +629,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
       eventmarker.append(eventInterval)
       drivers.append(eventmarker) #pylint: disable=E1101
       execut = tree.find("execute")
-      if execut:
+      if execut is not None:
         evtmarkattrib = {}
         evtmarkattrib['name'] = "evtMarker"
         evtmark = Element("driver", evtmarkattrib)
@@ -732,7 +717,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     output.append(outputelem)
     drivers.append(output) #pylint: disable=E1101
     execut = tree.find("execute")
-    if execut:
+    if execut is not None:
       outputattrib = {}
       outputattrib['name'] = "Writer"
       outputmark = Element("driver", outputattrib)

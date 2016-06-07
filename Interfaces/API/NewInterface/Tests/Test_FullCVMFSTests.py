@@ -30,11 +30,16 @@ class JobTestCase( unittest.TestCase ):
     #clip.registerSwitches()
     from DIRAC.Core.Base import Script
     Script.parseCommandLine() # Perform only once, multiple invocations can cause small issues
-  
+
+  def tearDown( self ):
+    os.chdir( self.basedir )
+
   def setUp(self):
     """set up the objects"""
     super(JobTestCase, self).setUp()
     from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import CLIParams
+
+    self.basedir = os.getcwd()
 
     clip = CLIParams()
     clip.testOverlay=True
@@ -64,7 +69,7 @@ class JobTestCase( unittest.TestCase ):
                           lcsimPostSteeringFile=myLCSimPostSteeringFile,
                           ddsimVersion="ILCSoft-01-17-09",
                           ddsimDetectorModel="CLIC_o2_v03",
-                          ddsimInputFile="qq_ln_gen_6701_975.stdhep",
+                          ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep",
                           inputFilesPath = 'LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
                           rootVersion="ILCSoft-01-17-08"
                         )
@@ -78,7 +83,7 @@ class JobTestCase( unittest.TestCase ):
     cvmfstestsdir = 'cvmfstests'
     if os.path.exists( homedir ):
       localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
-      os.chdir(homedir)
+      #os.chdir(homedir)
     else:
       localsitelocalarea = os.path.join( os.getcwd(), cvmfstestsdir )
     from DIRAC import gConfig
@@ -117,7 +122,7 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "DDSim")
     self.assertTrue ( res['OK'] )
 
-    ddsimInputFile="qq_ln_gen_6701_975.stdhep"
+    ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep"
     ddsimTarball="FCalTB.tar.gz"
     
     # Replace inputfile with 00.stdhep

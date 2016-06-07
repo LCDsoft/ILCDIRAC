@@ -469,7 +469,7 @@ class TestDDSimAnalysisASI( TestDDSimAnalysis ):
 class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
   """tests for _getDetectorXML """
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML( self ):
     """DDSim.getDetectorXML from CS................................................................."""
     gLogger.setLevel("ERROR")
@@ -480,7 +480,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Value'], xmlPath )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_relPatg( self ):
     """DDSim.getDetectorXML from CS with relative path.............................................."""
     gLogger.setLevel("ERROR")
@@ -491,7 +491,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Value'], os.path.join("/win32",xmlPath) )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Fail( self ):
     """DDSim.getDetectorXML Failure................................................................."""
     gLogger.setLevel("ERROR")
@@ -503,7 +503,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     self.assertFalse( res['OK'] )
     self.assertEqual( res['Message'], "Detector model was not found" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR("Windows not supported") ) )
+  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_ERROR("Windows not supported") ) )
   def test_DDSim_getDetectorXML_NoSoftFolder( self ):
     """DDSim.getDetectorXML Error no SoftwareFolder................................................."""
     gLogger.setLevel("ERROR")
@@ -514,7 +514,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Message'], "Windows not supported" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32" ) ))
+  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32" ) ))
   def test_DDSim_getDetectorXML_NoDetModels( self ):
     """DDSim.getDetectorXML Error no detectorModels................................................."""
     gLogger.setLevel("ERROR")

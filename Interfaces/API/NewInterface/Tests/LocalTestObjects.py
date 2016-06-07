@@ -244,7 +244,7 @@ class TestCreater(object):
         self.log.error("Failed adding Whizard:", res['Message'])
         return S_ERROR("Failed adding Whizard")
     elif self.clip.testInputData:
-      jobmo.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
+      jobmo.setInputData("/ilc/prod/clic/SingleParticles/Muon/50GeV/Muon_50GeV_Fixed_cosTheta0.7.stdhep")
     else:
       self.log.error("Mokka does not know where to get its input from")
       return S_ERROR("Mokka does not know where to gets its input from")
@@ -254,7 +254,7 @@ class TestCreater(object):
     if self.clip.testChain:
       mo.getInputFromApp(whmo)
     else:
-      mo.setNumberOfEvents(2)
+      mo.setNumberOfEvents(1)
     res = jobmo.append(mo)
     if not res['OK']:
       self.log.error("Failed adding Mokka:", res['Message'])
@@ -399,7 +399,7 @@ class TestCreater(object):
     marlin.setGearFile(self.gearFile)
     marlin.setOutputDstFile("testmarlinDST.slcio")
     marlin.setOutputRecFile("testmarlinREC.slcio")
-    marlin.setNumberOfEvents(2)
+    marlin.setNumberOfEvents(1)
     return marlin
 
   def getDD( self ):
@@ -410,7 +410,7 @@ class TestCreater(object):
     ddsim.setVersion(self.ddsimVersion)
     ddsim.setDetectorModel(self.ddsimDetectorModel)
     ddsim.setInputFile(self.ddsimInputFile) 
-    ddsim.setNumberOfEvents(30)
+    ddsim.setNumberOfEvents(2)
     return ddsim
   
 
@@ -604,7 +604,7 @@ class TestCreater(object):
         self.log.error("Failed adding Whizard:", res['Value'])
         return S_ERROR()
     elif self.clip.testInputData:
-      jobslic.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
+      jobslic.setInputData("/ilc/prod/clic/SingleParticles/Muon/50GeV/Muon_50GeV_Fixed_cosTheta0.7.stdhep")
     else:
       self.log.error("SLIC does not know where to get its input from")
       return S_ERROR()
@@ -636,8 +636,8 @@ class TestCreater(object):
           return S_ERROR()
         moma.getInputFromApp(whma)
       else:
-        jobma.setInputData("/ilc/prod/clic/3tev/qq_ln/gen/00006701/000/qq_ln_gen_6701_975.stdhep")
-        moma.setNumberOfEvents(2)
+        jobma.setInputData("/ilc/prod/clic/SingleParticles/Muon/50GeV/Muon_50GeV_Fixed_cosTheta0.7.stdhep")
+        moma.setNumberOfEvents(1)
       res = jobma.append(moma)
       if not res['OK']:
         self.log.error("Failed adding Mokka:", res['Message'])
@@ -682,7 +682,7 @@ class TestCreater(object):
           return S_ERROR()
         mysliclcsim.getInputFromApp(whlcsim)
       else:
-        joblcsim.setInputData("/ilc/user/s/sailer/testFiles/prod_clic_e2e2_o_gen_2213_25.stdhep")
+        joblcsim.setInputData("/ilc/prod/clic/SingleParticles/Muon/50GeV/Muon_50GeV_Fixed_cosTheta0.7.stdhep")
         mysliclcsim.setNumberOfEvents(2)
 
       res = joblcsim.append(mysliclcsim)
@@ -849,10 +849,10 @@ class TestCreater(object):
     specialJobs = ['root', 'ddsim']
     filesForJob = {
       'root' :  [ 'input2.root', 'input.root' ],
-      'ddsim' : [ 'FCalTB.tar.gz', 'qq_ln_gen_6701_975.stdhep' ]
+      'ddsim' : [ 'FCalTB.tar.gz', 'Muon_50GeV_Fixed_cosTheta0.7.stdhep' ]
     }
     for specialName in specialJobs:
-      if "root" in jobName.lower() and specialName is "root":
+      if "root" in jobName.lower() and specialName == "root":
         with open("root.sh", "w") as rScript:
           rScript.write( "echo $ROOTSYS" )
         with open("func.C", "w") as rMacro:

@@ -1,0 +1,63 @@
+<marlin>
+  <execute>
+    <processor name="BgOverlay" />
+  </execute>
+
+  <global>
+    <parameter name="GearXMLFile" value="args" />
+    <parameter name="GearXMLFile" > gear.xml </parameter>
+    <parameter name="MaxRecordNumber" value="-1" />
+    <parameter name="SkipNEvents" value="0" />
+    <parameter name="SupressCheck" value="false" />
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT">WARNING</parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+  </global>
+
+  <processor name="BgOverlay" type="Overlay">
+    <!--Opens a second (chain of) lcio file(s) and overlays events...-->
+    <!--Pairs of collection to be merged-->
+    <parameter name="CollectionMap" type="StringVec">
+      BeamCalCollection                     BeamCalCollection                     
+      COILCollection                        COILCollection                        
+      EcalBarrelSiliconCollection           EcalBarrelSiliconCollection           
+      EcalBarrelSiliconPreShowerCollection  EcalBarrelSiliconPreShowerCollection  
+      EcalEndcapRingCollection              EcalEndcapRingCollection              
+      EcalEndcapRingPreShowerCollection     EcalEndcapRingPreShowerCollection     
+      EcalEndcapSiliconCollection           EcalEndcapSiliconCollection           
+      EcalEndcapSiliconPreShowerCollection  EcalEndcapSiliconPreShowerCollection  
+      FTD_PIXELCollection                   FTD_PIXELCollection                   
+      FTD_STRIPCollection                   FTD_STRIPCollection                   
+      HcalBarrelRegCollection               HcalBarrelRegCollection               
+      HcalEndCapRingsCollection             HcalEndCapRingsCollection             
+      HcalEndCapsCollection                 HcalEndCapsCollection                 
+      LumiCalCollection                     LumiCalCollection  
+      LHcalCollection                       LHcalCollection
+      MCParticle                            MCParticle                            
+      MuonBarrelCollection                  MuonBarrelCollection                  
+      MuonEndCapCollection                  MuonEndCapCollection                  
+      SETCollection                         SETCollection                         
+      SITCollection                         SITCollection                         
+      TPCCollection                         TPCCollection                         
+      TPCSpacePointCollection               TPCSpacePointCollection               
+      VXDCollection                         VXDCollection                         
+    </parameter>
+    <!--Name of the lcio input file(s)-->
+    <parameter name="InputFileNames" type="StringVec"> 
+    </parameter>
+    <!--Overlay each event with this number of background events. (default 0)-->
+    <parameter name="NumberOverlayEvents" type="int"> 0 </parameter>
+
+    <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+    <parameter name="Verbosity" type="string"> WARNING </parameter>
+
+    <!--Add additional background events according to a poisson distribution with this expectation value. (non, if parameter not set)
+	1 TeV: 4.1, 500 GeV 1.7 used in DBD, 1.2 would have been (more) correct -->
+    <parameter name="expBG" type="double">0.0</parameter>
+    <!--Overlay each event with the content of one run.-->
+    <parameter name="runOverlay" type="bool">false </parameter>
+
+    <!--Maximum number of events to skip between overlayd events (choosen from flat intervall [0,NSkipEventsRandom] )-->
+    <parameter name="NSkipEventsRandom" type="int">0</parameter>
+
+  </processor>
+</marlin>

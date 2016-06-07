@@ -122,7 +122,7 @@ class Application(object):
     self._errorDict = {}
     
     #This is used to filter out the members that should not be set when using a dict as input
-    self._paramsToExclude = ['_paramsToExclude', "_log", "_errorDict", "addedtojob",
+    self._paramsToExclude = ['_paramsToExclude', "_log", "_errorDict", "addedtojob", '_ops',
                              "_inputappstep", "_linkedidx", "_inputapp", "_jobtype",
                              "_jobsteps", "_jobapps", "_job", "_platform", "_importLocation",
                              "_moduledescription", "_modulename", "prodparameters",
