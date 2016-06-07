@@ -7,11 +7,14 @@ mechanism. Removes log files from the GridSE
 Adapted from LHCbDirac.
 
 """
-__RCSID__ = "$Id$"
-# # imports
-import os.path, os
-from DIRAC                                                      import S_OK, S_ERROR, gMonitor
+
+import os
+
+from DIRAC                                                      import S_OK, S_ERROR
+from DIRAC.FrameworkSystem.Client.MonitoringClient              import gMonitor
 from DIRAC.RequestManagementSystem.private.OperationHandlerBase import OperationHandlerBase
+
+__RCSID__ = "$Id$"
 
 class LogUpload( OperationHandlerBase ):
   """
