@@ -11,9 +11,9 @@ key set in the DIRAC FileCatalog.
 
 import time, datetime
 
-from DIRAC                                                                import S_OK, gLogger, gMonitor
+from DIRAC                                                                import S_OK, gLogger
+from DIRAC.FrameworkSystem.Client.MonitoringClient                        import gMonitor
 from DIRAC.TransformationSystem.Agent.InputDataAgent                      import InputDataAgent
-from DIRAC.Core.Utilities.List                                            import sortList
 
 AGENT_NAME = 'ILCTransformation/ILCInputDataAgent'
 
@@ -133,7 +133,7 @@ class ILCInputDataAgent( InputDataAgent ):
         gLogger.verbose( 'Processing %d lfns for transformation %d' % ( len( final_list ), transID ) )
         # Add the files to the transformation
         gLogger.verbose( 'Adding %d lfns for transformation %d' % ( len( final_list ), transID ) )
-        result = self.transClient.addFilesToTransformation( transID, sortList( final_list ) )
+        result = self.transClient.addFilesToTransformation( transID, sorted( final_list ) )
         if not result['OK']:
           gLogger.warn( "InputDataAgent.execute: failed to add lfns to transformation", result['Message'] )
           self.fileLog[transID] = 0

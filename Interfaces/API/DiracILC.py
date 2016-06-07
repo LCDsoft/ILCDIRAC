@@ -6,7 +6,6 @@ API to use to submit jobs in the ILC VO
 """
 
 from DIRAC.Interfaces.API.Dirac                     import Dirac
-from DIRAC.Core.Utilities.List                      import sortList
 from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from DIRAC.DataManagementSystem.Client.DataManager  import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
@@ -125,7 +124,7 @@ class DiracILC(Dirac):
       gLogger.warn( "No repository is initialised" )
       return S_OK()
     jobs = self.jobRepo.readRepository()['Value']
-    for jobID in sortList( jobs.keys() ):
+    for jobID in sorted( jobs.keys() ):
       jobDict = jobs[jobID]
       if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
         if ( jobDict.has_key( 'UserOutputData' ) and ( not int( jobDict['UserOutputData'] ) ) ) or \
