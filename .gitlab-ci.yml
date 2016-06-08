@@ -12,14 +12,14 @@ before_script:
     - mkdir DIRAC
     - cd DIRAC
     - git clone https://github.com/DIRACGrid/DIRAC.git .
-    - git checkout origin/rel-v6r14
+    - git checkout origin/rel-v6r15
     - cd ..
     - rm -rf ILCDIRAC
     - mv ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
     - pip install --upgrade pip pylint mock MySQL-python #coverage Check if we need coverage
-    - easy_install pytest-cov pytest-randomly
+    - easy_install pytest-cov pytest-randomly pyparsing
     - cd ILCDIRAC
     - export HOME=/root/
 
