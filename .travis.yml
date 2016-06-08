@@ -10,6 +10,7 @@ script:
   - wget https://github.com/DIRACGrid/DIRAC/archive/rel-v6r14.zip
   - unzip rel-v6r14.zip
   - mv DIRAC-rel-v6r14 DIRAC
+  - export DIRAC=${PWD}
   - cd ILCDIRAC
   - export PYTHONPATH=${PWD%/*}
   - echo $PYTHONPATH
