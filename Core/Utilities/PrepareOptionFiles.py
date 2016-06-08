@@ -207,27 +207,16 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
       macfile.write("/run/beamOn %s\n" % nbOfRuns)
   else:
     macname = mac
-    
+
   with open(inputSteering, "r") as inputsteer, open(str(outputSteering), "w") as output:
     for line in inputsteer:
-      if not line.count("/Mokka/init/initialMacroFile"):
-        if not line.count("/Mokka/init/BatchMode"):
-          if not line.count("/Mokka/init/randomSeed"):
-            if outputlcio:
-              if not line.count("lcioFilename"):
-                if detectormodel:
-                  if not line.count("/Mokka/init/detectorModel"):
-                    output.write(line)
-                  else:
-                    output.write(line)
-                else:
-                  output.write(line)
-            else:
-              if detectormodel:
-                if not line.count("/Mokka/init/detectorModel"):
-                  output.write(line)
-              else:
-                output.write(line)
+      if line.count("/Mokka/init/initialMacroFile") or line.count("/Mokka/init/BatchMode") or line.count("/Mokka/init/randomSeed"):
+        continue
+      if outputlcio and line.count("lcioFilename"):
+        continue
+      if not outputlcio and detectormodel and line.count("/Mokka/init/detectorModel"):
+        continue
+      output.write( line )
     if detectormodel:
       output.write("#Set detector model to value specified\n")
       output.write("/Mokka/init/detectorModel %s\n" % detectormodel)
