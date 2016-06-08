@@ -1,10 +1,9 @@
-[v25r0p8]
+[v25r0p7]
 
 * Workflow:
 
 FIX: OverlayInput for KEK was not getting the correct path to copy files.
-
-[v25r0p7]
+FIX: DDSim: Enable use of tarballs with non-system compiler, ILCDIRAC-671
 
 * Interface:
 
