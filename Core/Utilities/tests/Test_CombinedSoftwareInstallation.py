@@ -6,7 +6,7 @@ import os
 from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import CombinedSoftwareInstallation, getSharedAreaLocation
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import CombinedSoftwareInstallation, getSharedAreaLocation, createSharedArea, getLocalAreaLocation, getSoftwareFolder, getEnvironmentScript, checkCVMFS
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
 
 __RCSID__ = "$Id$"
@@ -138,7 +138,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
         assertEqualsImproved( ke.__repr__(), "KeyError('injecting this into logger call 3',)", self )
 
 class TestSharedLocation( unittest.TestCase ):
-  from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSharedAreaLocation
+  """ Tests the sharedArea and localArea functions
+  """
 
   def test_getsharedarealoc( self ):
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='mylocation123test')), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '',''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
@@ -146,22 +147,22 @@ class TestSharedLocation( unittest.TestCase ):
       assertEqualsImproved( result, 'mylocation123test', self )
 
   def test_getsharedarealoc_environvar( self ):
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'} ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '/abc/def/ghi/clic', self )
 
   def test_getsharedarealoc_environvar_notfound( self ):
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$I_AM_FAKE', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'} ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$I_AM_FAKE', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '/abc/def/ghi/clic', self )
 
   def test_getsharedarealoc_overwrite_via_config( self ):
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'} ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '/myotherpath/hereissharedarea', '/myotherpath/hereissharedarea'])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '/myotherpath/hereissharedarea', '/myotherpath/hereissharedarea'])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '/myotherpath/hereissharedarea', self )
 
   def test_getsharedarealoc_notadir( self ):
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'} ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '', self )
 
@@ -170,6 +171,181 @@ class TestSharedLocation( unittest.TestCase ):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '', self )
 
+  def test_createsharedarea( self ):
+    with patch.dict( os.environ, { 'VO_ILC_SW_DIR' : '/myilc/sharedarea/cooldir', 'OSG_APP' : '/appdir/shared' }, True ), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, patch('%s.os.path.islink' % MODULE_NAME, new=Mock(return_value=False)) as islink_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ) as remove_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, patch( '%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True) ) as mkdirs_mock:
+      result = createSharedArea()
+      self.assertTrue( result )
+      self.assertFalse( remove_mock.called )
+      self.assertFalse( exists_mock.called )
+      self.assertFalse( mkdirs_mock.called )
+      finalsharedarea = '/myilc/sharedarea/cooldir/clic'
+      isdir_mock.assert_called_with( finalsharedarea )
+      islink_mock.assert_called_with( finalsharedarea )
+
+  def test_createsharedarea_noenvvars( self ):
+    with patch.dict( os.environ, {}, True ), patch( '%s.DIRAC.gLogger.info' % MODULE_NAME ) as mock_log:
+      result = createSharedArea()
+      self.assertFalse( result )
+      mock_log.assert_called_with( 'VO_ILC_SW_DIR and OSG_APP not defined.', )
+
+  def test_createsharedarea_points_to_curdir( self ):
+    with patch.dict( os.environ, { 'OSG_APP' : '.' }, True ), patch( '%s.DIRAC.gLogger.info' % MODULE_NAME ) as mock_log:
+      result = createSharedArea()
+      self.assertFalse( result )
+      mock_log.assert_called_with( 'VO_ILC_SW_DIR or OSG_APP points to "."', )
+
+  def test_createsharedarea_makedirs( self ):
+    with patch.dict( os.environ, { 'VO_ILC_SW_DIR' : '/myilc/sharedarea/cooldir', 'OSG_APP' : '/appdir/shared' }, True ), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, patch('%s.os.path.islink' % MODULE_NAME, new=Mock(return_value=True)) as islink_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ) as remove_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, patch( '%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True) ) as mkdirs_mock:
+      result = createSharedArea()
+      self.assertTrue( result )
+      self.assertFalse( remove_mock.called )
+      finalsharedarea = '/myilc/sharedarea/cooldir/clic'
+      isdir_mock.assert_called_with( finalsharedarea )
+      islink_mock.assert_called_with( finalsharedarea )
+      exists_mock.assert_called_with( finalsharedarea )
+      mkdirs_mock.assert_called_with( finalsharedarea )
+
+  def test_createsharedarea_remove_and_recreate( self ):
+    with patch.dict( os.environ, { 'OSG_APP' : '/appdir/shared' }, True ), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, patch('%s.os.path.islink' % MODULE_NAME, new=Mock(return_value=False)) as islink_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ) as remove_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, patch( '%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True) ) as mkdirs_mock:
+      result = createSharedArea()
+      self.assertTrue( result )
+      self.assertFalse( islink_mock.called )
+      finalsharedarea = '/appdir/shared/clic'
+      isdir_mock.assert_called_with( finalsharedarea )
+      exists_mock.assert_called_with( finalsharedarea )
+      mkdirs_mock.assert_called_with( finalsharedarea )
+      remove_mock.assert_called_with( finalsharedarea )
+
+  def test_createsharedarea_oserr( self ):
+    with patch.dict( os.environ, { 'VO_ILC_SW_DIR' : '/myilc/sharedarea/cooldir', 'OSG_APP' : '/appdir/shared' }, True ), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, patch('%s.os.path.islink' % MODULE_NAME, new=Mock(return_value=True)) as islink_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('some_filesys_error')) ) as remove_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, patch( '%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True) ) as mkdirs_mock, patch( '%s.DIRAC.gLogger.error' % MODULE_NAME ) as mock_err:
+      result = createSharedArea()
+      self.assertFalse( result )
+      self.assertFalse( mkdirs_mock.called )
+      finalsharedarea = '/myilc/sharedarea/cooldir/clic'
+      isdir_mock.assert_called_with( finalsharedarea )
+      islink_mock.assert_called_with( finalsharedarea )
+      exists_mock.assert_called_with( finalsharedarea )
+      remove_mock.assert_called_with( finalsharedarea )
+      mock_err.assert_called_with( 'Problem trying to create shared area', 'some_filesys_error')
+
+  def test_getlocalarealoc_already_exists( self ):
+    with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, patch( '%s.os.mkdir' % MODULE_NAME, new=Mock(return_value=True)) as mkdir_mock:
+      result = getLocalAreaLocation()
+      isdir_mock.assert_called_with( '/gconfig/localarea' )
+      self.assertFalse( remove_mock.called )
+      self.assertFalse( mkdir_mock.called )
+      self.assertFalse( exists_mock.called )
+      assertEqualsImproved( result, '/gconfig/localarea', self )
+
+  def test_getlocalarealoc_remove_old( self ):
+    import DIRAC
+    oldRoot = DIRAC.rootPath
+    DIRAC.rootPath = '/dirac/myrootpath'
+    with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='')), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock:
+      result = getLocalAreaLocation()
+      finallocalarea = '/dirac/myrootpath/LocalArea'
+      isdir_mock.assert_called_with( finallocalarea )
+      exists_mock.assert_called_with( finallocalarea )
+      remove_mock.assert_called_with( finallocalarea )
+      assertEqualsImproved( result, finallocalarea, self )
+    DIRAC.rootPath = oldRoot
+
+  def test_getlocalarealoc_create_new_dir( self ):
+    with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, patch( '%s.os.mkdir' % MODULE_NAME, new=Mock(return_value=True)) as mkdir_mock:
+      result = getLocalAreaLocation()
+      finallocalarea = '/gconfig/localarea'
+      isdir_mock.assert_called_with( finallocalarea )
+      mkdir_mock.assert_called_with( finallocalarea )
+      exists_mock.assert_called_with( finallocalarea )
+      self.assertFalse( remove_mock.called )
+      assertEqualsImproved( result, finallocalarea, self )
+
+  def test_getlocalarealoc_remove_fails( self ):
+    with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('some_remove_oserror'))) as remove_mock, patch( '%s.os.mkdir' % MODULE_NAME, new=Mock(return_value=True)) as mkdir_mock, patch('%s.DIRAC.gLogger.error' % MODULE_NAME) as mock_err:
+      result = getLocalAreaLocation()
+      finallocalarea = '/gconfig/localarea'
+      isdir_mock.assert_called_with( finallocalarea )
+      exists_mock.assert_called_with( finallocalarea )
+      remove_mock.assert_called_with( finallocalarea )
+      mock_err.assert_called_with( 'Cannot remove:', '/gconfig/localarea because some_remove_oserror')
+      self.assertFalse( mkdir_mock.called )
+      assertEqualsImproved( result, '', self )
+
+  def test_getlocalarealoc_create_fails( self ):
+    with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, patch( '%s.os.mkdir' % MODULE_NAME, new=Mock(side_effect=OSError('some_mkdir_oserror'))) as mkdir_mock, patch('%s.DIRAC.gLogger.error' % MODULE_NAME) as mock_err:
+      result = getLocalAreaLocation()
+      finallocalarea = '/gconfig/localarea'
+      isdir_mock.assert_called_with( finallocalarea )
+      exists_mock.assert_called_with( finallocalarea )
+      mkdir_mock.assert_called_with( finallocalarea )
+      mock_err.assert_called_with( 'Cannot create:', '/gconfig/localarea because some_mkdir_oserror')
+      self.assertFalse( remove_mock.called )
+      assertEqualsImproved( result, '', self )
+
+  def test_getsoftwarefolder( self ):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapparchive.test.tgz')) as getval_mock, patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, True ])) as exists_mock:
+      result = getSoftwareFolder( 'a', 'b', 'c' )
+      exists_mock.assert_any_call( '/mylocalarea/test/myapparchive.test' )
+      exists_mock.assert_any_call( '/testshared/area/myapparchive.test' )
+      getval_mock.assert_called_with( '/AvailableTarBalls/a/b/c/TarBall', '' )
+      assertEqualsImproved( len(exists_mock.mock_calls), 3, self ) #One exists call in checkCVMFS
+      assertDiracSucceedsWith_equals( result, '/testshared/area/myapparchive.test', self )
+
+  def test_getsoftwarefolder_from_cvmfs( self ):
+    with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('mycvmfsfolder/txt', 'otherentry')))) as cvmfs_mock:
+      result = getSoftwareFolder( 'a', 'b', 'c' )
+      cvmfs_mock.assert_called_with( 'a', ['b', 'c'] )
+      assertDiracSucceedsWith_equals( result, 'mycvmfsfolder/txt', self )
+
+  def test_getsoftwarefolder_apptar_fails( self ):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='')):
+      result = getSoftwareFolder( 'a', 'b', 'c' )
+      assertDiracFailsWith( result, 'could not find b, c name from cs', self )
+
+  def test_getsoftwarefolder_uselocal( self ):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapparchivev2.test.tar.gz')) as getval_mock, patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True, False ])) as exists_mock:
+      result = getSoftwareFolder( 'a', 'b', 'c' )
+      exists_mock.assert_called_with( '/mylocalarea/test/myapparchivev2.test' )
+      getval_mock.assert_called_with( '/AvailableTarBalls/a/b/c/TarBall', '' )
+      assertEqualsImproved( len(exists_mock.mock_calls), 2, self ) #One exists call in checkCVMFS
+      assertDiracSucceedsWith_equals( result, '/mylocalarea/test/myapparchivev2.test', self )
+
+  def test_getsoftwarefolder_notfound( self ):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapp_executable')) as getval_mock, patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, False ])) as exists_mock:
+      result = getSoftwareFolder( 'a', 'b', 'c' )
+      exists_mock.assert_any_call( '/mylocalarea/test/myapp_executable' )
+      exists_mock.assert_any_call( '/testshared/area/myapp_executable' )
+      getval_mock.assert_called_with( '/AvailableTarBalls/a/b/c/TarBall', '' )
+      assertEqualsImproved( len(exists_mock.mock_calls), 3, self ) #One exists call in checkCVMFS
+      assertDiracFailsWith( result, 'missing installation of myapp_executable', self )
+
+  def test_getEnvironmentScript( self ):
+    with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('/otherfolder/otherfile', 'cvmfsfolder/myenvscript')))):
+      result = getEnvironmentScript( 'a', 'b', 'c', None )
+      assertDiracSucceedsWith_equals( result, '', self ) #TODO bug??
+
+  def test_getEnvironmentScript_cvmfs_empty( self ):
+    def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
+      return ( platform, appname, appversion )
+    with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('entry', '')))):
+      result = getEnvironmentScript( 'a', 'b', 'c', return_my_value )
+      assertEqualsImproved( result, ('a', 'b', 'c'), self )
+
+  def test_getEnvironmentScript_from_passed_func( self ):
+    def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
+      return ( appname, platform, appversion )
+    with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_cvmfs_error'))):
+      result = getEnvironmentScript( 'a', 'b', 'c', return_my_value )
+      assertEqualsImproved( result, ('b', 'a', 'c'), self )
+
+  def test_checkcvmfs_not_found( self ):
+    result = checkCVMFS( 'mytestplatform', ('appnametesttest123', 'appversionv77testp2'))
+    assertDiracFailsWith( result, 'missing cvmfs', self )
+
+  def test_checkcvmfs_exists( self ):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(side_effect=['testcvmfspath', 'testenvscript'])), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)):
+      result = checkCVMFS( 'mytestplatform', ('appnametesttest123', 'appversionv77testp2'))
+      assertDiracSucceedsWith_equals( result, ('testcvmfspath', 'testenvscript'), self )
 
 CLASS_NAME = 'CombinedSoftwareInstallation'
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.%s' % CLASS_NAME
