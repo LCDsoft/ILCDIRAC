@@ -533,19 +533,12 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     mymock = Mock()
-    handles = getMultipleReadHandles(file_contents)
+    handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('%s.open' % moduleName, mock_open(mymock), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       args.extend([None] * (13-len(args)))
       result = PrepareOptionFiles.prepareSteeringFile(*args)
-    for (filename, mode) in expected_file_tuples:
-      file_mocker.assert_any_call(filename, mode)
-
-    for (index, handle) in enumerate(handles):
-      cur_handle = handle.__enter__()
-      assertEqualsImproved(len(expected[index]), handle.__enter__.return_value.write.call_count, self)
-      for entry in expected[index]:
-        cur_handle.write.assert_any_call(entry)
+      FileUtil.checkFileInteractions( self, file_mocker, expected_file_tuples, expected, handles )
     assertEqualsImproved(expected_return_value, result, self)
 
   current_tree = None
@@ -990,20 +983,6 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       assertEqualsXml(current_tree.findall('global/parameter')[-1], expected_element, self)
       expected_tuples = [('default.xml', 'w')]
       FileUtil.checkFileInteractions( self, mo, expected_tuples, expected, handles )
-
-def getMultipleReadHandles(file_contents):
-  full_file_contents = ['\n'.join(x) for x in file_contents]
-  gens = []
-  for filecontent in file_contents:
-    gens.append((f for f in filecontent))
-  amount_of_files = len(gens)
-  handles = []
-  for i in range(0, amount_of_files):
-    curhandle = Mock()
-    curhandle.__enter__.return_value.read.side_effect = lambda: full_file_contents.pop(0)
-    curhandle.__enter__.return_value.__iter__.return_value = gens[i]
-    handles.append(curhandle)
-  return handles
 
 def createXMLTreeForXML( flag = 0 ):
   """Creates a XML Tree to test prepareXMLFile()"""

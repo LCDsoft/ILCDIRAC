@@ -16,7 +16,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 from ILCDIRAC.Core.Utilities.WasteCPU                       import wasteCPUCycles
 import os, urllib, tarfile, subprocess, shutil, time
 from tarfile import TarError
-try:
+try:                      #FIXME: Deprecated import?
   import hashlib as md5
 except ImportError:
   import md5

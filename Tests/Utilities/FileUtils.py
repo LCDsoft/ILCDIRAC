@@ -23,7 +23,7 @@ class FileUtil(object):
     from ILCDIRAC.Workflow.Modules import WhizardAnalysis
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = "ILCDIRAC.Workflow.Modules.WhizardAnalysis"
-    with patch('%s.open' % moduleName, mock_open(), create=True) as mo:
+    with patch('%s.open' % moduleName, mock_open()) as mo:
       mo.side_effect = (h for h in handles)
       WhizardAnalysis.runIt()
       
@@ -62,12 +62,14 @@ class FileUtil(object):
     :param Iterable(Mock) handles: return value of the getMultipleReadHandles method, used to get call information
     """
     # Check if expected open() calls match the actual ones (each element of expected_tuples is in the calls of the mockobject --- #TODO: Check for same amount of calls & maybe does not work for duplicate calls?)
-    #assertEqualsImproved(len(expected_tuples), len(mockobject.mock_calls), testobject)
-    for (filename, filemode) in expected_tuples:
-      mockobject.assert_any_call(filename, filemode)
+    assertEqualsImproved(len(expected_tuples), len(mockobject.mock_calls), testobject)
+    for entry in expected_tuples:
+      if isinstance(entry, tuple):
+        filename, filemode = entry
+        mockobject.assert_any_call( filename, filemode )
+      else:
+        mockobject.assert_any_call( entry )
     # Check if expected write() calls match the actual ones exactly (same as above + check for same amount of calls --- think about duplicates #FIXME )
-    print expected_output
-    print handles
     assertEqualsImproved(len(expected_output), len(handles), testobject)
     for (index, handle) in enumerate(handles):
       cur_handle = handle.__enter__()
