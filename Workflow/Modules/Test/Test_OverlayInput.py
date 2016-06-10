@@ -281,16 +281,8 @@ class TestOverlayUnittests( unittest.TestCase ):
         remove_mock.assert_called_with( 'overlayinput.sh' )
       else:
         remove_mock.assert_not_called()
-      for (filename, mode) in expected_opens:
-        mo.assert_any_call(filename, mode)
-      assertEqualsImproved( len(mo.mock_calls), len(expected_opens), self )
       # Check if output to files is correct
-      self.assertEquals(len(file_contents), len(expected))
-      for (index, handle) in enumerate(handles):
-        cur_handle = handle.__enter__()
-        self.assertEquals(len(expected[index]), handle.__enter__.return_value.write.call_count)
-        for entry in expected[index]:
-          cur_handle.write.assert_any_call(entry)
+      FileUtil.checkFileInteractions( self, mo, expected_opens, expected, handles )
       if is_ral:
         self.assertIn( 'CNS_HOST', os.environ )
         self.assertIn( 'STAGE_SVCCLASS', os.environ )
