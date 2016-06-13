@@ -268,6 +268,13 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
     clearLock(lockname)
     return S_ERROR('Failed to download software')
 
+  # FIXME: this is really bad style, suggestion: create 2 private methods that (download a file and check its md5)
+  # and (delete the old files and cleanup), then call the download_and_check method once and create a loop
+  # with a MAX_TRIES variable that cleans up the old files and tries to download again until MAX_TRIES are used up.
+  # The loop is only entered if download/md5check fail and if anything goes wrong in the loop, `continue` is called
+  # Could also think about creating a clearLockAndExit method that takes a string (lockname) and return value res
+  # and just calls clearLock(lockname) return res. Then replace these double calls in this method with return clearLockAndExit
+
   ## Check that the downloaded file (or existing one) has the right checksum
   res = tarMd5Check(app_tar_base, md5sum)
   if not res['OK']:
