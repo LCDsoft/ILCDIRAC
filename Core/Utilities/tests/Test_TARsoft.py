@@ -679,7 +679,7 @@ class TestTARsoft( unittest.TestCase ):
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_OK(('app_tar', 'tarballURL', False, 'md5sum')))), patch('%s.os.chdir' % MODULE_NAME), patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_check_error_test'))), patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to check integrity of software', self )
-      log_mock.assert_called_once_with( 'Failed to check software/dependency mytestappName testv12')
+      log_mock.assert_called_with( 'Failed to check software/dependency mytestappName testv12')
 
   def test_install_package_configure_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
