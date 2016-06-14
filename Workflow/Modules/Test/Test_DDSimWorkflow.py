@@ -46,6 +46,7 @@ class TestDDSimAnalysis( unittest.TestCase ):
     self.curdir = os.getcwd()
     self.tempdir = tempfile.mkdtemp("", dir = "./")
     os.chdir(self.tempdir)
+    self.ddsim.ops = Mock()
 
   def tearDown( self ):
     os.chdir(self.curdir)
@@ -349,6 +350,9 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
     res = self.ddsim.getEnvScript( platform, appname, appversion )
     self.assertEqual( res['Value'], os.path.abspath("DDSimEnv.sh") )
     self.assertTrue( os.path.exists(os.path.abspath("DDSimEnv.sh")) )
+    with open("DDSimEnv.sh") as script:
+      scriptLines = "".join(script.readlines())
+      self.assertIn( "declare -x DD4hepINSTALL=%s" % "/win32", scriptLines )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR("no softFolder") ) )
   def test_DDSim_getEnvScript_noSoftFolder( self ):
@@ -369,18 +373,45 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
     appname = "ddsim"
     appversion = "Vista"
     self.ddsim.ops.getOptionsDict = Mock( return_value = S_OK( dict(KNIGHTSWORD="Ni",
-                                                                    WHEN="Always"
+                                                                    WHEN="Always",
+                                                                    G4LEDATA="/dev/camelot",
                                                                    )
                                                              )
                                         )
     res = self.ddsim.getEnvScript( platform, appname, appversion )
     self.assertEqual( res['Value'], os.path.abspath("DDSimEnv.sh") )
     self.assertTrue( os.path.exists(os.path.abspath("DDSimEnv.sh")) )
+    with open("DDSimEnv.sh") as script:
+      scriptLines = "".join(script.readlines())
+      self.assertIn( "declare -x KNIGHTSWORD=Ni", scriptLines )
+      self.assertIn( "declare -x WHEN=Always", scriptLines )
+      self.assertIn( "declare -x G4LEDATA=/dev/camelot", scriptLines )
+      self.assertNotIn( "declare -x G4LEDATA=$(ls -d $G4DATA/", scriptLines )
+      self.assertIn( "declare -x G4LEVELGAMMADATA=$(ls -d $G4DATA/", scriptLines )
+
+  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("os.path.exists", new=Mock(return_value=True ) )
+  def test_DDSim_getEnvScript_noVars( self ):
+    """DDSim.getEnvScript with no additional variables.............................................."""
+
+    platform = "Windows"
+    appname = "ddsim"
+    appversion = "Vista"
+    self.ddsim.ops.getOptionsDict = Mock( return_value = S_ERROR( "No Variables Set" ) )
+    self.ddsim.ops.getValue = Mock( return_value = None )
+    res = self.ddsim.getEnvScript( platform, appname, appversion )
+    self.ddsim.ops.getValue.assert_called_once_with("/AvailableTarBalls/Windows/ddsim/Vista/InitScript", None)
+    self.assertEqual( res['Value'], os.path.abspath("DDSimEnv.sh") )
+    self.assertTrue( os.path.exists(os.path.abspath("DDSimEnv.sh")) )
+    with open("DDSimEnv.sh") as script:
+      scriptLines = "".join(script.readlines())
+      self.assertIn( "declare -x G4LEDATA=$(ls -d $G4DATA/", scriptLines )
+      self.assertNotIn( "source ", scriptLines )
 
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
   @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getNewLDLibs", new=Mock(return_value="") )
-  def test_DDSim_getEnvScript_vars2( self ):
-    """DDSim.getEnvScript with variables success 2.................................................."""
+  def test_DDSim_getEnvScript_init( self ):
+    """DDSim.getEnvScript with initscript..........................................................."""
     platform = "Windows"
     appname = "ddsim"
     appversion = "Vista"
@@ -389,10 +420,16 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
                                                                    )
                                                              )
                                         )
+    self.ddsim.ops.getValue = Mock( return_value = "/cvmfs/initthisfile.sh" )
     with patch("os.path.exists", new=Mock(return_value=True ) ):
       res = self.ddsim.getEnvScript( platform, appname, appversion )
+    self.ddsim.ops.getValue.assert_called_once_with("/AvailableTarBalls/Windows/ddsim/Vista/InitScript", None)
     self.assertEqual( res['Value'], os.path.abspath("DDSimEnv.sh") )
     self.assertTrue( os.path.exists(os.path.abspath("DDSimEnv.sh")) )
+    with open("DDSimEnv.sh") as script:
+      scriptLines = "".join(script.readlines())
+      self.assertIn( "source /cvmfs/initthisfile.sh", scriptLines )
+
 
 
 class TestDDSimAnalysisASI( TestDDSimAnalysis ):
