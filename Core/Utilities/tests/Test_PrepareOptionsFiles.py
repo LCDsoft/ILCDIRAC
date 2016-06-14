@@ -979,7 +979,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     expected = [[ TestPrepareOptionsFilePatch.teststr ]] # Means 2 files will be opened, nothing is written to first file, and 'firstlineentry' and 'line100' are written (in different calls and exactly these strings) to the second file. If more/less is written this fails!
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified), patch('%s.open' % moduleName, mock_open(), create=True) as mo:
+    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified), \
+         patch('%s.open' % moduleName, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
       self.assertTrue(PrepareOptionFiles.prepareTomatoSalad(None, 'outputxml', 'inputslcio', 'outputFile', 'collection')['OK'])
       current_tree = TestPrepareOptionsFile.current_tree

@@ -268,7 +268,12 @@ class TestOverlayUnittests( unittest.TestCase ):
       expected_opens = [('overlayinput.sh', 'w')]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     # Variable mocks: exists return value, open values
-    with patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=0)) as shell_mock, patch('%s.os.unlink' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=exists_sideeff)),  patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, patch('%s.os.chmod' % MODULE_NAME, new=Mock(return_value=True)) as chmod_mock, patch.dict(os.environ, environ_dict, True), patch('%s.os.getuid' % MODULE_NAME, new=Mock(return_value='mytestuserid')):
+    with patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=0)) as shell_mock, \
+         patch('%s.os.unlink' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=exists_sideeff)),  patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
+         patch('%s.os.chmod' % MODULE_NAME, new=Mock(return_value=True)) as chmod_mock, \
+         patch.dict(os.environ, environ_dict, True), \
+         patch('%s.os.getuid' % MODULE_NAME, new=Mock(return_value='mytestuserid')):
       mo.side_effect = (h for h in handles)
       result = scriptmethod( mylfn )
       if should_fail_with:
@@ -307,7 +312,16 @@ class TestOverlayExecute( unittest.TestCase ):
   def test_execute( self ):
     rpc_mock = Mock()
     rpc_mock.canRun.return_value = S_OK(1)
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), patch('%s.FileCatalogClient.findFilesByMetadata' % MODULE_NAME, new=Mock(return_value=S_OK(['file1.txt', 'file2.ppt']))), patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value = True)), patch('%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, patch('%s.RPCClient' % MODULE_NAME, new=Mock(return_value=rpc_mock)), patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value = True)), patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value = True)), patch('%s.DataManager.getFile' % MODULE_NAME, new=Mock(return_value=S_OK('Nothing'))), patch('%s.wasteCPUCycles' % MODULE_NAME):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), \
+         patch('%s.FileCatalogClient.findFilesByMetadata' % MODULE_NAME, new=Mock(return_value=S_OK(['file1.txt', 'file2.ppt']))), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value = True)), \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
+         patch('%s.RPCClient' % MODULE_NAME, new=Mock(return_value=rpc_mock)), \
+         patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value = True)), \
+         patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value = True)), \
+         patch('%s.DataManager.getFile' % MODULE_NAME, new=Mock(return_value=S_OK('Nothing'))), \
+         patch('%s.wasteCPUCycles' % MODULE_NAME):
       result = self.over.execute()
       assertDiracSucceedsWith_equals( result, 'OverlayInput finished successfully', self )
       assertEqualsImproved( self.over.applicationLog, os.getcwd() + '/Overlay_input.log', self )
@@ -326,16 +340,20 @@ class TestOverlayExecute( unittest.TestCase ):
       assertEqualsImproved( self.over.applicationLog, os.getcwd() + '/' + log, self )
 
   def test_execute_getfiles_fails( self ):
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), patch('%s.OverlayInput._OverlayInput__getFilesFromPath' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_getfile_error'))):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), \
+         patch('%s.OverlayInput._OverlayInput__getFilesFromPath' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_getfile_error'))):
       assertDiracFailsWith( self.over.execute(), 'some_getfile_error', self )
 
   def test_execute_getfiles_empty( self ):
     self.over.pathToOverlayFiles = ''
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), patch('%s.OverlayInput._OverlayInput__getFilesFromFC' % MODULE_NAME, new=Mock(return_value=S_OK([]))):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), \
+         patch('%s.OverlayInput._OverlayInput__getFilesFromFC' % MODULE_NAME, new=Mock(return_value=S_OK([]))):
       assertDiracFailsWith( self.over.execute(), 'overlayprocessor got an empty list', self )
 
   def test_execute_getlocally_fails( self ):
-    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), patch('%s.OverlayInput._OverlayInput__getFilesFromPath' % MODULE_NAME, new=Mock(return_value=S_OK(['mylfn1', 'otherlfn', 'many_more_lfns.txt']))), patch('%s.OverlayInput._OverlayInput__getFilesLocaly' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_local_getfile_err'))):
+    with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=2)), \
+         patch('%s.OverlayInput._OverlayInput__getFilesFromPath' % MODULE_NAME, new=Mock(return_value=S_OK(['mylfn1', 'otherlfn', 'many_more_lfns.txt']))), \
+         patch('%s.OverlayInput._OverlayInput__getFilesLocaly' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_local_getfile_err'))):
       assertDiracFailsWith( self.over.execute(), 'failed to get files locally', self )
 
 

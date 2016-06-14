@@ -86,7 +86,9 @@ class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
     self.prodJob.energy = 250.0
     self.prodJob.evttype = 'electron party'
     self.prodJob.outputStorage = 'CERN-EOS-DST'
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._analyseJob', new=Mock(return_value=S_OK())), patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._checkConsistency', new=Mock(return_value=S_OK())), patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._checkFinalConsistency', new=Mock(return_value=S_OK())):
+    with patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._analyseJob', new=Mock(return_value=S_OK())), \
+         patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._checkConsistency', new=Mock(return_value=S_OK())), \
+         patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._checkFinalConsistency', new=Mock(return_value=S_OK())):
       res = self.prodJob.append(ddsim)
       assertDiracSucceeds( res, self )
     res = self.prodJob.setJobFileGroupSize(1389)
@@ -94,7 +96,8 @@ class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
 
 class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   def test_setInputDataQuery( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracSucceeds( res, self )
@@ -113,79 +116,93 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   # TODO fix here
   def test_setInputDataQuery_getmetadatafails( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_ERROR('some_error'))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_ERROR('some_error'))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracFailsWith( res, 'could not contact file catalog', self )
 
   def test_setInputDataQuery_filecatalogWrongCase( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'prodid' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'prodid' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracFailsWith( res, 'key syntax error', self )
 
   def test_setInputDataQuery_filecatalogMissingKey( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       # Key not present in getMetadataFields return value
       randomkey = '09428ituj42itufgm'
       res = self.prodJob.setInputDataQuery( {'ProdID' : 19872456, randomkey : 'testvalue'} )
       assertDiracFailsWith( res, 'key %s not found in metadata keys' % randomkey, self )
 
   def test_setInputDataQuery_noprodid( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       res = self.prodJob.setInputDataQuery( {} )
       assertDiracFailsWith( res, "input metadata dictionary must contain at least a key 'prodid' as reference", self )
 
   def test_setInputDataQuery_second_finddir_fails( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_ERROR('some_error')])):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_ERROR('some_error')])):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracFailsWith( res,  'error looking up the catalog', self )
 
   def test_setInputDataQuery_second_finddir_invalid( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({})])):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({})])):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracFailsWith( res, 'could not find any directories', self )
 
   def test_setInputDataQuery_getdirusermetadata_fails( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_ERROR('some_error'))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_ERROR('some_error'))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracFailsWith( res, 'error looking up the catalog for directory metadata', self )
 
   def test_setInputDataQuery_getenergyfromcompatmeta_1( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : ['electron party'], 'Energy' : '13gev' }))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : ['electron party'], 'Energy' : '13gev' }))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracSucceeds( res, self )
       assertEqualsImproved( self.prodJob.energy, Decimal('13'), self )
 
   def test_setInputDataQuery_getenergyfromcompatmeta_2( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : ['13tev'] }))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : ['13tev'] }))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracSucceeds( res, self )
       assertEqualsImproved( self.prodJob.energy, Decimal('13000'), self )
 
   def test_setInputDataQuery_getenergyfromcompatmeta_3( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracSucceeds( res, self )
       assertEqualsImproved( self.prodJob.energy, Decimal('13'), self )
 
   def test_setInputDataQuery_noevttype( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({}))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456})
       assertDiracFailsWith( res, 'evttype is not in the metadata', self )
 
   def test_setInputDataQuery_numofevts_1( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testsuihe123' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testsuihe123' }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'NumberOfEvents' : ['42985']})
       assertDiracSucceeds( res, self )
       assertEqualsImproved(self.prodJob.nbevts, 42985, self)
 
   def test_setInputDataQuery_numofevts_2( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testabc' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'NumberOfEvents' : 'testabc' }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party', 'Energy' : 13 }))):
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'NumberOfEvents' : '968541'})
       assertDiracSucceeds( res, self )
       assertEqualsImproved(self.prodJob.nbevts, 968541, self)
 
   def test_setInputDataQuery_datatype_1( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'mytype', 'DetectorType' : 'GoodDetector874'})
       assertDiracSucceeds( res, self )
@@ -193,7 +210,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertEqualsImproved( self.prodJob.detector, 'GoodDetector874', self )
 
   def test_setInputDataQuery_datatype_2( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'gen', 'DetectorType' : 'abc'})
       assertDiracSucceeds( res, self )
@@ -201,7 +219,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertEqualsImproved( self.prodJob.detector, '', self )
 
   def test_setInputDataQuery_datatype_list1( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['mytype'], 'DetectorType' : ['MyDetector3000']})
       assertDiracSucceeds( res, self )
@@ -209,7 +228,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertEqualsImproved( self.prodJob.detector, 'MyDetector3000', self )
 
   def test_setInputDataQuery_datatype_list2( self ):
-    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
+    with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
       res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['gen'], 'DetectorType' : '904215fadf'})
       assertDiracSucceeds( res, self )
@@ -232,7 +252,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('__builtin__.open', mock_open()) as all_mo, patch('%s.open' % moduleName, mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('__builtin__.open', mock_open()) as all_mo, \
+         patch('%s.open' % moduleName, mock_open()) as mo, \
+         patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -257,7 +279,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('__builtin__.open', mock_open()) as all_mo, patch('%s.open' % moduleName, mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('__builtin__.open', mock_open()) as all_mo, \
+         patch('%s.open' % moduleName, mock_open()) as mo, \
+         patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -279,7 +303,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('__builtin__.open', mock_open()) as all_mo, patch('%s.open' % moduleName, mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('__builtin__.open', mock_open()) as all_mo, \
+         patch('%s.open' % moduleName, mock_open()) as mo, \
+         patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction()
@@ -312,7 +338,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertDiracFailsWith( job.createProduction(), 'some_error', self )
     with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.createWorkflow', new=Mock(side_effect=OSError('some_os_error'))):
       assertDiracFailsWith( job.createProduction(), 'could not create workflow', self )
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.Transformation.addTransformation', new=Mock(return_value=S_ERROR('myerror123'))), patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open(), create=True):
+    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.Transformation.addTransformation', new=Mock(return_value=S_ERROR('myerror123'))), \
+         patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open(), create=True):
       assertDiracFailsWith( job.createProduction(), 'myerror123', self )
     job.trc = Mock()
     job.trc.getTransformationStats.return_value = S_OK('fail this') #S_OK because it means it found a transformation by that name, so the new one cannot be created
@@ -331,7 +358,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('%s.open' % moduleName, mock_open(), create=True) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('%s.open' % moduleName, mock_open(), create=True) as mo, \
+         patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -407,7 +435,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       return CREATEDIR_DICT[value]
     def changepath_sideeffect( val, bool_flag ):
       return CHANGEPATH_DICT[val.iterkeys().next()]
-    with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)), patch('%s.RPCClient' % MODULE_NAME, new=Mock()) as rpc_mock:
+    with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), \
+         patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)), \
+         patch('%s.RPCClient' % MODULE_NAME, new=Mock()) as rpc_mock:
       rpc_mock.setTransformationParameter.return_value = S_OK(True)
       res = job.finalizeProd( 1387 )
       assertDiracSucceeds( res, self )
@@ -449,7 +479,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       return CREATEDIR_DICT[value]
     def changepath_sideeffect( val, bool_flag ):
       return CHANGEPATH_DICT[val.iterkeys().next()]
-    with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)):
+    with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), \
+         patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)):
       res = job.finalizeProd( 1387 )
       assertDiracSucceeds( res, self )
 
@@ -597,7 +628,8 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.prodJob.evttype = ''
     self.myapp.willBeCut = False
     self.myapp.outputFile = False
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, False]), create=True), patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, False]), create=True), \
+         patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
     self.prodJob.evttype = ''
     with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True]), create=True):
@@ -622,7 +654,10 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     assertEqualsImproved( self.prodJob.workflow['name'], self.prodJob.name, self )
     self.prodJob.setWorkflowDescription( 'this is a test workflow, pls dont execute' )
     assertEqualsImproved( self.prodJob.workflow['description'], 'this is a test workflow, pls dont execute', self )
-    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, False])), patch('%s.shutil.move' % MODULE_NAME, new=Mock(return_value=True)) as move_mock, patch('%s.os.remove' % MODULE_NAME, new=Mock(True)) as remove_mock, patch('__builtin__.open', mock_open()) as open_mock:
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, False])), \
+         patch('%s.shutil.move' % MODULE_NAME, new=Mock(return_value=True)) as move_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(True)) as remove_mock, \
+         patch('__builtin__.open', mock_open()) as open_mock:
       self.prodJob.createWorkflow()
       assertEqualsImproved( len(move_mock.mock_calls), 1, self )
       move_mock.assert_called_with( 'mysuperworkflow.xml', 'mysuperworkflow.xml.backup' )
