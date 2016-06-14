@@ -197,9 +197,14 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc")
   def test_getnewldlibs_cornercase( self, mock_removelibc ):
     # TODO: Understand method: Currently this method ignores every library path except the last one in the list and just ignores if getSoftwareFolder fails
-    reference = os.environ.get('LD_LIBRARY_PATH', 'oldLibraryPath')
+    reference = os.environ.get('LD_LIBRARY_PATH', '')
     mock_removelibc.return_value=True
-    self.assertEquals("%s:%s" % ('bFolder/LDLibs', reference), PrepareOptionFiles.getNewLDLibs(None, None, None))
+    if 'LD_LIBRARY_PATH' in os.environ:
+      result = PrepareOptionFiles.getNewLDLibs(None, None, None)
+    else:
+      with patch.dict('os.environ', { 'LD_LIBRARY_PATH' : '' }):
+        result = PrepareOptionFiles.getNewLDLibs(None, None, None)
+    self.assertEquals("%s:%s" % ('bFolder/LDLibs', reference), result)
     mock_removelibc.assert_any_call("aFolder/lib")
     mock_removelibc.assert_any_call("bFolder/LDLibs")
 

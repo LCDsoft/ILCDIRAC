@@ -394,7 +394,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertDiracFailsWith( job.createProduction(), 'myerror123', self )
     job.trc = Mock()
     job.trc.getTransformationStats.return_value = S_OK('fail this') #S_OK because it means it found a transformation by that name, so the new one cannot be created
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open()):
+    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open(), create=True):
       assertDiracFailsWith( job.createProduction(), 'already exists', self )
 
   @patch('__builtin__.open', mock_open())
@@ -409,7 +409,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-    with patch('%s.open' % moduleName, mock_open()) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
+    with patch('%s.open' % moduleName, mock_open(), create=True) as mo, patch('%s.Transformation.addTransformation' % moduleName, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -633,7 +633,7 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.prodJob.energy = 250
     self.myapp.setEnergy.return_value = S_ERROR('some_energy_error')
     assertDiracFailsWith( self.prodJob.append(self.myapp), 'some_energy_error', self )
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(return_value=False)):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(return_value=False), create=True):
       self.prodJob.evttype = ''
       self.myapp.setEnergy.return_value = S_OK(True)
       assertDiracFailsWith( self.prodJob.append(self.myapp), 'event type not found', self )
@@ -653,14 +653,14 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.myapp.setOutputSE.return_value = S_OK(True)
     self.prodJob.evttype = 'mytype/'
     self.myapp.willBeCut = False
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(return_value=True)):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(return_value=True), create=True):
       self.assertTrue(self.prodJob.append(self.myapp))
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True])):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True]), create=True):
       self.myapp.outputFile = False
       self.myapp.willBeCut = False
       self.myapp.detectortype = 'mydetector'
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True])):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True]), create=True):
       my_dict = self.prodJob.prodparameters
       def getitem(name):
         return my_dict[name]
@@ -685,10 +685,10 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.prodJob.evttype = ''
     self.myapp.willBeCut = False
     self.myapp.outputFile = False
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, False])), patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, False]), create=True), patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
     self.prodJob.evttype = ''
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True])):
+    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True]), create=True):
       self.myapp.detectortype = 'application_detectortype'
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
 
