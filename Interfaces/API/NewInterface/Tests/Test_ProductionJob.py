@@ -390,7 +390,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       assertDiracFailsWith( job.createProduction(), 'some_error', self )
     with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.createWorkflow', new=Mock(side_effect=OSError('some_os_error'))):
       assertDiracFailsWith( job.createProduction(), 'could not create workflow', self )
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.Transformation.addTransformation', new=Mock(return_value=S_ERROR('myerror123'))), patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open()):
+    with patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.Transformation.addTransformation', new=Mock(return_value=S_ERROR('myerror123'))), patch('ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.open', mock_open(), create=True):
       assertDiracFailsWith( job.createProduction(), 'myerror123', self )
     job.trc = Mock()
     job.trc.getTransformationStats.return_value = S_OK('fail this') #S_OK because it means it found a transformation by that name, so the new one cannot be created
