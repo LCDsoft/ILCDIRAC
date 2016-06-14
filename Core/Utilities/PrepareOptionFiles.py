@@ -49,7 +49,7 @@ def getNewLDLibs(platform, application, applicationVersion):
       new_ld_lib_path = newlibdir
       ####Remove the libc
       removeLibc(new_ld_lib_path)
-  if os.environ.has_key("LD_LIBRARY_PATH"):
+  if "LD_LIBRARY_PATH" in os.environ:
     if new_ld_lib_path:
       new_ld_lib_path = new_ld_lib_path + ":%s" % os.environ["LD_LIBRARY_PATH"]
     else:
