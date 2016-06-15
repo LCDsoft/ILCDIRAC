@@ -420,9 +420,9 @@ class TestSharedLocation( unittest.TestCase ):
       assertDiracFailsWith( result, 'missing installation of myapp_executable', self )
 
   def test_getEnvironmentScript( self ):
-    with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('/otherfolder/otherfile', 'cvmfsfolder/myenvscript')))):
+    with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('/otherfolder/otherfile', '/cvmfsfolder/myenvscript')))):
       result = getEnvironmentScript( 'a', 'b', 'c', None )
-      assertDiracSucceedsWith_equals( result, '', self ) #TODO bug??
+      assertDiracSucceedsWith_equals( result, '/cvmfsfolder/myenvscript', self )
 
   def test_getEnvironmentScript_cvmfs_empty( self ):
     def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
