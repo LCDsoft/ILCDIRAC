@@ -77,7 +77,7 @@ def getNewPATH(platform, application, applicationVersion):
       log.verbose("Found bin folder in %s" % (depfolder))
       newpathdir = os.path.join(depfolder, "bin")
       new_path = newpathdir
-  if os.environ.has_key("PATH"):
+  if "PATH" in os.environ:
     if new_path:
       new_path = new_path + ":%s" % os.environ["PATH"]
     else:
@@ -363,7 +363,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     globparams.append(lciolist) #pylint: disable=E1101
 
   for param in tree.findall('processor'):
-    if param.attrib.has_key('name'):
+    if 'name' in param.attrib:
       if len(outputFile) > 0:
         if param.attrib.get('name') == 'MyLCIOOutputProcessor':
           subparams = param.findall('parameter')
@@ -601,7 +601,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   else:
     notdriver = True
     for driver in drivers:
-      if driver.attrib.has_key("type"):
+      if 'type' in driver.attrib:
         if driver.attrib["type"] == "org.lcsim.job.EventMarkerDriver" :
           eventInterval = Element("eventInterval")
           eventInterval.text = "%s" % lcsimPrintEveryEvent
@@ -628,7 +628,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 
   if trackingstrategy:
     for driver in drivers:
-      if driver.attrib.has_key('type'):
+      if 'type' in driver.attrib:
         if driver.attrib['type'] == 'org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper':
           driver.remove(driver.find('strategyFile'))
           strategy = Element("strategyFile")
@@ -640,7 +640,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     printtext = mark.text #pylint: disable=E1101
   else:
     for driver in drivers:
-      if driver.attrib.has_key("type"):
+      if 'type' in driver.attrib:
         if driver.attrib["type"] == "org.lcsim.job.EventMarkerDriver" :
           marker = Element("marker")
           marker.text = "LCSIM"
@@ -649,7 +649,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 
   ##Take care of overlay
   for driver in drivers:
-    if driver.attrib.has_key("type"):
+    if 'type' in driver.attrib:
       if driver.attrib['type'] == "org.lcsim.util.OverlayDriver":
         #if driver.attrib['name']=="eventOverlay":
         ov_name = driver.find("overlayName")
@@ -671,7 +671,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   recwriterfound = False
   dstwriterfound = False
   for driver in drivers:
-    if driver.attrib.has_key("type"):
+    if 'type' in driver.attrib:
       if driver.attrib['type'] == "org.lcsim.util.loop.LCIODriver":
         if driver.attrib['name'] == "Writer":
           if outputFile:
@@ -799,7 +799,7 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   glob = tree.find('global')
   lciolistfound = False
   for param in params:
-    if param.attrib.has_key('name'):
+    if 'name' in param.attrib:
       if param.attrib['name'] == 'LCIOInputFiles':
         lciolistfound = True
         com = Comment("input file list changed")
@@ -818,7 +818,7 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
     if 'type' in param.attrib and param.attrib['type'] == 'TomatoProcessor':
       subparams = param.findall('parameter')
       for subparam in subparams:
-        if subparam.attrib.has_key('name'):
+        if 'name' in subparam.attrib:
           if outputFile and subparam.attrib['name'] == 'OutputFile':
             com = Comment('Outputfile changed')
             param.insert(0, com)

@@ -38,7 +38,7 @@ class CombinedSoftwareInstallation(object):
     self.source = argumentsDict.get('Source', {})
 
     apps = []
-    if self.job.has_key('SoftwarePackages'):
+    if 'SoftwarePackages' in self.job:
       if type( self.job['SoftwarePackages'] ) == type(''):
         apps = [self.job['SoftwarePackages']]
       elif type( self.job['SoftwarePackages'] ) == type([]):
@@ -231,13 +231,13 @@ def createSharedArea():
    Method to be used by SAM jobs to make sure the proper directory structure is created
    if it does not exists
   """
-  if not os.environ.has_key('VO_ILC_SW_DIR') and not os.environ.has_key("OSG_APP"):
+  if not 'VO_ILC_SW_DIR' in os.environ and not "OSG_APP" in os.environ:
     DIRAC.gLogger.info( 'VO_ILC_SW_DIR and OSG_APP not defined.' )
     return False
   sharedArea = '.'
-  if os.environ.has_key('VO_ILC_SW_DIR'):
+  if 'VO_ILC_SW_DIR' in os.environ:
     sharedArea = os.environ['VO_ILC_SW_DIR']
-  elif os.environ.has_key("OSG_APP"):
+  elif "OSG_APP" in os.environ:
     sharedArea = os.environ["OSG_APP"]
   if sharedArea == '.':
     DIRAC.gLogger.info( 'VO_ILC_SW_DIR or OSG_APP points to "."' )
