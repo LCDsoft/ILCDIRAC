@@ -320,7 +320,7 @@ class TestTARsoft( unittest.TestCase ):
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo:
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mysideeff = [ handles[0] ]
       for i in xrange(0, len(other_file_contents)):
         other_read_mock = Mock()
@@ -359,7 +359,7 @@ class TestTARsoft( unittest.TestCase ):
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo:
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mysideeff = [ handles[0] ]
       for i in xrange(0, len(other_file_contents)):
         other_read_mock = Mock()
@@ -397,7 +397,7 @@ class TestTARsoft( unittest.TestCase ):
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo:
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mysideeff = [ handles[0] ]
       for i in xrange(0, len(other_file_contents)):
         other_read_mock = Mock()
@@ -426,7 +426,7 @@ class TestTARsoft( unittest.TestCase ):
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo, \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
          patch('%s.gLogger.warn' % MODULE_NAME) as warn_mock:
       mo.side_effect = (h for h in handles)
       result = check( ('appname', 'version'), 'mytestarea398', ['/my/basefolder', 'res_from_install[1]'] )
@@ -449,7 +449,7 @@ class TestTARsoft( unittest.TestCase ):
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, True, False])) as exists_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo:
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mysideeff = [ handles[0] ]
       for i in xrange(0, len(other_file_contents)):
         other_read_mock = Mock()

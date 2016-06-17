@@ -76,7 +76,7 @@ class TestPrepareLibs( unittest.TestCase ):
       assertEqualsImproved( len( getcwd_mock.mock_calls ), 2, self )
 
   def test_main( self ):
-    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True)) as exit_mock, \
+    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True), create=True) as exit_mock, \
          patch('%s.sys.argv' % MODULE_NAME, new=Mock(return_value=[ 'something', 'myothertestpath' ])), \
          patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
@@ -86,7 +86,7 @@ class TestPrepareLibs( unittest.TestCase ):
       exit_mock.assert_called_once_with( 0 )
 
   def test_main_no_args( self ):
-    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True)) as exit_mock, \
+    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True), create=True) as exit_mock, \
          patch('%s.sys.argv' % MODULE_NAME, new=Mock(return_value=[ 'something', 'myothertestpath' ])), \
          patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
@@ -96,7 +96,7 @@ class TestPrepareLibs( unittest.TestCase ):
       exit_mock.assert_called_once_with( 1 )
 
   def test_main_remove_fails( self ):
-    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True)) as exit_mock, \
+    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True), create=True) as exit_mock, \
          patch('%s.sys.argv' % MODULE_NAME, new=Mock(return_value=[ 'something', 'myothertestpath' ])), \
          patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \

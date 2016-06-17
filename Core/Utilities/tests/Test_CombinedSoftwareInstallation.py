@@ -17,7 +17,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
   STD_DICT = { 'Job' : { 'SoftwarePackages' : 'mypackagev1.0', 'SystemConfig' : 'mytestconfig', 'Platform' : 'mytestplatform' }, 'CE' : { 'CompatiblePlatforms' : 'blabla' }, 'Source' : {} }
 
   def setUp( self ):
-    self.csi = CombinedSoftwareInstallation( {} )
+    with patch('%s.NativeMachine.CMTSupportedConfig' % MODULE_NAME, new=Mock(return_value=['x86_64-slc5-gcc43-opt'])):
+      self.csi = CombinedSoftwareInstallation( {} )
     self.csi.apps = [ ('myprogram','v6765') ]
 
   def test_constructor( self ):

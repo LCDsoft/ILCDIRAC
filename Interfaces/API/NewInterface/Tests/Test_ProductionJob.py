@@ -261,7 +261,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('__builtin__.open', mock_open()) as all_mo, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo, \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
          patch('%s.Transformation.addTransformation' % MODULE_NAME, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
@@ -290,7 +290,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('__builtin__.open', mock_open()) as all_mo, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo, \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
          patch('%s.Transformation.addTransformation' % MODULE_NAME, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
@@ -316,7 +316,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('__builtin__.open', mock_open()) as all_mo, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as mo, \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
          patch('%s.Transformation.addTransformation' % MODULE_NAME, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'

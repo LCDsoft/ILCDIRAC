@@ -130,7 +130,7 @@ class TestNativeMachine( unittest.TestCase ):
     nm = NativeMachine()
     file_content = 'something\nSuSE 10.2\nsomething'
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[False, True])), \
-         patch('%s.open' % MODULE_NAME, mock_open(read_data=file_content)):
+         patch('%s.open' % MODULE_NAME, mock_open(read_data=file_content), create=True):
       result = nm.OSFlavour() # Extracts version number from 'MyCoolOS 20.12' strings
       assertEqualsImproved( result, 'SuSE', self )
       assertEqualsImproved( nm._osflavor, 'SuSE', self )
@@ -140,7 +140,7 @@ class TestNativeMachine( unittest.TestCase ):
     nm = NativeMachine()
     file_content = ''
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[False, True])), \
-         patch('%s.open' % MODULE_NAME, mock_open(read_data = file_content)):
+         patch('%s.open' % MODULE_NAME, mock_open(read_data = file_content), create=True):
       result = nm.OSFlavour( 'ubunTu 13.21' )
       assertEqualsImproved( result, 'Ubuntu', self )
       assertEqualsImproved( nm._osflavor, 'Ubuntu', self )
@@ -207,7 +207,7 @@ class TestNativeMachine( unittest.TestCase ):
     mach = get_naked_machine()
     mach._ostype = 'Linux'
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)), \
-         patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3')):
+         patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3'), create=True):
       result = mach.OSVersion( 5 )
       assertEqualsImproved( result, '19.3', self )
       assertEqualsImproved( mach._osversion, '19.3', self )
@@ -216,7 +216,7 @@ class TestNativeMachine( unittest.TestCase ):
     mach = get_naked_machine()
     mach._ostype = 'Linux'
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)), \
-         patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3')):
+         patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3'), create=True):
       result = mach.OSVersion( 2, 'SuSE 3.6' )
       assertEqualsImproved( result, '3.6', self )
       assertEqualsImproved( mach._osversion, '3.6', self )
@@ -236,7 +236,7 @@ class TestNativeMachine( unittest.TestCase ):
     mach = get_naked_machine()
     mach._ostype = 'Linux'
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)), \
-         patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3')):
+         patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3'), create=True):
       result = mach.OSVersion( teststring = 'wrong_file123' )
       self.assertIsNone( result )
       self.assertIsNone( mach._osversion )
