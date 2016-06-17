@@ -270,7 +270,8 @@ class TestOverlayUnittests( unittest.TestCase ):
     # Variable mocks: exists return value, open values
     with patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=0)) as shell_mock, \
          patch('%s.os.unlink' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=exists_sideeff)),  patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=exists_sideeff)), \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
          patch('%s.os.chmod' % MODULE_NAME, new=Mock(return_value=True)) as chmod_mock, \
          patch.dict(os.environ, environ_dict, True), \
          patch('%s.os.getuid' % MODULE_NAME, new=Mock(return_value='mytestuserid')):

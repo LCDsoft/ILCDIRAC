@@ -49,12 +49,12 @@ class TestTARsoft( unittest.TestCase ):
   def test_createlock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
     file_contents = [[]]
-    handles = FileUtil.getMultipleReadHandles(file_contents)
-    with patch('%s.open' % MODULE_NAME, mock_open()) as mo:
-      mo.side_effect = (h for h in handles)
-      assertDiracSucceeds( createLock('testfile.py'), self )
-      mo.assert_called_once_with('testfile.py', 'w')
-      expected = [['Locking this directory\n']]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
+      mo.side_effect = ( h for h in handles )
+      assertDiracSucceeds( createLock( 'testfile.py' ), self )
+      mo.assert_called_once_with( 'testfile.py', 'w' )
+      expected = [ [ 'Locking this directory\n' ] ]
       self.assertEquals(len(file_contents), len(expected))
       for (index, handle) in enumerate(handles):
         cur_handle = handle.__enter__()
@@ -64,7 +64,7 @@ class TestTARsoft( unittest.TestCase ):
 
   def test_createlock_ioerr( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
-    with patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError('some_test_open_error'))):
+    with patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError('some_test_open_error')), create=True):
       assertDiracFailsWith( createLock('myfile.txt'), 'not allowed to write here: ioerror some_test_open_error', self )
 
   def test_check_lock_age_no_lock( self ):
@@ -204,7 +204,7 @@ class TestTARsoft( unittest.TestCase ):
     file_contents = [ ['849utj429foemfi84j92fno;(*ME(FOJN$EO&*R#BNOFMN(OJIm'] ]
     expected_hash = 'dab9783374461a26e100164747e84e63' # Precalculated
     handles = FileUtil.getMultipleReadHandles( file_contents )
-    with patch('%s.open' % MODULE_NAME, mock_open()) as mo:
+    with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
       result = tarMd5Check( '/my/app/tarball.tgz', expected_hash )
       mo.assert_called_once_with( '/my/app/tarball.tgz' )
@@ -212,7 +212,8 @@ class TestTARsoft( unittest.TestCase ):
 
   def test_md5_check_io_err( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import tarMd5Check
-    with patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError('myerr'))),  patch('%s.gLogger.warn' % MODULE_NAME, new=Mock()) as log_mock:
+    with patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError('myerr')), create=True), \
+         patch('%s.gLogger.warn' % MODULE_NAME, new=Mock()) as log_mock:
       result = tarMd5Check( '/my/app/tarball.tgz', '138974' )
       assertDiracSucceeds( result, self )
       log_mock.assert_called_once_with( 'Failed to get tar ball md5, try without' )
@@ -222,7 +223,7 @@ class TestTARsoft( unittest.TestCase ):
     file_contents = [['2984jt4gomrfg8924jgnm', '1938jhfo9coiemc0m90pn@O*E&HQRF(*IONU)', ')(DCIFUJE*FIUEqf9oi1mnf)']]
     expected_hash = '0981u3jr9831rkjopk,f90381'
     handles = FileUtil.getMultipleReadHandles( file_contents )
-    with patch('%s.open' % MODULE_NAME, mock_open()) as mo:
+    with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
       result = tarMd5Check( '/my/app/tarball.tgz', expected_hash )
       mo.assert_called_once_with( '/my/app/tarball.tgz' )

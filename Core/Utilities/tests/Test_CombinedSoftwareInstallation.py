@@ -36,7 +36,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
     del custom_job_dict['SystemConfig']
     custom_dict['Job'] = custom_job_dict
     custom_dict['CE'] = { 'CompatiblePlatforms' : [ 'iamcompatibletoo', 'here' ] }
-    self.csi = CombinedSoftwareInstallation( custom_dict )
+    with patch('%s.NativeMachine.CMTSupportedConfig' % MODULE_NAME, new=Mock(return_value=['x86_64-slc5-gcc43-opt'])):
+      self.csi = CombinedSoftwareInstallation( custom_dict )
     assertEqualsImproved( self.csi.apps, [], self )
     assertEqualsImproved( self.csi.ceConfigs, ['x86_64-slc5-gcc43-opt'], self )
 
@@ -49,7 +50,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
   def test_execute( self ):
     with patch('%s.resolveDeps' % MODULE_NAME, new=Mock(return_value=[ { 'app' : 'dependency123', 'version' : '3.4' } ])), \
          patch('%s.Operations.getSections' % MODULE_NAME, new=Mock(return_value=S_OK(['x86_64-slc5-gcc43-opt']))), \
-         patch('%s.installInAnyArea' % MODULE_NAME, new=Mock(return_value=S_OK())):
+         patch('%s.installInAnyArea' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+         patch('%s.NativeMachine.CMTSupportedConfig' % MODULE_NAME, new=Mock(return_value=['x86_64-slc5-gcc43-opt'])):
       self.csi = CombinedSoftwareInstallation( TestCombinedSWInstallation.STD_DICT )
       assertEqualsImproved( self.csi.ceConfigs, ['x86_64-slc5-gcc43-opt'], self )
       assertEqualsImproved( self.csi.jobConfig, 'mytestconfig', self )
@@ -68,7 +70,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
   def test_execute_not_compatible( self ):
     with patch('%s.resolveDeps' % MODULE_NAME, new=Mock(return_value=[ { 'app' : 'dependency123', 'version' : '3.4' } ])), \
          patch('%s.Operations.getSections' % MODULE_NAME, new=Mock(return_value=S_OK(['some_Exotic_system1', 'nope_not_this_one_either']))), \
-         patch('%s.installInAnyArea' % MODULE_NAME, new=Mock(return_value=S_OK())):
+         patch('%s.installInAnyArea' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+         patch('%s.NativeMachine.CMTSupportedConfig' % MODULE_NAME, new=Mock(return_value=['x86_64-slc5-gcc43-opt'])):
       import copy
       custom_dict = copy.deepcopy( TestCombinedSWInstallation.STD_DICT )
       custom_dict['CE'] = { 'CompatiblePlatforms' : [ 'iamcompatibletoo', 'here' ] }

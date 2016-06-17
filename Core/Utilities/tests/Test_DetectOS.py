@@ -128,6 +128,8 @@ class TestNativeMachine( unittest.TestCase ):
 
   def test_osflavor_unix( self ):
     nm = NativeMachine()
+    nm._osflavor = None
+    nm._ostype = 'Linux'
     file_content = 'something\nSuSE 10.2\nsomething'
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[False, True])), \
          patch('%s.open' % MODULE_NAME, mock_open(read_data=file_content), create=True):
@@ -138,6 +140,8 @@ class TestNativeMachine( unittest.TestCase ):
 
   def test_osflavor_unix_with_teststr( self ):
     nm = NativeMachine()
+    nm._osflavor = None
+    nm._ostype = 'Linux'
     file_content = ''
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[False, True])), \
          patch('%s.open' % MODULE_NAME, mock_open(read_data = file_content), create=True):
@@ -205,6 +209,7 @@ class TestNativeMachine( unittest.TestCase ):
 
   def test_osversion_linux( self ):
     mach = get_naked_machine()
+    mach._osversion = None
     mach._ostype = 'Linux'
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.open' % MODULE_NAME, mock_open(read_data='somethingsomething\nUbuntu 19.3'), create=True):

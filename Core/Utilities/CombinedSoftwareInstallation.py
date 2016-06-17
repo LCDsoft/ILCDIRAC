@@ -5,16 +5,19 @@ Installs properly ILD soft and SiD soft, and all dependencies
 :author: Stephane Poss
 :author: Przemyslaw Majewski
 """
-__RCSID__ = "$Id$"
-import os, zipfile
+import os
+import zipfile
 import DIRAC
-from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, installDependencies
-from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
+
+from DIRAC                             import S_OK, S_ERROR
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from DIRAC.Core.Utilities.Subprocess   import systemCall
 
 from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
-from DIRAC.Core.Utilities.Subprocess   import systemCall
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
-from DIRAC                             import S_OK, S_ERROR
+from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
+from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, installDependencies
+
+__RCSID__ = "$Id$"
 
 natOS = NativeMachine()
 
@@ -231,7 +234,7 @@ def createSharedArea():
    Method to be used by SAM jobs to make sure the proper directory structure is created
    if it does not exists
   """
-  if not 'VO_ILC_SW_DIR' in os.environ and not "OSG_APP" in os.environ:
+  if 'VO_ILC_SW_DIR' not in os.environ and "OSG_APP" not in os.environ:
     DIRAC.gLogger.info( 'VO_ILC_SW_DIR and OSG_APP not defined.' )
     return False
   sharedArea = '.'

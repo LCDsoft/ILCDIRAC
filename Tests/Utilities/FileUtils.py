@@ -23,7 +23,7 @@ class FileUtil(object):
     from ILCDIRAC.Workflow.Modules import WhizardAnalysis
     handles = FileUtil.getMultipleReadHandles(file_contents)
     moduleName = "ILCDIRAC.Workflow.Modules.WhizardAnalysis"
-    with patch('%s.open' % moduleName, mock_open()) as mo:
+    with patch('%s.open' % moduleName, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
       WhizardAnalysis.runIt()
       

@@ -3,11 +3,11 @@ Tests for PrepareLibs
 
 """
 import unittest
-from mock import mock_open, patch, MagicMock as Mock
+import sys
+from mock import patch, MagicMock as Mock
 
-from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc, main
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved
 
 __RCSID__ = "$Id$"
 
@@ -76,32 +76,32 @@ class TestPrepareLibs( unittest.TestCase ):
       assertEqualsImproved( len( getcwd_mock.mock_calls ), 2, self )
 
   def test_main( self ):
-    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True), create=True) as exit_mock, \
-         patch('%s.sys.argv' % MODULE_NAME, new=Mock(return_value=[ 'something', 'myothertestpath' ])), \
-         patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
+    sys_mock = Mock()
+    sys_mock.argv = [ 'something', 'myothertestpath' ]
+    sys.modules['sys'] = sys_mock
+    with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
-      main()
-      exit_mock.assert_called_once_with( 0 )
+      assertEqualsImproved( main(), 0, self )
 
   def test_main_no_args( self ):
-    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True), create=True) as exit_mock, \
-         patch('%s.sys.argv' % MODULE_NAME, new=Mock(return_value=[ 'something', 'myothertestpath' ])), \
-         patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
+    sys_mock = Mock()
+    sys_mock.argv = [ 'something' ]
+    sys.modules['sys'] = sys_mock
+    with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
-      main()
-      exit_mock.assert_called_once_with( 1 )
+      assertEqualsImproved( main(), 1, self )
 
   def test_main_remove_fails( self ):
-    with patch('%s.exit' % MODULE_NAME, new=Mock(return_value=True), create=True) as exit_mock, \
-         patch('%s.sys.argv' % MODULE_NAME, new=Mock(return_value=[ 'something', 'myothertestpath' ])), \
-         patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
+    sys_mock = Mock()
+    sys_mock.argv = [ 'something', 'myothertestpath' ]
+    sys.modules['sys'] = sys_mock
+    with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError( 'test_cannot_remove_os_err' )) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
-      main()
-      exit_mock.assert_called_once_with( 1 )
+      assertEqualsImproved( main(), 1, self )
 
