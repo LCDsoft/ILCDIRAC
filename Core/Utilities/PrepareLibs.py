@@ -45,7 +45,8 @@ def getLibsToIgnore():
   """ :returns: static list of system libraries """
   return FILES_TO_REMOVE
 
-if __name__ == "__main__":
+def main():
+  """ Main method, executed when this file is executed as a python script """
   import sys
   if not len(sys.argv)>1:
     print "You need to pass the path"
@@ -57,3 +58,6 @@ if __name__ == "__main__":
     print "Could not clean libs"
     exit(1)
   exit(0)
+
+if __name__ == "__main__":
+  main()
