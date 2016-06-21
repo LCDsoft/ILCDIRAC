@@ -1,3 +1,21 @@
+[v26]
+
+Core:
+
+NEW: Based on DIRAC v6r15p5 (or later)
+NEW: Many unittests for Utilities and other modules
+
+Utilities:
+
+FIX: Clean code in CombinedSoftwareInstallation. Unnecessary call to os.path.join.
+FIX: PrepareLibs refactored
+FIX: PrepareOption files refactored for better maintanability
+
+Resources:
+
+CHANGE: Go back to XROOTStorage from DIRAC
+
+
 [v25r0p7]
 
 * Workflow:
