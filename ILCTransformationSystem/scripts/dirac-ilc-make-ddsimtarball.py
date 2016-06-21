@@ -7,7 +7,6 @@ Needs the chrpath and readelf utilities
 import sys
 import os
 import tarfile
-import shutil
 
 try:
   import hashlib as md5
@@ -19,11 +18,6 @@ from pprint import pprint
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
-
-Script.parseCommandLine( ignoreErrors = False )
-
-from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
-from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
 
 class DDSimTarMaker( object ):
   """ create a tarball of the DDSim release """
@@ -42,6 +36,7 @@ class DDSimTarMaker( object ):
 
   def copyDetectorModels( self, basePath, folder, targetFolder ):
     """copy the compact folders to the targetFolder """
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder
     for root,dirs,_files in os.walk( os.path.join(basePath, folder) ):
       for direct in dirs:
         if root.endswith("compact"):
@@ -104,7 +99,7 @@ class DDSimTarMaker( object ):
               }
 
     """
-
+    from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
     #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
     csParameter = { "TarBall": self.tarBallName,
                     "AdditionalEnvVar": {
@@ -185,6 +180,9 @@ class DDSimTarMaker( object ):
 
   def createDDSimTarBall( self ):
     """ do everything to create the DDSim tarball"""
+
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
+
     self.parseArgs()
     ddBase, lcgeoBase, _rootsys = self.checkEnvironment()
 
@@ -262,6 +260,7 @@ class DDSimTarMaker( object ):
     self.createCSEntry()
 
 if __name__=="__main__":
+  Script.parseCommandLine( ignoreErrors = False )
   print "Creating Tarball for DDSim"
   try:
     DDSIMMAKER = DDSimTarMaker()
