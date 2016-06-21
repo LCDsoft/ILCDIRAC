@@ -229,7 +229,7 @@ class ModuleBase(object):
     """
     fileInfo = {}
     for outputFile in outputList:
-      if 'outputFile' and 'outputDataSE' and 'outputPath' in outputFile:
+      if all (key in outputFile for key in ('outputFile','outputDataSE', 'outputPath')):
         fname = outputFile['outputFile']
         fileSE = outputFile['outputDataSE']
         filePath = outputFile['outputPath']
