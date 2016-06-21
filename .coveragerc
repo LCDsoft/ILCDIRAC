@@ -1,6 +1,10 @@
 [run]
 branch = True
+omit =
+     Interfaces/API/NewInterface/Tests/LocalTestObjects.py
+     */Tests/*
 
 [report]
 omit =
      Interfaces/API/NewInterface/Tests/LocalTestObjects.py
+     */Tests/*

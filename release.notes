@@ -15,6 +15,15 @@ Resources:
 
 CHANGE: Go back to XROOTStorage from DIRAC
 
+[v25r0p8]
+
+* Core:
+
+NEW: Based on DIRAC v6r14p35
+
+* Workflow:
+
+FIX: DDSim: Fix for running ddsim when init script is needed. The LD_LIBRARY_PATH was not put together correctly and on some sites the local libstdc++.so was picked up.
 
 [v25r0p7]
 

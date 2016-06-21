@@ -245,7 +245,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
 
     ##Libraries
     if newLDLibraryPath:
-      script.append('declare -x LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH' % newLDLibraryPath)
+      script.append('declare -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s' % newLDLibraryPath)
 
     ## user provided libraries are in lib in the job working directory
     if os.path.exists( "%s/lib" % os.getcwd() ):
