@@ -1,13 +1,12 @@
 #!/usr/local/env python
-
 """
 Test user jobfinalization
 
 """
 
-from mock import patch, mock_open, MagicMock as Mock
 import unittest
 from decimal import Decimal
+from mock import patch, mock_open, MagicMock as Mock
 from DIRAC import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
@@ -71,6 +70,8 @@ class ProductionJobCompleteTestCase( unittest.TestCase ):
     assertEqualsImproved(self.prodJob.prodparameters['ILDConfigVersion'], ver, self)
 
 class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
+  """ Tests the setJobFileGroupSize method
+  """
   def test_setJobFileGroupSize_normal( self ):
     # Basic setter method
     num = 4871
@@ -99,6 +100,8 @@ class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
     assertDiracFailsWith( res, 'input is needed at the beginning', self )
 
 class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
+  """ Tests the setInputDataQuery method
+  """
 
   @classmethod
   def setUpClass(cls):
@@ -444,13 +447,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
     job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {}, 'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {}, 'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {}, 'othertestpath/many_dirs/file.txt' : {} }
     job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {}, 'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {}, '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
+
     job.fc = Mock()
-
-    def createdir_sideeffect( value ):
-      return CREATEDIR_DICT[value]
-    def changepath_sideeffect( val, bool_flag ):
-      return CHANGEPATH_DICT[val.iterkeys().next()]
-
     job.fc.createDirectory.side_effect = createdir_sideeffect
     job.fc.changePathMode.side_effect = changepath_sideeffect
 
@@ -468,13 +466,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.slicesize = 561
     job.finalMetaDict = { 'asd' : 'asd' }
     job.finalMetaDictNonSearch = { 'testpath123/a/b/c' : {} }
+
     job.fc = Mock()
-
-    def createdir_sideeffect( value ):
-      return CREATEDIR_DICT[value]
-    def changepath_sideeffect( val, bool_flag ):
-      return CHANGEPATH_DICT[val.iterkeys().next()]
-
     job.fc.createDirectory.side_effect = createdir_sideeffect
     job.fc.changePathMode.side_effect = changepath_sideeffect
 
@@ -503,11 +496,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
     job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {}, 'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {}, 'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {}, 'othertestpath/many_dirs/file.txt' : {} }
     job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {}, 'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {}, '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
+
     class_name = '%s.FileCatalogClient' % MODULE_NAME
-    def createdir_sideeffect( value ):
-      return CREATEDIR_DICT[value]
-    def changepath_sideeffect( val, bool_flag ):
-      return CHANGEPATH_DICT[val.iterkeys().next()]
     with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), \
          patch('%s.changePathMode' % class_name, new=Mock(side_effect=changepath_sideeffect)):
       res = job.finalizeProd( 1387 )
@@ -738,7 +728,6 @@ def create_application_mock():
   return myapp
 
 # Constants needed for the tests
-
 EXPECTED_XML = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="arguments" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Arguments to executable Step"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output data]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.RegisterOutputData import RegisterOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Module to add in the metadata catalog the relevant info about the files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>RegisterOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output log files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadLogFile</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest]]></body>\n<origin></origin>\n<description><![CDATA[Sends any failover requests]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>FailoverRequest</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<StepDefinition>\n<origin></origin>\n<version>0.0</version>\n<type>Job_Finalization</type>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<ModuleInstance>\n<type>UploadOutputData</type>\n<name>dataUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>RegisterOutputData</type>\n<name>RegisterOutputData</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>UploadLogFile</type>\n<name>logUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>FailoverRequest</type>\n<name>failoverRequest</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n</StepDefinition>\n<StepInstance>\n<type>Job_Finalization</type>\n<name>finalization</name>\n<descr_short></descr_short>\n</StepInstance>\n</Workflow>\n'
 
 EXPECTED_XML_WITH_PROXY= '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="arguments" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Arguments to executable Step"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="Platform" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Platform ( Operating System )"><value><![CDATA[x86_64-slc5-gcc43-opt]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output data]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.RegisterOutputData import RegisterOutputData]]></body>\n<origin></origin>\n<description><![CDATA[Module to add in the metadata catalog the relevant info about the files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>RegisterOutputData</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile]]></body>\n<origin></origin>\n<description><![CDATA[Uploads the output log files]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>UploadLogFile</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<ModuleDefinition>\n<body><![CDATA[from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest]]></body>\n<origin></origin>\n<description><![CDATA[Sends any failover requests]]></description>\n<descr_short></descr_short>\n<required></required>\n<version>0.0</version>\n<type>FailoverRequest</type>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[False]]></value></Parameter>\n</ModuleDefinition>\n<StepDefinition>\n<origin></origin>\n<version>0.0</version>\n<type>Job_Finalization</type>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<ModuleInstance>\n<type>UploadOutputData</type>\n<name>dataUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>RegisterOutputData</type>\n<name>RegisterOutputData</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>UploadLogFile</type>\n<name>logUpload</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n<ModuleInstance>\n<type>FailoverRequest</type>\n<name>failoverRequest</name>\n<descr_short></descr_short>\n<Parameter name="enable" type="bool" linked_module="" linked_parameter="" in="True" out="False" description="EnableFlag"><value><![CDATA[True]]></value></Parameter>\n</ModuleInstance>\n</StepDefinition>\n<StepInstance>\n<type>Job_Finalization</type>\n<name>finalization</name>\n<descr_short></descr_short>\n</StepInstance>\n</Workflow>\n'
@@ -773,6 +762,28 @@ CHANGEPATH_DICT = {'testpath123/a/b/c' : S_OK(), \
                    'nonsearchable/path2' : S_OK(), \
                    '/usr/bin/test' : S_ERROR(), \
                    'asd' : S_OK() }#, S_OK(), S_ERROR('this is a test. fail please.')}
+
+def createdir_sideeffect( value ):
+  """ Returns the appropriate return value of the createDir method for the given directory string
+
+  :param string value: directory to be created
+  :returns: S_OK/S_ERROR structure with the value in CREATEDIR_DICT
+  :rtype: dict
+
+  """
+  return CREATEDIR_DICT[value]
+
+def changepath_sideeffect( val, bool_flag ): #pylint: disable=unused-argument
+  """ Returns the appropriate return value of the changePathMode method for the given directory string.
+  bool_flag is not used in this test version, but in the original method.
+
+  :param string val: path to be changed to
+  :param bool bool_flag: ignored, used in the actual implementation
+  :returns: S_OK/S_ERROR structure with the value in CHANGEPATH_DICT
+  :rtype: dict
+
+  """
+  return CHANGEPATH_DICT[val.iterkeys().next()]
 
 def runTests():
   """Runs our tests"""
