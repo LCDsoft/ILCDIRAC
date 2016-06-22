@@ -1,4 +1,4 @@
-#!/usr/local/env python
+#!/bin/env python
 """
 compile the release notes
 
@@ -7,10 +7,11 @@ from DIRAC.Core.Utilities import Distribution
 from DIRAC import gLogger, S_OK, S_ERROR
 import os
 import re
+import sys
 
-def doit():
+def doit( tag ):
   """compile release notes rst file"""
-  res = __generateReleaseNotes( "v25r0p0" )
+  res = __generateReleaseNotes( tag )
   if not res['OK']:
     print res['Message']
     return 1
@@ -151,4 +152,11 @@ def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
   
   
 if __name__=="__main__":
-  exit(doit())
+  args = sys.argv
+  print "args",args
+  if not len(args) > 1:
+    print "Please give the tag for the release notes"
+    exit(1)
+  tag = args[1]
+  print "Tag found:", tag
+  exit( doit( tag ))
