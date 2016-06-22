@@ -297,7 +297,9 @@ def fixedXML(element):
 
 def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug,
-                   dd4hepGeoFile=None):
+                   dd4hepGeoFile=None,
+                   eventsPerBackgroundFile=0,
+                  ):
   """Write out a xml file for Marlin
   
   Takes in input the specified job parameters for Marlin application given from :mod:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis`
@@ -312,6 +314,8 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   :param string outputREC: file name of REC
   :param string outputDST: file name of DST
   :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
+  :param str dd4hepGeoFile: path to the dd4hep Geometry XML file, optional, default None
+  :param int eventsPerBackgroundFile: number of events in each background file, optional, default 0
   :return: S_OK
   """
   tree = ElementTree()
@@ -400,6 +404,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 subparam.text = outputDST
                 com = Comment("DST file changed")
                 param.insert(0, com)
+      # OverlayTiming  processor treatment
       if param.attrib.get('name', '').lower().count('overlaytiming'):
         subparams = param.findall('parameter')
         for subparam in subparams:
@@ -416,6 +421,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               subparam.text = "\n".join(files)
               com = Comment("Overlay files changed")
               param.insert(0, com)
+      # BGOverlay Processor Treatment
       if param.attrib.get('name','').lower().count('bgoverlay'):
         bkg_Type = 'aa_lowpt' #specific to ILD_DBD
         subparams = param.findall('parameter')
@@ -431,6 +437,9 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               subparam.text = "\n".join(files)
               com = Comment("Overlay files changed")
               param.insert(0, com)
+            if subparam.attrib.get('name') == "NSkipEventsRandom" and len(files) > 0:
+              com = Comment("NSkipEventsRandom Changed")
+              subparam.text = "%d" % int( len(files) * eventsPerBackgroundFile )
 
       ## Deal with the InitializeDD4hep parameter value for the XML File
       if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:

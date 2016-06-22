@@ -135,6 +135,11 @@ class OverlayInput (ModuleBase):
       else:
         return S_ERROR("Number of events in the signal file is missing")
       self.nbinputsigfile = len(self.InputData)
+
+    self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
+    self.log.info( "Background Event Type: %s " % self.BkgEvtType )
+    self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
+    self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
       
     if not self.NbSigEvtsPerJob and not self.nbsigeventsperfile:
       return S_ERROR("Could not determine the number of signal events per input file")
@@ -175,6 +180,10 @@ class OverlayInput (ModuleBase):
                                                                                   self.detectormodel,
                                                                                   self.BkgEvtType), 
                                                  100)
+
+    self.log.info( "Number of Events Per BackgroundFile: %d " % self.nbofeventsperfile )
+    self.workflow_commons["OI_eventsPerBackgroundFile"] = self.nbofeventsperfile
+
     meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
