@@ -13,12 +13,14 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Workflow.Modules.UserJobFinalization'
 
+@patch('%s.gConfig.getValue' % MODULE_NAME, new=Mock(return_value=[]))
 class TestUserJobFinalization( unittest.TestCase ):
   """ Test the UserJobFinalization module
   """
 
   def setUp( self ):
     self.ujf = UserJobFinalization()
+    self.ujf.defaultOutputSE = []
 
   @patch.dict(os.environ, { 'JOBID' : '123956' }, clear=True)
   def test_application_specific_inputs( self ):
@@ -204,6 +206,7 @@ class TestExecute( unittest.TestCase ):
 
   def setUp( self ):
     self.ujf = UserJobFinalization()
+    self.ujf.defaultOutputSE = []
     self.ujf.step_commons = { 'STEP_NUMBER' : '42' }
     self.ujf.workflow_commons = { 'TotalSteps' : '42' }
 
