@@ -16,7 +16,7 @@ def mkdir( folder ):
   try:
     os.mkdir( os.path.join(os.getcwd(),folder) )
   except OSError as e:
-    print Exception,str(e)
+    print "Exception",repr(e)
 
 def mkRest( filename, modulename, fullmodulename, subpackages=None, modules=None ):
   """make a rst file for filename"""
@@ -24,48 +24,29 @@ def mkRest( filename, modulename, fullmodulename, subpackages=None, modules=None
     modulefinal = fullmodulename.split(".")[-2]+" Scripts"
   else:
     modulefinal = modulename
-  with open(filename, 'w') as rst:
-    lines = []
-    lines.append("%s" % modulefinal)
-    lines.append("="*len(modulefinal))
-    lines.append(".. module:: %s " % fullmodulename )
-    lines.append("" )
-    # lines.append(".. automodule:: %s" % fullmodulename )
-    # lines.append("   :members:" )
-    # lines.append("   :undoc-members:" )
-    # lines.append("   :inherited-members:" )
-    # lines.append("   :show-inheritance:" )
 
-    # if subpackages or modules:
-    #   lines.append(".. autosummary::")
-    #   lines.append("")
+  lines = []
+  lines.append("%s" % modulefinal)
+  lines.append("="*len(modulefinal))
+  lines.append(".. module:: %s " % fullmodulename )
+  lines.append("" )
 
-    # if subpackages:
-    #   for package in subpackages:
-    #     lines.append("   %s/%s" % (package,package.split("/")[-1] ) )
-    #     #lines.append("   %s " % (package, ) )
-    #     lines.append("")
-    # if modules:
-    #   for module in modules:
-    #     lines.append("   %s" % (module.split("/")[-1],) )
-    #     #lines.append("   %s " % (package, ) )
-    #     lines.append("")
-    
-    if subpackages or modules:
-      lines.append(".. toctree::")
-      lines.append("   :maxdepth: 1")
-      lines.append("")
+  if subpackages or modules:
+    lines.append(".. toctree::")
+    lines.append("   :maxdepth: 1")
+    lines.append("")
 
-    if subpackages:
-      for package in subpackages:
-        lines.append("   %s/%s.rst" % (package,package.split("/")[-1] ) )
-        #lines.append("   %s " % (package, ) )
+  if subpackages:
+    for package in subpackages:
+      lines.append("   %s/%s.rst" % (package,package.split("/")[-1] ) )
+      #lines.append("   %s " % (package, ) )
 
-    if modules:
-      for module in sorted(modules):
-        lines.append("   %s.rst" % (module.split("/")[-1],) )
-        #lines.append("   %s " % (package, ) )
+  if modules:
+    for module in sorted(modules):
+      lines.append("   %s.rst" % (module.split("/")[-1],) )
+      #lines.append("   %s " % (package, ) )
         
+  with open(filename, 'w') as rst:
     rst.write("\n".join(lines))
 
     
@@ -142,6 +123,7 @@ def createDoc():
     if abspath:
       mkdir( abspath )
       os.chdir( abspath )
+    #print "Making rst",modulename
     mkRest( modulename+".rst", modulename, fullmodulename, subpackages=packages, modules=getmodules(abspath, direc, files) )
 
     for filename in files:
