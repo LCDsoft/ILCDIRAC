@@ -9,6 +9,8 @@ from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
 from DIRAC import S_OK, S_ERROR
 
+__RCSID__ = "$Id$"
+
 class MarlinAnalysisFixture( object ):
   """ Contains the commonly used setUp and tearDown methods of the Tests"""
   def setUp( self ):
