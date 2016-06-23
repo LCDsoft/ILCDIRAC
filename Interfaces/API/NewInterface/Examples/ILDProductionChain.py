@@ -42,7 +42,7 @@ GGToHadInt350  = 0.33
 GGToHadInt500  = 1.7
 GGToHadInt1000 = 4.1
 
-MarlinVer    = "v01-16-02"
+MarlinVer    = "ILCSoft-01-16-02-p1"
 MokkaVer     = "080003"
 banned_sites = [""]
 dryrun       = False
@@ -67,7 +67,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160215_3_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20160623_1_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
