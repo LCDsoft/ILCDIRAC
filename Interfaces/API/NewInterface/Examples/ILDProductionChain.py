@@ -282,7 +282,7 @@ if ild_sim and meta:
   pmo = ILDProductionJob()
   pmo.matchToInput = matchToInput_mokka
   pmo.setDryRun(dryrun)
-  pmo.setProdPlugin('Limited')
+  pmo.setProdPlugin('Standard')
   pmo.setILDConfig(ILDConfig)
   pmo.setEvtClass(my_evtclass)
   pmo.setUseSoftTagInPath(True)
