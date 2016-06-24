@@ -450,23 +450,22 @@ class WhizardAnalysis(ModuleBase):
       info = {}
       info['xsection'] = {}
       processes.append('sum')
-      inf = open("whizard.out", "r")
-      for line in inf:
-        line = line.rstrip()
-        for process in processes:
-          if not process:
-            continue
-          if line.count("   %s            " % process):
-            info['xsection'][process] = {}
-            line = line.lstrip()
-            crosssection = line.split()[1]
-            err_crosssection = line.split()[2]
-            frac = line.split()[4]
-            info['xsection'][process]['xsection'] = float(crosssection)
-            info['xsection'][process]['err_xsection'] = float(err_crosssection)
-            info['xsection'][process]['fraction'] = float(frac)
+      with open("whizard.out", "r") as inf:
+        for line in inf:
+          line = line.rstrip()
+          for process in processes:
+            if not process:
+              continue
+            if line.count("   %s            " % process):
+              info['xsection'][process] = {}
+              line = line.lstrip()
+              crosssection = line.split()[1]
+              err_crosssection = line.split()[2]
+              frac = line.split()[4]
+              info['xsection'][process]['xsection'] = float(crosssection)
+              info['xsection'][process]['err_xsection'] = float(err_crosssection)
+              info['xsection'][process]['fraction'] = float(frac)
 
-      inf.close()
     if info:
       if 'Info' not in self.workflow_commons:
         self.workflow_commons['Info'] = info
