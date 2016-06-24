@@ -67,7 +67,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160623_1_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20160623_3_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -107,8 +107,8 @@ else:
     
 #DoSplit at stdhep level
 activesplitstdhep   = True
-nbevtsperfilestdhep = 500
-nbtasks_split       = -1 # To run ove rall input stdhep
+nbevtsperfilestdhep = 100
+nbtasks_split       = -1 # To run overall input stdhep
 if activesplitstdhep:
   if selectedfile > 0:
     meta['SelectedFile'] = selectedfile
@@ -162,7 +162,7 @@ overlay = OverlayInput()
 overlay.setMachine("ilc_dbd")             #Don't touch, this is how the system knows what files to get
 overlay.setEnergy(energy)                 #Don't touch, this is how the system knows what files to get
 overlay.setDetectorModel(detectorModel) #Don't touch, this is how the system knows what files to get
-overlay.setBkgEvtType("aa_lowpt")
+overlay.setBkgEvtType("aa_lowpt2")
 if energy==500.: #here you chose the overlay parameters as this determines how many files you need
   #it does NOT affect the content of the marlin steering file whatsoever, you need to make sure the values
   #there are correct. Only the file names are handled properly so that you don't need to care
