@@ -65,6 +65,7 @@ class OverlayInput (ModuleBase):
     self.lfns = []
     self.nbfilestoget = 0
     self.BkgEvtType = 'gghad'
+    self.metaEventType = self.BkgEvtType
     self.BXOverlay = 0
     self.ggtohadint = 3.2
     self.nbsigeventsperfile = 0
@@ -169,6 +170,12 @@ class OverlayInput (ModuleBase):
                                                                                   self.BkgEvtType), 
                                                  100)
 
+      self.metaEventType = self.ops.getValue( "/Overlay/%s/%s/%s/%s/EvtType" % ( self.machine,
+                                                                                 self.energytouse,
+                                                                                 self.detector,
+                                                                                 self.BkgEvtType),
+                                              self.BkgEvtType)
+
     else:
       res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, 
                                                                self.energytouse, 
@@ -180,10 +187,16 @@ class OverlayInput (ModuleBase):
                                                                                   self.detectormodel,
                                                                                   self.BkgEvtType), 
                                                  100)
+      self.metaEventType = self.ops.getValue( "/Overlay/%s/%s/%s/%s/EvtType" % ( self.machine,
+                                                                                 self.energytouse,
+                                                                                 self.detectormodel,
+                                                                                 self.BkgEvtType),
+                                              self.BkgEvtType)
 
     self.log.info( "Number of Events Per BackgroundFile: %d " % self.nbofeventsperfile )
     self.workflow_commons["OI_eventsPerBackgroundFile"] = self.nbofeventsperfile
 
+    meta['EvtType'] = self.metaEventType
     meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
