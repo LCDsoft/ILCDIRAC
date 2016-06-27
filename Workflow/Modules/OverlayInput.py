@@ -139,6 +139,7 @@ class OverlayInput (ModuleBase):
 
     self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
     self.log.info( "Background Event Type: %s " % self.BkgEvtType )
+    self.log.info( "Meta Event Type: %s " % self.metaEventType )
     self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
     self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
       
@@ -668,6 +669,13 @@ fi\n""" % (basename, lfile))
     if not self.result['OK']:
       self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
+
+    self.log.info( "Information after resolveInputVariables:" )
+    self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
+    self.log.info( "Background Event Type: %s " % self.BkgEvtType )
+    self.log.info( "Meta Event Type: %s " % self.metaEventType )
+    self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
+    self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
 
     if not self.applicationLog:
       self.applicationLog = 'Overlay_input.log'
