@@ -26,8 +26,85 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
     self.wha.workflowStatus = S_OK()
     self.wha.stepStatus = S_OK()
 
+  def test_obtainprocesslist_getfile_fails( self ):
+    datman_mock = Mock()
+    datman_mock.getFile.return_value = S_ERROR('network_error_testME')
+    operations_mock = Mock()
+    operations_mock.getValue.return_value = 'mytestproclist'
+    self.wha.ops = operations_mock
+    self.wha.datMan = datman_mock
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)):
+      res = self.wha.obtainProcessList()
+      assertDiracFailsWith( res, 'network_error_testme', self )
+      datman_mock.getFile.assert_called_once_with( 'mytestproclist' )
+      operations_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
+
+  def test_applicationSpecificInputs( self ):
+    self.wha.energy = '42189GeV'
+    self.wha.RandomSeed = None
+    self.wha.jobID = 840
+    self.wha.workflow_commons['IS_PROD'] = True
+    self.wha.workflow_commons['PRODUCTION_ID'] = '874'
+    self.wha.workflow_commons['JOB_ID'] = '783'
+    self.wha.workflow_commons['ProductionOutputData'] = 'myoutputfile_dontuseme;output_gen_test.exe'
+    self.wha.step_commons['SusyModel'] = 2
+    self.wha.step_commons['InputFile'] = '/ignore/this/inpfTest.me'
+    self.wha.steeringparameters = 'testparam=9842;illegalparam;another=one'
+    self.wha.willCut = False
+    result = self.wha.applicationSpecificInputs()
+    assertDiracSucceeds( result, self )
+    assertEqualsImproved( ('42189GeV', 874783, self.wha.parameters['SEED'], 2, 'inpfTest.me', '9842', 'one', False, 'output_gen_test.exe' ), ( self.wha.parameters['ENERGY'], self.wha.RandomSeed, self.wha.RandomSeed, self.wha.susymodel, self.wha.SteeringFile, self.wha.parameters['testparam'], self.wha.parameters['another'], self.wha.getProcessInFile, self.wha.OutputFile ), self)
+
+  def test_applicationSpecificInputs_1( self ):
+    self.wha.RandomSeed = 'myrandseed'
+    self.wha.SteeringFile = 'whizard.in'
+    self.wha.steeringparameters = ''
+    self.wha.OptionsDictStr = 'blab'
+    with patch('%s.os.rename' % MODULE_NAME) as rename_mock, \
+         patch('%s.eval' % MODULE_NAME, new=Mock(side_effect=IOError('dont use eval...'))):
+      result = self.wha.applicationSpecificInputs()
+      assertDiracFailsWith( result, 'could not convert string to dictionary for optionsdict', self )
+      rename_mock.assert_called_once_with( 'whizard.in', 'whizardnew.in' )
+      assertEqualsImproved( ( 'myrandseed', 'whizardnew.in', 0 ), ( self.wha.RandomSeed, self.wha.SteeringFile, self.wha.susymodel ), self )
+
+  def test_applicationSpecificInputs_2( self ):
+    self.wha.RandomSeed = '9803245'
+    self.wha.SteeringFile = 'testme'
+    self.wha.steeringparameters = ''
+    self.wha.OptionsDictStr = 'well_formed_dict'
+    self.wha.GenLevelCutDictStr = 'bla'
+    def replace_eval( string_to_parse ):
+      if string_to_parse == 'well_formed_dict':
+        return { 'process_input' : { 'sqrts' : 'mytestenergywithroots' }, 'random_entry' : 'testme' }
+      else:
+        raise IOError('dont use eval!')
+    with patch('%s.os.rename' % MODULE_NAME) as rename_mock, \
+         patch('%s.eval' % MODULE_NAME, new=Mock(side_effect=replace_eval)):
+      result = self.wha.applicationSpecificInputs()
+      assertDiracFailsWith( result, 'could not convert the generator level cuts back to dictionary', self )
+      self.assertFalse( rename_mock.called )
+      assertEqualsImproved( ( '9803245', 'testme', 0, { 'integration_input' : { 'seed' : 9803245 }, 'process_input' : { 'sqrts' : 'mytestenergywithroots' }, 'random_entry' : 'testme' }, 'mytestenergywithroots' ), ( self.wha.RandomSeed, self.wha.SteeringFile, self.wha.susymodel, self.wha.optionsdict, self.wha.energy ), self )
+
+  def test_applicationSpecificInputs_3( self ):
+    self.wha.RandomSeed = 'myrandseed'
+    self.wha.SteeringFile = 'testme'
+    self.wha.steeringparameters = ''
+    self.wha.OptionsDictStr = 'blab'
+    self.wha.GenLevelCutDictStr = 'bla'
+    self.wha.workflow_commons['IS_DBD_GEN_PROD'] = True
+    self.wha.workflow_commons['PRODUCTION_ID'] = 348
+    self.wha.workflow_commons['JOB_ID'] = 742
+    self.wha.workflow_commons['ProductionOutputData'] = 'abc;ignore_me'
+    with patch('%s.os.rename' % MODULE_NAME) as rename_mock, \
+         patch('%s.eval' % MODULE_NAME, new=Mock(side_effect=[ { 'integration_input' : { 'seed' : 'otherseed' }, 'random_entry' : 'testme' }, { 'something' : 'else' }])):
+      result = self.wha.applicationSpecificInputs()
+      assertDiracSucceeds( result, self )
+      self.assertFalse( rename_mock.called )
+      assertEqualsImproved( ( { 'integration_input' : { 'seed' : 'otherseed' }, 'random_entry' : 'testme' }, { 'something' : 'else' }, 'abc' ), ( self.wha.optionsdict, self.wha.genlevelcuts, self.wha.OutputFile), self)
+
+
   def test_runit( self ):
-    EXISTS_DICT = { 'list.txt' : True, 'LesHouches.msugra_1.in' : False, 'my/test/soft/dir/LesHouches_slsqhh.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : False, 'mytestAppLOg' : False, 'whizard.out' : True, 'my/test/soft/dir/myTestGotFile' : True, 'myTestEvents.001.stdhep' : True }
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : False, 'my/test/soft/dir/LesHouches_slsqhh.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : False, 'mytestAppLOg' : False, 'whizard.out' : True, 'my/test/soft/dir/myTestGotFile' : True, 'myTestEvents.001.stdhep' : True }
     self.wha.workflow_commons['Info'] = {}
     self.wha.useGridFiles = True
     self.wha.OutputFile = 'mytestwhizardOutputFile'
@@ -60,9 +137,9 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
     method_mock.getInFile.return_value = 'mywhizardTestFile.in'
     proclist_mock = Mock( return_value = method_mock )
     def exists_replace( key ):
-      value = EXISTS_DICT[key]
+      value = exists_dict[key]
       if key == 'mytestAppLOg':
-        EXISTS_DICT['mytestAppLOg'] = True
+        exists_dict['mytestAppLOg'] = True
       return value
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(side_effect=[ S_OK('my/test/soft/dir'), S_OK('/my/test/dep/ignorethis'), S_OK('mygridfiles/folder'), S_OK('/spectra/files') ])), \
@@ -688,9 +765,6 @@ def check_logfiles( file_contents, assertobject ):
     shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"', callbackFunction = assertobject.wha.redirectLogOutput, bufferLimit=209715200 )
     whizopts_mock.getAsDict.assert_called_once_with()
     assertEqualsImproved( assertobject.wha.workflow_commons[ 'Luminosity' ], 4565.3, assertobject )
-
-
-
 
 
 
