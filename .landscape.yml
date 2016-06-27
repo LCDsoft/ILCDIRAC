@@ -1,5 +1,5 @@
 pep8:
- run: false
+ run: true
 
 requirements:
     - .gitlab-ci.d/requirements.txt
