@@ -423,7 +423,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               param.insert(0, com)
       # BGOverlay Processor Treatment
       if param.attrib.get('name','').lower().count('bgoverlay'):
-        bkg_Type = 'aa_lowpt' #specific to ILD_DBD
+        bkg_Type = 'aa_lowpt' #specific to ILD_DBD #FIXME
         subparams = param.findall('parameter')
         for subparam in subparams:
           if subparam.attrib.get('name') == 'expBG' and (subparam.text == '0' or subparam.text == '0.0'):

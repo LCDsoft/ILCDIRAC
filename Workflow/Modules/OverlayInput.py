@@ -345,8 +345,8 @@ class OverlayInput (ModuleBase):
 
     self.log.info('Will obtain %s files for overlay' % totnboffilestoget)
 
-    os.mkdir("./overlayinput_" + self.BkgEvtType)
-    os.chdir("./overlayinput_" + self.BkgEvtType)
+    os.mkdir("./overlayinput_" + self.metaEventType)
+    os.chdir("./overlayinput_" + self.metaEventType)
     filesobtained = []
     usednumbers = []
     fail = False
