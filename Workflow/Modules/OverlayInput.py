@@ -118,6 +118,7 @@ class OverlayInput (ModuleBase):
 
     if self.step_commons.has_key('BkgEvtType'):
       self.BkgEvtType = self.step_commons['BkgEvtType']
+    self.metaEventType = self.BkgEvtType
       
     res =  allowedBkg(self.BkgEvtType, self.energytouse, detector = self.detector, 
                       detectormodel = self.detectormodel, machine = self.machine) 
