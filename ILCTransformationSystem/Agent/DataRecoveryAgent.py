@@ -42,6 +42,8 @@ __RCSID__ = "$Id$"
 AGENT_NAME = 'ILCTransformation/DataRecoveryAgent'
 MAXRESET = 10
 
+ASSIGNEDSTATES = ['Assigned', 'Processed']
+
 class DataRecoveryAgent( AgentModule ):
   """Data Recovery Agent"""
   def __init__(self, *args, **kwargs):
@@ -140,33 +142,37 @@ class DataRecoveryAgent( AgentModule ):
                    dict( Message="Output Missing, job Failed, input Assigned, MaxError --> Input MaxReset",
                          ShortMessage="Max ErrorCount --> Input MaxReset",
                          Counter=0,
-                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned" and job.inputFileExists and job.errorCount > MAXRESET,
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus in ASSIGNEDSTATES and job.inputFileExists and job.errorCount > MAXRESET,
                          Actions=lambda job,tInfo: [ job.setInputMaxReset(tInfo) ]
                        ),
                    dict( Message="Output Missing, job Failed, input Assigned --> Input Unused",
                          ShortMessage="Output Missing --> Input Unused",
                          Counter=0,
-                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned" and job.inputFileExists,
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus in ASSIGNEDSTATES and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo) ]
                        ),
                    dict( Message="Output Missing, job Done, input Assigned --> Job Failed, Input Unused",
                          ShortMessage="Output Missing --> Job Failed, Input Unused",
                          Counter=0,
-                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned" and job.inputFileExists,
+                         Check=lambda job: job.allFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus in ASSIGNEDSTATES and job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo), job.setJobFailed(tInfo) ]
                        ),
-                   ## some files missing, needing cleanup. Only checking for assigned, because processed could mean an earlier job was succesful and this one is just the duplucate that needed to be removed!
+                   ## some files missing, needing cleanup. Only checking for
+                   ## assigned, because processed could mean an earlier job was
+                   ## succesful and this one is just the duplicate that needed
+                   ## to be removed! But we check for other tasks earlier, so
+                   ## this should not happen
                    dict( Message="Some missing, job Failed, input Assigned --> cleanup, Input 'Unused'",
                          ShortMessage="Output Missing --> Cleanup, Input Unused",
                          Counter=0,
-                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus=="Assigned" and job.inputFileExists,
+                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Failed' and job.fileStatus in ASSIGNEDSTATES and job.inputFileExists,
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),
                    dict( Message="Some missing, job Done, input Assigned --> cleanup, job Failed, Input 'Unused'",
                          ShortMessage="Output Missing --> Cleanup, Job Failed, Input Unused",
                          Counter=0,
-                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus=="Assigned" and job.inputFileExists,
+                         Check=lambda job: job.someFilesMissing() and not job.otherTasks and job.status=='Done' and job.fileStatus in ASSIGNEDSTATES and job.inputFileExists,
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo),job.setJobFailed(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),

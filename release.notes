@@ -15,6 +15,17 @@ Resources:
 
 CHANGE: Go back to XROOTStorage from DIRAC
 
+[v25r0p9]
+
+* ILCTransformationSystem:
+
+FIX: ILCDIRAC-665: Also handle cases if a file gets stuck in 'Processed' status
+
+* Overlay:
+
+NEW: Set the NSKipEventsRandom parameter for BGOverlay processor. Calculates number of Events based on NBEvts Configuration Parameter
+NEW: Allow defining different parameter for the same background type by using EventType parameter to set the correct EventType
+
 [v25r0p8]
 
 * Core:
