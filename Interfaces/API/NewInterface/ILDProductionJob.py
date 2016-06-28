@@ -252,10 +252,10 @@ class ILDProductionJob( ProductionJob ):
                 
                 
         if compatmeta.has_key( "Energy" ):
-            if type( compatmeta["Energy"] ) in types.StringTypes:
-                self.energycat = compatmeta["Energy"]
-            if type( compatmeta["Energy"] ) == type( [] ):
-                self.energycat = compatmeta["Energy"][0]
+            if isinstance( compatmeta["Energy"], (int, long, basestring) ):
+                self.energycat = str(compatmeta["Energy"])
+            elif isinstance( compatmeta["Energy"] , list ):
+                self.energycat = str(compatmeta["Energy"][0])
 
         if compatmeta.has_key( "MachineParams" ):
             if type( compatmeta["MachineParams"] ) in types.StringTypes:
