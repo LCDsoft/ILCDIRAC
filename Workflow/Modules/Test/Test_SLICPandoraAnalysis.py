@@ -284,9 +284,7 @@ class TestSLICPandora( unittest.TestCase ):
       removelib_mock.assert_called_once_with( '/my/dir/test/me/LDLibs' )
       getlib_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       getpath_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
-      open_mock.assert_any_call( 'SLICPandora.sh', 'w' )
-      open_mock = open_mock()
-      assertEqualsImproved( open_mock.write.mock_calls, [ call('#!/bin/sh \n') , call('############################################################\n'), call('# Dynamically generated script to get the SLICPandora env. #\n'), call('############################################################\n'), call("declare -x PATH=/new/test/path:$PATH\n"), call('declare -x ROOTSYS=/my/dir/test/me/ROOT\n'), call('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n'), call('declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n') ], self )
+      self.assertFalse( open_mock.called )
       self.assertFalse( chmod_mock.called )
       assertEqualsImproved( exists_mock.mock_calls, [ call('PandoraFrontend'), call('/my/dir/test/me/Executable/PandoraFrontend') ], self )
 
