@@ -102,25 +102,15 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       self.assertFalse( rename_mock.called )
       assertEqualsImproved( ( { 'integration_input' : { 'seed' : 'otherseed' }, 'random_entry' : 'testme' }, { 'something' : 'else' }, 'abc' ), ( self.wha.optionsdict, self.wha.genlevelcuts, self.wha.OutputFile), self)
 
-
   def test_runit( self ):
+    set_default_values( self.wha )
+    self.wha.workflow_commons['Info'] = {} # Has to stay for the refactoring
     exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : False, 'my/test/soft/dir/LesHouches_slsqhh.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : False, 'mytestAppLOg' : False, 'whizard.out' : True, 'my/test/soft/dir/myTestGotFile' : True, 'myTestEvents.001.stdhep' : True }
-    self.wha.workflow_commons['Info'] = {}
-    self.wha.useGridFiles = True
-    self.wha.OutputFile = 'mytestwhizardOutputFile'
-    self.wha.getProcessInFile = False
-    self.wha.Model = 'mytestMODEL'
-    self.wha.optionsdict = 9834
-    self.wha.energy = '99TestTeV'
-    self.wha.debug = True
-    self.wha.susymodel = 1
-    self.wha.applicationLog = 'mytestAppLOg'
-    self.wha.applicationVersion = 'myTestV1'
-    self.wha.STEP_NUMBER = 'testStep12'
-    self.wha.extraCLIarguments = 'extraTestCLIargs'
-    self.wha.genlevelcuts = True
-    self.wha.ignoreapperrors = False
-    self.wha.evttype = 'myTestEvents'
+    def exists_replace( key ):
+      value = exists_dict[key]
+      if key == 'mytestAppLOg':
+        exists_dict['mytestAppLOg'] = True
+      return value
     file_contents = [ [], [ 'some_logging_ignoreme', '! Event sample corresponds to luminosity 92847', 'Event generation finished. Success!' ], [ 'a 12.1 489.3 b 91.2   843            "' ] ]
     genmodel_mock = Mock()
     genmodel_mock.hasModel.return_value = S_OK()
@@ -136,11 +126,17 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
     method_mock = Mock()
     method_mock.getInFile.return_value = 'mywhizardTestFile.in'
     proclist_mock = Mock( return_value = method_mock )
-    def exists_replace( key ):
-      value = exists_dict[key]
-      if key == 'mytestAppLOg':
-        exists_dict['mytestAppLOg'] = True
-      return value
+    expected_glob = [call( 'myTestEvents*.stdhep' )]
+    expected_shell = [call( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"', callbackFunction = self.wha.redirectLogOutput, bufferLimit=209715200 )]
+    expected_copy = []
+    expected_genmodel = [call.hasModel('mytestMODEL'), call.getFile('mytestMODEL'), call.getFile('mytestMODEL'), call.getFile('mytestMODEL')]
+    expected_getops = []
+    expected_remove = []
+    expected_chmod = [call( 'Whizard_myTestV1_Run_testStep12.sh', 0755 )]
+    expected_appstat = [ call( 'Whizard myTestV1 step testStep12'), call( 'Whizard myTestV1 Successful' ) ]
+    expected_exists = [ call( 'LesHouches.msugra_1.in' ), call('my/test/soft/dir/LesHouches_slsqhh.msugra_1.in'), call('my/test/soft/dir/myTestGotFile'), call( 'Whizard_myTestV1_Run_testStep12.sh' ), call( 'mytestAppLOg' ), call('mytestAppLOg'), call( 'whizard.out' ), call( 'myTestEvents.001.stdhep' ) ]
+    expected_rename = [ call( 'myoutputfile_123.stdhep', 'mytestwhizardOutputFile_1.stdhep' ), call('myotherfile_121.stdhep', 'mytestwhizardOutputFile_2.stdhep'), call('lastfile_9824.stdhep', 'mytestwhizardOutputFile_3.stdhep') ]
+    expected_calls = [ [ call('#!/bin/sh \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('declare -x PATH=my/test/soft/dir:$PATH\n'), call('declare -x LD_LIBRARY_PATH=my/test/soft/dir/lib:my/lib/path\n'), call('env | sort >> localEnv.log\n'), call('echo =============================\n'), call('echo Printing content of whizard.in \n'), call('cat whizard.in\n'), call('echo =============================\n'), call('cp  my/test/soft/dir/whizard.mdl ./\n'), call('cp my/test/soft/dir/myTestGotFile ./LesHouches.msugra_1.in\n'), call('ln -s LesHouches.msugra_1.in fort.71\n'), call('cp mygridfiles/folder/My99TestTeVFile.energy/gridfile1.txt ./\n'), call('cp mygridfiles/folder/My99TestTeVFile.energy/cool/gridfile2.ppt ./\n'), call('cp mygridfiles/folder/My99TestTeVFile.energy/My99TestTeVFile.energy ./\n'), call('cp my/test/soft/dir/whizard.prc ./\n'), call('echo =============================\n'), call('echo Printing content of whizard.prc \n'), call('cat whizard.prc\n'), call('echo =============================\n'), call('whizard --process_input \'process_id =\"myTestEvents\"\' --simulation_input \'write_events_file = \"myTestEvents\"\'  extraTestCLIargs \n'), call('declare -x appstatus=$?\n'), call('exit $appstatus\n') ], [], [] ]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(side_effect=[ S_OK('my/test/soft/dir'), S_OK('/my/test/dep/ignorethis'), S_OK('mygridfiles/folder'), S_OK('/spectra/files') ])), \
          patch('%s.removeLibc' % MODULE_NAME, new=Mock(return_value=True)), \
@@ -162,27 +158,13 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[ 'myoutputfile_123.stdhep', 'myotherfile_121.stdhep', 'lastfile_9824.stdhep'])) as glob_mock, \
          patch('%s.os.rename' % MODULE_NAME) as rename_mock:
       open_mock.side_effect = ( h for h in handles )
-      assertDiracSucceedsWith_equals( self.wha.runIt(), { 'OutputFile' : 'mytestwhizardOutputFile' }, self )
-      self.assertFalse( getops_mock.called )
-      assertEqualsImproved( exists_mock.mock_calls, [ call( 'LesHouches.msugra_1.in' ), call('my/test/soft/dir/LesHouches_slsqhh.msugra_1.in'), call('my/test/soft/dir/myTestGotFile'), call( 'Whizard_myTestV1_Run_testStep12.sh' ), call( 'mytestAppLOg' ), call('mytestAppLOg'), call( 'whizard.out' ), call( 'myTestEvents.001.stdhep' ) ], self )
-      self.assertFalse( remove_mock.called )
-      assertEqualsImproved( appstat_mock.mock_calls, [ call( 'Whizard myTestV1 step testStep12'), call( 'Whizard myTestV1 Successful' ) ], self )
-      self.assertFalse( copy_mock.called )
-      self.assertFalse( genmodel_mock.called )
-      whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
-      whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
+      result = self.wha.runIt()
+      assertDiracSucceedsWith_equals( result, { 'OutputFile' : 'mytestwhizardOutputFile' }, self )
       assertEqualsImproved( open_mock.mock_calls, [ call('Whizard_myTestV1_Run_testStep12.sh', 'w'), call('mytestAppLOg'), call( 'whizard.out', 'r') ], self )
-      expected_calls = [ [ call('#!/bin/sh \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('declare -x PATH=my/test/soft/dir:$PATH\n'), call('declare -x LD_LIBRARY_PATH=my/test/soft/dir/lib:my/lib/path\n'), call('env | sort >> localEnv.log\n'), call('echo =============================\n'), call('echo Printing content of whizard.in \n'), call('cat whizard.in\n'), call('echo =============================\n'), call('cp  my/test/soft/dir/whizard.mdl ./\n'), call('cp my/test/soft/dir/myTestGotFile ./LesHouches.msugra_1.in\n'), call('ln -s LesHouches.msugra_1.in fort.71\n'), call('cp mygridfiles/folder/My99TestTeVFile.energy/gridfile1.txt ./\n'), call('cp mygridfiles/folder/My99TestTeVFile.energy/cool/gridfile2.ppt ./\n'), call('cp mygridfiles/folder/My99TestTeVFile.energy/My99TestTeVFile.energy ./\n'), call('cp my/test/soft/dir/whizard.prc ./\n'), call('echo =============================\n'), call('echo Printing content of whizard.prc \n'), call('cat whizard.prc\n'), call('echo =============================\n'), call('whizard --process_input \'process_id =\"myTestEvents\"\' --simulation_input \'write_events_file = \"myTestEvents\"\'  extraTestCLIargs \n'), call('declare -x appstatus=$?\n'), call('exit $appstatus\n') ], [], [] ]
-      assertEqualsImproved( len(expected_calls), len(handles), self )
-      for (expected, handle) in zip( expected_calls, handles):
-        assertEqualsImproved( handle.write.mock_calls, expected, self )
-      chmod_mock.assert_called_once_with( 'Whizard_myTestV1_Run_testStep12.sh', 0755 )
-      shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"', callbackFunction = self.wha.redirectLogOutput, bufferLimit=209715200 )
-      whizopts_mock.getAsDict.assert_called_once_with()
-      assertEqualsImproved( self.wha.workflow_commons[ 'Luminosity' ], 92847, self )
+      check_runit_for_parameters( self, whiz_options_mock, getops_mock, genmodel_mock, expected_calls, handles, appstat_mock, exists_mock, rename_mock, chmod_mock, glob_mock, shell_mock, copy_mock, remove_mock, open_mock, expected_appstat, expected_exists, expected_rename, expected_chmod, expected_glob, expected_shell, expected_copy, expected_genmodel, expected_getops, expected_remove )
       assertEqualsImproved( self.wha.workflow_commons[ 'Info'], { 'xsection' : { '843' : { 'xsection' : 12.1, 'err_xsection' : 489.3, 'fraction' :  91.2 }} }, self )
-      glob_mock.assert_called_once_with( 'myTestEvents*.stdhep' )
-      assertEqualsImproved( rename_mock.mock_calls, [ call( 'myoutputfile_123.stdhep', 'mytestwhizardOutputFile_1.stdhep' ), call('myotherfile_121.stdhep', 'mytestwhizardOutputFile_2.stdhep'), call('lastfile_9824.stdhep', 'mytestwhizardOutputFile_3.stdhep') ], self )
+      assertEqualsImproved( self.wha.workflow_commons[ 'Luminosity' ], 92847, self )
+      whizopts_mock.getAsDict.assert_called_once_with()
 
   def test_runit_no_platform( self ):
     self.wha.platform = None
@@ -378,10 +360,10 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       appstat_mock.assert_called_once_with('Failed getting whizard.in file')
 
   def test_runit_changeandreturn_fails( self ):
-    self.wha.useGridFiles = True
-    self.wha.getProcessInFile = True
     self.wha.Model = 'mytestMODEL'
+    self.wha.getProcessInFile = True
     self.wha.optionsdict = 9834
+    self.wha.useGridFiles = True
     genmodel_mock = Mock()
     self.wha.genmodel = genmodel_mock
     changeandret_mock = Mock()
@@ -417,17 +399,17 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       changeandret_mock.changeAndReturn.assert_called_once_with( 9834 )
 
   def test_runit_prepareWhizardFile_fails( self ):
-    self.wha.useGridFiles = True
-    self.wha.getProcessInFile = True
-    self.wha.Model = True
-    self.wha.susymodel = False
-    self.wha.optionsdict = False
-    self.wha.template = False
-    self.wha.evttype = 'myTestEvent'
-    self.wha.energy = '100TestTeV'
-    self.wha.RandomSeed = 'notRandomTestme'
-    self.wha.NumberOfEvents = 'myTestNumber'
     self.wha.Lumi = 'mytestluminosity'
+    self.wha.Model = True
+    self.wha.NumberOfEvents = 'myTestNumber'
+    self.wha.RandomSeed = 'notRandomTestme'
+    self.wha.energy = '100TestTeV'
+    self.wha.evttype = 'myTestEvent'
+    self.wha.getProcessInFile = True
+    self.wha.optionsdict = False
+    self.wha.susymodel = False
+    self.wha.template = False
+    self.wha.useGridFiles = True
     genmodel_mock = Mock()
     self.wha.genmodel = genmodel_mock
     getops_mock = Mock()
@@ -460,15 +442,15 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       preparefile_mock.assert_called_once_with('whizardnew.in', 'myTestEvent', '100TestTeV','notRandomTestme','myTestNumber','mytestluminosity', 'whizard.in' )
 
   def test_runit_prepareWhizardFileTemplate_fails( self ):
-    self.wha.useGridFiles = True
-    self.wha.getProcessInFile = True
     self.wha.Model = True
-    self.wha.susymodel = False
-    self.wha.optionsdict = False
     self.wha.SteeringFile = 'templateTestme123'
-    self.wha.template = True
     self.wha.evttype = 'myTestEvent'
+    self.wha.getProcessInFile = True
+    self.wha.optionsdict = False
     self.wha.parameters = 'myTESTParams'
+    self.wha.susymodel = False
+    self.wha.template = True
+    self.wha.useGridFiles = True
     genmodel_mock = Mock()
     self.wha.genmodel = genmodel_mock
     getops_mock = Mock()
@@ -501,13 +483,9 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       preparetemplate_mock.assert_called_once_with('whizardnew.in', 'myTestEvent', 'myTESTParams', 'whizard.in')
 
   def test_runit_makecut1_fails( self ):
-    self.wha.useGridFiles = True
-    self.wha.getProcessInFile = True
-    self.wha.Model = 'mytestMODEL'
-    self.wha.optionsdict = 9834
-    self.wha.applicationVersion = 'myTestV1'
-    self.wha.STEP_NUMBER = 'testStep12'
+    set_default_values( self.wha )
     self.wha.genlevelcuts = { 'some_entry' : True, 'this_dict_is_not_empty' : True }
+    self.wha.getProcessInFile = True
     genmodel_mock = Mock()
     self.wha.genmodel = genmodel_mock
     whizopts_mock = Mock()
@@ -520,6 +498,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
     method_mock = Mock()
     method_mock.getInFile.return_value = 'mywhizardTestFile.in'
     proclist_mock = Mock( return_value = method_mock )
+    expected_calls = [[ call('#!/bin/sh \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('declare -x PATH=my/test/soft/dir:$PATH\n'), call('declare -x LD_LIBRARY_PATH=my/test/soft/dir/lib:my/lib/path\n'), call('env | sort >> localEnv.log\n'), call('echo =============================\n'), call('echo Printing content of whizard.in \n'), call('cat whizard.in\n'), call('echo =============================\n'), call('cp  my/test/soft/dir/whizard.mdl ./\n'), call('ln -s LesHouches.msugra_1.in fort.71\n'), call('cp file1.grb ./\n'), call('cp otherfile.grb ./\n'), call('cp testfile.grc ./\n'), call('cp my/test/soft/dir/whizard.prc ./\n') ]]
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(side_effect=[ S_OK('my/test/soft/dir'), S_OK('/my/test/dep/ignorethis'), S_OK('mygridfiles/folder'), S_OK('/spectra/files') ])), \
          patch('%s.removeLibc' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='my/lib/path')), \
@@ -537,36 +516,46 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
          patch('%s.WhizardAnalysis.makeWhizardDotCut1' % MODULE_NAME, new=Mock(return_value=S_ERROR())):
       #FIXME: makeWhizardDotCut1 currently cant fail (although it operates on files?!)
-      assertDiracFailsWith( self.wha.runIt(), 'could not create the cut1 file', self )
-      getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      exists_mock.assert_any_call( 'list.txt' )
-      exists_mock.assert_any_call( 'LesHouches.msugra_1.in' )
-      exists_mock.assert_any_call( 'Whizard_myTestV1_Run_testStep12.sh' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 3, self )
-      self.assertFalse( appstat_mock.called )
-      copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in', './whizardnew.in' )
-      self.assertFalse( genmodel_mock.called )
+      result = self.wha.runIt()
+      assertDiracFailsWith( result, 'could not create the cut1 file', self )
+      open_mock.assert_called_once_with('Whizard_myTestV1_Run_testStep12.sh', 'w')
+      rename_mock = Mock()
+      chmod_mock = Mock()
+      glob_mock = Mock()
+      shell_mock = Mock()
+      handles = [ open_mock() ]
+      expected_appstat = []
+      expected_rename = []
+      expected_chmod = []
+      expected_glob = []
+      expected_shell = []
+      expected_copy = [ call( 'my/test/soft/dir/mywhizardTestFile.in', './whizardnew.in' ) ]
+      expected_genmodel = []
+      expected_getops = [ call.getValue( '/ProcessList/Location', '' ) ]
+      expected_remove = [ call( 'Whizard_myTestV1_Run_testStep12.sh' ) ]
+      expected_exists = [ call( 'list.txt' ), call( 'LesHouches.msugra_1.in' ), call( 'Whizard_myTestV1_Run_testStep12.sh' ) ]
+      print whizopts_mock.mock_calls
+      print '..................'
+      print whiz_options_mock.mock_calls
+      check_runit_for_parameters( self, whiz_options_mock, getops_mock, genmodel_mock, expected_calls, handles, appstat_mock, exists_mock, rename_mock, chmod_mock, glob_mock, shell_mock, copy_mock, remove_mock, open_mock, expected_appstat, expected_exists, expected_rename, expected_chmod, expected_glob, expected_shell, expected_copy, expected_genmodel, expected_getops, expected_remove )
+      '''
       whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
       whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
-      remove_mock.assert_called_once_with( 'Whizard_myTestV1_Run_testStep12.sh' )
-      open_mock.assert_called_once_with('Whizard_myTestV1_Run_testStep12.sh', 'w')
-      write_calls = open_mock().write.mock_calls
-      expected_calls = [ call('#!/bin/sh \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('declare -x PATH=my/test/soft/dir:$PATH\n'), call('declare -x LD_LIBRARY_PATH=my/test/soft/dir/lib:my/lib/path\n'), call('env | sort >> localEnv.log\n'), call('echo =============================\n'), call('echo Printing content of whizard.in \n'), call('cat whizard.in\n'), call('echo =============================\n'), call('cp  my/test/soft/dir/whizard.mdl ./\n'), call('ln -s LesHouches.msugra_1.in fort.71\n'), call('cp file1.grb ./\n'), call('cp otherfile.grb ./\n'), call('cp testfile.grc ./\n'), call('cp my/test/soft/dir/whizard.prc ./\n') ]
-      assertEqualsImproved( write_calls, expected_calls, self )
+      '''
 
   def test_runit_noapplog_created( self ):
-    self.wha.useGridFiles = True
-    self.wha.getProcessInFile = True
     self.wha.Model = 'mytestMODEL'
-    self.wha.optionsdict = 9834
-    self.wha.debug = False
+    self.wha.STEP_NUMBER = 'testStep12'
     self.wha.applicationLog = 'mytestAppLOg'
     self.wha.applicationVersion = 'myTestV1'
-    self.wha.STEP_NUMBER = 'testStep12'
+    self.wha.debug = False
+    self.wha.evttype = 'myTestEvents'
     self.wha.extraCLIarguments = 'extraTestCLIargs'
     self.wha.genlevelcuts = False
+    self.wha.getProcessInFile = True
     self.wha.ignoreapperrors = False
-    self.wha.evttype = 'myTestEvents'
+    self.wha.optionsdict = 9834
+    self.wha.useGridFiles = True
     genmodel_mock = Mock()
     self.wha.genmodel = genmodel_mock
     whizopts_mock = Mock()
@@ -616,19 +605,19 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"', callbackFunction = self.wha.redirectLogOutput, bufferLimit=209715200 )
 
   def test_runit_no_outputfile( self ):
-    self.wha.useGridFiles = True
-    self.wha.OutputFile = 'mytestwhizardOutputFile'
-    self.wha.getProcessInFile = True
     self.wha.Model = 'mytestMODEL'
-    self.wha.optionsdict = 9834
-    self.wha.debug = False
+    self.wha.OutputFile = 'mytestwhizardOutputFile'
+    self.wha.STEP_NUMBER = 'testStep12'
     self.wha.applicationLog = 'mytestAppLOg'
     self.wha.applicationVersion = 'myTestV1'
-    self.wha.STEP_NUMBER = 'testStep12'
+    self.wha.debug = False
+    self.wha.evttype = 'myTestEvents'
     self.wha.extraCLIarguments = 'extraTestCLIargs'
     self.wha.genlevelcuts = False
+    self.wha.getProcessInFile = True
     self.wha.ignoreapperrors = False
-    self.wha.evttype = 'myTestEvents'
+    self.wha.optionsdict = 9834
+    self.wha.useGridFiles = True
     genmodel_mock = Mock()
     self.wha.genmodel = genmodel_mock
     whizopts_mock = Mock()
@@ -699,20 +688,26 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
     file_contents = [ [], ['! Event sample corresponds to luminosity 4565.3', 'Floating point exception'] ]
     check_logfiles( file_contents, self )
 
+  def test_makeWhizardDotCut( self ):
+    self.wha.genlevelcuts = { 'myprocess' : [ 'importantvalue', 'dontmissme' ], 'key' : [], 'param' : [ 'myparam', 'electron', 'myparam'] }
+    with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as open_mock:
+      assertDiracSucceeds( self.wha.makeWhizardDotCut1(), self )
+      open_mock.assert_any_call('whizard.cut1', 'w')
+      open_mock = open_mock()
+      check_lists_equal( open_mock.write.mock_calls, [ call('process myprocess\n'), call('  importantvalue\n'), call('  dontmissme\n'), call('process key\n'), call('process param\n'), call('  myparam\n'), call('  electron\n'), call('  myparam\n') ], self )
+      open_mock.close.assert_called_once_with()
+
+def check_lists_equal( list1, list2, assertobject ):
+  """ Checks if two lists are permutations of each other """
+  assertEqualsImproved( len(list1), len(list2), assertobject)
+  for element in list1:
+    assertobject.assertIn( element, list2)
+
 def check_logfiles( file_contents, assertobject ):
-  assertobject.wha.useGridFiles = True
-  assertobject.wha.OutputFile = 'mytestwhizardOutputFile'
-  assertobject.wha.getProcessInFile = True
-  assertobject.wha.Model = 'mytestMODEL'
-  assertobject.wha.optionsdict = 9834
+  set_default_values( assertobject.wha )
   assertobject.wha.debug = False
-  assertobject.wha.applicationLog = 'mytestAppLOg'
-  assertobject.wha.applicationVersion = 'myTestV1'
-  assertobject.wha.STEP_NUMBER = 'testStep12'
-  assertobject.wha.extraCLIarguments = 'extraTestCLIargs'
   assertobject.wha.genlevelcuts = False
-  assertobject.wha.ignoreapperrors = False
-  assertobject.wha.evttype = 'myTestEvents'
+  assertobject.wha.getProcessInFile = True
   genmodel_mock = Mock()
   assertobject.wha.genmodel = genmodel_mock
   whizopts_mock = Mock()
@@ -766,8 +761,43 @@ def check_logfiles( file_contents, assertobject ):
     whizopts_mock.getAsDict.assert_called_once_with()
     assertEqualsImproved( assertobject.wha.workflow_commons[ 'Luminosity' ], 4565.3, assertobject )
 
+def check_runit_for_parameters( testcaseobject, whiz_options_mock, getops_mock, genmodel_mock, expected_calls, handles, appstat_mock, exists_mock, rename_mock, chmod_mock, glob_mock, shell_mock, copy_mock, remove_mock, open_mock, expected_appstat, expected_exists, expected_rename, expected_chmod, expected_glob, expected_shell, expected_copy, expected_genmodel, expected_getops, expected_remove ):
+  """ Testcaseobject : self in a test method, provides access to assert methods and the WhizardAnalysis object
+  exists_replace : Method thats used to mock out os.path.exists
+  """
+  assertEqualsImproved( len(expected_calls), len(handles), testcaseobject )
+  for (expected, handle) in zip( expected_calls, handles):
+    assertEqualsImproved( handle.write.mock_calls, expected, testcaseobject )
+  assertEqualsImproved( appstat_mock.mock_calls, expected_appstat, testcaseobject )
+  assertEqualsImproved( exists_mock.mock_calls, expected_exists, testcaseobject )
+  assertEqualsImproved( rename_mock.mock_calls, expected_rename, testcaseobject )
+  assertEqualsImproved( chmod_mock.mock_calls, expected_chmod, testcaseobject)
+  assertEqualsImproved( glob_mock.mock_calls, expected_glob, testcaseobject )
+  assertEqualsImproved( shell_mock.mock_calls, expected_shell, testcaseobject )
+  assertEqualsImproved( copy_mock.mock_calls, expected_copy, testcaseobject )
+  assertEqualsImproved( genmodel_mock.mock_calls, expected_genmodel, testcaseobject )
+  assertEqualsImproved( getops_mock.mock_calls, expected_getops, testcaseobject )
+  assertEqualsImproved( remove_mock.mock_calls, expected_remove, testcaseobject )
+  whizopts_mock = whiz_options_mock.return_value
+  whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
+  whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
 
-
+def set_default_values( whizard_object ):
+  whizard_object.Model = 'mytestMODEL'
+  whizard_object.OutputFile = 'mytestwhizardOutputFile'
+  whizard_object.STEP_NUMBER = 'testStep12'
+  whizard_object.applicationLog = 'mytestAppLOg'
+  whizard_object.applicationVersion = 'myTestV1'
+  whizard_object.debug = True
+  whizard_object.energy = '99TestTeV'
+  whizard_object.evttype = 'myTestEvents'
+  whizard_object.extraCLIarguments = 'extraTestCLIargs'
+  whizard_object.genlevelcuts = True
+  whizard_object.getProcessInFile = False
+  whizard_object.ignoreapperrors = False
+  whizard_object.optionsdict = 9834
+  whizard_object.susymodel = 1
+  whizard_object.useGridFiles = True
 
 
 
