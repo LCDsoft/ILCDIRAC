@@ -43,6 +43,18 @@ class StdHepSplit(LCUtilityApplication):
 
 
 
+  def checkProductionMetaData(self, metaDict ):
+    """
+    Make sure NumberOfEvents is set to the number of events after splitting
+
+    :param dict metaDict: production job metadata dictionary, will be updated
+    :returns: S_OK, S_ERROR
+    """
+
+    if 'NumberOfEvents' in metaDict:
+      metaDict['NumberOfEvents'] = self.numberOfEventsPerFile
+    return super(StdHepSplit, self).checkProductionMetaData( metaDict )
+
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))

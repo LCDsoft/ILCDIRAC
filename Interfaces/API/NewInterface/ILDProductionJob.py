@@ -680,3 +680,21 @@ class ILDProductionJob( ProductionJob ):
         self.checked = True
             
         return S_OK()
+
+
+
+    def append( self, application ):
+        """ Append application to production job, in addition to `Job.Append` calls checkProductionMetadata for applications
+
+        :param application: Application instance
+        :type application: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Application`
+        :returns: S_OK, S_ERROR
+        """
+
+        ## First check meta data before doing the normal append
+        resMD = application.checkProductionMetaData( self.compatmeta )
+        if not resMD['OK']:
+            self.log.error( "Failed to check production Meta Data", resMD['Message'] )
+            return resMD
+
+        return super(ILDProductionJob, self).append( application )

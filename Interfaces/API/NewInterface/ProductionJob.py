@@ -777,7 +777,6 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
   def _jobSpecificModules(self, application, step):
     return application._prodjobmodules(step)
 
-
   def getEnergyPath(self):
     """returns the energy path 250gev or 3tev or 1.4tev etc."""
     energy = Decimal(str(self.energy))
