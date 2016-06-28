@@ -652,8 +652,6 @@ class ILDProductionJob( ProductionJob ):
         ## Applied for all productions, these are the metadata at the production level
         metap = {}
         ## MachineParams, Energy from this list, they are set at different level, SoftwareTag or ILDConfig are only sometimes at the prodID level
-        print "CompatMeta"
-        pprint( self.compatmeta )
         for imeta in ['GenProcessName',
                       'NumberOfEvents',
                       'BeamParticle1','BeamParticle2',
