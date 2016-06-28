@@ -617,6 +617,10 @@ class ILDProductionJob( ProductionJob ):
                 path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/', energypath , self.evttype)
                 self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
 
+                ## Set DetectorModel
+                path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector)
+                self.finalMetaDict[ path_gen_or_sim ] = { "DetectorModel": self.detector.strip("/") }
+
                 ## Set SoftwareTag
                 path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , softwarepath)
                 if self.usesofttag:
