@@ -637,27 +637,6 @@ class ILDProductionJob( ProductionJob ):
 
             path = path_gen_or_sim
 
-            metap = {}
-            ## MachineParams, Energy from this list, they are set at different level, SoftwareTag or ILDConfig are only sometimes at the prodID level
-            for imeta in ['GenProcessName',
-                          'NumberOfEvents',
-                          'BeamParticle1','BeamParticle2',
-                          'PolarizationB1','PolarizationB2']:
-                if imeta in self.compatmeta:
-                    print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
-                    metap.update( {imeta : self.compatmeta[imeta]} )    
-
-            ## usesofttag means softwaretag is used in the path, so we want the
-            ## ILDConfig at the end, however, ILDConfig is always set at the end
-            ## if it exists, so this is kind of redundant
-            ## See ProductionJob for this
-            if self.usesofttag:
-              metap.update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
-            elif 'SoftwareTag' in self.compatmeta:
-              metap.update( { "SoftwareTag":self.compatmeta['SoftwareTag'] } )
-
-            self.prodMetaDict.update( metap )
-
             if not path_gen_or_sim[-1] == '/':
                 path_gen_or_sim += "/"
             
@@ -669,6 +648,30 @@ class ILDProductionJob( ProductionJob ):
                 extension = 'slcio'
             fname = self.basename + "_%s" % ( application.datatype.lower() ) + "." + extension
             application.setOutputFile( fname, path_gen_or_sim )    
+
+        ## Applied for all productions, these are the metadata at the production level
+        metap = {}
+        ## MachineParams, Energy from this list, they are set at different level, SoftwareTag or ILDConfig are only sometimes at the prodID level
+        print "CompatMeta"
+        pprint( self.compatmeta )
+        for imeta in ['GenProcessName',
+                      'NumberOfEvents',
+                      'BeamParticle1','BeamParticle2',
+                      'PolarizationB1','PolarizationB2']:
+            if imeta in self.compatmeta:
+                print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
+                metap.update( {imeta : self.compatmeta[imeta]} )
+
+        ## usesofttag means softwaretag is used in the path, so we want the
+        ## ILDConfig at the end, however, ILDConfig is always set at the end
+        ## if it exists, so this is kind of redundant
+        ## See ProductionJob for this
+        if self.usesofttag:
+            metap.update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
+        elif 'SoftwareTag' in self.compatmeta:
+            metap.update( { "SoftwareTag":self.compatmeta['SoftwareTag'] } )
+
+        self.prodMetaDict.update( metap )
 
         self.basepath = path
 
