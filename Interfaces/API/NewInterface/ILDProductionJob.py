@@ -606,15 +606,15 @@ class ILDProductionJob( ProductionJob ):
             elif application.datatype == 'SIM':
                 # no processid
                 ## Set DataType
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/' )
+                path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/' )
                 self.finalMetaDict[ path_gen_or_sim ] = { "Datatype": "SIM" }
 
                 ## Set Energy and MachienParams
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/', energypath )
-                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+                path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/', energypath )
+                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
 
                 ## Set EventType
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/', energypath , self.evttype)
+                path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/', energypath , self.evttype)
                 self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
 
                 ## Set SoftwareTag
