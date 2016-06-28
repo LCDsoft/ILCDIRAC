@@ -539,7 +539,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     res = self._registerMetadata()
     if not res['OK']:
-      self.log.error("Could not register the following directories :", "%s" % str(res['Failed']))
+      self.log.error("Could not register the following directories :", "%s" % str(res))
     return S_OK()  
   #############################################################################
   
@@ -575,9 +575,26 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       else:
         self.log.error('Failed to create directory:', result['Message'])
         failed.append(path)
-      result = self.fc.setMetadata(path.rstrip("/"), meta)
+
+      ## Get existing metadata, if it is the same don't set it again, otherwise throw error
+      existingMetadata = self.fc.getDirectoryUserMetadata( path.rstrip("/") )
+      metaCopy = dict(meta)
+      if existingMetadata['OK']:
+        failure = False
+        print repr(existingMetadata)
+        for key, value in existingMetadata['Value'].iteritems():
+          if key in meta and meta[key] != value:
+            self.log.error( "Metadata values disagree for key %s: Existing(%r), new(%r)" % ( key, value, meta[key] ) )
+            failure = True
+          elif key in meta and meta[key] == value:
+            metaCopy.pop(key, None)
+        if failure:
+          return S_ERROR( "Error when setting new metadata, already existing metadata disagrees!" )
+
+      result = self.fc.setMetadata(path.rstrip("/"), metaCopy)
       if not result['OK']:
-        self.log.error("Could not preset metadata", "%s" % str(meta))
+        self.log.error("Could not preset metadata", "%s" % str(metaCopy))
+        self.log.error("Could not preset metadata", "%s" % result['Message'] )
 
     for path, meta in self.finalMetaDictNonSearch.items():
       result = self.fc.createDirectory(path)
@@ -718,7 +735,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     path = self.basepath  
     ###Need to resolve file names and paths
     if self.energy:
-      self.finalMetaDict[self.basepath + energypath] = {"Energy":int(self.energy)}
+      self.finalMetaDict[self.basepath + energypath] = {"Energy":str(self.energy)}
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
       path = self.basepath + energypath + evttypepath + application.detectortype + "/REC"
       self.finalMetaDict[self.basepath + energypath + evttypepath] = {"EvtType":self.evttype}

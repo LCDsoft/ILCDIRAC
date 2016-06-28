@@ -161,7 +161,7 @@ class ILDProductionJob( ProductionJob ):
             print '[debug tino] Found mdir %s' %mdir
             res = self.fc.getDirectoryUserMetadata( mdir )
             if not res['OK']:
-                return self._reportError( "Error looking up the catalog for directory metadata" )
+                return self._reportError( "Error looking up the catalog for directory metadata: %s" % res['Message'] )
             compatmeta = res['Value'] # this reset compatmeta for each iteration (do we want this?)
             compatmeta.update( metadata )
             print '[tino debug] Updated compatmeta to: %s' %compatmeta
@@ -187,7 +187,7 @@ class ILDProductionJob( ProductionJob ):
 
             res = self.fc.getFileUserMetadata( my_lfn )
             if not res['OK']:
-                return self._reportError( 'Failed to get file metadata, cannot build filename' )
+                return self._reportError( 'Failed to get file metadata, cannot build filename: %s' % res['Message'] )
             compatmeta.update( res['Value'] )
             print '[tino debug] Updated compatmeta to: %s' %compatmeta
 
@@ -545,7 +545,7 @@ class ILDProductionJob( ProductionJob ):
 
             ### REC OUTPUT FILES
             metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath)
-            self.finalMetaDict[ metaBasePathRec ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+            self.finalMetaDict[ metaBasePathRec ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype )] = {"EvtType" : evttypemeta}
 
             # no processid
@@ -563,7 +563,7 @@ class ILDProductionJob( ProductionJob ):
 
             ### DST OUTPUT FILES
             metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath)
-            self.finalMetaDict[ metaBasePathDst ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+            self.finalMetaDict[ metaBasePathDst ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
 
             self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype )] = {"EvtType" : evttypemeta}
 
@@ -593,7 +593,7 @@ class ILDProductionJob( ProductionJob ):
 
                 ## Set MachineParams and Energy
                 path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath )
-                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
 
                 path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype)
                 self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
