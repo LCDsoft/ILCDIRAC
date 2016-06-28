@@ -45,7 +45,7 @@ GGToHadInt1000 = 4.1
 MarlinVer    = "ILCSoft-01-16-02-p1"
 MokkaVer     = "080003"
 banned_sites = [""]
-dryrun       = True
+dryrun       = False
 # do not register anything nor create anything.
 # Should be used once the splitting-at-stdhep-level prods are submitted.
 
@@ -67,7 +67,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160623_4_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20160623_25_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
