@@ -196,8 +196,8 @@ class ILDProductionJob( ProductionJob ):
 
         else:
             if not self.dryrun:
-              print res
-              self._reportError( "No files matching the metadata: Metadata is wrong or files are not under /ilc/prod/ilc directory" )
+                print res
+                self._reportError( "No files matching the metadata: Metadata is wrong or files are not under /ilc/prod/ilc directory" )
                 
 
         if not len(compatmeta):
@@ -381,7 +381,7 @@ class ILDProductionJob( ProductionJob ):
             if 'SoftwareTag' in self.compatmeta:
                 softwarepath = self.compatmeta['SoftwareTag']
             else:
-                 print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
+                print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
 
         if not self.energy:
             if application.Energy:
@@ -445,12 +445,12 @@ class ILDProductionJob( ProductionJob ):
                     self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app")
                 # need extension if planning to use additional modules (LCIOSplit)
             else:
-              if application.datatype != 'gen': # for stdhepsplit we dont need to return
-                self._reportError(" Printing metadata before exit:")
-                for k,v in self.compatmeta.items():
-                    print "compatmeta[%s] %s"%(k,v)
+                if application.datatype != 'gen': # for stdhepsplit we dont need to return
+                    self._reportError(" Printing metadata before exit:")
+                    for k,v in self.compatmeta.items():
+                        print "compatmeta[%s] %s"%(k,v)
 
-                return self._reportError( "'SoftwareTag' should be defined to build the path")
+                    return self._reportError( "'SoftwareTag' should be defined to build the path")
 
         if 'DetectorModel'    in self.compatmeta:
             self.basename += '.m' + self.compatmeta['DetectorModel']
@@ -458,9 +458,9 @@ class ILDProductionJob( ProductionJob ):
             self.basename += '.m' + self.detector
         if self.energy:
             if not self.basename:
-              self.basename += 'E' + str( self.energy )
+                self.basename += 'E' + str( self.energy )
             else:
-              self.basename += '.E' + str( self.energy )
+                self.basename += '.E' + str( self.energy )
         if 'MachineParams' in self.compatmeta:
             self.basename += '-' + self.compatmeta['MachineParams']
             
