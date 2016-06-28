@@ -545,6 +545,7 @@ class ILDProductionJob( ProductionJob ):
             # metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath, self.evttype)
             metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath)
             # self.finalMetaDict[ metaBasePathRec ] = {"EvtClass" : evtclassmeta}
+            self.finalMetaDict[ metaBasePathRec ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype )] = {"EvtType" : evttypemeta}
             # self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ))] = {'ProcessID': self.processID}
             # self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, str( self.processID ), self.detector)] = {"DetectorModel" : detectormeta}
@@ -570,6 +571,8 @@ class ILDProductionJob( ProductionJob ):
             self.finalpaths.append( pathRec )
             # metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath, self.evttype)
             metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath)
+            self.finalMetaDict[ metaBasePathDst ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+
             # self.finalMetaDict[ metaBasePathDst ] = {"EvtClass" : evtclassmeta}
             self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype )] = {"EvtType" : evttypemeta}
             # self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, str( self.processID ))] = {'ProcessID': self.processID}
@@ -616,16 +619,30 @@ class ILDProductionJob( ProductionJob ):
                 # path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/' , 'generated' , energypath , self.evttype, self.detector , softwarepath)
                 # mc-dbd.generated already include 'generated'
                 #path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/' ,  energypath , self.evttype, self.detector , softwarepath)
+
+                ## Set DataType
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/')
+                self.finalMetaDict[ path_gen_or_sim ] = { "Datatype": "gen" }
+
+                ## Set MachineParams and Energy
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/' , energypath )
+                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+
+                #FIXME: self.detector does not exist for generator, like stdhepsplit
                 path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/' ,  energypath , self.evttype, self.detector , softwarepath)
+                self.finalMetaDict[ path_gen_or_sim ].update( { "SoftwareTag":self.prodparameters['ILDConfigVersion'] } )
 
             elif application.datatype == 'SIM':
                 # path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype , str( self.processID ) , self.detector , softwarepath)
                 # no processid
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/' , energypath )
+                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
                 path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , softwarepath)
 
             path = path_gen_or_sim
-            self.finalMetaDict[path_gen_or_sim] = {"EvtType" : evttypemeta}
+
             metap = {}
+            metap.update( {"EvtType" : evttypemeta} )
             # i want processid just in the last metapath
             # if 'GenProcessID' in self.compatmeta:
             #     metap.update( {"ProcessID":self.compatmeta['GenProcessID']} )  # because we need 2 fields for the same info: file and directory metadata
@@ -636,17 +653,23 @@ class ILDProductionJob( ProductionJob ):
 
             # If not included beam/pol the paths are not set correctly
             # for imeta in ['SoftwareTag','GenProcessName','MachineParams','Energy','BeamParticle1','BeamParticle2','PolarizationB1','PolarizationB2']: # NumberOfEvents needed or Mokka will fail
-            for imeta in ['NumberOfEvents','SoftwareTag','GenProcessName','MachineParams','Energy','BeamParticle1','BeamParticle2','PolarizationB1','PolarizationB2']:
+            ## APS: Removed MachineParams, Energy from this list, they are set at different level
+            for imeta in ['SoftwareTag',
+                          'GenProcessName',
+                          'NumberOfEvents'
+                          'BeamParticle1','BeamParticle2',
+                          'PolarizationB1','PolarizationB2']:
                 if imeta in self.compatmeta:
                     print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
                     metap.update( {imeta : self.compatmeta[imeta]} )    
 
-            if application.datatype:
-                print 'Updating final metadata with {"%s":"%s"}' %('Datatype',application.datatype)
-                metap.update({'Datatype' : application.datatype})
-                    
-            self.finalMetaDict[path_gen_or_sim] = metap
-            
+            ## APS: Datatype is set at lower level
+            # if application.datatype:
+            #     print 'Updating final metadata with {"%s":"%s"}' %('Datatype',application.datatype)
+            #     metap.update({'Datatype' : application.datatype})
+
+            self.prodMetaDict.update( metap )
+            #self.finalMetaDict[path_gen_or_sim].update( metap )
             
             # if hasattr( application, "DetectorModel" ):
             #     if application.DetectorModel:

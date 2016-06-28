@@ -14,6 +14,7 @@ cannot be (and should not be) used like the
 import os
 import shutil
 
+from collections import defaultdict
 from decimal import Decimal
 
 from DIRAC                                                  import S_OK, S_ERROR, gLogger
@@ -63,7 +64,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self.description = ''
 
     self.finalpaths = []
-    self.finalMetaDict = {}
+    self.finalMetaDict = defaultdict( dict )
+    self.prodMetaDict = {}
     self.finalMetaDictNonSearch = {}
     self.metadict_external = {}
     self.outputStorage = ''
@@ -411,7 +413,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       finalpaths = finalpaths.rstrip("/")
       finalpaths += "/"+str(self.transfid).zfill(8)
       finals.append(finalpaths)
-      self.finalMetaDict[finalpaths] = {"ProdID" : self.transfid}
+      self.finalMetaDict[finalpaths].update( { "ProdID": self.transfid } )
+      self.finalMetaDict[finalpaths].update( self.prodMetaDict )
       if 'ILDConfigVersion' in self.prodparameters:
         self.finalMetaDict[finalpaths].update({"ILDConfig":self.prodparameters['ILDConfigVersion']})
         
