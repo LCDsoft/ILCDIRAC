@@ -551,6 +551,9 @@ class ILDProductionJob( ProductionJob ):
         if hasattr( application, "setOutputRecFile" ) and not application.willBeCut:
 
             ### REC OUTPUT FILES
+            metaBasePathRec = joinPathForMetaData(self.basepath, 'rec')
+            self.finalMetaDict[ metaBasePathRec ] = { "Datatype": "REC" }
+
             metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath)
             self.finalMetaDict[ metaBasePathRec ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype )] = {"EvtType" : evttypemeta}
@@ -569,6 +572,9 @@ class ILDProductionJob( ProductionJob ):
 
 
             ### DST OUTPUT FILES
+            metaBasePathRec = joinPathForMetaData(self.basepath, 'dst')
+            self.finalMetaDict[ metaBasePathRec ] = { "Datatype": "DST" }
+
             metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath)
             self.finalMetaDict[ metaBasePathDst ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
 
