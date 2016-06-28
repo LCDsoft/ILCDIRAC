@@ -550,7 +550,7 @@ class ILDProductionJob( ProductionJob ):
 
             # no processid
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector, softwarepath)] = {"ILDConfig": self.prodparameters['ILDConfigVersion']}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector, softwarepath)] = {"SoftwareTag": self.compatmeta['SoftwareTag']}
 
             # this part is from Andre
             fname = self.basename + "_rec.slcio"
@@ -569,7 +569,7 @@ class ILDProductionJob( ProductionJob ):
 
             # no processid
             self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector, softwarepath)] = {"ILDConfig": self.prodparameters['ILDConfigVersion']}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector, softwarepath)] = {"SoftwareTag": self.compatmeta['SoftwareTag']}
             
             fname = self.basename + "_dst.slcio"
 
@@ -600,6 +600,7 @@ class ILDProductionJob( ProductionJob ):
 
                 #FIXME: self.detector does not exist for generator files or applications, like stdhepsplit
                 path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype, self.detector , softwarepath)
+                #FIXME: Is this ILDConfig or SoftwareTag at this point? I am not sure
                 self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
 
             elif application.datatype == 'SIM':
@@ -618,21 +619,27 @@ class ILDProductionJob( ProductionJob ):
 
                 ## Set SoftwareTag
                 path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , softwarepath)
-                self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
+                if self.usesofttag:
+                  self.finalMetaDict[ path_gen_or_sim ].update( { "SoftwareTag":self.compatmeta['SoftwareTag'] } )
+                else:
+                  self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
 
             path = path_gen_or_sim
 
             metap = {}
-
-            ## MachineParams, Energy from this list, they are set at different level
-            for imeta in ['SoftwareTag',
-                          'GenProcessName',
+            ## MachineParams, Energy from this list, they are set at different level, SoftwareTag or ILDConfig are only sometimes at the prodID level
+            for imeta in ['GenProcessName',
                           'NumberOfEvents',
                           'BeamParticle1','BeamParticle2',
                           'PolarizationB1','PolarizationB2']:
                 if imeta in self.compatmeta:
                     print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
                     metap.update( {imeta : self.compatmeta[imeta]} )    
+
+            if self.usesofttag:
+              metap.update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
+            elif 'SoftwareTag' in self.compatmeta:
+              metap.update( { "SoftwareTag":self.compatmeta['SoftwareTag'] } )
 
             self.prodMetaDict.update( metap )
 
