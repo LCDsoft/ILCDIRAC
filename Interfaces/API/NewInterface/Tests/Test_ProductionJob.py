@@ -488,7 +488,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
                            'ILDConfigVersion' : 'goodILDConfversion123.2' }
     job.finalpaths = [ 'testpath123/a/b/c', 'othertestpath/many_dirs/file.txt' ]
     job.slicesize = 561
-    job.finalMetaDict = { 'asd' : 'asd' }
+    job.finalMetaDict = { 'asd' : {'tag':'asd'} }
     job.finalMetaDictNonSearch = { 'testpath123/a/b/c' : {} }
 
     job.fc = Mock()
