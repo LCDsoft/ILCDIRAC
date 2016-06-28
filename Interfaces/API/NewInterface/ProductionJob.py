@@ -523,11 +523,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         self.finalMetaDictNonSearch[finalpath].update(self.metadict_external)  
     
     info.append('- Registered metadata: ')
-    for key, val in self.finalMetaDict.iteritems():
-      info.append('    %s = %s' % (key, val))
+    for path, metadata in sorted( self.finalMetaDict.iteritems() ):
+      info.append('    %s = %s' % (path, metadata))
     info.append('- Registered non searchable metadata: ')
-    for key, val in self.finalMetaDictNonSearch.iteritems():
-      info.append('    %s = %s' % (key, val))
+    for path, metadata in sorted( self.finalMetaDictNonSearch.iteritems() ):
+      info.append('    %s = %s' % (path, metadata))
       
     infoString = '\n'.join(info)
     self.prodparameters['DetailedInfo'] = infoString

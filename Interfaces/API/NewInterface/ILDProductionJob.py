@@ -595,21 +595,34 @@ class ILDProductionJob( ProductionJob ):
                 path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath )
                 self.finalMetaDict[ path_gen_or_sim ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
 
-                #FIXME: self.detector does not exist for generator, like stdhepsplit
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/' ,  energypath , self.evttype, self.detector , softwarepath)
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype)
+                self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
+
+                #FIXME: self.detector does not exist for generator files or applications, like stdhepsplit
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype, self.detector , softwarepath)
                 self.finalMetaDict[ path_gen_or_sim ].update( { "SoftwareTag":self.prodparameters['ILDConfigVersion'] } )
 
             elif application.datatype == 'SIM':
                 # no processid
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/' , energypath )
+                ## Set DataType
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/' )
+                self.finalMetaDict[ path_gen_or_sim ] = { "Datatype": "SIM" }
+
+                ## Set Energy and MachienParams
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/', energypath )
                 self.finalMetaDict[ path_gen_or_sim ] = { "Energy": int(self.energy), "MachineParams":self.machineparams }
+
+                ## Set EventType
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/sim/', energypath , self.evttype)
+                self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
+
+                ## Set SoftwareTag
                 path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , softwarepath)
+                self.finalMetaDict[ path_gen_or_sim ].update( { "SoftwareTag":self.prodparameters['ILDConfigVersion'] } )
 
             path = path_gen_or_sim
 
             metap = {}
-
-            metap.update( {"EvtType" : evttypemeta} )
 
             ## MachineParams, Energy from this list, they are set at different level
             for imeta in ['SoftwareTag',
