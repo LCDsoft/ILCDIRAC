@@ -107,7 +107,8 @@ class SLICPandoraAnalysis (ModuleBase):
             continue
       #if os.path.exists(detmodel): #and os.path.isdir(detmodel):
       self.detectorxml = os.path.join(os.getcwd(), self.detectorxml)
-      self.detectorxml = self.detectorxml + "_pandora.xml"
+      if not self.detectorxml.endswith('xml'):
+        self.detectorxml = self.detectorxml + "_pandora.xml"
     
     if not os.path.exists(self.detectorxml):
       self.log.error('Detector model xml %s was not found, exiting' % self.detectorxml)
