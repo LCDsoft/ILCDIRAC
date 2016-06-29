@@ -2,6 +2,7 @@
 """ Test the SLICPandora module """
 
 import unittest
+import sys
 from mock import patch, call, mock_open, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
@@ -16,6 +17,12 @@ class TestSLICPandora( unittest.TestCase ):
   """ Test the SLICPandora module
   """
   def setUp( self ):
+    # Mock out modules that spawn other threads
+    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    #sys.modules['ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation'] = Mock()
+    #sys.modules['ILCDIRAC.Core.Utilities.FindSteeringFileDir'] = Mock()
+    #sys.modules['ILCDIRAC.Core.Utilities.PrepareOptionFiles'] = Mock()
+
     self.spa = SLICPandoraAnalysis()
     self.spa.platform = 'myTestPlatform'
     self.spa.applicationLog = 'applogFile.test'

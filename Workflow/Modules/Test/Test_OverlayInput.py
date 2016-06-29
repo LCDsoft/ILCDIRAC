@@ -14,6 +14,9 @@ from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
 
+MODULE_NAME = 'ILCDIRAC.Workflow.Modules.OverlayInput'
+MODULEBASE_NAME = 'ILCDIRAC.Workflow.Modules.ModuleBase'
+
 gLogger.setLevel("ERROR")
 gLogger.showHeaders(True)
 
@@ -31,12 +34,12 @@ def createFile( *_args, **_kwargs ):
   with open("overlayFile.slcio", "w") as oFile:
     oFile.write("Somecontent")
 
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.OverlayInput.FileCatalogClient", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.OverlayInput.Operations", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.OverlayInput.RPCClient", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.OverlayInput.DataManager", new=Mock(return_value=S_OK()))
+@patch("%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=S_OK()))
+@patch("%s.Operations" % MODULE_NAME, new=Mock(return_value=S_OK()))
+@patch("%s.RPCClient" % MODULE_NAME, new=Mock(return_value=S_OK()))
+@patch("%s.DataManager" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class TestOverlayEos( unittest.TestCase ):
   """ test Getting Overlay files from CERN EOS
 
@@ -58,7 +61,7 @@ class TestOverlayEos( unittest.TestCase ):
     os.chdir("../")
     cleanup(self.tmpdir)
 
-  @patch("ILCDIRAC.Workflow.Modules.OverlayInput.shellCall", new=Mock(side_effect=createFile))
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(side_effect=createFile))
   def test_overlayinput_getEosFile_lfn_success( self ):
     """ test success when getting an lfn to copy from eos """
     testLFN = "/lfn/to/overlay/overlayFile.slcio"
@@ -69,7 +72,7 @@ class TestOverlayEos( unittest.TestCase ):
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/clicdp/grid%s" % testLFN , overscript.read() )
 
-  @patch("ILCDIRAC.Workflow.Modules.OverlayInput.shellCall", new=Mock(side_effect=createFile))
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(side_effect=createFile))
   def test_overlayinput_getEosFile_fullpath_success( self ):
     """ test that we don't predent if we get a fullpath for eos, however that might happen"""
     testLFN = "/eos/clicdp/grid/lfn/to/overlay/overlayFile.slcio"
@@ -80,7 +83,7 @@ class TestOverlayEos( unittest.TestCase ):
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch/%s" % testLFN , overscript.read() )
 
-  @patch("ILCDIRAC.Workflow.Modules.OverlayInput.shellCall", new=Mock())
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock())
   def test_overlayinput_getEosFile_lfn_failure( self ):
     """ test failure of copy command, that is no ouputfile present after copying """
     testLFN = "/lfn/to/overlay/overlayFile.slcio"
@@ -360,7 +363,6 @@ class TestOverlayExecute( unittest.TestCase ):
 
 
 
-MODULE_NAME = 'ILCDIRAC.Workflow.Modules.OverlayInput'
 def get_castor_lines( expanded_lfn ):
   result = [ ['#!/bin/sh \n', '###############################\n', '# Dynamically generated scrip #\n', '###############################\n', 'declare -x STAGE_SVCCLASS=ilcdata\n', 'declare -x STAGE_HOST=castorpublic\n', "xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % expanded_lfn,  """
 if [ ! -s %s ]; then

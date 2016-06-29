@@ -7,15 +7,14 @@ import os
 import shutil
 import tempfile
 import unittest
-
 from xml.etree.ElementTree import ElementTree
-
 from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 
 __RCSID__ = "$Id$"
 
+MODULE_NAME = 'ILCDIRAC.Core.Utilities.PrepareOptionFiles'
 def cleanup(tempdir):
   """
   Remove files after run
@@ -120,7 +119,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
           return False, message
     return False, "parameter " + parameterName + " not found "
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputfile.xml",
@@ -147,7 +146,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertFalse( *self.checkGlobalTag( "Verbosity", "NotSILENT" ) )
     self.assertFalse( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "NotTheseFiles") )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_initialParametersMissing( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputfilesmall.xml",
@@ -175,7 +174,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "mySLCIOOutput.slcio") )
 
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_productionOutputFiles( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputprod.xml",
@@ -201,7 +200,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "outputrec.slcio") )
     self.assertTrue( self.checkProcessorParameter( "DSTOutput", "LCIOOutputFile", "outputdst.slcio") )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_ildRecoFile( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputprodild.xml",
@@ -227,7 +226,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames", "file1\nfile2") )
     self.assertTrue( self.checkProcessorParameter( "BgOverlay", "NSkipEventsRandom", "666") )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_ildRecoFile_NoOver( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputprodildNoOver.xml",
@@ -275,7 +274,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "") )
 
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[] ) )
   def test_createFile_overlayTiming_NoFiles( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputprod.xml",
@@ -291,7 +290,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertFalse( res['OK'] )
     self.assertIn( "Could not find any overlay files", res['Message'] )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[] ) )
   def test_createFile_bgoverlay_NoFiles( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputprod.xml",
@@ -314,7 +313,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
       raise RuntimeError("Parse Failed")
 
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       res = prepareXMLFile( finalxml="outputprod.xml",
                             inputXML="marlininputild.xml",
                             inputGEAR="gearMyFile.xml",
@@ -344,7 +343,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertIn( "inputSLCIO is neither", res['Message'] )
 
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_inputList( self ):
     from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
     res = prepareXMLFile( finalxml="outputfile.xml",

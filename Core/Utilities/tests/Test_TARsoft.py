@@ -12,15 +12,14 @@ from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
 
-# DataManager import
-dataman_mock = Mock()
-dataman_mock.getFile.return_value = None
-sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_mock
-
 class TestTARsoft( unittest.TestCase ):
   """ Tests the base functionality of the class """
 
   def setUp( self ):
+    # Mock away DataManager import
+    dataman_import_mock = Mock()
+    dataman_import_mock.getFile.return_value = None
+    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_import_mock
     global dataman_mock
     dataman_mock = Mock()
 

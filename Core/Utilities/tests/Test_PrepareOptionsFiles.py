@@ -2,21 +2,23 @@
 tests for PrepareOptionFiles
 
 """
-__RCSID__ = "$Id$"
-from DIRAC import S_OK, S_ERROR
-from mock import mock_open, patch, MagicMock as Mock
 import unittest
 import os
 import filecmp
-import re
 import copy
 import collections
+import xml.etree.ElementTree as ET
+from mock import mock_open, patch, MagicMock as Mock
 
+from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities import PrepareOptionFiles
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareMacFile
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
-import xml.etree.ElementTree as ET
+
+__RCSID__ = "$Id$"
+
+MODULE_NAME = 'ILCDIRAC.Core.Utilities.PrepareOptionFiles'
 
 #TODO split up in separate classes (if too much time, decent for now. Quite some code duplication but hard to remove + unlikely&not too much effort to change)
 
@@ -191,10 +193,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   dep2 = { 'app' : True, 'version' : True }
   dep3 = { 'app' : True, 'version' : True }
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK('aFolder'), S_OK('bFolder')]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[True, False, False, True]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc")
+  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('aFolder'), S_OK('bFolder')]))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True]))
+  @patch("%s.removeLibc" % MODULE_NAME)
   def test_getnewldlibs_cornercase( self, mock_removelibc ):
     # TODO: Understand method: Currently this method ignores every library path except the last one in the list and just ignores if getSoftwareFolder fails
     reference = os.environ.get('LD_LIBRARY_PATH', '')
@@ -208,52 +210,51 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     mock_removelibc.assert_any_call("aFolder/lib")
     mock_removelibc.assert_any_call("bFolder/LDLibs")
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[False, False, False, False]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, False, False, False]))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewldlibs_nochange( self ):
     reference = os.environ.get('LD_LIBRARY_PATH', '')
     self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None, None))
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK('basetest'), S_ERROR()]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[True, False, False, False]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.environ", {})
+  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('basetest'), S_ERROR()]))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, False]))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.os.environ" % MODULE_NAME, {})
   def test_getnewldlibs_noldlibpath( self ):
     self.assertEquals('basetest/lib', PrepareOptionFiles.getNewLDLibs(None, None, None))
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK('bFolder')]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[True, False, False, True]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2]))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('bFolder')]))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True]))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewpath_cornercase( self ):
     # TODO: Understand method: Currently this method ignores every path except the last one in the list and just ignores if getSoftwareFolder fails
     reference = os.environ['PATH']
     self.assertEquals("%s:%s" % ('bFolder/bin', reference), PrepareOptionFiles.getNewPATH(None, None, None))
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[False, False]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
+  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, False]))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewpath_nochange( self ):
     reference = os.environ['PATH']
     self.assertEquals(reference, PrepareOptionFiles.getNewPATH(None, None, None))
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.resolveDeps", new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getSoftwareFolder", new=Mock(side_effect=[S_ERROR(), S_OK("testfolder"), S_ERROR()]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.path.exists", new=Mock(side_effect=[True, False]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.removeLibc", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.os.environ", {})
+  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK("testfolder"), S_ERROR()]))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False]))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.os.environ" % MODULE_NAME, {})
   def test_getnewpath_nokey( self ):
     self.assertEquals("testfolder/bin", PrepareOptionFiles.getNewPATH(None, None, None))
 
   def test_prepareWhizFile( self ):
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi'], []]
     handles = FileUtil.getMultipleReadHandles(file_contents)
-    with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
       assertDiracSucceedsWith_equals( result, True, self )
@@ -262,10 +263,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
 
   def test_prepareWhizFile_noprocessid( self ):
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id1"', '98u243jrui4fg4289fjh2487rh13urhi'], []]
     handles = FileUtil.getMultipleReadHandles(file_contents)
-    with patch('%s.open' % moduleName, mock_open(), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
       assertDiracSucceedsWith_equals( result, False, self )
@@ -274,10 +274,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
 
   def test_prepareWhizFile_luminosity( self ):
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = ['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi', 'luminosity']
     text_file_data = '\n'.join(file_contents)
-    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", "684", "out")
       assertDiracSucceedsWith_equals( result, True, self )
@@ -291,14 +290,13 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
   def test_prepareWhizFileTemplate( self ):
     parameters = create_testdict()
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [ x+x for x in parameters.keys() ] #Fill file contents with template strings
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
     parameters['USERSPECTRUM'] = 'mode1234'
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
     file_contents += ['write_events_file', 'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82']
     text_file_data = '\n'.join(file_contents)
-    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFileTemplate("in", "typeA", parameters, "out")
       assertDiracSucceedsWith_equals( result, True, self )
@@ -313,14 +311,13 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
   def test_prepareWhizFileTemplate_noprocessid( self ):
     parameters = create_testdict()
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     file_contents = [ x+x for x in parameters.keys() ] #Fill file contents with template strings
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
     parameters['USERSPECTRUM'] = 'mode1234'
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
     file_contents += ['write_events_file', 'processidaisuydhprocess_id"', 'efiuhifuoejf', '198734y37hrunffuydj82']
     text_file_data = '\n'.join(file_contents)
-    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFileTemplate("in", "typeA", parameters, "out")
       assertDiracSucceedsWith_equals( result, False, self )
@@ -332,14 +329,14 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       mocker_handle.write.assert_any_call(entry)
     assertEqualsImproved(len(expected), mocker_handle.__enter__.return_value.write.call_count, self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
+  @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
   def test_prepareXMLFile( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = createXMLTreeForXML().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
       assertDiracSucceedsWith_equals( result, True, self )
       mytree = TestPrepareOptionsFile.currenttree
@@ -365,27 +362,27 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
         self.assertTrue(procparams[0].text == 'outputfile')
         assertEqualsImproved( proc[0].text, 'output file changed', self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[]))
+  @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[]))
   def test_prepareXMLFile_getoverlayEmpty( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = createXMLTreeForXML(1).getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
       assertDiracFailsWith( result, 'could not find any overlay files', self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[ 'overlayfile1', 'verycomplicated_other_file.txt' ]))
+  @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[ 'overlayfile1', 'verycomplicated_other_file.txt' ]))
   def test_prepareXMLFile_getoverlayUsed( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = createXMLTreeForXML(2).getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
       assertDiracSucceeds( result, self )
       mytree = TestPrepareOptionsFile.currenttree
@@ -398,30 +395,30 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
           assertEqualsImproved( params[-1-i].text, 'overlayfile1\nverycomplicated_other_file.txt', self)
           assertEqualsImproved( proc[i].text, 'Overlay files changed', self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=Mock(side_effect=IOError))
+  @patch("%s.ElementTree.parse" % MODULE_NAME, new=Mock(side_effect=IOError))
   def test_prepareXMLFile_parsefails( self ):
     result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
     assertDiracFailsWith( result, 'found exception ', self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
+  @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
   def test_prepareXMLFile_slciotypeerror( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = createXMLTreeForXML().getroot()
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', 1, 1, 'outputfile', 'outputREC', 'outputdst', True )
       assertDiracFailsWith( result, 'inputslcio is neither string nor list!', self )
       assertDiracFailsWith( result, "actual type is <type 'int'>", self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
+  @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
   def test_prepareXMLFile_nodebug( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = createXMLTreeForXML(-1).getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', 'input slcio file list', 1, '', 'outputREC', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, True, self )
 
@@ -536,10 +533,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     """
     assertEqualsImproved(len(file_contents), len(expected), self)
 
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
     mymock = Mock()
     handles = FileUtil.getMultipleReadHandles(file_contents)
-    with patch('%s.open' % moduleName, mock_open(mymock), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(mymock), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
       args.extend([None] * (13-len(args)))
       result = PrepareOptionFiles.prepareSteeringFile(*args)
@@ -550,9 +546,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
   #@patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
   # For ease of testing, assert library method write() is correct and instead traverse the xml tree to check for correctness
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -573,7 +569,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     cachedir = 'cachedir'
     outputfile = 'outputfile'
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, outputfile, 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -619,9 +615,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
               assertEqualsXml( d.find('outputFilePath'), expected_element, self )
       assertEqualsImproved( ovNameFound, ofpNameFound, self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_RECWriter( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -635,7 +631,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     cachedir = 'cachedir'
     outputrec = 'outputrec'
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', outputrec, 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -652,9 +648,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self.assertTrue(flag)
 
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_DSTWriter( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -667,7 +663,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     amEvents = 1
     cachedir = 'cachedir'
     outputdst = 'outputdst'
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', 'outputrec', outputdst, False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -681,9 +677,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
           flag = True
       self.assertTrue(flag)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_nooutput( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -695,16 +691,16 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     jar_list = ['list of', 'jar files']
     amEvents = 1
     cachedir = 'cachedir'
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', '', '', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       ex = current_tree.find('execute/driver')
       assertEqualsXml(ex, ET.Element('driver', name='Writer'), self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_differentoutput( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -716,7 +712,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     jar_list = ['list of', 'jar files']
     amEvents = 1
     cachedir = 'cachedir'
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', '', '', False )
       assertDiracSucceedsWith_equals( result, 'LCSIM', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -731,23 +727,23 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self.assertTrue(flag)
 
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   def test_prepareLCSIM_lcsimempty( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_2().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 0, 'trackstrategy', ['list of slcio files'], [], '', 'outputfile', 'outputrec', 'outputdst', True )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       # New Elem is created
       assertEqualsXml(TestPrepareOptionsFile.current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=[]))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[]))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_overlayempty( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -760,14 +756,14 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     amEvents = 1
     cachedir = 'cachedir'
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracFailsWith( result, 'could not find any overlay files', self )
       # check classpath elem is cleared
       assertEqualsXml(TestPrepareOptionsFile.current_tree.find('classpath'), ET.Element('classpath'), self)
 
   def test_prepareLCSIM_ioerr( self ):
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", side_effect=IOError('')):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, side_effect=IOError('')):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracFailsWith( result, 'found exception', self )
 
@@ -777,7 +773,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_1().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', [], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputdst', 'outputrec', False )
       assertDiracFailsWith( result, 'empty input file list', self )
 
@@ -787,20 +783,20 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_3().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracFailsWith( result, 'invalid lcsim file structure', self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_rarecases( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_9().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', True )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -822,31 +818,31 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 
 
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_evtintervalwrong( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_10().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, '', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       assertEqualsImproved(current_tree.find("drivers/driver/eventInterval").text, '135851', self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_noexec( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_11().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -858,16 +854,16 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
           flag = True
       self.assertTrue(flag)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_withexec( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_12().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst' , False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
@@ -880,56 +876,56 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self.assertTrue(flag)
       assertEqualsImproved(current_tree.find('execute/driver').attrib['name'], 'evtMarker', self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_OK()))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
   def test_prepareLCSIM_noclasspath( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_4().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], ['jarfile'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_ERROR('bkgtesterror')))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_ERROR('bkgtesterror')))
   def test_prepareLCSIM_bkgfails( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_1().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       self.assertFalse(result['OK'])
       assertEqualsImproved('bkgtesterror', result['Message'], self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.allowedBkg", new=Mock(return_value=S_ERROR('dontthrowme')))
+  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_ERROR('dontthrowme')))
   def test_prepareLCSIM_noovname( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_lcsim_13().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   def test_prepareTomato_stdcase( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_salad_1().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       self.assertTrue(PrepareOptionFiles.prepareTomatoSalad('inputxml', 'outputxml', 'inputslcio', 'ofs', 'coll')['OK'])
       current_tree = TestPrepareOptionsFile.current_tree
       it = current_tree.find('global').iter()
@@ -947,28 +943,28 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
           elif pa.attrib['name'] == 'MCCollectionName':
             assertEqualsImproved(pa.text, 'coll', self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   def test_prepareTomato_othercase( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = xml_salad_2().getroot()
 
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       self.assertTrue(PrepareOptionFiles.prepareTomatoSalad('inputxml', 'outputxml', 'inputslcio', 'outputFile', 'collection')['OK'])
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('parameter', name='LCIOInputFiles')
       expected_element.text = 'inputslcio'
       assertEqualsXml(current_tree.findall('global/parameter')[-1], expected_element, self)
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   def test_prepareTomato_parsefails( self ):
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=Mock(side_effect=IOError(''))):
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=Mock(side_effect=IOError(''))):
       result = PrepareOptionFiles.prepareTomatoSalad('inputxml', 'outputxml', 'inputslcio', 'outputFile', 'collection')
       self.assertFalse(result['OK'])
       self.assertIn('found exception', result['Message'].lower())
 
-  @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.write", new=Mock(return_value=True))
+  @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   def test_prepareTomato_noinputfile( self ):
     #pylint: disable=W0613
     def parseModified( self, source, parser=None ):
@@ -978,9 +974,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     file_contents = [ [] ]
     expected = [[ TestPrepareOptionsFilePatch.teststr ]] # Means 2 files will be opened, nothing is written to first file, and 'firstlineentry' and 'line100' are written (in different calls and exactly these strings) to the second file. If more/less is written this fails!
     handles = FileUtil.getMultipleReadHandles(file_contents)
-    moduleName = "ILCDIRAC.Core.Utilities.PrepareOptionFiles"
-    with patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.ElementTree.parse", new=parseModified), \
-         patch('%s.open' % moduleName, mock_open(), create=True) as mo:
+    with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified), \
+         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
       self.assertTrue(PrepareOptionFiles.prepareTomatoSalad(None, 'outputxml', 'inputslcio', 'outputFile', 'collection')['OK'])
       current_tree = TestPrepareOptionsFile.current_tree

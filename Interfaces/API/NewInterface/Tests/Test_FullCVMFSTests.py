@@ -16,9 +16,10 @@ from DIRAC import S_OK
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds
 #from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
 
-
 __RCSID__ = "$Id$"
 
+MODULEBASE_NAME = 'ILCDIRAC.Workflow.Modules.ModuleBase'
+USERJOB_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.UserJob'
 
 class JobTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
@@ -97,9 +98,9 @@ class JobTestCase( unittest.TestCase ):
 
     
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_mokka(self):
     """create test for mokka"""
     print "mokka test"
@@ -110,9 +111,9 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_ddsim(self):
     """create tests for ddsim"""
     print "ddsimtest"
@@ -134,9 +135,9 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_marlin(self):
     """create test for marlin"""
     print "marlin test"
@@ -147,9 +148,9 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_marlin2(self):
     """create test for marlin"""
     print "marlin test2"
@@ -160,9 +161,9 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
   
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_whizard(self):
     """create test for whizard"""
     print "whizard test"
@@ -174,9 +175,9 @@ class JobTestCase( unittest.TestCase ):
       assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_utilities(self):
     """create test for utilities"""
     print "Utilities test"
@@ -188,9 +189,9 @@ class JobTestCase( unittest.TestCase ):
       assertDiracSucceeds( res, self )
       
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root(self):
     """create test for root 1"""
     print "test root"
@@ -201,9 +202,9 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length")
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root2(self):
     """create test for root 2"""
     print "test root2"
@@ -214,9 +215,9 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
 
   #@unittest.skip("Temporarily disabled due to length") 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.getProxyInfo", new=Mock(return_value=S_OK({"group":"ilc_user"})))
-  @patch("ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setPlatform", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root3(self):
     """create test for root 3"""
     print "test root3"
