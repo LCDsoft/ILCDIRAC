@@ -21,6 +21,7 @@ from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
 from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
 from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 
+MODULE_NAME = 'ILCDIRAC.Workflow.Modules'
 
 #from DIRAC.Workflow.Modules.test.Test_Modules import ModulesTestCase as DiracModulesTestCase
 #import DIRAC.Workflow.Modules.test.Test_Modules as Test_Modules
@@ -39,10 +40,10 @@ def cleanup(tempdir):
 class ModulesTestCase ( unittest.TestCase ):
   """ ILCDirac version of Workflow module tests"""
 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
   @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.Operations", new=Mock())
-  @patch("ILCDIRAC.Workflow.Modules.UploadLogFile.StorageElement", new=Mock(return_value=S_OK()))
+  @patch("%s.ModuleBase.Operations" % MODULE_NAME, new=Mock())
+  @patch("%s.UploadLogFile.StorageElement" % MODULE_NAME, new=Mock(return_value=S_OK()))
   @patch("DIRAC.Resources.Storage.StorageElement.StorageElementItem", new=Mock() )
   @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock())
   @patch("DIRAC.Resources.Storage.StorageElement.StorageElementItem", new=Mock() )
@@ -229,13 +230,13 @@ class ModulesTestCase ( unittest.TestCase ):
     cleanup(self.tempdir)
 
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class TestModuleBase( ModulesTestCase ):
   """ Tests for ModuleBase functions"""
 
   def test_generateFailoverFile( self ):
     """run the generateFailoverFile function and see what happens..................................."""
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       dummy_res = self.mbase.generateFailoverFile()
     #print res
 
@@ -509,13 +510,13 @@ class TestModuleBase( ModulesTestCase ):
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
 @patch("DIRAC.Resources.Storage.StorageElement.StorageElementItem", new=Mock() )
 @patch("DIRAC.Resources.Storage.StorageFactory.StorageFactory", new=Mock() )
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.UploadLogFile.StorageElement", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
+@patch("%s.UploadLogFile.StorageElement" % MODULE_NAME, new=Mock(return_value=S_OK()))
 @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock())
 class TestUploadLogFile( ModulesTestCase ):
   """ test UploadLogFile """
 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
   @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   def setUp( self ):
     """create logfile"""
@@ -559,7 +560,7 @@ class TestUploadLogFile( ModulesTestCase ):
     res = self.ulf.execute()
     self.assertTrue( res['OK'] )
 
-  @patch("ILCDIRAC.Workflow.Modules.UploadLogFile.getLogPath", new=Mock(return_value=S_ERROR("not the path you are looking for") ))
+  @patch("%s.UploadLogFile.getLogPath" % MODULE_NAME, new=Mock(return_value=S_ERROR("not the path you are looking for") ))
   def test_ULF_ASI_noLogPath( self ):
     """ULF.applicationSpecificInputs: getLogPath fails.............................................."""
     self.ulf = UploadLogFile()
@@ -735,7 +736,7 @@ class TestUploadLogFile( ModulesTestCase ):
     self.assertEqual( self.ulf.logExtensions, ["*.root"] )
 
   @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations.getValue', new=Mock(return_value=["FAIL-SRM"]))
-  @patch('ILCDIRAC.Workflow.Modules.UploadLogFile.FailoverTransfer', new=Mock() )
+  @patch('%s.UploadLogFile.FailoverTransfer' % MODULE_NAME, new=Mock() )
   def test_ULF__tryFailoverTransfer_1( self ):
     """ULF._tryFailoverTransfer 1..................................................................."""
     self.ulf = UploadLogFile()
@@ -760,7 +761,7 @@ class TestUploadLogFile( ModulesTestCase ):
 #############################################################################
 
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class UploadOutputDataSuccess( ModulesTestCase ):
   """ test UploadLogFile """
   def test_execute( self ):
@@ -768,7 +769,7 @@ class UploadOutputDataSuccess( ModulesTestCase ):
     pass
 
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class UploadOutputDataFailure( ModulesTestCase ):
   """ test UploadLogFile """
   def test_execute( self ):
@@ -781,13 +782,13 @@ class UploadOutputDataFailure( ModulesTestCase ):
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
 @patch("DIRAC.Resources.Storage.StorageElement.StorageElementItem", new=Mock() )
 @patch("DIRAC.Resources.Storage.StorageFactory.StorageFactory", new=Mock() )
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.UploadLogFile.StorageElement", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
+@patch("%s.UploadLogFile.StorageElement" % MODULE_NAME, new=Mock(return_value=S_OK()))
 @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock())
 class TestFailoverRequest( ModulesTestCase ):
   """ test UploadLogFile """
 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
   @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   def setUp( self ):
     super(TestFailoverRequest, self).setUp()
@@ -896,21 +897,21 @@ class TestFailoverRequest( ModulesTestCase ):
   def test_Exe_Success( self ):
     """execute: succeeds............................................................................"""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
     self.frq.applicationSpecificInputs = Mock(return_value=S_OK())
     self.frq.jobID = 12345
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( res['OK'] )
 
   def test_Exe_Success_input( self ):
     """execute: succeeds inputdata.................................................................."""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.fileReport = self.fr_mock
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
@@ -920,14 +921,14 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.jobID = 12345
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( res['OK'] )
 
   def test_Exe_Success_input_no( self ):
     """execute: succeeds inputdata.................................................................."""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.fileReport = self.fr_mock
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
@@ -941,14 +942,14 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.jobID = 12345
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( res['OK'] )
 
   def test_Exe_statusFalse( self ):
     """execute: workflowStatus not OK..............................................................."""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.fileReport = self.fr_mock
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
@@ -963,14 +964,14 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.workflowStatus['OK'] = False
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( not res['OK'] )
 
   def test_Exe_statusFalse_diset_err( self ):
     """execute: workflowStatus not OK diset error..................................................."""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
     self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
@@ -989,14 +990,14 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.fileReport = fr_mock
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( not res['OK'] )
 
   def test_Exe_statusFalse_diset_ok( self ):
     """execute: workflowStatus not OK diset success................................................."""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
     self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
@@ -1014,14 +1015,14 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.fileReport = fr_mock
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( not res['OK'] )
 
   def test_Exe_statusFalse_failoverFail( self ):
     """execute: workflowStatus not OK failoverfailure..............................................."""
     gLogger.setLevel("ERROR")
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq = FailoverRequest()
     self.frq.log = gLogger.getSubLogger("Frq-Exe-Succeed")
     self.frq.InputData = ["/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0000.stdhep",
@@ -1040,7 +1041,7 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.fileReport = fr_mock
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = fr_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
     self.frq.workflow_commons['Request'] = self.rc_mock
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       res = self.frq.execute()
     self.assertTrue( not res['OK'] )
 
@@ -1057,7 +1058,7 @@ class TestFailoverRequest( ModulesTestCase ):
     self.frq.fileReport.generateForwardDISET.return_value = S_OK("Spanish Inquisition")
     self.frq.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.frq.fileReport,
                                       Request = self.rc_mock, PRODUCTION_ID=43321, JOB_ID = 12345 )
-    with patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", Mock() ):
+    with patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, Mock() ):
       self.frq.execute()
     self.assertTrue( self.frq.workflow_commons['Request'] )
 
@@ -1098,11 +1099,11 @@ class TestFailoverRequest( ModulesTestCase ):
 #############################################################################
 
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class TestUploadOutputData( ModulesTestCase ):
   """ test UploadOutputData """
 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
   @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   def setUp( self ):
     super(TestUploadOutputData, self).setUp()
@@ -1262,7 +1263,7 @@ class TestUploadOutputData( ModulesTestCase ):
     self.assertTrue( all( filesFound ) )
 
   @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock() )
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.RequestValidator", new=Mock() )
+  @patch("%s.ModuleBase.RequestValidator" % MODULE_NAME, new=Mock() )
   def test_EXE_cleanUpRequests( self ):
     """execute: test when Requests are being cleaned up ............................................"""
     # we want that the upload output data fails to upload and do registration,
@@ -1293,11 +1294,11 @@ class TestUploadOutputData( ModulesTestCase ):
 #############################################################################
 
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class TestUserJobFinalization( ModulesTestCase ):
   """ test UserJobFinalization """
 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
   @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
   def setUp( self ):
     super(TestUserJobFinalization, self).setUp()

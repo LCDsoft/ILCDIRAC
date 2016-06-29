@@ -18,6 +18,8 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
 
+DDSIM_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim'
+
 gLogger.setLevel("DEBUG")
 gLogger.showHeaders(True)
 
@@ -72,6 +74,7 @@ class ProductionJobCompleteTestCase( unittest.TestCase ):
 class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
   """ Tests the setJobFileGroupSize method
   """
+
   def test_setJobFileGroupSize_normal( self ):
     # Basic setter method
     num = 4871
@@ -91,9 +94,9 @@ class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
     self.prodJob.energy = 250.0
     self.prodJob.evttype = 'electron party'
     self.prodJob.outputStorage = 'CERN-EOS-DST'
-    with patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._analyseJob', new=Mock(return_value=S_OK())), \
-         patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._checkConsistency', new=Mock(return_value=S_OK())), \
-         patch('ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim._checkFinalConsistency', new=Mock(return_value=S_OK())):
+    with patch('%s._analyseJob' % DDSIM_NAME, new=Mock(return_value=S_OK())), \
+         patch('%s._checkConsistency' % DDSIM_NAME, new=Mock(return_value=S_OK())), \
+         patch('%s._checkFinalConsistency' % DDSIM_NAME, new=Mock(return_value=S_OK())):
       res = self.prodJob.append(ddsim)
       assertDiracSucceeds( res, self )
     res = self.prodJob.setJobFileGroupSize(1389)

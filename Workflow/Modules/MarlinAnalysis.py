@@ -231,13 +231,12 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     """ Prepare the run time environment: MARLIN_DLL in particular.
     """
     #to fix the MARLIN_DLL, we need to get it first
-    script = open("temp.sh",'w')
-    script.write("#!/bin/bash\n")
-    lines = []
-    lines.append("source %s" % env_script_path)
-    lines.append('echo $MARLIN_DLL')
-    script.write("\n".join(lines))
-    script.close()
+    with open("temp.sh",'w') as script:
+      script.write("#!/bin/bash\n")
+      lines = []
+      lines.append("source %s" % env_script_path)
+      lines.append('echo $MARLIN_DLL')
+      script.write("\n".join(lines))
     os.chmod("temp.sh", 0755)
     res = shellCall(0, "./temp.sh")
     if not res['OK']:
@@ -275,7 +274,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
         self.log.verbose("Duplicated lib found, removing %s" % path1)
         try:
           temp.remove(path1)
-        except EnvironmentError:
+        except ValueError:
           pass
       
     marlindll = "%s:%s" % (":".join(temp), userlib) #Here we concatenate the default MarlinDLL with the user's stuff

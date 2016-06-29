@@ -4,12 +4,15 @@ Unit tests for the MarlinAnalysis.py file
 
 import unittest
 import os
-from mock import mock_open, patch, MagicMock as Mock
+from mock import mock_open, call, patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 from DIRAC import S_OK, S_ERROR
 
 __RCSID__ = "$Id$"
+
+MODULE_NAME = 'ILCDIRAC.Workflow.Modules.MarlinAnalysis'
 
 class MarlinAnalysisFixture( object ):
   """ Contains the commonly used setUp and tearDown methods of the Tests"""
@@ -28,35 +31,57 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
   """ Base class for the ProductionJob test cases
   """
 
+  def test_applicationspecificinputs( self ):
+    self.marAna.InputFile = [ 'firstEntry.txt' ]
+    self.marAna.workflow_commons[ 'ParametricInputSandbox' ] = [ 'addthis.slcio', 'anotherFile_butignoreme', 'lastfile.slcio' ]
+    assertDiracSucceeds( self.marAna.applicationSpecificInputs(), self )
+    assertEqualsImproved( ( self.marAna.InputFile, self.marAna.InputData ), ( [ 'firstEntry.txt', 'addthis.slcio', 'anotherFile_butignoreme', 'lastfile.slcio'], [] ), self)
+
+  def test_applicationspecificinputs_nolist( self ):
+    self.marAna.InputFile = [ 'dontleavemealone.txt' ]
+    self.marAna.workflow_commons[ 'ParametricInputSandbox' ] = 'myEntryies;another_one.slcio'
+    assertDiracSucceeds( self.marAna.applicationSpecificInputs(), self )
+    assertEqualsImproved( ( self.marAna.InputFile, self.marAna.InputData ), ( [ 'dontleavemealone.txt', 'myEntryies', 'another_one.slcio' ], [] ), self)
+
+  def test_applicationspecificinputs_emptylist( self ):
+    self.marAna.InputFile = [ 'leavemealone.txt' ]
+    self.marAna.workflow_commons[ 'ParametricInputSandbox' ] = []
+    assertDiracSucceeds( self.marAna.applicationSpecificInputs(), self )
+    assertEqualsImproved( ( self.marAna.InputFile, self.marAna.InputData ), ( [ 'leavemealone.txt' ], [] ), self)
+
+  def test_applicationspecificinputs_emptystring( self ):
+    self.marAna.InputFile = [ 'leavemealone2.txt' ]
+    self.marAna.workflow_commons[ 'ParametricInputSandbox' ] = ''
+    assertDiracSucceeds( self.marAna.applicationSpecificInputs(), self )
+    assertEqualsImproved( ( self.marAna.InputFile, self.marAna.InputData ), ( ['leavemealone2.txt'], [] ), self)
+
   def test_resolveinput_productionjob1( self ):
     self.marAna.workflow_commons[ "IS_PROD" ] = True
     outputfile1 = "/dir/a_REC_.a"
     outputfile2 = "/otherdir/b_DST_.b"
     inputfile = "/inputdir/input_SIM_.i"
     self.marAna.workflow_commons[ "ProductionOutputData" ] = ";".join([outputfile1, outputfile2, inputfile])
-    self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
-    self.assertEquals((self.marAna.outputREC, self.marAna.outputDST, self.marAna.InputFile), ("a_REC_.a", "b_DST_.b", ["input_SIM_.i"]))
+    assertDiracSucceedsWith_equals( self.marAna.applicationSpecificInputs(), "Parameters resolved", self )
+    assertEqualsImproved( ( self.marAna.outputREC, self.marAna.outputDST, self.marAna.InputFile ), ( "a_REC_.a", "b_DST_.b", [ "input_SIM_.i" ] ), self )
 
   def test_resolveinput_productionjob2( self ):
+    self.marAna.workflow_commons[ 'ParametricInputSandbox' ] = []
     self.marAna.workflow_commons[ "IS_PROD" ] = False
     self.marAna.workflow_commons[ "PRODUCTION_ID" ] = "123"
     self.marAna.workflow_commons[ "JOB_ID" ] = 456
-    
-    self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
-    self.assertFalse(self.marAna.InputFile or self.marAna.InputData)
+    assertDiracSucceedsWith_equals( self.marAna.applicationSpecificInputs(), "Parameters resolved", self )
+    self.assertEquals( self.marAna.InputFile, [])
+    self.assertEquals( self.marAna.InputData, [])
 
-    
   def test_resolveinput_productionjob3( self ):
     self.marAna.workflow_commons[ "IS_PROD" ] = True
-
     self.marAna.OutputFile = "c.c"
     self.marAna.InputFile = []
     inputlist = ["a.slcio", "b.slcio", "c.exe"]
     self.marAna.InputData = inputlist
-    
-    self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
+    assertDiracSucceedsWith_equals( self.marAna.applicationSpecificInputs(), "Parameters resolved", self )
     self.assertEquals([inputlist[0], inputlist[1]], self.marAna.InputFile)
-    
+
   def test_resolveinput_productionjob4( self ):
     self.marAna.workflow_commons[ "IS_PROD" ] = True
     self.marAna.OutputFile = ''
@@ -68,8 +93,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.InputFile = 'in3.slcio'
     self.marAna.outputREC = 'out1.stdhep'
     self.marAna.outputDST = 'test2.stdhep'
-    
-    self.assertEquals(S_OK("Parameters resolved"), self.marAna.applicationSpecificInputs())
+    assertDiracSucceedsWith_equals( self.marAna.applicationSpecificInputs(), "Parameters resolved", self )
     files = [self.marAna.outputREC, self.marAna.outputDST, self.marAna.InputFile[0]]
     for filename in files:
       # TODO: check for file extension, differentiate 'test'/'test2' in filename...
@@ -77,7 +101,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.assertInMultiple(['in3', '.slcio'], self.marAna.InputFile[0])
     self.assertInMultiple(['out1', '.stdhep'], self.marAna.outputREC)
     self.assertInMultiple(['test2', '.stdhep'], self.marAna.outputDST)
-      
+
   def test_runit_noplatform( self ):
     self.marAna.platform = None
     result = self.marAna.runIt()
@@ -103,7 +127,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = self.marAna.runIt()
     assertDiracSucceedsWith( result, 'should not proceed', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis._getDetectorXML",
+  @patch("%s.MarlinAnalysis._getDetectorXML" % MODULE_NAME,
          new=Mock(return_value=S_ERROR("zis iz not camelot")))
   def test_runit_detXMLFails( self ):
     self.marAna.platform = "Testplatform123"
@@ -113,7 +137,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = self.marAna.runIt()
     assertDiracFailsWith( result, "zis iz not camelot", self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("failed to get env script")))
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_ERROR("failed to get env script")))
   def test_runit_getEnvScriptFails( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -122,8 +146,8 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = self.marAna.runIt()
     assertDiracFailsWith( result, 'env script', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_ERROR('missing slcio file')))
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123')))
+  @patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_ERROR('missing slcio file')))
   def test_runit_getInputFilesFails( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -133,29 +157,78 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     #Only checks that the patch annotation is passed as the result
     assertDiracFailsWith( result, 'missing slcio file', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR('')))
+  def test_runit_no_steeringfile( self ):
+    exists_dict = { 'PandoraSettings.xml' : False, 'testGear.input' : False, '/steeringdir/testGear.input' : True, '/steeringdir/PandoraSettings.xml' : True, '' : True }
+    def replace_exists( path ):
+      return exists_dict[path]
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    self.marAna.detectorModel = None
+    self.marAna.inputGEAR = '/my/secret/path/testGear.input'
+    self.marAna.SteeringFile = ''
+    log_mock = Mock()
+    self.marAna.log = log_mock
+    with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('envscript_path.test'))), \
+         patch('%s.MarlinAnalysis.GetInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
+         patch('%s.getSteeringFileDirName' % MODULE_NAME, new=Mock(return_value=S_OK('/steeringdir'))), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)), \
+         patch('%s.shutil.copy' % MODULE_NAME, new=Mock(side_effect=EnvironmentError('shutil_test_fail'))) as copy_mock, \
+         patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/curdir')):
+      result = self.marAna.runIt()
+      assertDiracFailsWith( result, 'could not find steering file', self )
+      assertEqualsImproved( log_mock.warn.mock_calls, [ call('Could not copy PandoraSettings.xml, exception: shutil_test_fail')], self )
+      log_mock.error.assert_called_once_with( "Steering file not defined, shouldn't happen!" )
+      copy_mock.assert_called_once_with( '/steeringdir/PandoraSettings.xml', '/test/curdir/PandoraSettings.xml' )
+
+  def test_runit_no_steeringdir( self ):
+    exists_dict = { 'PandoraSettings.xml' : True, 'testGear.input' : False, '' : True }
+    def replace_exists( path ):
+      return exists_dict[path]
+    self.marAna.platform = "Testplatform123"
+    self.marAna.applicationLog = "testlog123"
+    self.marAna.stepStatus = S_OK()
+    self.marAna.workflowStatus = S_OK()
+    self.marAna.detectorModel = None
+    self.marAna.inputGEAR = '/my/secret/path/testGear.input'
+    self.marAna.SteeringFile = ''
+    log_mock = Mock()
+    self.marAna.log = log_mock
+    with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('envscript_path.test'))), \
+         patch('%s.MarlinAnalysis.GetInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
+         patch('%s.getSteeringFileDirName' % MODULE_NAME, new=Mock(return_value=S_ERROR('mytesterr'))), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)), \
+         patch('%s.shutil.copy' % MODULE_NAME, new=Mock(side_effect=EnvironmentError('shutil_test_fail'))) as copy_mock, \
+         patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/curdir')):
+      result = self.marAna.runIt()
+      assertDiracFailsWith( result, 'could not find steering file', self )
+      assertEqualsImproved( log_mock.warn.mock_calls, [ call('Could not find the steering file directory', 'mytesterr') ], self )
+      log_mock.error.assert_called_once_with( "Steering file not defined, shouldn't happen!" )
+      self.assertFalse( copy_mock.called )
+
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_ERROR('')))
   def test_getenvscript_getsoftwarefolderfails( self ):
     self.assertFalse(self.marAna.getEnvScript(None, None, None)['OK'])
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=False))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK('')))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=None))
+  @patch("%s.getNewLDLibs" % MODULE_NAME, new=Mock(return_value=None))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(return_value=False))
   def test_getenvscript_pathexists( self ):
     result = self.marAna.getEnvScript(None, None, None)
     assertDiracFailsWith( result, 'marlin_dll folder not found', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('aFolder')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value='bFolder'))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.listdir", new=Mock(return_value=['testdir']))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK('aFolder')))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=None))
+  @patch("%s.getNewLDLibs" % MODULE_NAME, new=Mock(return_value='bFolder'))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.os.listdir" % MODULE_NAME, new=Mock(return_value=['testdir']))
   def test_getenvscript( self ):
-    moduleName = "ILCDIRAC.Workflow.Modules.MarlinAnalysis"
     file_contents = []
     text_file_data = '\n'.join(file_contents)
     result = {}
-    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       result = self.marAna.getEnvScript(None, None, None)
     assertDiracSucceedsWith( result, '/MarlinEnv.sh', self )
     check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH\n', 'declare -x ROOTSYS=aFolder/ROOT\n', 'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n', "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n", "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
@@ -170,12 +243,12 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     assertDiracSucceeds( self.marAna.GetInputFiles(), self )
 
   def test_getinputfiles_resolvepathsfails( self ):
-    with patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_ERROR())):
+    with patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_ERROR())):
       result = self.marAna.GetInputFiles()
       assertDiracFailsWith( result, 'missing slcio', self )
 
   def test_getinputfiles_complete( self ):
-    with patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(['1.slcio', '2.slcio']))):
+    with patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_OK(['1.slcio', '2.slcio']))):
       res = self.marAna.GetInputFiles()
       assertDiracSucceedsWith_equals( res, '1.slcio 2.slcio', self )
 
@@ -192,10 +265,10 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
 
   def setUp( self ):
     super( MarlinAnalysisPatchTestCase, self ).setUp()
-    patches = [ patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123'))), \
-                patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles"))), \
-                patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir'))), \
-                patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, False, True, False, False])) ]
+    patches = [ patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))), \
+                patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
+                patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
+                patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, False, True, False, False])) ]
     for patcher in patches:
       patcher.start()
   #  self.addCleanup( patch.stopall() )
@@ -203,10 +276,10 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     super( MarlinAnalysisPatchTestCase, self ).tearDown()
     patch.stopall()
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy")
+  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.runMarlin" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.shutil.copy" % MODULE_NAME)
   def test_runit_handlepandorasettings_no_log( self, mock_copy ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -216,8 +289,8 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     assertDiracFailsWith( result, 'not produce the expected log', self )
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_ERROR('prepxml')))
+  @patch("%s.shutil.copy" % MODULE_NAME, new=Mock())
+  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_ERROR('prepxml')))
   def test_runit_xmlgenerationfails( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -226,9 +299,9 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = self.marAna.runIt()
     assertDiracFailsWith( result, 'prepxml', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy", new=Mock())
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_ERROR('mardll')))
+  @patch("%s.shutil.copy" % MODULE_NAME, new=Mock())
+  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_ERROR('mardll')))
   def test_runit_marlindllfails( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -237,10 +310,10 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     result = self.marAna.runIt()
     assertDiracFailsWith( result, 'wrong with software installation', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_ERROR('marlin failed')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy")
+  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.runMarlin" % MODULE_NAME, new=Mock(return_value=S_ERROR('marlin failed')))
+  @patch("%s.shutil.copy" % MODULE_NAME)
   def test_runit_runmarlinfails( self, mock_copy ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -250,29 +323,29 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     assertDiracFailsWith( result, 'failed to run', self )
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_OK([""])))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy")
+  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.runMarlin" % MODULE_NAME, new=Mock(return_value=S_OK([""])))
+  @patch("%s.shutil.copy" % MODULE_NAME)
   def test_runit_complete( self, mock_copy ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
     self.marAna.stepStatus = S_OK()
     self.marAna.workflowStatus = S_OK()
-    with patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, True, True, True, True] ) ):
+    with patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, True, True, True, True] ) ):
       result = self.marAna.runIt()
       assertDiracSucceeds( result, self )
       mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK('Testpath123')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.GetInputFiles", new=Mock(return_value=S_OK("testinputfiles")))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(side_effect=[False, True, False, True, True, True, True, True]))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.prepareXMLFile", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.prepareMARLIN_DLL", new=Mock(return_value=S_OK('testdir')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis.runMarlin", new=Mock(return_value=S_OK([""])))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.shutil.copy")
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis._getDetectorXML", new=Mock(return_value=S_OK("someDetector.xml")))
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123')))
+  @patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles")))
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, True, True, True, True]))
+  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
+  @patch("%s.MarlinAnalysis.runMarlin" % MODULE_NAME, new=Mock(return_value=S_OK([""])))
+  @patch("%s.shutil.copy" % MODULE_NAME)
+  @patch("%s.MarlinAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("someDetector.xml")))
   def test_runit_complete_dd( self, mock_copy ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -283,30 +356,28 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     assertDiracSucceeds( result, self )
     mock_copy.assert_called_with('testdir/PandoraSettings.xml', '%s/PandoraSettings.xml' % os.getcwd())
 
-
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR('')))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_ERROR('')))
   def test_getenvscript_getsoftwarefolderfails( self ):
     self.assertFalse(self.marAna.getEnvScript(None, None, None)['OK'])
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=False))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK('')))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=None))
+  @patch("%s.getNewLDLibs" % MODULE_NAME, new=Mock(return_value=None))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(return_value=False))
   def test_getenvscript_pathexists( self ):
     result = self.marAna.getEnvScript(None, None, None)
     assertDiracFailsWith( result, 'marlin_dll folder not found', self )
 
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK('aFolder')))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.removeLibc", new=Mock(return_value=None))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.getNewLDLibs", new=Mock(return_value='bFolder'))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.path.exists", new=Mock(return_value=True))
-  @patch("ILCDIRAC.Workflow.Modules.MarlinAnalysis.os.listdir", new=Mock(return_value=['testdir']))
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK('aFolder')))
+  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=None))
+  @patch("%s.getNewLDLibs" % MODULE_NAME, new=Mock(return_value='bFolder'))
+  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s.os.listdir" % MODULE_NAME, new=Mock(return_value=['testdir']))
   def test_getenvscript( self ):
-    moduleName = "ILCDIRAC.Workflow.Modules.MarlinAnalysis"
     file_contents = []
     text_file_data = '\n'.join(file_contents)
     result = {}
-    with patch('%s.open' % moduleName, mock_open(read_data=text_file_data), create=True) as file_mocker:
+    with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       result = self.marAna.getEnvScript(None, None, None)
     assertDiracSucceedsWith( result, '/MarlinEnv.sh', self )
     check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH\n', 'declare -x ROOTSYS=aFolder/ROOT\n', 'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n', "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n", "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
@@ -321,3 +392,283 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     """
     for string in listOfStrings:
       assertInImproved(string, bigString, self)
+
+class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
+  ''' Tests for the prepareMARLIN_DLL method
+  '''
+
+  def test_preparemarlindll( self ):
+    exists_dict = { './lib/marlin_dll' : True }
+    def replace_exists( path ):
+      return exists_dict[path]
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 0, 'MARlin_DLL/path: ', 'other_return_value_from_shell' ]))) as shell_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=[ True ])) as remove_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[ 'mytestlibrary.so', 'secondLibrary.veryUseful.so' ])) as glob_mock:
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      remove_mock.assert_called_once_with( 'temp.sh' )
+      exists_mock.assert_called_once_with( './lib/marlin_dll' )
+      glob_mock.assert_called_once_with( './lib/marlin_dll/*.so' )
+      assertDiracSucceedsWith( result, 'MARlin_DLL/path:mytestlibrary.so:secondLibrary.veryUseful.so', self )
+
+  def test_preparemarlindll_shellcall_fails( self ):
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_test_err'))) as shell_mock:
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      assertDiracFailsWith( result, 'failed getting the marlin_dll', self )
+
+  def test_preparemarlindll_empty_marlindll( self ):
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK( [0, '', 'other_value'] ))) as shell_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=EnvironmentError('something?'))) :
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      assertDiracFailsWith( result, 'empty marlin_dll env var', self )
+
+  def test_preparemarlindll_procstoinclude( self ):
+    self.marAna.ProcessorListToUse = [ 'secondLibrary.veryUseful.so' ]
+    exists_dict = { './lib/marlin_dll' : True }
+    def replace_exists( path ):
+      return exists_dict[path]
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 0, 'MARlin_DLL/path', 'other_return_value_from_shell' ]))) as shell_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=[ True ])) as remove_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[ 'mytestlibrary.so', 'secondLibrary.veryUseful.so', 'MARlin_DLL/path' ])) as glob_mock:
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      remove_mock.assert_called_once_with( 'temp.sh' )
+      exists_mock.assert_called_once_with( './lib/marlin_dll' )
+      glob_mock.assert_called_once_with( './lib/marlin_dll/*.so' )
+      assertDiracSucceedsWith( result, 'secondLibrary.veryUseful.so', self )
+
+  def test_preparemarlindll_procstoexclude( self ):
+    self.marAna.ProcessorListToExclude = [ 'secondLibrary.veryUseful.so' ]
+    exists_dict = { './lib/marlin_dll' : True }
+    def replace_exists( path ):
+      return exists_dict[path]
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 0, 'MARlin_DLL/path', 'other_return_value_from_shell' ]))) as shell_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=[ True ])) as remove_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[ 'mytestlibrary.so', 'secondLibrary.veryUseful.so' ])) as glob_mock:
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      remove_mock.assert_called_once_with( 'temp.sh' )
+      exists_mock.assert_called_once_with( './lib/marlin_dll' )
+      glob_mock.assert_called_once_with( './lib/marlin_dll/*.so' )
+      assertDiracSucceedsWith( result, 'MARlin_DLL/path:mytestlibrary.so', self )
+
+  def test_preparemarlindll_nolibs( self ):
+    exists_dict = { './lib/marlin_dll' : False }
+    def replace_exists( path ):
+      return exists_dict[path]
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 0, 'MARlin_DLL/path: ', 'other_return_value_from_shell' ]))) as shell_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=[ True ])) as remove_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[ 'mytestlibrary.so', 'secondLibrary.veryUseful.so' ])) as glob_mock:
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      remove_mock.assert_called_once_with( 'temp.sh' )
+      exists_mock.assert_called_once_with( './lib/marlin_dll' )
+      self.assertFalse( glob_mock.called )
+      assertDiracSucceedsWith( result, 'MARlin_DLL/path', self )
+
+  def test_preparemarlindll_swaplibpositions( self ):
+    self.marAna.ProcessorListToExclude = [ 'mytestlibrary.so' ]
+    exists_dict = { './lib/marlin_dll' : True }
+    def replace_exists( path ):
+      return exists_dict[path]
+    file_contents = [[]]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
+    with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 0, 'MARlin_DLL/path', 'other_return_value_from_shell' ]))) as shell_mock, \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=[ True ])) as remove_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[ 'testlibLCFIPlus.so', 'testlibLCFIVertex.1.so'  ])) as glob_mock:
+      open_mock.side_effect = (h for h in handles)
+      result = self.marAna.prepareMARLIN_DLL( 'some_path' )
+      open_mock.assert_called_once_with( 'temp.sh', 'w' )
+      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      assertEqualsImproved( len(expected_calls), len(handles), self )
+      for (expected, handle) in zip( expected_calls, handles):
+        assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
+      chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
+      shell_mock.assert_called_once_with( 0, './temp.sh' )
+      remove_mock.assert_called_once_with( 'temp.sh' )
+      exists_mock.assert_called_once_with( './lib/marlin_dll' )
+      glob_mock.assert_called_once_with( './lib/marlin_dll/*.so' )
+      assertDiracSucceedsWith( result, 'MARlin_DLL/path:testlibLCFIVertex.1.so:testlibLCFIPlus.so', self )
+
+class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
+  ''' Tests for the runMarlin method
+  '''
+
+  def test_runmarlin( self ):
+    self.marAna.STEP_NUMBER = '935'
+    self.marAna.applicationVersion = 'VT'
+    self.marAna.debug = True
+    self.marAna.applicationLog = 'testLog.mymarlin'
+    self.marAna.extraCLIarguments = 'testMyArgs'
+    exists_dict = { './lib/lddlib' : True, 'Marlin_VT_Run_935.sh' : True, './lib/marlin_dll' : True, 'myXML.test' : True, 'testLog.mymarlin' : False }
+    def replace_exists( path ):
+      return exists_dict[path]
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.os.remove' % MODULE_NAME) as remove_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK('shell succeeded'))) as shell_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.MarlinAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock:
+      result = self.marAna.runMarlin( 'myXML.test', 'TestEnvscript.path', 'marlin_dll.test.so' )
+      assertDiracSucceedsWith_equals( result, 'shell succeeded', self )
+      open_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 'w' )
+      open_mock = open_mock()
+      expected_calls = [call('#!/bin/bash \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('source TestEnvscript.path\n'), call('declare -x MARLIN_DLL=marlin_dll.test.so\n'), call('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n'), call('declare -x PATH=$ROOTSYS/bin:$PATH\n'), call('declare -x MARLIN_DEBUG=1\n'), call('\nif [ -e "${PANDORASETTINGS}" ]\nthen\n   cp $PANDORASETTINGS .\nfi    \n'), call('echo =============================\n'), call('echo LD_LIBRARY_PATH is\n'), call('echo $LD_LIBRARY_PATH | tr ":" "\n"\n'), call('echo =============================\n'), call('echo PATH is\n'), call('echo $PATH | tr ":" "\n"\n'), call('echo =============================\n'), call('echo MARLIN_DLL is\n'), call('echo $MARLIN_DLL | tr ":" "\n"\n'), call('echo =============================\n'), call('echo ldd of executable is\n'), call('ldd `which Marlin` \n'), call('echo =============================\n'), call('ldd ./lib/marlin_dll/*.so \n'), call('ldd ./lib/lddlib/*.so \n'), call('echo =============================\n'), call('env | sort >> localEnv.log\n'), call('Marlin -c myXML.test testMyArgs\n'), call('Marlin myXML.test testMyArgs\n'), call('declare -x appstatus=$?\n'), call('exit $appstatus\n')]
+      assertEqualsImproved( open_mock.write.mock_calls, expected_calls, self )
+      remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
+      assertEqualsImproved( exists_mock.mock_calls, [ call('Marlin_VT_Run_935.sh'), call('./lib/lddlib'), call('./lib/marlin_dll'), call('./lib/lddlib'), call('myXML.test'), call('testLog.mymarlin')], self )
+      shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"', callbackFunction=self.marAna.redirectLogOutput, bufferLimit=20971520 )
+      chmod_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 0755)
+      appstat_mock.assert_called_once_with( 'Marlin VT step 935')
+
+  def test_runmarlin_nosteeringfile( self ):
+    self.marAna.STEP_NUMBER = '932'
+    self.marAna.applicationVersion = 'V1T'
+    self.marAna.debug = False
+    self.marAna.extraCLIarguments = 'testMyArgs'
+    exists_dict = { './lib/lddlib' : False, 'Marlin_V1T_Run_932.sh' : False, 'inputxmlMy.test' : False }
+    def replace_exists( path ):
+      return exists_dict[path]
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)), \
+         patch('%s.os.remove' % MODULE_NAME) as remove_mock, \
+         patch('%s.shellCall' % MODULE_NAME) as shell_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.MarlinAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock:
+      result = self.marAna.runMarlin( 'inputxmlMy.test', 'envscript.path', 'marlin_dll' )
+      assertDiracFailsWith( result, 'steeringfile is missing', self )
+      open_mock.assert_called_once_with( 'Marlin_V1T_Run_932.sh', 'w' )
+      open_mock().close.assert_called_once_with()
+      self.assertFalse( remove_mock.called )
+      self.assertFalse( shell_mock.called )
+      self.assertFalse( appstat_mock.called )
+      self.assertFalse( chmod_mock.called )
+
+  def test_runmarlin_shell_fails( self ):
+    self.marAna.STEP_NUMBER = '935'
+    self.marAna.applicationVersion = 'VT'
+    self.marAna.debug = False
+    self.marAna.applicationLog = 'testLog.mymarlin'
+    self.marAna.extraCLIarguments = 'testMyArgs'
+    exists_dict = { './lib/lddlib' : False, 'Marlin_VT_Run_935.sh' : True, 'myXML.test' : True, 'testLog.mymarlin' : False }
+    def replace_exists( path ):
+      return exists_dict[path]
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.os.remove' % MODULE_NAME) as remove_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_test_err_with_script'))) as shell_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.MarlinAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock:
+      result = self.marAna.runMarlin( 'myXML.test', 'TestEnvscript.path', 'marlin_dll.test.so' )
+      assertDiracFailsWith( result, 'some_test_err_with_script', self )
+      open_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 'w' )
+      open_mock = open_mock()
+      expected_calls = [call('#!/bin/bash \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('source TestEnvscript.path\n'), call('declare -x MARLIN_DLL=marlin_dll.test.so\n'), call('declare -x PATH=$ROOTSYS/bin:$PATH\n'), call('declare -x MARLIN_DEBUG=1\n'), call('\nif [ -e "${PANDORASETTINGS}" ]\nthen\n   cp $PANDORASETTINGS .\nfi    \n'), call('echo =============================\n'), call('echo LD_LIBRARY_PATH is\n'), call('echo $LD_LIBRARY_PATH | tr ":" "\n"\n'), call('echo =============================\n'), call('echo PATH is\n'), call('echo $PATH | tr ":" "\n"\n'), call('echo =============================\n'), call('echo MARLIN_DLL is\n'), call('echo $MARLIN_DLL | tr ":" "\n"\n'), call('echo =============================\n'), call('env | sort >> localEnv.log\n'), call('Marlin -c myXML.test testMyArgs\n'), call('Marlin myXML.test testMyArgs\n'), call('declare -x appstatus=$?\n'), call('exit $appstatus\n')]
+      assertEqualsImproved( open_mock.write.mock_calls, expected_calls, self )
+      remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
+      assertEqualsImproved( exists_mock.mock_calls, [ call('Marlin_VT_Run_935.sh'), call('./lib/lddlib'), call('myXML.test'), call('testLog.mymarlin')], self )
+      shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"', callbackFunction=self.marAna.redirectLogOutput, bufferLimit=20971520 )
+      chmod_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 0755)
+      appstat_mock.assert_called_once_with( 'Marlin VT step 935')
+
+  def test_runmarlin_nolibs( self ):
+    self.marAna.STEP_NUMBER = '935'
+    self.marAna.applicationVersion = 'VT'
+    self.marAna.debug = True
+    self.marAna.applicationLog = 'testLog.mymarlin'
+    self.marAna.extraCLIarguments = 'testMyArgs'
+    exists_dict = { './lib/lddlib' : False, 'Marlin_VT_Run_935.sh' : True, './lib/marlin_dll' : False, 'myXML.test' : True, 'testLog.mymarlin' : False }
+    def replace_exists( path ):
+      return exists_dict[path]
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
+         patch('%s.os.remove' % MODULE_NAME) as remove_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK('shell succeeded'))) as shell_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
+         patch('%s.MarlinAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
+         patch('%s.os.chmod' % MODULE_NAME) as chmod_mock:
+      result = self.marAna.runMarlin( 'myXML.test', 'TestEnvscript.path', 'marlin_dll.test.so' )
+      assertDiracSucceedsWith_equals( result, 'shell succeeded', self )
+      open_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 'w' )
+      open_mock = open_mock()
+      expected_calls = [call('#!/bin/bash \n'), call('#####################################################################\n'), call('# Dynamically generated script to run a production or analysis job. #\n'), call('#####################################################################\n'), call('source TestEnvscript.path\n'), call('declare -x MARLIN_DLL=marlin_dll.test.so\n'), call('declare -x PATH=$ROOTSYS/bin:$PATH\n'), call('declare -x MARLIN_DEBUG=1\n'), call('\nif [ -e "${PANDORASETTINGS}" ]\nthen\n   cp $PANDORASETTINGS .\nfi    \n'), call('echo =============================\n'), call('echo LD_LIBRARY_PATH is\n'), call('echo $LD_LIBRARY_PATH | tr ":" "\n"\n'), call('echo =============================\n'), call('echo PATH is\n'), call('echo $PATH | tr ":" "\n"\n'), call('echo =============================\n'), call('echo MARLIN_DLL is\n'), call('echo $MARLIN_DLL | tr ":" "\n"\n'), call('echo =============================\n'), call('echo ldd of executable is\n'), call('ldd `which Marlin` \n'), call('echo =============================\n'), call('echo =============================\n'), call('env | sort >> localEnv.log\n'), call('Marlin -c myXML.test testMyArgs\n'), call('Marlin myXML.test testMyArgs\n'), call('declare -x appstatus=$?\n'), call('exit $appstatus\n')]
+      assertEqualsImproved( open_mock.write.mock_calls, expected_calls, self )
+      remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
+      assertEqualsImproved( exists_mock.mock_calls, [ call('Marlin_VT_Run_935.sh'), call('./lib/lddlib'), call('./lib/marlin_dll'), call('./lib/lddlib'), call('myXML.test'), call('testLog.mymarlin')], self )
+      shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"', callbackFunction=self.marAna.redirectLogOutput, bufferLimit=20971520 )
+      chmod_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 0755)
+      appstat_mock.assert_called_once_with( 'Marlin VT step 935')
