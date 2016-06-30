@@ -4,7 +4,8 @@ User Job class. Used to define user jobs!
 Example usage:
 
 >>> from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
->>> ...
+>>> from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+>>> myDiracInstance = DiracILC( withRepo=False )
 >>> myJob = UserJob()
 >>> ...
 >>> myJob.append( myMarlinApp )
@@ -39,8 +40,9 @@ class UserJob(Job):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
     add the job to DIRAC.
 
-    :param diracinstance: :any:`DiracILC <ILCDIRAC.Interfaces.API.DiracILC.DiracILC>` instance
-    :param string mode: "wms" (default), "agent", or "local"
+    :param diracinstance: DiracILC instance
+    :type diracinstance: ~ILCDIRAC.Interfaces.API.DiracILC.DiracILC
+    :param str mode: "wms" (default), "agent", or "local"
 
     .. note ::
       The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
@@ -111,7 +113,7 @@ class UserJob(Job):
     >>>                       'mySteeringFile.xml'] )
 
     :param flist: Files for the inputsandbox
-    :type flist: list or string
+    :type flist: `python:list` or `str`
     """
     if type(flist) == type(""):
       flist = [flist]
@@ -132,10 +134,10 @@ class UserJob(Job):
     >>> job.setOutputData(['Ntuple.root'])
 
     :param lfns: Output data file or files
-    :type lfns: Single string or list of strings ['','']
-    :param string OutputPath: Optional parameter to specify the Path in the Storage, postpended to /ilc/user/u/username/
+    :type lfns: Single `str` or `python:list` of strings ['','']
+    :param str OutputPath: Optional parameter to specify the Path in the Storage, postpended to /ilc/user/u/username/
     :param OutputSE: Optional parameter to specify the Storage Element to store data or files, e.g. CERN-SRM
-    :type OutputSE: string or list
+    :type OutputSE: `python:list` or `str`
     """
     kwargs = {'lfns' : lfns, 'OutputSE' : OutputSE, 'OutputPath' : OutputPath}
     if type(lfns) == list and len(lfns):
@@ -188,7 +190,7 @@ class UserJob(Job):
     on the grid and downloaded later if necessary. See :func:`setOutputData`
 
     :param files: Output sandbox files
-    :type files: Single string or list of strings ['','']
+    :type files: Single `str` or `python:list` of strings ['','']
 
     """
     if type( files ) == list and len( files ):

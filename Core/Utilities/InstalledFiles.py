@@ -13,12 +13,13 @@ def Exists(myfile, platform=None, configversion=None):
   """check if the file exists in the tarball
   First based on a list of files
 
-  Also checks if CVMFS is used for the configuration package (ILDConfig) as defined in `Job.setILDConfig`
+  Also checks if CVMFS is used for the configuration package (ILDConfig) set by
+  :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setILDConfig`
   If CVMFS is not available in the submission machine, but ILDConfig is on CVMFS we assume the file exists.
 
   :param str myfile: filename to be checked
   :param str platform: requested platform, optional
-  :param str configversion: ILDConfig version defined for the Job
+  :param str configversion: ILDConfig version defined for the :class:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob`
   :returns: S_OK/S_ERROR
   """
   files = ["defaultClicCrossingAngle.mac", "clic_ild_cdr500.steer",

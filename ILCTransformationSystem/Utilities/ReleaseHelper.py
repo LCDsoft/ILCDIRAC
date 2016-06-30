@@ -78,10 +78,13 @@ def getPythonStuff( basePath, targetFolder ):
 
 def removeSystemLibraries( folder ):
   """remove the system libraries from the folder
-  #FIXME: get this from ILCDIRAC
-    for file in libc.so* libc-2.5.so* libm.so* libpthread.so* libdl.so* libstdc++.so* libgcc_s.so.1*; do
-  rm $LIBFOLDER/$file 2> /dev/null
-    done
+
+  .. todo:: get these libraries from ILCDIRAC
+
+  |  for file in libc.so* libc-2.5.so* libm.so* libpthread.so* libdl.so* libstdc++.so* libgcc_s.so.1*; do
+  |    rm $LIBFOLDER/$file 2> /dev/null
+  |  done
+
   """
   systemLibraires = ['libc.so', 'libc-2.5.so', 'libm.so', 'libpthread.so', 'libdl.so',
                      'libstdc++.so', 'libgcc_s.so.1' ]

@@ -18,14 +18,14 @@ NEW: Based on DIRAC v6r14p35
 
 * Workflow:
 
-FIX: DDSim: Fix for running ddsim when init script is needed. The LD_LIBRARY_PATH was not put together correctly and on some sites the local libstdc++.so was picked up.
+FIX: :any:`DDSim`: Fix for running ddsim when init script is needed. The LD_LIBRARY_PATH was not put together correctly and on some sites the local libstdc++.so was picked up.
 
 [v25r0p7]
 
 * Workflow:
 
-FIX: OverlayInput for KEK was not getting the correct path to copy files.
-FIX: DDSim: Enable use of tarballs with non-system compiler, ILCDIRAC-671
+FIX: `OverlayInput` for KEK was not getting the correct path to copy files.
+FIX: `DDSim`: Enable use of tarballs with non-system compiler, ILCDIRAC-671
 
 * Interface:
 
@@ -35,8 +35,8 @@ NEW: :any:`Marlin` has the new function :func:`~ILCDIRAC.Interfaces.Utilities.DD
 
 * Workflow:
 
-FIX: Mokka outputfile event parameters were not properly set for Polarisation
-CHANGE: Overlay files are taken from cern eos instead of castor, when running at cern  (ILCDIRAC-636)
+FIX: `Mokka` outputfile event parameters were not properly set for Polarisation
+CHANGE: `OverlayInput` files are taken from cern eos instead of castor, when running at cern  (ILCDIRAC-636)
 
 * Interfaces:
 
@@ -46,13 +46,13 @@ FIX: Files from the ParametricInputData should now be handled correctly
 
 * WorkloadManagement:
 
-FIX: Copy getCPUNormalization from DIRAC and reduce memory footprint ILCDIRAC-661
+FIX: Copy `getCPUNormalization` from DIRAC and reduce memory footprint ILCDIRAC-661
 
 [v25r0p4]
 
 * WorkloadManagement:
 
-FIX: Copy DownloadInputData from DIRAC and fix ILCDIRAC-655
+FIX: Copy `DownloadInputData` from DIRAC and fix ILCDIRAC-655
 
 [v25r0p3]
 
@@ -62,11 +62,11 @@ NEW: Based on dirac v6r14p26
 
 * ILCTransformationSystem:
 
-FIX: DataRecoveryAgent now properly sets MaxReset for files with a large ErrorCoutn
+FIX: `DataRecoveryAgent` now properly sets MaxReset for files with a large ErrorCount
 
 * Workflow:
 
-FIX: DDSim Add DD4hepInstall environment variable to script for TarBallBased installations,, Fixes problem for running these jobs locally.
+FIX: `DDSim` Add DD4hepInstall environment variable to script for TarBallBased installations. Fixes problem for running these jobs locally.
 
 [v25r0p2]
 
@@ -76,13 +76,13 @@ NEW: Based on dirac v6r14p24
 
 * Workflow:
 
-FIX: DDSim: correctly handle the tarball
+FIX: `DDSim`: correctly handle the tarball
 
 [v25r0p1]
 
 * Interfaces:
 
-FIX: Correctly handle DDSim detector models
+FIX: Correctly handle `DDSim` detector models
 
 [v25r0p0]
 

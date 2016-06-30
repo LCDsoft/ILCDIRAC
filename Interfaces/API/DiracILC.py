@@ -63,7 +63,8 @@ class DiracILC(Dirac):
     
     Checks from CS that required software packages are available.
     
-    :param job: job definition.
+    :param job: job instance
+    :type job: ~ILCDIRAC.Interfaces.API.NewInterface.Job.Job
     :param mode: submission mode, not used here.
 
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
@@ -89,7 +90,8 @@ class DiracILC(Dirac):
     
     Actually checks that all input are available and checks that the required software packages are available in the CS
 
-    :param job: :mod:`job object <ILCDIRAC.Interfaces.API.NewInterface.Job.Job>`
+    :param job: Job Instance
+    :type job: ~ILCDIRAC.Interfaces.API.NewInterface.Job.Job
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     try:
