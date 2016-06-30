@@ -81,22 +81,25 @@ class DDSimTarMaker( object ):
 
   def createCSEntry( self ):
     """add the entries for this version into the Configuration System
-    <version>
-            {
-              TarBall = ddsim<version>.tgz
-              AdditionalEnvVar
+
+    .. code::
+
+      <version>
               {
-                ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
-                G4INSTALL = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01
-                G4DATA = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data
+                TarBall = ddsim<version>.tgz
+                AdditionalEnvVar
+                {
+                  ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
+                  G4INSTALL = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01
+                  G4DATA = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data
+                }
+                Overwrite = True
               }
-              Overwrite = True
-            }
-    Operations/DDSimDetectorModels/<Version>
-              {
-                CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
-                ...
-              }
+      Operations/DDSimDetectorModels/<Version>
+                {
+                  CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
+                  ...
+                }
 
     """
     from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
