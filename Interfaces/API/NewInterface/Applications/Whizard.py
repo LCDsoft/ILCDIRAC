@@ -185,7 +185,7 @@ class Whizard(LCApplication):
     else:
       self._reportError("Can't dump the whizard.in as there can be further changes")
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     """ Check the consistency, called from Application
     """
     self._wo = WhizardOptions(self.model)

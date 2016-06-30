@@ -244,7 +244,7 @@ class OverlayInput(LCUtilityApplication):
       return S_ERROR("Failed to set base parameters")
     return S_OK()
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     """ Checks that all needed parameters are set
     """
     if self.pathToOverlayFiles:

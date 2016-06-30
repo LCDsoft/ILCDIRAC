@@ -88,7 +88,7 @@ class SLIC(LCApplication):
       return S_ERROR('prodjobmodules failed')
     return S_OK()
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
 
     if not self.version:
       return S_ERROR('No version found')

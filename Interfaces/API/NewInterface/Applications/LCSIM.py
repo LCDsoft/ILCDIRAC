@@ -133,7 +133,7 @@ class LCSIM(LCApplication):
       return S_ERROR('prodjobmodules failed')
     return S_OK()
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
 
     if not self.energy :
       self._log.info('Energy set to 0 !')
