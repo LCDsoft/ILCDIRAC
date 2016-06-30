@@ -12,7 +12,8 @@ from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
 
-class TestTARsoft( unittest.TestCase ):
+#pylint: disable=global-variable-undefined
+class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   """ Tests the base functionality of the class """
 
   def setUp( self ):
@@ -23,7 +24,7 @@ class TestTARsoft( unittest.TestCase ):
     global dataman_mock
     dataman_mock = Mock()
 
-  def test_importfails( self ):
+  def test_importfails( self ): #pylint: disable=no-self-use
     """ Rather stupid test. The handling of an ImportError in hashlib internally imports hashlib as well...
     """
     try:
@@ -33,7 +34,7 @@ class TestTARsoft( unittest.TestCase ):
     realimport = builtins.__import__
     global importcounter
     importcounter = 0
-    def myimport(name, globals=globals(), locals=locals(), fromlist=[], level=-1): #pylint: disable=C0111
+    def myimport(name, globals=globals(), locals=locals(), fromlist=[], level=-1): #pylint: disable=missing-docstring, redefined-builtin, dangerous-default-value
       global importcounter
       if name == 'hashlib' :
         if importcounter == 4:
@@ -43,7 +44,7 @@ class TestTARsoft( unittest.TestCase ):
           importcounter = importcounter+1
       return realimport(name, globals, locals, fromlist, level)
     builtins.__import__ = myimport
-    from ILCDIRAC.Core.Utilities.TARsoft import createLock
+    from ILCDIRAC.Core.Utilities.TARsoft import createLock #pylint: disable=unused-variable
 
   def test_createlock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock

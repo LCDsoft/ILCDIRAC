@@ -1,8 +1,9 @@
 """Tests for .Core.Utilities.ProductionData.constructProductionLFNs"""
-__RCSID__ = "$Id$"
-#pylint: disable=R0904
+
 import unittest
 from ILCDIRAC.Core.Utilities.ProductionData import constructProductionLFNs
+
+__RCSID__ = "$Id$"
 
 class ProductionOutputDataTestCase( unittest.TestCase ):
   """ Base class for the test cases

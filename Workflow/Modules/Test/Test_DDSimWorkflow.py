@@ -20,7 +20,7 @@ MODULE_NAME = 'ILCDIRAC.Workflow.Modules.DDSimAnalysis'
 MODULEBASE_NAME = 'ILCDIRAC.Workflow.Modules.ModuleBase'
 PROXYINFO_NAME = 'DIRAC.Core.Security.ProxyInfo'
 DD4H_NAME = 'ILCDIRAC.Workflow.Utilities.DD4hepMixin'
-#pylint: disable=R0904, W0212
+#pylint: disable=too-many-public-methods, protected-access
 
 gLogger.setLevel("ERROR")
 gLogger.showHeaders(True)

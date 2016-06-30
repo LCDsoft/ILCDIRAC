@@ -438,14 +438,14 @@ class TestSharedLocation( unittest.TestCase ):
       assertDiracSucceedsWith_equals( result, '/cvmfsfolder/myenvscript', self )
 
   def test_getEnvironmentScript_cvmfs_empty( self ):
-    def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
+    def return_my_value( platform, appname, appversion ): #pylint: disable=missing-docstring
       return ( platform, appname, appversion )
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('entry', '')))):
       result = getEnvironmentScript( 'a', 'b', 'c', return_my_value )
       assertEqualsImproved( result, ('a', 'b', 'c'), self )
 
   def test_getEnvironmentScript_from_passed_func( self ):
-    def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
+    def return_my_value( platform, appname, appversion ): #pylint: disable=missing-docstring
       return ( appname, platform, appversion )
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_cvmfs_error'))):
       result = getEnvironmentScript( 'a', 'b', 'c', return_my_value )

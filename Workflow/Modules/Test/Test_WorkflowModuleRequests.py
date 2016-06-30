@@ -2,24 +2,27 @@
 """
 Test WorkflowModules
 """
-__RCSID__ = "$Id$"
-#pylint: disable=W0212,R0904,C0302,C0410,C0412,C0413
-import unittest, copy, os, shutil
+#pylint: disable=too-many-public-methods, protected-access, too-many-lines
+
+import unittest
+import copy
+import os
+import shutil
 import tempfile
 import sys
 from StringIO import StringIO
-
 from mock import MagicMock as Mock, patch
+
 from DIRAC import gLogger, S_ERROR, S_OK
-
-from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.RequestManagementSystem.Client.Request import Request
-
+from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData import getLogPath
 from ILCDIRAC.Workflow.Modules.FailoverRequest import FailoverRequest
 from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
 from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
 from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
+
+__RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Workflow.Modules'
 

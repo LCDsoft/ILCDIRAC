@@ -17,7 +17,6 @@ from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.ProductionJob'
-
 DDSIM_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim'
 
 gLogger.setLevel("DEBUG")
@@ -397,7 +396,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     res = self.prodJob.setNbOfTasks( testNbTasks )
     assertDiracSucceeds( res, self )
     assertEqualsImproved( self.prodJob.nbtasks, testNbTasks, self )
-    self.prodJob.currtrans.setMaxNumberOfTasks.assert_called_with( testNbTasks ) #pylint: disable=E1101
+    self.prodJob.currtrans.setMaxNumberOfTasks.assert_called_with( testNbTasks ) #pylint: disable=no-member
 
   def test_applyInputDataQuery( self ):
     job = self.prodJob
@@ -428,7 +427,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.dryrun = False
     testdict = { 'JobType' : 'mytest', 'Process' : 'mytestprocess', 'Energy' : 86451 }
     job.currtrans = Mock()
-    job.currtrans.getTransformationID.return_value = { 'Value' : 651 }  #pylint: disable=E1101
+    job.currtrans.getTransformationID.return_value = { 'Value' : 651 }  #pylint: disable=no-member
     res = job.finalizeProd( 1387, testdict )
     assertDiracSucceeds( res, self )
 

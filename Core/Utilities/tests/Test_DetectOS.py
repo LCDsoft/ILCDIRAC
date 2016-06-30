@@ -10,11 +10,11 @@ from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved
 __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.DetectOS'
 
-class TestNativeMachine( unittest.TestCase ):
+class TestNativeMachine( unittest.TestCase ):#pylint: disable=too-many-public-methods
   """ Tests the NativeMachine class
   """
 
-  #pylint: disable=W0212
+  #pylint: disable=protected-access
   def test_constructor( self ):
     with patch('%s.platform.uname' % MODULE_NAME, new=Mock(return_value=['TestOS', 'hostname', 'kernel version', 'date', 'x86_64'])):
       mach_unix = NativeMachine()

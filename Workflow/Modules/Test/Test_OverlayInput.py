@@ -146,7 +146,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '100tev', self )
-      self.over.energy = 123.0 #pylint: disable=R0204
+      self.over.energy = 123.0 #pylint: disable=redefined-variable-type
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '123gev', self )
@@ -248,7 +248,7 @@ class TestOverlayUnittests( unittest.TestCase ):
     mylfn =  '/ilc/user/j/jebbing/testfile.txt'
     self.check_scriptwriting_method( mylfn, self.over.getKEKFile, get_KEK_lines( '/grid%s' % mylfn, True ), 'failed', [ False, False, False ], False, [[], []], [ ('overlayinput.sh', 'w'), (os.getcwd() + '/DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w') ] )
 
-  #pylint: disable=R0913, R0914
+  #pylint: disable=too-many-arguments
   def check_scriptwriting_method( self, mylfn, scriptmethod, expected, should_fail_with = '', exists_sideeff = None, unlink_called = True, file_contents = None, expected_opens = None, environ_dict = None, is_ral = False ):
     """ Helper method that checks one of the methods provided by OverlayInput
 
