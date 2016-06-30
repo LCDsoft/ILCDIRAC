@@ -19,10 +19,6 @@ class TestSLICPandora( unittest.TestCase ):
   def setUp( self ):
     # Mock out modules that spawn other threads
     sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
-    #sys.modules['ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation'] = Mock()
-    #sys.modules['ILCDIRAC.Core.Utilities.FindSteeringFileDir'] = Mock()
-    #sys.modules['ILCDIRAC.Core.Utilities.PrepareOptionFiles'] = Mock()
-
     self.spa = SLICPandoraAnalysis()
     self.spa.platform = 'myTestPlatform'
     self.spa.applicationLog = 'applogFile.test'
@@ -48,8 +44,6 @@ class TestSLICPandora( unittest.TestCase ):
     ops_mock.getValue.return_value = [ 'detector_1_url_throw_error.pdf', 'detector2_unzip_fails.xml', 'working_detector_v4.xml' ]
     self.spa.ops = ops_mock
     mo = mock_open( read_data='some_log_data\nsuccessful finish :)')
-    def replace_exists( path ):
-      return exists_dict[path]
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('myenvscriptpathtestme'))), \
              patch('%s.resolveIFpaths' % MODULE_NAME, new=Mock(return_value=S_OK([ 'ruinonslcio.test' ]))), \
              patch('%s.unzip_file_into_dir' % MODULE_NAME, new=Mock(side_effect=[ OSError('unzipping failed'), True ])) as unzip_mock, \
@@ -59,7 +53,7 @@ class TestSLICPandora( unittest.TestCase ):
              patch('%s.urllib.urlretrieve' % MODULE_NAME, new=Mock(side_effect=[ IOError('my_test_ioerr'), True, True ])), \
              patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK([0, 'Disabled execution', '']))) as shell_mock, \
              patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/my/curdir/test')), \
-             patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, patch('%s.os.remove' % MODULE_NAME) as remove_mock:
+             patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, patch('%s.os.remove' % MODULE_NAME) as remove_mock:
       assertDiracSucceeds( self.spa.runIt(), self )
       assertEqualsImproved( exists_mock.mock_calls, [ call( 'testmodelDetector_pandora.xml' ), call( '/secret/dir/testmodelDetector.zip' ), call( '/secret/dir/testmodelDetector.zip' ), call( '/secret/dir/testmodelDetector_pandora.xml' ), call( 'SLICPandora__Run_465.sh'), call('./lib'), call( 'applogFile.test' ), call( 'applogFile.test' ) ], self )
       for opened_file in [ call( '/secret/dir/testmodelDetector.zip' ), call( 'SLICPandora__Run_465.sh', 'w'), call( 'applogFile.test', 'r')]:
@@ -105,13 +99,14 @@ class TestSLICPandora( unittest.TestCase ):
       appstat_mock.assert_called_once_with( 'SLICPandora: missing slcio file' )
 
   def test_runit_no_detectormodel_found( self ):
+    exists_dict = { 'testmodelDetector.xml' : True, '/secret/dir/testmodelDetector.xml' : False }
     self.spa.detectorxml = '/secret/dir/testmodelDetector.xml'
     self.spa.InputFile = 'testInput.file'
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('myenvscriptpathtestme'))), \
              patch('%s.resolveIFpaths' % MODULE_NAME, new=Mock(return_value=S_OK([ 'ruinonslcio.test' ]))) as resolve_mock, \
-             patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, False ])) as exists_mock:
+             patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock:
       assertDiracFailsWith( self.spa.runIt(), 'detector model xml was not found, exiting', self )
-      assertEqualsImproved( exists_mock.mock_calls, [ call( 'testmodelDetector.xml' ), call( '/secret/dir/testmodelDetector.xml' ) ], self )
+      assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
       resolve_mock.assert_called_once_with( 'testInput.file' )
 
   def test_runit_no_applog_created( self ):
@@ -229,12 +224,13 @@ class TestSLICPandora( unittest.TestCase ):
       self.assertFalse( remove_mock.called )
 
   def test_getenvscript( self ):
+    exists_dict = { 'PandoraFrontend' : True }
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_OK('/my/dir/test/me'))) as getsoft_mock, \
          patch('%s.removeLibc' % MODULE_NAME) as removelib_mock, \
          patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='/new/ldpath')) as getlib_mock, \
          patch('%s.getNewPATH' % MODULE_NAME, new=Mock(return_value='/new/test/path')) as getpath_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
          patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(return_value='/abs/test/path/SLICPandora.sh')) as abspath_mock:
       result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
@@ -247,7 +243,7 @@ class TestSLICPandora( unittest.TestCase ):
       open_mock = open_mock()
       assertEqualsImproved( open_mock.write.mock_calls, [ call('#!/bin/sh \n') , call('############################################################\n'), call('# Dynamically generated script to get the SLICPandora env. #\n'), call('############################################################\n'), call("declare -x PATH=/new/test/path:$PATH\n"), call('declare -x ROOTSYS=/my/dir/test/me/ROOT\n'), call('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n'), call('declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n'), call("declare -x PATH=.:$PATH\n" ) ], self )
       chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
-      exists_mock.assert_called_once_with( 'PandoraFrontend' )
+      assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
       abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
 
   def test_getenvscript_getsoftware_fails( self ):

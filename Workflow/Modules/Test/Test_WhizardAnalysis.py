@@ -257,6 +257,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       appstat_mock.assert_called_once_with('Failed getting processlist')
 
   def test_runit_leshouchesfile_missing( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : False, 'my/test/soft/dir/myTestGotFile' : False }
     self.wha.useGridFiles = True
     self.wha.getProcessInFile = True
     self.wha.Model = True
@@ -279,15 +280,12 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, False, False ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock:
       assertDiracFailsWith( self.wha.runIt(), 'the leshouches file was not found', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      exists_mock.assert_any_call( 'list.txt' )
-      exists_mock.assert_any_call( 'LesHouches.msugra_1.in' )
-      exists_mock.assert_any_call( 'my/test/soft/dir/myTestGotFile' )
       assertEqualsImproved( len(exists_mock.mock_calls), 3, self )
       appstat_mock.assert_called_once_with( 'LesHouches file missing' )
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in', './whizardnew.in' )
@@ -296,6 +294,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       assertEqualsImproved( len(genmodel_mock.mock_calls), 3, self )
 
   def test_runit_model_undefined( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : False }
     self.wha.useGridFiles = True
     self.wha.getProcessInFile = True
     self.wha.Model = True
@@ -318,14 +317,12 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, False, False ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock:
       assertDiracFailsWith( self.wha.runIt(), 'no model true defined', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      exists_mock.assert_any_call( 'list.txt' )
-      exists_mock.assert_any_call( 'LesHouches.msugra_1.in' )
       assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
       appstat_mock.assert_called_once_with( 'Model undefined' )
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in', './whizardnew.in' )
@@ -333,6 +330,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       self.assertFalse( genmodel_mock.called )
 
   def test_runit_copy_fails( self ):
+    exists_dict = { 'list.txt' : True }
     self.wha.useGridFiles = True
     self.wha.getProcessInFile = True
     getops_mock = Mock()
@@ -349,17 +347,17 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(side_effect=EnvironmentError('some_err_msg_test'))):
       assertDiracFailsWith( self.wha.runIt(), 'failed to obtain mywhizardtestfile.in', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      exists_mock.assert_any_call( 'list.txt' )
       assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
       appstat_mock.assert_called_once_with('Failed getting whizard.in file')
 
   def test_runit_changeandreturn_fails( self ):
+    exists_dict = {  'list.txt' : True, 'LesHouches.msugra_1.in' : True }
     self.wha.Model = 'mytestMODEL'
     self.wha.getProcessInFile = True
     self.wha.optionsdict = 9834
@@ -383,7 +381,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -399,6 +397,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       changeandret_mock.changeAndReturn.assert_called_once_with( 9834 )
 
   def test_runit_prepareWhizardFile_fails( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : True }
     self.wha.Lumi = 'mytestluminosity'
     self.wha.Model = True
     self.wha.NumberOfEvents = 'myTestNumber'
@@ -426,7 +425,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -442,6 +441,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       preparefile_mock.assert_called_once_with('whizardnew.in', 'myTestEvent', '100TestTeV','notRandomTestme','myTestNumber','mytestluminosity', 'whizard.in' )
 
   def test_runit_prepareWhizardFileTemplate_fails( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : True }
     self.wha.Model = True
     self.wha.SteeringFile = 'templateTestme123'
     self.wha.evttype = 'myTestEvent'
@@ -467,7 +467,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -483,6 +483,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       preparetemplate_mock.assert_called_once_with('whizardnew.in', 'myTestEvent', 'myTESTParams', 'whizard.in')
 
   def test_runit_makecut1_fails( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : True }
     set_default_values( self.wha )
     self.wha.genlevelcuts = { 'some_entry' : True, 'this_dict_is_not_empty' : True }
     self.wha.getProcessInFile = True
@@ -507,7 +508,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True, True ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -534,16 +535,15 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       expected_getops = [ call.getValue( '/ProcessList/Location', '' ) ]
       expected_remove = [ call( 'Whizard_myTestV1_Run_testStep12.sh' ) ]
       expected_exists = [ call( 'list.txt' ), call( 'LesHouches.msugra_1.in' ), call( 'Whizard_myTestV1_Run_testStep12.sh' ) ]
-      print whizopts_mock.mock_calls
-      print '..................'
-      print whiz_options_mock.mock_calls
       check_runit_for_parameters( self, whiz_options_mock, getops_mock, genmodel_mock, expected_calls, handles, appstat_mock, exists_mock, rename_mock, chmod_mock, glob_mock, shell_mock, copy_mock, remove_mock, open_mock, expected_appstat, expected_exists, expected_rename, expected_chmod, expected_glob, expected_shell, expected_copy, expected_genmodel, expected_getops, expected_remove )
-      '''
-      whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
-      whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
-      '''
 
   def test_runit_noapplog_created( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : True, 'mytestAppLOg' : True }
+    def replace_exists( path ):
+      result = exists_dict[path]
+      if path == 'mytestAppLOg':
+        exists_dict[path] = False
+      return result
     self.wha.Model = 'mytestMODEL'
     self.wha.STEP_NUMBER = 'testStep12'
     self.wha.applicationLog = 'mytestAppLOg'
@@ -576,7 +576,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True, True, True, False ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -605,6 +605,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"', callbackFunction = self.wha.redirectLogOutput, bufferLimit=209715200 )
 
   def test_runit_no_outputfile( self ):
+    exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : True, 'mytestAppLOg' : True, 'whizard.out' : False, 'myTestEvents.001.stdhep' : False}
     self.wha.Model = 'mytestMODEL'
     self.wha.OutputFile = 'mytestwhizardOutputFile'
     self.wha.STEP_NUMBER = 'testStep12'
@@ -641,7 +642,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True, True, True, True, False, False ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
          patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -654,7 +655,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       open_mock.side_effect = ( h for h in handles )
       assertDiracFailsWith( self.wha.runIt(), 'whizard Failed to produce STDHEP file', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      assertEqualsImproved( exists_mock.mock_calls, [ call( 'list.txt' ), call( 'LesHouches.msugra_1.in' ), call( 'Whizard_myTestV1_Run_testStep12.sh' ), call( 'mytestAppLOg' ), call('mytestAppLOg'), call( 'whizard.out' ), call('myTestEvents.001.stdhep') ], self )
+      assertEqualsImproved( len(exists_mock.mock_calls), 7, self)
       assertEqualsImproved( remove_mock.mock_calls, [ call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ], self )
       assertEqualsImproved( appstat_mock.mock_calls, [ call( 'Whizard myTestV1 step testStep12'), call( 'Whizard myTestV1 Failed to produce STDHEP file' )], self )
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in', './whizardnew.in' )
@@ -704,6 +705,7 @@ def check_lists_equal( list1, list2, assertobject ):
     assertobject.assertIn( element, list2)
 
 def check_logfiles( file_contents, assertobject ):
+  exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : True, 'Whizard_myTestV1_Run_testStep12.sh' : True, 'mytestAppLOg' : True, 'whizard.out' : False }#[ True, True, True, True, True, False, False ]
   set_default_values( assertobject.wha )
   assertobject.wha.debug = False
   assertobject.wha.genlevelcuts = False
@@ -730,7 +732,7 @@ def check_logfiles( file_contents, assertobject ):
        patch('%s.os.listdir' % MODULE_NAME, new=Mock(side_effect=[ [ 'gridfile1.txt', 'cool/gridfile2.ppt', 'last/file/ok' ], [] ])), \
        patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)), \
        patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=[ [ 'file1.grb', 'otherfile.grb' ], [ 'testfile.grc' ] ])), \
-       patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True, True, True, True, False, False ])) as exists_mock, \
+       patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
        patch('%s.ProcessList' % MODULE_NAME, new=proclist_mock), \
        patch('%s.WhizardAnalysis.setApplicationStatus' % MODULE_NAME) as appstat_mock, \
        patch('%s.shutil.copy' % MODULE_NAME, new=Mock(return_value=True)) as copy_mock, \
@@ -743,7 +745,7 @@ def check_logfiles( file_contents, assertobject ):
     open_mock.side_effect = ( h for h in handles )
     assertDiracFailsWith( assertobject.wha.runIt(), 'Whizard Exited With Status 1', assertobject )
     getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-    assertEqualsImproved( exists_mock.mock_calls, [ call( 'list.txt' ), call( 'LesHouches.msugra_1.in' ), call( 'Whizard_myTestV1_Run_testStep12.sh' ), call( 'mytestAppLOg' ), call('mytestAppLOg'), call( 'whizard.out' ) ], assertobject )
+    assertEqualsImproved( len(exists_mock.mock_calls), 6, assertobject )
     assertEqualsImproved( remove_mock.mock_calls, [ call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ], assertobject )
     assertEqualsImproved( appstat_mock.mock_calls, [ call( 'Whizard myTestV1 step testStep12'), call( 'whizard Exited With Status 1' )], assertobject )
     copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in', './whizardnew.in' )

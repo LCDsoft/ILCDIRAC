@@ -211,6 +211,7 @@ class TestExecute( unittest.TestCase ):
     self.ujf.workflow_commons = { 'TotalSteps' : '42' }
 
   def test_execute( self ):
+    exists_dict = { 'list_of.txt' : True, 'filenames.jar' : True }
     self.ujf.jobID = 512
     request_mock = Mock()
     request_mock.RequestName = 'job_512_request.xml'
@@ -228,7 +229,7 @@ class TestExecute( unittest.TestCase ):
     self.ujf.userOutputSE = 'thisValueIsntUsed'
     self.ujf.userOutputPath = 'my/User/OPPath'
     with patch('%s.constructUserLFNs' % MODULE_NAME, new=Mock(return_value=S_OK(['/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/list_of.txt', '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/filenames.jar']))) as constructlfn_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.open' % MODULE_NAME, mock_open(read_data='myfilecontent,makeniceadlerchecksum')), \
          patch('%s.os.path.getsize' % MODULE_NAME, new=Mock(return_value=3048)), \
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/mycurdirTestMe')), \
@@ -247,6 +248,7 @@ class TestExecute( unittest.TestCase ):
     dataman_mock = dataman_mock()
     dataman_mock.replicateAndRegister.assert_any_call( '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/filenames.jar', 'myTestReceivingSE' )
     dataman_mock.replicateAndRegister.assert_called_with( '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/list_of.txt', 'myTestReceivingSE' )
+    assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
 
   def test_execute_not_last_step( self ):
     self.ujf.step_commons = { 'STEP_NUMBER' : '1' }
@@ -298,6 +300,7 @@ class TestExecute( unittest.TestCase ):
       assertDiracFailsWith( result, 'my_construct_lfn_err_test', self )
 
   def test_execute_getfilemetadata_fails( self ):
+    exists_dict = { 'list_of.txt' : True, 'something' : True }
     self.ujf.jobID = 512
     request_mock = Mock()
     request_mock.RequestName = 'job_512_request.xml'
@@ -311,7 +314,7 @@ class TestExecute( unittest.TestCase ):
     self.ujf.userOutputData = [ 'something' ]
     self.ujf.userOutputSE = 'myTestReceivingSE'
     self.ujf.userOutputPath = 'my/User/OPPath'
-    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])), \
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.open' % MODULE_NAME, mock_open(read_data='myfilecontent,makeniceadlerchecksum')), \
          patch('%s.os.path.getsize' % MODULE_NAME, new=Mock(return_value=3048)), \
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/mycurdirTestMe')), \
@@ -322,6 +325,7 @@ class TestExecute( unittest.TestCase ):
       report_mock.setApplicationStatus.assert_called_once_with( 'my_getfilemeta_test_Err', True )
 
   def test_execute_getfilemetadata_empty( self ):
+    exists_dict = { 'list_of.txt' : True, 'something' : True }
     self.ujf.jobID = 512
     request_mock = Mock()
     request_mock.RequestName = 'job_512_request.xml'
@@ -335,7 +339,7 @@ class TestExecute( unittest.TestCase ):
     self.ujf.userOutputData = [ 'something' ]
     self.ujf.userOutputSE = 'myTestReceivingSE'
     self.ujf.userOutputPath = 'my/User/OPPath'
-    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])), \
+    with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.open' % MODULE_NAME, mock_open(read_data='myfilecontent,makeniceadlerchecksum')), \
          patch('%s.os.path.getsize' % MODULE_NAME, new=Mock(return_value=3048)), \
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/mycurdirTestMe')), \
@@ -346,6 +350,7 @@ class TestExecute( unittest.TestCase ):
       report_mock.setApplicationStatus.assert_called_once_with( 'No Output Data Files To Upload', True )
 
   def test_execute_ignoreapperrors( self ):
+    exists_dict = { 'list_of.txt' : True, 'something' : True }
     self.ujf.jobID = 512
     self.ujf.ignoreapperrors = True
     request_mock = Mock()
@@ -365,7 +370,7 @@ class TestExecute( unittest.TestCase ):
     self.ujf.userOutputPath = 'my/User/OPPath'
     with patch('%s.constructUserLFNs' % MODULE_NAME, new=Mock(return_value=S_OK(['/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/list_of.txt', '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/filenames.jar']))) as constructlfn_mock, \
          patch('%s.UserJobFinalization.getCandidateFiles' % MODULE_NAME, new=Mock(return_value={ 'OK' : False, 'Value' : {} })) as getcf_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.open' % MODULE_NAME, mock_open(read_data='myfilecontent,makeniceadlerchecksum')), \
          patch('%s.os.path.getsize' % MODULE_NAME, new=Mock(return_value=3048)), \
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/mycurdirTestMe')), \
