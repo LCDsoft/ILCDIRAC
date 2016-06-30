@@ -6,7 +6,6 @@ import sys
 from mock import patch, call, mock_open, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
 
 __RCSID__ = "$Id$"
@@ -19,6 +18,7 @@ class TestSLICPandora( unittest.TestCase ):
   def setUp( self ):
     # Mock out modules that spawn other threads
     sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
     self.spa = SLICPandoraAnalysis()
     self.spa.platform = 'myTestPlatform'
     self.spa.applicationLog = 'applogFile.test'
@@ -224,17 +224,26 @@ class TestSLICPandora( unittest.TestCase ):
       self.assertFalse( remove_mock.called )
 
   def test_getenvscript( self ):
+    import inspect
+    def replace_abspath( path ):
+      if path == 'SLICPandora.sh':
+        return '/abs/test/path/SLICPandora.sh'
+      else:
+        sys.exit()
     exists_dict = { 'PandoraFrontend' : True }
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_OK('/my/dir/test/me'))) as getsoft_mock, \
          patch('%s.removeLibc' % MODULE_NAME) as removelib_mock, \
          patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='/new/ldpath')) as getlib_mock, \
          patch('%s.getNewPATH' % MODULE_NAME, new=Mock(return_value='/new/test/path')) as getpath_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
+      with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
-         patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(return_value='/abs/test/path/SLICPandora.sh')) as abspath_mock:
-      result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
-      assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )
+         patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(side_effect=replace_abspath)) as abspath_mock:
+        result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
+        assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
+        assertEqualsImproved( len(abspath_mock.mock_calls), 1, self )
+        assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )
+        chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
       getsoft_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       removelib_mock.assert_called_once_with( '/my/dir/test/me/LDLibs' )
       getlib_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
@@ -242,9 +251,6 @@ class TestSLICPandora( unittest.TestCase ):
       open_mock.assert_any_call( 'SLICPandora.sh', 'w' )
       open_mock = open_mock()
       assertEqualsImproved( open_mock.write.mock_calls, [ call('#!/bin/sh \n') , call('############################################################\n'), call('# Dynamically generated script to get the SLICPandora env. #\n'), call('############################################################\n'), call("declare -x PATH=/new/test/path:$PATH\n"), call('declare -x ROOTSYS=/my/dir/test/me/ROOT\n'), call('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n'), call('declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n'), call("declare -x PATH=.:$PATH\n" ) ], self )
-      chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
-      assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
-      abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
 
   def test_getenvscript_getsoftware_fails( self ):
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_ERROR('getsoftware_test_err'))), patch('%s.SLICPandoraAnalysis.setApplicationStatus' % MODULE_NAME, new=Mock(return_value=S_ERROR())):
@@ -252,15 +258,25 @@ class TestSLICPandora( unittest.TestCase ):
       assertDiracFailsWith( result, 'getsoftware_test_err', self )
 
   def test_getenvscript_other_prefixpath( self ):
+    import inspect
+    def replace_abspath( path ):
+      if path == 'SLICPandora.sh':
+        return '/abs/test/path/SLICPandora.sh'
+      else:
+        sys.exit()
+    exists_dict = { 'PandoraFrontend' : False, '/my/dir/test/me/Executable/PandoraFrontend' : True }
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_OK('/my/dir/test/me'))) as getsoft_mock, \
          patch('%s.removeLibc' % MODULE_NAME) as removelib_mock, \
          patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='/new/ldpath')) as getlib_mock, \
          patch('%s.getNewPATH' % MODULE_NAME, new=Mock(return_value='/new/test/path')) as getpath_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])) as exists_mock, \
+         patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
+      with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
-         patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(return_value='/abs/test/path/SLICPandora.sh')) as abspath_mock:
-      result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
+         patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(side_effect=replace_abspath)) as abspath_mock:
+        result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
+        chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
+        assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
+        assertEqualsImproved( len(abspath_mock.mock_calls), 1, self )
       assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )
       getsoft_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       removelib_mock.assert_called_once_with( '/my/dir/test/me/LDLibs' )
@@ -269,17 +285,15 @@ class TestSLICPandora( unittest.TestCase ):
       open_mock.assert_any_call( 'SLICPandora.sh', 'w' )
       open_mock = open_mock()
       assertEqualsImproved( open_mock.write.mock_calls, [ call('#!/bin/sh \n') , call('############################################################\n'), call('# Dynamically generated script to get the SLICPandora env. #\n'), call('############################################################\n'), call("declare -x PATH=/new/test/path:$PATH\n"), call('declare -x ROOTSYS=/my/dir/test/me/ROOT\n'), call('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n'), call('declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n'), call("declare -x PATH=/my/dir/test/me/Executable:$PATH\n" ) ], self )
-      chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
-      assertEqualsImproved( exists_mock.mock_calls, [ call('PandoraFrontend'), call('/my/dir/test/me/Executable/PandoraFrontend') ], self )
-      abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
 
   def test_getenvscript_pandorafrontend_missing( self ):
+    exists_dict = { 'PandoraFrontend' : False, '/my/dir/test/me/Executable/PandoraFrontend' : False }
     with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_OK('/my/dir/test/me'))) as getsoft_mock, \
          patch('%s.removeLibc' % MODULE_NAME) as removelib_mock, \
          patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='/new/ldpath')) as getlib_mock, \
          patch('%s.getNewPATH' % MODULE_NAME, new=Mock(return_value='/new/test/path')) as getpath_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False ])) as exists_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, \
          patch('%s.os.chmod' % MODULE_NAME) as chmod_mock:
       result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       assertDiracFailsWith( result, 'missing pandorafrontend binary', self )
@@ -289,5 +303,5 @@ class TestSLICPandora( unittest.TestCase ):
       getpath_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       self.assertFalse( open_mock.called )
       self.assertFalse( chmod_mock.called )
-      assertEqualsImproved( exists_mock.mock_calls, [ call('PandoraFrontend'), call('/my/dir/test/me/Executable/PandoraFrontend') ], self )
+      assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
 
