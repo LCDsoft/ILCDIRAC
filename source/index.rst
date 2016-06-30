@@ -15,7 +15,7 @@ If you are looking for how to submit jobs
 for Linear Collider Software please look at the
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` class and the
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications` modules and finally at
-the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class
+the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
 
 .. toctree::
    :maxdepth: 1
@@ -23,6 +23,8 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class
    DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications.rst
    DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob.rst
    DOC/ILCDIRAC/Interfaces/API/DiracILC.rst
+   DOC/Examples/ExampleJobs.rst
+
 
 Scripts
 -------
