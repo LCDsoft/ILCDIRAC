@@ -17,6 +17,13 @@ FIX: ILCDIRAC-665: Also handle cases if a file gets stuck in 'Processed' status
 NEW: Set the NSKipEventsRandom parameter for BGOverlay processor. Calculates number of Events based on NBEvts Configuration Parameter
 NEW: Allow defining different parameter for the same background type by using EventType parameter to set the correct EventType
 
+* Interfaces:
+
+NEW: When applications check for existance of steering files packages on CVMFS are considered as well
+
+* Workflow:
+
+NEW: Move back to CPUNormalisation from DIRAC, fix ILCDIRAC-661 implemented and released in DIRAC
 
 [v25r0p8]
 
