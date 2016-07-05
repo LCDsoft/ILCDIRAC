@@ -7,7 +7,6 @@ Needs the chrpath and readelf utilities
 import sys
 import os
 import tarfile
-import shutil
 
 try:
   import hashlib as md5
@@ -20,14 +19,11 @@ from pprint import pprint
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
 
-Script.parseCommandLine( ignoreErrors = False )
-
-from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
-from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
-
 class DDSimTarMaker( object ):
   """ create a tarball of the DDSim release """
   def __init__( self ):
+    from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
+
     self.detmodels = {}
     self.lcgeo_env="lcgeo_DIR"
     self.ddhep_env="DD4HEP"
@@ -36,12 +32,13 @@ class DDSimTarMaker( object ):
     self.platform = 'x86_64-slc5-gcc43-opt'
     self.comment = ""
     self.name = "ddsim"
-    self.csapi = None
+    self.csapi = CSAPI()
     self.tarBallName = None
     self.md5sum = None
 
   def copyDetectorModels( self, basePath, folder, targetFolder ):
     """copy the compact folders to the targetFolder """
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder
     for root,dirs,_files in os.walk( os.path.join(basePath, folder) ):
       for direct in dirs:
         if root.endswith("compact"):
@@ -86,25 +83,29 @@ class DDSimTarMaker( object ):
 
   def createCSEntry( self ):
     """add the entries for this version into the Configuration System
-    <version>
-            {
-              TarBall = ddsim<version>.tgz
-              AdditionalEnvVar
+
+    .. code::
+
+      <version>
               {
-                ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
-                G4INSTALL = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01
-                G4DATA = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data
+                TarBall = ddsim<version>.tgz
+                AdditionalEnvVar
+                {
+                  ROOTSYS = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/root/5.34.30
+                  G4INSTALL = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01
+                  G4DATA = /cvmfs/ilc.desy.de/sw/x86_64_gcc44_sl6/geant4/10.01/share/Geant4-10.1.0/data
+                }
+                Overwrite = True
               }
-              Overwrite = True
-            }
-    Operations/DDSimDetectorModels/<Version>
-              {
-                CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
-                ...
-              }
+      Operations/DDSimDetectorModels/<Version>
+                {
+                  CLIC_o2_v03 = detectors/CLIC_o2_v03/CLIC_o2_v03.xml
+                  ...
+                }
 
     """
-
+    from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import insertCSSection
     #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
     csParameter = { "TarBall": self.tarBallName,
                     "AdditionalEnvVar": {
@@ -137,13 +138,13 @@ class DDSimTarMaker( object ):
 
     csPath = os.path.join( self.softSec , "%(platform)s/%(name)s/%(version)s/" % pars )
     pprint(csParameter)
-    result = self.insertCSSection( csPath, csParameter )
+    result = insertCSSection( self.csapi, csPath, csParameter )
 
     csPathModels = "Operations/Defaults/DDSimDetectorModels"
     csModels = { self.version : self.detmodels }
     pprint(csModels)
 
-    result = self.insertCSSection( csPathModels, csModels )
+    result = insertCSSection( self.csapi, csPathModels, csModels )
 
     if self.csapi is not None:
       resProxy = checkOrGetGroupProxy( "diracAdmin" )
@@ -156,35 +157,11 @@ class DDSimTarMaker( object ):
       gLogger.error( "Failed to create CS Section", result['Message'] )
       raise RuntimeError( "Failed to create CS Section" )
 
-  def insertCSSection( self, path, pardict ):
-    """ insert a section and values (or subsections) into the CS
-
-    :param str path: full path of the new section
-    :param str pardict: dictionary of key values in the new section, values can also be dictionaries
-    :return: S_OK(), S_ERROR()
-    """
-    from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
-    if self.csapi is None:
-      self.csapi = CSAPI()
-
-    for key, value in pardict.iteritems():
-      newSectionPath = os.path.join(path,key)
-      gLogger.debug( "Adding to cs %s : %s " % ( newSectionPath, value ) )
-      self.csapi.createSection( path )
-      if isinstance( value, dict ):
-        res = self.insertCSSection( newSectionPath, value )
-      else:
-        res = self.csapi.setOption( newSectionPath, value )
-
-      if not res['OK']:
-        return res
-      else:
-        gLogger.notice( "Added to CS: %s " % res['Value'] )
-
-    return S_OK("Added all things to cs")
-
   def createDDSimTarBall( self ):
     """ do everything to create the DDSim tarball"""
+
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import copyFolder, getLibraryPath, getFiles, getDependentLibraries, copyLibraries, getPythonStuff, killRPath, resolveLinks, removeSystemLibraries
+
     self.parseArgs()
     ddBase, lcgeoBase, _rootsys = self.checkEnvironment()
 
@@ -262,6 +239,7 @@ class DDSimTarMaker( object ):
     self.createCSEntry()
 
 if __name__=="__main__":
+  Script.parseCommandLine( ignoreErrors = False )
   print "Creating Tarball for DDSim"
   try:
     DDSIMMAKER = DDSimTarMaker()

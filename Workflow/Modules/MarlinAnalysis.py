@@ -184,11 +184,16 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     if not self.SteeringFile:
       self.log.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
-    
+
+    eventsPerBackgroundFile=self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
+    self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+
     res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
                          self.debug,
-                         dd4hepGeoFile=compactFile)
+                         dd4hepGeoFile=compactFile,
+                         eventsPerBackgroundFile=eventsPerBackgroundFile,
+                        )
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')

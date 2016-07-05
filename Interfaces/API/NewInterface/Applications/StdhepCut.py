@@ -94,7 +94,7 @@ class StdhepCut(LCApplication):
       return S_ERROR('prodjobmodules failed')
     return S_OK()
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     if not self.steeringFile and not self.inlineCuts:
       return S_ERROR("Cuts not specified")
     if self.steeringFile and self.inlineCuts:

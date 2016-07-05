@@ -6,9 +6,9 @@ import os
 import commands
 import re
 
+from DIRAC import S_OK, gLogger
+
 RSYNCBASE="rsync --exclude '.svn'"
-
-
 
 def killRPath( folder ):
   """remove rpath from all libraries in folder and below"""
@@ -78,10 +78,13 @@ def getPythonStuff( basePath, targetFolder ):
 
 def removeSystemLibraries( folder ):
   """remove the system libraries from the folder
-  #FIXME: get this from ILCDIRAC
-    for file in libc.so* libc-2.5.so* libm.so* libpthread.so* libdl.so* libstdc++.so* libgcc_s.so.1*; do
-  rm $LIBFOLDER/$file 2> /dev/null
-    done
+
+  .. todo:: get these libraries from ILCDIRAC
+
+  |  for file in libc.so* libc-2.5.so* libm.so* libpthread.so* libdl.so* libstdc++.so* libgcc_s.so.1*; do
+  |    rm $LIBFOLDER/$file 2> /dev/null
+  |  done
+
   """
   systemLibraires = ['libc.so', 'libc-2.5.so', 'libm.so', 'libpthread.so', 'libdl.so',
                      'libstdc++.so', 'libgcc_s.so.1' ]
@@ -131,3 +134,27 @@ def getRootStuff( rootsys, targetFolder ):
   for lib in libraries:
     allLibs.update( getDependentLibraries(lib) )
   copyLibraries( allLibs, targetFolder+"/lib" )
+
+def insertCSSection( csAPI, path, pardict ):
+  """ insert a section and values (or subsections) into the CS
+
+  :param str path: full path of the new section
+  :param str pardict: dictionary of key values in the new section, values can also be dictionaries
+  :return: S_OK(), S_ERROR()
+  """
+
+  for key, value in pardict.iteritems():
+    newSectionPath = os.path.join(path,key)
+    gLogger.debug( "Adding to cs %s : %s " % ( newSectionPath, value ) )
+    csAPI.createSection( path )
+    if isinstance( value, dict ):
+      res = insertCSSection( csAPI, newSectionPath, value )
+    else:
+      res = csAPI.setOption( newSectionPath, value )
+
+    if not res['OK']:
+      return res
+    else:
+      gLogger.notice( "Added to CS: %s " % res['Value'] )
+
+  return S_OK("Added all things to cs")

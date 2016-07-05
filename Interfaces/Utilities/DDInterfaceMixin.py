@@ -8,13 +8,13 @@ from DIRAC import S_OK, S_ERROR
 class DDInterfaceMixin( object ):
   """Mixin for DD4hep interface functions
 
-  This mixin class requires that the main class should be of `Application` type
-  and have the `detectorModel`, `_ops`, `version`, and `log` attributes.
+  This mixin class requires that the main class should be of :class:`Application` type
+  and have the :attr:`detectorModel`, :attr:`_ops`, :attr:`version`, and :attr:`_log` attributes.
 
-     * `_ops` is an Operations instance
-     * `_log` a gLogger sublogger
-     * `version` is the version of the application
-     * detectorModel is set to the name of the detector model as inferred in the `setDetectorModel` function
+     * :attr:`_ops` is an Operations instance
+     * :attr:`_log` a gLogger sublogger
+     * :attr:`version` is the version of the application
+     * :attr:`detectorModel` is set to the name of the detector model as inferred in the :func:`setDetectorModel` function
 
   """
 

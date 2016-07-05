@@ -110,7 +110,7 @@ class GenericApplication(LCApplication):
       self._job._addSoftware(depn, depv)
     return S_OK()
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     """ Checks that script and dependencies are set.
     """
     if not self.script:

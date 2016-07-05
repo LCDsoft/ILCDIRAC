@@ -139,8 +139,8 @@ class Job(DiracJob):
     res = application._analyseJob(self)
     if not res['OK']:
       return res
-    
-    res = application._checkConsistency()
+
+    res = application._checkConsistency( self )
     if not res['OK']:
       self.log.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))

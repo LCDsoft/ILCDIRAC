@@ -111,8 +111,7 @@ class Params(object):
 class CVMFSAdder(object):
   """Container for all the objects and functions to add software to ILCDirac"""
   def __init__(self, cliParams ):
-    from DIRAC.Interfaces.API.DiracAdmin import DiracAdmin
-    self.diracAdmin = DiracAdmin()
+    from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
     self.modifiedCS = False
     self.softSec = "/Operations/Defaults/AvailableTarBalls"
     self.mailadress = 'ilc-dirac@cern.ch'
@@ -124,7 +123,22 @@ class CVMFSAdder(object):
                            initsctipt = cliParams.initScriptLocation
                          )
     self.applications = cliParams.applicationList
+    self.detmodels = {}
+    self.csAPI = CSAPI()
 
+  def findDDSimDetectorModels( self ):
+    """ find all detector models in lcgeo and
+    fill the self.detmodels dictionary with Detmodel as key and path as value
+
+    :returns: None
+    """
+    for root,dirs,_files in os.walk( os.path.join( self.parameter["basepath"], "lcgeo" ) ):
+      for direct in dirs:
+        if root.endswith("compact"):
+          ## the main xml file must have the same name as the folder
+          xmlPath = os.path.join( root, direct, direct+".xml")
+          if os.path.exists( xmlPath ):
+            self.detmodels[direct] = xmlPath
 
   def checkConsistency(self):
     """checks if platform is defined, application exists, etc."""
@@ -154,7 +168,7 @@ class CVMFSAdder(object):
     """write changes to the CS to the server"""
     if self.modifiedCS:
       gLogger.notice("Commiting changes to the CS")
-      result = self.diracAdmin.csCommitChanges(False)
+      result = self.csAPI.commit()
       if not result[ 'OK' ]:
         gLogger.error('Commit failed with message = %s' % (result[ 'Message' ]))
         return S_ERROR("Failed to commit to CS")
@@ -164,7 +178,8 @@ class CVMFSAdder(object):
     return S_OK()
 
   def addAllToCS(self):
-    """add all the applications to the CS, take care of special cases (mokka, ildconfig,...)"""
+    """add all the applications to the CS, take care of special cases (mokka, ildconfig, ddsim,...)"""
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import insertCSSection
 
     for application in self.applications:
       csParameter = dict( CVMFSEnvScript = self.cliParams.initScriptLocation,
@@ -173,6 +188,14 @@ class CVMFSAdder(object):
 
       if application == 'mokka':
         csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
+
+      if application == 'ddsim':
+        self.findDDSimDetectorModels()
+
+        csPathModels = "Operations/Defaults/DDSimDetectorModels"
+        csModels = { self.parameter["version"] : self.detmodels }
+        insertCSSection( self.csAPI, csPathModels, csModels )
+        self.modifiedCS = True
 
       elif application == 'ildconfig':
         del csParameter['CVMFSEnvScript']
@@ -207,7 +230,7 @@ class CVMFSAdder(object):
     csPath = self.softSec + ("/%(platform)s/%(name)s/%(version)s/" % pars)
     for par, val in csParameter.iteritems():
       gLogger.notice("Add: %s = %s" %(csPath+par, val))
-      result = self.diracAdmin.csSetOption(csPath+par, val)
+      result = self.csAPI.setOption(csPath+par, val)
       if result['OK']:
         self.modifiedCS = True
       else:

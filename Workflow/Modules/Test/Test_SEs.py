@@ -33,7 +33,7 @@ class SETestCase( unittest.TestCase ):
   lfntestfile = ''
   storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
   #storageelements = [ "CERN-DST-EOS" ]
-  options = "-o/DIRAC/Setup=ILC-Test"
+  options = ['-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive", "-o/DIRAC/Setup=ILC-Test"]
 
   @classmethod
   def setUpClass( cls ):
@@ -55,7 +55,7 @@ class SETestCase( unittest.TestCase ):
     """set up the objects"""
     # Check if file exists already
     try:
-      subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile, self.options])
+      subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
       print "WARN Warning: file already existed on SE:", self.lfntestfile
     except subprocess.CalledProcessError:
       sys.exc_clear()
@@ -92,7 +92,7 @@ class SETestCase( unittest.TestCase ):
     """
     self.uploadFile(site)
     # get file from SE, check for equivalence
-    result = subprocess.check_output(["dirac-dms-get-file", "-ddd", self.lfntestfile, self.options])
+    result = subprocess.check_output(["dirac-dms-get-file", "-ddd", self.lfntestfile]+self.options)
     self.assertOperationSuccessful(result, "Retrieval of random file from storage element to local failed: " + result)
     
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename), "Received wrong file")
@@ -113,10 +113,10 @@ class SETestCase( unittest.TestCase ):
     # Replicate file to SE2, remove replica from SE1, get file, rm from all
     self.replicateTo(site2)
 
-    result = subprocess.check_output(["dirac-dms-remove-replicas", self.lfntestfile, site1, self.options])
+    result = subprocess.check_output(["dirac-dms-remove-replicas", self.lfntestfile, site1]+self.options)
     self.assertTrue(result.count("Successfully removed") == 1, "Failed removing replica of random file: " + result)
 
-    result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile, self.options])
+    result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile]+self.options)
     self.assertOperationSuccessful(result, "Retrieval of random file from storage element to local failed: " + result)
     
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename), "Received wrong file")
@@ -134,11 +134,11 @@ class SETestCase( unittest.TestCase ):
     self.uploadFile(site1)
     self.replicateTo(site2)
  
-    result = subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile, self.options])
+    result = subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
     self.assertTrue(result.count("Successfully removed 1 files") == 1, "Removal of random file failed: " + result)
     
     try:
-      result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile, self.options])
+      result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile]+self.options)
       self.fail("Get file should not succeed")
     except subprocess.CalledProcessError as err:
       self.assertTrue(err.output.count("ERROR") >= 1, "File not removed from SE even though it should be: " + err.output)
@@ -148,7 +148,7 @@ class SETestCase( unittest.TestCase ):
     """Adds the local random file to the storage elements
     """
     try:
-      result = subprocess.check_output(["dirac-dms-add-file", "-ddd", self.lfntestfile, self.localtestfile, site, self.options])
+      result = subprocess.check_output(["dirac-dms-add-file", "-ddd", self.lfntestfile, self.localtestfile, site]+self.options)
       self.assertTrue(result.count("Successfully uploaded ") == 1, "Upload of random file failed")
     except subprocess.CalledProcessError as err:
       self.fail( err.output )
@@ -156,7 +156,7 @@ class SETestCase( unittest.TestCase ):
   def removeFile ( self ):
     """Removes the random file from the storage elements
     """
-    result = subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile, self.options])
+    result = subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
     self.assertTrue(result.count("Successfully removed 1 files") == 1, "Removal of random file failed: " + result)
     
   def assertOperationSuccessful( self, result, message ):
@@ -169,7 +169,7 @@ class SETestCase( unittest.TestCase ):
     """Replicates the random file to another storage element and checks if it worked
     """
     try:
-      result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile, site, "-ddd", self.options])
+      result = subprocess.check_output(["dirac-dms-replicate-lfn", self.lfntestfile, site, "-ddd"]+self.options)
       self.assertOperationSuccessful(result, "Failed replicating file")
     except subprocess.CalledProcessError as err:
       print err.output
@@ -180,7 +180,7 @@ class SETestCase( unittest.TestCase ):
     If it doesn't exist, nothing happens
     """
     try:
-      subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile, self.options])
+      subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
     except subprocess.CalledProcessError:
       sys.exc_clear()
 

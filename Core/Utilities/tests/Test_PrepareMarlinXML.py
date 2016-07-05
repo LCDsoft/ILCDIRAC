@@ -213,7 +213,9 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
                           outputREC="outputrec.slcio",
                           outputDST="outputdst.slcio",
                           debug=True,
-                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          eventsPerBackgroundFile=333
+                        )
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprodild.xml" )
     #self.assertTrue( self.findProcessorInTree( "BGoverLay" ), "Problem with InitDD4hep" )
@@ -223,6 +225,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
     self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames", "file1\nfile2") )
+    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "NSkipEventsRandom", "666") )
 
   @patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.getOverlayFiles", new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_ildRecoFile_NoOver( self ):
