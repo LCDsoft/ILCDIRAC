@@ -22,6 +22,8 @@ from DIRAC import gLogger, S_OK
 class DDSimTarMaker( object ):
   """ create a tarball of the DDSim release """
   def __init__( self ):
+    from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
+
     self.detmodels = {}
     self.lcgeo_env="lcgeo_DIR"
     self.ddhep_env="DD4HEP"
@@ -30,7 +32,7 @@ class DDSimTarMaker( object ):
     self.platform = 'x86_64-slc5-gcc43-opt'
     self.comment = ""
     self.name = "ddsim"
-    self.csapi = None
+    self.csapi = CSAPI()
     self.tarBallName = None
     self.md5sum = None
 
@@ -103,6 +105,7 @@ class DDSimTarMaker( object ):
 
     """
     from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
+    from ILCDIRAC.ILCTransformationSystem.Utilities.ReleaseHelper import insertCSSection
     #FIXME: Get root and geant4 location from environment, make sure it is cvmfs
     csParameter = { "TarBall": self.tarBallName,
                     "AdditionalEnvVar": {
@@ -135,13 +138,13 @@ class DDSimTarMaker( object ):
 
     csPath = os.path.join( self.softSec , "%(platform)s/%(name)s/%(version)s/" % pars )
     pprint(csParameter)
-    result = self.insertCSSection( csPath, csParameter )
+    result = insertCSSection( self.csapi, csPath, csParameter )
 
     csPathModels = "Operations/Defaults/DDSimDetectorModels"
     csModels = { self.version : self.detmodels }
     pprint(csModels)
 
-    result = self.insertCSSection( csPathModels, csModels )
+    result = insertCSSection( self.csapi, csPathModels, csModels )
 
     if self.csapi is not None:
       resProxy = checkOrGetGroupProxy( "diracAdmin" )
@@ -153,33 +156,6 @@ class DDSimTarMaker( object ):
     if not result['OK']:
       gLogger.error( "Failed to create CS Section", result['Message'] )
       raise RuntimeError( "Failed to create CS Section" )
-
-  def insertCSSection( self, path, pardict ):
-    """ insert a section and values (or subsections) into the CS
-
-    :param str path: full path of the new section
-    :param str pardict: dictionary of key values in the new section, values can also be dictionaries
-    :return: S_OK(), S_ERROR()
-    """
-    from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
-    if self.csapi is None:
-      self.csapi = CSAPI()
-
-    for key, value in pardict.iteritems():
-      newSectionPath = os.path.join(path,key)
-      gLogger.debug( "Adding to cs %s : %s " % ( newSectionPath, value ) )
-      self.csapi.createSection( path )
-      if isinstance( value, dict ):
-        res = self.insertCSSection( newSectionPath, value )
-      else:
-        res = self.csapi.setOption( newSectionPath, value )
-
-      if not res['OK']:
-        return res
-      else:
-        gLogger.notice( "Added to CS: %s " % res['Value'] )
-
-    return S_OK("Added all things to cs")
 
   def createDDSimTarBall( self ):
     """ do everything to create the DDSim tarball"""
