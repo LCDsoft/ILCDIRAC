@@ -65,6 +65,7 @@ class OverlayInput (ModuleBase):
     self.lfns = []
     self.nbfilestoget = 0
     self.BkgEvtType = 'gghad'
+    self.metaEventType = self.BkgEvtType
     self.BXOverlay = 0
     self.ggtohadint = 3.2
     self.nbsigeventsperfile = 0
@@ -117,6 +118,7 @@ class OverlayInput (ModuleBase):
 
     if self.step_commons.has_key('BkgEvtType'):
       self.BkgEvtType = self.step_commons['BkgEvtType']
+    self.metaEventType = self.BkgEvtType
       
     res =  allowedBkg(self.BkgEvtType, self.energytouse, detector = self.detector, 
                       detectormodel = self.detectormodel, machine = self.machine) 
@@ -135,6 +137,12 @@ class OverlayInput (ModuleBase):
       else:
         return S_ERROR("Number of events in the signal file is missing")
       self.nbinputsigfile = len(self.InputData)
+
+    self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
+    self.log.info( "Background Event Type: %s " % self.BkgEvtType )
+    self.log.info( "Meta Event Type: %s " % self.metaEventType )
+    self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
+    self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
       
     if not self.NbSigEvtsPerJob and not self.nbsigeventsperfile:
       return S_ERROR("Could not determine the number of signal events per input file")
@@ -164,6 +172,12 @@ class OverlayInput (ModuleBase):
                                                                                   self.BkgEvtType), 
                                                  100)
 
+      self.metaEventType = self.ops.getValue( "/Overlay/%s/%s/%s/%s/EvtType" % ( self.machine,
+                                                                                 self.energytouse,
+                                                                                 self.detector,
+                                                                                 self.BkgEvtType),
+                                              self.BkgEvtType)
+
     else:
       res = self.ops.getValue("/Overlay/%s/%s/%s/%s/ProdID" % (self.machine, 
                                                                self.energytouse, 
@@ -175,43 +189,21 @@ class OverlayInput (ModuleBase):
                                                                                   self.detectormodel,
                                                                                   self.BkgEvtType), 
                                                  100)
+      self.metaEventType = self.ops.getValue( "/Overlay/%s/%s/%s/%s/EvtType" % ( self.machine,
+                                                                                 self.energytouse,
+                                                                                 self.detectormodel,
+                                                                                 self.BkgEvtType),
+                                              self.BkgEvtType)
+
+    self.log.info( "Number of Events Per BackgroundFile: %d " % self.nbofeventsperfile )
+    self.workflow_commons["OI_eventsPerBackgroundFile"] = self.nbofeventsperfile
+
+    meta['EvtType'] = self.metaEventType
     meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
     self.log.info("Using %s as metadata" % (meta))
-    #res = self.fc.getCompatibleMetadata(meta)
-    #if not res['OK']:
-    #  return res
-    #compatmeta = res['Value']
-    #if not self.prodid:
-    #  if compatmeta.has_key('ProdID'):
-    #    #take the latest prodID as
-    #    list = compatmeta['ProdID']
-    #    list.sort()
-    #    self.prodid=list[-1]
-    #  else:
-    #    return S_ERROR("Could not determine ProdID from compatible metadata")
-    #meta['ProdID']=self.prodid
-    #refetch the compat metadata to get nb of events
 
-    #res = self.fc.getCompatibleMetadata(meta)
-    #if not res['OK']:
-    #  return res
-    #compatmeta = res['Value']
-    #if compatmeta.has_key('NumberOfEvents'):
-    #  if type(compatmeta['NumberOfEvents'])==type([]):
-    #    self.nbofeventsperfile = compatmeta['NumberOfEvents'][0]
-    #  elif type(compatmeta['NumberOfEvents']) in types.StringTypes:
-    #    self.nbofeventsperfile = compatmeta['NumberOfEvents']
-    #else:
-    #  return S_ERROR("Number of events could not be determined, cannot proceed.")
-    
-    ##Below might still be needed
-    #if self.site == "LCG.CERN.ch":
-    #  return self.__getFilesFromCastor(meta)
-#    elif   self.site == "LCG.IN2P3-CC.fr": ##but not this
-#      return self.__getFilesFromLyon(meta) ## nor this
-    #else:
     return self.fcc.findFilesByMetadata(meta)
 
 
@@ -355,8 +347,8 @@ class OverlayInput (ModuleBase):
 
     self.log.info('Will obtain %s files for overlay' % totnboffilestoget)
 
-    os.mkdir("./overlayinput_" + self.BkgEvtType)
-    os.chdir("./overlayinput_" + self.BkgEvtType)
+    os.mkdir("./overlayinput_" + self.metaEventType)
+    os.chdir("./overlayinput_" + self.metaEventType)
     filesobtained = []
     usednumbers = []
     fail = False
@@ -678,6 +670,13 @@ fi\n""" % (basename, lfile))
     if not self.result['OK']:
       self.log.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
+
+    self.log.info( "Information after resolveInputVariables:" )
+    self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
+    self.log.info( "Background Event Type: %s " % self.BkgEvtType )
+    self.log.info( "Meta Event Type: %s " % self.metaEventType )
+    self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
+    self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
 
     if not self.applicationLog:
       self.applicationLog = 'Overlay_input.log'

@@ -398,9 +398,14 @@ class Application(object):
     self._log.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     """ Called from Job Class, overloaded by every class. Used to check that everything is fine, in particular 
     that all required parameters are defined.
+
+    :param job: The instance of the job
+    :type job: `Job`
+    :returns: S_OK/S_ERROR
+
     """
     return S_OK()
   

@@ -594,9 +594,9 @@ class ModuleBase(object):
 
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
-    print `message` to stdout and to the `self.applicationLog` file
+    print ``message`` to stdout and to the :attr:`self.applicationLog` file
 
-    * If `self.eventstring` is None print everything.
+    * If :attr:`self.eventstring` is None print everything.
     * If it is an empty list, an empty string, or an empty string in a list print nothing
     * If it is a string or a list of strings print only matching strings
 

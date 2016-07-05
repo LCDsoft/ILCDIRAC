@@ -4,10 +4,24 @@ List of files in the SteeringFiles tar ball.
 :author: S. Poss
 :since: Nov 8, 2011
 '''
-from DIRAC import S_OK, S_ERROR
 
-def Exists(myfile):
-  """check if the file exists"""
+import os
+
+from DIRAC import S_OK, S_ERROR, gLogger
+
+def Exists(myfile, platform=None, configversion=None):
+  """check if the file exists in the tarball
+  First based on a list of files
+
+  Also checks if CVMFS is used for the configuration package (ILDConfig) set by
+  :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setILDConfig`
+  If CVMFS is not available in the submission machine, but ILDConfig is on CVMFS we assume the file exists.
+
+  :param str myfile: filename to be checked
+  :param str platform: requested platform, optional
+  :param str configversion: ILDConfig version defined for the :class:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob`
+  :returns: S_OK/S_ERROR
+  """
   files = ["defaultClicCrossingAngle.mac", "clic_ild_cdr500.steer",
            "clic_ild_cdr.steer", "clic_cdr_prePandora.lcsim",
            "clic_cdr_postPandora.lcsim", "clic_cdr_prePandoraOverlay.lcsim",
@@ -48,6 +62,33 @@ def Exists(myfile):
            "cuts_h_mumu_3000.txt",]
   if myfile in files:
     return S_OK()
-  else:
+  elif configversion is None or platform is None:
     return S_ERROR("File %s is not available locally nor in the software installation." % myfile)
-  
+  else:
+    return _checkInCVMFS( myfile, platform, configversion)
+
+
+def _checkInCVMFS( cFile, platform, configversion ):
+  """ check if the file is available on cvmfs or not """
+
+  from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+  version = configversion.split("ILDConfig")[1]
+  configPath = Operations().getValue( "/AvailableTarBalls/%(platform)s/ildconfig/%(version)s/CVMFSPath" % \
+                                         dict( version=version,
+                                               platform=platform,
+                                             ),
+                                      "" )
+  if not configPath:
+    return S_ERROR( "Cannot get CVMFSPath for this ILDConfig version: %s " % version )
+
+  # check if cvmfs exists on this machine, if not we guess the person knows what they are doing
+  if not os.path.exists( "/cvmfs" ):
+    gLogger.warn( "CMVFS does not exist on this machine, cannot check for file existance." )
+    return S_OK()
+
+  if os.path.exists( os.path.join( configPath, cFile ) ):
+    gLogger.info( "Found file on CVMFS %s/%s" %( configPath, cFile) )
+    return S_OK()
+  else:
+    gLogger.error( "Cannot find file %s in cvmfs folder: %s  " % ( cFile, configPath ) )
+    return S_ERROR( "Cannot find file on cvmfs" )

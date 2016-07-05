@@ -55,7 +55,7 @@ class SoftwareInstall( Application ):
     self._setBaseStepParametersValues(instance)
     return S_OK()
       
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     """ Checks that script and dependencies are set.
     """
     

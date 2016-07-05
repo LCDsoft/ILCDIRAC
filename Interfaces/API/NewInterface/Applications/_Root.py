@@ -77,7 +77,7 @@ class _Root(LCApplication):
       return S_ERROR('prodjobmodules failed')
     return S_OK()
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
     """ Checks that script is set.
     """
     if not self.script:

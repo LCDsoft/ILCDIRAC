@@ -79,13 +79,25 @@ class DDSim( DDInterfaceMixin, LCApplication ):
       return S_ERROR('prodjobmodules failed')
     return S_OK()
 
-  def _checkConsistency(self):
-    """ FIXME """
+  def _checkConsistency(self, job=None):
+    """ FIXME
+    Check consistency of the DDSim application, this is called from the `Job` instance
+
+    :param job: The instance of the job
+    :type job: `Job`
+    :returns: S_OK/S_ERROR
+    """
+
+    ildconfig = job.workflow.parameters.find("ILDConfigPackage")
+    configversion = ildconfig.value if ildconfig else None
+    ## Platform must always be defined
+    platform = job.workflow.parameters.find("Platform").value
+
     if not self.version:
       return S_ERROR('No version found')
     if self.steeringFile:
-      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
-        res = Exists(self.steeringFile)
+      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().startswith("lfn:"):
+        res = Exists(self.steeringFile, platform=platform, configversion=configversion)
         if not res['OK']:
           return res
 

@@ -56,7 +56,7 @@ class GetSRMFile(LCUtilityApplication):
     return S_ERROR('Should not use in Production')
 
 
-  def _checkConsistency(self):
+  def _checkConsistency(self, job=None):
 
     if not self.files:
       return S_ERROR("The file list was not defined")
