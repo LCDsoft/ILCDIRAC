@@ -1,3 +1,11 @@
+[v25r0p10]
+
+* Core
+
+NEW: based on DIRAC v6r14p37
+
+FIX: Add CVMFS Software script now adds DDSimDetectorModels
+
 [v25r0p9]
 
 * ILCTransformationSystem:
