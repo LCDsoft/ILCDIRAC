@@ -711,8 +711,8 @@ class WhizardOptions(object):
         elif etype == 'T/F':
           if value != 'T' and value != 'F':
             return S_ERROR("%s should be either 'T' or 'F'" % (key + "/" + subkey))
-        elif etype == 'integer' or type == '0/1/2/3':
-          if not type(value) == types.IntType:
+        elif etype == 'integer' or etype == '0/1/2/3':
+          if not type(value) == types.IntType or ( etype == '0/1/2/3' and value not in range(4) ):
             return S_ERROR("%s should be an integer" % (key + "/" + subkey))
         elif etype == 'string':
           if not type(value) in types.StringTypes:
@@ -798,8 +798,9 @@ class WhizardOptions(object):
           pdict[curkey][key] = val
     return self.changeAndReturn(pdict)
 
-if __name__=="__main__":
-  import sys, pprint
+def main():
+  import sys
+  import pprint
   fname = sys.argv[1]
   model = 'sm'
   if len(sys.argv)>2:
@@ -810,7 +811,11 @@ if __name__=="__main__":
     print "Error:",res['Message']
     if res['Message'].count("parameter_input"):
       print "Maybe you are trying to set a mass that will be overwritten by a LesHouches file?"
-    exit(1)
-  
+    return 1
+
   pp = pprint.PrettyPrinter(indent=2)
   pp.pprint(wh.getAsDict()['Value'])
+  return 0
+
+if __name__=="__main__":
+  exit( main() )

@@ -29,6 +29,19 @@ def assertEqualsXml( elem1, elem2, assertobject ):
   assertEqualsImproved( elem1.tail, elem2.tail, assertobject )
   assertEqualsImproved( elem1.attrib, elem2.attrib, assertobject )
 
+def assertEqualsXmlTree( root1, root2, assertobject):
+  """ Asserts that the two passed XML trees and all their contained elements are equal.
+  """
+  print 'root1 = %s, root2 = %s' % (root1, root2)
+  print 'kinder1 = %s, kinder2 = %s' % (list(root1), list(root2))
+  assertEqualsXml( root1, root2, assertobject )
+  children1 = list( root1 )
+  assertEqualsImproved( len( children1 ), len( list(root2) ), assertobject )
+  for child1 in children1:
+    child2 = root2.find( child1.tag )
+    assert child2 is not None
+    assertEqualsXmlTree( child1, child2, assertobject )
+
 def assertDiracFailsWith( result, errorstring, assertobject):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).
 
