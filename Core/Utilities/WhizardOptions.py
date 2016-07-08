@@ -646,7 +646,7 @@ class WhizardOptions(object):
     """ Get the main fields
     """
     listoffields = []
-    for elem in self.whizardxml.getchildren():
+    for elem in list( self.whizardxml ):
       listoffields.append(elem.tag)
     return S_OK(listoffields)
   
@@ -657,7 +657,7 @@ class WhizardOptions(object):
     element = self.whizardxml.find(field)
     if element == None:
       return S_ERROR("Field %s does not exist" % field)
-    for subelements in element.getchildren():
+    for subelements in list( element ):
       options.append(subelements.tag)
     return S_OK(options)
   
@@ -684,9 +684,9 @@ class WhizardOptions(object):
     """ Get the content as dict, like the one used for setting the options
     """
     whiz_opt = {}
-    for element in self.whizardxml.getchildren():
+    for element in list( self.whizardxml ):
       whiz_opt[element.tag] = {}
-      for item in element.getchildren():
+      for item in list( element ):
         val = item.attrib['value']
         if type(val) == type(""):
           val = val.rstrip()
@@ -733,12 +733,12 @@ class WhizardOptions(object):
     """ Write the options to the whizard.in
     """
     lines = []
-    for elem in self.whizardxml.getchildren():
+    for elem in list( self.whizardxml ):
       tag = elem.tag
       if tag.count("beam_input"):
         tag = "beam_input"
       lines.append("&%s" % tag)
-      for subelem in elem.getchildren():
+      for subelem in list( elem ):
         val = subelem.get('value')
         if val == 'sqrts':
           continue
