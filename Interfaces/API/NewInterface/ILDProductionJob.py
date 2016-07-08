@@ -12,12 +12,14 @@ from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.LFNPathUtilities import joinPathForMetaData
-import types, string
+import types, string, pprint
 from decimal import Decimal
 
 #pylint: disable=W0311
 #pylint: disable=R0902
 #pylint: disable=R0904
+#pylint: disable=unidiomatic-typecheck
+
 class ILDProductionJob( ProductionJob ):
     """ILD Production Jobs definition"""
     def __init__( self ):
@@ -368,20 +370,7 @@ class ILDProductionJob( ProductionJob ):
             if not self.prodparameters["SoftwareTag"].count( curpackage ):
                 self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
         else :
-            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.Version )
-            
-        # softwarepath = application.appname+application.Version
-        if 'ILDConfigVersion' in self.prodparameters:
-            softwarepath = self.prodparameters['ILDConfigVersion']
-        else:
-            return S_ERROR( "ILDConfig not set, it is mandatory for path definition, please use p.setILDConfig() before appending applications" )
-
-        # override softwarepath if asked by user
-        if self.usesofttag:
-            if 'SoftwareTag' in self.compatmeta:
-                softwarepath = self.compatmeta['SoftwareTag']
-            else:
-                print "Warning: usesofttag is True but no SoftwareTag in metadata. For Mokka or Marlin job this is wrong"
+            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.version )
 
         if not self.energy:
             if application.Energy:
@@ -436,13 +425,14 @@ class ILDProductionJob( ProductionJob ):
             # self.basename = 's' + self.prodparameters['ILDConfigVersion']
             if 'SoftwareTag' in self.compatmeta:
                 if application.appname == 'mokka':     # sim
-                    self.basename = 's' + self.compatmeta['SoftwareTag']
+                    self.basename = 's' + self.prodparameters['ILDConfigVersion']
                 elif application.appname == 'marlin':  # reco
                     self.basename = 'r' + self.prodparameters['ILDConfigVersion']
-                    self.basename += '.s' + self.compatmeta['SoftwareTag']
+                    ## FIXME: Get Mokka ILDConfig from previous production
+                    self.basename += '.s' + self.compatmeta['ILDConfig']
                 elif application.appname == 'stdhepsplit':  # we dont need this tag in stdhep's: metadata search will fail if not present
-                    self.compatmeta.pop('SoftwareTag')
-                    self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app")
+                    self.compatmeta.pop( 'SoftwareTag', None )
+                    self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
                 # need extension if planning to use additional modules (LCIOSplit)
             else:
                 if application.datatype != 'gen': # for stdhepsplit we dont need to return
@@ -525,12 +515,7 @@ class ILDProductionJob( ProductionJob ):
         else:
             evtclassmeta = self.evtclass.rstrip( "/" )
 
-        # softwaremeta = softwarepath # this changes soft to ildconf.
-        softwaremeta = ''
         detectormeta = ''
-        if 'SoftwareTag' in self.compatmeta:
-            softwaremeta = self.compatmeta['SoftwareTag']
-        softwarepath += "/"
         if self.detector:
             if not self.detector[-1] == "/":
                 detectormeta = self.detector
@@ -538,12 +523,10 @@ class ILDProductionJob( ProductionJob ):
             else:
                 detectormeta = self.detector.rstrip( "/" )
 
-        if self.usesofttag:
-            softtag = "SoftwareTag"
-            softmeta = self.compatmeta['SoftwareTag']
-        else:
-            softtag = "ILDConfig"
-            softmeta = self.prodparameters['ILDConfigVersion']
+        ##Always use ILDConfig for the path
+        if 'ILDConfigVersion' not in self.prodparameters and application.datatype.lower() != "gen":
+            return S_ERROR( "ILDConfig not set, it is mandatory for path definition, please use p.setILDConfig() before appending applications" )
+        ildConfigPath = self.prodparameters.get( "ILDConfigVersion", "" ) + "/"
 
         path = self.basepath
         # ##Need to resolve file names and paths
@@ -560,13 +543,13 @@ class ILDProductionJob( ProductionJob ):
 
             # no processid
             self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector, softwarepath)] = {softtag: softmeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector, ildConfigPath)] = {"ILDConfig": self.prodparameters["ILDConfigVersion"]}
 
             # this part is from Andre
             fname = self.basename + "_rec.slcio"
-
+            print "+++Output REC Filename", fname
             # no processid
-            pathRec = joinPathForMetaData( self.basepath , 'rec' , energypath , self.evttype , self.detector , softwarepath)
+            pathRec = joinPathForMetaData( self.basepath, 'rec', energypath, self.evttype, self.detector, ildConfigPath )
             application.setOutputRecFile( fname, pathRec )
             self.finalpaths.append( pathRec )
 
@@ -582,12 +565,13 @@ class ILDProductionJob( ProductionJob ):
 
             # no processid
             self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector, softwarepath)] = {softtag: softmeta}
+            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector, ildConfigPath)] = {"ILDConfig": self.prodparameters["ILDConfigVersion"]}
             
             fname = self.basename + "_dst.slcio"
+            print "+++Output DST Filename", fname
 
             # no processid
-            pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evttype, self.detector , softwarepath)
+            pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evttype, self.detector , ildConfigPath )
             application.setOutputDstFile( fname, pathDst )
             self.finalpaths.append( pathDst )
 
@@ -611,10 +595,8 @@ class ILDProductionJob( ProductionJob ):
                 path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype)
                 self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
 
-                #FIXME: self.detector does not exist for generator files or applications, like stdhepsplit, this part is just being ignored
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype, self.detector , softwarepath)
-                #FIXME: Is this ILDConfig or SoftwareTag at this point? I am not sure
-                self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
+                # No detector, no ILDConfig for splitting or generator
+                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype )
 
             elif application.datatype == 'SIM':
                 # no processid
@@ -634,12 +616,9 @@ class ILDProductionJob( ProductionJob ):
                 path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector)
                 self.finalMetaDict[ path_gen_or_sim ] = { "DetectorModel": self.detector.strip("/") }
 
-                ## Set SoftwareTag
-                path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , softwarepath)
-                if self.usesofttag:
-                    self.finalMetaDict[ path_gen_or_sim ].update( { "SoftwareTag":self.compatmeta['SoftwareTag'] } )
-                else:
-                    self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
+                ## Always use ILDConfig
+                path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , ildConfigPath)
+                self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig": self.prodparameters['ILDConfigVersion'] } )
 
             path = path_gen_or_sim
 
@@ -654,10 +633,12 @@ class ILDProductionJob( ProductionJob ):
                 extension = 'slcio'
             fname = self.basename + "_%s" % ( application.datatype.lower() ) + "." + extension
             application.setOutputFile( fname, path_gen_or_sim )    
+            print "+++Output SIM/GEN Filename", fname
 
         ## Applied for all productions, these are the metadata at the production level
         metap = {}
-        ## MachineParams, Energy from this list, they are set at different level, SoftwareTag or ILDConfig are only sometimes at the prodID level
+        ## Drop ILDConfig, MachineParams, Energy from this list, they are set at different level
+        ## SoftwareTag is only sometimes at the prodID level
         for imeta in ['GenProcessName',
                       'NumberOfEvents',
                       'BeamParticle1','BeamParticle2',
@@ -666,17 +647,20 @@ class ILDProductionJob( ProductionJob ):
                 print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
                 metap.update( {imeta : self.compatmeta[imeta]} )
 
-        ## usesofttag means softwaretag is used in the path, so we want the
-        ## ILDConfig at the end, however, ILDConfig is always set at the end
-        ## if it exists, so this is kind of redundant
-        ## See ProductionJob for this
-        if self.usesofttag:
-            metap.update( { "ILDConfig":self.prodparameters['ILDConfigVersion'] } )
-        elif 'SoftwareTag' in self.compatmeta:
-            metap.update( { "SoftwareTag":self.compatmeta['SoftwareTag'] } )
+        ## Add software to non-searchable metadata
+        curpackage = "%s.%s" % (application.appname, application.version)
+        if "SWPackages" in self.prodparameters:
+          if not self.prodparameters["SWPackages"].count(curpackage):
+            self.prodparameters["SWPackages"] += ";%s" % curpackage
+        else:
+          self.prodparameters["SWPackages"] = curpackage
+
+        softmeta = application.appname + "." + application.version
+        print "++++Software meta for", application.appname, "=", softmeta
+        metap.update( { "SoftwareTag": softmeta } )
 
         self.prodMetaDict.update( metap )
-
+        pprint.pprint( self.prodMetaDict )
         self.basepath = path
 
         if not res['OK']:

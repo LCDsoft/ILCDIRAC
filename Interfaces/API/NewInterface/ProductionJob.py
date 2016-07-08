@@ -415,8 +415,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       finals.append(finalpaths)
       self.finalMetaDict[finalpaths].update( { "ProdID": self.transfid } )
       self.finalMetaDict[finalpaths].update( self.prodMetaDict )
-      if 'ILDConfigVersion' in self.prodparameters:
-        self.finalMetaDict[finalpaths].update({"ILDConfig":self.prodparameters['ILDConfigVersion']})
+      # if 'ILDConfigVersion' in self.prodparameters:
+      #   self.finalMetaDict[finalpaths].update({"ILDConfig":self.prodparameters['ILDConfigVersion']})
         
       if self.nbevts:
         self.finalMetaDict[finalpaths].update({'NumberOfEvents' : self.jobFileGroupSize * self.nbevts})
@@ -553,7 +553,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     prevent_registration = self.ops.getValue("Production/PreventMetadataRegistration", False)
     
     if self.dryrun or prevent_registration:
-      self.log.notice("Would have created and registered the following", str(self.finalMetaDict))
+      self.log.notice("Would have created and registered the following\n",
+                      "\n ".join( [ " * %s: %s" %( par, val ) for par,val in self.finalMetaDict.iteritems() ] ) )
       self.log.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
       return S_OK()
     
@@ -584,7 +585,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         print repr(existingMetadata)
         for key, value in existingMetadata['Value'].iteritems():
           if key in meta and meta[key] != value:
-            self.log.error( "Metadata values disagree for key %s: Existing(%r), new(%r)" % ( key, value, meta[key] ) )
+            self.log.error( "Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)" % ( path, key, value, meta[key] ) )
             failure = True
           elif key in meta and meta[key] == value:
             metaCopy.pop(key, None)

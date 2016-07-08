@@ -8,6 +8,8 @@ Modified to perform ILD reconstruction.
 C. Calancha
 '''
 
+#pylint: disable=invalid-name
+
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -17,7 +19,6 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import Mokka, Marlin, OverlayInput
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLCIOSplit, StdHepSplit
-from decimal import Decimal
 
 
 
@@ -33,7 +34,6 @@ energy           = 500. ##This is mostly needed to define easily the steering fi
 analysis += '_' + my_evttype
 
 meta_energy       = str(int(energy)) ##This is needed for the meta data search below
-my_mokka_conf_dbd = 'v01-14-01-p00'
 
 # for the overlay: using DBD numbers
 BXOverlay      = 1
@@ -43,14 +43,15 @@ GGToHadInt500  = 1.7
 GGToHadInt1000 = 4.1
 
 MarlinVer    = "ILCSoft-01-16-02-p1"
+ILDConfig = ''
 MokkaVer     = "080003"
+MokkaILDConfig = "v01-14-01-p00"
 banned_sites = [""]
 dryrun       = False
 # do not register anything nor create anything.
 # Should be used once the splitting-at-stdhep-level prods are submitted.
 
 detectorModel = 'ILD_o1_v05'    ##OR anything valid, but be careful with the overlay, the files need to exist
-ILDConfig = ''
 dbslice = "mokka-08-00-dbdump.sql"
 
 machineParameters = 'TDR_ws'
@@ -67,7 +68,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160623_25_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20160623_32_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -75,8 +76,8 @@ energyMachinePars        = meta_energy + '-' + machineParameters
 basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc/mc-dbd/ild/' )
 
 matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
-matchToInput_mokka       = basepath + "splitted/" + energyMachinePars + '/' + my_evttype + '/' + ILDConfig
-matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + my_mokka_conf_dbd
+matchToInput_mokka       = basepath + "splitted/" + energyMachinePars + '/' + my_evttype + '/'
+matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + MokkaILDConfig
 
 SE        = "CERN-DST-EOS"
 ###LCG_SITE  = "LCG.KEK.jp"
@@ -91,7 +92,6 @@ meta['Energy']         = meta_energy
 meta['Machine']        = 'ilc'
 meta['GenProcessName'] = genprocessname
 meta['MachineParams']  = machineParameters
-meta['SoftwareTag']    = my_mokka_conf_dbd
 
 # GenProcessID or ProcessID
 if meta['Datatype'] == 'gen':
@@ -212,7 +212,7 @@ if activesplitstdhep and meta:
   pstdhepsplit.basepath = basepath + "splitted/"
   pstdhepsplit.matchToInput = matchToInput_stdhepsplit
   pstdhepsplit.setDryRun(dryrun)
-  pstdhepsplit.setILDConfig(ILDConfig)
+  #pstdhepsplit.setILDConfig(ILDConfig)
   pstdhepsplit.setEvtClass(my_evtclass)
   pstdhepsplit.setEvtType(my_evttype)
   # pstdhepsplit.setUseSoftTagInPath(False)
@@ -261,9 +261,9 @@ if activesplitstdhep and meta:
     print res['Message']
 
   # 20150924 testing if i need this: i found this is mandatory to get the Mokka input
-  res = pstdhepsplit.setSoftwareTagInFinalPath(tmp_softwaretag_val)
-  if not res['OK']:
-    print res['Message']
+  # res = pstdhepsplit.setSoftwareTagInFinalPath(tmp_softwaretag_val)
+  # if not res['OK']:
+  #   print res['Message']
 
   res = pstdhepsplit.finalizeProd()
   if not res['OK']:
@@ -283,7 +283,7 @@ if ild_sim and meta:
   pmo.matchToInput = matchToInput_mokka
   pmo.setDryRun(dryrun)
   pmo.setProdPlugin('Standard')
-  pmo.setILDConfig(ILDConfig)
+  pmo.setILDConfig(MokkaILDConfig)
   pmo.setEvtClass(my_evtclass)
   pmo.setUseSoftTagInPath(True)
   pmo.setEvtType(my_evttype)
