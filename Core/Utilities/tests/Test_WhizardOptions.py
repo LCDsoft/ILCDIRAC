@@ -171,6 +171,47 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
       assertEqualsImproved( main(), 1, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )
 
+
+class TestWhOptCustomTree( unittest.TestCase ):
+  """ Test critical methods with a custom xml tree
+  """
+
+  DEFAULT_TREE = '<mytree>    <testchild1 type="asd" value="10">        <testoption type="test" value="123"></testoption>        <other_option></other_option>        <lastoneIpromise></lastoneIpromise>    </testchild1>    <dontforgetme></dontforgetme>    <onlychild type="floatarray" value="asd" some_other_field="test"></onlychild></mytree>'
+
+  def setUp( self ):
+    self.whop = WhizardOptions()
+    self.whop.paramdict = { 'testchild1' : { 'testoption' : '123', 'other_option' : None, 'lastoneIpromise' : None }, 'dontforgetme' : {}, 'onlychild' : {} }
+    self.whop.whizardxml = fromstring( TestWhOptCustomTree.DEFAULT_TREE )
+
+  def test_getoptions_nontrivial( self ):
+    result = self.whop.getOptionsForField( 'testchild1' )
+    assertDiracSucceedsWith_equals( result, [ 'testoption', 'other_option', 'lastoneIpromise' ], self )
+
+  def test_changeandreturn_nontrivial( self ):
+    with self.assertRaises( KeyError ) as ke:
+      self.whop.changeAndReturn( {} )
+    assertEqualsImproved( ke.exception.message, 'type', self )
+
+  def test_changeandreturn_updatechecks( self ):
+    missing_values = { 'testchild1' : [ 'other_option', 'lastoneIpromise' ] }
+    for key in missing_values.keys():
+      for subelem in missing_values[key]:
+        self.whop.whizardxml.find( '%s/%s' % ( key, subelem ) ).attrib['type'] = 'default'
+    result = self.whop.changeAndReturn( { 'testchild1' : { 'lastoneIpromise' : 242 } } )
+    assertDiracSucceeds( result, self )
+    root = result[ 'Value' ]
+    assertEqualsImproved( root.find( 'testchild1/lastoneIpromise' ).attrib['value'], 242, self )
+    # TODO continue here, check for updated value
+
+  def test_getasdict_nontrivial( self ):
+    missing_values = { 'testchild1' : [ 'other_option', 'lastoneIpromise' ], 'dontforgetme' : [], 'onlychild' : [] }
+    root = self.whop.whizardxml
+    for key in missing_values.keys():
+      for subelem in missing_values[key]:
+        root.find( '%s/%s' % ( key, subelem ) ).attrib['value'] = 'default'
+    result = self.whop.getAsDict()
+    assertDiracSucceedsWith_equals( result, { 'dontforgetme' : {}, 'onlychild' : {}, 'testchild1': { 'lastoneIpromise' : 'default', 'other_option' : 'default', 'testoption' : '123' } }, self )
+
 # TODO use nontrivial existing xmltree
 
 # TODO use self-written example XML Tree, check methods on that?

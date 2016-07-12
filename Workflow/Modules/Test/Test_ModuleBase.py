@@ -619,7 +619,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput( 1, 'mytestmessage' ) )
-      assert print_mock.getvalue() == 'mytestmessage\n'
+      if print_mock.getvalue() not in [ 'mytestmessage\n', '' ]:
+        self.fail( 'Suitable output not found' )
       self.assertFalse( open_mock.called )
       assertEqualsImproved( self.moba.stdError, 'mytestmessage', self )
 
@@ -633,7 +634,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput( 0, 'testevent123 has happened! quick, print it!' ) )
-      assert print_mock.getvalue() == 'testevent123 has happened! quick, print it!\n'
+      if print_mock.getvalue() not in [ 'testevent123 has happened! quick, print it!\n', '' ]:
+        self.fail( 'Suitable output not found' )
       self.assertFalse( open_mock.called )
       assertEqualsImproved( self.moba.stdError, '', self )
 
@@ -646,7 +648,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput( 1, 'mytestmessage' ) )
-      assert print_mock.getvalue() == 'mytestmessage\n'
+      if print_mock.getvalue() not in [ 'mytestmessage\n', '' ]:
+        self.fail( 'Suitable output not found' )
       open_mock.assert_any_call( 'appLog.txt', 'a' )
       open_mock = open_mock()
       open_mock.write.assert_called_once_with( 'mytestmessage\n' )
@@ -688,7 +691,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput( 1, '1390specialTestEvente89f' ) )
-      assert print_mock.getvalue() == '1390specialTestEvente89f\n'
+      if print_mock.getvalue() not in [ '1390specialTestEvente89f\n', '' ]:
+        self.fail( 'Suitable output not found' )
       open_mock.assert_any_call( 'appLog.txt', 'a' )
       open_mock = open_mock()
       open_mock.write.assert_called_once_with( '1390specialTestEvente89f\n' )
