@@ -6,7 +6,7 @@ from xml.etree.ElementTree import fromstring
 from mock import mock_open, call, patch, MagicMock as Mock
 
 from ILCDIRAC.Core.Utilities.WhizardOptions import WhizardOptions, getDict, main
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals, assertEqualsXmlTree
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals, assertEqualsXmlTree, running_on_docker
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
@@ -124,11 +124,12 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
       mo.side_effect = (h for h in handles)
       assertEqualsImproved( main(), 0, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )
-      xml_dict = pprint_mock.PrettyPrinter.return_value.pprint.call_args[0][0]
-      assertEqualsImproved( xml_dict[ 'process_input' ][ 'process_id' ], 'myprocessid', self )
-      assertEqualsImproved( xml_dict[ 'process_input' ][ 'cm_frame' ], 'F', self )
-      assertEqualsImproved( xml_dict[ 'simulation_input' ][ 'unweighted' ], 'F', self )
-      assertEqualsImproved( xml_dict[ 'diagnostics_input' ][ 'write_logfile_file' ], 'my_diagnostics_logfile.txt', self )
+      if not running_on_docker():
+        xml_dict = pprint_mock.PrettyPrinter.return_value.pprint.call_args[0][0]
+        assertEqualsImproved( xml_dict[ 'process_input' ][ 'process_id' ], 'myprocessid', self )
+        assertEqualsImproved( xml_dict[ 'process_input' ][ 'cm_frame' ], 'F', self )
+        assertEqualsImproved( xml_dict[ 'simulation_input' ][ 'unweighted' ], 'F', self )
+        assertEqualsImproved( xml_dict[ 'diagnostics_input' ][ 'write_logfile_file' ], 'my_diagnostics_logfile.txt', self )
 
   def test_main_other_model( self ):
     print_mock = Mock()
@@ -141,11 +142,12 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
       mo.side_effect = (h for h in handles)
       assertEqualsImproved( main(), 0, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )
-      xml_dict = pprint_mock.PrettyPrinter.return_value.pprint.call_args[0][0]
-      assertEqualsImproved( xml_dict[ 'process_input' ][ 'process_id' ], 'myprocessid', self )
-      assertEqualsImproved( xml_dict[ 'process_input' ][ 'cm_frame' ], 'F', self )
-      assertEqualsImproved( xml_dict[ 'simulation_input' ][ 'unweighted' ], 'F', self )
-      assertEqualsImproved( xml_dict[ 'diagnostics_input' ][ 'write_logfile_file' ], 'my_diagnostics_logfile.txt', self )
+      if not running_on_docker():
+        xml_dict = pprint_mock.PrettyPrinter.return_value.pprint.call_args[0][0]
+        assertEqualsImproved( xml_dict[ 'process_input' ][ 'process_id' ], 'myprocessid', self )
+        assertEqualsImproved( xml_dict[ 'process_input' ][ 'cm_frame' ], 'F', self )
+        assertEqualsImproved( xml_dict[ 'simulation_input' ][ 'unweighted' ], 'F', self )
+        assertEqualsImproved( xml_dict[ 'diagnostics_input' ][ 'write_logfile_file' ], 'my_diagnostics_logfile.txt', self )
 
   def test_main_wrong_type( self ):
     print_mock = Mock()
@@ -215,8 +217,3 @@ class TestWhOptCustomTree( unittest.TestCase ):
 # TODO use nontrivial existing xmltree
 
 # TODO use self-written example XML Tree, check methods on that?
-
-
-
-
-

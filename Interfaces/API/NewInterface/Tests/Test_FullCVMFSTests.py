@@ -13,7 +13,7 @@ import os
 import pwd
 from mock import patch, MagicMock as Mock
 from DIRAC import S_OK
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds, running_on_docker
 #from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
 
 __RCSID__ = "$Id$"
@@ -83,11 +83,10 @@ class JobTestCase( unittest.TestCase ):
     user_info = pwd.getpwuid( uid )
     homedir = os.path.join( os.sep + 'home', user_info.pw_name )
     cvmfstestsdir = 'cvmfstests'
-    if os.path.exists( homedir ):
-      localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
-      #os.chdir(homedir)
-    else:
+    if running_on_docker():
       localsitelocalarea = os.path.join( os.getcwd(), cvmfstestsdir )
+    else:
+      localsitelocalarea = os.path.join( homedir, cvmfstestsdir )
     from DIRAC import gConfig
     gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea )
     gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )

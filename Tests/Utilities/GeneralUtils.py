@@ -1,6 +1,9 @@
 """Contains general utility methods for unit testing.
 """
 
+import os
+import pwd
+
 __RCSID__ = "$Id$"
 
 def assertEqualsImproved( val1, val2, assertobject ):
@@ -79,3 +82,15 @@ def assertDiracSucceedsWith_equals( result, expected_res, assertobject ):
   """
   assertDiracSucceeds( result, assertobject )
   assertobject.assertEquals( expected_res, result['Value'] )
+
+def running_on_docker():
+  """ Returns whether the code is currently being executed in a docker VM or on a local (dev) machine.
+  This is achieved by checking wether /home/<currently logged in user> exists.
+  """
+  uid = os.getuid()
+  user_info = pwd.getpwuid( uid )
+  homedir = os.path.join( os.sep + 'home', user_info.pw_name )
+  if os.path.exists( homedir ) and not os.environ['CI']:
+    return False
+  else:
+    return True
