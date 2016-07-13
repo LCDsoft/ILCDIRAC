@@ -180,7 +180,7 @@ class TestSharedLocation( unittest.TestCase ):
       assertEqualsImproved( result, 'mylocation123test', self )
 
   def test_getsharedarealoc_environvar( self ):
-    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True } # FalseTrue
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
@@ -190,7 +190,7 @@ class TestSharedLocation( unittest.TestCase ):
       assertEqualsImproved( result, '/abc/def/ghi/clic', self )
 
   def test_getsharedarealoc_environvar_notfound( self ):
-    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : False } #FFT
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : False }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$I_AM_FAKE', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
@@ -210,7 +210,7 @@ class TestSharedLocation( unittest.TestCase ):
       assertEqualsImproved( result, '/myotherpath/hereissharedarea', self )
 
   def test_getsharedarealoc_notadir( self ):
-    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True } #FT
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
@@ -420,7 +420,7 @@ class TestSharedLocation( unittest.TestCase ):
       assertDiracSucceedsWith_equals( result, '/mylocalarea/test/myapparchivev2.test', self )
 
   def test_getsoftwarefolder_notfound( self ):
-    exists_dict = { 'myapp_executable' : False, '/mylocalarea/test/myapp_executable' : False, '/testshared/area/myapp_executable' : False } #FFF
+    exists_dict = { 'myapp_executable' : False, '/mylocalarea/test/myapp_executable' : False, '/testshared/area/myapp_executable' : False }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapp_executable')) as getval_mock, \
          patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), \
          patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), \

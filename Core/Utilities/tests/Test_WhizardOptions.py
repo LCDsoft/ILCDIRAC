@@ -196,24 +196,19 @@ class TestWhOptCustomTree( unittest.TestCase ):
 
   def test_changeandreturn_updatechecks( self ):
     missing_values = { 'testchild1' : [ 'other_option', 'lastoneIpromise' ] }
-    for key in missing_values.keys():
-      for subelem in missing_values[key]:
+    for key, list_of_subelems in missing_values.iteritems():
+      for subelem in list_of_subelems:
         self.whop.whizardxml.find( '%s/%s' % ( key, subelem ) ).attrib['type'] = 'default'
     result = self.whop.changeAndReturn( { 'testchild1' : { 'lastoneIpromise' : 242 } } )
     assertDiracSucceeds( result, self )
     root = result[ 'Value' ]
     assertEqualsImproved( root.find( 'testchild1/lastoneIpromise' ).attrib['value'], 242, self )
-    # TODO continue here, check for updated value
 
   def test_getasdict_nontrivial( self ):
     missing_values = { 'testchild1' : [ 'other_option', 'lastoneIpromise' ], 'dontforgetme' : [], 'onlychild' : [] }
     root = self.whop.whizardxml
-    for key in missing_values.keys():
-      for subelem in missing_values[key]:
+    for key, list_of_subelems in missing_values.iteritems():
+      for subelem in list_of_subelems:
         root.find( '%s/%s' % ( key, subelem ) ).attrib['value'] = 'default'
     result = self.whop.getAsDict()
     assertDiracSucceedsWith_equals( result, { 'dontforgetme' : {}, 'onlychild' : {}, 'testchild1': { 'lastoneIpromise' : 'default', 'other_option' : 'default', 'testoption' : '123' } }, self )
-
-# TODO use nontrivial existing xmltree
-
-# TODO use self-written example XML Tree, check methods on that?
