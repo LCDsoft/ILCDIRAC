@@ -153,7 +153,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
          patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       res = self.prodJob.setInputDataQuery( {} )
-      assertDiracFailsWith( res, "input metadata dictionary must contain at least a key 'prodid' as reference", self )
+      assertDiracFailsWith( res,
+                            "input metadata dictionary must contain at least a key 'prodid' as reference",
+                            self )
 
   def test_setInputDataQuery_second_finddir_fails( self ):
     with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456 }}))), \
@@ -218,7 +220,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
          patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
-      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'mytype', 'DetectorType' : 'GoodDetector874'})
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : 'mytype',
+                                            'DetectorType' : 'GoodDetector874'})
       assertDiracSucceeds( res, self )
       assertEqualsImproved( self.prodJob.datatype, 'mytype', self )
       assertEqualsImproved( self.prodJob.detector, 'GoodDetector874', self )
@@ -236,7 +239,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
          patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
-      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['mytype'], 'DetectorType' : ['MyDetector3000']})
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['mytype'],
+                                            'DetectorType' : ['MyDetector3000']})
       assertDiracSucceeds( res, self )
       assertEqualsImproved( self.prodJob.datatype, 'mytype', self )
       assertEqualsImproved( self.prodJob.detector, 'MyDetector3000', self )
@@ -245,7 +249,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     with patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getMetadataFields', new=Mock(return_value=S_OK({'DirectoryMetaFields' : { 'ProdID' : 19872456, 'Datatype' : 'test123', 'DetectorType' : 'testdetector' }}))), \
          patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.findDirectoriesByMetadata', new=Mock(side_effect=[S_OK(['dir1','dir2']), S_OK({'abc' : 'testdir123'})])),  patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient.getDirectoryUserMetadata', new=Mock(return_value=S_OK({ 'EvtType' : 'electron party'}))):
       self.prodJob.energycat='7'
-      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['gen'], 'DetectorType' : '904215fadf'})
+      res = self.prodJob.setInputDataQuery({'ProdID' : 19872456, 'Datatype' : ['gen'],
+                                            'DetectorType' : '904215fadf'})
       assertDiracSucceeds( res, self )
       assertEqualsImproved( self.prodJob.datatype, 'gen', self )
       assertEqualsImproved( self.prodJob.detector, '', self )
@@ -262,7 +267,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.nbevts = 89134
     job.finalpaths = [ 'test/path/my' ]
     job.workflow.setName('mytestworkflow')
-    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata', 'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
+    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata',
+                       'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('__builtin__.open', mock_open()) as all_mo, \
@@ -291,7 +297,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.call_finalization = True
     job.finalpaths = [ 'test/path/my' ]
     job.workflow.setName('mytestworkflow')
-    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata', 'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
+    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata',
+                       'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('__builtin__.open', mock_open()) as all_mo, \
@@ -317,7 +324,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.created = False
     job.call_finalization = False
     job.workflow.setName('mytestworkflow')
-    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata', 'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
+    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata',
+                       'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('__builtin__.open', mock_open()) as all_mo, \
@@ -374,7 +382,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.dryrun = True
     job.call_finalization = True
     job.workflow.setName('mytestworkflow')
-    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata', 'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
+    job.finalsdict = { 'uploadData' : 'myuploaddata', 'registerData' : 'myregisterdata',
+                       'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
@@ -443,12 +452,19 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   def test_finalizeProd_withparams( self ):
     job = self.prodJob
     job.slicesize = 0
-    job.prodparameters = { 'JobType' : [ 'mytest' ], 'lumi' : 12, 'NbInputFiles' : 1, 'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages', 'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
+    job.prodparameters = { 'JobType' : [ 'mytest' ], 'lumi' : 12, 'NbInputFiles' : 1,
+                           'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages',
+                           'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
     job.finalpaths = [ 'testpath123/a/b/c', 'othertestpath/many_dirs/file.txt' ]
     job.slicesize = 561
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
-    job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {}, 'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {}, 'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {}, 'othertestpath/many_dirs/file.txt' : {} }
-    job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {}, 'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {}, '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
+    job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {},
+                          'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {},
+                          'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {},
+                          'othertestpath/many_dirs/file.txt' : {} }
+    job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {},
+                                   'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {},
+                                   '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
 
     job.fc = Mock()
     job.fc.createDirectory.side_effect = createdir_sideeffect
@@ -463,7 +479,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   def test_finalizeProd_noswpackages_nometadictexternal( self ):
     job = self.prodJob
     job.slicesize = 0
-    job.prodparameters = { 'JobType' : 'mytest', 'lumi' : 12, 'NbInputFiles' : 1, 'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
+    job.prodparameters = { 'JobType' : 'mytest', 'lumi' : 12, 'NbInputFiles' : 1,
+                           'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SoftwareTag' : 'Monday',
+                           'ILDConfigVersion' : 'goodILDConfversion123.2' }
     job.finalpaths = [ 'testpath123/a/b/c', 'othertestpath/many_dirs/file.txt' ]
     job.slicesize = 561
     job.finalMetaDict = { 'asd' : 'asd' }
@@ -480,7 +498,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   def test_finalizeProd_lumiZero( self ):
     job = self.prodJob
-    job.prodparameters = { 'JobType' : 'mytest', 'lumi' : 0, 'NbInputFiles' : 1, 'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages', 'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
+    job.prodparameters = { 'JobType' : 'mytest', 'lumi' : 0, 'NbInputFiles' : 1,
+                           'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages',
+                           'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
     res = job.finalizeProd( 1387 )
     assertDiracSucceeds( res, self )
 
@@ -492,12 +512,19 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   def test_finalizeProd_setMetaFails( self ):
     job = self.prodJob
     job.slicesize = 0
-    job.prodparameters = { 'JobType' : 'mytest', 'lumi' : 12, 'NbInputFiles' : 1, 'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages', 'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
+    job.prodparameters = { 'JobType' : 'mytest', 'lumi' : 12, 'NbInputFiles' : 1,
+                           'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages',
+                           'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
     job.finalpaths = [ 'testpath123/a/b/c', 'othertestpath/many_dirs/file.txt' ]
     job.slicesize = 561
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
-    job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {}, 'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {}, 'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {}, 'othertestpath/many_dirs/file.txt' : {} }
-    job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {}, 'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {}, '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
+    job.finalMetaDict = { 'testpath123/a/b/c' : {}, 'another_path/file.txt' : {}, 'another_one/asd' : {},
+                          'wrongpath' : {}, 'something_invalid' : {}, 'nonsearchable/path' : {},
+                          'other_unsearchable/path/f.txt' : {}, 'need/more/paths' : {},
+                          'othertestpath/many_dirs/file.txt' : {} }
+    job.finalMetaDictNonSearch = { 'nonsearchable/path2' : {}, 'other_unsearchables/path/gh.txt' : {},
+                                   'test/path/more/needed' : {}, 'my_file/hidden.txt' : {}, 'tmp.txt' : {},
+                                   '/usr/bin/test' : {}, '/myfile_f.txt' : {} }
 
     class_name = '%s.FileCatalogClient' % MODULE_NAME
     with patch('%s.createDirectory' % class_name, new=Mock(side_effect=createdir_sideeffect)), \
@@ -507,7 +534,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   def test_getMetadata( self ):
     job = self.prodJob
-    reference_dict = { '1' : {'test1' : 1, '09ksrt' : '123tgvda'}, '2' : {'vdunivi' : -135, 21 : 'sdfg', job : 0, 'NumberOfEvents' : 1002 } }
+    reference_dict = { '1' : {'test1' : 1, '09ksrt' : '123tgvda'}, '2' : {'vdunivi' : -135, 21 : 'sdfg',
+                                                                          job : 0, 'NumberOfEvents' : 1002 } }
     reference_dict_nonbofevts = { 'test1' : 1, '09ksrt' : '123tgvda', 'vdunivi' : -135, 21 : 'sdfg', job : 0 }
     job.finalMetaDict = reference_dict
     assertEqualsImproved( reference_dict_nonbofevts, job.getMetadata(), self )
@@ -674,7 +702,8 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     assertEqualsImproved( self.prodJob.workflow['name'], 'mysuperworkflow', self )
     assertEqualsImproved( self.prodJob.workflow['name'], self.prodJob.name, self )
     self.prodJob.setWorkflowDescription( 'this is a test workflow, pls dont execute' )
-    assertEqualsImproved( self.prodJob.workflow['description'], 'this is a test workflow, pls dont execute', self )
+    assertEqualsImproved( self.prodJob.workflow['description'],
+                          'this is a test workflow, pls dont execute', self )
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, False])), \
          patch('%s.shutil.move' % MODULE_NAME, new=Mock(return_value=True)) as move_mock, \
          patch('%s.os.remove' % MODULE_NAME, new=Mock(True)) as remove_mock, \
@@ -714,7 +743,8 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     assertEqualsImproved( self.prodJob.outputStorage, '', self )
 
 
-ALLOWED_PRODTYPES = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay', 'Merge', 'Split']
+ALLOWED_PRODTYPES = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 'MCReconstruction_Overlay',
+                     'Merge', 'Split']
 def create_application_mock():
   """ Returns a mock object containing all necessary values for being used as an application in ProductionJob
   """
@@ -739,31 +769,40 @@ EXPECTED_XML_NOFINAL = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]>
 EXPECTED_XML_NOFINAL_WITH_PROXY = '<Workflow>\n<origin></origin>\n<description><![CDATA[]]></description>\n<descr_short></descr_short>\n<version>0.0</version>\n<type></type>\n<name>mytestworkflow</name>\n<Parameter name="JobType" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Job Type"><value><![CDATA[User]]></value></Parameter>\n<Parameter name="Priority" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Priority"><value><![CDATA[1]]></value></Parameter>\n<Parameter name="JobGroup" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified job group"><value><![CDATA[@{PRODUCTION_ID}]]></value></Parameter>\n<Parameter name="JobName" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Name of Job"><value><![CDATA[Name]]></value></Parameter>\n<Parameter name="Site" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Site Requirement"><value><![CDATA[ANY]]></value></Parameter>\n<Parameter name="Origin" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Origin of client"><value><![CDATA[DIRAC]]></value></Parameter>\n<Parameter name="StdOutput" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard output file"><value><![CDATA[std.out]]></value></Parameter>\n<Parameter name="StdError" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Standard error file"><value><![CDATA[std.err]]></value></Parameter>\n<Parameter name="InputData" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Default null input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="LogLevel" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="User specified logging level"><value><![CDATA[verbose]]></value></Parameter>\n<Parameter name="arguments" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Arguments to executable Step"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputData" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input data value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="ParametricInputSandbox" type="string" linked_module="" linked_parameter="" in="True" out="False" description="Default null parametric input sandbox value"><value><![CDATA[]]></value></Parameter>\n<Parameter name="Platform" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="Platform ( Operating System )"><value><![CDATA[x86_64-slc5-gcc43-opt]]></value></Parameter>\n<Parameter name="IS_PROD" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="This job is a production job"><value><![CDATA[True]]></value></Parameter>\n<Parameter name="MaxCPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="CPUTime" type="JDL" linked_module="" linked_parameter="" in="True" out="False" description="CPU time in secs"><value><![CDATA[300000]]></value></Parameter>\n<Parameter name="productionVersion" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProdAPIVersion"><value><![CDATA[$Id$]]></value></Parameter>\n<Parameter name="PRODUCTION_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="JOB_ID" type="string" linked_module="" linked_parameter="" in="True" out="False" description="ProductionJobID"><value><![CDATA[00012345]]></value></Parameter>\n<Parameter name="emailAddress" type="string" linked_module="" linked_parameter="" in="True" out="False" description="CrashEmailAddress"><value><![CDATA[ilcdirac-support@cern.ch]]></value></Parameter>\n</Workflow>\n'
 
 
-CREATEDIR_DICT = {'testpath123/a/b/c' : S_OK( { 'Successful' : { 'testpath123/a/b/c' : 'created' } } ), \
-                  'another_path/file.txt' : S_OK( { 'Successful' : {}, 'Failed' : { 'another_path/file.txt' : 'could not create, OSError' }} ), \
-                  'another_one/asd' : S_OK( { 'Successful' : { 'another_one/asf' : 'created' }} ), \
-                  'wrongpath' : S_ERROR('some_error'), \
-                  'something_invalid' : S_OK({ 'Successful' : {}, 'Failed' : {}}), \
-                  'nonsearchable/path': S_OK( { 'Successful' : { 'nonsearchable/path' : 'created' } } ), \
-                  'other_unsearchable/path/f.txt' : S_OK( { 'Successful' : {}, 'Failed' : { 'other_unsearchable/path/f.ppt' : 'could not create, OSError' }} ), \
-                  'need/more/paths' : S_OK( { 'Successful' : { 'need/more/paths' : 'created' }} ), \
-                  'othertestpath/many_dirs/file.txt': S_OK( {'Successful' : { 'othertestpath/many_dirs/file.txt' : 'created' }} ), \
-                  'nonsearchable/path2' : S_OK( { 'Successful' : { 'nonsearchable/path2' : 'created' } } ), \
-                  'other_unsearchables/path/gh.txt' : S_OK( { 'Successful' : {}, 'Failed' : { 'other_unsearchables/path/gh.txt' : 'could not create, OSError' }} ), \
-                  'test/path/more/needed' : S_OK( { 'Successful' : { 'diff_string' : 'created' }} ), \
-                  'my_file/hidden.txt' : S_ERROR('some_error'), \
-                  'tmp.txt' : S_OK({ 'Successful' : {}, 'Failed' : {}}), \
-                  '/usr/bin/test' : S_OK( { 'Successful' : { '/usr/bin/test' : 'created' } } ), \
-                  '/myfile_f.txt' : S_OK( { 'Successful' : {}, 'Failed' : { '/myfile_f.ppt' : 'could not create, OSError' }} ), \
-                  'asd' : S_OK( { 'Successful' : { 'asd' : 'created' }, 'Failed' : {} } ) }
+CREATEDIR_DICT = { 'testpath123/a/b/c' : S_OK( { 'Successful' : { 'testpath123/a/b/c' : 'created' } } ),
+                   'another_path/file.txt' : S_OK( { 'Successful' : {}, 'Failed' :
+                                                     { 'another_path/file.txt' :
+                                                       'could not create, OSError' } } ),
+                   'another_one/asd' : S_OK( { 'Successful' : { 'another_one/asf' : 'created' } } ),
+                   'wrongpath' : S_ERROR('some_error'),
+                   'something_invalid' : S_OK({ 'Successful' : {}, 'Failed' : {}}),
+                   'nonsearchable/path': S_OK( { 'Successful' : { 'nonsearchable/path' : 'created' } } ),
+                   'other_unsearchable/path/f.txt' : S_OK( { 'Successful' : {},
+                                                             'Failed' : { 'other_unsearchable/path/f.ppt' :
+                                                                          'could not create, OSError' } } ),
+                   'need/more/paths' : S_OK( { 'Successful' : { 'need/more/paths' : 'created' } } ),
+                   'othertestpath/many_dirs/file.txt': S_OK( {'Successful' :
+                                                              { 'othertestpath/many_dirs/file.txt' :
+                                                                'created' } } ),
+                   'nonsearchable/path2' : S_OK( { 'Successful' : { 'nonsearchable/path2' : 'created' } } ),
+                   'other_unsearchables/path/gh.txt' : S_OK( { 'Successful' : {}, 'Failed' :
+                                                               { 'other_unsearchables/path/gh.txt' :
+                                                                 'could not create, OSError' } } ),
+                   'test/path/more/needed' : S_OK( { 'Successful' : { 'diff_string' : 'created' } } ),
+                   'my_file/hidden.txt' : S_ERROR('some_error'),
+                   'tmp.txt' : S_OK({ 'Successful' : {}, 'Failed' : {}}),
+                   '/usr/bin/test' : S_OK( { 'Successful' : { '/usr/bin/test' : 'created' } } ),
+                   '/myfile_f.txt' : S_OK( { 'Successful' : {}, 'Failed' :
+                                             { '/myfile_f.ppt' : 'could not create, OSError' } } ),
+                   'asd' : S_OK( { 'Successful' : { 'asd' : 'created' }, 'Failed' : {} } ) }
 
-CHANGEPATH_DICT = {'testpath123/a/b/c' : S_OK(), \
-                   'nonsearchable/path' : S_ERROR('this is a test. fail please.'), \
-                   'need/more/paths' : S_OK(), \
-                   'othertestpath/many_dirs/file.txt' : S_OK(), \
-                   'nonsearchable/path2' : S_OK(), \
-                   '/usr/bin/test' : S_ERROR(), \
-                   'asd' : S_OK() }#, S_OK(), S_ERROR('this is a test. fail please.')}
+CHANGEPATH_DICT = { 'testpath123/a/b/c' : S_OK(),
+                    'nonsearchable/path' : S_ERROR('this is a test. fail please.'),
+                    'need/more/paths' : S_OK(),
+                    'othertestpath/many_dirs/file.txt' : S_OK(),
+                    'nonsearchable/path2' : S_OK(),
+                    '/usr/bin/test' : S_ERROR(),
+                    'asd' : S_OK() }#, S_OK(), S_ERROR('this is a test. fail please.')}
 
 def createdir_sideeffect( value ):
   """ Returns the appropriate return value of the createDir method for the given directory string

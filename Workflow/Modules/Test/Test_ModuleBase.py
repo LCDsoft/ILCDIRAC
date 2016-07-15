@@ -8,7 +8,9 @@ from StringIO import StringIO
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase, generateRandomString
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
+  assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, \
+  assertDiracSucceedsWith_equals
 
 __RCSID__ = "$Id$"
 
@@ -48,14 +50,16 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.isProdJob = True
     self.moba.InputData = 'myInputData.testme'
     with patch('%s.getNumberOfEvents' % MODULE_NAME, new=Mock(return_value=S_ERROR(''))) as getevts_mock:
-      assertDiracFailsWith( self.moba.execute(), 'failed to get numberofevents from filecatalog', self )
+      assertDiracFailsWith( self.moba.execute(),
+                            'failed to get numberofevents from filecatalog', self )
       getevts_mock.assert_called_once_with( 'myInputData.testme' )
 
   def test_execute_treatsteering_fails( self ):
     self.moba.step_commons['SteeringFileVers'] = 'mySteerTestVers'
     self.moba.platform = 'TRestPlatformMine'
     with patch('%s.getSteeringFileDir' % MODULE_NAME, new=Mock(return_value=S_ERROR('test_err_filedir_steer'))) as steerdir_mock:
-      assertDiracFailsWith( self.moba.execute(), 'failed to locate steering files mysteertestvers', self )
+      assertDiracFailsWith( self.moba.execute(),
+                            'failed to locate steering files mysteertestvers', self )
       steerdir_mock.assert_called_once_with( 'TRestPlatformMine', 'mySteerTestVers' )
 
   def test_execute_ildconfig_fails( self ):
@@ -63,18 +67,34 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.workflow_commons['ILDConfigPackage'] = 'ILDConfigv102'
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_err'))) as cvmfs_mock, \
          patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_other_err'))) as getsoft_mock:
-      assertDiracFailsWith( self.moba.execute(), 'Failed to locate ILDConfigv102 as config dir', self )
-      cvmfs_mock.assert_called_once_with( 'PlatformMineTest', ( 'ildconfig', 'v102' ) )
-      getsoft_mock.assert_called_once_with( 'PlatformMineTest', 'ildconfig', 'v102' )
+      assertDiracFailsWith( self.moba.execute(),
+                            'Failed to locate ILDConfigv102 as config dir', self )
+      cvmfs_mock.assert_called_once_with( 'PlatformMineTest',
+                                          ( 'ildconfig', 'v102' ) )
+      getsoft_mock.assert_called_once_with( 'PlatformMineTest',
+                                            'ildconfig', 'v102' )
 
   def test_execute_runit_fails( self ):
     with patch('%s.ModuleBase.runIt' % MODULE_NAME, new=Mock(return_value=S_ERROR('runit_fails_test_err'))):
       assertDiracFailsWith( self.moba.execute(), 'runit_fails_test_err', self )
 
   def test_execute_othercases( self ):
-    exists_dict = { 'steering.file' : False, './entry.steeringfile' : False, './failcopyingonthis': False, './testentry' : True, './lastfile.sf' : False, './ildfile.entry' : False, './my.ild.file' : True, './ild_failcopyhere' : False, './lastfile.ild' : False }
-    isdir_dict = { 'steering/file/path/entry.steeringfile' : True, 'steering/file/path/lastfile.sf' : False, 'steering/file/path/failcopyingonthis' : True, 'ild/test/configpath/ildfile.entry' : True, 'ild/test/configpath/lastfile.ild' : False, 'ild/test/configpath/ild_failcopyhere' : True }
-    listdir_dict = { 'steering/file/path' : [ 'entry.steeringfile', 'testentry', 'failcopyingonthis', 'lastfile.sf' ], 'ild/test/configpath' : [ 'ildfile.entry', 'my.ild.file', 'ild_failcopyhere', 'lastfile.ild' ], '/test/cur/working/dir' : [] }
+    exists_dict = { 'steering.file' : False, './entry.steeringfile' : False,
+                    './failcopyingonthis': False, './testentry' : True,
+                    './lastfile.sf' : False, './ildfile.entry' : False,
+                    './my.ild.file' : True, './ild_failcopyhere' : False,
+                    './lastfile.ild' : False }
+    isdir_dict = { 'steering/file/path/entry.steeringfile' : True,
+                   'steering/file/path/lastfile.sf' : False,
+                   'steering/file/path/failcopyingonthis' : True,
+                   'ild/test/configpath/ildfile.entry' : True,
+                   'ild/test/configpath/lastfile.ild' : False,
+                   'ild/test/configpath/ild_failcopyhere' : True }
+    listdir_dict = { 'steering/file/path' : [
+      'entry.steeringfile', 'testentry', 'failcopyingonthis', 'lastfile.sf' ],
+                     'ild/test/configpath' : [
+                       'ildfile.entry', 'my.ild.file', 'ild_failcopyhere',
+                       'lastfile.ild' ], '/test/cur/working/dir' : [] }
     self.moba.SteeringFile = '/dir/myfile/steering.file'
     self.moba.workflow_commons['ILDConfigPackage'] = 'ILDConfigv102'
     self.moba.step_commons['SteeringFileVers'] = 'mySteerTestVers'
@@ -89,8 +109,14 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/cur/working/dir')) as getcwd_mock:
       result = self.moba.execute()
     assertDiracSucceedsWith_equals( result, None, self )
-    assertEqualsImproved( copytree_mock.mock_calls, [ call( 'steering/file/path/entry.steeringfile', './entry.steeringfile' ), call( 'steering/file/path/failcopyingonthis', './failcopyingonthis' ), call( 'ild/test/configpath/ildfile.entry', './ildfile.entry'), call( 'ild/test/configpath/ild_failcopyhere', './ild_failcopyhere') ], self )
-    assertEqualsImproved( copy2_mock.mock_calls, call( 'steering/file/path/lastfile.sf', './lastfile.sf' ), call( 'ild/test/configpath/lastfile.ild', './lastfile.ild' ) )
+    assertEqualsImproved( copytree_mock.mock_calls, [
+      call( 'steering/file/path/entry.steeringfile', './entry.steeringfile' ),
+      call( 'steering/file/path/failcopyingonthis', './failcopyingonthis' ),
+      call( 'ild/test/configpath/ildfile.entry', './ildfile.entry'),
+      call( 'ild/test/configpath/ild_failcopyhere', './ild_failcopyhere') ], self )
+    assertEqualsImproved( copy2_mock.mock_calls,
+                          call( 'steering/file/path/lastfile.sf', './lastfile.sf' ),
+                          call( 'ild/test/configpath/lastfile.ild', './lastfile.ild' ) )
     assertEqualsImproved( len(listdir_mock.mock_calls), 3, self )
     self.assertNotEquals( listdir_mock.mock_calls[0], listdir_mock.mock_calls[1] )
     assertEqualsImproved( len(isdir_mock.mock_calls), 6, self )
@@ -103,17 +129,20 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.setApplicationStatus.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
-    assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ), 'mytest_success!!!', self )
+    assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ),
+                                    'mytest_success!!!', self )
     self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
     report_mock.setApplicationStatus.assert_called_once_with( 'my_test_status', True )
 
   def test_setappstat_local( self ):
     self.moba.jobID = 0
-    assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ), 'JobID not defined', self )
+    assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ),
+                                    'JobID not defined', self )
 
   def test_setappstat_noreporter( self ):
     self.moba.jobID = 24986
-    assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ), 'No reporting tool given', self )
+    assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ),
+                                    'No reporting tool given', self )
 
   def test_setappstat_setting_fails( self ):
     self.moba.jobID = 24986
@@ -122,7 +151,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.setApplicationStatus.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
-    assertDiracFailsWith( self.moba.setApplicationStatus( 'my_test_status' ), 'failed setting appstat_testme', self )
+    assertDiracFailsWith( self.moba.setApplicationStatus( 'my_test_status' ),
+                          'failed setting appstat_testme', self )
     report_mock.setApplicationStatus.assert_called_once_with( 'my_test_status', True )
     log_mock.warn.assert_called_once_with( 'failed setting appstat_testme' )
 
@@ -139,11 +169,13 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_sendstoredstatinfo_local( self ):
     self.moba.jobID = 0
-    assertDiracSucceedsWith_equals( self.moba.sendStoredStatusInfo(), 'JobID not defined', self )
+    assertDiracSucceedsWith_equals( self.moba.sendStoredStatusInfo(),
+                                    'JobID not defined', self )
 
   def test_sendstoredstatinfo_noreporter( self ):
     self.moba.jobID = 24986
-    assertDiracSucceedsWith_equals( self.moba.sendStoredStatusInfo(), 'No reporting tool given', self )
+    assertDiracSucceedsWith_equals( self.moba.sendStoredStatusInfo(),
+                                    'No reporting tool given', self )
 
   def test_sendstoredstatinfo_setting_fails( self ):
     self.moba.jobID = 24986
@@ -163,17 +195,20 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.setJobParameter.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
-    assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'mytestName', 135 ), 'mytest_success!!!', self )
+    assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'mytestName', 135 ),
+                                    'mytest_success!!!', self )
     self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
     report_mock.setJobParameter.assert_called_once_with( 'mytestName', '135', True )
 
   def test_setjobparameter_local( self ):
     self.moba.jobID = 0
-    assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'mytestName', 193 ), 'JobID not defined', self )
+    assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'mytestName', 193 ),
+                                    'JobID not defined', self )
 
   def test_setjobparameter_noreporter( self ):
     self.moba.jobID = 24986
-    assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'myTEstName', 9813 ), 'No reporting tool given', self )
+    assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'myTEstName', 9813 ),
+                                    'No reporting tool given', self )
 
   def test_setjobparameter_setting_fails( self ):
     self.moba.jobID = 24986
@@ -182,7 +217,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.setJobParameter.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
-    assertDiracFailsWith( self.moba.setJobParameter( 'parameterTestName', 984 ), 'failed setting appstat_testme', self )
+    assertDiracFailsWith( self.moba.setJobParameter( 'parameterTestName', 984 ),
+                          'failed setting appstat_testme', self )
     report_mock.setJobParameter.assert_called_once_with( 'parameterTestName', '984', True )
     log_mock.warn.assert_called_once_with( 'failed setting appstat_testme' )
 
@@ -193,17 +229,20 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.sendStoredJobParameters.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
-    assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(), 'mytest_success!!!', self )
+    assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(),
+                                    'mytest_success!!!', self )
     self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
     report_mock.sendStoredJobParameters.assert_called_once_with()
 
   def test_sendstoredjobparameters_local( self ):
     self.moba.jobID = 0
-    assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(), 'JobID not defined', self )
+    assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(),
+                                    'JobID not defined', self )
 
   def test_sendstoredjobparameters_noreporter( self ):
     self.moba.jobID = 24986
-    assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(), 'No reporting tool given', self )
+    assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(),
+                                    'No reporting tool given', self )
 
   def test_sendstoredjobparameters_setting_fails( self ):
     self.moba.jobID = 24986
@@ -212,7 +251,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.sendStoredJobParameters.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
-    assertDiracFailsWith( self.moba.sendStoredJobParameters(), 'failed setting appstat_testme', self )
+    assertDiracFailsWith( self.moba.sendStoredJobParameters(),
+                          'failed setting appstat_testme', self )
     report_mock.sendStoredJobParameters.assert_called_once_with()
     log_mock.error.assert_called_once_with( 'failed setting appstat_testme' )
 
@@ -220,14 +260,16 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.setFileStatus.return_value = S_OK('my_report_test_returnval')
     self.moba.workflow_commons['FileReport'] = report_mock
-    assertDiracSucceedsWith_equals( self.moba.setFileStatus( 'production', 'lfn', 'status' ), 'my_report_test_returnval', self )
+    assertDiracSucceedsWith_equals( self.moba.setFileStatus( 'production', 'lfn', 'status' ),
+                                    'my_report_test_returnval', self )
     assertEqualsImproved( self.moba.workflow_commons['FileReport'], report_mock, self )
 
   def test_setfilestatus( self ):
     report_mock = Mock()
     report_mock.setFileStatus.return_value = S_OK('other_my_report_test')
     with patch('%s.FileReport' % MODULE_NAME, new=Mock(return_value=report_mock)):
-      assertDiracSucceedsWith_equals( self.moba.setFileStatus( 'production', 'lfn', 'status' ), 'other_my_report_test', self )
+      assertDiracSucceedsWith_equals( self.moba.setFileStatus( 'production', 'lfn', 'status' ),
+                                      'other_my_report_test', self )
       assertEqualsImproved( self.moba.workflow_commons['FileReport'], report_mock, self )
 
   def test_setfilestatus_fails_useexistingfilereport( self ):
@@ -236,7 +278,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.workflow_commons['FileReport'] = report_mock
     log_mock = Mock()
     self.moba.log = log_mock
-    assertDiracFailsWith( self.moba.setFileStatus( 'production', 'lfn', 'status' ), 'test_setfilestat_err', self )
+    assertDiracFailsWith( self.moba.setFileStatus( 'production', 'lfn', 'status' ),
+                          'test_setfilestat_err', self )
     assertEqualsImproved( self.moba.workflow_commons['FileReport'], report_mock, self )
     log_mock.warn.assert_called_once_with('test_setfilestat_err')
 
@@ -246,7 +289,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     log_mock = Mock()
     self.moba.log = log_mock
     with patch('%s.FileReport' % MODULE_NAME, new=Mock(return_value=report_mock)):
-      assertDiracFailsWith( self.moba.setFileStatus( 'production', 'lfn', 'status' ), 'test_setfile_staterr', self )
+      assertDiracFailsWith( self.moba.setFileStatus( 'production', 'lfn', 'status' ),
+                            'test_setfile_staterr', self )
       assertEqualsImproved( self.moba.workflow_commons['FileReport'], report_mock, self )
       log_mock.warn.assert_called_once_with('test_setfile_staterr')
 
@@ -255,32 +299,54 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     log_mock = Mock()
     self.moba.log = log_mock
     self.moba.ignoreapperrors = True
-    mytest_outputlist = [ { 'outputFile' : 'testfile_allworks.stdhep', 'outputDataSE' : 'testSE_dip4_allgood', 'outputPath' : '/test/clic/ilc/mytestfile.txt' }, { 'outputFile' : 'failhere', 'outputDataSE' : '' }, { 'outputFile' : 'testfile_notlocal.txt', 'outputDataSE' : 'no_se', 'outputPath' : '/test/clic/ilc/otherdir/newfile.txt' } ]
+    mytest_outputlist = [ {
+      'outputFile' : 'testfile_allworks.stdhep', 'outputDataSE' : 'testSE_dip4_allgood',
+      'outputPath' : '/test/clic/ilc/mytestfile.txt' }, {
+        'outputFile' : 'failhere', 'outputDataSE' : '' }, {
+          'outputFile' : 'testfile_notlocal.txt', 'outputDataSE' : 'no_se',
+          'outputPath' : '/test/clic/ilc/otherdir/newfile.txt' } ]
     mylfns = [ 'testfile_allworks.stdhep', 'ignorethis', 'testfile_notlocal.txt' ]
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])):
       result = self.moba.getCandidateFiles( mytest_outputlist, mylfns, 'dummy_file_mask')
-      assertDiracSucceedsWith_equals( result, { 'testfile_allworks.stdhep' : { 'lfn': 'testfile_allworks.stdhep', 'path' : '/test/clic/ilc/mytestfile.txt', 'workflowSE': 'testSE_dip4_allgood' } }, self )
+      assertDiracSucceedsWith_equals( result, { 'testfile_allworks.stdhep' : {
+        'lfn': 'testfile_allworks.stdhep', 'path' : '/test/clic/ilc/mytestfile.txt',
+        'workflowSE': 'testSE_dip4_allgood' } }, self )
 
   def test_getcandidatefiles_filenametoolong( self ):
     log_mock = Mock()
     self.moba.log = log_mock
-    mytest_outputlist = [ { 'outputFile' : 'eruighnegjmneroiljger89igujmnerjhvreikvnmer9fig8erjg89iuerjhguie5hgieu7hg893j4tf4iufnugfyrhbgyukbfruwjfhwiefjhuiewfjwenfiuewnfieuwhuifrweuijfiuwerjhuiwer', 'outputDataSE' : 'testSE_dip4_allgood', 'outputPath' : '/test/clic/ilc/mytestfile.txt' }, { 'outputFile' : 'failhere', 'outputDataSE' : '' } ]
-    mylfns = [ 'eruighnegjmneroiljger89igujmnerjhvreikvnmer9fig8erjg89iuerjhguie5hgieu7hg893j4tf4iufnugfyrhbgyukbfruwjfhwiefjhuiewfjwenfiuewnfieuwhuifrweuijfiuwerjhuiwer', 'ignorethis' ]
-    assertDiracFailsWith( self.moba.getCandidateFiles( mytest_outputlist, mylfns, 'dummy_file_mask'), 'filename too long', self )
+    mytest_outputlist = [ {
+      'outputFile' : 'eruighnegjmneroiljger89igujmnerjhvreikvnmer9fig8erjg89iuerjhguie5hgieu7hg893j4tf4iufnugfyrhbgyukbfruwjfhwiefjhuiewfjwenfiuewnfieuwhuifrweuijfiuwerjhuiwer', 'outputDataSE' : 'testSE_dip4_allgood', 'outputPath' : '/test/clic/ilc/mytestfile.txt'
+    }, { 'outputFile' : 'failhere', 'outputDataSE' : '' } ]
+    mylfns = [ 'eruighnegjmneroiljger89igujmnerjhvreikvnmer9fig8erjg89iuerjhguie5hgieu7hg893j4tf4iufnugfyrhbgyukbfruwjfhwiefjhuiewfjwenfiuewnfieuwhuifrweuijfiuwerjhuiwer',
+               'ignorethis' ]
+    assertDiracFailsWith( self.moba.getCandidateFiles(
+      mytest_outputlist, mylfns, 'dummy_file_mask'), 'filename too long', self )
 
   def test_getcandidatefiles_lfntoolong( self ):
     log_mock = Mock()
     self.moba.log = log_mock
-    mytest_outputlist = [ { 'outputFile' : 'testfile_dirstoolong.stdhep', 'outputDataSE' : 'testSE_dip4_allgood', 'outputPath' : '/test/clic/ilc/mytestfile.txt' }, { 'outputFile' : 'failhere', 'outputDataSE' : '' } ]
-    mylfns = [ 'esaiujf/oijkrgrmwg/oirwgjmoiwrg/oijefiouwef/dir/oiejfmwseroigfujwfguiwefmviwfweoifkmiwoe/oieujguimeosifkmespokfsoeifkjoisuejfsef/soiuejfuisejfosiekfoisejfiusejfoisekfjoisejuguisehngusefjoisefkfsefjmsi/eiujfmeiowfmefkjeoifjiuenfenfj/feiosjkfoiesfksepoflsefpolsefiokseiufnmjef/fueinsfsnejfhsnjhefsjhebfjshebfsenfseifnsoiefkjseoidejiuesjndeqniuwejqoiwjeiqwmdwkajndawnduaidjaiowdjiawd/duiwandqiuodjqiwodjqownuqnfrqujrnjqwrqweioqmwdoiqmid/testfile_dirstoolong.stdhep', 'ignorethis' ]
-    assertDiracFailsWith( self.moba.getCandidateFiles( mytest_outputlist, mylfns, 'dummy_file_mask'), 'lfn too long', self )
+    mytest_outputlist = [ {
+      'outputFile' : 'testfile_dirstoolong.stdhep', 'outputDataSE' : 'testSE_dip4_allgood',
+      'outputPath' : '/test/clic/ilc/mytestfile.txt' }, {
+        'outputFile' : 'failhere', 'outputDataSE' : '' } ]
+    mylfns = [ 'esaiujf/oijkrgrmwg/oirwgjmoiwrg/oijefiouwef/dir/oiejfmwseroigfujwfguiwefmviwfweoifkmiwoe/oieujguimeosifkmespokfsoeifkjoisuejfsef/soiuejfuisejfosiekfoisejfiusejfoisekfjoisejuguisehngusefjoisefkfsefjmsi/eiujfmeiowfmefkjeoifjiuenfenfj/feiosjkfoiesfksepoflsefpolsefiokseiufnmjef/fueinsfsnejfhsnjhefsjhebfjshebfsenfseifnsoiefkjseoidejiuesjndeqniuwejqoiwjeiqwmdwkajndawnduaidjaiowdjiawd/duiwandqiuodjqiwodjqownuqnfrqujrnjqwrqweioqmwdoiqmid/testfile_dirstoolong.stdhep',
+               'ignorethis' ]
+    assertDiracFailsWith( self.moba.getCandidateFiles(
+      mytest_outputlist, mylfns, 'dummy_file_mask'), 'lfn too long', self )
 
   def test_getcandidatefiles_missinglocally( self ):
     exists_dict = { 'dir/testfile_allworks.stdhep' : True, 'testfile_notlocal.txt' : False }
     log_mock = Mock()
     self.moba.log = log_mock
     self.moba.ignoreapperrors = False
-    mytest_outputlist = [ { 'outputFile' : 'dir/testfile_allworks.stdhep', 'outputDataSE' : 'testSE_dip4_allgood', 'outputPath' : '/test/clic/ilc/mytestfile.txt' }, { 'outputFile' : 'failhere', 'outputDataSE' : '' }, { 'outputFile' : 'testfile_notlocal.txt', 'outputDataSE' : 'no_se', 'outputPath' : '/test/clic/ilc/otherdir/newfile.txt' } ]
+    mytest_outputlist = [
+      { 'outputFile' : 'dir/testfile_allworks.stdhep',
+        'outputDataSE' : 'testSE_dip4_allgood',
+        'outputPath' : '/test/clic/ilc/mytestfile.txt' }, {
+          'outputFile' : 'failhere', 'outputDataSE' : '' }, {
+            'outputFile' : 'testfile_notlocal.txt', 'outputDataSE' : 'no_se',
+            'outputPath' : '/test/clic/ilc/otherdir/newfile.txt' } ]
     mylfns = [ 'testfile_allworks.stdhep', 'ignorethis', 'testfile_notlocal.txt' ]
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])):
       result = self.moba.getCandidateFiles( mytest_outputlist, mylfns, 'dummy_file_mask')
@@ -295,36 +361,34 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.os.path.getsize' % MODULE_NAME, new=Mock(side_effect=lambda path: size_dict[path])), \
          patch('%s.fileAdler' % MODULE_NAME, new=Mock(side_effect=lambda path: adler_dict[path])), \
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/cur/working/test/')):
-      candidateFiles = { 'testfile_allworks.stdhep' : { 'lfn': 'testfile_allworks.stdhep', 'path' : '/test/clic/ilc/mytestfile.txt', 'workflowSE': 'testSE_dip4_allgood' }, 'myothertest_file' : { 'lfn' : 'myothertest_file', 'path' : '/dir/clid/user/myothertestfile.txt', 'workflowSE' : 'CERN_dip4_testme' } }
+      candidateFiles = { 'testfile_allworks.stdhep' : {
+        'lfn': 'testfile_allworks.stdhep', 'path' : '/test/clic/ilc/mytestfile.txt',
+        'workflowSE': 'testSE_dip4_allgood' }, 'myothertest_file' : {
+          'lfn' : 'myothertest_file', 'path' : '/dir/clid/user/myothertestfile.txt',
+          'workflowSE' : 'CERN_dip4_testme' } }
       result = self.moba.getFileMetadata( candidateFiles )
-      expected_dict = { 'testfile_allworks.stdhep': { 'filedict': { 'Status': 'Waiting', \
-                                                    'ADLER32': '9803531', \
-                                                    'ChecksumType': 'ADLER32', \
-                                                    'Checksum': '9803531', \
-                                                    'LFN': 'testfile_allworks.stdhep', \
-                                                    'GUID': 'test_myGuid_1', \
-                                                    'Addler': '9803531', \
-                                                    'Size': 24852 }, \
-                                      'lfn': 'testfile_allworks.stdhep', \
-                                      'localpath': '/cur/working/test//testfile_allworks.stdhep', \
-                                      'workflowSE': 'testSE_dip4_allgood', \
-                                      'path': '/test/clic/ilc/mytestfile.txt', \
-                                      'GUID': 'test_myGuid_1' }, \
-        'myothertest_file': { 'filedict': { 'Status': 'Waiting', \
-                                            'ADLER32': 'checksum1230#', \
-                                            'ChecksumType': 'ADLER32', \
-                                            'Checksum': 'checksum1230#', \
-                                            'LFN': 'myothertest_file', \
-                                            'GUID': 'test_myGuid_2', \
-                                            'Addler': 'checksum1230#', \
-                                            'Size': 948524 }, \
-                              'lfn': 'myothertest_file', \
-                              'localpath': '/cur/working/test//myothertest_file', \
-                              'workflowSE': 'CERN_dip4_testme', \
-                              'path': '/dir/clid/user/myothertestfile.txt', \
-                              'GUID': 'test_myGuid_2'} }
+      expected_dict = {
+        'testfile_allworks.stdhep': {
+          'filedict': {
+            'Status': 'Waiting', 'ADLER32': '9803531', 'ChecksumType': 'ADLER32',
+            'Checksum': '9803531', 'LFN': 'testfile_allworks.stdhep',
+            'GUID': 'test_myGuid_1', 'Addler': '9803531', 'Size': 24852
+          }, 'lfn': 'testfile_allworks.stdhep',
+          'localpath': '/cur/working/test//testfile_allworks.stdhep',
+          'workflowSE': 'testSE_dip4_allgood', 'path': '/test/clic/ilc/mytestfile.txt',
+          'GUID': 'test_myGuid_1' }, 'myothertest_file': {
+            'filedict': {
+              'Status': 'Waiting', 'ADLER32': 'checksum1230#',
+              'ChecksumType': 'ADLER32', 'Checksum': 'checksum1230#',
+              'LFN': 'myothertest_file', 'GUID': 'test_myGuid_2',
+              'Addler': 'checksum1230#', 'Size': 948524 }, 'lfn': 'myothertest_file',
+            'localpath': '/cur/working/test//myothertest_file',
+            'workflowSE': 'CERN_dip4_testme',
+            'path': '/dir/clid/user/myothertestfile.txt',
+            'GUID': 'test_myGuid_2'} }
       assertDiracSucceedsWith_equals( result, expected_dict, self )
-      assertEqualsImproved( guid_mock.mock_calls, [ call('testfile_allworks.stdhep'), call('myothertest_file') ], self )
+      assertEqualsImproved( guid_mock.mock_calls, [
+        call('testfile_allworks.stdhep'), call('myothertest_file') ], self )
 
   def test_resolveinputvars( self ):
     mb = self.moba
@@ -333,9 +397,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     mb.workflow_commons['SystemConfig'] = 'myTestPlatform'
     mb.workflow_commons['StartFrom'] = 94
     mb.workflow_commons['NbOfEvts'] = 458
-    mb.workflow_commons['InputData'] = 'myinputData1Test;myinputData2Test;myinputData3Test' # Also multiple tests
-    # mb.workflow_commons['ParametricInputData'] = ''  test mit parametric+normal inputdata
-    mb.step_commons['InputFile'] = 'myInputTestFile1;TestinputFile2' # 4 Tests, entry1;entry2, [], '', [ 'myif1', 'myif4' ]
+    mb.workflow_commons['InputData'] = 'myinputData1Test;myinputData2Test;myinputData3Test'
+    mb.step_commons['InputFile'] = 'myInputTestFile1;TestinputFile2'
     mb.OutputFile = None
     mb.step_commons['OutputFile'] = 'myTestOFile.txt'
     with patch('%s.getNumberOfEvents' % MODULE_NAME, new=Mock(return_value=S_ERROR('getNbEvtsFails_test'))):
@@ -348,8 +411,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     mb.workflow_commons['PRODUCTION_ID'] = 13412
     mb.workflow_commons['SystemConfig'] = 'myTestPlatform'
     mb.workflow_commons['StartFrom'] = 94
-    mb.workflow_commons['InputData'] = ['myinputData1Test', 'myinputData2Test', 'LFN:myinputData3Test']
-    # mb.workflow_commons['ParametricInputData'] = ''  test mit parametric+normal inputdata
+    mb.workflow_commons['InputData'] = ['myinputData1Test', 'myinputData2Test',
+                                        'LFN:myinputData3Test']
     mb.step_commons['InputFile'] = ''
     mb.OutputFile = 'myTestOutputFile'
     mb.step_commons['OutputFile'] = 'myTestOFile.txt'
@@ -411,7 +474,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     mb.workflow_commons['SystemConfig'] = 'myTestPlatform'
     mb.workflow_commons['StartFrom'] = 94
     mb.workflow_commons['NbOfEvts'] = 458
-    mb.workflow_commons['ParametricInputData'] = [ 'myParamEntry1', 'LFN:someoTherEntry', 'LFN:dontforgetme']
+    mb.workflow_commons['ParametricInputData'] = [ 'myParamEntry1',
+                                                   'LFN:someoTherEntry',
+                                                   'LFN:dontforgetme']
     mb.OutputFile = None
     mb.step_commons['OutputFile'] = 'myTestOFile.txt'
     with patch('%s.getNumberOfEvents' % MODULE_NAME, new=Mock(return_value=S_ERROR('getNbEvtsFails_test'))), \
@@ -427,7 +492,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     mb.workflow_commons['SystemConfig'] = 'myTestPlatform'
     mb.workflow_commons['StartFrom'] = 94
     mb.workflow_commons['InputData'] = 'myinputData1Test;myinputData2Test;myinputData3Test'
-    mb.workflow_commons['ParametricInputData'] = [ 'myParamEntry1', 'LFN:someoTherEntry', 'LFN:dontforgetme']
+    mb.workflow_commons['ParametricInputData'] = [ 'myParamEntry1',
+                                                   'LFN:someoTherEntry',
+                                                   'LFN:dontforgetme']
     mb.OutputFile = None
     mb.step_commons['OutputFile'] = 'myTestOFile.txt'
     with patch('%s.getNumberOfEvents' % MODULE_NAME, new=Mock(return_value=S_ERROR('getNbEvtsFails_test'))), \
@@ -443,7 +510,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     mb.workflow_commons['SystemConfig'] = 'myTestPlatform'
     mb.workflow_commons['StartFrom'] = 94
     mb.workflow_commons['NbOfEvts'] = 458
-    mb.workflow_commons['ParametricInputData'] = [ 'myParamEntry1', 'LFN:someoTherEntry', 'LFN:dontforgetme']
+    mb.workflow_commons['ParametricInputData'] = [ 'myParamEntry1',
+                                                   'LFN:someoTherEntry',
+                                                   'LFN:dontforgetme']
     mb.workflow_commons['InputData'] = 'myinputData1Test;myinputData2Test;myinputData3Test'
     mb.OutputFile = None
     mb.step_commons['OutputFile'] = 'myTestOFile.txt'
@@ -457,7 +526,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.log = log_mock
     self.moba.ignoreapperrors = False
     with patch('%s.ModuleBase.setApplicationStatus' % MODULE_NAME) as appstat_mock:
-      assertDiracSucceedsWith( self.moba.finalStatusReport( 0 ), ' Successful', self ) # Application successful
+      assertDiracSucceedsWith( self.moba.finalStatusReport( 0 ), ' Successful', self )
       appstat_mock.assert_called_once_with( '  Successful' )
       self.assertFalse( log_mock.error.called )
 
@@ -466,7 +535,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.log = log_mock
     self.moba.ignoreapperrors = False
     with patch('%s.ModuleBase.setApplicationStatus' % MODULE_NAME) as appstat_mock:
-      assertDiracFailsWith( self.moba.finalStatusReport( 1 ), '', self ) # Application failed
+      assertDiracFailsWith( self.moba.finalStatusReport( 1 ), '', self )
       appstat_mock.assert_called_once_with( ' exited With Status 1' )
       self.assertTrue( log_mock.error.called )
 
@@ -475,7 +544,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.log = log_mock
     self.moba.ignoreapperrors = True
     with patch('%s.ModuleBase.setApplicationStatus' % MODULE_NAME) as appstat_mock:
-      assertDiracSucceedsWith( self.moba.finalStatusReport( 1 ), ' exited With Status 1', self ) # Application failed
+      assertDiracSucceedsWith( self.moba.finalStatusReport( 1 ), ' exited With Status 1', self )
       appstat_mock.assert_called_once_with( ' exited With Status 1' )
       self.assertTrue( log_mock.error.called )
 
@@ -633,7 +702,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.log = log_mock
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
-      self.assertIsNone( self.moba.redirectLogOutput( 0, 'testevent123 has happened! quick, print it!' ) )
+      self.assertIsNone( self.moba.redirectLogOutput(
+        0, 'testevent123 has happened! quick, print it!' ) )
       if print_mock.getvalue() not in [ 'testevent123 has happened! quick, print it!\n', '' ]:
         self.fail( 'Suitable output not found' )
       self.assertFalse( open_mock.called )

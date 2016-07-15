@@ -33,13 +33,15 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.tmpdir = tempfile.mkdtemp("", dir = "./")
     os.chdir(self.tmpdir)
     self.inputXMLFile = "marlininput.xml"
-    self.expectedOutput = os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/marlinExpectedOutput.xml" )
+    self.expectedOutput = os.path.join( os.getenv("DIRAC"),
+                                        "ILCDIRAC/Testfiles/marlinExpectedOutput.xml" )
     for xmlFile in ("marlininput.xml",
                     "marlinInputSmall.xml",
                     "marlinRecoProd.xml",
                     "marlininputild.xml",
                     "marlininputildNoOver.xml"):
-      shutil.copyfile( os.path.join( os.getenv("DIRAC"), "ILCDIRAC/Testfiles/", xmlFile), xmlFile )
+      shutil.copyfile( os.path.join( os.getenv( "DIRAC" ), "ILCDIRAC/Testfiles/",
+                                     xmlFile ), xmlFile )
     #self.createInputXMLFile()
     self.expectedTree = self.getExpectedXMLTree()
     self.testedTree = None
@@ -72,8 +74,10 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     with optional parameter and optional value comparison
 
     """
-    expected = TestPrepareMarlinXMLFile.findAttributeByName( self.expectedTree.findall('execute/processor'), processorName )
-    tested = TestPrepareMarlinXMLFile.findAttributeByName( self.testedTree.findall('execute/processor'), processorName )
+    expected = TestPrepareMarlinXMLFile.findAttributeByName(
+      self.expectedTree.findall( 'execute/processor' ), processorName )
+    tested = TestPrepareMarlinXMLFile.findAttributeByName(
+      self.testedTree.findall( 'execute/processor' ), processorName )
 
     if expected:
       print "found",processorName, "in expectedProcessors"
@@ -82,7 +86,8 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
 
     return expected == tested
 
-  def checkProcessorParameter( self, processorName, processorParameter, parameterValue):
+  def checkProcessorParameter( self, processorName, processorParameter,
+                               parameterValue):
     """check that the processorParameter has the correct value """
     processors = self.testedTree.findall('processor')
     for proc in processors:
@@ -90,7 +95,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
         parameters = proc.findall('parameter')
         for param in parameters:
           if param.attrib.get('name') == processorParameter:
-            if param.text is not None and param.text.strip() == str(parameterValue):
+            if param.text is not None and param.text.strip() == str( parameterValue ):
               return True
             elif param.attrib.get('value') == str(parameterValue):
               return True
@@ -114,7 +119,7 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
           print "found parameter", parameterName, "with",parameterValue
           return True,None
         else:
-          message = "The parameter "+parameterName+" does not have the value "+parameterValue+" but "+ \
+          message = "The parameter "+parameterName+" does not have the value " +parameterValue+" but "+ \
             repr(param.get('value'))+" or"+repr(param.text)
           return False, message
     return False, "parameter " + parameterName + " not found "
@@ -140,11 +145,16 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
     self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "SILENT" ) )
-    self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
-    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
+    self.assertTrue( self.checkProcessorParameter(
+      "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming",
+                                                   "BackgroundFileNames",
+                                                   "file1\nfile2") )
     ## Make sure these checks are not always true
     self.assertFalse( *self.checkGlobalTag( "Verbosity", "NotSILENT" ) )
-    self.assertFalse( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "NotTheseFiles") )
+    self.assertFalse( self.checkProcessorParameter( "MyOverlayTiming",
+                                                    "BackgroundFileNames",
+                                                    "NotTheseFiles") )
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_initialParametersMissing( self ):
@@ -161,17 +171,23 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
                           dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfilesmall.xml" )
-    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
+    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ),
+                     "Problem with InitDD4hep" )
     self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
     self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
     self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
     self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
-    self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
-    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "NBunchtrain", "0") )
-    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "NumberBackground", "0.0") )
-    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "") )
-    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "mySLCIOOutput.slcio") )
+    self.assertTrue( self.checkProcessorParameter(
+      "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming",
+                                                   "NBunchtrain", "0" ) )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming",
+                                                   "NumberBackground", "0.0" ) )
+    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming",
+                                                   "BackgroundFileNames", "" ) )
+    self.assertTrue( self.checkProcessorParameter(
+      "MyLCIOOutputProcessor", "LCIOOutputFile", "mySLCIOOutput.slcio" ) )
 
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
@@ -189,16 +205,21 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
                           dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprod.xml" )
-    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
+    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ),
+                     "Problem with InitDD4hep" )
     self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )
     self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
     self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
     self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
-    self.assertTrue( self.checkProcessorParameter( "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
-    self.assertTrue( self.checkProcessorParameter( "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
-    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "outputrec.slcio") )
-    self.assertTrue( self.checkProcessorParameter( "DSTOutput", "LCIOOutputFile", "outputdst.slcio") )
+    self.assertTrue( self.checkProcessorParameter(
+      "InitDD4hep", "DD4hepXMLFile", "/cvmfs/monty.python.fr/myDetector.xml") )
+    self.assertTrue( self.checkProcessorParameter(
+      "MyOverlayTiming", "BackgroundFileNames", "file1\nfile2") )
+    self.assertTrue( self.checkProcessorParameter(
+      "MyLCIOOutputProcessor", "LCIOOutputFile", "outputrec.slcio") )
+    self.assertTrue( self.checkProcessorParameter(
+      "DSTOutput", "LCIOOutputFile", "outputdst.slcio") )
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_ildRecoFile( self ):
@@ -223,8 +244,10 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
     self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
-    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames", "file1\nfile2") )
-    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "NSkipEventsRandom", "666") )
+    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "InputFileNames",
+                                                   "file1\nfile2") )
+    self.assertTrue( self.checkProcessorParameter( "BgOverlay", "NSkipEventsRandom",
+                                                   "666") )
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=["file1","file2"] ) )
   def test_createFile_ildRecoFile_NoOver( self ):
@@ -271,7 +294,8 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
     self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )
     self.assertTrue( *self.checkGlobalTag( "GearXMLFile", "gearMyFile.xml" ) )
     self.assertTrue( *self.checkGlobalTag( "Verbosity", "WARNING" ) )
-    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor", "LCIOOutputFile", "") )
+    self.assertTrue( self.checkProcessorParameter( "MyLCIOOutputProcessor",
+                                                   "LCIOOutputFile", "") )
 
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[] ) )
@@ -358,7 +382,8 @@ class TestPrepareMarlinXMLFile( unittest.TestCase ):
                           dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
     self.assertTrue( res['OK'] )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfile.xml" )
-    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
+    self.assertTrue( self.findProcessorInTree( "InitDD4hep" ),
+                     "Problem with InitDD4hep" )
     self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "file1 file2" ) )
     self.assertTrue( *self.checkGlobalTag( "MaxRecordNumber", 501 ) )
     self.assertTrue( *self.checkGlobalTag( "SkipNEvents", 0 ) )

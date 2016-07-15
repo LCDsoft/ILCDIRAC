@@ -26,9 +26,13 @@ class TestProductionData( unittest.TestCase ):
     date_mock.today.return_value = today_mock
     with patch('%s.datetime.date' % MODULE_NAME, new=date_mock), \
          patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='testpre')):
-      result = constructUserLFNs( 1234567, 'mytestVO', 'mytestowner', [ 'myTestOutputFile1.txt', 'myTestOutputFile2.ppt' ], '/mydir/dir//MyTestOutputPath1' )
-      assertDiracSucceedsWith( result, '/mytestVO/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile1.txt', self )
-      assertDiracSucceedsWith( result, '/mytestVO/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile2.ppt', self )
+      result = constructUserLFNs( 1234567, 'mytestVO', 'mytestowner',
+                                  [ 'myTestOutputFile1.txt', 'myTestOutputFile2.ppt' ],
+                                  '/mydir/dir//MyTestOutputPath1' )
+      assertDiracSucceedsWith(
+        result, '/mytestVO/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile1.txt', self )
+      assertDiracSucceedsWith(
+        result, '/mytestVO/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile2.ppt', self )
 
   def test_construct_user_lfns_getvo_fails( self ):
     today_mock = Mock()
@@ -39,9 +43,13 @@ class TestProductionData( unittest.TestCase ):
          patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='testpre')), \
          patch('%s.getVOfromProxyGroup' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_err'))), \
          patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
-      result = constructUserLFNs( 1234567, None, 'mytestowner', [ 'myTestOutputFile1.txt', 'myTestOutputFile2.ppt' ], '/mydir/dir//MyTestOutputPath1' )
-      assertDiracSucceedsWith( result, '/ilc/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile1.txt', self )
-      assertDiracSucceedsWith( result, '/ilc/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile2.ppt', self )
+      result = constructUserLFNs( 1234567, None, 'mytestowner',
+                                  [ 'myTestOutputFile1.txt', 'myTestOutputFile2.ppt' ],
+                                  '/mydir/dir//MyTestOutputPath1' )
+      assertDiracSucceedsWith(
+        result, '/ilc/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile1.txt', self )
+      assertDiracSucceedsWith(
+        result, '/ilc/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile2.ppt', self )
       log_mock.assert_called_once_with( 'Could not get VO from CS, assuming ilc' )
 
   def test_construct_user_lfns_novo( self ):
@@ -52,9 +60,13 @@ class TestProductionData( unittest.TestCase ):
     with patch('%s.datetime.date' % MODULE_NAME, new=date_mock), \
          patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value = 'testpre')), \
          patch('%s.getVOfromProxyGroup' % MODULE_NAME, new=Mock(return_value=S_OK('mytestproxyvo'))):
-      result = constructUserLFNs( 1234567, None, 'mytestowner', [ 'myTestOutputFile1.txt', 'myTestOutputFile2.ppt' ], '/mydir/dir//MyTestOutputPath1' )
-      assertDiracSucceedsWith( result, '/mytestproxyvo/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile1.txt', self)
-      assertDiracSucceedsWith( result, '/mytestproxyvo/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile2.ppt', self )
+      result = constructUserLFNs( 1234567, None, 'mytestowner',
+                                  [ 'myTestOutputFile1.txt', 'myTestOutputFile2.ppt' ],
+                                  '/mydir/dir//MyTestOutputPath1' )
+      assertDiracSucceedsWith(
+        result, '/mytestproxyvo/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile1.txt', self)
+      assertDiracSucceedsWith(
+        result, '/mytestproxyvo/testpre/m/mytestowner/mydir/dir/MyTestOutputPath1/myTestOutputFile2.ppt', self )
 
   def test_construct_user_lfns_no_outputpath( self ):
     today_mock = Mock()
@@ -64,7 +76,8 @@ class TestProductionData( unittest.TestCase ):
     with patch('%s.datetime.date' % MODULE_NAME, new=date_mock), \
          patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value = 'testpre')):
       result = constructUserLFNs( 1234567, 'mytestVO', 'mytestowner', '/ignore/this/myOutputString.md5', None )
-      assertDiracSucceedsWith( result, '/mytestVO/testpre/m/mytestowner/1999_27/1234/1234567/myOutputString.md5', self )
+      assertDiracSucceedsWith(
+        result, '/mytestVO/testpre/m/mytestowner/1999_27/1234/1234567/myOutputString.md5', self )
 
   def test_construct_user_lfns_no_lfns( self ):
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='testpre')), \

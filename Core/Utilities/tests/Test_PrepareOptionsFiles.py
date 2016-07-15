@@ -14,13 +14,16 @@ from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities import PrepareOptionFiles
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareMacFile
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, \
+  assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
+  assertDiracSucceedsWith_equals
 
 __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.PrepareOptionFiles'
 
-#TODO split up in separate classes (if too much time, decent for now. Quite some code duplication but hard to remove + unlikely&not too much effort to change)
+#TODO split up in separate classes (if too much time, decent for now. Quite
+#some code duplication but hard to remove + unlikely&not too much effort to change)
 
 # pylint: disable=no-member, too-many-public-methods
 class TestPrepareOptionsFile( unittest.TestCase ):
@@ -61,7 +64,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       ifile.write( "\n".join(lines) )
       ifile.write( "\n" )
 
-  def createReferenceMacFile(self, startfrom=0, nbevents=10, outputfile=None, detector=None, randomseed=0):
+  def createReferenceMacFile( self, startfrom=0, nbevents=10, outputfile=None,
+                             detector=None, randomseed=0 ):
     """create the input macfile for the test"""
     lines = []
     if detector:
@@ -102,7 +106,8 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     nbevents = 10
     stdhep = "dummy.stdhep"
     self.createReferenceMacFile( startfrom=startfrom, nbevents=nbevents)
-    prepareMacFile(self.inputmac, self.outputmac, stdhep=stdhep, nbevts=nbevents, startfrom=startfrom)
+    prepareMacFile(self.inputmac, self.outputmac, stdhep=stdhep, nbevts=nbevents,
+                   startfrom=startfrom)
     self.assertTrue( self.compareMacFiles() )
 
   def test_prepMacFile2(self):
@@ -112,11 +117,10 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     nbevents = 10
     stdhep = "dummy.stdhep"
     outputfile = "out1.slcio"
-    self.createReferenceMacFile( startfrom=startfrom, nbevents=nbevents, outputfile=outputfile)
+    self.createReferenceMacFile( startfrom=startfrom, nbevents=nbevents,
+                                 outputfile=outputfile)
     prepareMacFile( self.inputmac, self.outputmac, stdhep=stdhep, nbevts=nbevents,
-                    startfrom=startfrom,
-                    outputlcio=outputfile
-                  )
+                    startfrom=startfrom, outputlcio=outputfile )
     self.assertTrue( self.compareMacFiles() )
 
   def test_prepMacFile3(self):
@@ -133,10 +137,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
                                  detector=detector
                                )
     prepareMacFile( self.inputmac, self.outputmac, stdhep=stdhep, nbevts=nbevents,
-                    startfrom=startfrom,
-                    outputlcio=outputfile,
-                    detector=detector
-                  )
+                    startfrom=startfrom, outputlcio=outputfile, detector=detector )
     self.assertTrue( self.compareMacFiles() )
 
 
@@ -147,14 +148,10 @@ class TestPrepareOptionsFile( unittest.TestCase ):
     nbevents = 10
     stdhep = "dummy.stdhep"
     randomseed = 123
-    self.createReferenceMacFile( startfrom=startfrom,
-                                 nbevents=nbevents,
-                                 randomseed=randomseed
-                               )
+    self.createReferenceMacFile( startfrom=startfrom, nbevents=nbevents,
+                                 randomseed=randomseed )
     prepareMacFile( self.inputmac, self.outputmac, stdhep=stdhep, nbevts=nbevents,
-                    startfrom=startfrom,
-                    randomseed=randomseed
-                  )
+                    startfrom=startfrom, randomseed=randomseed )
     self.assertTrue( self.compareMacFiles() )
 
 class TestPrepareOptionsFilePatch( unittest.TestCase ):
@@ -215,7 +212,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewldlibs_nochange( self ):
     reference = os.environ.get('LD_LIBRARY_PATH', '')
-    self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None, None))
+    self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None,
+                                                                 None))
 
   @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
   @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('basetest'), S_ERROR()]))
@@ -223,7 +221,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.os.environ" % MODULE_NAME, {})
   def test_getnewldlibs_noldlibpath( self ):
-    self.assertEquals('basetest/lib', PrepareOptionFiles.getNewLDLibs(None, None, None))
+    self.assertEquals('basetest/lib', PrepareOptionFiles.getNewLDLibs(None,
+                                                                      None,
+                                                                      None))
 
   @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2]))
   @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('bFolder')]))
@@ -232,7 +232,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   def test_getnewpath_cornercase( self ):
     # TODO: Understand method: Currently this method ignores every path except the last one in the list and just ignores if getSoftwareFolder fails
     reference = os.environ['PATH']
-    self.assertEquals("%s:%s" % ('bFolder/bin', reference), PrepareOptionFiles.getNewPATH(None, None, None))
+    self.assertEquals("%s:%s" % ('bFolder/bin', reference),
+                      PrepareOptionFiles.getNewPATH(None, None, None))
 
   @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
   @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
@@ -248,44 +249,63 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
   @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.os.environ" % MODULE_NAME, {})
   def test_getnewpath_nokey( self ):
-    self.assertEquals("testfolder/bin", PrepareOptionFiles.getNewPATH(None, None, None))
+    self.assertEquals("testfolder/bin",
+                      PrepareOptionFiles.getNewPATH(None, None, None))
 
   def test_prepareWhizFile( self ):
-    file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi'], []]
+    file_contents = [ [ 'asdseed123', '314s.sqrtsfe89u', 'n_events143417',
+                        'write_events_file', 'processidprocess_id"123',
+                        '98u243jrui4fg4289fjh2487rh13urhi' ], [] ]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
-      result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
+      result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev",
+                                                     "89741", "50", False, "out")
       assertDiracSucceedsWith_equals( result, True, self )
     tuples = [('in', 'r'), ('out', 'w')]
-    expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi']]
+    expected = [ [], [ ' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n',
+                       ' write_events_file = "typeA" \n', 'processidprocess_id"123',
+                       '98u243jrui4fg4289fjh2487rh13urhi'] ]
     FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
 
   def test_prepareWhizFile_noprocessid( self ):
-    file_contents = [['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id1"', '98u243jrui4fg4289fjh2487rh13urhi'], []]
-    handles = FileUtil.getMultipleReadHandles(file_contents)
+    file_contents = [ [ 'asdseed123', '314s.sqrtsfe89u', 'n_events143417',
+                        'write_events_file', 'processidprocess_id1"',
+                        '98u243jrui4fg4289fjh2487rh13urhi'], [] ]
+    handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as file_mocker:
       file_mocker.side_effect = (h for h in handles)
-      result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", False, "out")
+      result = PrepareOptionFiles.prepareWhizardFile( "in", "typeA", "1tev",
+                                                      "89741", "50", False, "out" )
       assertDiracSucceedsWith_equals( result, False, self )
-    tuples = [('in', 'r'), ('out', 'w')]
-    expected = [[], [' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n', ' write_events_file = "typeA" \n', 'processidprocess_id1"', '98u243jrui4fg4289fjh2487rh13urhi']]
+    tuples = [ ('in', 'r'), ('out', 'w') ]
+    expected = [ [], [ ' seed = 89741\n', ' sqrts = 1tev\n', ' n_events = 50\n',
+                       ' write_events_file = "typeA" \n', 'processidprocess_id1"',
+                       '98u243jrui4fg4289fjh2487rh13urhi' ] ]
     FileUtil.checkFileInteractions( self, file_mocker, tuples, expected, handles )
 
   def test_prepareWhizFile_luminosity( self ):
-    file_contents = ['asdseed123', '314s.sqrtsfe89u', 'n_events143417', 'write_events_file', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi', 'luminosity']
+    file_contents = [ 'asdseed123', '314s.sqrtsfe89u', 'n_events143417',
+                      'write_events_file', 'processidprocess_id"123',
+                      '98u243jrui4fg4289fjh2487rh13urhi', 'luminosity' ]
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
-      result = PrepareOptionFiles.prepareWhizardFile("in", "typeA", "1tev", "89741", "50", "684", "out")
+      result = PrepareOptionFiles.prepareWhizardFile( "in", "typeA", "1tev",
+                                                      "89741", "50", "684",
+                                                      "out")
       assertDiracSucceedsWith_equals( result, True, self )
-    file_mocker.assert_any_call('in', 'r')
-    file_mocker.assert_any_call('out', 'w')
+    file_mocker.assert_any_call( 'in', 'r' )
+    file_mocker.assert_any_call( 'out', 'w' )
     mocker_handle = file_mocker()
-    expected = [' seed = 89741\n', ' sqrts = 1tev\n', 'n_events143417', ' write_events_file = "typeA" \n', 'processidprocess_id"123', '98u243jrui4fg4289fjh2487rh13urhi', ' luminosity = 684\n']
+    expected = [ ' seed = 89741\n', ' sqrts = 1tev\n', 'n_events143417',
+                 ' write_events_file = "typeA" \n', 'processidprocess_id"123',
+                 '98u243jrui4fg4289fjh2487rh13urhi', ' luminosity = 684\n' ]
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
-    assertEqualsImproved(len(expected), mocker_handle.__enter__.return_value.write.call_count, self)
+    assertEqualsImproved( len(expected),
+                          mocker_handle.__enter__.return_value.write.call_count,
+                          self )
 
   def test_prepareWhizFileTemplate( self ):
     parameters = create_testdict()
@@ -293,7 +313,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
     parameters['USERSPECTRUM'] = 'mode1234'
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
-    file_contents += ['write_events_file', 'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82']
+    file_contents += [ 'write_events_file', 'processidaisuydhprocess_id"35',
+                       'efiuhifuoejf', '198734y37hrunffuydj82' ]
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
@@ -302,11 +323,19 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     file_mocker.assert_any_call('in', 'r')
     file_mocker.assert_any_call('out', 'w')
     mocker_handle = file_mocker()
-    expected = [' seed = 135431\n', ' sqrts = 1tev\n', ' beam_recoil = 134\n', ' n_events = 23\n', ' luminosity=13\n', ' keep_initials = JE\n', " particle_name = 'electron_hans'\n", " particle_name = 'proton_peter'\n", ' polarization = plus\n', ' polarization = minus\n', ' USER_spectrum_on = spectrumA\n', ' USER_spectrum_on = SpectrumB\n', ' USER_spectrum_mode = mode1234\n', ' USER_spectrum_mode = -mode1234\n', ' ISR_on = PSDL\n', ' ISR_on = FVikj\n', ' EPA_on = 234\n', ' EPA_on = asf31\n', ' write_events_file = "typeA" \n', 'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82']
+    expected = [' seed = 135431\n', ' sqrts = 1tev\n', ' beam_recoil = 134\n',
+                ' n_events = 23\n', ' luminosity=13\n', ' keep_initials = JE\n',
+                " particle_name = 'electron_hans'\n", " particle_name = 'proton_peter'\n",
+                ' polarization = plus\n', ' polarization = minus\n', ' USER_spectrum_on = spectrumA\n',
+                ' USER_spectrum_on = SpectrumB\n', ' USER_spectrum_mode = mode1234\n',
+                ' USER_spectrum_mode = -mode1234\n', ' ISR_on = PSDL\n', ' ISR_on = FVikj\n',
+                ' EPA_on = 234\n', ' EPA_on = asf31\n', ' write_events_file = "typeA" \n',
+                'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82' ]
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
-    assertEqualsImproved(len(expected), mocker_handle.__enter__.return_value.write.call_count, self)
-
+    assertEqualsImproved( len(expected),
+                          mocker_handle.__enter__.return_value.write.call_count,
+                          self )
 
   def test_prepareWhizFileTemplate_noprocessid( self ):
     parameters = create_testdict()
@@ -314,19 +343,32 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
     parameters['USERSPECTRUM'] = 'mode1234'
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
-    file_contents += ['write_events_file', 'processidaisuydhprocess_id"', 'efiuhifuoejf', '198734y37hrunffuydj82']
+    file_contents += [ 'write_events_file', 'processidaisuydhprocess_id"',
+                       'efiuhifuoejf', '198734y37hrunffuydj82' ]
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
-      result = PrepareOptionFiles.prepareWhizardFileTemplate("in", "typeA", parameters, "out")
+      result = PrepareOptionFiles.prepareWhizardFileTemplate( "in", "typeA",
+                                                              parameters, "out" )
       assertDiracSucceedsWith_equals( result, False, self )
-    file_mocker.assert_any_call('in', 'r')
-    file_mocker.assert_any_call('out', 'w')
+    file_mocker.assert_any_call( 'in', 'r' )
+    file_mocker.assert_any_call( 'out', 'w' )
     mocker_handle = file_mocker()
-    expected = [' seed = 135431\n', ' sqrts = 1tev\n', ' beam_recoil = 134\n', ' n_events = 23\n', ' luminosity=13\n', ' keep_initials = JE\n', " particle_name = 'electron_hans'\n", " particle_name = 'proton_peter'\n", ' polarization = plus\n', ' polarization = minus\n', ' USER_spectrum_on = spectrumA\n', ' USER_spectrum_on = SpectrumB\n', ' USER_spectrum_mode = mode1234\n', ' USER_spectrum_mode = -mode1234\n', ' ISR_on = PSDL\n', ' ISR_on = FVikj\n', ' EPA_on = 234\n', ' EPA_on = asf31\n', ' write_events_file = "typeA" \n', 'processidaisuydhprocess_id"', 'efiuhifuoejf', '198734y37hrunffuydj82']
+    expected = [ ' seed = 135431\n', ' sqrts = 1tev\n', ' beam_recoil = 134\n',
+                 ' n_events = 23\n', ' luminosity=13\n', ' keep_initials = JE\n',
+                 " particle_name = 'electron_hans'\n", " particle_name = 'proton_peter'\n",
+                 ' polarization = plus\n', ' polarization = minus\n',
+                 ' USER_spectrum_on = spectrumA\n', ' USER_spectrum_on = SpectrumB\n',
+                 ' USER_spectrum_mode = mode1234\n', ' USER_spectrum_mode = -mode1234\n',
+                 ' ISR_on = PSDL\n', ' ISR_on = FVikj\n', ' EPA_on = 234\n',
+                 ' EPA_on = asf31\n', ' write_events_file = "typeA" \n',
+                 'processidaisuydhprocess_id"', 'efiuhifuoejf',
+                 '198734y37hrunffuydj82' ]
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
-    assertEqualsImproved(len(expected), mocker_handle.__enter__.return_value.write.call_count, self)
+    assertEqualsImproved( len(expected),
+                          mocker_handle.__enter__.return_value.write.call_count,
+                          self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
   def test_prepareXMLFile( self ):
@@ -336,15 +378,19 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = createXMLTreeForXML().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
+      result = PrepareOptionFiles.prepareXMLFile(
+        'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
+        'outputfile', 'outputREC', 'outputdst', True )
       assertDiracSucceedsWith_equals( result, True, self )
       mytree = TestPrepareOptionsFile.currenttree
       params = mytree.findall('global/parameter')
-      expected_params = ['LCIOInputFiles', 'MaxRecordNumber', 'GearXMLFile', 'GearXMLFile', 'Verbosity']
+      expected_params = [ 'LCIOInputFiles', 'MaxRecordNumber', 'GearXMLFile',
+                          'GearXMLFile', 'Verbosity' ]
       assertEqualsImproved( len(params), len(expected_params), self )
       for param, expected in zip(params, expected_params):
         assertEqualsImproved( param.attrib['name'], expected, self )
-      expected_comments = [ 'input gear changed', 'input gear changed', 'MaxRecordNumber changed', 'input file list changed' ]
+      expected_comments = [ 'input gear changed', 'input gear changed',
+                            'MaxRecordNumber changed', 'input file list changed' ]
       for child in params:
         if child.attrib['name'] == 'GearXMLFile' and 'value' in child.attrib:
           self.assertEquals( child.attrib['value'], 'inputGEAR' )
@@ -370,7 +416,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = createXMLTreeForXML(1).getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
+      result = PrepareOptionFiles.prepareXMLFile(
+        'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
+        'outputfile', 'outputREC', 'outputdst', True )
       assertDiracFailsWith( result, 'could not find any overlay files', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
@@ -382,7 +430,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = createXMLTreeForXML(2).getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
+      result = PrepareOptionFiles.prepareXMLFile(
+        'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
+        'outputfile', 'outputREC', 'outputdst', True )
       assertDiracSucceeds( result, self )
       mytree = TestPrepareOptionsFile.currenttree
       procs = mytree.findall('processor')
@@ -391,12 +441,16 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
         params = proc.findall('parameter')
         self.assertEquals(len(params), 6)
         for i in xrange(0, 3):
-          assertEqualsImproved( params[-1-i].text, 'overlayfile1\nverycomplicated_other_file.txt', self)
+          assertEqualsImproved( params[-1-i].text,
+                                'overlayfile1\nverycomplicated_other_file.txt',
+                                self )
           assertEqualsImproved( proc[i].text, 'Overlay files changed', self )
 
   @patch("%s.ElementTree.parse" % MODULE_NAME, new=Mock(side_effect=IOError))
   def test_prepareXMLFile_parsefails( self ):
-    result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1, 'outputfile', 'outputREC', 'outputdst', True )
+    result = PrepareOptionFiles.prepareXMLFile(
+      'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
+      'outputfile', 'outputREC', 'outputdst', True )
     assertDiracFailsWith( result, 'found exception ', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
@@ -406,8 +460,11 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       """Exchanges the current xmltree object with the one generated by the method"""
       self._root = createXMLTreeForXML().getroot()
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', 1, 1, 'outputfile', 'outputREC', 'outputdst', True )
-      assertDiracFailsWith( result, 'inputslcio is neither string nor list!', self )
+      result = PrepareOptionFiles.prepareXMLFile(
+        'finalxml', 'inputxml', 'inputGEAR', 1, 1, 'outputfile',
+        'outputREC', 'outputdst', True )
+      assertDiracFailsWith( result, 'inputslcio is neither string nor list!',
+                            self )
       assertDiracFailsWith( result, "actual type is <type 'int'>", self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
@@ -418,110 +475,321 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = createXMLTreeForXML(-1).getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareXMLFile( 'finalxml', 'inputxml', 'inputGEAR', 'input slcio file list', 1, '', 'outputREC', 'outputdst', False )
+      result = PrepareOptionFiles.prepareXMLFile(
+        'finalxml', 'inputxml', 'inputGEAR', 'input slcio file list', 1, '',
+        'outputREC', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, True, self )
 
   def test_prepareSteeringFile_full( self ):
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [[], ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "", 41, 2, 561351, 8654]
-    tuples = [('mokkamac.mac', 'w'), ('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [], [
+      "/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+      "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14",
+      "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i",
+      "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    args = [ 'input.intest', 'output.outtest', "TestdetectormodelClicv302",
+             "stdhepfiletest", "", 41, 2, 561351, 8654 ]
+    tuples = [ ( 'mokkamac.mac', 'w' ), ( 'input.intest', 'r' ),
+               ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [['/generator/generator stdhepfiletest\n', '/run/beamOn 41\n'], [], ['9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile mokkamac.mac\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', "13490ielcioFilename12894eu14", '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n']]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [ '/generator/generator stdhepfiletest\n', '/run/beamOn 41\n' ],
+                 [], [ '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                       '#Set detector model to value specified\n',
+                       '/Mokka/init/detectorModel TestdetectormodelClicv302\n',
+                       '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                       '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                       '#Set mac file to the one created on the site\n',
+                       '/Mokka/init/initialMacroFile mokkamac.mac\n',
+                       '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n',
+                       "13490ielcioFilename12894eu14", '#Setting run number, same as seed\n',
+                       '/Mokka/init/mcRunNumber 8654\n',
+                       '#Set event start number to value given as job parameter\n',
+                       '/Mokka/init/startEventNumber 2\n' ] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+    self.helper_test_prepareSteeringFile( file_contents, args, tuples, expected,
+                                          exp_retval )
 
   def test_prepareSteeringFile_nostdhepfile( self ):
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [[], ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "", "", 41, 2, 561351, 8654, None, True]
-    tuples = [('mokkamac.mac', 'w'), ('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [], [ "/Mokka/init/initialMacroFile",
+                            "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                            "asdioj/Mokka/init/randomSeedasdki",
+                            "13490ielcioFilename12894eu14",
+                            "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                            "9d0i3198ji31i", "nextline",
+                            "901-l[doc,193dkdnfba" ], [] ]
+    args = [ 'input.intest', 'output.outtest', "TestdetectormodelClicv302", "",
+             "", 41, 2, 561351, 8654, None, True ]
+    tuples = [ ( 'mokkamac.mac', 'w' ), ( 'input.intest', 'r' ),
+               ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [['/run/beamOn 41\n'], [], ['9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile mokkamac.mac\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', "13490ielcioFilename12894eu14", '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n']]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [ '/run/beamOn 41\n' ], [], [
+      '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+      '#Set detector model to value specified\n',
+      '/Mokka/init/detectorModel TestdetectormodelClicv302\n',
+      '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+      '#Set mac file to the one created on the site\n',
+      '/Mokka/init/initialMacroFile mokkamac.mac\n',
+      '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n',
+      "13490ielcioFilename12894eu14", '#Setting run number, same as seed\n',
+      '/Mokka/init/mcRunNumber 8654\n',
+      '#Set event start number to value given as job parameter\n',
+      '/Mokka/init/startEventNumber 2\n'] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+    self.helper_test_prepareSteeringFile( file_contents, args, tuples,
+                                          expected, exp_retval )
 
   def test_prepareSteeringFile_othercases( self ):
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '1.3', 'Energy' : '186', 'PolarizationB1' : '', 'PolarizationB2' : 'L' }
-    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
-    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [ "/Mokka/init/initialMacroFile",
+                        "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                        "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14",
+                        "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                        "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    metadict = { 'GenProcessID' : 'testgenID', 'CrossSection' : '1.3',
+                 'Energy' : '186', 'PolarizationB1' : '', 'PolarizationB2' : 'L' }
+    args = [ 'input.intest', 'output.outtest', "TestdetectormodelClicv302",
+             "stdhepfiletest", "testmacname", 41, 2, 561351, 8654,
+             "testprocessid", False, "testslciooutput.te", metadict ]
+    tuples = [ ('input.intest', 'r' ), ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n", "/Mokka/init/lcioEventParameter float Energy 186.0\n", "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n", "/Mokka/init/lcioEventParameter float Pol_em -1.0\n"]]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [], [ '8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i',
+                       '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                       '#Set detector model to value specified\n',
+                       '/Mokka/init/detectorModel TestdetectormodelClicv302\n',
+                       '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                       '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                       '#Set mac file to the one created on the site\n',
+                       '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n',
+                       '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n',
+                       '/Mokka/init/mcRunNumber 8654\n',
+                       '#Set event start number to value given as job parameter\n',
+                       '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n',
+                       '/Mokka/init/lcioFilename testslciooutput.te\n',
+                       "#Set processID as event parameter\n",
+                       "/Mokka/init/lcioEventParameter string Process testprocessid\n",
+                       "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n",
+                       "/Mokka/init/lcioEventParameter float Energy 186.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_em -1.0\n" ] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+    self.helper_test_prepareSteeringFile( file_contents, args, tuples,
+                                          expected, exp_retval )
 
   def test_prepareSteeringFile_polarization1( self ):
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '9.2', 'Energy' : '-91', 'PolarizationB1' : 'R', 'PolarizationB2' : '' }
-    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, '', False, "testslciooutput.te", metadict ]
-    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [ "/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                        "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14",
+                        "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                        "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    metadict = { 'GenProcessID' : 'testgenID', 'CrossSection' : '9.2',
+                 'Energy' : '-91', 'PolarizationB1' : 'R', 'PolarizationB2' : '' }
+    args = [ 'input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest",
+             "testmacname", 41, 2, 561351, 8654, '', False, "testslciooutput.te", metadict ]
+    tuples = [ ( 'input.intest', 'r' ), ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testgenID\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 9.2\n", "/Mokka/init/lcioEventParameter float Energy -91.0\n", "/Mokka/init/lcioEventParameter float Pol_ep 1.0\n", "/Mokka/init/lcioEventParameter float Pol_em 0.0\n"]]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [], [ '8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i',
+                       '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                       '#Set detector model to value specified\n',
+                       '/Mokka/init/detectorModel TestdetectormodelClicv302\n',
+                       '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                       '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                       '#Set mac file to the one created on the site\n',
+                       '/Mokka/init/initialMacroFile testmacname\n',
+                       '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n',
+                       '#Setting run number, same as seed\n',
+                       '/Mokka/init/mcRunNumber 8654\n',
+                       '#Set event start number to value given as job parameter\n',
+                       '/Mokka/init/startEventNumber 2\n',
+                       '#Set outputfile name to job specified\n',
+                       '/Mokka/init/lcioFilename testslciooutput.te\n',
+                       "#Set processID as event parameter\n",
+                       "/Mokka/init/lcioEventParameter string Process testgenID\n",
+                       "/Mokka/init/lcioEventParameter float CrossSection_fb 9.2\n",
+                       "/Mokka/init/lcioEventParameter float Energy -91.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_ep 1.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_em 0.0\n" ] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+    self.helper_test_prepareSteeringFile( file_contents, args, tuples, expected,
+                                          exp_retval )
 
 
   def test_prepareSteeringFile_polarization2( self ):
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '5.7', 'Energy' : '0', 'PolarizationB1' : 'L', 'PolarizationB2' : 'R' }
-    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
-    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [ "/Mokka/init/initialMacroFile",
+                        "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                        "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14",
+                        "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                        "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    metadict = { 'GenProcessID' : 'testgenID', 'CrossSection' : '5.7', 'Energy' : '0',
+                 'PolarizationB1' : 'L', 'PolarizationB2' : 'R' }
+    args = [ 'input.intest', 'output.outtest', "TestdetectormodelClicv302",
+             "stdhepfiletest", "testmacname", 41, 2, 561351, 8654,
+             "testprocessid", False, "testslciooutput.te", metadict ]
+    tuples = [ ( 'input.intest', 'r' ), ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 5.7\n", "/Mokka/init/lcioEventParameter float Energy 0.0\n", "/Mokka/init/lcioEventParameter float Pol_ep -1.0\n", "/Mokka/init/lcioEventParameter float Pol_em 1.0\n" ]]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i',
+                      '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                      '#Set detector model to value specified\n',
+                      '/Mokka/init/detectorModel TestdetectormodelClicv302\n',
+                      '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                      '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                      '#Set mac file to the one created on the site\n',
+                      '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n',
+                      '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n',
+                      '/Mokka/init/mcRunNumber 8654\n',
+                      '#Set event start number to value given as job parameter\n',
+                      '/Mokka/init/startEventNumber 2\n',
+                      '#Set outputfile name to job specified\n',
+                      '/Mokka/init/lcioFilename testslciooutput.te\n',
+                      "#Set processID as event parameter\n",
+                      "/Mokka/init/lcioEventParameter string Process testprocessid\n",
+                      "/Mokka/init/lcioEventParameter float CrossSection_fb 5.7\n",
+                      "/Mokka/init/lcioEventParameter float Energy 0.0\n",
+                      "/Mokka/init/lcioEventParameter float Pol_ep -1.0\n",
+                      "/Mokka/init/lcioEventParameter float Pol_em 1.0\n" ] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
-
+    self.helper_test_prepareSteeringFile( file_contents, args, tuples, expected,
+                                          exp_retval )
 
   def test_prepareSteeringFile_polarization3( self ):
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '0.0', 'Energy' : '3.7', 'PolarizationB1' : 'L13', 'PolarizationB2' : 'R98' }
-    args = ['input.intest', 'output.outtest', "TestdetectormodelClicv302", "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
-    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [ "/Mokka/init/initialMacroFile",
+                        "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                        "asdioj/Mokka/init/randomSeedasdki",
+                        "13490ielcioFilename12894eu14",
+                        "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                        "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    metadict = { 'GenProcessID' : 'testgenID', 'CrossSection' : '0.0',
+                 'Energy' : '3.7', 'PolarizationB1' : 'L13',
+                 'PolarizationB2' : 'R98' }
+    args = [ 'input.intest', 'output.outtest', "TestdetectormodelClicv302",
+             "stdhepfiletest", "testmacname", 41, 2, 561351, 8654,
+             "testprocessid", False, "testslciooutput.te", metadict ]
+    tuples = [ ( 'input.intest', 'r' ), ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set detector model to value specified\n', '/Mokka/init/detectorModel TestdetectormodelClicv302\n', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 0.0\n", "/Mokka/init/lcioEventParameter float Energy 3.7\n", "/Mokka/init/lcioEventParameter float Pol_ep -0.13\n", "/Mokka/init/lcioEventParameter float Pol_em 0.98\n"]]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [], [ '8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i',
+                       '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                       '#Set detector model to value specified\n',
+                       '/Mokka/init/detectorModel TestdetectormodelClicv302\n',
+                       '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                       '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                       '#Set mac file to the one created on the site\n',
+                       '/Mokka/init/initialMacroFile testmacname\n',
+                       '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n',
+                       '#Setting run number, same as seed\n',
+                       '/Mokka/init/mcRunNumber 8654\n',
+                       '#Set event start number to value given as job parameter\n',
+                       '/Mokka/init/startEventNumber 2\n',
+                       '#Set outputfile name to job specified\n',
+                       '/Mokka/init/lcioFilename testslciooutput.te\n',
+                       "#Set processID as event parameter\n",
+                       "/Mokka/init/lcioEventParameter string Process testprocessid\n",
+                       "/Mokka/init/lcioEventParameter float CrossSection_fb 0.0\n",
+                       "/Mokka/init/lcioEventParameter float Energy 3.7\n",
+                       "/Mokka/init/lcioEventParameter float Pol_ep -0.13\n",
+                       "/Mokka/init/lcioEventParameter float Pol_em 0.98\n"]]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
-
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected,
+                                         exp_retval)
 
   def test_prepareSteeringFile_outputlcio_det_model1( self ):
     # Tests with outputlcio set and detmodel not set
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '1.3', 'Energy' : '186', 'PolarizationB1' : '', 'PolarizationB2' : 'L' }
-    args = ['input.intest', 'output.outtest', '', "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, "testslciooutput.te", metadict ]
-    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [ "/Mokka/init/initialMacroFile",
+                        "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                        "asdioj/Mokka/init/randomSeedasdki",
+                        "13490ielcioFilename12894eu14",
+                        "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                        "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    metadict = { 'GenProcessID' : 'testgenID', 'CrossSection' : '1.3',
+                 'Energy' : '186', 'PolarizationB1' : '', 'PolarizationB2' : 'L' }
+    args = [ 'input.intest', 'output.outtest', '', "stdhepfiletest",
+             "testmacname", 41, 2, 561351, 8654, "testprocessid", False,
+             "testslciooutput.te", metadict ]
+    tuples = [ ( 'input.intest', 'r' ), ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [[], ['8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', '#Set outputfile name to job specified\n', '/Mokka/init/lcioFilename testslciooutput.te\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n", "/Mokka/init/lcioEventParameter float Energy 186.0\n", "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n", "/Mokka/init/lcioEventParameter float Pol_em -1.0\n"]]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [], [ '8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i',
+                       '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                       '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                       '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                       '#Set mac file to the one created on the site\n',
+                       '/Mokka/init/initialMacroFile testmacname\n',
+                       '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n',
+                       '#Setting run number, same as seed\n',
+                       '/Mokka/init/mcRunNumber 8654\n',
+                       '#Set event start number to value given as job parameter\n',
+                       '/Mokka/init/startEventNumber 2\n',
+                       '#Set outputfile name to job specified\n',
+                       '/Mokka/init/lcioFilename testslciooutput.te\n',
+                       "#Set processID as event parameter\n",
+                       "/Mokka/init/lcioEventParameter string Process testprocessid\n",
+                       "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n",
+                       "/Mokka/init/lcioEventParameter float Energy 186.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_em -1.0\n" ] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
-
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples,
+                                         expected, exp_retval)
 
   def test_prepareSteeringFile_outputlcio_det_model2( self ):
     # Tests with outputlcio set and detmodel not set
     # Any open() call removes the first element of this list and uses it as its content
-    file_contents = [ ["/Mokka/init/initialMacroFile", "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf", "asdioj/Mokka/init/randomSeedasdki", "13490ielcioFilename12894eu14", "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i", "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba"], []]
-    metadict = {'GenProcessID' : 'testgenID', 'CrossSection' : '1.3', 'Energy' : '186', 'PolarizationB1' : '', 'PolarizationB2' : 'L' }
-    args = ['input.intest', 'output.outtest', '', "stdhepfiletest", "testmacname", 41, 2, 561351, 8654, "testprocessid", False, '', metadict ]
-    tuples = [('input.intest', 'r'), ('output.outtest', 'w')]
+    file_contents = [ [ "/Mokka/init/initialMacroFile",
+                        "ewoqijfoifemf/Mokka/init/BatchModeadsifkojmf",
+                        "asdioj/Mokka/init/randomSeedasdki",
+                        "13490ielcioFilename12894eu14",
+                        "8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i",
+                        "9d0i3198ji31i", "nextline", "901-l[doc,193dkdnfba" ], [] ]
+    metadict = { 'GenProcessID' : 'testgenID',
+                 'CrossSection' : '1.3', 'Energy' : '186', 'PolarizationB1' : '',
+                 'PolarizationB2' : 'L' }
+    args = [ 'input.intest', 'output.outtest', '', "stdhepfiletest",
+             "testmacname", 41, 2, 561351, 8654, "testprocessid", False, '',
+             metadict ]
+    tuples = [ ( 'input.intest', 'r' ), ( 'output.outtest', 'w' ) ]
 
-    # expected[i] is the expected output to file i (files are numbered in the order they are opened in the method that is being tested)
-    expected = [[], ['13490ielcioFilename12894eu14', '8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i', '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba', '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n', '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n', '#Set mac file to the one created on the site\n', '/Mokka/init/initialMacroFile testmacname\n', '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n', '#Setting run number, same as seed\n', '/Mokka/init/mcRunNumber 8654\n', '#Set event start number to value given as job parameter\n', '/Mokka/init/startEventNumber 2\n', "#Set processID as event parameter\n", "/Mokka/init/lcioEventParameter string Process testprocessid\n", "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n", "/Mokka/init/lcioEventParameter float Energy 186.0\n", "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n", "/Mokka/init/lcioEventParameter float Pol_em -1.0\n"]]
+    # expected[i] is the expected output to file i (files are numbered in the
+    # order they are opened in the method that is being tested)
+    expected = [ [], [ '13490ielcioFilename12894eu14',
+                       '8r9f2u4jikmelf8/Mokka/init/detectorModelasdiojuaf934i',
+                       '9d0i3198ji31i', 'nextline', '901-l[doc,193dkdnfba',
+                       '#Set debug level to 1\n', '/Mokka/init/printLevel 1\n',
+                       '#Set batch mode to true\n', '/Mokka/init/BatchMode true\n',
+                       '#Set mac file to the one created on the site\n',
+                       '/Mokka/init/initialMacroFile testmacname\n',
+                       '#Setting random seed\n', '/Mokka/init/randomSeed 561351\n',
+                       '#Setting run number, same as seed\n',
+                       '/Mokka/init/mcRunNumber 8654\n',
+                       '#Set event start number to value given as job parameter\n',
+                       '/Mokka/init/startEventNumber 2\n',
+                       "#Set processID as event parameter\n",
+                       "/Mokka/init/lcioEventParameter string Process testprocessid\n",
+                       "/Mokka/init/lcioEventParameter float CrossSection_fb 1.3\n",
+                       "/Mokka/init/lcioEventParameter float Energy 186.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_ep 0.0\n",
+                       "/Mokka/init/lcioEventParameter float Pol_em -1.0\n" ] ]
     exp_retval = S_OK(True)
-    self.helper_test_prepareSteeringFile(file_contents, args, tuples, expected, exp_retval)
+    self.helper_test_prepareSteeringFile(file_contents, args, tuples,
+                                         expected, exp_retval)
 
-  def helper_test_prepareSteeringFile( self, file_contents, args, expected_file_tuples, expected, expected_return_value ):
+  def helper_test_prepareSteeringFile( self, file_contents, args,
+                                       expected_file_tuples, expected,
+                                       expected_return_value ):
     """Helper function to test prepareSteeringFile.
 
     :param list file_contents: List of lists containing the mocked file contents. i-th element is a list whose j-th element is the j-th line of the file it represents. No \n necessary
@@ -538,13 +806,15 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       file_mocker.side_effect = (h for h in handles)
       args.extend([None] * (13-len(args)))
       result = PrepareOptionFiles.prepareSteeringFile(*args)
-      FileUtil.checkFileInteractions( self, file_mocker, expected_file_tuples, expected, handles )
+      FileUtil.checkFileInteractions( self, file_mocker, expected_file_tuples,
+                                      expected, handles )
     assertEqualsImproved(expected_return_value, result, self)
 
   current_tree = None
 
   #@patch("ILCDIRAC.Core.Utilities.PrepareOptionFiles.open", mock_open(), create=True)
-  # For ease of testing, assert library method write() is correct and instead traverse the xml tree to check for correctness
+  # For ease of testing, assert library method write() is correct and
+  # instead traverse the xml tree to check for correctness
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.allowedBkg" % MODULE_NAME, new=Mock(return_value=S_OK()))
@@ -569,11 +839,13 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     outputfile = 'outputfile'
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, outputfile, 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list,
+        cachedir, outputfile, 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       # clear is called
-      assertEqualsXml(current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
+      assertEqualsXml(current_tree.find('inputFiles'), ET.Element('inputFiles'), self )
       # element is created for each entry in slcio list
       xml_file_list = current_tree.findall('inputFiles/file')
       assertEqualsImproved(len(slcio_list), len(xml_file_list), self)
@@ -581,7 +853,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
         expected_element = ET.Element('file')
         expected_element.text = slcio_string
         assertEqualsXml(treeelem, expected_element, self)
-      assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self)
+      assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self )
       xml_jar_list = current_tree.findall('classpath/jar')
       assertEqualsImproved(len(jar_list), len(xml_jar_list), self)
       for (jar_string, treeelem) in zip(jar_list, xml_jar_list):
@@ -631,7 +903,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     outputrec = 'outputrec'
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', outputrec, 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list,
+        cachedir, 'outputfile', outputrec, 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
@@ -663,7 +937,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     cachedir = 'cachedir'
     outputdst = 'outputdst'
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', 'outputrec', outputdst, False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list,
+        cachedir, 'outputfile', 'outputrec', outputdst, False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
@@ -691,7 +967,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     amEvents = 1
     cachedir = 'cachedir'
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', '', '', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list,
+        cachedir, 'outputfile', '', '', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       ex = current_tree.find('execute/driver')
@@ -712,7 +990,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     amEvents = 1
     cachedir = 'cachedir'
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', '', '', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list,
+        cachedir, 'outputfile', '', '', False )
       assertDiracSucceedsWith_equals( result, 'LCSIM', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
@@ -735,10 +1015,13 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_2().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 0, 'trackstrategy', ['list of slcio files'], [], '', 'outputfile', 'outputrec', 'outputdst', True )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 0, 'trackstrategy', ['list of slcio files'],
+        [], '', 'outputfile', 'outputrec', 'outputdst', True )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       # New Elem is created
-      assertEqualsXml(TestPrepareOptionsFile.current_tree.find('inputFiles'), ET.Element('inputFiles'), self)
+      assertEqualsXml(TestPrepareOptionsFile.current_tree.find('inputFiles'),
+                      ET.Element('inputFiles'), self)
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[]))
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
@@ -756,14 +1039,20 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     cachedir = 'cachedir'
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list, cachedir, 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', amEvents, trackstrat, slcio_list, jar_list,
+        cachedir, 'outputfile', 'outputrec', 'outputdst', False )
       assertDiracFailsWith( result, 'could not find any overlay files', self )
       # check classpath elem is cleared
-      assertEqualsXml(TestPrepareOptionsFile.current_tree.find('classpath'), ET.Element('classpath'), self)
+      assertEqualsXml(TestPrepareOptionsFile.current_tree.find('classpath'),
+                      ET.Element('classpath'), self)
 
   def test_prepareLCSIM_ioerr( self ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, side_effect=IOError('')):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'],
+        ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec',
+        'outputdst', False )
       assertDiracFailsWith( result, 'found exception', self )
 
   def test_prepareLCSIM_inputlistempty( self ):
@@ -773,7 +1062,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_1().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', [], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputdst', 'outputrec', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy', [],
+        ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputdst',
+        'outputrec', False )
       assertDiracFailsWith( result, 'empty input file list', self )
 
   def test_prepareLCSIM_emptytree( self ):
@@ -783,7 +1075,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_3().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'], ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files'],
+        ['list of', 'jar files'], 'cachedir', 'outputfile', 'outputrec',
+        'outputdst', False )
       assertDiracFailsWith( result, 'invalid lcsim file structure', self )
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
@@ -796,7 +1091,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_9().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', True )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy',
+        ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst', True )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('numberOfEvents')
@@ -827,10 +1125,14 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_10().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, '', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, '',
+        [ 'list of slcio files', 'anotherEntry.txt' ], [], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
-      assertEqualsImproved(current_tree.find("drivers/driver/eventInterval").text, '135851', self)
+      assertEqualsImproved(current_tree.find("drivers/driver/eventInterval").text,
+                           '135851', self)
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
@@ -842,7 +1144,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_11().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy',
+        [ 'list of slcio files', 'anotherEntry.txt' ], [], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
@@ -863,7 +1168,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_12().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst' , False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy',
+        [ 'list of slcio files', 'anotherEntry.txt' ], [], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst' , False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
@@ -873,7 +1181,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
           assertEqualsImproved(d.find('eventInterval').text, '1', self)
           flag = True
       self.assertTrue(flag)
-      assertEqualsImproved(current_tree.find('execute/driver').attrib['name'], 'evtMarker', self)
+      assertEqualsImproved(current_tree.find('execute/driver').attrib['name'],
+                           'evtMarker', self)
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
@@ -885,10 +1194,14 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_4().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], ['jarfile'], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy',
+        [ 'list of slcio files', 'anotherEntry.txt' ], [ 'jarfile' ], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
       current_tree = TestPrepareOptionsFile.current_tree
-      assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'), self)
+      assertEqualsXml(current_tree.find('classpath'), ET.Element('classpath'),
+                      self)
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
@@ -900,9 +1213,12 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_1().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy',
+        [ 'list of slcio files', 'anotherEntry.txt' ], [], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst', False )
       self.assertFalse(result['OK'])
-      assertEqualsImproved('bkgtesterror', result['Message'], self)
+      assertEqualsImproved('bkgtesterror', result['Message'], self )
 
   @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=['overlaytestfile1', 'testfile2.txt']))
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
@@ -914,7 +1230,10 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_lcsim_13().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      result = PrepareOptionFiles.prepareLCSIMFile( 'inputlcsim', 'outputlcsim', 1, 'trackstrategy', ['list of slcio files', 'anotherEntry.txt'], [], 'cachedir', 'outputfile', 'outputrec', 'outputdst', False )
+      result = PrepareOptionFiles.prepareLCSIMFile(
+        'inputlcsim', 'outputlcsim', 1, 'trackstrategy',
+        [ 'list of slcio files', 'anotherEntry.txt' ], [], 'cachedir',
+        'outputfile', 'outputrec', 'outputdst', False )
       assertDiracSucceedsWith_equals( result, 'testtext', self )
 
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
@@ -925,12 +1244,13 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_salad_1().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      self.assertTrue(PrepareOptionFiles.prepareTomatoSalad('inputxml', 'outputxml', 'inputslcio', 'ofs', 'coll')['OK'])
+      self.assertTrue(PrepareOptionFiles.prepareTomatoSalad(
+        'inputxml', 'outputxml', 'inputslcio', 'ofs', 'coll' )['OK'] )
       current_tree = TestPrepareOptionsFile.current_tree
       it = current_tree.find('global').iter()
       it.next()
-      assertEqualsXml(it.next(), ET.Comment("input file list changed"), self)
-      assertEqualsXml(it.next(), ET.Comment("input file list changed"), self)
+      assertEqualsXml( it.next(), ET.Comment("input file list changed"), self )
+      assertEqualsXml( it.next(), ET.Comment("input file list changed"), self )
       for pa in current_tree.findall('global/parameter'):
         if 'name' in pa.attrib and pa.attrib['name'] == 'LCIOInputFiles':
           assertEqualsImproved(pa.text, 'inputslcio', self)
@@ -950,16 +1270,19 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       self._root = xml_salad_2().getroot()
 
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
-      self.assertTrue(PrepareOptionFiles.prepareTomatoSalad('inputxml', 'outputxml', 'inputslcio', 'outputFile', 'collection')['OK'])
+      self.assertTrue(PrepareOptionFiles.prepareTomatoSalad(
+        'inputxml', 'outputxml', 'inputslcio', 'outputFile', 'collection' )['OK'] )
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('parameter', name='LCIOInputFiles')
       expected_element.text = 'inputslcio'
-      assertEqualsXml(current_tree.findall('global/parameter')[-1], expected_element, self)
+      assertEqualsXml(current_tree.findall('global/parameter')[-1],
+                      expected_element, self)
 
   @patch("%s.ElementTree.write" % MODULE_NAME, new=Mock(return_value=True))
   def test_prepareTomato_parsefails( self ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=Mock(side_effect=IOError(''))):
-      result = PrepareOptionFiles.prepareTomatoSalad('inputxml', 'outputxml', 'inputslcio', 'outputFile', 'collection')
+      result = PrepareOptionFiles.prepareTomatoSalad(
+        'inputxml', 'outputxml', 'inputslcio', 'outputFile', 'collection' )
       self.assertFalse(result['OK'])
       self.assertIn('found exception', result['Message'].lower())
 
@@ -976,13 +1299,16 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified), \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
       mo.side_effect = (h for h in handles)
-      self.assertTrue(PrepareOptionFiles.prepareTomatoSalad(None, 'outputxml', 'inputslcio', 'outputFile', 'collection')['OK'])
+      self.assertTrue(PrepareOptionFiles.prepareTomatoSalad(
+        None, 'outputxml', 'inputslcio', 'outputFile', 'collection' )['OK'] )
       current_tree = TestPrepareOptionsFile.current_tree
       expected_element = ET.Element('parameter', name='LCIOInputFiles')
       expected_element.text = 'inputslcio'
-      assertEqualsXml(current_tree.findall('global/parameter')[-1], expected_element, self)
+      assertEqualsXml(current_tree.findall('global/parameter')[-1],
+                      expected_element, self)
       expected_tuples = [('default.xml', 'w')]
-      FileUtil.checkFileInteractions( self, mo, expected_tuples, expected, handles )
+      FileUtil.checkFileInteractions( self, mo, expected_tuples, expected,
+                                      handles )
 
 def createXMLTreeForXML( flag = 0 ):
   """Creates a XML Tree to test prepareXMLFile()"""
@@ -1123,7 +1449,8 @@ def createXMLTreeForLCSIM( flags ):
     cd.text='t'
 
   dr = ET.SubElement(root, 'drivers')
-  dri = ET.SubElement(dr, 'driver', type='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper')
+  dri = ET.SubElement(dr, 'driver',
+                      type='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper')
   ET.SubElement(dri, 'strategyFile', testarg1='deletemepls', testparam='143')
   if not flags['with_control_subelems'] and not flags['with_root_execute'] and not flags['with_evt_interval']:
     ev = ET.SubElement(dri, 'eventInterval')
@@ -1137,7 +1464,8 @@ def createXMLTreeForLCSIM( flags ):
     ET.SubElement(co, 'numberOfEvents')
     ET.SubElement(dr, 'driver', type='org.lcsim.job.EventMarkerDriver')
 
-  dri1 = ET.SubElement(dr, 'driver', type='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper')
+  dri1 = ET.SubElement(dr, 'driver',
+                       type='org.lcsim.recon.tracking.seedtracker.steeringwrappers.SeedTrackerWrapper')
   ET.SubElement(dri1, 'strategyFile')
   ma = ET.SubElement(dri1, 'marker')
   ma.text='testtext'
@@ -1148,15 +1476,18 @@ def createXMLTreeForLCSIM( flags ):
   ET.SubElement(dri2, 'overlayFiles')
 
   ET.SubElement(dr, 'driver')
-  dri4 = ET.SubElement(dr, 'driver', type='org.lcsim.util.loop.LCIODriver', name='Writer')
+  dri4 = ET.SubElement(dr, 'driver', type='org.lcsim.util.loop.LCIODriver',
+                       name='Writer')
   ET.SubElement(dri4, 'outputFilePath', testparam1='1', asd='123')
 
   if flags['use_rec_writer']:
-    dri5 = ET.SubElement(dr, 'driver', type='org.lcsim.util.loop.LCIODriver', name='RECWriter')
+    dri5 = ET.SubElement(dr, 'driver', type='org.lcsim.util.loop.LCIODriver',
+                         name='RECWriter')
     ET.SubElement(dri5, 'outputFilePath', testparam1='1', asd='123')
 
   if flags['use_dst_writer']:
-    dri6 = ET.SubElement(dr, 'driver', type='org.lcsim.util.loop.LCIODriver', name='DSTWriter')
+    dri6 = ET.SubElement(dr, 'driver', type='org.lcsim.util.loop.LCIODriver',
+                         name='DSTWriter')
     ET.SubElement(dri6, 'outputFilePath', testparam1='1', asd='123')
 
   if flags['no_writer']:

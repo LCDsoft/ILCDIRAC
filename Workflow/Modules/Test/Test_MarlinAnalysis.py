@@ -6,7 +6,9 @@ import unittest
 import os
 from mock import mock_open, call, patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
+  assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
+  assertDiracSucceedsWith, assertDiracSucceedsWith_equals
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 from DIRAC import S_OK, S_ERROR
 
@@ -196,9 +198,9 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/curdir')):
       result = self.marAna.runIt()
       assertDiracFailsWith( result, 'could not find steering file', self )
-      assertEqualsImproved( log_mock.warn.mock_calls,
-                            [ call('Could not copy PandoraSettings.xml, exception: shutil_test_fail') ],
-                            self )
+      assertEqualsImproved( log_mock.warn.mock_calls, [
+        call('Could not copy PandoraSettings.xml, exception: shutil_test_fail')
+      ], self )
       log_mock.error.assert_called_once_with( "Steering file not defined, shouldn't happen!" )
       copy_mock.assert_called_once_with( '/steeringdir/PandoraSettings.xml',
                                          '/test/curdir/PandoraSettings.xml' )
@@ -225,8 +227,8 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/curdir')):
       result = self.marAna.runIt()
       assertDiracFailsWith( result, 'could not find steering file', self )
-      assertEqualsImproved( log_mock.warn.mock_calls,
-                            [ call('Could not find the steering file directory', 'mytesterr') ], self )
+      assertEqualsImproved( log_mock.warn.mock_calls, [
+        call('Could not find the steering file directory', 'mytesterr') ], self )
       log_mock.error.assert_called_once_with( "Steering file not defined, shouldn't happen!" )
       self.assertFalse( copy_mock.called )
 
@@ -254,11 +256,11 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       result = self.marAna.getEnvScript(None, None, None)
     assertDiracSucceedsWith( result, '/MarlinEnv.sh', self )
-    check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH\n',
-                        'declare -x ROOTSYS=aFolder/ROOT\n',
-                        'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n',
-                        "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n",
-                        "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
+    check_in_script = [
+      'declare -x PATH=aFolder/Executable:$PATH\n', 'declare -x ROOTSYS=aFolder/ROOT\n',
+      'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n',
+      "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n",
+      "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
     file_mocker.assert_called_with('MarlinEnv.sh', 'w')
     mocker_handle = file_mocker()
     for expected in check_in_script:
@@ -412,11 +414,12 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
       result = self.marAna.getEnvScript(None, None, None)
     assertDiracSucceedsWith( result, '/MarlinEnv.sh', self )
-    check_in_script = [ 'declare -x PATH=aFolder/Executable:$PATH\n',
-                        'declare -x ROOTSYS=aFolder/ROOT\n',
-                        'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n',
-                        "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n",
-                        "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
+    check_in_script = [
+      'declare -x PATH=aFolder/Executable:$PATH\n',
+      'declare -x ROOTSYS=aFolder/ROOT\n',
+      'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:aFolder/LDLibs:bFolder\n',
+      "declare -x MARLIN_DLL=aFolder/MARLIN_DLL/testdir:\n",
+      "declare -x PANDORASETTINGS=aFolder/Settings/PandoraSettings.xml" ]
     file_mocker.assert_called_with('MarlinEnv.sh', 'w')
     mocker_handle = file_mocker()
     for expected in check_in_script:
@@ -546,7 +549,8 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       open_mock.side_effect = (h for h in handles)
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
-      expected_calls = [[ call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ]]
+      expected_calls = [ [
+        call("#!/bin/bash\n"), call('source some_path\necho $MARLIN_DLL') ] ]
       assertEqualsImproved( len(expected_calls), len(handles), self )
       for (expected, handle) in zip( expected_calls, handles):
         assertEqualsImproved( handle.__enter__().write.mock_calls, expected, self )
@@ -658,10 +662,10 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
         call('exit $appstatus\n') ]
       assertEqualsImproved( open_mock.write.mock_calls, expected_calls, self )
       remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
-      assertEqualsImproved( exists_mock.mock_calls,
-                            [ call('Marlin_VT_Run_935.sh'), call('./lib/lddlib'),
-                              call('./lib/marlin_dll'), call('./lib/lddlib'),
-                              call('myXML.test'), call('testLog.mymarlin')],
+      assertEqualsImproved( exists_mock.mock_calls, [
+        call('Marlin_VT_Run_935.sh'), call('./lib/lddlib'),
+        call('./lib/marlin_dll'), call('./lib/lddlib'), call('myXML.test'),
+        call('testLog.mymarlin') ],
                             self )
       shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"',
                                           callbackFunction=self.marAna.redirectLogOutput,
