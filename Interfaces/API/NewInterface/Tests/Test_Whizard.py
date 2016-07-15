@@ -3,21 +3,18 @@ Tests for the Whizard module
 
 """
 import unittest
-import os
 from mock import mock_open, patch, call, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard
-from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsXml, \
-  assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-  assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
+  assertDiracFailsWith, assertDiracSucceeds
 
 __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard'
 
-#pylint: disable=protected-access
+#pylint: disable=protected-access,too-many-public-methods
 class TestWhizard( unittest.TestCase ):
   """ Tests the Whizard class """
 
@@ -325,12 +322,31 @@ class TestWhizard( unittest.TestCase ):
     assertDiracSucceeds( self.whiz._checkConsistency(), self )
 
   def test_applicationmodule( self ):
-    pass
+    result = self.whiz._applicationModule()
+    self.assertIsNotNone( result )
 
+  def test_applicationmodulevalues( self ):
+    module_mock = Mock()
+    self.whiz._applicationModuleValues( module_mock )
+    self.assertTrue( module_mock.setValue.called )
+    assertEqualsImproved( len(module_mock.mock_calls), 11, self )
 
+  def test_userjobmodules( self ):
+    module_mock = Mock()
+    assertDiracSucceeds( self.whiz._userjobmodules( module_mock ), self )
 
+  def test_prodjobmodules( self ):
+    module_mock = Mock()
+    assertDiracSucceeds( self.whiz._prodjobmodules( module_mock ), self )
 
+  def test_userjobmodules_fails( self ):
+    with patch('%s._setUserJobFinalization' % MODULE_NAME, new=Mock(return_value=S_OK('something'))),\
+         patch('%s._setApplicationModuleAndParameters' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_test_err'))):
+      assertDiracFailsWith( self.whiz._userjobmodules( None ),
+                            'userjobmodules failed', self )
 
-
-
-
+  def test_prodjobmodules_fails( self ):
+    with patch('%s._setApplicationModuleAndParameters' % MODULE_NAME, new=Mock(return_value=S_OK('something'))), \
+         patch('%s._setOutputComputeDataList' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_other_test_err'))):
+      assertDiracFailsWith( self.whiz._prodjobmodules( None ),
+                            'prodjobmodules failed', self )
