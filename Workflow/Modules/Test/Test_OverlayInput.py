@@ -96,6 +96,7 @@ class TestOverlayEos( unittest.TestCase ):
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/clicdp/grid%s" % testLFN , overscript.read() )
 
+#pylint: disable=too-many-public-methods
 class TestOverlayUnittests( unittest.TestCase ):
   """ Tests the Overlayinput class
   """
@@ -417,8 +418,48 @@ class TestOverlayExecute( unittest.TestCase ):
          patch('%s.OverlayInput._OverlayInput__getFilesLocaly' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_local_getfile_err'))):
       assertDiracFailsWith( self.over.execute(), 'failed to get files locally', self )
 
+  #pylint: disable=protected-access,no-member
+  def test_getfcfiles( self ):
+    ops_dict = { '/Overlay/clic_cdr/200TeV/testdetectorv2000/myTestBkgEvt/ProdID' : 98421,
+                 '/Overlay/clic_cdr/200TeV/testdetectorv2000/myTestBkgEvt/NbEvts' : 482,
+                 '/Overlay/clic_cdr/200TeV/testdetectorv2000/myTestBkgEvt/EvtType' : 'someTestEventType' }
+    self.over.energy = 123
+    self.over.useEnergyForFileLookup = True
+    self.over.BkgEvtType = 'myTestBkgEvt'
+    self.over.machine = 'clic_cdr'
+    ops_mock = Mock()
+    ops_mock.getValue.side_effect = lambda key, default: ops_dict[key]
+    self.over.ops = ops_mock
+    fcc_mock = Mock()
+    fcc_mock.findFilesByMetadata.return_value = S_OK( 9824 )
+    self.over.fcc = fcc_mock
+    result = self.over._OverlayInput__getFilesFromFC()
+    assertDiracSucceedsWith_equals( result, 9824, self )
+    fcc_mock.findFilesByMetadata.assert_called_once_with(
+      { 'Energy' : '123', 'EvtType' : 'someTestEventType', 'ProdID' : 98421, 'Datatype' : 'SIM',
+        'DetectorModel' : 'testdetectorv2000', 'Machine' : 'clic' } )
 
-
+  def test_getfcfiles_othercase( self ):
+    ops_dict = { '/Overlay/ilc_dbd/TestILCDetectorv1/200TeV/otherTestEvt/ProdID' : 139,
+                 '/Overlay/ilc_dbd/200TeV/TestILCDetectorv1/otherTestEvt/NbEvts' : 2145,
+                 '/Overlay/ilc_dbd/200TeV/TestILCDetectorv1/otherTestEvt/EvtType' : 'ilc_evt_testme' }
+    self.over.energy = 0
+    self.over.useEnergyForFileLookup = False
+    self.over.detectormodel = ''
+    self.over.BkgEvtType = 'otherTestEvt'
+    self.over.machine = 'ilc_dbd'
+    self.over.detector = 'TestILCDetectorv1'
+    self.over.prodid = 82492
+    ops_mock = Mock()
+    ops_mock.getValue.side_effect = lambda key, default: ops_dict[key]
+    self.over.ops = ops_mock
+    fcc_mock = Mock()
+    fcc_mock.findFilesByMetadata.return_value = S_OK( 2948 )
+    self.over.fcc = fcc_mock
+    result = self.over._OverlayInput__getFilesFromFC()
+    assertDiracSucceedsWith_equals( result, 2948, self )
+    fcc_mock.findFilesByMetadata.assert_called_once_with(
+      { 'EvtType' : 'ilc_evt_testme', 'ProdID' : 82492, 'Datatype' : 'SIM', 'Machine' : 'ilc' } )
 
 def get_castor_lines( expanded_lfn ):
   result = [ [
