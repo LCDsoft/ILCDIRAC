@@ -90,7 +90,7 @@ def running_on_docker():
   uid = os.getuid()
   user_info = pwd.getpwuid( uid )
   homedir = os.path.join( os.sep + 'home', user_info.pw_name )
-  if os.path.exists( homedir ) and not os.environ['CI']:
+  if os.path.exists( homedir ) and not os.environ.get( 'CI', False ):
     return False
   else:
     return True
