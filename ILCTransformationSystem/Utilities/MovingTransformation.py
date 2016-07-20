@@ -7,7 +7,6 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
-
 def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=''):
   """Creates the replication transformation based on the given parameters
 
