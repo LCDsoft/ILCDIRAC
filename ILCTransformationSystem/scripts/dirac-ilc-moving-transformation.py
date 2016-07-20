@@ -14,9 +14,10 @@ Options:
 """
 
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger, S_OK, S_ERROR
+from DIRAC import gLogger, S_OK, S_ERROR, exit as dexit
 
 from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkAndGetProdProxy
+from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
 
 
 __RCSID__ = "$Id$"
@@ -83,70 +84,18 @@ class _Params(object):
     Script.showHelp()
     return S_ERROR()
 
-def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
-  """Creates the replication transformation based on the given parameters"""
-
-  from DIRAC.TransformationSystem.Client.Transformation import Transformation
-  from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-  metadata = {"Datatype":datatype, "ProdID":prodID}
-
-  trans = Transformation()
-  transName = 'Move_%s_%s_%s' % ( datatype, str(prodID), ",".join(targetSE) )
-  if extraname:
-    transName += "_%s" % extraname
-
-  trans.setTransformationName( transName )
-  description = 'Move files for prodID %s to %s' % ( str(prodID), ",".join(targetSE) )
-  trans.setDescription( description )
-  trans.setLongDescription( description )
-  trans.setType( 'Replication' )
-  trans.setGroup( 'Moving' )
-  trans.setPlugin( 'Broadcast' )
-
-  transBody = [ ("ReplicateAndRegister", { "SourceSE":sourceSE, "TargetSE":targetSE }),
-                ("RemoveReplica", { "TargetSE":sourceSE } ),
-              ]
-
-  trans.setBody( transBody )
-
-  res = trans.setSourceSE( sourceSE )
-  if not res['OK']:
-    exit(1)
-  res = trans.setTargetSE( targetSE )
-  if not res['OK']:
-    exit(1)
-
-  res = trans.addTransformation()
-  if not res['OK']:
-    gLogger.error(res['Message'])
-    exit(1)
-  gLogger.verbose(res)
-  trans.setStatus( 'Active' )
-  trans.setAgentType( 'Automatic' )
-  currtrans = trans.getTransformationID()['Value']
-  client = TransformationClient()
-  res = client.createTransformationInputDataQuery( currtrans, metadata )
-  if res['OK']:
-    gLogger.always("Successfully created replication transformation")
-    return S_OK()
-  else:
-    gLogger.error("Failure during replication creation", res['Message'])
-    return S_ERROR("Failed to create transformation")
-
-
 def _createTrafo():
   """reads command line parameters, makes check and creates replication transformation"""
-  from DIRAC import exit as dexit
   clip = _Params()
   clip.registerSwitches()
   Script.parseCommandLine()
   if not clip.checkSettings()['OK']:
     gLogger.error("ERROR: Missing settings")
-    dexit(1)
-  resCreate = _createReplication( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
+    return 1
+  resCreate = createMovingTransformation( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
   if not resCreate['OK']:
-    dexit(1)
-  dexit(0)
+    return 1
+  return 0
 
 if __name__ == '__main__':
-  _createTrafo()
+  dexit(_createTrafo())
