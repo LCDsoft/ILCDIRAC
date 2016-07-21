@@ -2,12 +2,12 @@
 
     DIRAC assumes an execute() method will exist during usage.
 """
-__RCSID__   = "$Id: OutputDataPolicy.py 19570 2010-01-07 08:42:02Z joel $"
-__VERSION__ = "$Revision: 1.40 $"
 
 from DIRAC                                          import gLogger
 from DIRAC.Interfaces.API.Job                       import Job
 from ILCDIRAC.Core.Utilities.ProductionData         import constructProductionLFNs
+
+__RCSID__ = "$Id$"
 
 class OutputDataPolicy(object):
   """ This module is called from the TransformationSystem
@@ -24,12 +24,12 @@ class OutputDataPolicy(object):
     inputData = self.paramDict['InputData']
     
     job = Job(jobDescription)
-    commons = job._getParameters()
+    commons = job._getParameters() #pylint: disable=protected-access
     code = job.workflow.createCode()
     outputList = []
     for line in code.split("\n"):
       if line.count("listoutput"):
-        outputList += eval(line.split("#")[0].split("=")[-1])
+        outputList += eval(line.split("#")[0].split("=")[-1]) #pylint: disable=eval-used
 
     commons['outputList'] = outputList
     commons['PRODUCTION_ID'] = prodID
