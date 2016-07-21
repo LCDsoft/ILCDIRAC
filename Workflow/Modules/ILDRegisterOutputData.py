@@ -73,7 +73,7 @@ class ILDRegisterOutputData(ModuleBase):
         nbevts = {}
         nbevts['NumberOfEvents'] = self.nbofevents
         if 'file_number_of_event_relation' in self.workflow_commons:
-          if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
+          if os.path.basename(files) in self.workflow_commons['file_number_of_event_relation']:
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         meta.update(nbevts) 
         

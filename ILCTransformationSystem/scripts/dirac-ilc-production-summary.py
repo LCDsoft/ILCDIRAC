@@ -327,7 +327,7 @@ def _getProductionSummary():
       dirmeta['NumberOfEvents']=0
     #print processesdict[dirmeta['EvtType']]
     dirmeta['detail']=''
-    if processesdict.has_key(dirmeta['EvtType']):
+    if dirmeta['EvtType'] not in processesdict:
       if 'Detail' in processesdict[dirmeta['EvtType']]:
         detail = processesdict[dirmeta['EvtType']]['Detail']
         

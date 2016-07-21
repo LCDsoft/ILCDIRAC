@@ -551,7 +551,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
     for finalpath in self.finalpaths:
-      if not self.finalMetaDictNonSearch.has_key(finalpath):
+      if finalpath not in self.finalMetaDictNonSearch:
         self.finalMetaDictNonSearch[finalpath] = {}
       if "SWPackages" in self.prodparameters:
         self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
@@ -606,7 +606,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
               self.log.error(res['Message'])
               failed.append(path)
         elif result['Value']['Failed']:
-          if result['Value']['Failed'].has_key(path):  
+          if path in result['Value']['Failed']:
             self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
@@ -620,14 +620,14 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
-          if result['Value']['Successful'].has_key(path):
+          if path in result['Value']['Successful']:
             self.log.verbose("Successfully created directory:", "%s" % path)
             res = self.fc.changePathMode({ path: 0o775}, False)
             if not res['OK']:
               self.log.error(res['Message'])
               failed.append(path)
         elif result['Value']['Failed']:
-          if result['Value']['Failed'].has_key(path):  
+          if path in result['Value']['Failed']:
             self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:

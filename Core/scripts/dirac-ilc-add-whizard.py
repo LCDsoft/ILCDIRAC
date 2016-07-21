@@ -286,7 +286,7 @@ def doTheWhizardInstallation():
         if len(line.split()) < 2:
           continue
         currprocess = line.split()[0]
-        if inputlist.has_key(currprocess):
+        if currprocess in inputlist:
           inputlist[currprocess]['CrossSection'] = line.split()[1]
   
   

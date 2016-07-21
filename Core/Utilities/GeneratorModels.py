@@ -20,7 +20,7 @@ class GeneratorModels(object):
   def hasModel(self, model):
     """ Check that specified model exists
     """
-    if self.models.has_key(model):
+    if model in self.models:
       return S_OK()
     else:
       return S_ERROR("Model %s is not defined, use any of %s" % (model, self.models.keys()))

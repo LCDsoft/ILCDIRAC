@@ -84,7 +84,7 @@ class ILDProductionJob( ProductionJob ):
                         return self._reportError( "Key syntax error %s, should be %s" % ( key, meta ), name='ILDProduction' )
             if not metaFCkeys.count( key ):
                 return self._reportError( "Key %s not found in metadata keys, allowed are %s" % ( key, metaFCkeys ) )
-        # if not metadata.has_key("ProdID"):
+        # if 'ProdID' not in metadata:
         #    return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
         res = self.fc.findDirectoriesByMetadata( metadata )
         if not res['OK']:

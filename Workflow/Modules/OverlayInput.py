@@ -592,7 +592,7 @@ fi\n""" % (basename, lfile))
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    if os.environ.has_key('X509_USER_PROXY'):
+    if 'X509_USER_PROXY' in os.environ:
       comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s" % os.getuid()]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
       print res

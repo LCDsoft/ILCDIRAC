@@ -93,7 +93,7 @@ class InputDataResolution(object):
         return S_ERROR('Could not resolve InputDataPolicy from /InputDataPolicy')
 
       options = inputDataPolicy['Value']
-      if options.has_key(site):
+      if site in options:
         policy = options[site]
         policy = [x.strip() for x in string.split(policy, ',')]
         self.log.info('Found specific input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))

@@ -394,7 +394,7 @@ class ProcessDB ( DB ):
     rows = res['Value']
     soft_dict = {}
     for row in rows:
-      if not soft_dict.has_key(row[0]): 
+      if row[0] not in soft_dict:
         soft_dict[row[0]] = {}
         res  = self._getFields('Software', ['AppName', 'AppVersion', 'Platform'],
                                ['idSoftware'], [row[0]], conn = connection)
@@ -564,7 +564,7 @@ class ProcessDB ( DB ):
     
     jobkeys = ['Status', 'JobID', 'Site', 'AppName', 'AppVersion', 'Platform']
     for key in jobkeys:
-      if not jobdict.has_key(key):
+      if key not in jobdict:
         return S_ERROR("Missing mandatory parameter %s" % key)
       
     softid = 0  
