@@ -449,7 +449,7 @@ class OverlayInput (ModuleBase):
         script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
       script.write('declare -x STAGE_SVCCLASS=ilcdata\n')
       script.write('declare -x STAGE_HOST=castorpublic\n')
-      script.write("xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
+      script.write(r"xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
       #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
       script.write("""
 if [ ! -s %s ]; then

@@ -466,7 +466,7 @@ def get_castor_lines( expanded_lfn ):
     '#!/bin/sh \n', '###############################\n', '# Dynamically generated scrip #\n',
     '###############################\n', 'declare -x STAGE_SVCCLASS=ilcdata\n',
     'declare -x STAGE_HOST=castorpublic\n',
-    "xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % expanded_lfn,
+    r"xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % expanded_lfn,
     """
 if [ ! -s %s ]; then
   echo "Using rfcp instead"
