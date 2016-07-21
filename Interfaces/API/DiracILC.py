@@ -5,15 +5,19 @@ API to use to submit jobs in the ILC VO
 :author: Stephane Poss
 """
 
+import os
+import string
+
 from DIRAC.Interfaces.API.Dirac                     import Dirac
-from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from DIRAC.DataManagementSystem.Client.DataManager  import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
-
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
-import string, os
+
+from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 
 __RCSID__ = "$Id$"
+
+#pylint: disable=protected-access
 
 COMPONENT_NAME = 'DiracILC'
 
@@ -141,13 +145,13 @@ class DiracILC(Dirac):
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     #Start by taking care of sandbox
-    if hasattr(job, "inputsandbox") and type( job.inputsandbox ) == list and len( job.inputsandbox ):
+    if hasattr(job, "inputsandbox") and isinstance( job.inputsandbox, list ) and len( job.inputsandbox ):
       found_list = False
       for items in job.inputsandbox:
-        if type(items) == type([]):#We fix the SB in the case is contains a list of lists
+        if isinstance( items, list ):#We fix the SB in the case is contains a list of lists
           found_list = True
           for inBoxFile in items:
-            if type(inBoxFile) == type([]):
+            if isinstance( inBoxFile, list ):
               return S_ERROR("Too many lists of lists in the input sandbox, please fix!")
             job.inputsandbox.append(inBoxFile)
           job.inputsandbox.remove(items)
