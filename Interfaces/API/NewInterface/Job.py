@@ -7,14 +7,17 @@ Use :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` or :mod:`~ILCDIRAC.Inte
 :author: Ching Bon Lam
 '''
 
+import inspect
+
 from DIRAC.Interfaces.API.Job                          import Job as DiracJob
 from DIRAC.Core.Utilities.PromptUser                   import promptUser
 from DIRAC.Core.Workflow.Step                          import StepDefinition
 
 from DIRAC import S_ERROR, S_OK, gLogger
-import inspect
 
 __RCSID__ = "$Id$"
+
+#pylint: disable=protected-access
 
 class Job(DiracJob):
   """ ILCDIRAC job class
@@ -159,7 +162,7 @@ class Job(DiracJob):
     self.applicationlist.append(application)
     ##Get the application's sandbox and add it to the job's
     for isb in application.inputSB:
-      if not isb in self.inputsandbox:
+      if isb not in self.inputsandbox:
         self.inputsandbox.append(isb)
     #self.inputsandbox.extend(application.inputSB)
 
@@ -268,7 +271,7 @@ class Job(DiracJob):
       
     return S_OK()
   
-  def _jobSpecificModules(self, application, step):
+  def _jobSpecificModules(self, application, step): #pylint: disable=no-self-use
     """ Returns the list of the job specific modules for the passed application. Is overloaded in 
     ProductionJob class. UserJob uses the default.
     """
@@ -314,7 +317,7 @@ class Job(DiracJob):
     else:
       apps = self.workflow.findParameter( swPackages ).getValue()
 
-      if not currentApp in apps.split( ';' ):
+      if currentApp not in apps.split( ';' ):
         apps += ';' + currentApp
 
       self._addParameter( self.workflow, swPackages, 'JDL', apps, description )
@@ -335,7 +338,7 @@ class Job(DiracJob):
 
     for argName, argType in argNamesAndTypes.iteritems():
 
-      if not args.has_key(argName):
+      if argName not in args:
         self._reportError( 'Method does not contain argument \'%s\'' % argName,
                            __name__,
                            **self._getArgsDict( 1 )
@@ -347,7 +350,7 @@ class Job(DiracJob):
                            **self._getArgsDict( 1 )
                          )
 
-  def _getArgsDict( self, level = 0 ):
+  def _getArgsDict( self, level = 0 ): #pylint: disable=no-self-use
     """ Private method
     """
 
