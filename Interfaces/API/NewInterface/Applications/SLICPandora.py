@@ -1,13 +1,17 @@
 """
 SLICPandora : Run Pandora in the SID context
 """
-__RCSID__ = "$Id$"
+
+import os
+import types
+
+from DIRAC import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
-from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+
+__RCSID__ = "$Id$"
 
 class SLICPandora(LCApplication):
   """ Call SLICPandora
@@ -102,7 +106,7 @@ class SLICPandora(LCApplication):
     if not self.startFrom :
       self._log.info('No startFrom defined for SlicPandora : start from the begining')
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       self.prodparameters['slicpandora_steeringfile'] = self.steeringFile
       self.prodparameters['slicpandora_detectorModel'] = self.detectorModel
 
@@ -133,9 +137,8 @@ class SLICPandora(LCApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
-

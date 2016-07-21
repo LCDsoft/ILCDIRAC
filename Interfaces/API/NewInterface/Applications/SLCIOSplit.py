@@ -1,12 +1,15 @@
 """
 SLCIOSplit : Helper to split SLCIO files
 """
-__RCSID__ = "$Id$"
 
-from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
+import types
+
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC import S_OK, S_ERROR
-import types
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
+
+__RCSID__ = "$Id$"
 
 class SLCIOSplit(LCUtilityApplication):
   """ Helper to split slcio files
@@ -78,7 +81,7 @@ class SLCIOSplit(LCUtilityApplication):
     if not self.outputFile and self._jobtype =='User' :
       self._log.error('No output file name specified.')
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nb_events_per_file'] = self.numberOfEventsPerFile
@@ -90,7 +93,7 @@ class SLCIOSplit(LCUtilityApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance(self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

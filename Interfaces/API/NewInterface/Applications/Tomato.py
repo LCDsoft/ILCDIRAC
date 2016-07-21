@@ -1,12 +1,15 @@
 """
 Tomato : Helper to filter generator selection
 """
-__RCSID__ = "$Id$"
 
-from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+import types
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
-import types
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+
+__RCSID__ = "$Id$"
 
 class Tomato(LCApplication):
   """ Helper application over Tomato analysis
@@ -83,7 +86,7 @@ class Tomato(LCApplication):
 
   def _resolveLinkedStepParameters(self, stepinstance):
 
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

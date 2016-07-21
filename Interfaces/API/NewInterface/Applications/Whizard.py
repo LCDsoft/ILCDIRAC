@@ -218,7 +218,7 @@ class Whizard(LCApplication):
       self.eventType = res['Value']
 
       res = self._wo.getValue("process_input/sqrts")
-      if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
+      if isinstance( res['Value'], (int, long, float) ):
         energy = res['Value']
       else:
         energy = eval(res['Value'])
@@ -233,7 +233,7 @@ class Whizard(LCApplication):
       self.energy = energy
 
       res = self._wo.getValue("simulation_input/n_events")
-      if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
+      if isinstance( res['Value'], (int, long, float) ):
         numberOfEvents = res['Value']
       else:
         numberOfEvents = eval(res['Value'])
@@ -255,7 +255,7 @@ class Whizard(LCApplication):
         if process not in self.eventType.split():
           self._log.info("You want to cut on %s but that process is not to be generated" % process)
       for values in self.generatorLevelCuts.values():
-        if not type(values) == types.ListType:
+        if not isinstance( values, list ):
           return S_ERROR('Type of %s is not a list, cannot proceed' % values)
       self._genlevelcutsstr = str(self.generatorLevelCuts)
 

@@ -1,12 +1,16 @@
 """
 Mokka: Simulation after Whizard or StdHepCut
 """
-__RCSID__ = "$Id$"
 
-from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+import os
+import types
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+
+__RCSID__ = "$Id$"
 
 class Mokka(LCApplication):
   """ Call Mokka simulator (after Whizard, Pythia or StdHepCut)
@@ -156,7 +160,7 @@ class Mokka(LCApplication):
     #if not res['OK']:
     #  return res
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}", "outputDataSE":'@{OutputSE}'})
       self.prodparameters['mokka_steeringfile'] = self.steeringFile
       if self.detectorModel:
@@ -197,7 +201,7 @@ class Mokka(LCApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

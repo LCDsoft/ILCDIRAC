@@ -1,12 +1,16 @@
 """
  ROOT class for common functionality of :doc:`RootScript` and :doc:`RootMacro`.
 """
-__RCSID__ = "$Id"
 
-from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+import types
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
-import types
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+
+__RCSID__ = "$Id"
+
 class _Root(LCApplication):
   """ Root principal class. Will inherit in :doc:`RootScript` and :doc:`RootMacro` classes, so don't use this (you can't anyway)!
   """
@@ -95,7 +99,7 @@ class _Root(LCApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
