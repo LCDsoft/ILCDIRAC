@@ -7,5 +7,5 @@ requirements:
     - .gitlab-ci.d/requirements.txt
 
 ignore-patterns:
-    - .*/Tests/.*
+    - (^|.*/)Tests/.*
     - Test_.*.py
