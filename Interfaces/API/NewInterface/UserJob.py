@@ -16,13 +16,11 @@ Example usage:
 :author: Ching Bon Lam
 """
 
-from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
-from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+from DIRAC import S_OK
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
-from DIRAC import S_OK
-
-import types
+from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
+from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 __RCSID__ = "$Id$"
 
@@ -87,16 +85,16 @@ class UserJob(Job):
     :param lfns: Logical File Names
     :type lfns: Single LFN string or list of LFNs
     """
-    if type( lfns ) == list and len( lfns ):
-      for i in xrange( len( lfns ) ):
-        lfns[i] = lfns[i].replace( 'LFN:', '' )
+    if isinstance( lfns, list ) and len( lfns ):
+      for i, lfn in enumerate( lfns ):
+        lfns[i] = lfn.replace( 'LFN:', '' )
       #inputData = map( lambda x: 'LFN:' + x, lfns )
       inputData = lfns #because we don't need the LFN: for inputData, and it breaks the 
       #resolution of the metadata in the InputFilesUtilities
       inputDataStr = ';'.join( inputData )
       description = 'List of input data specified by LFNs'
       self._addParameter( self.workflow, 'InputData', 'JDL', inputDataStr, description )
-    elif type( lfns ) == type( ' ' ):  #single LFN
+    elif isinstance( lfns, basestring ): #single LFN
       description = 'Input data specified by LFN'
       self._addParameter( self.workflow, 'InputData', 'JDL', lfns, description )
     else:
@@ -115,9 +113,9 @@ class UserJob(Job):
     :param flist: Files for the inputsandbox
     :type flist: `python:list` or `str`
     """
-    if type(flist) == type(""):
+    if isinstance( flist, basestring ):
       flist = [flist]
-    if not type(flist) == type([]) :
+    if not isinstance( flist, list ):
       return self._reportError("File passed must be either single file or list of files.") 
     self.inputsandbox.extend(flist)
     return S_OK()
@@ -140,11 +138,11 @@ class UserJob(Job):
     :type OutputSE: `python:list` or `str`
     """
     kwargs = {'lfns' : lfns, 'OutputSE' : OutputSE, 'OutputPath' : OutputPath}
-    if type(lfns) == list and len(lfns):
+    if isinstance( lfns, list ) and len(lfns):
       outputDataStr = ';'.join(lfns)
       description = 'List of output data files'
       self._addParameter(self.workflow, 'UserOutputData', 'JDL', outputDataStr, description)
-    elif type(lfns) == type(" "):
+    elif isinstance( lfns, basestring ):
       description = 'Output data file'
       self._addParameter(self.workflow, 'UserOutputData', 'JDL', lfns, description)
     else:
@@ -152,16 +150,16 @@ class UserJob(Job):
 
     if OutputSE:
       description = 'User specified Output SE'
-      if type(OutputSE) in types.StringTypes:
+      if isinstance( OutputSE, basestring ):
         OutputSE = [OutputSE]
-      elif type(OutputSE) != types.ListType:
+      elif not isinstance( OutputSE, list ):
         return self._reportError('Expected string or list for OutputSE', **kwargs)
       OutputSE = ';'.join(OutputSE)
       self._addParameter(self.workflow, 'UserOutputSE', 'JDL', OutputSE, description)
 
     if OutputPath:
       description = 'User specified Output Path'
-      if not type(OutputPath) in types.StringTypes:
+      if not isinstance( OutputPath, basestring ):
         return self._reportError('Expected string for OutputPath', **kwargs)
       # Remove leading "/" that might cause problems with os.path.join
       while OutputPath[0] == '/': 
@@ -193,11 +191,11 @@ class UserJob(Job):
     :type files: Single `str` or `python:list` of strings ['','']
 
     """
-    if type( files ) == list and len( files ):
+    if isinstance( files, list ) and len( files ):
       fileList = ";".join( files )
       description = 'Output sandbox file list'
       self._addParameter( self.workflow, 'OutputSandbox', 'JDL', fileList, description )
-    elif type( files ) == type( " " ):
+    elif isinstance( files, basestring ):
       description = 'Output sandbox file'
       self._addParameter( self.workflow, 'OutputSandbox', 'JDL', files, description )
     else:

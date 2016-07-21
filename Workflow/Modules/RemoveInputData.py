@@ -1,5 +1,5 @@
 """
-Remove input data (used in case of merging
+Remove input data (used in case of merging)
 """
 
 __RCSID__ = "$Id$"
@@ -19,7 +19,7 @@ class RemoveInputData(ModuleBase):
 
   def applicationSpecificInputs(self):
     self.enable = self.step_commons.get('Enable', self.enable)
-    if not type(self.enable) == type(True):
+    if not isinstance( self.enable, bool ):
       self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
     return S_OK('Parameters resolved') 

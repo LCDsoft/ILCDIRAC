@@ -7,14 +7,16 @@ Run TOMATO
 :author: C. B. Lam
 '''
 
-__RCSID__ = "$Id$"
+import os
+
+from DIRAC                                                 import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis              import MarlinAnalysis
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import prepareTomatoSalad
 from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
-from DIRAC                                                 import S_OK, S_ERROR, gLogger
-import os, types
+
+__RCSID__ = "$Id$"
 
 class TomatoAnalysis(MarlinAnalysis):
   """ Module to run Tomato: the auTOMated Analysis TOol by C.B. Lam.
@@ -34,7 +36,7 @@ class TomatoAnalysis(MarlinAnalysis):
     
     if 'InputSLCIO' in self.step_commons:
       inputf = self.step_commons["InputSLCIO"]
-      if not type(inputf) == types.ListType:
+      if not isinstance( inputf, list ):
         inputf = inputf.split(";")
       self.InputFile = inputf
     
@@ -140,8 +142,3 @@ class TomatoAnalysis(MarlinAnalysis):
     
     script.close()
     return S_OK(os.path.abspath(env_script_name))
-  
-  
-
-#############################################################
-

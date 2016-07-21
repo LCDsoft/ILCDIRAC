@@ -10,8 +10,12 @@ Called by Job Agent.
 
 __RCSID__ = "$Id$"
 
-import os, shutil, types
+import os
+import shutil
+
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
+from DIRAC                                                   import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Workflow.Utilities.CompactMixin                import CompactMixin
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation    import getSoftwareFolder
@@ -20,7 +24,6 @@ from ILCDIRAC.Core.Utilities.resolvePathsAndNames            import resolveIFpat
 from ILCDIRAC.Core.Utilities.PrepareLibs                     import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringFileDirName
 
-from DIRAC                                                   import S_OK, S_ERROR, gLogger
 
 class LCSIMAnalysis(CompactMixin, ModuleBase):
   """Define the LCSIM analysis part of the workflow
@@ -64,7 +67,7 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
       
     if 'inputSlcio' in self.step_commons:
       inputf = self.step_commons["inputSlcio"]
-      if not type(inputf) == types.ListType:
+      if not isinstance( inputf, list ):
         inputf = inputf.split(";")
       self.InputFile = inputf
 
@@ -203,7 +206,7 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
     paths = {}
     paths[os.path.basename(self.SteeringFile)] = os.path.basename(self.SteeringFile)
     paths[os.path.basename(self.trackingstrategy)] = os.path.basename(self.trackingstrategy)
-    for myfile in paths.keys():  
+    for myfile in paths:
       if len(myfile):
         #file = os.path.basename(file)
         if not os.path.exists(myfile):
@@ -280,4 +283,3 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
     self.log.info( "Status after the application execution is", str( status ) )
 
     return self.finalStatusReport(status)
-

@@ -9,12 +9,13 @@ ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
 :author: Przemyslaw Majewski
 '''
 
-__RCSID__ = "$Id$"
-
-import os, shutil, glob, types
+import glob
+import os
+import shutil
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-#from DIRAC.Core.DISET.RPCClient                           import RPCClient
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareXMLFile, getNewLDLibs
@@ -24,8 +25,8 @@ from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFile
 from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
 
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger
 
+__RCSID__ = "$Id$"
 
 class MarlinAnalysis(DD4hepMixin, ModuleBase):
   """Define the Marlin analysis part of the workflow
@@ -54,7 +55,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
 
     if 'ParametricInputSandbox' in self.workflow_commons:
       paramsb = self.workflow_commons['ParametricInputSandbox']
-      if not type(paramsb) == types.ListType:
+      if not isinstance( paramsb, list ):
         if len(paramsb):
           paramsb = paramsb.split(";")
         else:

@@ -7,13 +7,14 @@ the end of a job.
 
 """
 
-__RCSID__ = "$Id$"
+import os
 
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC.TransformationSystem.Client.FileReport          import FileReport
 from DIRAC                                                 import S_OK, S_ERROR, gLogger
 
-import os
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class FailoverRequest(ModuleBase):
   """ Handle the failover requests issued by previous steps. Used in production. 
@@ -47,7 +48,7 @@ class FailoverRequest(ModuleBase):
       self.enable = False
 
     self.enable = self.step_commons.get('Enable', self.enable)
-    if not type(self.enable) == type(True):
+    if not isinstance( self.enable, bool ):
       self.log.error('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
 

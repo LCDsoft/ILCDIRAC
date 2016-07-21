@@ -5,13 +5,16 @@ Register the meta data of the production files
 
 :author: sposs
 '''
-__RCSID__ = "$Id$"
 
-from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
+import os
+
 from DIRAC.Resources.Catalog.FileCatalogClient    import FileCatalogClient
 from DIRAC.Core.Utilities                         import DEncode
 from DIRAC import S_OK, gLogger
-import os
+
+from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class RegisterOutputData( ModuleBase ):
   """ At the end of a production Job, we need to register meta data info for the files. 
@@ -34,7 +37,7 @@ class RegisterOutputData( ModuleBase ):
   def applicationSpecificInputs(self):
     if 'Enable' in self.step_commons:
       self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
+      if not isinstance( self.enable, bool):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
         self.enable = False
         
