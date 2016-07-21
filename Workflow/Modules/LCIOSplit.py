@@ -5,14 +5,16 @@ Module to concatenate LCIO files
 :since: Dec 17, 2011
 """
 
-__RCSID__ = "$Id$"
+import os
 
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
-import os
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class LCIOSplit(ModuleBase):
   """ LCIO split module
@@ -113,10 +115,10 @@ lcio split -i %s -n %s
 exit $?
 
 """ % (
-    LD_LIBRARY_PATH,
-    PATH,
-    runonslcio,
-    self.nbEventsPerSlice
+  LD_LIBRARY_PATH,
+  PATH,
+  runonslcio,
+  self.nbEventsPerSlice
 )
 
     # Write script to file
@@ -185,7 +187,7 @@ exit $?
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []
-      for fileName in numberofeventsdict.keys():
+      for fileName in numberofeventsdict:
         item = {}
         item['outputFile'] = fileName
         item['outputPath'] = self.listoutput['outputPath']
@@ -204,11 +206,10 @@ exit $?
         else:
           this_split_data = item
       path = os.path.dirname(this_split_data)
-      for fileName in numberofeventsdict.keys():
+      for fileName in numberofeventsdict:
         finalproddata.append(os.path.join(path, fileName))
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
     self.log.info( "Status after the application execution is %s" % str( status ) )
     self.listDir()
     return self.finalStatusReport(status)
-
