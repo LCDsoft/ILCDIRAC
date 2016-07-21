@@ -404,7 +404,7 @@ done
       self.log.info( "Mokka execution finished successfully")
 
     message = 'Mokka %s Successful' % (self.applicationVersion)
-    if failed == True:
+    if failed is True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError) 
       #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))

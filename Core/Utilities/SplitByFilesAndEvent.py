@@ -25,7 +25,7 @@ def SplitByFilesAndEvents(listoffiles, evtsperjob):
   for files in listoffiles:
     myfdict = {}
     resInfo =  getNumberOfEvents([files])
-    if not resInfo['OK'] or not "nbevts" in resInfo['Value']:
+    if not resInfo['OK'] or "nbevts" not in resInfo['Value']:
       return S_ERROR("The file %s does not have attached number of events, cannot split" % files)
     myfdict['file'] = files
     myfdict['nbevts'] = resInfo['Value']['nbevts']
@@ -46,7 +46,7 @@ def SplitByFilesAndEvents(listoffiles, evtsperjob):
 
     if cur_events == evtsperjob :
       jdict['startFrom'] = startfromevt
-      if not 'files' in jdict:
+      if 'files' not in jdict:
         jdict['files'] = []
       jdict['files'].append(item['file'])
       startfromevt = int(cur_events)
@@ -55,7 +55,7 @@ def SplitByFilesAndEvents(listoffiles, evtsperjob):
       joblist.append(jdict)
       continue
     if cur_events > nb_evts_in_file:
-      if not 'files' in jdict:
+      if 'files' not in jdict:
         jdict['files'] = []
       jdict['files'].append(item['file'])
       mylist.remove(item)

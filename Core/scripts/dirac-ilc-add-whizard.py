@@ -335,7 +335,7 @@ def doTheWhizardInstallation():
   
   av_platforms = gConfig.getSections(softwareSection, [])
   if av_platforms['OK']:
-    if not platform in av_platforms['Value']:
+    if platform not in av_platforms['Value']:
       gLogger.error("Platform %s unknown, available are %s." % (platform, ", ".join(av_platforms['Value'])))
       gLogger.error("If yours is missing add it in CS")
       dexit(255)

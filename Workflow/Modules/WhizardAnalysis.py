@@ -502,7 +502,7 @@ class WhizardAnalysis(ModuleBase):
           if not self.ignoreapperrors:
             return S_ERROR(messageout)
 
-    if failed == True:
+    if failed is True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( message )
       self.setApplicationStatus('%s Exited With Status %s' % (self.applicationName, status))

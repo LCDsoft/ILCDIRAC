@@ -244,7 +244,7 @@ def checkForMandatoryKeys(paramDict, keys):
   :returns: S_OK, S_ERROR
   """
   for k in keys:
-    if not k in paramDict:
+    if k not in paramDict:
       return S_ERROR('%s not defined' % k)
   return S_OK()
 

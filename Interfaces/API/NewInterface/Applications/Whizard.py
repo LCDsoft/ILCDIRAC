@@ -1,15 +1,18 @@
 """
 Whizard: First Generator application
 """
-__RCSID__ = "$Id$"
+
+import types
+import os
+
+from DIRAC import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.WhizardOptions import WhizardOptions, getDict
 from ILCDIRAC.Core.Utilities.GeneratorModels import GeneratorModels
 
-from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+__RCSID__ = "$Id$"
 
 class Whizard(LCApplication):
   """ Runs whizard to generate a given event type
@@ -207,7 +210,7 @@ class Whizard(LCApplication):
       res = self._wo.getValue("process_input/process_id")
       if not len(res['Value']):
         if self.eventType:
-          if not 'process_input' in self.fullParameterDict:
+          if 'process_input' not in self.fullParameterDict:
             self.fullParameterDict['process_input'] = {}
           self.fullParameterDict['process_input']['process_id'] = self.eventType
         else:
@@ -221,7 +224,7 @@ class Whizard(LCApplication):
         energy = eval(res['Value'])
       if not energy:
         if self.energy:
-          if not 'process_input' in self.fullParameterDict:
+          if 'process_input' not in self.fullParameterDict:
             self.fullParameterDict['process_input'] = {}
           self.fullParameterDict['process_input']['sqrts'] = self.energy
           energy = self.energy
@@ -236,7 +239,7 @@ class Whizard(LCApplication):
         numberOfEvents = eval(res['Value'])
       if not numberOfEvents:
         if self.numberOfEvents:
-          if not 'simulation_input' in self.fullParameterDict:
+          if 'simulation_input' not in self.fullParameterDict:
             self.fullParameterDict['simulation_input'] = {}
           self.fullParameterDict['simulation_input']['n_events'] = self.numberOfEvents
           numberOfEvents = self.numberOfEvents
@@ -249,7 +252,7 @@ class Whizard(LCApplication):
 
     if self.generatorLevelCuts:
       for process in self.generatorLevelCuts.keys():
-        if not process in self.eventType.split():
+        if process not in self.eventType.split():
           self._log.info("You want to cut on %s but that process is not to be generated" % process)
       for values in self.generatorLevelCuts.values():
         if not type(values) == types.ListType:
@@ -295,7 +298,7 @@ class Whizard(LCApplication):
         self.outputFile += "_" + self.jobIndex
       self.outputFile += "_gen.stdhep"
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       if not self.willBeCut:
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                    "outputDataSE":'@{OutputSE}'})

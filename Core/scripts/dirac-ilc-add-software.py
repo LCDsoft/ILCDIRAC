@@ -84,7 +84,7 @@ class SoftwareAdder(object):
     gLogger.notice("Checking consistency")
     av_platforms = gConfig.getSections(self.softSec, [])
     if av_platforms['OK']:
-      if not self.platform in av_platforms['Value']:
+      if self.platform not in av_platforms['Value']:
         gLogger.error("Platform %s unknown, available are %s." % (self.platform, ", ".join(av_platforms['Value'])))
         gLogger.error("If yours is missing add it in CS")
         dexit(255)
