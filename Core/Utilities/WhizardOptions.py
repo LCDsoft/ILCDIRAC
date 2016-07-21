@@ -13,8 +13,6 @@ This is currently done on the job definition side
 from xml.etree.ElementTree                                import ElementTree, fromstring
 from ILCDIRAC.Core.Utilities.GeneratorModels              import GeneratorModels
 
-import types
-
 from DIRAC import S_OK, S_ERROR
 
 def getDict():
@@ -655,7 +653,7 @@ class WhizardOptions(object):
     """
     options = []
     element = self.whizardxml.find(field)
-    if element == None:
+    if element is None:
       return S_ERROR("Field %s does not exist" % field)
     for subelements in list( element ):
       options.append(subelements.tag)
@@ -688,7 +686,7 @@ class WhizardOptions(object):
       whiz_opt[element.tag] = {}
       for item in list( element ):
         val = item.attrib['value']
-        if type(val) == type(""):
+        if isinstance( val, basestring ):
           val = val.rstrip()
         whiz_opt[element.tag][item.tag] = val
     return S_OK(whiz_opt)
@@ -698,28 +696,28 @@ class WhizardOptions(object):
     """
     for key, val in paramdict.items():
       element = self.whizardxml.find(key)
-      if element == None:
+      if element is None:
         return S_ERROR("Element %s is not in the allowed parameters" % key)
       for subkey, value in val.items():
         subelement = self.whizardxml.find(key + "/" + subkey)
-        if subelement == None:
+        if subelement is None:
           return S_ERROR("Key %s/%s is not in the allowed parameters" % (key, subkey))
         etype = subelement.attrib['type']
         if etype == 'float':
-          if not type(value) == types.FloatType and not type(value) == types.IntType:
+          if not isinstance( value, (float, int, long) ):
             return S_ERROR("%s should be a float" % (key + "/" + subkey))
         elif etype == 'T/F':
           if value != 'T' and value != 'F':
             return S_ERROR("%s should be either 'T' or 'F'" % (key + "/" + subkey))
         elif etype == 'integer' or etype == '0/1/2/3':
-          if not type(value) == types.IntType or ( etype == '0/1/2/3' and value not in range(4) ):
+          if not isinstance( value, (int, long) ) or ( etype == '0/1/2/3' and value not in range(4) ):
             return S_ERROR("%s should be an integer" % (key + "/" + subkey))
         elif etype == 'string':
-          if not type(value) in types.StringTypes:
+          if not isinstance( value, basestring ):
             return S_ERROR("%s should be a string" % (key + "/" + subkey))
         elif etype == 'floatarray':
           error = False
-          if not type(value) in types.StringTypes:
+          if not isinstance( value, basestring ):
             error = True
           else:
             valelem = value.split()
@@ -788,12 +786,12 @@ class WhizardOptions(object):
             if val.count("."):
               try:
                 val = float(val)
-              except:
+              except ValueError:
                 pass
             else:
               try:
                 val = int(val)
-              except:
+              except ValueError:
                 pass
           pdict[curkey][key] = val
     return self.changeAndReturn(pdict)
