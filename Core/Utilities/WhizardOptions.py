@@ -704,7 +704,7 @@ class WhizardOptions(object):
           return S_ERROR("Key %s/%s is not in the allowed parameters" % (key, subkey))
         etype = subelement.attrib['type']
         if etype == 'float':
-          if not isinstance( value, (float, int, long) ):
+          if not isinstance( value, (float, int, long) ) or isinstance( value, bool ):
             return S_ERROR("%s should be a float" % (key + "/" + subkey))
         elif etype == 'T/F':
           if value != 'T' and value != 'F':
