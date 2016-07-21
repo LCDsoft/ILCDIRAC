@@ -42,9 +42,9 @@ class StdHepSplit(ModuleBase):
     if not self.OutputFile:
       return S_ERROR( 'No output file defined' )
     
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           self.prod_outputdata = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in self.prod_outputdata:
             if obj.lower().count("_gen_"):
@@ -59,7 +59,7 @@ class StdHepSplit(ModuleBase):
         if files.lower().find(".stdhep") > -1:
           self.InputFile.append(files)
       
-    if self.step_commons.has_key('listoutput'):
+    if 'listoutput' in self.step_commons:
       if len(self.step_commons['listoutput']):
         self.listoutput = self.step_commons['listoutput'][0]
       
@@ -210,7 +210,7 @@ exit $?
       self.step_commons['listoutput'] = outputlist
       
     #Not only the step_commons must be updated  
-    if self.workflow_commons.has_key('ProductionOutputData'):
+    if 'ProductionOutputData' in self.workflow_commons:
       proddata = self.workflow_commons['ProductionOutputData'].split(";")
       finalproddata = []
       this_split_data = ''

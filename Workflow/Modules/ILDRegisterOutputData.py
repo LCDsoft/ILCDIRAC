@@ -28,18 +28,18 @@ class ILDRegisterOutputData(ModuleBase):
     self.swpackages = []
     
   def applicationSpecificInputs(self):
-    if self.step_commons.has_key('Enable'):
+    if 'Enable' in self.step_commons:
       self.enable = self.step_commons['Enable']
       if not type(self.enable) == type(True):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
         self.enable = False
         
-    if self.workflow_commons.has_key('ProductionOutputData'):
+    if 'ProductionOutputData' in self.workflow_commons:
       self.prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
     else:
       self.prodOutputLFNs = []
       
-    if self.workflow_commons.has_key('SoftwarePackages'):
+    if 'SoftwarePackages' in self.workflow_commons:
       self.swpackages = self.workflow_commons['SoftwarePackages'].split(";")
 
     self.nbofevents = self.NumberOfEvents #comes from ModuleBase
@@ -72,7 +72,7 @@ class ILDRegisterOutputData(ModuleBase):
       if self.nbofevents:
         nbevts = {}
         nbevts['NumberOfEvents'] = self.nbofevents
-        if self.workflow_commons.has_key('file_number_of_event_relation'):
+        if 'file_number_of_event_relation' in self.workflow_commons:
           if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         meta.update(nbevts) 

@@ -81,7 +81,7 @@ class ProcessList(object):
     self.cfg.setOption("Processes/%s/Restrictions" % process, processdic['Restrictions'])
     self.cfg.setOption("Processes/%s/InFile" % process, processdic['InFile'])
     cross_section = 0
-    if processdic.has_key("CrossSection"):
+    if 'CrossSection' in processdic:
       cross_section = processdic["CrossSection"]
     self.cfg.setOption("Processes/%s/CrossSection" % process, cross_section)
     return S_OK()

@@ -87,12 +87,12 @@ class ProcessManagerHandler(RequestHandler):
   def export_addProductionData(self, ProdDataDict):
     """ Add a new Production data object
     """
-    if (not ProdDataDict.has_key("ProdID") 
-        or not ProdDataDict.has_key("Process") 
-        or not ProdDataDict.has_key("Path") 
-        or not ProdDataDict.has_key("AppName")
-        or not ProdDataDict.has_key("AppVersion")
-        or not ProdDataDict.has_key('Platform')
+    if (not 'ProdID' in ProdDataDict
+        or not 'Process' in ProdDataDict
+        or not 'Path' in ProdDataDict
+        or not 'AppName' in ProdDataDict
+        or not 'AppVersion' in ProdDataDict
+        or not 'Platform' in ProdDataDict
         ):
       return S_ERROR('Incorrect dictionary structure')
     return processDB.addProductionData(ProdDataDict)
@@ -115,7 +115,7 @@ class ProcessManagerHandler(RequestHandler):
   def export_updateCrossSection(self, ProcessDict):
     """ Update the cross section for the given process and software version
     """
-    if not (ProcessDict.has_key('ProdID') and ProcessDict.has_key('AppName') and ProcessDict.has_key('CrossSection')):
+    if not ('ProdID' in ProcessDict and 'AppName' in ProcessDict and 'CrossSection' in ProcessDict):
       return S_ERROR("Missing essential dictionary info")
     return processDB.updateCrossSection(ProcessDict)
     

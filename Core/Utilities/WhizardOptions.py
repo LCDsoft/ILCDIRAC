@@ -606,9 +606,9 @@ class WhizardOptions(object):
   def getInputFiles(self, model):
     """ Get the proper input parameter file, usually LesHouches
     """
-    if not self.paramdict.has_key('process_input'):
+    if 'process_input' not in self.paramdict:
       self.paramdict['process_input'] = {}
-    if not self.paramdict['process_input'].has_key('input_file'):
+    if 'input_file' not in self.paramdict['process_input']:
       res = self.genmodel.getFile(model) 
       if not res['OK']:
         self.paramdict['process_input']['input_file'] = ''

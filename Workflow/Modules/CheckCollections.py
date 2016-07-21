@@ -45,7 +45,7 @@ class CheckCollections(ModuleBase):
     if not self.platform:
       result = S_ERROR( 'No ILC platform selected' )
 
-    if not os.environ.has_key("LCIO"):
+    if 'LCIO' not in os.environ:
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       result = S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 

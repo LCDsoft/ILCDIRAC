@@ -47,18 +47,18 @@ class InputDataResolution(object):
 
     #For local running of this module we can expose an option to ignore missing files
     ignoreMissing = False
-    if self.arguments.has_key('IgnoreMissing'):
+    if 'IgnoreMissing' in self.arguments:
       ignoreMissing = self.arguments['IgnoreMissing']
 
     #For LHCb original policy was as long as one TURL exists, this can be conveyed to the application
     #this breaks due to the stripping so the policy has been changed.
-    if result.has_key('Failed'):
+    if 'Failed' in result:
       failedReplicas = result['Failed']
       if failedReplicas and not ignoreMissing:
         self.log.error('Failed to obtain access to the following files:\n%s' % (string.join(failedReplicas, '\n')))
         return S_ERROR('Failed to access all of requested input data')
 
-    if not result.has_key('Successful'):
+    if 'Successful' not in result:
       return result
 
     if not result['Successful']:
@@ -71,16 +71,16 @@ class InputDataResolution(object):
     """This method controls the execution of the DIRAC input data modules according
        to the ILC VO policy defined in the configuration service.
     """
-    if self.arguments['Configuration'].has_key('SiteName'):
+    if 'SiteName' in self.arguments['Configuration']:
       site = self.arguments['Configuration']['SiteName']
     else:
       site = DIRAC.siteName()
 
     policy = []
-    if not self.arguments.has_key('Job'):
+    if 'Job' not in self.arguments:
       self.arguments['Job'] = {}
 
-    if self.arguments['Job'].has_key('InputDataPolicy'):
+    if 'InputDataPolicy' in self.arguments['Job']:
       policy = self.arguments['Job']['InputDataPolicy']
       #In principle this can be a list of modules with the first taking precedence
       if type(policy) in types.StringTypes:
@@ -97,7 +97,7 @@ class InputDataResolution(object):
         policy = options[site]
         policy = [x.strip() for x in string.split(policy, ',')]
         self.log.info('Found specific input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
-      elif options.has_key('Default'):
+      elif 'Default' in options:
         policy = options['Default']
         policy = [x.strip() for x in string.split(policy, ',')]
         self.log.info('Applying default input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
@@ -113,7 +113,7 @@ class InputDataResolution(object):
           self.log.warn('Problem during %s execution' % modulePath)
           return result
 
-        if result.has_key('Failed'):
+        if 'Failed' in result:
           failedReplicas = result['Failed']
 
         if failedReplicas:

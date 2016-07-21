@@ -65,7 +65,7 @@ class GetSRMFile(ModuleBase):
         time.sleep(60)
         continue
       running = 0
-      if res['Value'].has_key('Running'):
+      if 'Running' in res['Value']:
         running = res['Value']['Running']
       if running < max_concurrent_running:
         break
@@ -74,7 +74,7 @@ class GetSRMFile(ModuleBase):
 
     self.setApplicationStatus('Downloading SRM files')
     for filed in self.files:
-      if not filed.has_key('file') or not filed.has_key('site'):
+      if 'file' not in filed or 'site' not in filed:
         self.log.error('Dictionnary does not contain correct keys')
         return S_ERROR('Dictionnary does not contain correct keys')
       start = os.getcwd()

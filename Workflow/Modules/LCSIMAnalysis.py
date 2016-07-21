@@ -52,17 +52,17 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
     :return: S_OK()
     """
     
-    if self.step_commons.has_key('inputXML'):
+    if 'inputXML' in self.step_commons:
       self.SteeringFile = self.step_commons['inputXML']
 
     #TODO: Next is necessary for old interface, should be removed when old prods are archived.
-    if self.step_commons.has_key('outputREC'):
+    if 'outputREC' in self.step_commons:
       self.outputREC = self.step_commons['outputREC']
       
-    if self.step_commons.has_key('outputDST'):
+    if 'outputDST' in self.step_commons:
       self.outputDST = self.step_commons['outputDST']
       
-    if self.step_commons.has_key("inputSlcio"):
+    if 'inputSlcio' in self.step_commons:
       inputf = self.step_commons["inputSlcio"]
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
@@ -74,19 +74,19 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
       if not self.detectorModel:
         self.detectorModel = "clic_sid_cdr.zip"
       
-    if self.step_commons.has_key('ExtraParams'):
+    if 'ExtraParams' in self.step_commons:
       self.extraparams = self.step_commons['ExtraParams']    
 
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
         #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
-        #if self.workflow_commons.has_key("MokkaOutput"):
+        #if 'MokkaOutput' in self.workflow_commons:
         #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
         #                                    int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_rec_"):
@@ -100,12 +100,12 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
                                            int(self.workflow_commons["JOB_ID"]))
           self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
-          if self.workflow_commons.has_key("SLICOutput"):
+          if 'SLICOutput' in self.workflow_commons:
             self.InputFile = [getProdFilename(self.workflow_commons["SLICOutput"], 
                                               int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))]
 
-    if self.step_commons.has_key("aliasproperties"):
+    if 'aliasproperties' in self.step_commons:
       self.aliasproperties = self.step_commons["aliasproperties"]
 
     if not len(self.InputFile) and len(self.InputData):

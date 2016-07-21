@@ -26,10 +26,10 @@ class DBDGenRegisterOutputData(ModuleBase):
     self.prodOutputLFNs = []
     
   def applicationSpecificInputs(self):
-    if self.workflow_commons.has_key('ProductionOutputData'):
+    if 'ProductionOutputData' in self.workflow_commons:
       self.prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
       
-    if self.workflow_commons.has_key('NbOfEvts'):
+    if 'NbOfEvts' in self.workflow_commons:
       self.nbofevents = self.workflow_commons[ 'NbOfEvts']          
     return S_OK("Parameters resolved")
       

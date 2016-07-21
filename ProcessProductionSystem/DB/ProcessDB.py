@@ -399,7 +399,7 @@ class ProcessDB ( DB ):
         res  = self._getFields('Software', ['AppName', 'AppVersion', 'Platform'],
                                ['idSoftware'], [row[0]], conn = connection)
         soft_dict[row[0]]['AppName'], soft_dict[row[0]]['AppVersion'], soft_dict[row[0]]['Platform'] = res['Value'][0]
-      if not   soft_dict[row[0]].has_key('Sites'):
+      if 'Sites' not in soft_dict[row[0]]:
         soft_dict[row[0]]['Sites'] = []
       res =   self._getFields('Sites', ['SiteName'], ['idSite'], [row[1]], conn = connection )
       if len(res['Value']):
@@ -597,7 +597,7 @@ class ProcessDB ( DB ):
         res = self._removeJob(opID, connection)
     else:
       #when new
-      if jobdict.has_key('Operation'):
+      if 'Operation' in jobdict:
         if not jobdict['Operation'] in self.Operations:
           return S_ERROR("Operation %s is not supported" % jobdict['Operation'])
       res = self._insert('SoftwareOperations', ['JobID', 'idSoftware', 'idSite'], [jobdict['JobID'], softid, siteid], connection)
@@ -620,10 +620,10 @@ class ProcessDB ( DB ):
     AppVersion = ProdDataDict['AppVersion']
     Platform   = ProdDataDict['Platform']
     SteeringFile = None
-    if ProdDataDict.has_key('SteeringFile'):
+    if 'SteeringFile' in ProdDataDict:
       SteeringFile = ProdDataDict['SteeringFile']
     InheritsFrom = None
-    if ProdDataDict.has_key('InheritsFrom'):
+    if 'InheritsFrom' in ProdDataDict:
       InheritsFrom = ProdDataDict['InheritsFrom']
 
     if not ProdType in self.ProdTypes:
@@ -762,7 +762,7 @@ class ProcessDB ( DB ):
     """ Mark site as banned or active
     """
     connection = self.__getConnection( connection )
-    if not sitedict.has_key('Status') or not sitedict.has_key('SiteName'):
+    if 'Status' not in sitedict or 'SiteName' not in sitedict:
       return S_ERROR("Missing mandatory key Status or SiteDict")
     if not sitedict['Status'] in self.SiteStatuses:
       return S_ERROR("Status %s is not a valid site status" % sitedict['Status'])
@@ -784,7 +784,7 @@ class ProcessDB ( DB ):
     """ Report if application is OK to use or not at a given site
     """
     connection = self.__getConnection( connection )
-    if not jobdict.has_key('JobID') or not jobdict.has_key('AppName') or not jobdict.has_key('AppVersion') or not jobdict.has_key('Platform'):
+    if 'JobID' not in jobdict or 'AppName' not in jobdict or 'AppVersion' not in jobdict or 'Platform' not in jobdict:
       return S_ERROR("Missing key")
 
     statusdict = {}
@@ -800,7 +800,7 @@ class ProcessDB ( DB ):
     """ Report that application installation failed at the given site
     """
     connection = self.__getConnection( connection )
-    if not jobdict.has_key('JobID') or not jobdict.has_key('AppName') or not jobdict.has_key('AppVersion') or not jobdict.has_key('Platform'):
+    if 'JobID' not in jobdict or 'AppName' not in jobdict or 'AppVersion' not in jobdict or 'Platform' not in jobdict:
       return S_ERROR("Missing key")
     statusdict = {}
     statusdict['Status'] = False

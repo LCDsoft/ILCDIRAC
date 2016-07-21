@@ -211,7 +211,7 @@ class ModuleBase(object):
 #      result = integrityDB.insertProblematic(source, fileMetadata)
 #      if not result['OK']:
 #        # Add it to the request
-#        if self.workflow_commons.has_key('Request'):
+#        if 'Request' in self.workflow_commons:
 #          request  = self.workflow_commons['Request']
 #          subrequest = DISETSubRequest(result['rpcStub']).getDictionary()
 #          request.addSubRequest(subrequest, 'integrity')

@@ -41,7 +41,7 @@ class ResetCounters ( AgentModule ):
       res = self.jobmon.getCurrentJobCounters(attribdict)
       if not res['OK']:
         continue
-      if res['Value'].has_key('Running'):
+      if 'Running' in res['Value']:
         sitedict[site] = res['Value']['Running']
       else:
         sitedict[site] = 0

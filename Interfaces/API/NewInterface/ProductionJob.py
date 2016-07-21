@@ -538,7 +538,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     if self.prodparameters.get('lumi', False):
       info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * \
                                                                self.prodparameters['NbInputFiles']))
-    if self.prodparameters.has_key('FCInputQuery'):
+    if 'FCInputQuery' in self.prodparameters:
       info.append('Using InputDataQuery :')
       for key, val in self.prodparameters['FCInputQuery'].iteritems():
         info.append('    %s = %s' % (key, val))

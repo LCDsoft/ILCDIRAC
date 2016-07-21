@@ -39,7 +39,7 @@ class StdHepConverter(ModuleBase):
       return self.result
 
 
-    if not os.environ.has_key("LCIO"):
+    if 'LCIO' not in os.environ:
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 

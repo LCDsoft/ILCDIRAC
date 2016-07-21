@@ -82,12 +82,12 @@ class OverlayInput (ModuleBase):
 
     self.pathToOverlayFiles = self.step_commons.get("pathToOverlayFiles", self.pathToOverlayFiles)
 
-    if self.step_commons.has_key('Detector'):
+    if 'Detector' in self.step_commons:
       self.detectormodel = self.step_commons['Detector']
     if not self.detectormodel and not self.detector and not self.pathToOverlayFiles:
       return S_ERROR('Detector model not defined')
 
-    if self.step_commons.has_key('Energy'):
+    if 'Energy' in self.step_commons:
       self.energytouse = self.step_commons['Energy']
 
     if self.energy:
@@ -102,21 +102,21 @@ class OverlayInput (ModuleBase):
     if not self.energytouse and not self.pathToOverlayFiles:
       return S_ERROR("Energy not set anywhere!")
 
-    if self.step_commons.has_key('BXOverlay'):
+    if 'BXOverlay' in self.step_commons:
       self.BXOverlay = self.step_commons['BXOverlay']
     if not self.BXOverlay:
       return S_ERROR("BXOverlay parameter not defined")
 
-    if self.step_commons.has_key('ggtohadint'):
+    if 'ggtohadint' in self.step_commons:
       self.ggtohadint = self.step_commons['ggtohadint']
 
-    if self.step_commons.has_key('ProdID'):
+    if 'ProdID' in self.step_commons:
       self.prodid = self.step_commons['ProdID']
 
-    if self.step_commons.has_key('NbSigEvtsPerJob'):
+    if 'NbSigEvtsPerJob' in self.step_commons:
       self.NbSigEvtsPerJob = self.step_commons['NbSigEvtsPerJob']
 
-    if self.step_commons.has_key('BkgEvtType'):
+    if 'BkgEvtType' in self.step_commons:
       self.BkgEvtType = self.step_commons['BkgEvtType']
     self.metaEventType = self.BkgEvtType
       
@@ -126,7 +126,7 @@ class OverlayInput (ModuleBase):
       return res
     if res['Value'] < 0 and not self.pathToOverlayFiles:
       return S_ERROR("No suitable ProdID") 
-    #if self.workflow_commons.has_key('Site'):
+    #if 'Site' in self.workflow_commons:
     #  self.site = self.workflow_commons['Site']
 
     self.useEnergyForFileLookup = self.step_commons.get("useEnergyForFileLookup", self.useEnergyForFileLookup)
@@ -321,7 +321,7 @@ class OverlayInput (ModuleBase):
       #  time.sleep(60)
       #  continue
       #running = 0
-      #if res['Value'].has_key('Running'):
+      #if 'Running' in res['Value']:
       #  running = res['Value']['Running']
 
       res = overlaymon.canRun(self.site)

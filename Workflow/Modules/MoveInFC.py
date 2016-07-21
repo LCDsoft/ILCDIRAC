@@ -37,7 +37,7 @@ class MoveInFC(ModuleBase):
       for files in self.InputData:
         self.InputFile.append(files)
     
-    if self.step_commons.has_key('listoutput'):
+    if 'listoutput' in self.step_commons:
       self.listoutput = self.step_commons['listoutput'][0]
     
     return S_OK()

@@ -43,7 +43,7 @@ class SIDProductionJob(ProductionJob):
             return self._reportError("Key syntax error %s, should be %s" % (key, meta), name = 'SIDProduction')
       if not metaFCkeys.count(key):
         return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
-    #if not metadata.has_key("ProdID"):
+    #if 'ProdID' not in metadata:
     #  return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
     res = client.findDirectoriesByMetadata(metadata)
     if not res['OK']:
@@ -58,39 +58,39 @@ class SIDProductionJob(ProductionJob):
       compatmeta = res['Value']
       compatmeta.update(metadata)
       
-    if compatmeta.has_key('EvtType'):
+    if 'EvtType' in compatmeta:
       if type(compatmeta['EvtType']) in types.StringTypes:
         self.evttype  = compatmeta['EvtType']
       if type(compatmeta['EvtType']) == type([]):
         self.evttype = compatmeta['EvtType'][0]
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
-    if compatmeta.has_key('NumberOfEvents'):
+    if 'NumberOfEvents' in compatmeta:
       if type(compatmeta['NumberOfEvents']) == type([]):
         self.nbevts = int(compatmeta['NumberOfEvents'][0])
       else:
         self.nbevts = int(compatmeta['NumberOfEvents'])
 
     
-    if compatmeta.has_key("Energy"):
+    if 'Energy' in compatmeta:
       if type(compatmeta["Energy"]) in types.StringTypes:
         self.energycat = compatmeta["Energy"]
       if type(compatmeta["Energy"]) == type([]):
         self.energycat = compatmeta["Energy"][0]
 
-    if compatmeta.has_key("Polarisation"):
+    if 'Polarisation' in compatmeta:
       if type(compatmeta["Polarisation"]) in types.StringTypes:
         self.polarization = compatmeta["Polarisation"]
       if type(compatmeta["Polarisation"]) == type([]):
         self.polarization = compatmeta["Polarisation"][0]
 
-    if compatmeta.has_key("MachineParams"):
+    if 'MachineParams' in compatmeta:
       if type(compatmeta["MachineParams"]) in types.StringTypes:
         self.machineparams = compatmeta["MachineParams"]
       if type(compatmeta["MachineParams"]) == type([]):
         self.machineparams = compatmeta["MachineParams"][0]
     gendata = False    
-    if compatmeta.has_key('Datatype'):
+    if 'Datatype' in compatmeta:
       if type(compatmeta['Datatype']) in types.StringTypes:
         self.datatype = compatmeta['Datatype']
         if compatmeta['Datatype'] == 'GEN':
@@ -100,7 +100,7 @@ class SIDProductionJob(ProductionJob):
         if compatmeta['Datatype'][0] == 'GEN':
           gendata = True
 
-    if compatmeta.has_key("DetectorModel") and not gendata:
+    if 'DetectorModel' in compatmeta and not gendata:
       if type(compatmeta["DetectorModel"]) in types.StringTypes:
         self.detector = compatmeta["DetectorModel"]
       if type(compatmeta["DetectorModel"]) == type([]):

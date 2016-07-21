@@ -52,7 +52,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     :return: S_OK()
     """
 
-    if self.workflow_commons.has_key('ParametricInputSandbox'):
+    if 'ParametricInputSandbox' in self.workflow_commons:
       paramsb = self.workflow_commons['ParametricInputSandbox']
       if not type(paramsb) == types.ListType:
         if len(paramsb):
@@ -66,16 +66,16 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     self.outputREC = self.step_commons.get('outputREC', self.outputREC)
     self.outputDST = self.step_commons.get('outputDST', self.outputDST)
       
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"] and len(self.OutputFile)==0:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
         #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
-        #if self.workflow_commons.has_key("MokkaOutput"):
+        #if 'MokkaOutput' in self.workflow_commons:
         #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
         #                                    int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_rec_"):
@@ -89,7 +89,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
                                            int(self.workflow_commons["JOB_ID"]))
           self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
-          #if self.workflow_commons.has_key("MokkaOutput"):
+          #if 'MokkaOutput' in self.workflow_commons:
           #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
           self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),

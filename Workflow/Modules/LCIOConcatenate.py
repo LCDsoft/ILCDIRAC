@@ -38,7 +38,7 @@ class LCIOConcatenate(ModuleBase):
       return S_ERROR( 'No output file defined' )
     
     if self.isProdJob:
-      if self.workflow_commons.has_key('ProductionOutputData'):
+      if 'ProductionOutputData' in self.workflow_commons:
         outputlist = self.workflow_commons['ProductionOutputData'].split(";")
         for obj in outputlist:
           if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
@@ -67,7 +67,7 @@ class LCIOConcatenate(ModuleBase):
       self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
 
-    if not os.environ.has_key("LCIO"):
+    if 'LCIO' not in os.environ:
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 

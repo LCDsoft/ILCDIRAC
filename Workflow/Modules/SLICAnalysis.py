@@ -51,7 +51,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     elif self.jobID:
       self.RandomSeed = self.jobID
 
-    if self.workflow_commons.has_key("IS_PROD") and self.workflow_commons["IS_PROD"]:
+    if 'IS_PROD' in self.workflow_commons and self.workflow_commons["IS_PROD"]:
       self.OutputFile = getProdFilename(self.OutputFile,
                                         int(self.workflow_commons["PRODUCTION_ID"]),
                                         int(self.workflow_commons["JOB_ID"]))
@@ -177,16 +177,16 @@ class SLICAnalysis(CompactMixin, ModuleBase):
   def getEnvScript(self, sysconfig, appname, appversion):
     """ This is called in case CVMFS is not there.
     """
-    if not os.environ.has_key('SLIC_DIR'):
+    if 'SLIC_DIR' not in os.environ:
       self.log.error('SLIC_DIR not found, probably the software installation failed')
       return S_ERROR('SLIC_DIR not found, probably the software installation failed')
-    if not os.environ.has_key('SLIC_VERSION'):
+    if 'SLIC_VERSION' not in os.environ:
       self.log.error('SLIC_VERSION not found, probably the software installation failed')
       return S_ERROR('SLIC_VERSION not found, probably the software installation failed')
-    if not os.environ.has_key('LCDD_VERSION'):
+    if 'LCDD_VERSION' not in os.environ:
       self.log.error('LCDD_VERSION not found, probably the software installation failed')
       return S_ERROR('LCDD_VERSION not found, probably the software installation failed')
-    #if not os.environ.has_key('XERCES_VERSION'):
+    #if 'XERCES_VERSION' not in os.environ:
     #  self.log.error('XERCES_VERSION not found, probably the software installation failed')
     #  return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
 
@@ -204,7 +204,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     script.write("######################\n")
     script.write("## Env script for SLIC\n")
     script.write("######################\n")
-    if os.environ.has_key('XERCES_VERSION'):
+    if 'XERCES_VERSION' in os.environ:
       script.write('declare -x XERCES_LIB_DIR=%s/packages/xerces/%s/lib\n' % (mySoftwareRoot, 
                                                                               os.environ['XERCES_VERSION']))
       if new_ld_lib_path:

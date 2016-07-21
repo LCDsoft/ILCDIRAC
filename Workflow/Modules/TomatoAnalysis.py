@@ -29,10 +29,10 @@ class TomatoAnalysis(MarlinAnalysis):
   def applicationSpecificInputs(self):
     """ Implement the application specific inputs defined in ModuleBase
     """
-    if self.step_commons.has_key('Collections'):
+    if 'Collections' in self.step_commons:
       self.collection = self.step_commons['Collections']
     
-    if self.step_commons.has_key('InputSLCIO'):
+    if 'InputSLCIO' in self.step_commons:
       inputf = self.step_commons["InputSLCIO"]
       if not type(inputf) == types.ListType:
         inputf = inputf.split(";")
