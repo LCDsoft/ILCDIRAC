@@ -93,11 +93,7 @@ class DiracILC(Dirac):
     :type job: ~ILCDIRAC.Interfaces.API.NewInterface.Job.Job
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
-    try:
-      formulationErrors = job._getErrors()
-    except Exception, x:
-      self.log.verbose( 'Could not obtain job errors:%s' % ( x ) )
-      formulationErrors = {}
+    formulationErrors = job.errorDict
 
     if formulationErrors:
       for method, errorList in formulationErrors.items():
