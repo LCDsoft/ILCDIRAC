@@ -128,12 +128,12 @@ class DiracILC(Dirac):
     jobs = self.jobRepo.readRepository()['Value']
     for jobID in sorted( jobs.keys() ):
       jobDict = jobs[jobID]
-      if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
-        if ( jobDict.has_key( 'UserOutputData' ) and ( not int( jobDict['UserOutputData'] ) ) ) or \
-        ( not jobDict.has_key( 'UserOutputData' ) ):
+      if 'State' in jobDict and ( jobDict['State'] in requestedStates ):
+        if ( 'UserOutputData' in jobDict and ( not int( jobDict['UserOutputData'] ) ) ) or \
+           ( 'UserOutputData' not in jobDict ):
           params = self.parameters(int(jobID))
           if params['OK']:
-            if params['Value'].has_key('UploadedOutputData'):
+            if 'UploadedOutputData' in params['Value']:
               lfn = params['Value']['UploadedOutputData']
               llist.append(lfn)
     return llist
