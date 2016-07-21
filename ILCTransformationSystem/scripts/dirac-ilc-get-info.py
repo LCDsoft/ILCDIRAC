@@ -9,10 +9,10 @@ Options:
   -f, --File lfn                 LFN from the Production
 
 """
+import pprint
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, exit as dexit
-import pprint, types
 
 __RCSID__ = "$Id$"
 
@@ -108,18 +108,16 @@ def _createFileInfo(fmeta):
     except Exception: ##cannot do anything else because decode raises base Exception #pylint: disable=W0703
       dinfo = eval(fmeta["AdditionalInfo"])
     info.append(" - There is some additional info:")
-    if type(dinfo) == types.TupleType:
+    if isinstance( dinfo, tuple ):
       dinfo = dinfo[0]
-    if type(dinfo) == types.DictType:
+    if isinstance( dinfo, dict ):
       dictinfo = dinfo
-      if 'xsection' in dictinfo:
-        if 'sum' in dictinfo['xsection']:
-          if 'xsection' in dictinfo['xsection']['sum']:
-            xsec= str(dictinfo['xsection']['sum']['xsection'])
-            if 'err_xsection' in dictinfo['xsection']['sum']:
-              xsec += ' +/- %s' % dictinfo['xsection']['sum']['err_xsection']
-            xsec += "fb"
-            info.append('    Cross section %s' % xsec)
+      if 'xsection' in dictinfo and 'sum' in dictinfo['xsection'] and 'xsection' in dictinfo['xsection']['sum']:
+        xsec= str(dictinfo['xsection']['sum']['xsection'])
+        if 'err_xsection' in dictinfo['xsection']['sum']:
+          xsec += ' +/- %s' % dictinfo['xsection']['sum']['err_xsection']
+        xsec += "fb"
+        info.append('    Cross section %s' % xsec)
 
     else:
       info.append('    %s' % dinfo)
@@ -190,26 +188,25 @@ def _getInfo():
       trans['AddParams'] = res['Value']
     #do something with transf
     res1 = fc.findDirectoriesByMetadata({'ProdID':clip.prodid})
-    if res1['OK']:
-      if len(res1['Value'].values()):
-        gLogger.verbose("Found %i directory matching the metadata" % len(res1['Value'].values()) )
-        for dirs in res1['Value'].values():
-          res = fc.getDirectoryUserMetadata(dirs)
-          if res['OK']:
-            fmeta.update(res['Value'])
-          else:
-            gLogger.error("Failed to get metadata for %s, SKIPPING" % dirs)
-            continue
-          res = fc.listDirectory(dirs)
-          if not res['OK']:
-            continue
-          content = res['Value']['Successful'][dirs]
-          if content["Files"]:
-            for f_ex in content["Files"].keys():
-              res = fc.getFileUserMetadata(f_ex)
-              if res['OK']:
-                fmeta.update(res['Value'])
-                break
+    if res1['OK'] and len(res1['Value'].values()):
+      gLogger.verbose("Found %i directory matching the metadata" % len(res1['Value'].values()) )
+      for dirs in res1['Value'].values():
+        res = fc.getDirectoryUserMetadata(dirs)
+        if res['OK']:
+          fmeta.update(res['Value'])
+        else:
+          gLogger.error("Failed to get metadata for %s, SKIPPING" % dirs)
+          continue
+        res = fc.listDirectory(dirs)
+        if not res['OK']:
+          continue
+        content = res['Value']['Successful'][dirs]
+        if content["Files"]:
+          for f_ex in content["Files"].keys():
+            res = fc.getFileUserMetadata(f_ex)
+            if res['OK']:
+              fmeta.update(res['Value'])
+              break
 
     #here we have trans and fmeta
     info.append("")

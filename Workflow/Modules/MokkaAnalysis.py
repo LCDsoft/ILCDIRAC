@@ -395,7 +395,7 @@ done
         os.rename("out.slcio", self.OutputFile)
 
     failed = False
-    if not status in [0, 106, 9]:
+    if status not in [0, 106, 9]:
       self.log.error( "Mokka execution completed with errors:" )
       failed = True
     elif status in [106, 9]:

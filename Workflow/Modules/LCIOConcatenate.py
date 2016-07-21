@@ -5,14 +5,16 @@ Module to concatenate LCIO files
 :since: Dec 17, 2011
 """
 
-__RCSID__ = "$Id$"
+import os
 
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
-import os
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class LCIOConcatenate(ModuleBase):
   """ LCIO concatenate module
@@ -71,8 +73,6 @@ class LCIOConcatenate(ModuleBase):
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
-    # removeLibc
-
     removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
 
     # Setting up script
@@ -100,9 +100,9 @@ lcio concat -f *.slcio -o %s
 exit $?
 
 """ % (
-    LD_LIBRARY_PATH,
-    PATH,
-    self.OutputFile
+  LD_LIBRARY_PATH,
+  PATH,
+  self.OutputFile
 )
 
     # Write script to file
@@ -145,4 +145,3 @@ exit $?
     
     self.listDir()
     return self.finalStatusReport(status)
-
