@@ -55,7 +55,7 @@ class UserJob(Job):
                                self.__class__.__name__)
     if 'group' in self.proxyinfo['Value']:
       group = self.proxyinfo['Value']['group']
-      if not group in self.usergroup:
+      if group not in self.usergroup:
         self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
         return self._reportError("Not allowed to submit job, you need a %s proxy." % self.usergroup,
                                  self.__class__.__name__)

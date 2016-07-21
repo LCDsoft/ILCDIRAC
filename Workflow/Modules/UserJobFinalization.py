@@ -6,23 +6,23 @@ defined in the user workflow.
 :since: Sep 01, 2010
 """
 
-__RCSID__ = "$Id$"
+import os
+import random
+import time
 
 from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
-
 from DIRAC.Core.Security.ProxyInfo                         import getProxyInfo
-
+from DIRAC                                                 import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.Core.Utilities                                  import List
+import DIRAC
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData               import constructUserLFNs
 from ILCDIRAC.Core.Utilities.ResolveSE                    import getDestinationSEList
 
-from DIRAC                                                 import S_OK, S_ERROR, gLogger, gConfig
+__RCSID__ = "$Id$"
 
-import DIRAC
-import os, random, time
 
 class UserJobFinalization(ModuleBase):
   """ User Job finalization: takes care of uploading the output data to the specified storage elements
@@ -57,11 +57,11 @@ class UserJobFinalization(ModuleBase):
     self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
     self.enable = self.step_commons.get('Enable', self.enable)
-    if not type(self.enable) == type(True):
+    if not isinstance( self.enable, bool ):
       self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
       self.enable = False
 
-    if not type(self.failoverTest) == type(True):
+    if not isinstance( self.failoverTest, bool ):
       self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
       self.failoverTest = False
 
@@ -74,11 +74,11 @@ class UserJobFinalization(ModuleBase):
 
     #Use LHCb utility for local running via dirac-jobexec
     self.userOutputData = self.workflow_commons.get('UserOutputData', self.userOutputData)
-    if self.userOutputData and not type(self.userOutputData) == type([]):
+    if self.userOutputData and not isinstance( self.userOutputData, list ):
       self.userOutputData = [i.strip() for i in self.userOutputData.split(';')]
 
     specifiedSE = self.workflow_commons.get('UserOutputSE', '')
-    if not type(specifiedSE) == type([]) and specifiedSE:
+    if not isinstance( specifiedSE, list ) and specifiedSE:
       self.userOutputSE = [i.strip() for i in specifiedSE.split(';')]
       self.log.debug("userOutputSE is: " + str(self.userOutputSE) )
     else:
@@ -168,7 +168,7 @@ class UserJobFinalization(ModuleBase):
     if self.userOutputSE:
       prependSEs = []
       for userSE in self.userOutputSE:
-        if not userSE in orderedSEs:
+        if userSE not in orderedSEs:
           prependSEs.append(userSE)
       orderedSEs = prependSEs + orderedSEs
 
@@ -236,7 +236,7 @@ class UserJobFinalization(ModuleBase):
     if not result['OK']:
       return S_ERROR('Could not obtain proxy information')
 
-    if not 'username' in result['Value']:
+    if 'username' not in result['Value']:
       return S_ERROR('Could not get username from proxy')
 
     username = result['Value']['username']
@@ -250,7 +250,7 @@ class UserJobFinalization(ModuleBase):
     if not result['OK']:
       return S_ERROR('Could not obtain proxy information')
 
-    if not 'group' in result['Value']:
+    if 'group' not in result['Value']:
       return S_ERROR('Could not get group from proxy')
 
     group = result['Value']['group']

@@ -7,9 +7,15 @@ Stolen by S. Poss from LHCbSystem.Workflow.Modules
 :author: S. Poss
 :author: S. Paterson
 """
-import shutil
 
-__RCSID__ = "$Id$"
+import os
+import re
+import shutil
+import string
+import sys
+import urllib
+
+from random import choice
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Security.ProxyInfo                        import getProxyInfoAsString
@@ -21,16 +27,14 @@ from DIRAC.Core.Utilities.File                            import makeGuid
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 from DIRAC.RequestManagementSystem.Client.Request         import Request
 from DIRAC.RequestManagementSystem.private.RequestValidator   import RequestValidator
+from DIRAC.RequestManagementSystem.Client.Operation       import Operation
+from DIRAC.RequestManagementSystem.Client.File            import File
 
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, checkCVMFS
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfEvents
 
-from DIRAC.RequestManagementSystem.Client.Operation       import Operation
-from DIRAC.RequestManagementSystem.Client.File            import File
-
-import os, string, sys, re, types, urllib
-from random import choice
+__RCSID__ = "$Id$"
 
 def generateRandomString(length=8, chars = string.letters + string.digits):
   """Return random string of 8 chars, used by :mod:`~ILCDIRAC.Workflow.Modules.PythiaAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
@@ -278,7 +282,7 @@ class ModuleBase(object):
     mandatoryKeys = ['path', 'workflowSE', 'lfn'] #filedict is used for requests
     for fileName, metadata in candidateFiles.items():
       for key in mandatoryKeys:
-        if not key in metadata:
+        if key not in metadata:
           return S_ERROR('File %s has missing key %s' % (fileName, key))
     return S_OK(candidateFiles)
 
@@ -335,7 +339,7 @@ class ModuleBase(object):
     mandatoryKeys = ['GUID', 'filedict'] #filedict is used for requests (this method adds guid and filedict)
     for fileName, metadata in final.items():
       for key in mandatoryKeys:
-        if not key in metadata:
+        if key not in metadata:
           return S_ERROR('File %s has missing %s' % (fileName, key))
 
     return S_OK(final)
@@ -343,7 +347,7 @@ class ModuleBase(object):
   def _getRequestContainer( self ):
     """ just return the Request reporter (object)
     """
-    if not 'Request' in self.workflow_commons or not self.workflow_commons['Request'].RequestName:
+    if 'Request' not in self.workflow_commons or not self.workflow_commons['Request'].RequestName:
       self.workflow_commons['Request'] = Request()
       self.workflow_commons['Request'].RequestName = 'job_%d_request.xml' % int(self.jobID)
       self.workflow_commons['Request'].JobID = int(self.jobID)
@@ -355,7 +359,7 @@ class ModuleBase(object):
     """ just return the job reporter (object, always defined by dirac-jobexec)
     """
 
-    if not 'JobReport' in self.workflow_commons:
+    if 'JobReport' not in self.workflow_commons:
       self.workflow_commons['JobReport'] = JobReport( self.jobID )
     return self.workflow_commons['JobReport']
 
@@ -408,7 +412,7 @@ class ModuleBase(object):
     if 'InputFile' in self.step_commons:
       ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string
       inputf = self.step_commons['InputFile']
-      if not type(inputf) == types.ListType:
+      if not isinstance( inputf, list ):
         if len(inputf):
           inputf = inputf.split(";")
         else:

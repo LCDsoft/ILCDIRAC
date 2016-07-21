@@ -22,12 +22,13 @@ to list only the directories containing the files use the "-D" flag::
 :since: Mar 20, 2013
 :author: stephane
 """
-__RCSID__ = "$Id$"
+
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
-from types import ListType, DictType
 from DIRAC.Core.Utilities import uniqueElements
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+
+__RCSID__ = "$Id$"
 
 OPLIST = ['>=','<=','>','<','!=','=']
 SCRIPTNAME = "dirac-ilc-find-in-FC"
@@ -77,7 +78,7 @@ def _createQueryDict(argss):
         return None
         
       name,value = arg.split(operation)
-      if not name in typeDict:
+      if name not in typeDict:
         gLogger.error("Error: metadata field %s not defined" % name)
         return None
       mtype = typeDict[name]
@@ -95,10 +96,10 @@ def _createQueryDict(argss):
       valueList = [ x.replace("'","").replace('"','') for x in value.split(',') ]
       mvalue = valueList
       if mtype[0:3].lower() == 'int':
-        mvalue = [ int(x) for x in valueList if not x in ['Missing','Any'] ]
+        mvalue = [ int(x) for x in valueList if x not in ['Missing','Any'] ]
         mvalue += [ x for x in valueList if x in ['Missing','Any'] ]
       if mtype[0:5].lower() == 'float':
-        mvalue = [ float(x) for x in valueList if not x in ['Missing','Any'] ]
+        mvalue = [ float(x) for x in valueList if x not in ['Missing','Any'] ]
         mvalue += [ x for x in valueList if x in ['Missing','Any'] ]
       if operation == "=":
         operation = 'in'
@@ -107,7 +108,7 @@ def _createQueryDict(argss):
       mvalue = {operation:mvalue}  
     else:            
       mvalue = value.replace("'","").replace('"','')
-      if not value in ['Missing','Any']:
+      if value not in ['Missing','Any']:
         if mtype[0:3].lower() == 'int':
           mvalue = int(value)
         if mtype[0:5].lower() == 'float':
@@ -116,40 +117,40 @@ def _createQueryDict(argss):
         mvalue = {operation:mvalue}      
                               
     if name in metaDict:
-      if type(metaDict[name]) == DictType:
-        if type(mvalue) == DictType:
+      if isinstance( metaDict[name], dict ):
+        if isinstance( mvalue, dict ):
           op,value = mvalue.items()[0]
           if op in metaDict[name]:
-            if type(metaDict[name][op]) == ListType:
-              if type(value) == ListType:
+            if isinstance( metaDict[name][op], list ):
+              if isinstance( value, list ):
                 metaDict[name][op] = uniqueElements(metaDict[name][op] + value)
               else:
                 metaDict[name][op] = uniqueElements(metaDict[name][op].append(value))     
             else:
-              if type(value) == ListType:
+              if isinstance( value, list ):
                 metaDict[name][op] = uniqueElements([metaDict[name][op]] + value)
               else:
                 metaDict[name][op] = uniqueElements([metaDict[name][op],value])       
           else:
             metaDict[name].update(mvalue)
         else:
-          if type(mvalue) == ListType:
+          if isinstance( mvalue, list ):
             metaDict[name].update({'in':mvalue})
           else:  
             metaDict[name].update({'=':mvalue})
-      elif type(metaDict[name]) == ListType:   
-        if type(mvalue) == DictType:
+      elif isinstance( metaDict[name], list ):
+        if isinstance( mvalue, dict ):
           metaDict[name] = {'in':metaDict[name]}
           metaDict[name].update(mvalue)
-        elif type(mvalue) == ListType:
+        elif isinstance( mvalue, list ):
           metaDict[name] = uniqueElements(metaDict[name] + mvalue)
         else:
           metaDict[name] = uniqueElements(metaDict[name].append(mvalue))      
       else:
-        if type(mvalue) == DictType:
+        if isinstance( mvalue, dict ):
           metaDict[name] = {'=':metaDict[name]}
           metaDict[name].update(mvalue)
-        elif type(mvalue) == ListType:
+        elif isinstance( mvalue, list ):
           metaDict[name] = uniqueElements([metaDict[name]] + mvalue)
         else:
           metaDict[name] = uniqueElements([metaDict[name],mvalue])          

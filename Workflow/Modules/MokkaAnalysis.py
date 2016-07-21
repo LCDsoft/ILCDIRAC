@@ -8,21 +8,21 @@ Called by Job Agent.
 :author: Stephane Poss
 :author: Przemyslaw Majewski
 '''
-
-__RCSID__ = "$Id$"
+import os
+import shutil
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareSteeringFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
-
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
-from DIRAC                                                import S_OK, S_ERROR, gLogger
 
-import  os, shutil, types
+__RCSID__ = "$Id$"
 
 class MokkaAnalysis(ModuleBase):
   """
@@ -60,7 +60,7 @@ class MokkaAnalysis(ModuleBase):
 
     if 'stdhepFile' in self.step_commons:
       inputf = self.step_commons["stdhepFile"]
-      if not type(inputf) == types.ListType:
+      if not isinstance( inputf, list ):
         inputf = inputf.split(";")
       self.InputFile = inputf
 

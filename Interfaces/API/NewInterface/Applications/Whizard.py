@@ -312,7 +312,7 @@ class Whizard(LCApplication):
 
     if not self.fullParameterDict and self.parameterDict:
       for key in self.parameterDict.keys():
-        if not key in self._allowedparams:
+        if key not in self._allowedparams:
           return S_ERROR("Unknown parameter %s"%key)
 
       self.setParameter( 'PNAME1', 'e1', "Assuming incoming beam 1 to be electrons" )
@@ -385,7 +385,7 @@ class Whizard(LCApplication):
     return S_OK()
 
   def setParameter(self, parameter, defaultValue, docString):
-    if not parameter in self.parameterDict:
+    if parameter not in self.parameterDict:
       self._log.info(docString)
       self.parameters.append( "%s=%s" % (parameter, defaultValue) )
     else:
