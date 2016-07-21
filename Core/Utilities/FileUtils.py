@@ -4,10 +4,13 @@ Several file utilities
 :since: Mar 13, 2013
 :author: sposs
 '''
-__RCSID__ = "$Id$"
 
-import os, shutil, glob, re
-from distutils import dir_util, errors
+import glob
+import os
+import re
+import shutil
+
+from distutils import dir_util, errors #pylint: disable=no-name-in-module
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
@@ -20,6 +23,7 @@ from DIRAC.RequestManagementSystem.Client.Operation         import File
 from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
 from DIRAC.RequestManagementSystem.Client.ReqClient         import ReqClient
 
+__RCSID__ = "$Id$"
 
 def upload(path, appTar):
   """ Upload software tar ball to storage
@@ -108,4 +112,3 @@ def fullCopy(srcdir, dstdir, item):
       except EnvironmentError, why:
         return S_ERROR(str(why))
   return S_OK()
-
