@@ -5,3 +5,7 @@ pep8:
 
 requirements:
     - .gitlab-ci.d/requirements.txt
+
+ignore-patterns:
+    - .*/Tests/.*
+    - Test_.*.py
