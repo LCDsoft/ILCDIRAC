@@ -66,7 +66,7 @@ Running DDSim
   job.submit(dIlc)
 
 
-Running Marlin and then DDSim
+Running DDSim and then Marlin
 -----------------------------
 
 .. code:: python
@@ -104,3 +104,50 @@ Running Marlin and then DDSim
 
   myJob.append( marlin )
   myJob.submit( dIlc )
+
+
+Running Overlay and Marlin
+--------------------------
+
+.. code:: python
+
+  from DIRAC.Core.Base import Script
+  Script.parseCommandLine()
+
+  from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+  from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+  from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin, OverlayInput
+
+  dIlc = DiracILC()
+
+  job = UserJob()
+  job.setInputData( "/ilc/prod/clic/350gev/h_nunu/ILD/SIM/00006524/000/h_nunu_sim_6524_1.slcio" )
+  job.setOutputSandbox( "*.log" )
+  job.setOutputData( "myReco_1.slcio" )
+
+  over = OverlayInput()
+  over.setBXOverlay( 300 )
+  over.setGGToHadInt( 0.0464 )
+  over.setNumberOfSignalEventsPerJob( 100 )
+  over.setBackgroundType( "gghad" )
+  over.setDetectorModel( "CLIC_ILD_CDR500" )
+  over.setEnergy( "350" )
+  over.setMachine( "clic_cdr" )
+
+  marlin = Marlin()
+  marlin.setVersion( "v0111Prod" )
+  marlin.setInputFile( "h_nunu_sim_6524_1.slcio" )
+  marlin.setOutputFile( "myReco_1.slcio" )
+  marlin.setSteeringFileVersion( "V22" )
+  marlin.setSteeringFile( "clic_ild_cdr500_steering_overlay_350.0.xml" )
+  marlin.setGearFile( "clic_ild_cdr500.gear" )
+  marlin.setNumberOfEvents( 10 )
+
+  res = job.append( over )
+  if not res['OK']:
+    print res['Message']
+    exit( 1 )
+  job.append( marlin )
+
+
+  job.submit( dIlc )
