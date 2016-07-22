@@ -1,24 +1,28 @@
 """
 ILD DBD specific  job utility
 
-@author: S. Poss
-@since: Jul 01, 2012
+:author: S. Poss, A. Sailer, C. Calancha
+:since: Jul 01, 2012
 """
 
-__RCSID__ = "235f82e (2014-10-20 17:03:09 +0200) Andre Sailer <andre.philippe.sailer@cern.ch>"
+import types
+import string
+import pprint
+from decimal import Decimal
 
-from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
+
+from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from ILCDIRAC.Core.Utilities.LFNPathUtilities import joinPathForMetaData
-import types, string, pprint
-from decimal import Decimal
+
+__RCSID__ = "$Id$"
 
 #pylint: disable=W0311
 #pylint: disable=R0902
 #pylint: disable=R0904
-#pylint: disable=unidiomatic-typecheck
 
 class ILDProductionJob( ProductionJob ):
     """ILD Production Jobs definition"""
@@ -106,8 +110,8 @@ class ILDProductionJob( ProductionJob ):
         metakeys = metadata.keys()
         res = self.fc.getMetadataFields()
 
-        for k,v in metadata.items():
-            print "[0] meta[%s] %s"%(k,v)
+        for key,val in metadata.iteritems():
+            print "[0] meta[%s] %s"%(key,val)
 
         if not res['OK']:
             print "Could not contact File Catalog"
@@ -122,10 +126,6 @@ class ILDProductionJob( ProductionJob ):
                         return self._reportError( "Key syntax error %s, should be %s" % ( key, meta ), name='ILDProduction' )
             if not metaFCkeys.count( key ):
                 return self._reportError( "Key %s not found in metadata keys, allowed are %s" % ( key, metaFCkeys ) )
-        # if 'ProdID' not in metadata:
-        #    return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
-
-        # res = self.fc.findDirectoriesByMetadata( metadata )
 
         # do i need this?
         tmp_metadata = {}
@@ -193,8 +193,8 @@ class ILDProductionJob( ProductionJob ):
             compatmeta.update( res['Value'] )
             print '[tino debug] Updated compatmeta to: %s' %compatmeta
 
-            for k,v in self.compatmeta.items():
-                print "my_lfn %s compatmeta[%s] %s"%(my_lfn,k,v)
+            for key,val in self.compatmeta.iteritems():
+                print "my_lfn %s compatmeta[%s] %s"%(my_lfn, key, val)
 
         else:
             if not self.dryrun:
@@ -206,29 +206,23 @@ class ILDProductionJob( ProductionJob ):
             print 'ERROR, compatmeta is empty: this is expected when dryrun = True'
 
         print 'compatmeta contains ProcessID? (%s) See below:'%compatmeta
-        for k,v in self.compatmeta.items():
-            print "compatmeta[%s] %s"%(k,v)
+        pprint.pprint(self.compatmeta)
 
         self.log.verbose( "Using %s to build path" % str( compatmeta ) )
-        if compatmeta.has_key( 'EvtClass' ):
-            if type( compatmeta['EvtClass'] ) in types.StringTypes and not self.evtclass:
+        if 'EvtClass' in compatmeta and not self.evtclass:
+            if type( compatmeta['EvtClass'] ) in types.StringTypes:
                 self.evtclass = compatmeta['EvtClass']
-            if type( compatmeta['EvtClass'] ) == type( [] ) and not self.evtclass:
+            if type( compatmeta['EvtClass'] ) == type( [] ):
                 self.evtclass = compatmeta['EvtClass'][0]
-        if compatmeta.has_key( 'EvtType' ):
-            if type( compatmeta['EvtType'] ) in types.StringTypes and not self.evttype:
+        if 'EvtType' in compatmeta and not self.evttype:
+            if type( compatmeta['EvtType'] ) in types.StringTypes:
                 self.evttype = compatmeta['EvtType']
-            if type( compatmeta['EvtType'] ) == type( [] ) and not self.evttype:
+            if type( compatmeta['EvtType'] ) == type( [] ):
                 self.evttype = compatmeta['EvtType'][0]
-        # elif compatmeta.has_key( 'GenProcessName' ):
-        #     if type( compatmeta['GenProcessName'] ) in types.StringTypes:
-        #         self.evttype = compatmeta['GenProcessName']
-        #     if type( compatmeta['GenProcessName'] ) == type( [] ):
-        #         self.evttype = compatmeta['GenProcessName'][0]            
-        elif compatmeta.has_key( 'GenProcessType' ):
-            if type( compatmeta['GenProcessType'] ) in types.StringTypes and not self.evttype:
+        elif 'GenProcessType' in compatmeta and not self.evttype:
+            if type( compatmeta['GenProcessType'] ) in types.StringTypes:
                 self.evttype = compatmeta['GenProcessType']
-            if type( compatmeta['GenProcessType'] ) == type( [] ) and not self.evttype:
+            if type( compatmeta['GenProcessType'] ) == type( [] ):
                 self.evttype = compatmeta['GenProcessType'][0]
         elif not self.evttype:
             return self._reportError( "Neither EvtType nor GenProcessType are in the metadata: if you dont set app evttype with setEvtType at least one should be " )
@@ -253,13 +247,13 @@ class ILDProductionJob( ProductionJob ):
             return self._reportError( "Cannot find ProcessID, it's mandatory for path definition" )
                 
                 
-        if compatmeta.has_key( "Energy" ):
+        if 'Energy' in compatmeta:
             if isinstance( compatmeta["Energy"], (int, long, basestring) ):
                 self.energycat = str(compatmeta["Energy"])
             elif isinstance( compatmeta["Energy"] , list ):
                 self.energycat = str(compatmeta["Energy"][0])
 
-        if compatmeta.has_key( "MachineParams" ):
+        if 'MachineParams' in compatmeta:
             if type( compatmeta["MachineParams"] ) in types.StringTypes:
                 self.machineparams = compatmeta["MachineParams"]
             if type( compatmeta["MachineParams"] ) == type( [] ):
@@ -267,17 +261,15 @@ class ILDProductionJob( ProductionJob ):
         if not self.machineparams:
             return self._reportError( "MachineParams should part of the metadata" )        
         gendata = False        
-        if compatmeta.has_key( 'Datatype' ):
+        if 'Datatype' in compatmeta:
             if type( compatmeta['Datatype'] ) in types.StringTypes:
                 self.datatype = compatmeta['Datatype']
-                if compatmeta['Datatype'].lower() == 'gen':
-                    gendata = True
             if type( compatmeta['Datatype'] ) == type( [] ):
                 self.datatype = compatmeta['Datatype'][0]
-                if compatmeta['Datatype'][0].lower() == 'gen':
-                    gendata = True
+            if self.datatype.lower() == 'gen':
+                gendata = True
 
-        if compatmeta.has_key( "DetectorModel" ) and not gendata:
+        if 'DetectorModel' in compatmeta and not gendata:
             if type( compatmeta["DetectorModel"] ) in types.StringTypes:
                 self.detector = compatmeta["DetectorModel"]
             if type( compatmeta["DetectorModel"] ) == type( [] ):
@@ -288,8 +280,7 @@ class ILDProductionJob( ProductionJob ):
 #
         if not self.energycat:# FIXME
             print "Printing metadata before exit:"
-            for k,v in self.compatmeta.items():
-                print "compatmeta[%s] %s"%(k,v)
+            pprint.pprint( self.compatmeta )
             return self._reportError("ERROR::ILDProductionJob.py: self.energycat is null")
 
         self.energy = Decimal( self.energycat )    
@@ -428,7 +419,6 @@ class ILDProductionJob( ProductionJob ):
                     self.basename = 's' + self.prodparameters['ILDConfigVersion']
                 elif application.appname == 'marlin':  # reco
                     self.basename = 'r' + self.prodparameters['ILDConfigVersion']
-                    ## FIXME: Get Mokka ILDConfig from previous production
                     self.basename += '.s' + self.compatmeta['ILDConfig']
                 elif application.appname == 'stdhepsplit':  # we dont need this tag in stdhep's: metadata search will fail if not present
                     self.compatmeta.pop( 'SoftwareTag', None )
@@ -437,9 +427,7 @@ class ILDProductionJob( ProductionJob ):
             else:
                 if application.datatype != 'gen': # for stdhepsplit we dont need to return
                     self._reportError(" Printing metadata before exit:")
-                    for k,v in self.compatmeta.items():
-                        print "compatmeta[%s] %s"%(k,v)
-
+                    pprint.pprint( self.compatmeta )
                     return self._reportError( "'SoftwareTag' should be defined to build the path")
 
         if 'DetectorModel'    in self.compatmeta:
@@ -499,29 +487,18 @@ class ILDProductionJob( ProductionJob ):
         if 'PolarizationB2' in self.compatmeta:
             self.basename += self.compatmeta['PolarizationB2']
 
-        
-        if not self.machine[-1] == '/':
-            self.machine += "/"
-            
-        if not self.evttype[-1] == '/':
-            evttypemeta = self.evttype
-            self.evttype += '/'    
-        else:
-            evttypemeta = self.evttype.rstrip( "/" )
-            
-        if not self.evtclass[-1] == '/':
-            evtclassmeta = self.evtclass
-            self.evtclass += '/'    
-        else:
-            evtclassmeta = self.evtclass.rstrip( "/" )
+
+        self.machine = self.machine.rstrip('/')+'/'
+
+        self.evttype = self.evttype.rstrip('/')+'/'
+        evttypemeta = self.evttype.rstrip('/')
+
+        self.evtclass = self.evtclass.rstrip('/')+'/'
 
         detectormeta = ''
         if self.detector:
-            if not self.detector[-1] == "/":
-                detectormeta = self.detector
-                self.detector += "/"
-            else:
-                detectormeta = self.detector.rstrip( "/" )
+          self.detector = self.detector.rstrip('/')+'/'
+          detectormeta = self.detector.rstrip('/')
 
         ##Always use ILDConfig for the path
         if 'ILDConfigVersion' not in self.prodparameters and application.datatype.lower() != "gen":
