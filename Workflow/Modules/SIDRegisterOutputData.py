@@ -31,7 +31,7 @@ class SIDRegisterOutputData(ModuleBase):
   def applicationSpecificInputs(self):
     if 'Enable' in self.step_commons:
       self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
+      if not isinstance( self.enable, bool ):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
         self.enable = False
         
