@@ -249,6 +249,8 @@ class OverlayInput(LCUtilityApplication):
     """
     if self.pathToOverlayFiles:
       res = FileCatalogClient().findFilesByMetadata({}, self.pathToOverlayFiles)
+      if not res['OK']:
+        return res
       self._log.notice("Found %i files in path %s" %( len(res['Value']), self.pathToOverlayFiles))
       if len(res['Value']) == 0 :
         return S_ERROR("OverlayInput: PathToFiles is specified, but there are no files in that path")
