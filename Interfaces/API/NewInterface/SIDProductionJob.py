@@ -8,7 +8,6 @@ SID DBD specific production job utility
 import string
 from decimal import Decimal
 
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
@@ -32,28 +31,14 @@ class SIDProductionJob(ProductionJob):
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
     """
-    metakeys = metadata.keys()
-    client = FileCatalogClient()
-    res = client.getMetadataFields()
-    if not res['OK']:
-      print "Could not contact File Catalog"
-      return S_ERROR()
-    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
-    for key in metakeys:
-      for meta in metaFCkeys:
-        if meta != key:
-          if meta.lower() == key.lower():
-            return self._reportError("Key syntax error %s, should be %s" % (key, meta), name = 'SIDProduction')
-      if not metaFCkeys.count(key):
-        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
-    #if 'ProdID' not in metadata:
-    #  return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
-    res = client.findDirectoriesByMetadata(metadata)
-    if not res['OK']:
-      return self._reportError("Error looking up the catalog for available directories")
-    elif len(res['Value']) < 1:
-      return self._reportError('Could not find any directory corresponding to the query issued')
-    dirs = res['Value'].values()
+    retMetaKey = self._checkMetaKeys( metadata.keys() )
+    if not retMetaKey['OK']:
+      return retMetaKey
+
+    retDirs = self._checkFindDirectories( metadata )
+    if not retDirs['OK']:
+      return retDirs
+    dirs = retDirs['Value'].values()
     for mdir in dirs:
       res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:

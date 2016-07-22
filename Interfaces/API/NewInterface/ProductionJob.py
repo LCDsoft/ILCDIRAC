@@ -194,46 +194,26 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed
     """
-    res = self.fc.findDirectoriesByMetadata(metadata)
-    if not res['OK']:
-      return res
-    dirs = res['Value']
-    if not len(dirs):
-      return S_ERROR("No directories found")
 
-    metakeys = metadata.keys()
-    res = self.fc.getMetadataFields()
-    if not res['OK']:
-      print "Could not contact File Catalog"
-      return S_ERROR("Could not contact File Catalog")
-    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
-    for key in metakeys:
-      for meta in metaFCkeys:
-        if meta != key:
-          if meta.lower() == key.lower():
-            return self._reportError("Key syntax error %s, should be %s" % (key, meta))
-      if not metaFCkeys.count(key):
-        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
+    retMetaKey = self._checkMetaKeys( metadata.keys() )
+    if not retMetaKey['OK']:
+      return retMetaKey
 
     if "ProdID" not in metadata:
       return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
     
-    res = self.fc.findDirectoriesByMetadata(metadata)
-    if not res['OK']:
-      return self._reportError("Error looking up the catalog for available directories")
-    elif len(res['Value']) < 1:
-      return self._reportError('Could not find any directories corresponding to the query issued')
-    dirs = res['Value'].values()
+    retDirs = self._checkFindDirectories( metadata )
+    if not retDirs['OK']:
+      return retDirs
+    dirs = retDirs['Value'].values()
     for mdir in dirs:
       gLogger.notice("Directory: %s" % mdir)
       res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
-    #res =   client.getCompatibleMetadata(metadata)
-    #if not res['OK']:
-    #  return self._reportError("Error looking up the catalog for compatible metadata")
       compatmeta = res['Value']
       compatmeta.update(metadata)
+
     if 'EvtType' in compatmeta:
       self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
     else:
@@ -814,4 +794,40 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     self.log.info ("Energy path is: ", energyPath)
     return energyPath
-  
+
+
+  def _checkMetaKeys( self, metakeys ):
+    """ check if metadata keys are allowed to be metadata
+
+    :param list metakeys: metadata keys for production metadata
+    :returns: S_OK, S_ERROR
+    """
+
+    res = self.fc.getMetadataFields()
+    if not res['OK']:
+      print "Could not contact File Catalog"
+      return S_ERROR("Could not contact File Catalog")
+    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
+
+    for key in metakeys:
+      for meta in metaFCkeys:
+        if meta != key and meta.lower() == key.lower():
+          return self._reportError("Key syntax error %r, should be %r" % (key, meta), name = self.__class__.__name__)
+      if key not in metaFCkeys:
+        return self._reportError("Key %r not found in metadata keys, allowed are %r" % (key, metaFCkeys))
+
+    return S_OK()
+
+  def _checkFindDirectories( self, metadata ):
+    """ find directories by metadata and check that there are directories found
+
+    :param dict metadata: metadata dictionary
+    :returns: S_OK, S_ERROR
+    """
+
+    res = self.fc.findDirectoriesByMetadata(metadata)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for available directories")
+    elif len(res['Value']) < 1:
+      return self._reportError('Could not find any directories corresponding to the query issued')
+    return res
