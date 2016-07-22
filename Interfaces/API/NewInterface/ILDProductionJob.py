@@ -5,7 +5,6 @@ ILD DBD specific  job utility
 :since: Jul 01, 2012
 """
 
-import types
 import string
 import pprint
 from decimal import Decimal
@@ -16,6 +15,7 @@ from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
 
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+from ILCDIRAC.Interfaces.Utilities import JobHelpers
 from ILCDIRAC.Core.Utilities.LFNPathUtilities import joinPathForMetaData
 
 __RCSID__ = "$Id$"
@@ -210,20 +210,11 @@ class ILDProductionJob( ProductionJob ):
 
         self.log.verbose( "Using %s to build path" % str( compatmeta ) )
         if 'EvtClass' in compatmeta and not self.evtclass:
-            if type( compatmeta['EvtClass'] ) in types.StringTypes:
-                self.evtclass = compatmeta['EvtClass']
-            if type( compatmeta['EvtClass'] ) == type( [] ):
-                self.evtclass = compatmeta['EvtClass'][0]
+            self.evtclass = JobHelpers.getValue( compatmeta['EvtClass'], str, basestring )
         if 'EvtType' in compatmeta and not self.evttype:
-            if type( compatmeta['EvtType'] ) in types.StringTypes:
-                self.evttype = compatmeta['EvtType']
-            if type( compatmeta['EvtType'] ) == type( [] ):
-                self.evttype = compatmeta['EvtType'][0]
+            self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
         elif 'GenProcessType' in compatmeta and not self.evttype:
-            if type( compatmeta['GenProcessType'] ) in types.StringTypes:
-                self.evttype = compatmeta['GenProcessType']
-            if type( compatmeta['GenProcessType'] ) == type( [] ):
-                self.evttype = compatmeta['GenProcessType'][0]
+            self.evttype = JobHelpers.getValue( compatmeta['GenProcessType'], str, basestring )
         elif not self.evttype:
             return self._reportError( "Neither EvtType nor GenProcessType are in the metadata: if you dont set app evttype with setEvtType at least one should be " )
 
@@ -234,46 +225,28 @@ class ILDProductionJob( ProductionJob ):
             return self._reportError( "GenProcessName is missing! It should appear in the basename")
 
         if 'GenProcessID' in compatmeta:
-            if type( compatmeta['GenProcessID'] ) == type( 2L ):
-                self.processID = compatmeta['GenProcessID']
-            if type( compatmeta['GenProcessID'] ) == type( [] ):
-                self.processID = int( compatmeta['GenProcessID'][0] )
+            self.processID = JobHelpers.getValue( compatmeta['GenProcessID'], int, (int, long) )
         elif 'ProcessID' in compatmeta:
-            if type( compatmeta['ProcessID'] ) == type( 2L ):
-                self.processID = compatmeta['ProcessID']
-            if type( compatmeta['ProcessID'] ) == type( [] ):
-                self.processID = int( compatmeta['ProcessID'][0] )
+            self.processID = JobHelpers.getValue( compatmeta['ProcessID'], int, (int, long) )
         else:
             return self._reportError( "Cannot find ProcessID, it's mandatory for path definition" )
                 
                 
         if 'Energy' in compatmeta:
-            if isinstance( compatmeta["Energy"], (int, long, basestring) ):
-                self.energycat = str(compatmeta["Energy"])
-            elif isinstance( compatmeta["Energy"] , list ):
-                self.energycat = str(compatmeta["Energy"][0])
+            self.energycat = JobHelpers.getValue( compatmeta['Energy'], str, (int, long, basestring) )
 
         if 'MachineParams' in compatmeta:
-            if type( compatmeta["MachineParams"] ) in types.StringTypes:
-                self.machineparams = compatmeta["MachineParams"]
-            if type( compatmeta["MachineParams"] ) == type( [] ):
-                self.machineparams = compatmeta["MachineParams"][0]
+            self.machineparams = JobHelpers.getValue( compatmeta['MachineParams'], str, basestring )
         if not self.machineparams:
-            return self._reportError( "MachineParams should part of the metadata" )        
-        gendata = False        
+            return self._reportError( "MachineParams should part of the metadata" )
+        gendata = False
         if 'Datatype' in compatmeta:
-            if type( compatmeta['Datatype'] ) in types.StringTypes:
-                self.datatype = compatmeta['Datatype']
-            if type( compatmeta['Datatype'] ) == type( [] ):
-                self.datatype = compatmeta['Datatype'][0]
+            self.datatype = JobHelpers.getValue( compatmeta['Datatype'], str, basestring )
             if self.datatype.lower() == 'gen':
                 gendata = True
 
         if 'DetectorModel' in compatmeta and not gendata:
-            if type( compatmeta["DetectorModel"] ) in types.StringTypes:
-                self.detector = compatmeta["DetectorModel"]
-            if type( compatmeta["DetectorModel"] ) == type( [] ):
-                self.detector = compatmeta["DetectorModel"][0]
+            self.detector = JobHelpers.getValue( compatmeta['DetectorModel'], str, basestring )
 
         self.compatmeta = compatmeta
         self.basename = ''
