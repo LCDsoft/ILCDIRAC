@@ -5,14 +5,17 @@ SID DBD specific production job utility
 :since: Jul 01, 2012
 """
 
-from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+import string
+from decimal import Decimal
+
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
 
-import types,string
-from decimal import Decimal
+from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+from ILCDIRAC.Interfaces.Utilities import JobHelpers
+
 
 __RCSID__ = "$Id$"
 
@@ -59,52 +62,30 @@ class SIDProductionJob(ProductionJob):
       compatmeta.update(metadata)
       
     if 'EvtType' in compatmeta:
-      if type(compatmeta['EvtType']) in types.StringTypes:
-        self.evttype  = compatmeta['EvtType']
-      if type(compatmeta['EvtType']) == type([]):
-        self.evttype = compatmeta['EvtType'][0]
+      self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
-    if 'NumberOfEvents' in compatmeta:
-      if type(compatmeta['NumberOfEvents']) == type([]):
-        self.nbevts = int(compatmeta['NumberOfEvents'][0])
-      else:
-        self.nbevts = int(compatmeta['NumberOfEvents'])
 
+    if 'NumberOfEvents' in compatmeta:
+      self.nbevts = JobHelpers.getValue( compatmeta['NumberOfEvents'], int, None )
     
     if 'Energy' in compatmeta:
-      if type(compatmeta["Energy"]) in types.StringTypes:
-        self.energycat = compatmeta["Energy"]
-      if type(compatmeta["Energy"]) == type([]):
-        self.energycat = compatmeta["Energy"][0]
+      self.energycat = JobHelpers.getValue( compatmeta['Energy'], str, basestring )
 
     if 'Polarisation' in compatmeta:
-      if type(compatmeta["Polarisation"]) in types.StringTypes:
-        self.polarization = compatmeta["Polarisation"]
-      if type(compatmeta["Polarisation"]) == type([]):
-        self.polarization = compatmeta["Polarisation"][0]
+      self.polarization = JobHelpers.getValue( compatmeta["Polarisation"], str, basestring )
 
     if 'MachineParams' in compatmeta:
-      if type(compatmeta["MachineParams"]) in types.StringTypes:
-        self.machineparams = compatmeta["MachineParams"]
-      if type(compatmeta["MachineParams"]) == type([]):
-        self.machineparams = compatmeta["MachineParams"][0]
-    gendata = False    
+      self.machineparams = JobHelpers.getValue( compatmeta["MachineParams"], str, basestring )
+
+    gendata = False
     if 'Datatype' in compatmeta:
-      if type(compatmeta['Datatype']) in types.StringTypes:
-        self.datatype = compatmeta['Datatype']
-        if compatmeta['Datatype'] == 'GEN':
-          gendata = True
-      if type(compatmeta['Datatype']) == type([]):
-        self.datatype = compatmeta['Datatype'][0]
-        if compatmeta['Datatype'][0] == 'GEN':
-          gendata = True
+      self.datatype = JobHelpers.getValue( compatmeta['Datatype'], str, basestring )
+      if self.datatype == 'GEN':
+        gendata = True
 
     if 'DetectorModel' in compatmeta and not gendata:
-      if type(compatmeta["DetectorModel"]) in types.StringTypes:
-        self.detector = compatmeta["DetectorModel"]
-      if type(compatmeta["DetectorModel"]) == type([]):
-        self.detector = compatmeta["DetectorModel"][0]
+      self.detector = JobHelpers.getValue( compatmeta["DetectorModel"], str, basestring )
 
     self.basename = self.evttype+"_"+self.polarization
         

@@ -27,6 +27,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 
 from ILCDIRAC.ILCTransformationSystem.Client.Transformation import Transformation
 from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
+from ILCDIRAC.Interfaces.Utilities import JobHelpers
 
 __RCSID__ = "$Id$"
 
@@ -234,31 +235,18 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       compatmeta = res['Value']
       compatmeta.update(metadata)
     if 'EvtType' in compatmeta:
-      if isinstance( compatmeta['EvtType'], basestring ):
-        self.evttype  = compatmeta['EvtType']
-      if isinstance( compatmeta['EvtType'], list ):
-        self.evttype = compatmeta['EvtType'][0]
+      self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
+
     if 'NumberOfEvents' in compatmeta:
-      if isinstance( compatmeta['NumberOfEvents'], list ):
-        self.nbevts = int(compatmeta['NumberOfEvents'][0])
-      else:
-        #type(compatmeta['NumberOfEvents']) in types.StringTypes:
-        self.nbevts = int(compatmeta['NumberOfEvents'])
-      #else:
-      #  return self._reportError('Nb of events does not have any type recognised')
+      self.nbevts = JobHelpers.getValue( compatmeta['NumberOfEvents'], int, None )
 
     self.basename = self.evttype
     gLogger.notice("MetaData: %s" % compatmeta)
     gLogger.notice("MetaData: %s" % metadata)
     if "Energy" in compatmeta:
-      if isinstance( compatmeta["Energy"], basestring ):
-        self.energycat = compatmeta["Energy"]
-      if isinstance( compatmeta["Energy"], list ):
-        self.energycat = compatmeta["Energy"][0]
-      if isinstance( compatmeta["Energy"], (int, long) ):
-        self.energycat = str(compatmeta["Energy"])
+      self.energycat = JobHelpers.getValue( compatmeta["Energy"], str, (int, long, basestring) )
         
     if self.energycat.count("tev"):
       self.energy = Decimal("1000.") * Decimal(self.energycat.split("tev")[0])
@@ -268,19 +256,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       self.energy = Decimal("1.") * Decimal(self.energycat)
     gendata = False
     if 'Datatype' in compatmeta:
-      if isinstance( compatmeta['Datatype'], basestring ):
-        self.datatype = compatmeta['Datatype']
-        if compatmeta['Datatype'] == 'gen':
-          gendata = True
-      if isinstance( compatmeta['Datatype'], list ):
-        self.datatype = compatmeta['Datatype'][0]
-        if compatmeta['Datatype'][0] == 'gen':
-          gendata = True
+      self.datatype = JobHelpers.getValue( compatmeta['Datatype'], str, basestring )
+      if self.datatype == 'gen':
+        gendata = True
     if "DetectorType" in compatmeta and not gendata:
-      if isinstance( compatmeta["DetectorType"], basestring ):
-        self.detector = compatmeta["DetectorType"]
-      if isinstance( compatmeta["DetectorType"], list ):
-        self.detector = compatmeta["DetectorType"][0]    
+      self.detector = JobHelpers.getValue( compatmeta["DetectorType"], str, basestring )
     self.inputBKSelection = metadata
     self.inputdataquery = True
     
