@@ -36,6 +36,14 @@ Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRA
 
    DOC/ILCDIRAC/Interfaces/scripts/scripts.rst
 
+Acknowledgements and References
+===============================
+
+Suggested acknowledgements for the grid resources accessible through iLCDirac
+and references for iLCDirac and DIRAC can be found `here
+<DOC/Files/acknowledgements>`.
+
+
 Production Scripts
 ==================
 
@@ -67,14 +75,6 @@ Release notes can be found here
 
    Latest Version <releasenotes>
    Complete history <relnotes>
-
-Acknowledgements and References
-===============================
-
-Suggested acknowledgements for the grid resources accessible through iLCDirac
-and references for iLCDirac and DIRAC can be found `here
-<DOC/acknowledgements>`.
-
 
 Indices and tables
 ==================

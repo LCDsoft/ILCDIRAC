@@ -199,6 +199,7 @@ completeDocumentation: releasenotes
 	python MakeDoc.py
 	rsync --delete -art DOC/ source/DOC
 	rsync --delete -art Examples source/DOC
+	rsync --delete -art Files source/DOC
 	make clean
 	make html
 	@echo
