@@ -585,7 +585,6 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       metaCopy = dict(meta)
       if existingMetadata['OK']:
         failure = False
-        print repr(existingMetadata)
         for key, value in existingMetadata['Value'].iteritems():
           if key in meta and meta[key] != value:
             self.log.error( "Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)" % ( path, key, value, meta[key] ) )

@@ -311,7 +311,7 @@ class ILDProductionJob( ProductionJob ):
         if not retCheck['OK']:
             return retCheck
 
-        if retCheck.get('Value') and "ShortCut" in retCheck.get('Value'):
+        if retCheck.get('Value') is not None and "ShortCut" in retCheck.get('Value'):
             ##Short cut the function because of overlay
             return S_OK()
 
