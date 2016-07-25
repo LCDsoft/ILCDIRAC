@@ -308,6 +308,6 @@ autodoc_member_order = 'groupwise'
 autodoc_member_order = 'bysource'
 
 
-intersphinx_mapping = { 'DIRAC': ('http://diracgrid.org/files/docs/', None),
+intersphinx_mapping = { 'DIRAC': ('http://dirac.readthedocs.io/en/latest', None),
                         'python': ('https://docs.python.org/2.7', None),
                       }
