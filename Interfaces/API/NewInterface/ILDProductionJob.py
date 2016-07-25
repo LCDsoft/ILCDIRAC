@@ -370,100 +370,16 @@ class ILDProductionJob( ProductionJob ):
         
         energypath = "%s-%s/" % ( self.energy, self.machineparams )  # 1000-B1s_ws
  
-        
-        # TODO: Make sure basename is correct. Maybe allow for setting basename prefix
-        # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include 
-        # EvtClass automatically)
-        if not self.basename:
-            # self.basename = 's' + self.prodparameters['ILDConfigVersion']
-            if 'SoftwareTag' in self.compatmeta:
-                if application.appname == 'mokka':     # sim
-                    self.basename = 's' + self.prodparameters['ILDConfigVersion']
-                elif application.appname == 'marlin':  # reco
-                    self.basename = 'r' + self.prodparameters['ILDConfigVersion']
-                    self.basename += '.s' + self.compatmeta['ILDConfig']
-                # we dont need this tag in stdhep's: metadata search will fail
-                # if not present
-                elif application.appname == 'stdhepsplit':
-                    self.compatmeta.pop( 'SoftwareTag', None )
-                    self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
-                # need extension if planning to use additional modules (LCIOSplit)
-            else:
-                if application.datatype != 'gen': # for stdhepsplit we dont need to return
-                    self._reportError(" Printing metadata before exit:")
-                    pprint.pprint( self.compatmeta )
-                    return self._reportError( "'SoftwareTag' should be defined to build the path")
-
-        if 'DetectorModel'    in self.compatmeta:
-            self.basename += '.m' + self.compatmeta['DetectorModel']
-        elif self.detector:
-            self.basename += '.m' + self.detector
-        if self.energy:
-            if not self.basename:
-                self.basename += 'E' + str( self.energy )
-            else:
-                self.basename += '.E' + str( self.energy )
-        if 'MachineParams' in self.compatmeta:
-            self.basename += '-' + self.compatmeta['MachineParams']
-            
-        if 'GenProcessID' in self.compatmeta:
-            self.basename += '.I' + str( self.compatmeta['GenProcessID'] )
-        elif 'ProcessID' in self.compatmeta:
-            self.basename += '.I' + str( self.compatmeta['ProcessID'] )
-        # if 'EvtType' in self.compatmeta:
-        #     self.basename += '.P' + self.compatmeta['EvtType']  # To be fixed with Jan
-        # elif 'GenProcessType' in self.compatmeta:
-        #     self.basename += '.P' + self.compatmeta['GenProcessType']
-        # elif self.evttype:
-        #     self.basename += '.P' + self.evttype
-        # ILD convention is adding GenProcessName not type
-
-
-        # if self.Energy in [250,350] and application.appname == 'stdhepsplit':
-        #     print "Called swapping GenProcessName '%s' with EvtType '%s' metadata fields" % (self.genprocname, self.genprocname)
-        #     self.__swapGenProcNameEvtType()
-
-        if 'GenProcessName' in self.compatmeta:
-            self.basename += '.P' + self.compatmeta['GenProcessName']
-        elif self.genprocname:
-            self.basename += '.P' + self.genprocname
-        else:
-            return self._reportError( "GenProcessName is missing! It should appear in the basename")
-
-        if 'BeamParticle1' in self.compatmeta:
-            self.basename += '.'
-            if self.compatmeta['BeamParticle1'] == 'e1':
-                self.basename += 'e'
-            elif self.compatmeta['BeamParticle1'] == 'E1':
-                self.basename += 'p'
-            else:
-                self.basename += self.compatmeta['BeamParticle1']
-        if 'PolarizationB1' in self.compatmeta:
-            self.basename += self.compatmeta['PolarizationB1']
-        if 'BeamParticle2' in self.compatmeta:
-            self.basename += '.'
-            if self.compatmeta['BeamParticle2'] == 'E1':
-                self.basename += 'p'
-            elif self.compatmeta['BeamParticle2'] == 'e1':
-                self.basename += 'e'
-            else:
-                self.basename += self.compatmeta['BeamParticle2']
-        if 'PolarizationB2' in self.compatmeta:
-            self.basename += self.compatmeta['PolarizationB2']
-
-        self.evttype = self.evttype.rstrip('/')+'/'
-        evttypemeta = self.evttype.rstrip('/')
-
-        self.evtclass = self.evtclass.rstrip('/')+'/'
-
-        detectormeta = ''
-        if self.detector:
-          self.detector = self.detector.rstrip('/')+'/'
-          detectormeta = self.detector.rstrip('/')
+        retFileName = self.__createFileName( application )
+        if not retFileName['OK']:
+          self.log.error( "Filename creation Failed", retFileName['Message'] )
+          return retFileName
 
         ##Always use ILDConfig for the path
         if 'ILDConfigVersion' not in self.prodparameters and application.datatype.lower() != "gen":
-            return S_ERROR( "ILDConfig not set, it is mandatory for path definition, please use p.setILDConfig() before appending applications" )
+            return S_ERROR( "ILDConfig not set, it is mandatory for path "
+                            "definition, please use p.setILDConfig() before"
+                            "appending applications" )
         ildConfigPath = self.prodparameters.get( "ILDConfigVersion", "" ) + "/"
 
         path = self.basepath
@@ -480,10 +396,10 @@ class ILDProductionJob( ProductionJob ):
                                                   'MachineParams':self.machineparams }
 
             metaPathRec = joinPathForMetaData( metaPathRec, self.evttype )
-            self.finalMetaDict[ metaPathRec ] = {'EvtType' : evttypemeta }
+            self.finalMetaDict[ metaPathRec ] = {'EvtType' : self.evttype.strip('/') }
 
             metaPathRec = joinPathForMetaData( metaPathRec, self.detector)
-            self.finalMetaDict[ metaPathRec ] = { 'DetectorModel' : detectormeta }
+            self.finalMetaDict[ metaPathRec ] = { 'DetectorModel' : self.detector.strip('/') }
 
             metaPathRec = joinPathForMetaData( metaPathRec, ildConfigPath )
             self.finalMetaDict[ metaPathRec ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
@@ -503,10 +419,10 @@ class ILDProductionJob( ProductionJob ):
                                                   'MachineParams':self.machineparams }
 
             metaPathDst = joinPathForMetaData( metaPathDst, self.evttype )
-            self.finalMetaDict[ metaPathDst ] = { 'EvtType' : evttypemeta }
+            self.finalMetaDict[ metaPathDst ] = { 'EvtType' : self.evttype.strip('/') }
 
             metaPathDst = joinPathForMetaData( metaPathDst, self.detector )
-            self.finalMetaDict[ metaPathDst ] = { 'DetectorModel' : detectormeta }
+            self.finalMetaDict[ metaPathDst ] = { 'DetectorModel' : self.detector.strip('/') }
 
             metaPathDst = joinPathForMetaData( metaPathDst, ildConfigPath )
             self.finalMetaDict[ metaPathDst ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
@@ -539,7 +455,7 @@ class ILDProductionJob( ProductionJob ):
                                                           'MachineParams':self.machineparams }
 
                 path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, self.evttype )
-                self.finalMetaDict[ path_gen_or_sim ] = { 'EvtType': evttypemeta }
+                self.finalMetaDict[ path_gen_or_sim ] = { 'EvtType': self.evttype.strip('/') }
 
             elif application.datatype == 'SIM':
                 ## Set DataType
@@ -553,7 +469,7 @@ class ILDProductionJob( ProductionJob ):
 
                 ## Set EventType
                 path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, self.evttype )
-                self.finalMetaDict[ path_gen_or_sim ] = { 'EvtType': evttypemeta }
+                self.finalMetaDict[ path_gen_or_sim ] = { 'EvtType': self.evttype.strip('/') }
 
                 ## Set DetectorModel
                 path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, self.detector )
@@ -630,3 +546,81 @@ class ILDProductionJob( ProductionJob ):
             return resMD
 
         return super(ILDProductionJob, self).append( application )
+
+    def __createFileName(self, application):
+        """ create the filename for ILD productions
+
+        A partial description of the desired filename is found here
+        https://svnweb.cern.ch/trac/lcgentools/browser/trunk/ILC/documents/generator-conventions.pdf
+
+        :param application: application used for production job
+        :returns: S_OK, S_ERROR
+        """
+        # TODO: Make sure basename is correct. Maybe allow for setting basename prefix
+        # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include
+        # EvtClass automatically)
+        if not self.basename:
+
+            if 'SoftwareTag' in self.compatmeta:
+                if application.appname == 'mokka': # sim
+                    self.basename = 's' + self.prodparameters['ILDConfigVersion']
+                elif application.appname == 'marlin': # reco
+                    self.basename = 'r' + self.prodparameters['ILDConfigVersion']
+                    self.basename += '.s' + self.compatmeta['ILDConfig']
+                # we dont need this tag in stdhep's: metadata search will fail
+                # if not present
+                elif application.appname == 'stdhepsplit':
+                    self.compatmeta.pop( 'SoftwareTag', None )
+                    self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
+                # need extension if planning to use additional modules (LCIOSplit)
+            else:
+                if application.datatype != 'gen': # for stdhepsplit we dont need to return
+                    self._reportError(" Printing metadata before exit:")
+                    pprint.pprint( self.compatmeta )
+                    return self._reportError( "'SoftwareTag' should be defined to build the path")
+
+        if 'DetectorModel' in self.compatmeta:
+            self.basename += '.m' + self.compatmeta['DetectorModel']
+        elif self.detector:
+            self.basename += '.m' + self.detector
+
+        if self.energy:
+            self.basename += '.' if self.basename else ''
+            self.basename += 'E' + str( self.energy )
+
+            if 'MachineParams' in self.compatmeta:
+                self.basename += '-' + self.compatmeta['MachineParams']
+
+        if 'GenProcessID' in self.compatmeta:
+            self.basename += '.I' + str( self.compatmeta['GenProcessID'] )
+        elif 'ProcessID' in self.compatmeta:
+            self.basename += '.I' + str( self.compatmeta['ProcessID'] )
+
+        # if 'EvtType' in self.compatmeta:
+        #     self.basename += '.P' + self.compatmeta['EvtType']  # To be fixed with Jan
+        # elif 'GenProcessType' in self.compatmeta:
+        #     self.basename += '.P' + self.compatmeta['GenProcessType']
+        # elif self.evttype:
+        #     self.basename += '.P' + self.evttype
+        # ILD convention is adding GenProcessName not type
+
+        if 'GenProcessName' in self.compatmeta:
+            self.basename += '.P' + self.compatmeta['GenProcessName']
+        elif self.genprocname:
+            self.basename += '.P' + self.genprocname
+        else:
+            return self._reportError( "GenProcessName is missing! It should appear in the basename")
+
+        for i in ( 1, 2 ):
+          bp = 'BeamParticle%s' % i
+          if bp in self.compatmeta:
+              self.basename += '.'
+              if self.compatmeta[ bp ] == 'e1':
+                  self.basename += 'e'
+              elif self.compatmeta[ bp ] == 'E1':
+                  self.basename += 'p'
+              else:
+                  self.basename += self.compatmeta[ bp ]
+          self.basename += self.compatmeta.get( 'PolarizationB%s' % i, '' )
+
+        return S_OK()
