@@ -307,77 +307,24 @@ class ILDProductionJob( ProductionJob ):
     def _jobSpecificParams( self, application ):
         """ For production additional checks are needed: ask the user
         """
-        if self.created:
-            return S_ERROR( "The production was created, you cannot add new applications to the job." )
+        retCheck = self.__checkParameters( application )
+        if not retCheck['OK']:
+            return retCheck
 
-        if not application.LogFile:
-            logf = application.appname + "_" + application.Version + "_@{STEP_ID}.log"
-            res = application.setLogFile( logf )
-            if not res['OK']:
-                return res
-            
-            # in fact a bit more tricky as the log files have the prodID and jobID in them
-        
-        if "SoftwareTag" in self.prodparameters:
-            curpackage = "%s.%s" % ( application.appname, application.Version )
-            if not self.prodparameters["SoftwareTag"].count( curpackage ):
-                self.prodparameters["SoftwareTag"] += ";%s" % ( curpackage )
-        else :
-            self.prodparameters["SoftwareTag"] = "%s.%s" % ( application.appname, application.version )
-
-        if not self.energy:
-            if application.Energy:
-                self.energy = Decimal( str( application.Energy ) )
-            else:
-                return S_ERROR( "Could not find the energy defined, it is needed for the production definition." )
-        elif not application.Energy:
-            res = application.setEnergy( float( self.energy ) )
-            if not res['OK']:
-                return res
-        if self.energy:
+        if self.energy: ##APS: Is it possible for there no being any energy?
             self._setParameter( "Energy", "float", float( self.energy ), "Energy used" )
             self.prodparameters["Energy"] = float( self.energy )
-            
-        if not self.evttype:
-            if hasattr( application, 'EvtType' ):
-                self.evttype = application.evtType
-            else:
-                return S_ERROR( "Event type not found nor specified, it's mandatory for the production paths." )    
-            
-        if not application.accountInProduction:
-            # needed for the stupid overlay
-            res = self._updateProdParameters( application )
-            if not res['OK']:
-                return res    
-            self.checked = True
-            return S_OK()    
-        
-        if not self.outputStorage:
-            return S_ERROR( "You need to specify the Output storage element" )
-        
-        res = application.setOutputSE( self.outputStorage )
-        if not res['OK']:
-            return res
-        
-        if not self.detector:
-            if hasattr( application, "DetectorModel" ):
-                self.detector = application.DetectorModel            
-                if not self.detector:
-                    return S_ERROR( "Application does not know which model to use, so the production does not either." )
-            # else:
-            #    return S_ERROR("Application does not know which model to use, so the production does not either.")
-        
-        
-        energypath = "%s-%s/" % ( self.energy, self.machineparams )  # 1000-B1s_ws
+
+        energypath = "%s-%s" % ( self.energy, self.machineparams ) # e.g.: 1000-B1s_ws
  
         retFileName = self.__createFileName( application )
         if not retFileName['OK']:
-          self.log.error( "Filename creation Failed", retFileName['Message'] )
-          return retFileName
+            self.log.error( "Filename creation Failed", retFileName['Message'] )
+            return retFileName
 
         ##Always use ILDConfig for the path
         if 'ILDConfigVersion' not in self.prodparameters and application.datatype.lower() != "gen":
-            return S_ERROR( "ILDConfig not set, it is mandatory for path "
+            return S_ERROR( "ILDConfig not set, it is mandatory for the path "
                             "definition, please use p.setILDConfig() before"
                             "appending applications" )
         ildConfigPath = self.prodparameters.get( "ILDConfigVersion", "" ) + "/"
@@ -522,11 +469,8 @@ class ILDProductionJob( ProductionJob ):
         pprint.pprint( self.prodMetaDict )
         self.basepath = path
 
-        if not res['OK']:
-            return res            
-        
         self.checked = True
-            
+
         return S_OK()
 
 
@@ -547,7 +491,7 @@ class ILDProductionJob( ProductionJob ):
 
         return super(ILDProductionJob, self).append( application )
 
-    def __createFileName(self, application):
+    def __createFileName(self, application): #pylint: disable=too-many-branches
         """ create the filename for ILD productions
 
         A partial description of the desired filename is found here
@@ -596,14 +540,6 @@ class ILDProductionJob( ProductionJob ):
         elif 'ProcessID' in self.compatmeta:
             self.basename += '.I' + str( self.compatmeta['ProcessID'] )
 
-        # if 'EvtType' in self.compatmeta:
-        #     self.basename += '.P' + self.compatmeta['EvtType']  # To be fixed with Jan
-        # elif 'GenProcessType' in self.compatmeta:
-        #     self.basename += '.P' + self.compatmeta['GenProcessType']
-        # elif self.evttype:
-        #     self.basename += '.P' + self.evttype
-        # ILD convention is adding GenProcessName not type
-
         if 'GenProcessName' in self.compatmeta:
             self.basename += '.P' + self.compatmeta['GenProcessName']
         elif self.genprocname:
@@ -624,3 +560,64 @@ class ILDProductionJob( ProductionJob ):
           self.basename += self.compatmeta.get( 'PolarizationB%s' % i, '' )
 
         return S_OK()
+
+
+    def __checkParameters( self, application ): #pylint: disable=too-many-return-statements, too-many-branches
+      """ check if everything is consistent, parameters set, meta data defined, applications configured correctly...
+
+
+      :returns: S_OK, S_ERROR
+      """
+
+      if self.created:
+          return S_ERROR( "The production was created, you cannot add new applications to the job." )
+
+      curpackage = "%s.%s" % ( application.appname, application.version )
+      self.prodparameters.setdefault( 'SoftwareTag', curpackage )
+      if curpackage not in self.prodparameters["SoftwareTag"]:
+          self.prodparameters["SoftwareTag"] += ";%s" % curpackage
+
+      if not application.logFile:
+          logf = application.appname + "_" + application.version + "_@{STEP_ID}.log"
+          resLog = application.setLogFile( logf )
+          if not resLog['OK']:
+              return resLog
+
+      if not self.energy:
+          if application.energy:
+              self.energy = Decimal( str( application.energy ) )
+          else:
+              return S_ERROR( "Could not find the energy defined, it is needed for the production definition." )
+      elif not application.energy:
+          resEnergy = application.setEnergy( float( self.energy ) )
+          if not resEnergy['OK']:
+              return resEnergy
+
+      if not self.evttype:
+          if hasattr( application, 'evttype' ):
+              self.evttype = application.evtType
+          else:
+              return S_ERROR( "Event type not found nor specified, it is mandatory for the production paths." )
+
+      if not application.accountInProduction:
+          # needed for the overlay
+          resUPP = self._updateProdParameters( application )
+          if not resUPP['OK']:
+              return resUPP
+          self.checked = True
+          return S_OK()
+
+      if not self.outputStorage:
+          return S_ERROR( "You need to specify the Output storage element" )
+
+      resSE = application.setOutputSE( self.outputStorage )
+      if not resSE['OK']:
+          return resSE
+
+      if not self.detector:
+          if hasattr( application, "detectorModel" ):
+              self.detector = application.detectorModel
+              if not self.detector:
+                  return S_ERROR( "Application does not know which model to use, so the production does not either." )
+
+      return S_OK()
