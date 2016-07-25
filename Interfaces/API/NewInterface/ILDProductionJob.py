@@ -451,9 +451,6 @@ class ILDProductionJob( ProductionJob ):
         if 'PolarizationB2' in self.compatmeta:
             self.basename += self.compatmeta['PolarizationB2']
 
-
-        self.machine = self.machine.rstrip('/')+'/'
-
         self.evttype = self.evttype.rstrip('/')+'/'
         evttypemeta = self.evttype.rstrip('/')
 
@@ -475,98 +472,103 @@ class ILDProductionJob( ProductionJob ):
         if hasattr( application, "setOutputRecFile" ) and not application.willBeCut:
 
             ### REC OUTPUT FILES
-            metaBasePathRec = joinPathForMetaData(self.basepath, 'rec')
-            self.finalMetaDict[ metaBasePathRec ] = { "Datatype": "REC" }
+            metaPathRec = joinPathForMetaData( self.basepath, 'rec' )
+            self.finalMetaDict[ metaPathRec ] = { 'Datatype': 'REC' }
 
-            metaBasePathRec = joinPathForMetaData(self.basepath, 'rec', energypath)
-            self.finalMetaDict[ metaBasePathRec ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype )] = {"EvtType" : evttypemeta}
+            metaPathRec = joinPathForMetaData( metaPathRec, energypath )
+            self.finalMetaDict[ metaPathRec ] = { 'Energy': str(self.energy),
+                                                  'MachineParams':self.machineparams }
 
-            # no processid
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathRec, self.evttype, self.detector, ildConfigPath)] = {"ILDConfig": self.prodparameters["ILDConfigVersion"]}
+            metaPathRec = joinPathForMetaData( metaPathRec, self.evttype )
+            self.finalMetaDict[ metaPathRec ] = {'EvtType' : evttypemeta }
 
-            # this part is from Andre
+            metaPathRec = joinPathForMetaData( metaPathRec, self.detector)
+            self.finalMetaDict[ metaPathRec ] = { 'DetectorModel' : detectormeta }
+
+            metaPathRec = joinPathForMetaData( metaPathRec, ildConfigPath )
+            self.finalMetaDict[ metaPathRec ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
+
             fname = self.basename + "_rec.slcio"
-            print "+++Output REC Filename", fname
-            # no processid
-            pathRec = joinPathForMetaData( self.basepath, 'rec', energypath, self.evttype, self.detector, ildConfigPath )
-            application.setOutputRecFile( fname, pathRec )
-            self.finalpaths.append( pathRec )
+            print '+++Output REC Filename', fname
+            application.setOutputRecFile( fname, metaPathRec )
+            self.finalpaths.append( metaPathRec )
 
 
             ### DST OUTPUT FILES
-            metaBasePathRec = joinPathForMetaData(self.basepath, 'dst')
-            self.finalMetaDict[ metaBasePathRec ] = { "Datatype": "DST" }
+            metaPathDst = joinPathForMetaData( self.basepath, 'dst' )
+            self.finalMetaDict[ metaPathDst ] = { 'Datatype': 'DST' }
 
-            metaBasePathDst = joinPathForMetaData(self.basepath, 'dst', energypath)
-            self.finalMetaDict[ metaBasePathDst ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
+            metaPathDst = joinPathForMetaData( metaPathDst, energypath )
+            self.finalMetaDict[ metaPathDst ] = { 'Energy': str(self.energy),
+                                                  'MachineParams':self.machineparams }
 
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype )] = {"EvtType" : evttypemeta}
+            metaPathDst = joinPathForMetaData( metaPathDst, self.evttype )
+            self.finalMetaDict[ metaPathDst ] = { 'EvtType' : evttypemeta }
 
-            # no processid
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector)] = {"DetectorModel" : detectormeta}
-            self.finalMetaDict[ joinPathForMetaData( metaBasePathDst, self.evttype, self.detector, ildConfigPath)] = {"ILDConfig": self.prodparameters["ILDConfigVersion"]}
-            
-            fname = self.basename + "_dst.slcio"
-            print "+++Output DST Filename", fname
+            metaPathDst = joinPathForMetaData( metaPathDst, self.detector )
+            self.finalMetaDict[ metaPathDst ] = { 'DetectorModel' : detectormeta }
 
-            # no processid
-            pathDst = joinPathForMetaData( self.basepath , 'dst' , energypath , self.evttype, self.detector , ildConfigPath )
-            application.setOutputDstFile( fname, pathDst )
-            self.finalpaths.append( pathDst )
+            metaPathDst = joinPathForMetaData( metaPathDst, ildConfigPath )
+            self.finalMetaDict[ metaPathDst ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
 
-            path = pathDst
-        elif hasattr( application, "outputFile" ) and hasattr( application, 'datatype' ) and ( not application.outputFile ) and ( not application.willBeCut ):
-            if ( not application.datatype ) and self.datatype:
+            fname = self.basename + '_dst.slcio'
+            print '+++Output DST Filename', fname
+            application.setOutputDstFile( fname, metaPathDst )
+            self.finalpaths.append( metaPathDst )
+
+            path = metaPathDst
+        elif hasattr( application, 'outputFile' ) and \
+             hasattr( application, 'datatype' ) and \
+             not application.outputFile and \
+             not application.willBeCut:
+
+            if not application.datatype and self.datatype:
                 application.datatype = self.datatype
 
-            path_gen_or_sim = ""
+            path_gen_or_sim = ''
             if application.datatype == 'gen':
                 # for historical reasons generated stdhep separated from mokka/dst/rec files
 
                 ## Set DataType
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/')
-                self.finalMetaDict[ path_gen_or_sim ] = { "Datatype": "gen" }
+                path_gen_or_sim = joinPathForMetaData( '/'.join( self.basepath.split( '/' )[:-2] ) + '/splitted/' )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'Datatype': 'gen' }
 
                 ## Set MachineParams and Energy
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath )
-                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
+                path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, energypath )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'Energy': str(self.energy),
+                                                          'MachineParams':self.machineparams }
 
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype)
-                self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
-
-                # No detector, no ILDConfig for splitting or generator
-                path_gen_or_sim = joinPathForMetaData( "/".join( self.basepath.split( "/" )[:-2] ) + '/splitted/', energypath , self.evttype )
+                path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, self.evttype )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'EvtType': evttypemeta }
 
             elif application.datatype == 'SIM':
-                # no processid
                 ## Set DataType
-                path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/' )
-                self.finalMetaDict[ path_gen_or_sim ] = { "Datatype": "SIM" }
+                path_gen_or_sim = joinPathForMetaData( self.basepath + 'sim' )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'Datatype': 'SIM' }
 
-                ## Set Energy and MachienParams
-                path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/', energypath )
-                self.finalMetaDict[ path_gen_or_sim ] = { "Energy": str(self.energy), "MachineParams":self.machineparams }
+                ## Set Energy and MachineParams
+                path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, energypath )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'Energy': str(self.energy),
+                                                          'MachineParams':self.machineparams }
 
                 ## Set EventType
-                path_gen_or_sim = joinPathForMetaData( self.basepath + '/sim/', energypath , self.evttype)
-                self.finalMetaDict[ path_gen_or_sim ] = { "EvtType": evttypemeta }
+                path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, self.evttype )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'EvtType': evttypemeta }
 
                 ## Set DetectorModel
-                path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector)
-                self.finalMetaDict[ path_gen_or_sim ] = { "DetectorModel": self.detector.strip("/") }
+                path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, self.detector )
+                self.finalMetaDict[ path_gen_or_sim ] = { 'DetectorModel': self.detector.strip('/') }
 
                 ## Always use ILDConfig
-                path_gen_or_sim = joinPathForMetaData( self.basepath , 'sim' , energypath , self.evttype, self.detector , ildConfigPath)
-                self.finalMetaDict[ path_gen_or_sim ].update( { "ILDConfig": self.prodparameters['ILDConfigVersion'] } )
+                path_gen_or_sim = joinPathForMetaData( path_gen_or_sim, ildConfigPath )
+                self.finalMetaDict[ path_gen_or_sim ].update( { 'ILDConfig': self.prodparameters['ILDConfigVersion'] } )
 
             path = path_gen_or_sim
 
-            if not path_gen_or_sim[-1] == '/':
-                path_gen_or_sim += "/"
+
+            path_gen_or_sim = path_gen_or_sim.rstrip('/')+'/'
             
-            self.log.info( "Will store the files under", "%s" % path_gen_or_sim )
+            self.log.info( 'Will store the files under: %s' % path_gen_or_sim )
             self.finalpaths.append( path_gen_or_sim )
 
             extension = 'stdhep'
