@@ -334,52 +334,30 @@ class ILDProductionJob( ProductionJob ):
         # TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
         if hasattr( application, "setOutputRecFile" ) and not application.willBeCut:
 
-            ### REC OUTPUT FILES
-            metaPathRec = joinPathForMetaData( self.basepath, 'rec' )
-            self.finalMetaDict[ metaPathRec ] = { 'Datatype': 'REC' }
+            for outType in ( 'REC', 'DST' ):
 
-            metaPathRec = joinPathForMetaData( metaPathRec, energypath )
-            self.finalMetaDict[ metaPathRec ] = { 'Energy': str(self.energy),
-                                                  'MachineParams':self.machineparams }
+                metaPath = joinPathForMetaData( self.basepath, outType.lower() )
+                self.finalMetaDict[ metaPath ] = { 'Datatype': outType }
 
-            metaPathRec = joinPathForMetaData( metaPathRec, self.evttype )
-            self.finalMetaDict[ metaPathRec ] = {'EvtType' : self.evttype.strip('/') }
+                metaPath = joinPathForMetaData( metaPath, energypath )
+                self.finalMetaDict[ metaPath ] = { 'Energy': str(self.energy),
+                                                   'MachineParams':self.machineparams }
 
-            metaPathRec = joinPathForMetaData( metaPathRec, self.detector)
-            self.finalMetaDict[ metaPathRec ] = { 'DetectorModel' : self.detector.strip('/') }
+                metaPath = joinPathForMetaData( metaPath, self.evttype )
+                self.finalMetaDict[ metaPath ] = {'EvtType' : self.evttype.strip('/') }
 
-            metaPathRec = joinPathForMetaData( metaPathRec, ildConfigPath )
-            self.finalMetaDict[ metaPathRec ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
+                metaPath = joinPathForMetaData( metaPath, self.detector )
+                self.finalMetaDict[ metaPath ] = { 'DetectorModel' : self.detector.strip('/') }
 
-            fname = self.basename + "_rec.slcio"
-            print '+++Output REC Filename', fname
-            application.setOutputRecFile( fname, metaPathRec )
-            self.finalpaths.append( metaPathRec )
+                metaPath = joinPathForMetaData( metaPath, ildConfigPath )
+                self.finalMetaDict[ metaPath ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
 
+                fname = "%s_%s.slcio" % ( self.basename, outType )
+                print '+++Output %s Filename: %s' %( outType, fname )
+                getattr(application, 'setOutput%sFile' % outType.capitalize())( fname, metaPath )
+                self.finalpaths.append( metaPath )
+                path = metaPath
 
-            ### DST OUTPUT FILES
-            metaPathDst = joinPathForMetaData( self.basepath, 'dst' )
-            self.finalMetaDict[ metaPathDst ] = { 'Datatype': 'DST' }
-
-            metaPathDst = joinPathForMetaData( metaPathDst, energypath )
-            self.finalMetaDict[ metaPathDst ] = { 'Energy': str(self.energy),
-                                                  'MachineParams':self.machineparams }
-
-            metaPathDst = joinPathForMetaData( metaPathDst, self.evttype )
-            self.finalMetaDict[ metaPathDst ] = { 'EvtType' : self.evttype.strip('/') }
-
-            metaPathDst = joinPathForMetaData( metaPathDst, self.detector )
-            self.finalMetaDict[ metaPathDst ] = { 'DetectorModel' : self.detector.strip('/') }
-
-            metaPathDst = joinPathForMetaData( metaPathDst, ildConfigPath )
-            self.finalMetaDict[ metaPathDst ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
-
-            fname = self.basename + '_dst.slcio'
-            print '+++Output DST Filename', fname
-            application.setOutputDstFile( fname, metaPathDst )
-            self.finalpaths.append( metaPathDst )
-
-            path = metaPathDst
         elif hasattr( application, 'outputFile' ) and \
              hasattr( application, 'datatype' ) and \
              not application.outputFile and \
