@@ -210,7 +210,10 @@ class Job(DiracJob):
     ##Finally, add the software packages if needed
     if application.appname and application.version:
       self._addSoftware(application.appname, application.version)
-      
+
+    ## Pass ApplicationErrors to job, will be checked at submission time
+    self.errorDict.update( application._errorDict )
+
     return S_OK()
   
   def _addToWorkflow(self):
