@@ -311,6 +311,10 @@ class ILDProductionJob( ProductionJob ):
         if not retCheck['OK']:
             return retCheck
 
+        if retCheck.get('Value') and "ShortCut" in retCheck.get('Value'):
+            ##Short cut the function because of overlay
+            return S_OK()
+
         if self.energy: ##APS: Is it possible for there no being any energy?
             self._setParameter( "Energy", "float", float( self.energy ), "Energy used" )
             self.prodparameters["Energy"] = float( self.energy )
@@ -583,7 +587,7 @@ class ILDProductionJob( ProductionJob ):
           if not resUPP['OK']:
               return resUPP
           self.checked = True
-          return S_OK()
+          return S_OK("ShortCut")
 
       if not self.outputStorage:
           return S_ERROR( "You need to specify the Output storage element" )
