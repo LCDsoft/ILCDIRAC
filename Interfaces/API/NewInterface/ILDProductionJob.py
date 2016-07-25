@@ -107,25 +107,13 @@ class ILDProductionJob( ProductionJob ):
     def setInputDataQuery( self, metadata ):
         """ Define the input data query needed, also get from the data the meta info requested to build the path
         """
-        metakeys = metadata.keys()
-        res = self.fc.getMetadataFields()
 
         for key,val in metadata.iteritems():
             print "[0] meta[%s] %s"%(key,val)
 
-        if not res['OK']:
-            print "Could not contact File Catalog"
-            return S_ERROR()
-        metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
-        metaFCkeys.extend( res['Value']['FileMetaFields'].keys() )
-
-        for key in metakeys:
-            for meta in metaFCkeys:
-                if meta != key:
-                    if meta.lower() == key.lower():
-                        return self._reportError( "Key syntax error %s, should be %s" % ( key, meta ), name='ILDProduction' )
-            if not metaFCkeys.count( key ):
-                return self._reportError( "Key %s not found in metadata keys, allowed are %s" % ( key, metaFCkeys ) )
+        retMetaKey = self._checkMetaKeys( metadata.keys() )
+        if not retMetaKey['OK']:
+            return retMetaKey
 
         # do i need this?
         tmp_metadata = {}
@@ -134,14 +122,11 @@ class ILDProductionJob( ProductionJob ):
         for kk in ['SoftwareTag', 'ILDConfig','ProcessID']:
             tmp_metadata.pop(kk, None) # why i was dropping ProdID?
 
-        # using tmp_metadata for search dirs (metadata not modified)
-        res = self.fc.findDirectoriesByMetadata( tmp_metadata )
+        retDirs = self._checkFindDirectories( tmp_metadata )
+        if not retDirs['OK']:
+            return retDirs
+        dirs = retDirs['Value'].values()
 
-        if not res['OK']:
-            return self._reportError( "Error looking up the catalog for available directories" )
-        elif len( res['Value'] ) < 1:
-            return self._reportError( 'Could not find any directory corresponding to the query issued' )
-        dirs = res['Value'].values()
         compatmeta = {}
 
         print 'dirs found: %d' %len(dirs)
@@ -152,11 +137,11 @@ class ILDProductionJob( ProductionJob ):
             print 'Will try to match dir with %s' %self.matchToInput
         for mdir in dirs:
             if self.matchToInput:
-                if not self.matchToInput in mdir:
+                if self.matchToInput not in mdir:
                     continue
             if 'ProdID' in metadata:
                 val = '/' + str(metadata['ProdID']).zfill(8)
-                if not val in mdir:
+                if val not in mdir:
                     continue
 
             dir_found = True
@@ -199,7 +184,8 @@ class ILDProductionJob( ProductionJob ):
         else:
             if not self.dryrun:
                 print res
-                self._reportError( "No files matching the metadata: Metadata is wrong or files are not under /ilc/prod/ilc directory" )
+                self._reportError( "No files matching the metadata: Metadata is wrong or files are not under "
+                                   "/ilc/prod/ilc directory" )
                 
 
         if not len(compatmeta):
@@ -211,12 +197,16 @@ class ILDProductionJob( ProductionJob ):
         self.log.verbose( "Using %s to build path" % str( compatmeta ) )
         if 'EvtClass' in compatmeta and not self.evtclass:
             self.evtclass = JobHelpers.getValue( compatmeta['EvtClass'], str, basestring )
+
         if 'EvtType' in compatmeta and not self.evttype:
             self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
         elif 'GenProcessType' in compatmeta and not self.evttype:
             self.evttype = JobHelpers.getValue( compatmeta['GenProcessType'], str, basestring )
         elif not self.evttype:
-            return self._reportError( "Neither EvtType nor GenProcessType are in the metadata: if you dont set app evttype with setEvtType at least one should be " )
+            return self._reportError( "Neither EvtType nor GenProcessType are "
+                                      "in the metadata: if you dont set app "
+                                      "evttype with setEvtType at least one "
+                                      "should be." )
 
         if 'GenProcessName' in compatmeta:
             self.genprocname = compatmeta['GenProcessName']
@@ -230,8 +220,7 @@ class ILDProductionJob( ProductionJob ):
             self.processID = JobHelpers.getValue( compatmeta['ProcessID'], int, (int, long) )
         else:
             return self._reportError( "Cannot find ProcessID, it's mandatory for path definition" )
-                
-                
+
         if 'Energy' in compatmeta:
             self.energycat = JobHelpers.getValue( compatmeta['Energy'], str, (int, long, basestring) )
 
@@ -393,7 +382,9 @@ class ILDProductionJob( ProductionJob ):
                 elif application.appname == 'marlin':  # reco
                     self.basename = 'r' + self.prodparameters['ILDConfigVersion']
                     self.basename += '.s' + self.compatmeta['ILDConfig']
-                elif application.appname == 'stdhepsplit':  # we dont need this tag in stdhep's: metadata search will fail if not present
+                # we dont need this tag in stdhep's: metadata search will fail
+                # if not present
+                elif application.appname == 'stdhepsplit':
                     self.compatmeta.pop( 'SoftwareTag', None )
                     self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
                 # need extension if planning to use additional modules (LCIOSplit)

@@ -816,10 +816,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     return energyPath
 
 
-  def _checkMetaKeys( self, metakeys ):
+  def _checkMetaKeys( self, metakeys, extendFileMeta=False ):
     """ check if metadata keys are allowed to be metadata
 
     :param list metakeys: metadata keys for production metadata
+    :param bool extendFileMeta: also use FileMetaFields for checking meta keys
     :returns: S_OK, S_ERROR
     """
 
@@ -828,6 +829,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       print "Could not contact File Catalog"
       return S_ERROR("Could not contact File Catalog")
     metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
+    if extendFileMeta:
+      metaFCkeys.extend( res['Value']['FileMetaFields'].keys() )
 
     for key in metakeys:
       for meta in metaFCkeys:
