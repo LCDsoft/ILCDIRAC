@@ -13,6 +13,7 @@ cannot be (and should not be) used like the
 
 import os
 import shutil
+import pprint
 
 from collections import defaultdict
 from decimal import Decimal
@@ -528,7 +529,9 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     info.append('- Registered non searchable metadata: ')
     for path, metadata in sorted( self.finalMetaDictNonSearch.iteritems() ):
       info.append('    %s = %s' % (path, metadata))
-      
+
+    pprint.pprint( info )
+
     infoString = '\n'.join(info)
     self.prodparameters['DetailedInfo'] = infoString
     

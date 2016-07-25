@@ -111,7 +111,7 @@ class ILDProductionJob( ProductionJob ):
         for key,val in metadata.iteritems():
             print "[0] meta[%s] %s"%(key,val)
 
-        retMetaKey = self._checkMetaKeys( metadata.keys() )
+        retMetaKey = self._checkMetaKeys( metadata.keys(), extendFileMeta = True)
         if not retMetaKey['OK']:
             return retMetaKey
 

@@ -8,7 +8,7 @@ Modified to perform ILD reconstruction.
 C. Calancha
 '''
 
-#pylint: disable=invalid-name
+#pylint: disable=invalid-name, wrong-import-position
 
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
@@ -68,7 +68,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160623_32_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20160623_42_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -107,7 +107,7 @@ else:
     
 #DoSplit at stdhep level
 activesplitstdhep   = True
-nbevtsperfilestdhep = 500
+nbevtsperfilestdhep = 100
 nbtasks_split       = -1 # To run overall input stdhep
 if activesplitstdhep:
   if selectedfile > 0:
@@ -219,7 +219,6 @@ if activesplitstdhep and meta:
   pstdhepsplit.setLogLevel("verbose")
   pstdhepsplit.setProdType('Split')
   pstdhepsplit.setBannedSites(banned_sites)
-  pstdhepsplit.setInputSandbox( input_sand_box )
   pstdhepsplit.setProdPlugin('Limited') # exit with error: it seems i need
                                         # to set the Prod. plugin
 
@@ -275,6 +274,7 @@ if activesplitstdhep and meta:
   if tmp_softwaretag_val: # reinsert SoftwareTag: used in path construction
     meta.update({'SoftwareTag' : tmp_softwaretag_val})
 
+  print " Done With Stdhepsplit","\n"*5
 
 if ild_sim and meta:
   ####################
@@ -422,8 +422,6 @@ if ild_rec_ov and meta:
   pmao.setLogLevel("verbose")
   pmao.setProdType('MCReconstruction_Overlay')
   pmao.setBannedSites(banned_sites)
-  pmao.setOutputSandbox(["*.log"])
-  pmao.setInputSandbox( input_sand_box )
 
   res = pmao.setInputDataQuery(meta)
   if not res['OK']:
