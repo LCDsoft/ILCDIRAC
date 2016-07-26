@@ -356,7 +356,7 @@ class ILDProductionJob( ProductionJob ):
                 metaPath = joinPathForMetaData( metaPath, ildConfigPath )
                 self.finalMetaDict[ metaPath ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
 
-                fname = "%s_%s.slcio" % ( self.basename, outType )
+                fname = "%s_%s.slcio" % ( self.basename, outType.lower() )
                 print '+++Output %s Filename: %s' %( outType, fname )
                 getattr(application, 'setOutput%sFile' % outType.capitalize())( fname, metaPath )
                 self.finalpaths.append( metaPath )
