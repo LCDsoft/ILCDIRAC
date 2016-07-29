@@ -28,7 +28,7 @@ class SETestCase( unittest.TestCase ):
 
 
   localtestfile = 'testfile'
-  lfntestfilename = "testfile.txt"
+  lfntestfilename = "testfile_uploaded.txt"
   lfntestfilepath = "/ilc/user/"
   lfntestfile = ''
   storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
@@ -125,7 +125,7 @@ class SETestCase( unittest.TestCase ):
     
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename),
                     "Received wrong file")
-
+    self.removeDownloadedFile()
   
   #@unittest.skip("demonstrating skipping")
   def test_removal_all( self ):
@@ -204,3 +204,11 @@ class SETestCase( unittest.TestCase ):
     """
     return [(site1, site2) for site1 in self.storageelements for site2 in
             self.storageelements if site1 != site2]
+
+  def removeDownloadedFile( self ):
+    """ remove the lfn test file if it exists locally """
+    if os.path.exists( self.lfntestfilename ):
+      try:
+        os.unlink ( self.lfntestfilename )
+      except EnvironmentError as err:
+        print "failed to remove lfn", repr(err)
