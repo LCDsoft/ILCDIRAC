@@ -5,15 +5,19 @@ API to use to submit jobs in the ILC VO
 :author: Stephane Poss
 """
 
+import os
+import string
+
 from DIRAC.Interfaces.API.Dirac                     import Dirac
-from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 from DIRAC.DataManagementSystem.Client.DataManager  import DataManager
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
-
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
-import string, os
+
+from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
 
 __RCSID__ = "$Id$"
+
+#pylint: disable=protected-access
 
 COMPONENT_NAME = 'DiracILC'
 
@@ -93,11 +97,7 @@ class DiracILC(Dirac):
     :type job: ~ILCDIRAC.Interfaces.API.NewInterface.Job.Job
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
-    try:
-      formulationErrors = job._getErrors()
-    except Exception, x:
-      self.log.verbose( 'Could not obtain job errors:%s' % ( x ) )
-      formulationErrors = {}
+    formulationErrors = job.errorDict
 
     if formulationErrors:
       for method, errorList in formulationErrors.items():
@@ -128,12 +128,12 @@ class DiracILC(Dirac):
     jobs = self.jobRepo.readRepository()['Value']
     for jobID in sorted( jobs.keys() ):
       jobDict = jobs[jobID]
-      if jobDict.has_key( 'State' ) and ( jobDict['State'] in requestedStates ):
-        if ( jobDict.has_key( 'UserOutputData' ) and ( not int( jobDict['UserOutputData'] ) ) ) or \
-        ( not jobDict.has_key( 'UserOutputData' ) ):
+      if 'State' in jobDict and ( jobDict['State'] in requestedStates ):
+        if ( 'UserOutputData' in jobDict and ( not int( jobDict['UserOutputData'] ) ) ) or \
+           ( 'UserOutputData' not in jobDict ):
           params = self.parameters(int(jobID))
           if params['OK']:
-            if params['Value'].has_key('UploadedOutputData'):
+            if 'UploadedOutputData' in params['Value']:
               lfn = params['Value']['UploadedOutputData']
               llist.append(lfn)
     return llist
@@ -145,13 +145,13 @@ class DiracILC(Dirac):
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     #Start by taking care of sandbox
-    if hasattr(job, "inputsandbox") and type( job.inputsandbox ) == list and len( job.inputsandbox ):
+    if hasattr(job, "inputsandbox") and isinstance( job.inputsandbox, list ) and len( job.inputsandbox ):
       found_list = False
       for items in job.inputsandbox:
-        if type(items) == type([]):#We fix the SB in the case is contains a list of lists
+        if isinstance( items, list ):#We fix the SB in the case is contains a list of lists
           found_list = True
           for inBoxFile in items:
-            if type(inBoxFile) == type([]):
+            if isinstance( inBoxFile, list ):
               return S_ERROR("Too many lists of lists in the input sandbox, please fix!")
             job.inputsandbox.append(inBoxFile)
           job.inputsandbox.remove(items)

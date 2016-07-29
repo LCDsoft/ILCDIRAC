@@ -5,13 +5,16 @@ Register the meta data of the production files
 
 :author: sposs
 '''
-__RCSID__ = "$Id$"
 
-from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
+import os
+
 from DIRAC.Resources.Catalog.FileCatalogClient    import FileCatalogClient
 from DIRAC.Core.Utilities                         import DEncode
 from DIRAC import S_OK, gLogger
-import os
+
+from ILCDIRAC.Workflow.Modules.ModuleBase         import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class RegisterOutputData( ModuleBase ):
   """ At the end of a production Job, we need to register meta data info for the files. 
@@ -32,23 +35,23 @@ class RegisterOutputData( ModuleBase ):
     self.filemeta = {}
 
   def applicationSpecificInputs(self):
-    if self.step_commons.has_key('Enable'):
+    if 'Enable' in self.step_commons:
       self.enable = self.step_commons['Enable']
-      if not type(self.enable) == type(True):
+      if not isinstance( self.enable, bool):
         self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
         self.enable = False
         
-    if self.workflow_commons.has_key('ProductionOutputData'):
+    if 'ProductionOutputData' in self.workflow_commons:
       self.prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
     else:
       self.prodOutputLFNs = []
       
     self.nbofevents = self.NumberOfEvents
-    if self.workflow_commons.has_key('Luminosity'):
+    if 'Luminosity' in self.workflow_commons:
       self.luminosity = self.workflow_commons['Luminosity']
     
     ##Additional info: cross section only for the time being, comes from WHIZARD
-    if self.workflow_commons.has_key('Info'):
+    if 'Info' in self.workflow_commons:
       if 'stdhepcut' in self.workflow_commons['Info']:
         self.sel_eff = self.workflow_commons['Info']['stdhepcut']['Reduction']
         self.cut_eff = self.workflow_commons['Info']['stdhepcut']['CutEfficiency']
@@ -82,8 +85,8 @@ class RegisterOutputData( ModuleBase ):
       if self.nbofevents:
         nbevts = {}
         nbevts['NumberOfEvents'] = self.nbofevents
-        if self.workflow_commons.has_key('file_number_of_event_relation'):
-          if self.workflow_commons['file_number_of_event_relation'].has_key(os.path.basename(files)):
+        if 'file_number_of_event_relation' in self.workflow_commons:
+          if os.path.basename(files) in self.workflow_commons['file_number_of_event_relation']:
             nbevts['NumberOfEvents'] = self.workflow_commons['file_number_of_event_relation'][os.path.basename(files)]
         metafiles.update(nbevts)  
       if self.luminosity:

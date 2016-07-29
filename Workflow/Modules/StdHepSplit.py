@@ -5,16 +5,18 @@ Module to concatenate LCIO files
 :since: Mar 09, 2012
 """
 
+import os
+
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
 __RCSID__ = "$Id$"
 
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from DIRAC                                                import S_OK, S_ERROR, gLogger
-from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
-
-import os
 
 class StdHepSplit(ModuleBase):
   """ StdHep split module, split StdHep files using A. Miyamoto's HepSplit utility
@@ -42,9 +44,9 @@ class StdHepSplit(ModuleBase):
     if not self.OutputFile:
       return S_ERROR( 'No output file defined' )
     
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           self.prod_outputdata = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in self.prod_outputdata:
             if obj.lower().count("_gen_"):
@@ -59,7 +61,7 @@ class StdHepSplit(ModuleBase):
         if files.lower().find(".stdhep") > -1:
           self.InputFile.append(files)
       
-    if self.step_commons.has_key('listoutput'):
+    if 'listoutput' in self.step_commons:
       if len(self.step_commons['listoutput']):
         self.listoutput = self.step_commons['listoutput'][0]
       
@@ -91,9 +93,6 @@ class StdHepSplit(ModuleBase):
     else:
       self.log.warn("No files found to split")
       return S_OK("No files found to process")
-    # removeLibc
-
-    #removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
 
     prefix = ''
     if self.OutputFile:
@@ -133,11 +132,11 @@ declare -x LD_LIBRARY_PATH=%s
 exit $?
 
 """ % (
-    LD_LIBRARY_PATH,
-    mysplitDir,
-    runonstdhep,
-    self.nbEventsPerSlice,
-    prefix
+  LD_LIBRARY_PATH,
+  mysplitDir,
+  runonstdhep,
+  self.nbEventsPerSlice,
+  prefix
 )
 
     # Write script to file
@@ -171,8 +170,6 @@ exit $?
                              bufferLimit = 20971520
                            )
 
-        # Check results
-
     resultTuple = self.result['Value']
     status      = resultTuple[0]
 
@@ -201,7 +198,7 @@ exit $?
     self.workflow_commons['file_number_of_event_relation'] = numberofeventsdict
     if self.listoutput:
       outputlist = []
-      for of in numberofeventsdict.keys():
+      for of in numberofeventsdict:
         item = {}
         item['outputFile'] = of
         item['outputPath'] = self.listoutput['outputPath']
@@ -210,7 +207,7 @@ exit $?
       self.step_commons['listoutput'] = outputlist
       
     #Not only the step_commons must be updated  
-    if self.workflow_commons.has_key('ProductionOutputData'):
+    if 'ProductionOutputData' in self.workflow_commons:
       proddata = self.workflow_commons['ProductionOutputData'].split(";")
       finalproddata = []
       this_split_data = ''
@@ -220,7 +217,7 @@ exit $?
         else:
           this_split_data = item
       path = os.path.dirname(this_split_data)
-      for of in numberofeventsdict.keys():
+      for of in numberofeventsdict:
         finalproddata.append(os.path.join(path, of))
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
@@ -231,4 +228,3 @@ exit $?
       
     self.listDir()  
     return self.finalStatusReport(status)
-

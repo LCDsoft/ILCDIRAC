@@ -1,12 +1,14 @@
 """
 StdhepCut: apply generator level cuts after pythia or whizard
 """
-__RCSID__ = "$Id$"
+import types
 
-from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC import S_OK, S_ERROR
-import types
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+
+__RCSID__ = "$Id$"
 
 class StdhepCut(LCApplication):
   """ Call stdhep cut after whizard or pythia
@@ -110,7 +112,7 @@ class StdhepCut(LCApplication):
     if not self.selectionEfficiency:
       return S_ERROR('You need to know the selection efficiency of your cuts')
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts_kept'] = self.maxNumberOfEvents
@@ -139,7 +141,7 @@ class StdhepCut(LCApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

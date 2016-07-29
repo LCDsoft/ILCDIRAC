@@ -7,4 +7,6 @@ omit =
 [report]
 omit =
      Interfaces/API/NewInterface/Tests/LocalTestObjects.py
-     */Tests/*
+     *Test_*.py
+     *tests/*
+     *Tests/*

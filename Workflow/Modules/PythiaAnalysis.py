@@ -28,11 +28,11 @@ class PythiaAnalysis(ModuleBase):
         
   def applicationSpecificInputs(self):
     
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
         #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           baseoutputfile = self.OutputFile.split(".stdhep")[0]
           for obj in outputlist:

@@ -107,7 +107,8 @@ class SLICPandoraAnalysis (ModuleBase):
             continue
       #if os.path.exists(detmodel): #and os.path.isdir(detmodel):
       self.detectorxml = os.path.join(os.getcwd(), self.detectorxml)
-      self.detectorxml = self.detectorxml + "_pandora.xml"
+      if not self.detectorxml.endswith('xml'):
+        self.detectorxml = self.detectorxml + "_pandora.xml"
     
     if not os.path.exists(self.detectorxml):
       self.log.error('Detector model xml %s was not found, exiting' % self.detectorxml)
@@ -225,16 +226,6 @@ fi
 
     new_path = getNewPATH(sysconfig, appname, appversion)
 
-    
-    script = open(env_script_name, "w")
-    script.write('#!/bin/sh \n')
-    script.write('############################################################\n')
-    script.write('# Dynamically generated script to get the SLICPandora env. #\n')
-    script.write('############################################################\n')
-    script.write("declare -x PATH=%s:$PATH\n" % new_path )
-    script.write('declare -x ROOTSYS=%s/ROOT\n' % (myslicPandoraDir))
-    script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n' % (myslicPandoraDir, new_ld_lib_path))
-    script.write('declare -x PANDORASETTINGSDIR=%s/Settings\n' % myslicPandoraDir)
     prefixpath = ""
     if os.path.exists("PandoraFrontend"):
       prefixpath = "."
@@ -242,10 +233,16 @@ fi
       prefixpath ="%s/Executable" % myslicPandoraDir
     else:
       return S_ERROR("Missing PandoraFrontend binary")
-    script.write("declare -x PATH=%s:$PATH\n" % prefixpath )  
-    script.close()
+    with open(env_script_name, "w") as script:
+      script.write('#!/bin/sh \n')
+      script.write('############################################################\n')
+      script.write('# Dynamically generated script to get the SLICPandora env. #\n')
+      script.write('############################################################\n')
+      script.write("declare -x PATH=%s:$PATH\n" % new_path )
+      script.write('declare -x ROOTSYS=%s/ROOT\n' % (myslicPandoraDir))
+      script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n' % (myslicPandoraDir, new_ld_lib_path))
+      script.write('declare -x PANDORASETTINGSDIR=%s/Settings\n' % myslicPandoraDir)
+      script.write("declare -x PATH=%s:$PATH\n" % prefixpath )
     os.chmod(env_script_name, 0755)
     return S_OK(os.path.abspath(env_script_name))
-  
-  
-      
+

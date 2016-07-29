@@ -31,7 +31,7 @@ def _getFileInfo(lfn):
   if not res['OK']:
     gLogger.error("Failed to get metadata of %s" % lfn)
     return (0,0,{})
-  if res['Value'].has_key('Luminosity'):   
+  if 'Luminosity' in res['Value']:
     lumi += float(res['Value']['Luminosity'])
   addinfo = {}
   if 'AdditionalInfo' in res['Value']:
@@ -323,12 +323,12 @@ def _getProductionSummary():
     #    if 'sum' in addinfo['xsection']:
     #      if 'xsection' in addinfo['xsection']['sum']:
     #        dirmeta['CrossSection']=addinfo['xsection']['sum']['xsection']
-    if not dirmeta.has_key('NumberOfEvents'):
+    if 'NumberOfEvents' not in dirmeta:
       dirmeta['NumberOfEvents']=0
     #print processesdict[dirmeta['EvtType']]
     dirmeta['detail']=''
-    if processesdict.has_key(dirmeta['EvtType']):
-      if processesdict[dirmeta['EvtType']].has_key('Detail'):
+    if dirmeta['EvtType'] not in processesdict:
+      if 'Detail' in processesdict[dirmeta['EvtType']]:
         detail = processesdict[dirmeta['EvtType']]['Detail']
         
     else:
@@ -338,9 +338,9 @@ def _getProductionSummary():
     if not prodtype == 'MCGeneration':
       res = trc.getTransformationInputDataQuery(str(prodID))
       if res['OK']:
-        if res['Value'].has_key('ProdID'):
+        if 'ProdID' in res['Value']:
           dirmeta['MomProdID']=res['Value']['ProdID']
-    if not dirmeta.has_key('MomProdID'):
+    if 'MomProdID' not in dirmeta:
       dirmeta['MomProdID']=0
     dirmeta['detail']= _translate(detail)
 
@@ -359,7 +359,7 @@ def _getProductionSummary():
   detectors['sid']['REC'] = []
   detectors['gen']=[]
   for channel in metadata:
-    if not channel.has_key('DetectorType'):
+    if 'DetectorType'  not in channel:
       detectors['gen'].append((channel['detail'],
                                channel['Energy'],
                                channel['ProdID'],

@@ -286,7 +286,7 @@ def doTheWhizardInstallation():
         if len(line.split()) < 2:
           continue
         currprocess = line.split()[0]
-        if inputlist.has_key(currprocess):
+        if currprocess in inputlist:
           inputlist[currprocess]['CrossSection'] = line.split()[1]
   
   
@@ -335,7 +335,7 @@ def doTheWhizardInstallation():
   
   av_platforms = gConfig.getSections(softwareSection, [])
   if av_platforms['OK']:
-    if not platform in av_platforms['Value']:
+    if platform not in av_platforms['Value']:
       gLogger.error("Platform %s unknown, available are %s." % (platform, ", ".join(av_platforms['Value'])))
       gLogger.error("If yours is missing add it in CS")
       dexit(255)

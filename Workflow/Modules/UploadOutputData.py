@@ -6,18 +6,20 @@ defined in the production workflow.
 :since: Sep 01, 2010
 """
 
-__RCSID__ = "$Id$"
+import os
+import random
+import time
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
+from DIRAC import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations   import Operations
+import DIRAC
+
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations   import Operations
 
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig
-import DIRAC
-
-import os, random, time
+__RCSID__ = "$Id$"
 
 class UploadOutputData(ModuleBase):
   """ As name suggest: upload output data. For Production only: See :mod:`~ILCDIRAC.Workflow.Modules.UserJobFinalization` for User job upload.
@@ -50,12 +52,12 @@ class UploadOutputData(ModuleBase):
     self.log.debug("Workflow commons: %s" % self.workflow_commons)
 
     self.enable = self.step_commons.get('Enable', self.enable)
-    if not type(self.enable) == type(True):
+    if not isinstance( self.enable, bool ):
       self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
     
     self.failoverTest = self.step_commons.get('TestFailover', self.failoverTest)
-    if not type(self.failoverTest) == type(True):
+    if not isinstance( self.failoverTest, bool ):
       self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
       self.failoverTest = False
 
@@ -97,7 +99,7 @@ class UploadOutputData(ModuleBase):
     self.outputMode = self.workflow_commons.get('outputMode', self.outputMode)
 
     self.outputDataFileMask = self.workflow_commons.get('outputDataFileMask', self.outputDataFileMask)
-    if not type(self.outputDataFileMask) == type([]):
+    if not isinstance( self.outputDataFileMask, list ):
       self.outputDataFileMask = [i.lower().strip() for i in self.outputDataFileMask.split(';')]
 
     #result = constructProductionLFNs(self.workflow_commons)
@@ -107,7 +109,7 @@ class UploadOutputData(ModuleBase):
     #self.prodOutputLFNs=result['Value']['ProductionOutputData']
 
     tempOutputLFNs = self.workflow_commons.get('ProductionOutputData', self.prodOutputLFNs)
-    if type(tempOutputLFNs) == type("string"):
+    if isinstance( tempOutputLFNs, basestring ):
       self.prodOutputLFNs = tempOutputLFNs.split(";")
     else:
       self.prodOutputLFNs = tempOutputLFNs

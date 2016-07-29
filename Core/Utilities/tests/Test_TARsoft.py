@@ -7,24 +7,25 @@ import sys
 from mock import mock_open, patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
+  assertDiracSucceeds, assertDiracSucceedsWith_equals
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
 
-# DataManager import
-dataman_mock = Mock()
-dataman_mock.getFile.return_value = None
-sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_mock
-
-class TestTARsoft( unittest.TestCase ):
+#pylint: disable=global-variable-undefined
+class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   """ Tests the base functionality of the class """
 
   def setUp( self ):
+    # Mock away DataManager import
+    dataman_import_mock = Mock()
+    dataman_import_mock.getFile.return_value = None
+    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_import_mock
     global dataman_mock
     dataman_mock = Mock()
 
-  def test_importfails( self ):
+  def test_importfails( self ): #pylint: disable=no-self-use
     """ Rather stupid test. The handling of an ImportError in hashlib internally imports hashlib as well...
     """
     try:
@@ -34,7 +35,7 @@ class TestTARsoft( unittest.TestCase ):
     realimport = builtins.__import__
     global importcounter
     importcounter = 0
-    def myimport(name, globals=globals(), locals=locals(), fromlist=[], level=-1): #pylint: disable=C0111
+    def myimport(name, globals=globals(), locals=locals(), fromlist=[], level=-1): #pylint: disable=missing-docstring, redefined-builtin, dangerous-default-value
       global importcounter
       if name == 'hashlib' :
         if importcounter == 4:
@@ -44,7 +45,7 @@ class TestTARsoft( unittest.TestCase ):
           importcounter = importcounter+1
       return realimport(name, globals, locals, fromlist, level)
     builtins.__import__ = myimport
-    from ILCDIRAC.Core.Utilities.TARsoft import createLock
+    from ILCDIRAC.Core.Utilities.TARsoft import createLock #pylint: disable=unused-variable
 
   def test_createlock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
@@ -65,7 +66,8 @@ class TestTARsoft( unittest.TestCase ):
   def test_createlock_ioerr( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
     with patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError('some_test_open_error')), create=True):
-      assertDiracFailsWith( createLock('myfile.txt'), 'not allowed to write here: ioerror some_test_open_error', self )
+      assertDiracFailsWith( createLock('myfile.txt'),
+                            'not allowed to write here: ioerror some_test_open_error', self )
 
   def test_check_lock_age_no_lock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import checkLockAge
@@ -142,8 +144,10 @@ class TestTARsoft( unittest.TestCase ):
       remove_mock.assert_called_once_with( file_to_check )
       isdir_mock.assert_called_once_with( file_to_check )
       exists_mock.assert_called_with( file_to_check )
-      err_mock.assert_any_call( 'Failed deleting testFile_deleteMe2.txt because :', 'OSError test_remove_cannot_error' )
-      err_mock.assert_any_call( 'Oh Oh, something was not right, the directory testFile_deleteMe2.txt is still here' )
+      err_mock.assert_any_call( 'Failed deleting testFile_deleteMe2.txt because :',
+                                'OSError test_remove_cannot_error' )
+      err_mock.assert_any_call(
+        'Oh Oh, something was not right, the directory testFile_deleteMe2.txt is still here' )
 
   def test_delete_old_dir( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import deleteOld
@@ -167,8 +171,10 @@ class TestTARsoft( unittest.TestCase ):
       remove_mock.assert_called_once_with( file_to_check )
       isdir_mock.assert_called_once_with( file_to_check )
       exists_mock.assert_called_with( file_to_check )
-      err_mock.assert_any_call( 'Failed deleting /delete/that because :', "<type 'exceptions.OSError'> test_remove_dir_cannot_error" )
-      err_mock.assert_any_call( 'Oh Oh, something was not right, the directory /delete/that is still here' )
+      err_mock.assert_any_call( 'Failed deleting /delete/that because :',
+                                "<type 'exceptions.OSError'> test_remove_dir_cannot_error" )
+      err_mock.assert_any_call(
+        'Oh Oh, something was not right, the directory /delete/that is still here' )
 
   def test_download_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
@@ -196,7 +202,8 @@ class TestTARsoft( unittest.TestCase ):
     dataman_mock.getFile.return_value=S_ERROR('datman_test_err')
     with patch('%s.DataManager' % MODULE_NAME, new=Mock(return_value=dataman_mock)):
       from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
-      assertDiracFailsWith( downloadFile( '/unavailable/datman/dir/', 'mytestappv2/tarball', '/other_folder/' ), 'datman_test_err', self )
+      assertDiracFailsWith( downloadFile( '/unavailable/datman/dir/', 'mytestappv2/tarball',
+                                          '/other_folder/' ), 'datman_test_err', self )
       dataman_mock.getFile.assert_called_once_with( '/unavailable/datman/dir/mytestappv2/tarball' )
 
   def test_md5_check( self ):
@@ -220,7 +227,8 @@ class TestTARsoft( unittest.TestCase ):
 
   def test_md5_check_hash_wrong( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import tarMd5Check
-    file_contents = [['2984jt4gomrfg8924jgnm', '1938jhfo9coiemc0m90pn@O*E&HQRF(*IONU)', ')(DCIFUJE*FIUEqf9oi1mnf)']]
+    file_contents = [ [ '2984jt4gomrfg8924jgnm', '1938jhfo9coiemc0m90pn@O*E&HQRF(*IONU)',
+                        ')(DCIFUJE*FIUEqf9oi1mnf)' ] ]
     expected_hash = '0981u3jr9831rkjopk,f90381'
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo:
@@ -261,7 +269,8 @@ class TestTARsoft( unittest.TestCase ):
   def test_install_in_any_area( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installInAnyArea
     with patch('%s.installSinglePackage' % MODULE_NAME, new=Mock(side_effect=[S_ERROR('not here'), S_ERROR('neither here'), S_OK('Bingo')])) as install_mock:
-      assertDiracSucceeds( installInAnyArea( [ 'area1', 'otherarea', 'thisonesurelyworks' ], 'myapplication2', 'jobconf' ), self )
+      assertDiracSucceeds( installInAnyArea( [ 'area1', 'otherarea', 'thisonesurelyworks' ],
+                                             'myapplication2', 'jobconf' ), self )
       install_mock.assert_any_call( 'myapplication2', 'jobconf', 'area1' )
       install_mock.assert_any_call( 'myapplication2', 'jobconf', 'otherarea' )
       install_mock.assert_any_call( 'myapplication2', 'jobconf', 'thisonesurelyworks' )
@@ -269,7 +278,9 @@ class TestTARsoft( unittest.TestCase ):
   def test_install_in_any_area_fail_all( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installInAnyArea
     with patch('%s.installSinglePackage' % MODULE_NAME, new=Mock(return_value=S_ERROR('not here'))) as install_mock:
-      assertDiracFailsWith( installInAnyArea( [ 'area1', 'otherarea', 'thisonesurelyworks' ], 'myapplication3', 'jobconf' ), 'failed to install software', self )
+      assertDiracFailsWith( installInAnyArea( [ 'area1', 'otherarea', 'thisonesurelyworks' ],
+                                              'myapplication3', 'jobconf' ), 'failed to install software',
+                            self )
       install_mock.assert_any_call( 'myapplication3', 'jobconf', 'area1' )
       install_mock.assert_any_call( 'myapplication3', 'jobconf', 'otherarea' )
       install_mock.assert_any_call( 'myapplication3', 'jobconf', 'thisonesurelyworks' )
@@ -315,8 +326,16 @@ class TestTARsoft( unittest.TestCase ):
   def test_check( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
     # Different treatment of with open() and open().read().....
-    file_contents = [ ['HelloWorld -', 'mychecksum md5_checksum.md5', 'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt', '6fe635186392d43f0ae5728e41a92f96 appfile2.ppt', 'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin', 'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so', 'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
-    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu', 'appfile29031i4rt498jnyfouf908j248f4298fn24iuyf', 'importf90ui4j9rf41f09j14fiun41 fp1,cmic13', 'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
+    file_contents = [ [ 'HelloWorld -', 'mychecksum md5_checksum.md5',
+                        'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt',
+                        '6fe635186392d43f0ae5728e41a92f96 appfile2.ppt',
+                        'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin',
+                        'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py',
+                        'abc libstdc++.so', 'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
+    other_file_contents = [
+      'appfile1r0984u3jriumfilf42890tjr742tu', 'appfile29031i4rt498jnyfouf908j248f4298fn24iuyf',
+      'importf90ui4j9rf41f09j14fiun41 fp1,cmic13',
+      'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
@@ -329,7 +348,9 @@ class TestTARsoft( unittest.TestCase ):
         mysideeff.append( other_read_mock )
       mo.side_effect = tuple( mysideeff )
       result = check( ('appname', 'version'), 'mytestarea398', ['/my/basefolder', 'res_from_install[1]'] )
-      expected_open_calls = [ ( '/my/basefolder/md5_checksum.md5', 'r' ), '/my/basefolder/appfile1.txt', '/my/basefolder/appfile2.ppt', '/my/basefolder/myapp/importantfile.bin', '/my/basefolder/otherdir/main.py' ]
+      expected_open_calls = [ ( '/my/basefolder/md5_checksum.md5', 'r' ), '/my/basefolder/appfile1.txt',
+                              '/my/basefolder/appfile2.ppt', '/my/basefolder/myapp/importantfile.bin',
+                              '/my/basefolder/otherdir/main.py' ]
       expected = [[]]
       FileUtil.checkFileInteractions( self, mo, expected_open_calls, expected, handles )
       assertDiracSucceedsWith_equals( result, ['/my/basefolder'], self )
@@ -354,8 +375,15 @@ class TestTARsoft( unittest.TestCase ):
   def test_check_corrupt_checksum( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
     # Different treatment of with open() and open().read().....
-    file_contents = [ ['HelloWorld -', 'mychecksum md5_checksum.md5', 'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt', 'CORRUPT_CHECKSUM appfile2.ppt', 'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin', 'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so', 'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
-    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu', 'appfile29031i4rt498jnyfouf908j248f4298fn24iuyf', 'importf90ui4j9rf41f09j14fiun41 fp1,cmic13', 'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
+    file_contents = [ ['HelloWorld -', 'mychecksum md5_checksum.md5',
+                       'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt', 'CORRUPT_CHECKSUM appfile2.ppt',
+                       'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin',
+                       'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so',
+                       'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
+    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu',
+                            'appfile29031i4rt498jnyfouf908j248f4298fn24iuyf',
+                            'importf90ui4j9rf41f09j14fiun41 fp1,cmic13',
+                            'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
@@ -387,13 +415,20 @@ class TestTARsoft( unittest.TestCase ):
       isfile_mock.assert_called_once_with( '/base/' )
       exists_mock.assert_called_once_with( '/base/md5_checksum.md5' )
       assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
-      warn_mock.assert_called_once_with( 'The application does not come with md5 checksum file:', ('appname', 'version'))
+      warn_mock.assert_called_once_with( 'The application does not come with md5 checksum file:',
+                                         ('appname', 'version') )
 
   def test_check_ioerr( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
     # Different treatment of with open() and open().read().....
-    file_contents = [ [ 'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt', '6fe635186392d43f0ae5728e41a92f96 appfile2.ppt', 'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin', 'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so', 'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
-    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu', IOError('md5_read_err'), 'importf90ui4j9rf41f09j14fiun41 fp1,cmic13', 'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
+    file_contents = [ [ 'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt',
+                        '6fe635186392d43f0ae5728e41a92f96 appfile2.ppt',
+                        'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin',
+                        'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so',
+                        'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
+    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu', IOError('md5_read_err'),
+                            'importf90ui4j9rf41f09j14fiun41 fp1,cmic13',
+                            'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
@@ -409,7 +444,8 @@ class TestTARsoft( unittest.TestCase ):
         mysideeff.append( other_read_mock )
       mo.side_effect = tuple( mysideeff )
       result = check( ('appname', 'version'), 'mytestarea398', ['/my/basefolder', 'res_from_install[1]'] )
-      expected_open_calls = [ ( '/my/basefolder/md5_checksum.md5', 'r' ), '/my/basefolder/appfile1.txt', '/my/basefolder/appfile2.ppt' ]
+      expected_open_calls = [ ( '/my/basefolder/md5_checksum.md5', 'r' ), '/my/basefolder/appfile1.txt',
+                              '/my/basefolder/appfile2.ppt' ]
       expected = [[]]
       assertDiracFailsWith( result, 'failed to compute md5 sum', self )
       FileUtil.checkFileInteractions( self, mo, expected_open_calls, expected, handles )
@@ -444,8 +480,16 @@ class TestTARsoft( unittest.TestCase ):
   def test_check_missing_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
     # Different treatment of with open() and open().read().....
-    file_contents = [ ['HelloWorld -', 'mychecksum md5_checksum.md5', 'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt', '6fe635186392d43f0ae5728e41a92f96 appfile2.ppt', 'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin', 'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so', 'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
-    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu', 'appfile29031i4rt498jnyfouf908j248f4298fn24iuyf', 'importf90ui4j9rf41f09j14fiun41 fp1,cmic13', 'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
+    file_contents = [ ['HelloWorld -', 'mychecksum md5_checksum.md5',
+                       'ef7493baf5582b41cd4fcaa25124c3d9 ./appfile1.txt',
+                       '6fe635186392d43f0ae5728e41a92f96 appfile2.ppt',
+                       'e10dab217514cf7f2166d87fb5d04d5c ./myapp/importantfile.bin',
+                       'a51999cbc7ee434ee95b33f1d18c7210 otherdir/main.py', 'abc libstdc++.so',
+                       'def myapp/libgcc_s.so.1', 'ignoreme ./other_dir/libc-2.5' ] ]
+    other_file_contents = [ 'appfile1r0984u3jriumfilf42890tjr742tu',
+                            'appfile29031i4rt498jnyfouf908j248f4298fn24iuyf',
+                            'importf90ui4j9rf41f09j14fiun41 fp1,cmic13',
+                            'MAIN()@KJR(*@KRE)+@MOUFRIN@FR*YB^ B* @HE)J @E( HG!V!UYNEJ)(!))))' ]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
@@ -553,7 +597,8 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.removeLibc' % MODULE_NAME, new=Mock(return_value=True)) as libc_mock, \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True))as isdir_mock, \
          patch('%s.addFolderToLdLibraryPath' % MODULE_NAME, new=Mock(return_value=True)) as addfolder_mock:
-      result = configure( ('myILCApplicationTesttest123', 'version1000'), 'configurationArea', ['ILCApplication3002'] )
+      result = configure( ('myILCApplicationTesttest123', 'version1000'), 'configurationArea',
+                          ['ILCApplication3002'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
       libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
@@ -772,7 +817,8 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_OK())) as configure_mock, \
          patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_OK())) as clean_mock, \
          patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
-      result = installPackage(  ('testAppLication', 'version1.01.'), 'configToTest', 'secret_area', 'mycurrenttestdir' )
+      result = installPackage(  ('testAppLication', 'version1.01.'), 'configToTest', 'secret_area',
+                                'mycurrenttestdir' )
       assertDiracSucceeds( result, self )
       # change dir to current dir after every step
       chdir_mock.assert_called_with( 'mycurrenttestdir' )
@@ -780,9 +826,12 @@ class TestTARsoft( unittest.TestCase ):
       for i in xrange(0, len(chdir_mock.mock_calls) - 1):
         assertEqualsImproved( chdir_mock.mock_calls[i], chdir_mock.mock_calls[i+1], self )
       get_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'configToTest', 'secret_area' )
-      install_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'APP_TAR', 'http://myTar.url', False, '1234MyMd5', 'secret_area' )
-      check_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'secret_area', 'res_from_install_test')
-      configure_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'secret_area', 'res_from_check_test' )
+      install_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'APP_TAR',
+                                            'http://myTar.url', False, '1234MyMd5', 'secret_area' )
+      check_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'secret_area',
+                                          'res_from_install_test')
+      configure_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'secret_area',
+                                              'res_from_check_test' )
       clean_mock.assert_called_once_with( 'secret_area', 'res_from_install_test' )
       self.assertFalse( log_mock.called )
 
@@ -792,7 +841,8 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to install software', self )
-      log_mock.assert_called_once_with( 'Could not install software/dependency mytestappName testv12: tarball_err')
+      log_mock.assert_called_once_with(
+        'Could not install software/dependency mytestappName testv12: tarball_err')
 
   def test_install_package_install_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
@@ -802,7 +852,8 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to install software', self )
-      log_mock.assert_called_once_with( 'Could not install software/dependency mytestappName testv12: install_test_err')
+      log_mock.assert_called_once_with(
+        'Could not install software/dependency mytestappName testv12: install_test_err')
 
   def test_install_package_check_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
@@ -839,7 +890,8 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracSucceeds( result, self )
-      log_mock.assert_called_once_with( 'Failed to clean useless tar balls, deal with it: mytestappName testv12' )
+      log_mock.assert_called_once_with(
+        'Failed to clean useless tar balls, deal with it: mytestappName testv12' )
 
   def test_install( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import install
@@ -858,7 +910,8 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.os.rename' % MODULE_NAME) as rename_mock, \
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/my/cwd/test')), \
          patch('%s.os.unlink' % MODULE_NAME) as remove_mock:
-      result = install(('appname', 'appvers'), 'myapptarbase.tar.gz', 'tarballURL', False, 'Mymd5sumTest', 'mytestArea')
+      result = install(('appname', 'appvers'), 'myapptarbase.tar.gz', 'tarballURL', False, 'Mymd5sumTest',
+                       'mytestArea')
       assertDiracSucceedsWith_equals( result, ['myapptarbase', 'myapptarbase.tar.gz'], self )
       clearlock_mock.assert_called_once_with( 'myapptarbase.lock' )
       listdir_mock.assert_called_once_with( 'myapptarbase' )
@@ -1004,7 +1057,9 @@ class TestTARsoft( unittest.TestCase ):
          patch('%s.tarfile.is_tarfile' % MODULE_NAME, new=Mock(return_value=True)) as istar_mock, \
          patch('%s.tarfile.open' % MODULE_NAME, new=Mock(return_value=untar_me_mock)) as tar_open_mock:
       result = install(('appname', 'appvers'), 'app_tar.tar.gz', 'tarballURL', False, 'md5sum', 'area')
-      assertDiracFailsWith( result, 'Could not extract tar ball app_tar.tar.gz because of custom_tar_test_err, cannot continue ', self )
+      assertDiracFailsWith(
+        result, 'Could not extract tar ball app_tar.tar.gz because of custom_tar_test_err, cannot continue ',
+        self )
       clearlock_mock.assert_called_once_with( 'app_tar.lock' )
       istar_mock.assert_called_once_with( 'app_tar.tar.gz' )
       tar_open_mock.assert_called_once_with( 'app_tar.tar.gz' )

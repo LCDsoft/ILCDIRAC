@@ -5,14 +5,16 @@ Module to concatenate LCIO files
 :since: Dec 17, 2011
 """
 
-__RCSID__ = "$Id$"
+import os
 
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
-import os
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class LCIOConcatenate(ModuleBase):
   """ LCIO concatenate module
@@ -38,7 +40,7 @@ class LCIOConcatenate(ModuleBase):
       return S_ERROR( 'No output file defined' )
     
     if self.isProdJob:
-      if self.workflow_commons.has_key('ProductionOutputData'):
+      if 'ProductionOutputData' in self.workflow_commons:
         outputlist = self.workflow_commons['ProductionOutputData'].split(";")
         for obj in outputlist:
           if obj.lower().count("_sim_") or obj.lower().count("_rec_") or obj.lower().count("_dst_"):
@@ -67,11 +69,9 @@ class LCIOConcatenate(ModuleBase):
       self.log.error("Failed to resolve input parameters:", result['Message'])
       return result
 
-    if not os.environ.has_key("LCIO"):
+    if 'LCIO' not in os.environ:
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
-
-    # removeLibc
 
     removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
 
@@ -100,9 +100,9 @@ lcio concat -f *.slcio -o %s
 exit $?
 
 """ % (
-    LD_LIBRARY_PATH,
-    PATH,
-    self.OutputFile
+  LD_LIBRARY_PATH,
+  PATH,
+  self.OutputFile
 )
 
     # Write script to file
@@ -145,4 +145,3 @@ exit $?
     
     self.listDir()
     return self.finalStatusReport(status)
-

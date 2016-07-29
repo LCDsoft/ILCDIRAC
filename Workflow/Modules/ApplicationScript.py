@@ -4,12 +4,16 @@ Run any application provided by the user. Is used when a specific environment is
 :since: Jul 12, 2010
 :author: sposs
 '''
-__RCSID__ = "$Id$"
 
-import os, re, types
+import os
+import re
+
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class ApplicationScript(ModuleBase):
   """ Default application environment. Called GenericApplication in the Interface.
@@ -27,7 +31,7 @@ class ApplicationScript(ModuleBase):
     self.log.info("The arguments are %s"% self.arguments)
     if 'ParametricParameters' in self.workflow_commons:
       parametric = ' '
-      if type(self.workflow_commons['ParametricParameters']) == types.ListType:
+      if isinstance( self.workflow_commons['ParametricParameters'], list ):
         parametric = " ".join(self.workflow_commons['ParametricParameters'])
       else:
         parametric = self.workflow_commons['ParametricParameters']
@@ -103,7 +107,7 @@ class ApplicationScript(ModuleBase):
     else:
       self.log.info( "%s execution completed successfully:" % os.path.basename(self.script) )
 
-    if failed == True:
+    if failed is True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError )
       return S_ERROR('%s Exited With Status %s' % (os.path.basename(self.script), status))

@@ -4,13 +4,18 @@ Module that gets a file from its SRM definition
 :since: Aug 27, 2010
 :author: sposs
 '''
-__RCSID__ = "$Id$"
+
+import os
+import tempfile
+import time
 
 from DIRAC.Core.DISET.RPCClient                            import RPCClient
 from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
-from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC import S_OK, S_ERROR, gLogger
-import os, tempfile, time
+
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class GetSRMFile(ModuleBase):
   """ When a file is not in the FileCatalog, it can still be obtained using this. and specifying the srm path.
@@ -47,7 +52,7 @@ class GetSRMFile(ModuleBase):
       self.log.error('Files txt was not found correctly: %s' % self.srmfiles)
       return S_ERROR('Files txt was not found correctly')
     
-    if not type(self.files[0]) is type({}):
+    if not isinstance( self.files[0], dict ):
       self.log.error('Files were not found correctly: %s' % self.files)
       return S_ERROR('Files were not found correctly')
 
@@ -65,7 +70,7 @@ class GetSRMFile(ModuleBase):
         time.sleep(60)
         continue
       running = 0
-      if res['Value'].has_key('Running'):
+      if 'Running' in res['Value']:
         running = res['Value']['Running']
       if running < max_concurrent_running:
         break
@@ -74,7 +79,7 @@ class GetSRMFile(ModuleBase):
 
     self.setApplicationStatus('Downloading SRM files')
     for filed in self.files:
-      if not filed.has_key('file') or not filed.has_key('site'):
+      if 'file' not in filed or 'site' not in filed:
         self.log.error('Dictionnary does not contain correct keys')
         return S_ERROR('Dictionnary does not contain correct keys')
       start = os.getcwd()

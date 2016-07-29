@@ -46,7 +46,7 @@ class _Params(object):
     if not datatype.upper() in VALIDDATATYPES:
       self.errorMessages.append("ERROR: Unknown Datatype, use %s " % (",".join(VALIDDATATYPES),) )
       return S_ERROR()
-    self.datatype = datatype
+    self.datatype = datatype.upper()
     return S_OK()
 
   def setExtraname(self, extraname):
@@ -112,6 +112,7 @@ def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
   trans.setDescription( description )
   trans.setLongDescription( description )
   trans.setType( 'Replication' )
+  trans.setGroup( 'Replication' )
   trans.setPlugin( 'Broadcast' )
   res = trans.setSourceSE( sourceSE )
   if not res['OK']:

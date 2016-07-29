@@ -16,7 +16,11 @@ from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds
 
 __RCSID__ = "$Id$"
 
-#pylint: disable=R0904, W0212
+MODULE_NAME = 'ILCDIRAC.Workflow.Modules.DDSimAnalysis'
+MODULEBASE_NAME = 'ILCDIRAC.Workflow.Modules.ModuleBase'
+PROXYINFO_NAME = 'DIRAC.Core.Security.ProxyInfo'
+DD4H_NAME = 'ILCDIRAC.Workflow.Utilities.DD4hepMixin'
+#pylint: disable=too-many-public-methods, protected-access
 
 gLogger.setLevel("ERROR")
 gLogger.showHeaders(True)
@@ -30,8 +34,8 @@ def cleanup(tempdir):
   except OSError:
     pass
 
-@patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-@patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+@patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+@patch("%s.getProxyInfoAsString" % PROXYINFO_NAME, new=Mock(return_value=S_OK()))
 class TestDDSimAnalysis( unittest.TestCase ):
   """ test DDSimAnalysis """
 
@@ -39,8 +43,8 @@ class TestDDSimAnalysis( unittest.TestCase ):
     """make this existing to placate pylint"""
     return super(TestDDSimAnalysis, self).assertIn(*args, **kwargs)
 
-  @patch("ILCDIRAC.Workflow.Modules.ModuleBase.getProxyInfoAsString", new=Mock(return_value=S_OK()))
-  @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfoAsString" % PROXYINFO_NAME, new=Mock(return_value=S_OK()))
   def setUp( self ):
     self.ddsim = DDSimAnalysis()
     self.curdir = os.getcwd()
@@ -61,9 +65,9 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     with open(self.logFileName, "w") as logF:
       logF.write("logged the logging logs")
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_success(self):
     """DDSim.runit ................................................................................."""
     self.ddsim.platform = "Windows"
@@ -74,10 +78,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     print res
     assertDiracSucceeds( res, self )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK(["pairs.hepmc"]) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_OK(["pairs.hepmc"]) ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_success_inputFile(self):
     """DDSim.runit success with inputFile..........................................................."""
     self.ddsim.platform = "Windows"
@@ -90,10 +94,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.assertEqual( self.ddsim.InputFile, ["pairs.hepmc"] )
     self.assertIn( " --inputFile pairs.hepmc " , self.ddsim.extraCLIarguments )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_ERROR("no pairs.hepmc") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_ERROR("no pairs.hepmc") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_failure_inputFile(self):
     """DDSim.runit failure with inputFile..........................................................."""
     self.ddsim.platform = "Windows"
@@ -104,10 +108,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertEqual( res['Message'], "no pairs.hepmc" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_failure_LogFile(self):
     """DDSim.runit failure with applicationLog......................................................"""
     self.ddsim.platform = "Windows"
@@ -119,10 +123,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     self.assertIn( "did not produce the expected log", res['Message'] )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_failure_LogFile_ignore(self):
     """DDSim.runit failure with applicationLog but ignore..........................................."""
     self.ddsim.platform = "Windows"
@@ -134,10 +138,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.resolveIFpaths", new=Mock(return_value=S_OK("pairs.hepmc") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_OK("pairs.hepmc") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_success_LogAndScriptPresent(self):
     """DDSim.runit success log and script exist....................................................."""
     self.ddsim.platform = "Windows"
@@ -153,9 +157,9 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
   def test_DDSim_runIt_success_steeringFile(self):
     """DDSim.runit success with steeringFile........................................................"""
     self.ddsim.platform = "Windows"
@@ -169,10 +173,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     steerFlag = " --steeringFile %s " % self.ddsim.SteeringFile
     self.assertIn( steerFlag, self.ddsim.extraCLIarguments )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")) )
   def test_DDSim_runIt_success_steeringFile_1(self):
     """DDSim.runit success with non-local steeringFile.............................................."""
     self.ddsim.platform = "Windows"
@@ -187,10 +191,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     steerFlag = " --steeringFile %s " % fullPath
     self.assertIn( steerFlag,  self.ddsim.extraCLIarguments )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_ERROR("NothingToSee")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_ERROR("NothingToSee")) )
   def test_DDSim_runIt_failure_steeringFile_1(self):
     """DDSim.runit failure with non-local steeringFile.............................................."""
     self.ddsim.platform = "Windows"
@@ -202,10 +206,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.assertFalse( res['OK'] )
     self.assertEqual( res['Message'], "NothingToSee" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")) )
   def test_DDSim_runIt_failure_steeringFile_2(self):
     """DDSim.runit failure with non-local steeringFile 2............................................"""
     self.ddsim.platform = "Windows"
@@ -221,10 +225,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
   #######################
   # Test NumberOfEvents #
   #######################
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")) )
   def test_DDSim_runIt_success_numberOfEvents_1(self):
     """DDSim.runit success with NumberOfEvents set.................................................."""
     self.ddsim.platform = "Windows"
@@ -240,10 +244,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
   ##############################
   # Test skipNEvents/startFrom #
   ##############################
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")) )
   def test_DDSim_runIt_success_skipNevents(self):
     """DDSim.runit success with startFrom..........................................................."""
     self.ddsim.platform = "Windows"
@@ -260,10 +264,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
   ##############
   # Test Debug #
   ##############
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")) )
   def test_DDSim_runIt_success_Debug(self):
     """DDSim.runit success with startFrom..........................................................."""
     self.ddsim.platform = "Windows"
@@ -280,10 +284,10 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
   ###################
   # Test OutputFile #
   ###################
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_OK("myDet.xml") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.shellCall", new=Mock(return_value=S_OK((0,"AllGood")) ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSteeringFileDirName", new=Mock(return_value=S_OK("SteerFold")) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml") ) )
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0,"AllGood")) ) )
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")) )
   def test_DDSim_runIt_success_OutputFile_1(self):
     """DDSim.runit success with OutputFile set......................................................"""
     self.ddsim.platform = "Windows"
@@ -321,7 +325,7 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     res = self.ddsim.runIt()
     self.assertEqual( res['Value'], "DDSim should not proceed as previous step did not end properly" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_ERROR("missing ddsiming.sh") ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_ERROR("missing ddsiming.sh") ) )
   def test_DDSim_runIt_fail_env(self):
     """DDSim.runit failed to get env................................................................"""
     self.ddsim.platform = "Windows"
@@ -329,8 +333,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     res = self.ddsim.runIt()
     self.assertEqual( res['Message'], "missing ddsiming.sh" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getEnvironmentScript", new=Mock(return_value=S_OK("ddsiming.sh") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.DDSimAnalysis._getDetectorXML", new=Mock(return_value=S_ERROR("no myDet.xml") ) )
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_ERROR("no myDet.xml") ) )
   def test_DDSim_runIt_fail_xml(self):
     """DDSim.runit failed to get xml................................................................"""
     self.ddsim.platform = "Windows"
@@ -341,7 +345,7 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
 class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
   """ DDSim getEnvScript """
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getEnvScript_success( self ):
     """DDSim.getEnvScript success..................................................................."""
     platform = "Windows"
@@ -354,7 +358,7 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
       scriptLines = "".join(script.readlines())
       self.assertIn( "declare -x DD4hepINSTALL=%s" % "/win32", scriptLines )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_ERROR("no softFolder") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_ERROR("no softFolder") ) )
   def test_DDSim_getEnvScript_noSoftFolder( self ):
     """DDSim.getEnvScript fail softfolder..........................................................."""
     platform = "Windows"
@@ -364,7 +368,7 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
     self.assertFalse( res['OK'] )
     self.assertEqual( res['Message'], "no softFolder" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   @patch("os.path.exists", new=Mock(return_value=True ) )
   def test_DDSim_getEnvScript_vars( self ):
     """DDSim.getEnvScript with variables success...................................................."""
@@ -389,7 +393,7 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
       self.assertNotIn( "declare -x G4LEDATA=$(ls -d $G4DATA/", scriptLines )
       self.assertIn( "declare -x G4LEVELGAMMADATA=$(ls -d $G4DATA/", scriptLines )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   @patch("os.path.exists", new=Mock(return_value=True ) )
   def test_DDSim_getEnvScript_noVars( self ):
     """DDSim.getEnvScript with no additional variables.............................................."""
@@ -408,8 +412,8 @@ class TestDDSimAnalysisEnv( TestDDSimAnalysis ):
       self.assertIn( "declare -x G4LEDATA=$(ls -d $G4DATA/", scriptLines )
       self.assertNotIn( "source ", scriptLines )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getNewLDLibs", new=Mock(return_value="") )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getNewLDLibs" % MODULE_NAME, new=Mock(return_value="") )
   def test_DDSim_getEnvScript_init( self ):
     """DDSim.getEnvScript with initscript..........................................................."""
     platform = "Windows"
@@ -507,7 +511,7 @@ class TestDDSimAnalysisASI( TestDDSimAnalysis ):
 class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
   """tests for _getDetectorXML """
 
-  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % DD4H_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML( self ):
     """DDSim.getDetectorXML from CS................................................................."""
     gLogger.setLevel("ERROR")
@@ -518,7 +522,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Value'], xmlPath )
 
-  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % DD4H_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_relPatg( self ):
     """DDSim.getDetectorXML from CS with relative path.............................................."""
     gLogger.setLevel("ERROR")
@@ -529,7 +533,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Value'], os.path.join("/win32",xmlPath) )
 
-  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % DD4H_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Fail( self ):
     """DDSim.getDetectorXML Failure................................................................."""
     gLogger.setLevel("ERROR")
@@ -541,7 +545,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     self.assertFalse( res['OK'] )
     self.assertEqual( res['Message'], "Detector model was not found" )
 
-  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_ERROR("Windows not supported") ) )
+  @patch("%s.getSoftwareFolder" % DD4H_NAME, new=Mock(return_value=S_ERROR("Windows not supported") ) )
   def test_DDSim_getDetectorXML_NoSoftFolder( self ):
     """DDSim.getDetectorXML Error no SoftwareFolder................................................."""
     gLogger.setLevel("ERROR")
@@ -552,7 +556,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     res = self.ddsim._getDetectorXML()
     self.assertEqual( res['Message'], "Windows not supported" )
 
-  @patch("ILCDIRAC.Workflow.Utilities.DD4hepMixin.getSoftwareFolder", new=Mock(return_value=S_OK("/win32" ) ))
+  @patch("%s.getSoftwareFolder" % DD4H_NAME, new=Mock(return_value=S_OK("/win32" ) ))
   def test_DDSim_getDetectorXML_NoDetModels( self ):
     """DDSim.getDetectorXML Error no detectorModels................................................."""
     gLogger.setLevel("ERROR")
@@ -563,7 +567,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     self.assertEqual( res['Message'], "Failed to get list of DetectorModels from the ConfigSystem" )
 
   @patch("os.path.exists", new=Mock(return_value=True) )
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.unzip_file_into_dir", new=Mock() )
+  @patch("%s.unzip_file_into_dir" % MODULE_NAME, new=Mock() )
   def test_DDSim_getDetectorXML_CustomWithOfficialName( self ):
     """DDSim.getDetectorXML CustomTarball with official name........................................"""
     gLogger.setLevel("ERROR")
@@ -590,7 +594,7 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
       tar.add(xmlPath)
     cleanup(self.ddsim.detectorModel)
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ( self ):
     """DDSim.getDetectorXML with local tar.gz......................................................."""
     gLogger.setLevel("ERROR")
@@ -603,7 +607,7 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
     self.assertEqual( res['Value'], expectedPath )
     self.assertTrue( os.path.exists( expectedPath ) )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ_2( self ):
     """DDSim.getDetectorXML with local tar.gz run twice............................................."""
     gLogger.setLevel("ERROR")
@@ -628,7 +632,7 @@ class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
     self.assertFalse( res['OK'] )
     self.assertEqual( res['Message'], "Failed to untar detector model" )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TGZ_2( self ):
     """DDSim.getDetectorXML with local tgz.........................................................."""
     gLogger.setLevel("ERROR")
@@ -657,7 +661,7 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
       zipF.write(xmlPath)
     cleanup(self.ddsim.detectorModel)
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ( self ):
     """DDSim.getDetectorXML with local zip.........................................................."""
     gLogger.setLevel("ERROR")
@@ -670,7 +674,7 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
     self.assertEqual( res['Value'], expectedPath )
     self.assertTrue( os.path.exists( expectedPath ) )
 
-  @patch("ILCDIRAC.Workflow.Modules.DDSimAnalysis.getSoftwareFolder", new=Mock(return_value=S_OK("/win32") ) )
+  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_OK("/win32") ) )
   def test_DDSim_getDetectorXML_Local_TarGZ_2( self ):
     """DDSim.getDetectorXML with local zip run twice................................................"""
     gLogger.setLevel("ERROR")

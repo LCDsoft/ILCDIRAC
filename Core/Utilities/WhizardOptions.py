@@ -13,8 +13,6 @@ This is currently done on the job definition side
 from xml.etree.ElementTree                                import ElementTree, fromstring
 from ILCDIRAC.Core.Utilities.GeneratorModels              import GeneratorModels
 
-import types
-
 from DIRAC import S_OK, S_ERROR
 
 def getDict():
@@ -608,9 +606,9 @@ class WhizardOptions(object):
   def getInputFiles(self, model):
     """ Get the proper input parameter file, usually LesHouches
     """
-    if not self.paramdict.has_key('process_input'):
+    if 'process_input' not in self.paramdict:
       self.paramdict['process_input'] = {}
-    if not self.paramdict['process_input'].has_key('input_file'):
+    if 'input_file' not in self.paramdict['process_input']:
       res = self.genmodel.getFile(model) 
       if not res['OK']:
         self.paramdict['process_input']['input_file'] = ''
@@ -646,7 +644,7 @@ class WhizardOptions(object):
     """ Get the main fields
     """
     listoffields = []
-    for elem in self.whizardxml.getchildren():
+    for elem in list( self.whizardxml ):
       listoffields.append(elem.tag)
     return S_OK(listoffields)
   
@@ -655,9 +653,9 @@ class WhizardOptions(object):
     """
     options = []
     element = self.whizardxml.find(field)
-    if element == None:
+    if element is None:
       return S_ERROR("Field %s does not exist" % field)
-    for subelements in element.getchildren():
+    for subelements in list( element ):
       options.append(subelements.tag)
     return S_OK(options)
   
@@ -684,11 +682,11 @@ class WhizardOptions(object):
     """ Get the content as dict, like the one used for setting the options
     """
     whiz_opt = {}
-    for element in self.whizardxml.getchildren():
+    for element in list( self.whizardxml ):
       whiz_opt[element.tag] = {}
-      for item in element.getchildren():
+      for item in list( element ):
         val = item.attrib['value']
-        if type(val) == type(""):
+        if isinstance( val, basestring ):
           val = val.rstrip()
         whiz_opt[element.tag][item.tag] = val
     return S_OK(whiz_opt)
@@ -698,28 +696,28 @@ class WhizardOptions(object):
     """
     for key, val in paramdict.items():
       element = self.whizardxml.find(key)
-      if element == None:
+      if element is None:
         return S_ERROR("Element %s is not in the allowed parameters" % key)
       for subkey, value in val.items():
         subelement = self.whizardxml.find(key + "/" + subkey)
-        if subelement == None:
+        if subelement is None:
           return S_ERROR("Key %s/%s is not in the allowed parameters" % (key, subkey))
         etype = subelement.attrib['type']
         if etype == 'float':
-          if not type(value) == types.FloatType and not type(value) == types.IntType:
+          if not isinstance( value, (float, int, long) ) or isinstance( value, bool ):
             return S_ERROR("%s should be a float" % (key + "/" + subkey))
         elif etype == 'T/F':
           if value != 'T' and value != 'F':
             return S_ERROR("%s should be either 'T' or 'F'" % (key + "/" + subkey))
-        elif etype == 'integer' or type == '0/1/2/3':
-          if not type(value) == types.IntType:
+        elif etype == 'integer' or etype == '0/1/2/3':
+          if not isinstance( value, (int, long) ) or ( etype == '0/1/2/3' and value not in range(4) ):
             return S_ERROR("%s should be an integer" % (key + "/" + subkey))
         elif etype == 'string':
-          if not type(value) in types.StringTypes:
+          if not isinstance( value, basestring ):
             return S_ERROR("%s should be a string" % (key + "/" + subkey))
         elif etype == 'floatarray':
           error = False
-          if not type(value) in types.StringTypes:
+          if not isinstance( value, basestring ):
             error = True
           else:
             valelem = value.split()
@@ -733,12 +731,12 @@ class WhizardOptions(object):
     """ Write the options to the whizard.in
     """
     lines = []
-    for elem in self.whizardxml.getchildren():
+    for elem in list( self.whizardxml ):
       tag = elem.tag
       if tag.count("beam_input"):
         tag = "beam_input"
       lines.append("&%s" % tag)
-      for subelem in elem.getchildren():
+      for subelem in list( elem ):
         val = subelem.get('value')
         if val == 'sqrts':
           continue
@@ -788,18 +786,19 @@ class WhizardOptions(object):
             if val.count("."):
               try:
                 val = float(val)
-              except:
+              except ValueError:
                 pass
             else:
               try:
                 val = int(val)
-              except:
+              except ValueError:
                 pass
           pdict[curkey][key] = val
     return self.changeAndReturn(pdict)
 
-if __name__=="__main__":
-  import sys, pprint
+def main():
+  import sys
+  import pprint
   fname = sys.argv[1]
   model = 'sm'
   if len(sys.argv)>2:
@@ -810,7 +809,11 @@ if __name__=="__main__":
     print "Error:",res['Message']
     if res['Message'].count("parameter_input"):
       print "Maybe you are trying to set a mass that will be overwritten by a LesHouches file?"
-    exit(1)
-  
+    return 1
+
   pp = pprint.PrettyPrinter(indent=2)
   pp.pprint(wh.getAsDict()['Value'])
+  return 0
+
+if __name__=="__main__":
+  exit( main() )

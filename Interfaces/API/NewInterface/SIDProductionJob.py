@@ -5,14 +5,16 @@ SID DBD specific production job utility
 :since: Jul 01, 2012
 """
 
-from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+import string
+from decimal import Decimal
+
 from DIRAC.Core.Workflow.Module import ModuleDefinition
 from DIRAC.Core.Workflow.Step import StepDefinition
 from DIRAC import S_OK, S_ERROR
 
-import types,string
-from decimal import Decimal
+from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+from ILCDIRAC.Interfaces.Utilities import JobHelpers
+
 
 __RCSID__ = "$Id$"
 
@@ -29,28 +31,14 @@ class SIDProductionJob(ProductionJob):
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed, also get from the data the meta info requested to build the path
     """
-    metakeys = metadata.keys()
-    client = FileCatalogClient()
-    res = client.getMetadataFields()
-    if not res['OK']:
-      print "Could not contact File Catalog"
-      return S_ERROR()
-    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
-    for key in metakeys:
-      for meta in metaFCkeys:
-        if meta != key:
-          if meta.lower() == key.lower():
-            return self._reportError("Key syntax error %s, should be %s" % (key, meta), name = 'SIDProduction')
-      if not metaFCkeys.count(key):
-        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
-    #if not metadata.has_key("ProdID"):
-    #  return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
-    res = client.findDirectoriesByMetadata(metadata)
-    if not res['OK']:
-      return self._reportError("Error looking up the catalog for available directories")
-    elif len(res['Value']) < 1:
-      return self._reportError('Could not find any directory corresponding to the query issued')
-    dirs = res['Value'].values()
+    retMetaKey = self._checkMetaKeys( metadata.keys() )
+    if not retMetaKey['OK']:
+      return retMetaKey
+
+    retDirs = self._checkFindDirectories( metadata )
+    if not retDirs['OK']:
+      return retDirs
+    dirs = retDirs['Value'].values()
     for mdir in dirs:
       res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
@@ -58,53 +46,31 @@ class SIDProductionJob(ProductionJob):
       compatmeta = res['Value']
       compatmeta.update(metadata)
       
-    if compatmeta.has_key('EvtType'):
-      if type(compatmeta['EvtType']) in types.StringTypes:
-        self.evttype  = compatmeta['EvtType']
-      if type(compatmeta['EvtType']) == type([]):
-        self.evttype = compatmeta['EvtType'][0]
+    if 'EvtType' in compatmeta:
+      self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
-    if compatmeta.has_key('NumberOfEvents'):
-      if type(compatmeta['NumberOfEvents']) == type([]):
-        self.nbevts = int(compatmeta['NumberOfEvents'][0])
-      else:
-        self.nbevts = int(compatmeta['NumberOfEvents'])
 
+    if 'NumberOfEvents' in compatmeta:
+      self.nbevts = JobHelpers.getValue( compatmeta['NumberOfEvents'], int, None )
     
-    if compatmeta.has_key("Energy"):
-      if type(compatmeta["Energy"]) in types.StringTypes:
-        self.energycat = compatmeta["Energy"]
-      if type(compatmeta["Energy"]) == type([]):
-        self.energycat = compatmeta["Energy"][0]
+    if 'Energy' in compatmeta:
+      self.energycat = JobHelpers.getValue( compatmeta['Energy'], str, basestring )
 
-    if compatmeta.has_key("Polarisation"):
-      if type(compatmeta["Polarisation"]) in types.StringTypes:
-        self.polarization = compatmeta["Polarisation"]
-      if type(compatmeta["Polarisation"]) == type([]):
-        self.polarization = compatmeta["Polarisation"][0]
+    if 'Polarisation' in compatmeta:
+      self.polarization = JobHelpers.getValue( compatmeta["Polarisation"], str, basestring )
 
-    if compatmeta.has_key("MachineParams"):
-      if type(compatmeta["MachineParams"]) in types.StringTypes:
-        self.machineparams = compatmeta["MachineParams"]
-      if type(compatmeta["MachineParams"]) == type([]):
-        self.machineparams = compatmeta["MachineParams"][0]
-    gendata = False    
-    if compatmeta.has_key('Datatype'):
-      if type(compatmeta['Datatype']) in types.StringTypes:
-        self.datatype = compatmeta['Datatype']
-        if compatmeta['Datatype'] == 'GEN':
-          gendata = True
-      if type(compatmeta['Datatype']) == type([]):
-        self.datatype = compatmeta['Datatype'][0]
-        if compatmeta['Datatype'][0] == 'GEN':
-          gendata = True
+    if 'MachineParams' in compatmeta:
+      self.machineparams = JobHelpers.getValue( compatmeta["MachineParams"], str, basestring )
 
-    if compatmeta.has_key("DetectorModel") and not gendata:
-      if type(compatmeta["DetectorModel"]) in types.StringTypes:
-        self.detector = compatmeta["DetectorModel"]
-      if type(compatmeta["DetectorModel"]) == type([]):
-        self.detector = compatmeta["DetectorModel"][0]
+    gendata = False
+    if 'Datatype' in compatmeta:
+      self.datatype = JobHelpers.getValue( compatmeta['Datatype'], str, basestring )
+      if self.datatype == 'GEN':
+        gendata = True
+
+    if 'DetectorModel' in compatmeta and not gendata:
+      self.detector = JobHelpers.getValue( compatmeta["DetectorModel"], str, basestring )
 
     self.basename = self.evttype+"_"+self.polarization
         

@@ -1,33 +1,37 @@
 '''
-Production Job class. Used to define new productions. 
+Production Job class. Used to define new productions.
 
-Mostly similar to :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`, but cannot be (and should not be) used like the :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` class.
+Mostly similar to :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`, but
+cannot be (and should not be) used like the
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` class.
 
 :author: Stephane Poss
 :author: Remi Ete
 :author: Ching Bon Lam
+
 '''
+
+import os
+import shutil
+
+from decimal import Decimal
+
+from DIRAC                                                  import S_OK, S_ERROR, gLogger
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
+from DIRAC.Core.DISET.RPCClient                             import RPCClient
+from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
+from DIRAC.Core.Workflow.Module                             import ModuleDefinition
+from DIRAC.Core.Workflow.Step                               import StepDefinition
+from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogClient
+from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+
+from ILCDIRAC.ILCTransformationSystem.Client.Transformation import Transformation
+from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
+from ILCDIRAC.Interfaces.Utilities import JobHelpers
 
 __RCSID__ = "$Id$"
 
-from DIRAC.Core.Workflow.Module                             import ModuleDefinition
-from DIRAC.Core.Workflow.Step                               import StepDefinition
-from ILCDIRAC.Interfaces.API.NewInterface.Job               import Job
-from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-from ILCDIRAC.ILCTransformationSystem.Client.Transformation import Transformation
-from DIRAC.Core.DISET.RPCClient                             import RPCClient
-
-from DIRAC.Resources.Catalog.FileCatalogClient              import FileCatalogClient
-from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
-
-from DIRAC                                                  import S_OK, S_ERROR, gLogger
-
-import os, shutil, types
-from decimal import Decimal
-
-
-class ProductionJob(Job):
+class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-instance-attributes
   """ Production job class. Suitable for CLIC studies. Need to sub class and overload for other clients.
   """
   def __init__(self, script = None):
@@ -154,7 +158,7 @@ class ProductionJob(Job):
   def setProdType(self, prodType):
     """Set prod type.
     """
-    if not prodType in self.prodTypes:
+    if prodType not in self.prodTypes:
       raise TypeError('Prod must be one of %s' % (', '.join(self.prodTypes)))
     self.setType(prodType)
   #############################################################################
@@ -190,72 +194,39 @@ class ProductionJob(Job):
   def setInputDataQuery(self, metadata):
     """ Define the input data query needed
     """
-    res = self.fc.findDirectoriesByMetadata(metadata)
-    if not res['OK']:
-      return res
-    dirs = res['Value']
-    if not len(dirs):
-      return S_ERROR("No directories found")
 
-    metakeys = metadata.keys()
-    res = self.fc.getMetadataFields()
-    if not res['OK']:
-      print "Could not contact File Catalog"
-      return S_ERROR("Could not contact File Catalog")
-    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
-    for key in metakeys:
-      for meta in metaFCkeys:
-        if meta != key:
-          if meta.lower() == key.lower():
-            return self._reportError("Key syntax error %s, should be %s" % (key, meta))
-      if not metaFCkeys.count(key):
-        return self._reportError("Key %s not found in metadata keys, allowed are %s" % (key, metaFCkeys))
+    retMetaKey = self._checkMetaKeys( metadata.keys() )
+    if not retMetaKey['OK']:
+      return retMetaKey
 
-    if not   metadata.has_key("ProdID"):
+    if "ProdID" not in metadata:
       return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
     
-    res = self.fc.findDirectoriesByMetadata(metadata)
-    if not res['OK']:
-      return self._reportError("Error looking up the catalog for available directories")
-    elif len(res['Value']) < 1:
-      return self._reportError('Could not find any directories corresponding to the query issued')
-    dirs = res['Value'].values()
+    retDirs = self._checkFindDirectories( metadata )
+    if not retDirs['OK']:
+      return retDirs
+    dirs = retDirs['Value'].values()
     for mdir in dirs:
       gLogger.notice("Directory: %s" % mdir)
       res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
-    #res =   client.getCompatibleMetadata(metadata)
-    #if not res['OK']:
-    #  return self._reportError("Error looking up the catalog for compatible metadata")
       compatmeta = res['Value']
       compatmeta.update(metadata)
-    if compatmeta.has_key('EvtType'):
-      if type(compatmeta['EvtType']) in types.StringTypes:
-        self.evttype  = compatmeta['EvtType']
-      if type(compatmeta['EvtType']) == type([]):
-        self.evttype = compatmeta['EvtType'][0]
+
+    if 'EvtType' in compatmeta:
+      self.evttype = JobHelpers.getValue( compatmeta['EvtType'], str, basestring )
     else:
       return self._reportError("EvtType is not in the metadata, it has to be!")
-    if compatmeta.has_key('NumberOfEvents'):
-      if type(compatmeta['NumberOfEvents']) == type([]):
-        self.nbevts = int(compatmeta['NumberOfEvents'][0])
-      else:
-        #type(compatmeta['NumberOfEvents']) in types.StringTypes:
-        self.nbevts = int(compatmeta['NumberOfEvents'])
-      #else:
-      #  return self._reportError('Nb of events does not have any type recognised')
+
+    if 'NumberOfEvents' in compatmeta:
+      self.nbevts = JobHelpers.getValue( compatmeta['NumberOfEvents'], int, None )
 
     self.basename = self.evttype
     gLogger.notice("MetaData: %s" % compatmeta)
     gLogger.notice("MetaData: %s" % metadata)
     if "Energy" in compatmeta:
-      if type(compatmeta["Energy"]) in types.StringTypes:
-        self.energycat = compatmeta["Energy"]
-      if type(compatmeta["Energy"]) == type([]):
-        self.energycat = compatmeta["Energy"][0]
-      if type(compatmeta["Energy"]) in (types.LongType, types.IntType):
-        self.energycat = str(compatmeta["Energy"])
+      self.energycat = JobHelpers.getValue( compatmeta["Energy"], str, (int, long, basestring) )
         
     if self.energycat.count("tev"):
       self.energy = Decimal("1000.") * Decimal(self.energycat.split("tev")[0])
@@ -264,20 +235,12 @@ class ProductionJob(Job):
     else:
       self.energy = Decimal("1.") * Decimal(self.energycat)
     gendata = False
-    if compatmeta.has_key('Datatype'):
-      if type(compatmeta['Datatype']) in types.StringTypes:
-        self.datatype = compatmeta['Datatype']
-        if compatmeta['Datatype'] == 'gen':
-          gendata = True
-      if type(compatmeta['Datatype']) == type([]):
-        self.datatype = compatmeta['Datatype'][0]
-        if compatmeta['Datatype'][0] == 'gen':
-          gendata = True
-    if compatmeta.has_key("DetectorType") and not gendata:
-      if type(compatmeta["DetectorType"]) in types.StringTypes:
-        self.detector = compatmeta["DetectorType"]
-      if type(compatmeta["DetectorType"]) == type([]):
-        self.detector = compatmeta["DetectorType"][0]    
+    if 'Datatype' in compatmeta:
+      self.datatype = JobHelpers.getValue( compatmeta['Datatype'], str, basestring )
+      if self.datatype == 'gen':
+        gendata = True
+    if "DetectorType" in compatmeta and not gendata:
+      self.detector = JobHelpers.getValue( compatmeta["DetectorType"], str, basestring )
     self.inputBKSelection = metadata
     self.inputdataquery = True
     
@@ -373,7 +336,7 @@ class ProductionJob(Job):
     
     if not self.proxyinfo['OK']:
       return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
-    if self.proxyinfo['Value'].has_key('group'):
+    if 'group' in self.proxyinfo['Value']:
       group = self.proxyinfo['Value']['group']
       if not group == "ilc_prod":
         return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
@@ -395,8 +358,8 @@ class ProductionJob(Job):
     self.log.verbose('Workflow XML file name is:', '%s' % fileName)
     try:
       self.createWorkflow()
-    except Exception, x:
-      self.log.error(x)
+    except Exception as x:
+      self.log.error( "Exception creating workflow", repr(x) )
       return S_ERROR('Could not create workflow')
     with open(fileName, 'r') as oFile:
       workflowXML = oFile.read()
@@ -521,9 +484,9 @@ class ProductionJob(Job):
       
     info = []
     info.append('%s Production %s has following parameters:\n' % (self.prodparameters['JobType'], currtrans))
-    if self.prodparameters.has_key("Process"):
+    if "Process" in self.prodparameters:
       info.append('- Process %s' % self.prodparameters['Process'])
-    if self.prodparameters.has_key("Energy"):
+    if "Energy" in self.prodparameters:
       info.append('- Energy %s GeV' % self.prodparameters["Energy"])
 
     if not self.slicesize:
@@ -532,14 +495,13 @@ class ProductionJob(Job):
       self.prodparameters['nbevts'] = self.slicesize
     if self.prodparameters['nbevts']:
       info.append("- %s events per job" % (self.prodparameters['nbevts']))
-    if self.prodparameters.has_key('lumi'):
-      if self.prodparameters['lumi']:
-        info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * \
-                                                                 self.prodparameters['NbInputFiles']))
-    if self.prodparameters.has_key('FCInputQuery'):
+    if self.prodparameters.get('lumi', False):
+      info.append('    corresponding to a luminosity %s fb' % (self.prodparameters['lumi'] * \
+                                                               self.prodparameters['NbInputFiles']))
+    if 'FCInputQuery' in self.prodparameters:
       info.append('Using InputDataQuery :')
-      for k, v in self.prodparameters['FCInputQuery'].items():
-        info.append('    %s = %s' % (k, v))
+      for key, val in self.prodparameters['FCInputQuery'].iteritems():
+        info.append('    %s = %s' % (key, val))
     if "SWPackages" in self.prodparameters:
       info.append('- SW packages %s' % self.prodparameters["SWPackages"])
     if "SoftwareTag" in self.prodparameters:
@@ -549,7 +511,7 @@ class ProductionJob(Job):
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
     for finalpath in self.finalpaths:
-      if not self.finalMetaDictNonSearch.has_key(finalpath):
+      if finalpath not in self.finalMetaDictNonSearch:
         self.finalMetaDictNonSearch[finalpath] = {}
       if "SWPackages" in self.prodparameters:
         self.finalMetaDictNonSearch[finalpath]["SWPackages"] = self.prodparameters["SWPackages"]
@@ -558,17 +520,17 @@ class ProductionJob(Job):
         self.finalMetaDictNonSearch[finalpath].update(self.metadict_external)  
     
     info.append('- Registered metadata: ')
-    for k, v in self.finalMetaDict.items():
-      info.append('    %s = %s' % (k, v))
+    for key, val in self.finalMetaDict.iteritems():
+      info.append('    %s = %s' % (key, val))
     info.append('- Registered non searchable metadata: ')
-    for k, v in self.finalMetaDictNonSearch.items():
-      info.append('    %s = %s' % (k, v))
+    for key, val in self.finalMetaDictNonSearch.iteritems():
+      info.append('    %s = %s' % (key, val))
       
     infoString = '\n'.join(info)
     self.prodparameters['DetailedInfo'] = infoString
     
-    for n, v in self.prodparameters.items():
-      result = self._setProdParameter(currtrans, n, v)
+    for name, val in self.prodparameters.iteritems():
+      result = self._setProdParameter(currtrans, name, val)
       if not result['OK']:
         self.log.error(result['Message'])
 
@@ -597,14 +559,14 @@ class ProductionJob(Job):
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
-          if result['Value']['Successful'].has_key(path):
+          if path in result['Value']['Successful']:
             self.log.verbose("Successfully created directory:", "%s" % path)
             res = self.fc.changePathMode({ path : 0o775 }, False)
             if not res['OK']:
               self.log.error(res['Message'])
               failed.append(path)
         elif result['Value']['Failed']:
-          if result['Value']['Failed'].has_key(path):  
+          if path in result['Value']['Failed']:
             self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
@@ -618,14 +580,14 @@ class ProductionJob(Job):
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
-          if result['Value']['Successful'].has_key(path):
+          if path in result['Value']['Successful']:
             self.log.verbose("Successfully created directory:", "%s" % path)
             res = self.fc.changePathMode({ path: 0o775}, False)
             if not res['OK']:
               self.log.error(res['Message'])
               failed.append(path)
         elif result['Value']['Failed']:
-          if result['Value']['Failed'].has_key(path):  
+          if path in result['Value']['Failed']:
             self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
@@ -652,11 +614,11 @@ class ProductionJob(Job):
   def _setProdParameter(self, prodID, pname, pvalue):
     """ Set a production parameter.
     """
-    if type(pvalue) == type([]):
+    if isinstance( pvalue, list ):
       pvalue = '\n'.join(pvalue)
 
     prodClient = RPCClient('Transformation/TransformationManager', timeout=120)
-    if type(pvalue) == type(2):
+    if isinstance( pvalue, (int, long) ):
       pvalue = str(pvalue)
     if not self.dryrun:  
       result = prodClient.setTransformationParameter(int(prodID), str(pname), str(pvalue))
@@ -808,8 +770,8 @@ class ProductionJob(Job):
     """
     try:
       self.prodparameters.update(application.prodparameters)
-    except Exception, x:
-      return S_ERROR("%s: %s" % (Exception, str(x)))
+    except Exception as x:
+      return S_ERROR("Exception: %r" % x )
     return S_OK()
 
   def _jobSpecificModules(self, application, step):
@@ -832,4 +794,40 @@ class ProductionJob(Job):
 
     self.log.info ("Energy path is: ", energyPath)
     return energyPath
-  
+
+
+  def _checkMetaKeys( self, metakeys ):
+    """ check if metadata keys are allowed to be metadata
+
+    :param list metakeys: metadata keys for production metadata
+    :returns: S_OK, S_ERROR
+    """
+
+    res = self.fc.getMetadataFields()
+    if not res['OK']:
+      print "Could not contact File Catalog"
+      return S_ERROR("Could not contact File Catalog")
+    metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
+
+    for key in metakeys:
+      for meta in metaFCkeys:
+        if meta != key and meta.lower() == key.lower():
+          return self._reportError("Key syntax error %r, should be %r" % (key, meta), name = self.__class__.__name__)
+      if key not in metaFCkeys:
+        return self._reportError("Key %r not found in metadata keys, allowed are %r" % (key, metaFCkeys))
+
+    return S_OK()
+
+  def _checkFindDirectories( self, metadata ):
+    """ find directories by metadata and check that there are directories found
+
+    :param dict metadata: metadata dictionary
+    :returns: S_OK, S_ERROR
+    """
+
+    res = self.fc.findDirectoriesByMetadata(metadata)
+    if not res['OK']:
+      return self._reportError("Error looking up the catalog for available directories")
+    elif len(res['Value']) < 1:
+      return self._reportError('Could not find any directories corresponding to the query issued')
+    return res

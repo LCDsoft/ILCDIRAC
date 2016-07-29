@@ -144,9 +144,8 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
     return S_OK()
-

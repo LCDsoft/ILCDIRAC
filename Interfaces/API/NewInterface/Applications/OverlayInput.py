@@ -249,6 +249,8 @@ class OverlayInput(LCUtilityApplication):
     """
     if self.pathToOverlayFiles:
       res = FileCatalogClient().findFilesByMetadata({}, self.pathToOverlayFiles)
+      if not res['OK']:
+        return res
       self._log.notice("Found %i files in path %s" %( len(res['Value']), self.pathToOverlayFiles))
       if len(res['Value']) == 0 :
         return S_ERROR("OverlayInput: PathToFiles is specified, but there are no files in that path")
@@ -285,7 +287,7 @@ class OverlayInput(LCUtilityApplication):
     if not res['OK']:
       return S_ERROR("Could not resolve the CS path to the overlay specifications")
     sections = res['Value']
-    if not self.machine in sections:
+    if self.machine not in sections:
       return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.machine, sections))
 
     fracappen = modf(float(self.energy)/1000.)
@@ -296,14 +298,14 @@ class OverlayInput(LCUtilityApplication):
     if energytouse.count(".0"):
       energytouse = energytouse.replace(".0", "")
     res = self._ops.getSections("/Overlay/%s" % self.machine)
-    if not energytouse in res['Value']:
+    if energytouse not in res['Value']:
       return S_ERROR("No overlay files corresponding to %s" % energytouse)
 
     res = self._ops.getSections("/Overlay/%s/%s" % (self.machine, energytouse))
     if not res['OK']:
       return S_ERROR("Could not find the detector models")
 
-    if not self.detectorModel in res['Value']:
+    if self.detectorModel not in res['Value']:
       return S_ERROR("Detector model specified has no overlay data with that energy and machine")
 
     res = allowedBkg(self.backgroundEventType, energytouse, detectormodel = self.detectorModel, machine = self.machine)

@@ -7,6 +7,8 @@ from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
 
 __RCSID__ = "$Id$"
 
+MODULE_NAME = 'ILCDIRAC.Core.Utilities.WasteCPU'
+
 class WasteCPUTest( unittest.TestCase ):
   """Test the WasteCPU"""
 
@@ -22,13 +24,13 @@ class WasteCPUTest( unittest.TestCase ):
 
   def test_fail1( self ):
     """wasteCPUCycles fails 1......................................................................."""
-    with patch("ILCDIRAC.Core.Utilities.WasteCPU.log", new=Mock(side_effect=ValueError("MockedValue"))):
+    with patch("%s.log" % MODULE_NAME, new=Mock(side_effect=ValueError("MockedValue"))):
       self.assertFalse( wasteCPUCycles(1)['OK'] )
       self.assertIn( "MockedValue",  wasteCPUCycles(1)['Message'] )
 
   def test_fail2( self ):
     """wasteCPUCycles fails 2......................................................................."""
-    with patch("ILCDIRAC.Core.Utilities.WasteCPU.log", new=Mock(side_effect=RuntimeError("MockedError"))):
+    with patch("%s.log" % MODULE_NAME, new=Mock(side_effect=RuntimeError("MockedError"))):
       self.assertFalse( wasteCPUCycles(1)['OK'] )
       self.assertIn( "OtherException", wasteCPUCycles(1)['Message'] )
       self.assertIn( "RuntimeError('MockedError',)", wasteCPUCycles(1)['Message'] )

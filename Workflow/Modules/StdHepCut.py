@@ -141,7 +141,7 @@ class StdHepCut(ModuleBase):
       sel_eff = 1. * nbevtswritten / nbevtspassing
       if nbevtswritten < self.MaxNbEvts:
         self.log.error('Not enough events to fill up')
-      if self.workflow_commons.has_key('Luminosity'):
+      if 'Luminosity' in self.workflow_commons:
         self.workflow_commons['Luminosity'] = self.workflow_commons['Luminosity'] * sel_eff
       self.workflow_commons['NbOfEvts'] = nbevtswritten
       info = {}

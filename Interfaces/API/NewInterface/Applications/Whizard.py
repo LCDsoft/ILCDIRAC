@@ -1,15 +1,18 @@
 """
 Whizard: First Generator application
 """
-__RCSID__ = "$Id$"
+
+import types
+import os
+
+from DIRAC import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.WhizardOptions import WhizardOptions, getDict
 from ILCDIRAC.Core.Utilities.GeneratorModels import GeneratorModels
 
-from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+__RCSID__ = "$Id$"
 
 class Whizard(LCApplication):
   """ Runs whizard to generate a given event type
@@ -207,7 +210,7 @@ class Whizard(LCApplication):
       res = self._wo.getValue("process_input/process_id")
       if not len(res['Value']):
         if self.eventType:
-          if not 'process_input' in self.fullParameterDict:
+          if 'process_input' not in self.fullParameterDict:
             self.fullParameterDict['process_input'] = {}
           self.fullParameterDict['process_input']['process_id'] = self.eventType
         else:
@@ -215,13 +218,13 @@ class Whizard(LCApplication):
       self.eventType = res['Value']
 
       res = self._wo.getValue("process_input/sqrts")
-      if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
+      if isinstance( res['Value'], (int, long, float) ):
         energy = res['Value']
       else:
         energy = eval(res['Value'])
       if not energy:
         if self.energy:
-          if not 'process_input' in self.fullParameterDict:
+          if 'process_input' not in self.fullParameterDict:
             self.fullParameterDict['process_input'] = {}
           self.fullParameterDict['process_input']['sqrts'] = self.energy
           energy = self.energy
@@ -230,13 +233,13 @@ class Whizard(LCApplication):
       self.energy = energy
 
       res = self._wo.getValue("simulation_input/n_events")
-      if type(res['Value']) == type(3) or type(res['Value']) == type(3.):
+      if isinstance( res['Value'], (int, long, float) ):
         numberOfEvents = res['Value']
       else:
         numberOfEvents = eval(res['Value'])
       if not numberOfEvents:
         if self.numberOfEvents:
-          if not 'simulation_input' in self.fullParameterDict:
+          if 'simulation_input' not in self.fullParameterDict:
             self.fullParameterDict['simulation_input'] = {}
           self.fullParameterDict['simulation_input']['n_events'] = self.numberOfEvents
           numberOfEvents = self.numberOfEvents
@@ -249,10 +252,10 @@ class Whizard(LCApplication):
 
     if self.generatorLevelCuts:
       for process in self.generatorLevelCuts.keys():
-        if not process in self.eventType.split():
+        if process not in self.eventType.split():
           self._log.info("You want to cut on %s but that process is not to be generated" % process)
       for values in self.generatorLevelCuts.values():
-        if not type(values) == types.ListType:
+        if not isinstance( values, list ):
           return S_ERROR('Type of %s is not a list, cannot proceed' % values)
       self._genlevelcutsstr = str(self.generatorLevelCuts)
 
@@ -295,7 +298,7 @@ class Whizard(LCApplication):
         self.outputFile += "_" + self.jobIndex
       self.outputFile += "_gen.stdhep"
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       if not self.willBeCut:
         self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                    "outputDataSE":'@{OutputSE}'})
@@ -309,7 +312,7 @@ class Whizard(LCApplication):
 
     if not self.fullParameterDict and self.parameterDict:
       for key in self.parameterDict.keys():
-        if not key in self._allowedparams:
+        if key not in self._allowedparams:
           return S_ERROR("Unknown parameter %s"%key)
 
       self.setParameter( 'PNAME1', 'e1', "Assuming incoming beam 1 to be electrons" )
@@ -382,7 +385,7 @@ class Whizard(LCApplication):
     return S_OK()
 
   def setParameter(self, parameter, defaultValue, docString):
-    if not parameter in self.parameterDict:
+    if parameter not in self.parameterDict:
       self._log.info(docString)
       self.parameters.append( "%s=%s" % (parameter, defaultValue) )
     else:

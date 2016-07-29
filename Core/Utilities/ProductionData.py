@@ -8,13 +8,16 @@ according to LHCb conventions.
 
 __RCSID__ = "$Id$"
 
-import string, os, types, datetime
+import datetime
+import os
+import string
 
-from ILCDIRAC.Core.Utilities.resolvePathsAndNames import getProdFilename
-from ILCDIRAC.Core.Utilities.LFNPathUtilities import cleanUpLFNPath
 from DIRAC.Core.Security.ProxyInfo import getVOfromProxyGroup
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC import S_OK, S_ERROR, gLogger
+
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames import getProdFilename
+from ILCDIRAC.Core.Utilities.LFNPathUtilities import cleanUpLFNPath
 
 gLogger = gLogger.getSubLogger('ProductionData')
 #############################################################################
@@ -149,7 +152,7 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
         newPath.append(i)
     outputPath = string.join(newPath, os.sep)
   
-  if not type(outputFiles) == types.ListType:
+  if not isinstance( outputFiles, list ):
     outputFiles = [outputFiles]
     
   for outputFile in outputFiles:
@@ -244,7 +247,7 @@ def checkForMandatoryKeys(paramDict, keys):
   :returns: S_OK, S_ERROR
   """
   for k in keys:
-    if not k in paramDict:
+    if k not in paramDict:
       return S_ERROR('%s not defined' % k)
   return S_OK()
 

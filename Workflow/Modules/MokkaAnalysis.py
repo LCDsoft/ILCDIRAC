@@ -8,21 +8,21 @@ Called by Job Agent.
 :author: Stephane Poss
 :author: Przemyslaw Majewski
 '''
-
-__RCSID__ = "$Id$"
+import os
+import shutil
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareSteeringFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
-
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
-from DIRAC                                                import S_OK, S_ERROR, gLogger
 
-import  os, shutil, types
+__RCSID__ = "$Id$"
 
 class MokkaAnalysis(ModuleBase):
   """
@@ -60,7 +60,7 @@ class MokkaAnalysis(ModuleBase):
 
     if 'stdhepFile' in self.step_commons:
       inputf = self.step_commons["stdhepFile"]
-      if not type(inputf) == types.ListType:
+      if not isinstance( inputf, list ):
         inputf = inputf.split(";")
       self.InputFile = inputf
 
@@ -85,7 +85,7 @@ class MokkaAnalysis(ModuleBase):
         else:
           self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
                                             int(self.workflow_commons["JOB_ID"]))
-          #if self.workflow_commons.has_key("WhizardOutput"):
+          #if 'WhizardOutput' in self.workflow_commons:
           #  self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],
           #                                    int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
@@ -395,7 +395,7 @@ done
         os.rename("out.slcio", self.OutputFile)
 
     failed = False
-    if not status in [0, 106, 9]:
+    if status not in [0, 106, 9]:
       self.log.error( "Mokka execution completed with errors:" )
       failed = True
     elif status in [106, 9]:
@@ -404,7 +404,7 @@ done
       self.log.info( "Mokka execution finished successfully")
 
     message = 'Mokka %s Successful' % (self.applicationVersion)
-    if failed == True:
+    if failed is True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( self.stdError) 
       #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))

@@ -4,16 +4,16 @@ Module to check the file contents
 :author: Ching Bon Lam
 """
 
-__RCSID__ = "$Id$"
-
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from DIRAC                                                import S_OK, S_ERROR, gLogger
-from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
-
 import os
 
 from string import Template
+
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
+from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
+
+__RCSID__ = "$Id$"
 
 class CheckCollections(ModuleBase):
   """ Check the collections in a given slcio file.
@@ -45,15 +45,13 @@ class CheckCollections(ModuleBase):
     if not self.platform:
       result = S_ERROR( 'No ILC platform selected' )
 
-    if not os.environ.has_key("LCIO"):
+    if 'LCIO' not in os.environ:
       self.log.error("Environment variable LCIO was not defined, cannot do anything")
       result = S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     if not result['OK']:
       self.log.error("Failed to resolve the input parameters:", self.result["Message"])
       return result
-
-        # removeLibc
 
     removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
 

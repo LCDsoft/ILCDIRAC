@@ -6,15 +6,21 @@ import os
 from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import CombinedSoftwareInstallation, getSharedAreaLocation, createSharedArea, getLocalAreaLocation, getSoftwareFolder, getEnvironmentScript, checkCVMFS
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import CombinedSoftwareInstallation, \
+  getSharedAreaLocation, createSharedArea, getLocalAreaLocation, getSoftwareFolder, \
+  getEnvironmentScript, checkCVMFS
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
+  assertDiracSucceeds, assertDiracSucceedsWith_equals
 
 __RCSID__ = "$Id$"
 
 class TestCombinedSWInstallation( unittest.TestCase ):
   """ Test the different methods of the class
   """
-  STD_DICT = { 'Job' : { 'SoftwarePackages' : 'mypackagev1.0', 'SystemConfig' : 'mytestconfig', 'Platform' : 'mytestplatform' }, 'CE' : { 'CompatiblePlatforms' : 'blabla' }, 'Source' : {} }
+  STD_DICT = { 'Job' : { 'SoftwarePackages' : 'mypackagev1.0',
+                         'SystemConfig' : 'mytestconfig',
+                         'Platform' : 'mytestplatform' },
+               'CE' : { 'CompatiblePlatforms' : 'blabla' }, 'Source' : {} }
 
   def setUp( self ):
     with patch('%s.NativeMachine.CMTSupportedConfig' % MODULE_NAME, new=Mock(return_value=['x86_64-slc5-gcc43-opt'])):
@@ -22,15 +28,17 @@ class TestCombinedSWInstallation( unittest.TestCase ):
     self.csi.apps = [ ('myprogram','v6765') ]
 
   def test_constructor( self ):
-    localapps =  [('dep1', 'v4'), ['dep2', 'v5.0']]
+    localapps =  [ ('dep1', 'v4'), ['dep2', 'v5.0'] ]
     localapps_raw =  ['dep1.v4', 'dep2.v5.0']
-    self.csi = CombinedSoftwareInstallation( { 'Job' : {'SoftwarePackages' : localapps_raw, 'Platform' : 'coolplatform123'} } )
+    self.csi = CombinedSoftwareInstallation( {
+      'Job' : { 'SoftwarePackages' : localapps_raw,
+                'Platform' : 'coolplatform123' } } )
     assertEqualsImproved( self.csi.jobConfig, 'coolplatform123', self )
     assertEqualsImproved( self.csi.apps, localapps, self )
 
   def test_constructor_illegal_sw_package( self ):
     import copy
-    custom_job_dict = copy.deepcopy( TestCombinedSWInstallation.STD_DICT['Job'])
+    custom_job_dict = copy.deepcopy( TestCombinedSWInstallation.STD_DICT['Job'] )
     custom_dict = copy.deepcopy( TestCombinedSWInstallation.STD_DICT )
     custom_job_dict['SoftwarePackages'] = 1
     del custom_job_dict['SystemConfig']
@@ -74,7 +82,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
          patch('%s.NativeMachine.CMTSupportedConfig' % MODULE_NAME, new=Mock(return_value=['x86_64-slc5-gcc43-opt'])):
       import copy
       custom_dict = copy.deepcopy( TestCombinedSWInstallation.STD_DICT )
-      custom_dict['CE'] = { 'CompatiblePlatforms' : [ 'iamcompatibletoo', 'here' ] }
+      custom_dict['CE'] = { 'CompatiblePlatforms' : [ 'iamcompatibletoo',
+                                                      'here' ] }
       self.csi = CombinedSoftwareInstallation( custom_dict )
       result = self.csi.execute()
       assertDiracFailsWith( result, 'requested architecture not supported by ce', self )
@@ -142,7 +151,9 @@ class TestCombinedSWInstallation( unittest.TestCase ):
         self.fail('Should not reach this due to KeyError being thrown')
       except KeyError as ke:
         mock_log.assert_any_call('important_message')
-        assertEqualsImproved( ke.__repr__(), "KeyError('injecting this into logger call',)", self )
+        assertEqualsImproved( ke.__repr__(),
+                              "KeyError('injecting this into logger call',)",
+                              self )
 
   def test_listareadir_fail_a_bit( self ):
     with patch('%s.systemCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 1, 'entry', 'my_subprocess_error_msg']))), \
@@ -152,8 +163,11 @@ class TestCombinedSWInstallation( unittest.TestCase ):
         listAreaDirectory( self.csi.sharedArea )
         self.fail('Should not reach this due to KeyError being thrown')
       except KeyError as ke:
-        mock_log.assert_called_with('Failed to list the area directory', 'my_subprocess_error_msg')
-        assertEqualsImproved( ke.__repr__(),  "KeyError('injecting this into logger call 2',)", self )
+        mock_log.assert_called_with( 'Failed to list the area directory',
+                                     'my_subprocess_error_msg' )
+        assertEqualsImproved( ke.__repr__(),
+                              "KeyError('injecting this into logger call 2',)",
+                              self )
 
   def test_listareadir_fail_completely( self ):
     with patch('%s.systemCall' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_os_listdir_error'))), \
@@ -163,52 +177,60 @@ class TestCombinedSWInstallation( unittest.TestCase ):
         listAreaDirectory( self.csi.sharedArea )
         self.fail('Should not reach this due to KeyError being thrown')
       except KeyError as ke:
-        mock_log.assert_called_with('Failed to list the area directory', 'some_os_listdir_error')
-        assertEqualsImproved( ke.__repr__(), "KeyError('injecting this into logger call 3',)", self )
+        mock_log.assert_called_with( 'Failed to list the area directory',
+                                     'some_os_listdir_error' )
+        assertEqualsImproved( ke.__repr__(),
+                              "KeyError('injecting this into logger call 3',)",
+                              self )
 
 class TestSharedLocation( unittest.TestCase ):
   """ Tests the sharedArea and localArea functions
   """
 
   def test_getsharedarealoc( self ):
+    exists_dict = { 'mylocation123test' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='mylocation123test')), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '',''])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, 'mylocation123test', self )
 
   def test_getsharedarealoc_environvar( self ):
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '/abc/def/ghi/clic', self )
 
   def test_getsharedarealoc_environvar_notfound( self ):
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : False }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$I_AM_FAKE', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '/abc/def/ghi/clic', self )
 
   def test_getsharedarealoc_overwrite_via_config( self ):
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '/myotherpath/hereissharedarea', '/myotherpath/hereissharedarea'])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '/myotherpath/hereissharedarea', self )
 
   def test_getsharedarealoc_notadir( self ):
+    exists_dict = { 'testLocation135' : False, '/abc/def/ghi/clic' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[ 'testLocation135', '$MANY_MORE_LOCATIONS' ])), \
          patch.dict( os.environ, { 'MANY_MORE_LOCATIONS' : '/abc/def/ghi'}, True ), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)):
       result = getSharedAreaLocation()
@@ -216,11 +238,12 @@ class TestSharedLocation( unittest.TestCase ):
 
   def test_getsharedarealoc_notfound( self ):
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value=[])), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True ])), \
+         patch('%s.os.path.exists' % MODULE_NAME) as exists_mock, \
          patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(side_effect=['a', 'a', '', ''])), \
          patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)):
       result = getSharedAreaLocation()
       assertEqualsImproved( result, '', self )
+      self.assertFalse( exists_mock.called )
 
   def test_createsharedarea( self ):
     with patch.dict( os.environ, { 'VO_ILC_SW_DIR' : '/myilc/sharedarea/cooldir', 'OSG_APP' : '/appdir/shared' }, True ), \
@@ -300,7 +323,8 @@ class TestSharedLocation( unittest.TestCase ):
       islink_mock.assert_called_with( finalsharedarea )
       exists_mock.assert_called_with( finalsharedarea )
       remove_mock.assert_called_with( finalsharedarea )
-      mock_err.assert_called_with( 'Problem trying to create shared area', 'some_filesys_error')
+      mock_err.assert_called_with( 'Problem trying to create shared area',
+                                   'some_filesys_error')
 
   def test_getlocalarealoc_already_exists( self ):
     with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), \
@@ -357,7 +381,8 @@ class TestSharedLocation( unittest.TestCase ):
       isdir_mock.assert_called_with( finallocalarea )
       exists_mock.assert_called_with( finallocalarea )
       remove_mock.assert_called_with( finallocalarea )
-      mock_err.assert_called_with( 'Cannot remove:', '/gconfig/localarea because some_remove_oserror')
+      mock_err.assert_called_with(
+        'Cannot remove:', '/gconfig/localarea because some_remove_oserror')
       self.assertFalse( mkdir_mock.called )
       assertEqualsImproved( result, '', self )
 
@@ -373,21 +398,24 @@ class TestSharedLocation( unittest.TestCase ):
       isdir_mock.assert_called_with( finallocalarea )
       exists_mock.assert_called_with( finallocalarea )
       mkdir_mock.assert_called_with( finallocalarea )
-      mock_err.assert_called_with( 'Cannot create:', '/gconfig/localarea because some_mkdir_oserror')
+      mock_err.assert_called_with(
+        'Cannot create:', '/gconfig/localarea because some_mkdir_oserror' )
       self.assertFalse( remove_mock.called )
       assertEqualsImproved( result, '', self )
 
   def test_getsoftwarefolder( self ):
+    exists_dict = { 'myapparchive.test.tgz' : False,  '/mylocalarea/test/myapparchive.test' : False, '/testshared/area/myapparchive.test' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapparchive.test.tgz')) as getval_mock, \
          patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), \
          patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, True ])) as exists_mock:
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock:
       result = getSoftwareFolder( 'a', 'b', 'c' )
       exists_mock.assert_any_call( '/mylocalarea/test/myapparchive.test' )
       exists_mock.assert_any_call( '/testshared/area/myapparchive.test' )
       getval_mock.assert_called_with( '/AvailableTarBalls/a/b/c/TarBall', '' )
       assertEqualsImproved( len(exists_mock.mock_calls), 3, self ) #One exists call in checkCVMFS
-      assertDiracSucceedsWith_equals( result, '/testshared/area/myapparchive.test', self )
+      assertDiracSucceedsWith_equals( result, '/testshared/area/myapparchive.test',
+                                      self )
 
   def test_getsoftwarefolder_from_cvmfs( self ):
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('mycvmfsfolder/txt', 'otherentry')))) as cvmfs_mock:
@@ -401,21 +429,25 @@ class TestSharedLocation( unittest.TestCase ):
       assertDiracFailsWith( result, 'could not find b, c name from cs', self )
 
   def test_getsoftwarefolder_uselocal( self ):
+    exists_dict = { 'myapparchivev2.test.tar.gz' : False, '/mylocalarea/test/myapparchivev2.test' : True }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapparchivev2.test.tar.gz')) as getval_mock, \
          patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), \
          patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, True, False ])) as exists_mock:
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock:
       result = getSoftwareFolder( 'a', 'b', 'c' )
       exists_mock.assert_called_with( '/mylocalarea/test/myapparchivev2.test' )
       getval_mock.assert_called_with( '/AvailableTarBalls/a/b/c/TarBall', '' )
       assertEqualsImproved( len(exists_mock.mock_calls), 2, self ) #One exists call in checkCVMFS
-      assertDiracSucceedsWith_equals( result, '/mylocalarea/test/myapparchivev2.test', self )
+      assertDiracSucceedsWith_equals( result,
+                                      '/mylocalarea/test/myapparchivev2.test',
+                                      self )
 
   def test_getsoftwarefolder_notfound( self ):
+    exists_dict = { 'myapp_executable' : False, '/mylocalarea/test/myapp_executable' : False, '/testshared/area/myapp_executable' : False }
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(return_value='myapp_executable')) as getval_mock, \
          patch('%s.getLocalAreaLocation' % MODULE_NAME, new=Mock(return_value='/mylocalarea/test')), \
          patch('%s.getSharedAreaLocation' % MODULE_NAME, new=Mock(return_value='/testshared/area')), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[ False, False, False ])) as exists_mock:
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock:
       result = getSoftwareFolder( 'a', 'b', 'c' )
       exists_mock.assert_any_call( '/mylocalarea/test/myapp_executable' )
       exists_mock.assert_any_call( '/testshared/area/myapp_executable' )
@@ -429,14 +461,14 @@ class TestSharedLocation( unittest.TestCase ):
       assertDiracSucceedsWith_equals( result, '/cvmfsfolder/myenvscript', self )
 
   def test_getEnvironmentScript_cvmfs_empty( self ):
-    def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
+    def return_my_value( platform, appname, appversion ): #pylint: disable=missing-docstring
       return ( platform, appname, appversion )
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_OK(('entry', '')))):
       result = getEnvironmentScript( 'a', 'b', 'c', return_my_value )
       assertEqualsImproved( result, ('a', 'b', 'c'), self )
 
   def test_getEnvironmentScript_from_passed_func( self ):
-    def return_my_value( platform, appname, appversion ): #pylint: disable=C0111
+    def return_my_value( platform, appname, appversion ): #pylint: disable=missing-docstring
       return ( appname, platform, appversion )
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_cvmfs_error'))):
       result = getEnvironmentScript( 'a', 'b', 'c', return_my_value )
@@ -449,8 +481,10 @@ class TestSharedLocation( unittest.TestCase ):
   def test_checkcvmfs_exists( self ):
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(side_effect=['testcvmfspath', 'testenvscript'])), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)):
-      result = checkCVMFS( 'mytestplatform', ('appnametesttest123', 'appversionv77testp2'))
-      assertDiracSucceedsWith_equals( result, ('testcvmfspath', 'testenvscript'), self )
+      result = checkCVMFS( 'mytestplatform', ('appnametesttest123',
+                                              'appversionv77testp2') )
+      assertDiracSucceedsWith_equals( result, ('testcvmfspath',
+                                               'testenvscript'), self )
 
 CLASS_NAME = 'CombinedSoftwareInstallation'
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.%s' % CLASS_NAME

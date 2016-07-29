@@ -32,24 +32,24 @@ class PostGenSelection(ModuleBase):
   def applicationSpecificInputs(self):
     """ Called from ModuleBase
     """
-    if self.step_commons.has_key('NbEvtsKept'):
+    if 'NbEvtsKept' in self.step_commons:
       self.NbEvtsKept = self.step_commons['NbEvtsKept']
 
     if not self.NbEvtsKept:
       return S_ERROR('Nb of events to keep MUST be specified')  
     
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"]:
         #self.OutputFile = getProdFilename(self.OutputFile,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                  int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_gen_"):
               self.InputFile = [os.path.basename(obj)]
               self.OutputFile = self.InputFile[0]
         else:
-          if self.workflow_commons.has_key("WhizardOutput"):
+          if 'WhizardOutput' in self.workflow_commons:
             self.stdhepFile = getProdFilename(self.workflow_commons["WhizardOutput"],
                                               int(self.workflow_commons["PRODUCTION_ID"]),
                                               int(self.workflow_commons["JOB_ID"]))
@@ -78,7 +78,7 @@ class PostGenSelection(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('PostGenSelection should not proceed as previous step did not end properly')
 
-    if not os.environ.has_key('ROOTSYS'):
+    if 'ROOTSYS' not in os.environ:
       return S_OK('Root environment is not set') 
     res = getSoftwareFolder(self.platform, "postgensel", self.applicationVersion)
     if not res['OK']:

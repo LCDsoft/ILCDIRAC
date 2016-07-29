@@ -10,11 +10,11 @@ from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved
 __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.DetectOS'
 
-class TestNativeMachine( unittest.TestCase ):
+class TestNativeMachine( unittest.TestCase ):#pylint: disable=too-many-public-methods
   """ Tests the NativeMachine class
   """
 
-  #pylint: disable=W0212
+  #pylint: disable=protected-access
   def test_constructor( self ):
     with patch('%s.platform.uname' % MODULE_NAME, new=Mock(return_value=['TestOS', 'hostname', 'kernel version', 'date', 'x86_64'])):
       mach_unix = NativeMachine()
@@ -30,7 +30,9 @@ class TestNativeMachine( unittest.TestCase ):
          patch('%s.os.popen' % MODULE_NAME, new=Mock(return_value=os_mock)):
       mach_darwin_PowerPC = NativeMachine()
 
-    assertEqualsImproved( mach_unix._sysinfo, ['TestOS', 'hostname', 'kernel version', 'date', 'x86_64'], self )
+    assertEqualsImproved( mach_unix._sysinfo, ['TestOS', 'hostname',
+                                               'kernel version', 'date',
+                                               'x86_64'], self )
     self.assertIsNone( mach_unix._arch )
     assertEqualsImproved( mach_unix._ostype, 'TestOS', self )
     assertEqualsImproved( mach_unix._machine, 'x86_64', self )
@@ -45,24 +47,31 @@ class TestNativeMachine( unittest.TestCase ):
     assertEqualsImproved( mach_win64._ostype, 'Windows', self  )
     assertEqualsImproved( mach_win64._machine, 'x86_64', self )
 
-    assertEqualsImproved( mach_linux_64bit._sysinfo, ['Linux', 'hostname', 'kernel version', 'date', 'x86_64'], self )
+    assertEqualsImproved( mach_linux_64bit._sysinfo, ['Linux', 'hostname',
+                                                      'kernel version', 'date',
+                                                      'x86_64'], self )
     assertEqualsImproved( mach_linux_64bit._arch, '64', self  )
     assertEqualsImproved( mach_linux_64bit._ostype, 'Linux', self )
     assertEqualsImproved( mach_linux_64bit._machine, 'x86_64', self )
 
-    assertEqualsImproved( mach_linux_32bit._sysinfo, ['Linux', 'hostname', 'kernel version', 'date', 'i686'], self )
+    assertEqualsImproved( mach_linux_32bit._sysinfo, ['Linux', 'hostname',
+                                                      'kernel version', 'date',
+                                                      'i686'], self )
     assertEqualsImproved( mach_linux_32bit._arch, '32', self  )
     assertEqualsImproved( mach_linux_32bit._ostype, 'Linux', self )
     assertEqualsImproved( mach_linux_32bit._machine, 'i686', self )
 
-    assertEqualsImproved( mach_darwin_PowerPC._sysinfo, ['Darwin', 'hostname', 'kernel version', 'date', 'i686'], self )
+    assertEqualsImproved( mach_darwin_PowerPC._sysinfo, ['Darwin', 'hostname',
+                                                         'kernel version', 'date',
+                                                         'i686'], self )
     assertEqualsImproved( mach_darwin_PowerPC._arch, 'ppc', self  )
     assertEqualsImproved( mach_darwin_PowerPC._ostype, 'Darwin', self )
     assertEqualsImproved( mach_darwin_PowerPC._machine, 'i686', self )
 
   def test_osflavor_win( self ):
     nm = get_win32_machine()
-    nm._sysinfo = ('Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64', 'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel')
+    nm._sysinfo = ('Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64',
+                   'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
     result = nm.OSFlavour()
     assertEqualsImproved( result, '2008ServerR2', self )
     assertEqualsImproved( nm._osflavor, '2008ServerR2', self )
@@ -78,7 +87,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_osflavor_darwin_1( self ):
     nm = get_win32_machine()
     nm._ostype = 'Darwin'
-    nm._sysinfo = ('Darwin', 'hubert.local', '7.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386')
+    nm._sysinfo = ( 'Darwin', 'hubert.local', '7.4.2',
+                    'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                    'x86_64', 'i386' )
     result = nm.OSFlavour()
     assertEqualsImproved( result, 'Panther', self )
     assertEqualsImproved( nm._osflavor, 'Panther', self )
@@ -87,7 +98,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_osflavor_darwin_2( self ):
     nm = get_win32_machine()
     nm._ostype = 'Darwin'
-    nm._sysinfo = ('Darwin', 'hubert.local', '8.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386')
+    nm._sysinfo = ( 'Darwin', 'hubert.local', '8.4.2',
+                    'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                    'x86_64', 'i386')
     result = nm.OSFlavour()
     assertEqualsImproved( result, 'Tiger', self )
     assertEqualsImproved( nm._osflavor, 'Tiger', self )
@@ -96,7 +109,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_osflavor_darwin_3( self ):
     nm = get_win32_machine()
     nm._ostype = 'Darwin'
-    nm._sysinfo = ('Darwin', 'hubert.local', '9.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386')
+    nm._sysinfo = ( 'Darwin', 'hubert.local', '9.4.2',
+                    'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                    'x86_64', 'i386')
     result = nm.OSFlavour()
     assertEqualsImproved( result, 'Leopard', self )
     assertEqualsImproved( nm._osflavor, 'Leopard', self )
@@ -105,7 +120,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_osflavor_darwin_4( self ):
     nm = get_win32_machine()
     nm._ostype = 'Darwin'
-    nm._sysinfo = ('Darwin', 'hubert.local', '10.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386')
+    nm._sysinfo = ( 'Darwin', 'hubert.local', '10.4.2',
+                    'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                    'x86_64', 'i386')
     result = nm.OSFlavour()
     assertEqualsImproved( result, 'Snow Leopard', self )
     assertEqualsImproved( nm._osflavor, 'Snow Leopard', self )
@@ -114,7 +131,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_osflavor_darwin_unknown( self ):
     nm = get_win32_machine()
     nm._ostype = 'Darwin'
-    nm._sysinfo = ('Darwin', 'hubert.local', '11.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386')
+    nm._sysinfo = ( 'Darwin', 'hubert.local', '11.4.2',
+                    'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                    'x86_64', 'i386')
     result = nm.OSFlavour()
     assertEqualsImproved( result, None, self )
     assertEqualsImproved( nm._osflavor, None, self )
@@ -152,35 +171,40 @@ class TestNativeMachine( unittest.TestCase ):
 
   def test_osversion_win( self ):
     nm = get_win32_machine()
-    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64', 'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
+    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64',
+                     'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
     result = nm.OSVersion( 3 )
     assertEqualsImproved( result, '6.1.7600', self )
     assertEqualsImproved( nm._osversion, '6.1.7600', self )
 
   def test_osversion_win_position_0( self ):
     nm = get_win32_machine()
-    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64', 'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
+    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64',
+                     'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
     result = nm.OSVersion( 0 )
     assertEqualsImproved( result, '6.1.7600', self ) # `if position` ignores pos=0
     assertEqualsImproved( nm._osversion, '6.1.7600', self )
 
   def test_osversion_win_position_1( self ):
     nm = get_win32_machine()
-    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64', 'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
+    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64',
+                     'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
     result = nm.OSVersion( 1 )
     assertEqualsImproved( result, '6', self )
     assertEqualsImproved( nm._osversion, '6.1.7600', self )
 
   def test_osversion_win_position_2( self ):
     nm = get_win32_machine()
-    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64', 'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
+    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64',
+                     'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
     result = nm.OSVersion( 2 )
     assertEqualsImproved( result, '6.1', self )
     assertEqualsImproved( nm._osversion, '6.1.7600', self )
 
   def test_osversion_win_position_4( self ):
     nm = get_win32_machine()
-    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64', 'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
+    nm._sysinfo =  ( 'Windows', 'dhellmann', '2008ServerR2', '6.1.7600', 'AMD64',
+                     'Intel64 Family 6 Model 15 Stepping 11, GenuineIntel' )
     result = nm.OSVersion( 4 )
     assertEqualsImproved( result, '6.1.7600', self )
     assertEqualsImproved( nm._osversion, '6.1.7600', self )
@@ -202,7 +226,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_osversion_darwin( self ):
     mach = get_naked_machine()
     mach._ostype = 'Darwin'
-    mach._sysinfo =  ( 'Darwin', 'hubert.local', '11.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386' )
+    mach._sysinfo =  ( 'Darwin', 'hubert.local', '11.4.2',
+                       'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                       'x86_64', 'i386' )
     result = mach.OSVersion( 3 )
     assertEqualsImproved( result, '10.7.4', self )
     assertEqualsImproved( mach._osversion, '10.7.4', self )
@@ -256,7 +282,9 @@ class TestNativeMachine( unittest.TestCase ):
     unix_mach = get_win32_machine()
     unix_mach._ostype = 'Linux'
     proc_mock = Mock()
-    proc_mock.readlines.return_value = [ 'something', 'g++ (GCC) 4.4.7 20120313 (Red Hat 4.4.7-17)', 'Copyright (C) 2010 Free Software Foundation, Inc.', 'This is free software; see the source for copying conditions.  There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.' ]
+    proc_mock.readlines.return_value = [
+      'something', 'g++ (GCC) 4.4.7 20120313 (Red Hat 4.4.7-17)', 'Copyright (C) 2010 Free Software Foundation, Inc.',
+      'This is free software; see the source for copying conditions.  There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.' ]
     with patch('%s.os.popen' % MODULE_NAME, new=Mock(return_value=proc_mock)) as popen_mock:
       result = unix_mach.nativeCompilerVersion( 2 )
       assertEqualsImproved( result, '4.4', self )
@@ -267,7 +295,9 @@ class TestNativeMachine( unittest.TestCase ):
     unix_mach = get_win32_machine()
     unix_mach._ostype = 'Linux'
     proc_mock = Mock()
-    proc_mock.readlines.return_value = [ 'something', 'g++ (GCC) 5.2.1 20120313 (Red Hat 5.2.1-17)', 'Copyright (C) 2010 Free Software Foundation, Inc.', 'This is free software; see the source for copying conditions.  There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.' ]
+    proc_mock.readlines.return_value = [
+      'something', 'g++ (GCC) 5.2.1 20120313 (Red Hat 5.2.1-17)',
+      'Copyright (C) 2010 Free Software Foundation, Inc.', 'This is free software; see the source for copying conditions.  There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.' ]
     with patch('%s.os.popen' % MODULE_NAME, new=Mock(return_value=proc_mock)) as popen_mock:
       result = unix_mach.nativeCompilerVersion( 3 )
       assertEqualsImproved( result, '5.2.1', self )
@@ -279,7 +309,9 @@ class TestNativeMachine( unittest.TestCase ):
     unix_mach.nativeCompilerVersion()
     unix_mach._ostype = 'Linux'
     proc_mock = Mock()
-    proc_mock.readlines.return_value = [ 'something', 'g++ (GCC) 4.4.7 20120313 (Red Hat 4.4.7-17)', 'Copyright (C) 2010 Free Software Foundation, Inc.', 'This is free software; see the source for copying conditions.  There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.' ]
+    proc_mock.readlines.return_value = [
+      'something', 'g++ (GCC) 4.4.7 20120313 (Red Hat 4.4.7-17)',
+      'Copyright (C) 2010 Free Software Foundation, Inc.', 'This is free software; see the source for copying conditions.  There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.' ]
     with patch('%s.os.popen' % MODULE_NAME, new=Mock(return_value=proc_mock)):
       result = unix_mach.nativeCompilerVersion( 2 )
       assertEqualsImproved( result, 'vc71', self )
@@ -342,7 +374,9 @@ class TestNativeMachine( unittest.TestCase ):
   def test_native_compiler_darwin( self ):
     unix_mach = get_win32_machine()
     unix_mach._ostype = 'Darwin'
-    unix_mach._sysinfo = ('Darwin', 'hubert.local', '9.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386')
+    unix_mach._sysinfo = ( 'Darwin', 'hubert.local', '9.4.2',
+                           'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                           'x86_64', 'i386' )
     proc_mock = Mock()
     proc_mock.readlines.return_value = [ 'g++ (GCC) 6.3.1 20120313 (Red Hat 6.3.1-17)' ]
     with patch('%s.os.popen' % MODULE_NAME, new=Mock(return_value=proc_mock)):
@@ -398,7 +432,9 @@ class TestNativeMachine( unittest.TestCase ):
     res_1 = unix_mach.CMTOSFlavour()
     assertEqualsImproved( res_1, 'winmytestarch', self )
     unix_mach._ostype = 'Darwin'
-    unix_mach._sysinfo =  ( 'Darwin', 'hubert.local', '11.4.2', 'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386' )
+    unix_mach._sysinfo =  ( 'Darwin', 'hubert.local', '11.4.2',
+                            'Darwin Kernel Version 11.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                            'x86_64', 'i386' )
     res_2 = unix_mach.CMTOSFlavour()
     assertEqualsImproved( res_2, 'osx107', self )
     unix_mach._ostype = 'Linux'
@@ -431,7 +467,9 @@ class TestNativeMachine( unittest.TestCase ):
     unix_mach = get_naked_machine()
     unix_mach._machine = 'x86_64'
     unix_mach._ostype = 'Darwin'
-    unix_mach._sysinfo =  ( 'Darwin', 'hubert.local', '9.4.2', 'Darwin Kernel Version 9.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64', 'x86_64', 'i386' )
+    unix_mach._sysinfo =  ( 'Darwin', 'hubert.local', '9.4.2',
+                            'Darwin Kernel Version 9.4.2: Thu Aug 23 16:25:48 PDT 2012; root:xnu-1699.32.7~1/RELEASE_X86_64',
+                            'x86_64', 'i386' )
     assertEqualsImproved( unix_mach.CMTSupportedConfig(), [], self )
 
   def test_cmt_native_config( self ):

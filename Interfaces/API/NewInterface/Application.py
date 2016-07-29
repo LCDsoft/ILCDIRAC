@@ -33,16 +33,23 @@ The interfaces for the currently available applications can be found here:
 :author: Ching Bon Lam
 
 '''
+
+import inspect
+import os
+import sys
+import types
+import urllib
+
 from DIRAC.Core.Workflow.Module                     import ModuleDefinition
 from DIRAC.Core.Workflow.Parameter                  import Parameter
 
 from DIRAC import S_OK, S_ERROR, gLogger
-import inspect, sys, types, os, urllib
-
 
 __RCSID__ = "$Id$"
 
-class Application(object):
+#pylint: disable=no-self-use, unused-argument
+
+class Application(object): #pylint: disable=too-many-instance-attributes
   """ General application definition. Any new application should inherit from this class.
   """
   #need to define slots
@@ -144,11 +151,9 @@ class Application(object):
     if not params:
       return S_OK()
     for param, value in params.items():
-      if type(value) in types.StringTypes:
-        value = "'%s'" % value
       try:
-        exec "self.set%s(%s)" % (param, str(value))
-      except:
+        getattr(self, "set%s" % param )( value )
+      except AttributeError:
         self._log.error("The %s class does not have a set%s method." % (self.__class__.__name__, param))
     return S_OK()  
   
@@ -158,7 +163,7 @@ class Application(object):
     curdict = self.__dict__
     pdict = {}
     for key, val in curdict.items():
-      if not key in self._paramsToExclude:
+      if key not in self._paramsToExclude:
         if val:
           pdict[key] = val
     return S_OK(pdict)
@@ -203,10 +208,16 @@ class Application(object):
   
     
   def setOutputFile(self, ofile, path = None):
-    """ Set the output file
+    """Set the output file
     
-    :param string ofile: Output file name. Will overwrite the default. This is necessary when linking applications (when using :any:`getInputFromApp`)
-    :param string path: Set the output path for the output file to go. Will not do anything in a :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`. Use :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData` of the job for that functionality.
+    :param string ofile: Output file name. Will overwrite the default. This is
+       necessary when linking applications (when using :any:`getInputFromApp`)
+
+    :param string path: Set the output path for the output file to go. Will not
+       do anything in a :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`. Use
+       :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData`
+       of the job for that functionality.
+
     """
     self._checkArgs({ 'ofile' : types.StringTypes } )
     
@@ -240,9 +251,9 @@ class Application(object):
     :type inputfile: string or list
     """
     kwargs = { "inputfile" : inputfile}
-    if not type(inputfile) in types.StringTypes and not type(inputfile) == type([]):
+    if not isinstance( inputfile, (basestring, list) ):
       return self._reportError("InputFile must be string or list of strings", __name__, **kwargs)
-    if not type(inputfile) == type([]):
+    if not isinstance( inputfile, list ):
       inputfile = [inputfile]
     for inf in inputfile:
       if os.path.exists(inf) or inf.lower().count("lfn:"):
@@ -428,7 +439,7 @@ class Application(object):
     """
     if self._inputapp:
       for app in self._inputapp:
-        if not app in self._jobapps:
+        if app not in self._jobapps:
           return S_ERROR("job order not correct: If this app uses some input coming from an other app, the app in \
           question must be passed to job.append() before.")
         else:
@@ -575,7 +586,7 @@ class Application(object):
 
     for argName, argType in argNamesAndTypes.iteritems():
 
-      if not args.has_key(argName):
+      if argName not in args:
         self._reportError( 'Method does not contain argument \'%s\'' % argName,
                            __name__,
                            **self._getArgsDict( 1 )
@@ -630,7 +641,7 @@ class Application(object):
     finalReport = 'Problem with %s.%s() call:\nArguments: %s\nMessage: %s\n' % ( className, methodName, 
                                                                                  ', '.join( arguments ), 
                                                                                  message )
-    if self._errorDict.has_key( methodName ):
+    if methodName in self._errorDict:
       tmp = self._errorDict[methodName]
       tmp.append( finalReport )
       self._errorDict[methodName] = tmp

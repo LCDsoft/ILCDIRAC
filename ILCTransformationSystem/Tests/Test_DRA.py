@@ -15,6 +15,7 @@ from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import TaskInfoException
 
 __RCSID__ = "$Id$"
 
+MODULE_NAME = 'ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent'
 
 class TestDRA( unittest.TestCase ):
   """Test the DataRecoveryAgent"""
@@ -22,7 +23,7 @@ class TestDRA( unittest.TestCase ):
 
   @patch("DIRAC.Core.Base.AgentModule.PathFinder", new=Mock())
   @patch("DIRAC.ConfigurationSystem.Client.PathFinder.getSystemInstance", new=Mock() )
-  @patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.ReqClient", new=Mock() )
+  @patch("%s.ReqClient" % MODULE_NAME, new=Mock() )
   def setUp ( self ):
     self.dra = DataRecoveryAgent( agentName="ILCTransformationSystem/DataRecoveryAgent", loadName="TestDRA" )
     self.dra.reqClient=Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
@@ -53,7 +54,7 @@ class TestDRA( unittest.TestCase ):
 
   @patch("DIRAC.Core.Base.AgentModule.PathFinder", new=Mock())
   @patch("DIRAC.ConfigurationSystem.Client.PathFinder.getSystemInstance", new=Mock() )
-  @patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.ReqClient", new=Mock() )
+  @patch("%s.ReqClient" % MODULE_NAME, new=Mock() )
   def test_init( self ):
     """test for DataRecoveryAgent initialisation...................................................."""
     res = DataRecoveryAgent( agentName="ILCTransformationSystem/DataRecoveryAgent", loadName="TestDRA" )
@@ -95,7 +96,7 @@ class TestDRA( unittest.TestCase ):
     #catch the printout to check path taken
     out = StringIO()
     sys.stdout = out
-    with patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.TransformationInfo", new=tinfoMock ):
+    with patch("%s.TransformationInfo" % MODULE_NAME, new=tinfoMock ):
       self.dra.treatProduction( prodID=1234, transName="TestProd12", transType="MCGeneration" ) ##returns None
     self.assertNotIn( "Getting tasks...", out.getvalue().strip().splitlines()[0] )
 
@@ -108,7 +109,7 @@ class TestDRA( unittest.TestCase ):
     #catch the printout to check path taken
     out = StringIO()
     sys.stdout = out
-    with patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.TransformationInfo", new=tinfoMock ):
+    with patch("%s.TransformationInfo" % MODULE_NAME, new=tinfoMock ):
       self.dra.treatProduction( prodID=1234, transName="TestProd12", transType="MCReconstruction" ) ##returns None
     self.assertIn( "Getting tasks...", out.getvalue().strip().splitlines()[0] )
 
@@ -121,7 +122,7 @@ class TestDRA( unittest.TestCase ):
     #catch the printout to check path taken
     out = StringIO()
     sys.stdout = out
-    with patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.TransformationInfo",
+    with patch("%s.TransformationInfo" % MODULE_NAME,
                autospec=True,
                return_value=getJobMock ):
       self.dra.treatProduction( prodID=1234, transName="TestProd12", transType="MCReconstruction" ) ##returns None
@@ -672,7 +673,7 @@ class TestDRA( unittest.TestCase ):
     sendmailMock = Mock()
     sendmailMock.sendMail.return_value = S_OK("Nice Card")
     notificationMock = Mock( return_value = sendmailMock )
-    with patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.NotificationClient", new=notificationMock ):
+    with patch("%s.NotificationClient" % MODULE_NAME, new=notificationMock ):
       res = self.dra.execute()
     self.assertTrue( res["OK"] )
     self.assertIn( "Will ignore the following productions: [123, 456, 789]", out.getvalue() )
@@ -687,7 +688,7 @@ class TestDRA( unittest.TestCase ):
     sendmailMock = Mock()
     sendmailMock.sendMail.return_value = S_ERROR("No stamp")
     notificationMock = Mock( return_value = sendmailMock )
-    with patch("ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.NotificationClient", new=notificationMock ):
+    with patch("%s.NotificationClient" % MODULE_NAME, new=notificationMock ):
       res = self.dra.execute()
     self.assertTrue( res["OK"] )
     self.assertNotIn( 124, self.dra.jobCache ) ## was popped

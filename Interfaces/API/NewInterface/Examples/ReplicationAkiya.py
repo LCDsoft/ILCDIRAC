@@ -34,7 +34,7 @@ proxyinfo = getProxyInfo()
 if not proxyinfo['OK']:
   print "Not allowed to create production, you need a ilc_prod proxy: use dirac-proxy-init -g ilc_prod"
   exit(1)
-if proxyinfo['Value'].has_key('group'):
+if 'group' in proxyinfo['Value']:
   group = proxyinfo['Value']['group']
   if not group == "ilc_prod":
     print "Not allowed to create production, you need a ilc_prod proxy: use dirac-proxy-init -g ilc_prod"

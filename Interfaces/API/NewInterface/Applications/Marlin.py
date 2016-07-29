@@ -180,7 +180,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     if not self.gearFile:
       self.gearFile = 'GearOutput.xml'
 
-    if not self._jobtype == 'User' :
+    if self._jobtype != 'User':
       if not self.outputFile:
         self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}",
                                    "outputDataSE":'@{OutputSE}'})
@@ -220,7 +220,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

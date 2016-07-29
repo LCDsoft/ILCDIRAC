@@ -1,13 +1,17 @@
 """
 SLIC : Simulation after Whizard or StdHepCut
 """
-__RCSID__ = "$Id$"
+
+import os
+import types
+
+from DIRAC import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
-from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Workflow.Parameter import Parameter
-import types, os
+
+__RCSID__ = "$Id$"
 
 class SLIC(LCApplication):
   """ Call SLIC simulator (after Whizard, Pythia or StdHepCut)
@@ -102,7 +106,7 @@ class SLIC(LCApplication):
     #if not res['OK']:
     #  return res
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
       self.prodparameters['slic_steeringfile'] = self.steeringFile
@@ -138,7 +142,7 @@ class SLIC(LCApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

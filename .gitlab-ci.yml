@@ -93,7 +93,6 @@ unittest7:
     - source ../bashrc
     - .gitlab-ci.d/run-unittests.sh
 
-
 setests6:
   stage: test
   tags:

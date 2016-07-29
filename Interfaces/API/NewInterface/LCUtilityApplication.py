@@ -3,11 +3,13 @@
 :since: Nov 7, 2013
 '''
 
-__RCSID__ = "$Id$"
+from types import FloatType, IntType
+
+from DIRAC import S_OK
 
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
-from DIRAC import S_OK
-from types import FloatType, IntType
+
+__RCSID__ = "$Id$"
 
 class LCUtilityApplication( Application ):
   '''
@@ -32,7 +34,7 @@ class LCUtilityApplication( Application ):
     
     :param float energy: Energy used in GeV
     """
-    if not type(energy) == type(1.1):
+    if not isinstance( energy, float ):
       energy = float(energy)
     self._checkArgs({ 'energy' : FloatType })
     self.energy = energy

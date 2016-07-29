@@ -31,7 +31,7 @@ class ILCWorkflowTasks( WorkflowTasks ):
   def _handleInputs( self, oJob, paramsDict ):
     """ set job inputs (+ metadata)
     """
-    if paramsDict.has_key( 'InputData' ):
+    if 'InputData' in paramsDict:
       if paramsDict['InputData']:
         self.log.verbose( 'Setting input data to %s' % paramsDict['InputData'] )
         lfns = paramsDict['InputData'].split(";") #it comes as one string with;

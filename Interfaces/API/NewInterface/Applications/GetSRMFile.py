@@ -30,7 +30,7 @@ class GetSRMFile(LCUtilityApplication):
     :type fdict: :class:`python:dict`, or :any:`python:list` of :class:`python:dict`
     """
     kwargs = {"fdict":fdict}
-    if not type(fdict) == type({}) and not type(fdict) == type([]):
+    if not isinstance( fdict, (dict, list) ):
       return self._reportError('Expected dict or list of dicts for fdict', __name__, **kwargs)
 
     self.files = fdict
@@ -61,7 +61,7 @@ class GetSRMFile(LCUtilityApplication):
     if not self.files:
       return S_ERROR("The file list was not defined")
 
-    if type(self.files) == type({}):
+    if isinstance( self.files, dict ):
       self.files = [self.files]
 
     ##For the getInputFromApp to work, we nedd to tell the application about the expected OutputFile

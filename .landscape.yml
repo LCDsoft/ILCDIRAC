@@ -1,5 +1,11 @@
 pep8:
- run: false
+ run: true
+ disable:
+   - E114
 
 requirements:
     - .gitlab-ci.d/requirements.txt
+
+ignore-patterns:
+    - (^|.*/)Tests/.*
+    - Test_.*.py

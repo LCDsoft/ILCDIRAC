@@ -1,12 +1,13 @@
 """
 SLCIOConcatenate : Helper to concatenate SLCIO files
 """
-__RCSID__ = "$Id$"
 
-from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC import S_OK, S_ERROR
-import types
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
+
+__RCSID__ = "$Id$"
 
 class SLCIOConcatenate(LCUtilityApplication):
   """ Helper to concatenate slcio files
@@ -57,7 +58,7 @@ class SLCIOConcatenate(LCUtilityApplication):
       self.setOutputFile('LCIOFileConcatenated.slcio')
       self._log.notice('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
-    if not self._jobtype == 'User':
+    if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
 
@@ -71,7 +72,7 @@ class SLCIOConcatenate(LCUtilityApplication):
     return self._checkRequiredApp()
 
   def _resolveLinkedStepParameters(self, stepinstance):
-    if type(self._linkedidx) == types.IntType:
+    if isinstance( self._linkedidx, (int, long) ):
       self._inputappstep = self._jobsteps[self._linkedidx]
     if self._inputappstep:
       stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")

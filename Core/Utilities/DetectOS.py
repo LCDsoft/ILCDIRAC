@@ -4,10 +4,16 @@ General ILC platform configuration, based on LHCb version
 Called from CombinedSoftwareInstallation
 """
 
+import logging
+import os
+import platform
+import re
+import sys
+
 __RCSID__ = "$Id$"
 
-import sys, platform, os
-import re, logging
+#pylint: disable=invalid-name
+
 # CMTCONFIG extraction
 
 def isNewStyleBinary(cmtconfig):

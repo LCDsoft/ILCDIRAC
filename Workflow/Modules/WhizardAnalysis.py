@@ -94,7 +94,7 @@ class WhizardAnalysis(ModuleBase):
 
     if not self.RandomSeed and self.jobID:
       self.RandomSeed = self.jobID
-    if self.workflow_commons.has_key("IS_PROD") or self.workflow_commons.has_key("IS_DBD_GEN_PROD"):  
+    if 'IS_PROD' in self.workflow_commons or 'IS_DBD_GEN_PROD' in self.workflow_commons:
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))  
 
     self.parameters['SEED'] = self.RandomSeed
@@ -102,7 +102,7 @@ class WhizardAnalysis(ModuleBase):
     self.parameters['LUMI'] = self.Lumi
 
     ##EVER USED???
-    if self.step_commons.has_key('SusyModel'):
+    if 'SusyModel' in self.step_commons:
       self.susymodel = self.step_commons['SusyModel']
 
     self.SteeringFile = os.path.basename(self.step_commons.get("InputFile", self.SteeringFile))
@@ -121,12 +121,12 @@ class WhizardAnalysis(ModuleBase):
       self.log.info("Will use whizard.in definition from WhizardOptions.")
       try:
         self.optionsdict = eval(self.OptionsDictStr)
-        if not self.optionsdict.has_key('integration_input'):
+        if 'integration_input' not in self.optionsdict:
           self.optionsdict['integration_input'] = {}
-        if not self.optionsdict['integration_input'].has_key('seed'):
+        if 'seed' not in self.optionsdict['integration_input']:
           self.optionsdict['integration_input']['seed'] = int(self.RandomSeed)
-        if self.optionsdict.has_key('process_input'):
-          if self.optionsdict['process_input'].has_key('sqrts'):
+        if 'process_input' in self.optionsdict:
+          if 'sqrts' in self.optionsdict['process_input']:
             self.energy = self.optionsdict['process_input']['sqrts']
       except:
         return S_ERROR("Could not convert string to dictionary for optionsdict")
@@ -450,23 +450,22 @@ class WhizardAnalysis(ModuleBase):
       info = {}
       info['xsection'] = {}
       processes.append('sum')
-      inf = open("whizard.out", "r")
-      for line in inf:
-        line = line.rstrip()
-        for process in processes:
-          if not process:
-            continue
-          if line.count("   %s            " % process):
-            info['xsection'][process] = {}
-            line = line.lstrip()
-            crosssection = line.split()[1]
-            err_crosssection = line.split()[2]
-            frac = line.split()[4]
-            info['xsection'][process]['xsection'] = float(crosssection)
-            info['xsection'][process]['err_xsection'] = float(err_crosssection)
-            info['xsection'][process]['fraction'] = float(frac)
+      with open("whizard.out", "r") as inf:
+        for line in inf:
+          line = line.rstrip()
+          for process in processes:
+            if not process:
+              continue
+            if line.count("   %s            " % process):
+              info['xsection'][process] = {}
+              line = line.lstrip()
+              crosssection = line.split()[1]
+              err_crosssection = line.split()[2]
+              frac = line.split()[4]
+              info['xsection'][process]['xsection'] = float(crosssection)
+              info['xsection'][process]['err_xsection'] = float(err_crosssection)
+              info['xsection'][process]['fraction'] = float(frac)
 
-      inf.close()
     if info:
       if 'Info' not in self.workflow_commons:
         self.workflow_commons['Info'] = info
@@ -503,7 +502,7 @@ class WhizardAnalysis(ModuleBase):
           if not self.ignoreapperrors:
             return S_ERROR(messageout)
 
-    if failed == True:
+    if failed is True:
       self.log.error( "==================================\n StdError:\n" )
       self.log.error( message )
       self.setApplicationStatus('%s Exited With Status %s' % (self.applicationName, status))

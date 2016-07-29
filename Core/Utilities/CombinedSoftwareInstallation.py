@@ -42,9 +42,9 @@ class CombinedSoftwareInstallation(object):
 
     apps = []
     if 'SoftwarePackages' in self.job:
-      if type( self.job['SoftwarePackages'] ) == type(''):
+      if isinstance( self.job['SoftwarePackages'], basestring):
         apps = [self.job['SoftwarePackages']]
-      elif type( self.job['SoftwarePackages'] ) == type([]):
+      elif isinstance( self.job['SoftwarePackages'], list ):
         apps = self.job['SoftwarePackages']
 
 
@@ -77,7 +77,7 @@ class CombinedSoftwareInstallation(object):
     self.ceConfigs = []
     if 'CompatiblePlatforms' in self.ce:
       self.ceConfigs = self.ce['CompatiblePlatforms']
-      if type(self.ceConfigs) == type(''):
+      if isinstance( self.ceConfigs, basestring ):
         self.ceConfigs = [self.ceConfigs]
     #else:
     ### Use always the list of compatible platform.

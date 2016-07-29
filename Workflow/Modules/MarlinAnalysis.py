@@ -9,12 +9,13 @@ ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
 :author: Przemyslaw Majewski
 '''
 
-__RCSID__ = "$Id$"
-
-import os, shutil, glob, types
+import glob
+import os
+import shutil
  
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-#from DIRAC.Core.DISET.RPCClient                           import RPCClient
+from DIRAC                                                import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareXMLFile, getNewLDLibs
@@ -24,8 +25,8 @@ from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFile
 from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
 
 
-from DIRAC                                                import S_OK, S_ERROR, gLogger
 
+__RCSID__ = "$Id$"
 
 class MarlinAnalysis(DD4hepMixin, ModuleBase):
   """Define the Marlin analysis part of the workflow
@@ -52,9 +53,9 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     :return: S_OK()
     """
 
-    if self.workflow_commons.has_key('ParametricInputSandbox'):
+    if 'ParametricInputSandbox' in self.workflow_commons:
       paramsb = self.workflow_commons['ParametricInputSandbox']
-      if not type(paramsb) == types.ListType:
+      if not isinstance( paramsb, list ):
         if len(paramsb):
           paramsb = paramsb.split(";")
         else:
@@ -66,16 +67,16 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     self.outputREC = self.step_commons.get('outputREC', self.outputREC)
     self.outputDST = self.step_commons.get('outputDST', self.outputDST)
       
-    if self.workflow_commons.has_key("IS_PROD"):
+    if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"] and len(self.OutputFile)==0:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
         #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
-        #if self.workflow_commons.has_key("MokkaOutput"):
+        #if 'MokkaOutput' in self.workflow_commons:
         #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
         #                                    int(self.workflow_commons["JOB_ID"]))
-        if self.workflow_commons.has_key('ProductionOutputData'):
+        if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
           for obj in outputlist:
             if obj.lower().count("_rec_"):
@@ -89,7 +90,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
                                            int(self.workflow_commons["JOB_ID"]))
           self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
                                            int(self.workflow_commons["JOB_ID"]))
-          #if self.workflow_commons.has_key("MokkaOutput"):
+          #if 'MokkaOutput' in self.workflow_commons:
           #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
           #                                    int(self.workflow_commons["JOB_ID"]))
           self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
@@ -231,13 +232,12 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     """ Prepare the run time environment: MARLIN_DLL in particular.
     """
     #to fix the MARLIN_DLL, we need to get it first
-    script = open("temp.sh",'w')
-    script.write("#!/bin/bash\n")
-    lines = []
-    lines.append("source %s" % env_script_path)
-    lines.append('echo $MARLIN_DLL')
-    script.write("\n".join(lines))
-    script.close()
+    with open("temp.sh",'w') as script:
+      script.write("#!/bin/bash\n")
+      lines = []
+      lines.append("source %s" % env_script_path)
+      lines.append('echo $MARLIN_DLL')
+      script.write("\n".join(lines))
     os.chmod("temp.sh", 0755)
     res = shellCall(0, "./temp.sh")
     if not res['OK']:
@@ -275,7 +275,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
         self.log.verbose("Duplicated lib found, removing %s" % path1)
         try:
           temp.remove(path1)
-        except EnvironmentError:
+        except ValueError:
           pass
       
     marlindll = "%s:%s" % (":".join(temp), userlib) #Here we concatenate the default MarlinDLL with the user's stuff

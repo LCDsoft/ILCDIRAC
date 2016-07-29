@@ -32,7 +32,7 @@ class JobPathResolution(object):
     """
     ilcPath = ''
 
-    if not self.arguments.has_key('ConfigPath'):
+    if 'ConfigPath' not in self.arguments:
       self.log.warn('No CS ConfigPath defined')
       return S_ERROR('JobPathResoulution Failure')
 

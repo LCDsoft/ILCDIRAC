@@ -5,6 +5,9 @@ from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
 __RCSID__ = "$Id$"
+
+#pylint: disable=invalid-name
+
 # Define Version
 
 majorVersion = 22

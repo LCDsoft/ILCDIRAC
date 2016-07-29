@@ -22,7 +22,7 @@ def getNumberOfEvents(inputfile):
     if not myfile:
       continue
     bpath = os.path.dirname(myfile)
-    if not bpath in flist.keys():
+    if bpath not in flist:
       flist[bpath] = [myfile]
     else:
       flist[bpath].append(myfile)
@@ -59,15 +59,15 @@ def getNumberOfEvents(inputfile):
     res = fc.getDirectoryUserMetadata(path)
     if res['OK']:   
       tags = res['Value']
-      if tags.has_key("NumberOfEvents") and not found_nbevts:
+      if "NumberOfEvents" in tags and not found_nbevts:
         numberofevents += len(files)*int(tags["NumberOfEvents"])
         found_nbevts = True
         completeFailure = False
-      if tags.has_key("Luminosity") and not found_lumi:
+      if "Luminosity" in tags and not found_lumi:
         luminosity += len(files) * float(tags["Luminosity"])
         found_lumi = True
-      if tags.has_key("EvtType"):
-        evttype = tags["EvtType"]
+
+      evttype = tags.get("EvtType", evttype)
       others.update(tags)    
       if found_nbevts: 
         continue
@@ -80,10 +80,10 @@ def getNumberOfEvents(inputfile):
         gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (myfile, res['Message']))
         continue
       tags = res['Value']
-      if tags.has_key("NumberOfEvents"):
+      if "NumberOfEvents" in tags:
         numberofevents += int(tags["NumberOfEvents"])
         completeFailure = False
-      if tags.has_key("Luminosity") and not found_lumi:
+      if "Luminosity" in tags and not found_lumi:
         luminosity += float(tags["Luminosity"])
       others.update(tags)  
         

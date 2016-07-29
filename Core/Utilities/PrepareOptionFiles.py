@@ -571,7 +571,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   #handle number of events
   if numberofevents:
     nbevts = tree.find("control/numberOfEvents")     
-    if not nbevts is None:
+    if nbevts is not None:
       nbevts.text = str(numberofevents)
     else:
       control = tree.find('control')
@@ -581,7 +581,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   #handle verbosity
   if debug:
     debugline = tree.find("control/verbose")
-    if not debugline is None:
+    if debugline is not None:
       debugline.text = 'true'
     else:
       control = tree.find('control')
@@ -591,7 +591,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 
   if cachedir:
     cachedirline = tree.find("control/cacheDirectory")
-    if not cachedirline is None:
+    if cachedirline is not None:
       cachedirline.text = cachedir
     else:
       control = tree.find('control')
@@ -603,7 +603,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   lcsimPrintEveryEvent = 1 if not res['OK'] else res['Value']
   drivers = tree.findall("drivers/driver")      
   eventInterval = tree.find("drivers/driver/eventInterval")
-  if not eventInterval is None:
+  if eventInterval is not None:
     evtint = eventInterval.text #pylint: disable=E1101
     if int(evtint) < 10:    
       eventInterval.text = "%s" % lcsimPrintEveryEvent
@@ -645,7 +645,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
           driver.append(strategy)
 
   mark = tree.find("drivers/driver/marker")
-  if not mark is None:
+  if mark is not None:
     printtext = mark.text #pylint: disable=E1101
   else:
     for driver in drivers:
@@ -663,7 +663,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
         #if driver.attrib['name']=="eventOverlay":
         ov_name = driver.find("overlayName")
         bkg_Type = "gghad"
-        if not ov_name is None:
+        if ov_name is not None:
           bkg_Type = ov_name.text.lower()
           res = allowedBkg(bkg_Type)
           if not res['OK']:
@@ -758,15 +758,18 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   return S_OK(printtext)
 
 def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
-  """ Prepare the proper steering file for Tomato
+  """Prepare the proper steering file for Tomato
 
   :param string inputxml: name of the xml steering file
   :param string outputxml: name of the final tomato steering file
   :param string inputSLCIO: inputSLCIO
-  :param string outputFile: name of the produced output slcio file, this is useful when combined with :func:`setOutputData() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
+  :param string outputFile: name of the produced output slcio file, this is
+      useful when combined with :func:`setOutputData()
+      <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
   :param string collection: collection to be analysed
 
   :return: S_OK
+
   """
   if not inputxml:
     with open('default.xml',"w") as inputxmlf:
@@ -801,9 +804,9 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   tree = ElementTree()
   try:
     tree.parse(inputxml)
-  except Exception, x:
-    print "Found Exception %s %s" % (Exception, x)
-    return S_ERROR("Found Exception %s %s" % (Exception, x))
+  except Exception as x:
+    print "Found Exception %r" % x
+    return S_ERROR("Found Exception %r" % x)
   params = tree.findall('global/parameter')
   glob = tree.find('global')
   lciolistfound = False

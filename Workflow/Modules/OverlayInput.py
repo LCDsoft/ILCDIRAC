@@ -82,12 +82,12 @@ class OverlayInput (ModuleBase):
 
     self.pathToOverlayFiles = self.step_commons.get("pathToOverlayFiles", self.pathToOverlayFiles)
 
-    if self.step_commons.has_key('Detector'):
+    if 'Detector' in self.step_commons:
       self.detectormodel = self.step_commons['Detector']
     if not self.detectormodel and not self.detector and not self.pathToOverlayFiles:
       return S_ERROR('Detector model not defined')
 
-    if self.step_commons.has_key('Energy'):
+    if 'Energy' in self.step_commons:
       self.energytouse = self.step_commons['Energy']
 
     if self.energy:
@@ -102,21 +102,21 @@ class OverlayInput (ModuleBase):
     if not self.energytouse and not self.pathToOverlayFiles:
       return S_ERROR("Energy not set anywhere!")
 
-    if self.step_commons.has_key('BXOverlay'):
+    if 'BXOverlay' in self.step_commons:
       self.BXOverlay = self.step_commons['BXOverlay']
     if not self.BXOverlay:
       return S_ERROR("BXOverlay parameter not defined")
 
-    if self.step_commons.has_key('ggtohadint'):
+    if 'ggtohadint' in self.step_commons:
       self.ggtohadint = self.step_commons['ggtohadint']
 
-    if self.step_commons.has_key('ProdID'):
+    if 'ProdID' in self.step_commons:
       self.prodid = self.step_commons['ProdID']
 
-    if self.step_commons.has_key('NbSigEvtsPerJob'):
+    if 'NbSigEvtsPerJob' in self.step_commons:
       self.NbSigEvtsPerJob = self.step_commons['NbSigEvtsPerJob']
 
-    if self.step_commons.has_key('BkgEvtType'):
+    if 'BkgEvtType' in self.step_commons:
       self.BkgEvtType = self.step_commons['BkgEvtType']
     self.metaEventType = self.BkgEvtType
       
@@ -126,7 +126,7 @@ class OverlayInput (ModuleBase):
       return res
     if res['Value'] < 0 and not self.pathToOverlayFiles:
       return S_ERROR("No suitable ProdID") 
-    #if self.workflow_commons.has_key('Site'):
+    #if 'Site' in self.workflow_commons:
     #  self.site = self.workflow_commons['Site']
 
     self.useEnergyForFileLookup = self.step_commons.get("useEnergyForFileLookup", self.useEnergyForFileLookup)
@@ -321,7 +321,7 @@ class OverlayInput (ModuleBase):
       #  time.sleep(60)
       #  continue
       #running = 0
-      #if res['Value'].has_key('Running'):
+      #if 'Running' in res['Value']:
       #  running = res['Value']['Running']
 
       res = overlaymon.canRun(self.site)
@@ -449,7 +449,7 @@ class OverlayInput (ModuleBase):
         script.write("cp %s /tmp/x509up_u%s \n" % (os.environ['X509_USER_PROXY'], os.getuid()))
       script.write('declare -x STAGE_SVCCLASS=ilcdata\n')
       script.write('declare -x STAGE_HOST=castorpublic\n')
-      script.write("xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
+      script.write(r"xrdcp -s root://castorpublic.cern.ch/%s ./ -OSstagerHost=castorpublic\&svcClass=ilcdata\n" % lfile.rstrip())
       #script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n"%(lfile,basename))
       script.write("""
 if [ ! -s %s ]; then
@@ -592,7 +592,7 @@ fi\n""" % (basename, lfile))
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
-    if os.environ.has_key('X509_USER_PROXY'):
+    if 'X509_USER_PROXY' in os.environ:
       comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s" % os.getuid()]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
       print res

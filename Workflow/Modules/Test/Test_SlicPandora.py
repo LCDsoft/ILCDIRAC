@@ -9,7 +9,7 @@ import urllib2
 import tempfile
 
 from DIRAC import gLogger
-from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
+#from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
 
 gLogger.setLevel("ERROR")
 gLogger.showHeaders(True)
@@ -31,7 +31,7 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
     os.chdir(self.tempdir)
 
     super(TestSlicPandoraAnalysis, self).setUp()
-    self.spa = SLICPandoraAnalysis()
+    #self.spa = SLICPandoraAnalysis()
     self.mydir = "temp_dir"
     #detURL = "http://www.lcsim.org/detectors/clic_sid_cdr.zip"
     detURL = "https://lcd-data.web.cern.ch/lcd-data/ILCDIRACTars/testfiles/clic_sid_cdr.zip"
