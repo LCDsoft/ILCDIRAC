@@ -26,7 +26,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLCIOSplit, St
 analysis         = 'ILD-DBD' ##Some analysis: the prods will belong to the ProdGroup
 my_evttype       = 'higgs_ffh'
 my_evtclass      = 'higgs'
-selectedfile     = 1
+selectedfile     = 0
 prodid           = 6556
 genprocessname   = 'qqh_ww_4q'
 process          = '106730'
@@ -43,7 +43,7 @@ GGToHadInt500  = 1.7
 GGToHadInt1000 = 4.1
 
 MarlinVer    = "ILCSoft-01-16-02-p1"
-ILDConfig = ''
+ILDConfig = '' ## Set below for different energies
 MokkaVer     = "080003"
 MokkaILDConfig = "v01-14-01-p00"
 banned_sites = [""]
@@ -76,10 +76,10 @@ energyMachinePars        = meta_energy + '-' + machineParameters
 basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc/mc-dbd/ild/' )
 
 matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
-matchToInput_mokka       = basepath + "splitted/" + energyMachinePars + '/' + my_evttype + '/'
+matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype
 matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + MokkaILDConfig
 
-SE        = "CERN-DST-EOS"
+SE        = "KEK-SRM"
 ###LCG_SITE  = "LCG.KEK.jp"
 input_sand_box = [""]
 ##This is where magic happens
@@ -106,9 +106,9 @@ else:
   meta['ProdID']        = prodid
     
 #DoSplit at stdhep level
-activesplitstdhep   = True
-nbevtsperfilestdhep = 100
-nbtasks_split       = -1 # To run overall input stdhep
+activesplitstdhep   = False
+nbevtsperfilestdhep = 500
+nbtasks_split       = -1 # To run over all input stdhep
 if activesplitstdhep:
   if selectedfile > 0:
     meta['SelectedFile'] = selectedfile
@@ -162,21 +162,27 @@ overlay = OverlayInput()
 overlay.setMachine("ilc_dbd")             #Don't touch, this is how the system knows what files to get
 overlay.setEnergy(energy)                 #Don't touch, this is how the system knows what files to get
 overlay.setDetectorModel(detectorModel) #Don't touch, this is how the system knows what files to get
-overlay.setBkgEvtType("aa_lowpt2")
 if energy==500.: #here you chose the overlay parameters as this determines how many files you need
   #it does NOT affect the content of the marlin steering file whatsoever, you need to make sure the values
   #there are correct. Only the file names are handled properly so that you don't need to care
   overlay.setBXOverlay(BXOverlay)
   overlay.setGGToHadInt(GGToHadInt500)
+  overlay.setBkgEvtType("aa_lowpt2") ## lowpt2: correct number of events (500),
+                                     ## not increased to 2500 to reduce number
+                                     ## of downloaded files
 elif energy == 1000.:
   overlay.setBXOverlay(BXOverlay)
   overlay.setGGToHadInt(GGToHadInt1000)
+  overlay.setBkgEvtType("aa_lowpt")
 elif energy == 350.:
   overlay.setBXOverlay(BXOverlay)
   overlay.setGGToHadInt(GGToHadInt350)
+  overlay.setBkgEvtType("aa_lowpt")
 elif energy == 250.:
   overlay.setBXOverlay(BXOverlay)
   overlay.setGGToHadInt(GGToHadInt250)
+  overlay.setBkgEvtType("aa_lowpt")
+
 else:
   print "Overlay ILD: No overlay parameters defined for this energy"
 
@@ -209,10 +215,10 @@ if ild_rec:
 ### HERE WE DEFINE THE PRODUCTIONS
 if activesplitstdhep and meta:
   pstdhepsplit = ILDProductionJob()
-  pstdhepsplit.basepath = basepath + "splitted/"
+  pstdhepsplit.basepath = '/ilc/prod/ilc/mc-dbd.generated/ild/' # Sailer suggestion
   pstdhepsplit.matchToInput = matchToInput_stdhepsplit
   pstdhepsplit.setDryRun(dryrun)
-  #pstdhepsplit.setILDConfig(ILDConfig)
+  #pstdhepsplit.setILDConfig(ILDConfig) ## stdhepsplit does not need ILDConfig
   pstdhepsplit.setEvtClass(my_evtclass)
   pstdhepsplit.setEvtType(my_evttype)
   # pstdhepsplit.setUseSoftTagInPath(False)
@@ -258,11 +264,6 @@ if activesplitstdhep and meta:
   res = pstdhepsplit.setProcessIDInFinalPath()
   if not res['OK']:
     print res['Message']
-
-  # 20150924 testing if i need this: i found this is mandatory to get the Mokka input
-  # res = pstdhepsplit.setSoftwareTagInFinalPath(tmp_softwaretag_val)
-  # if not res['OK']:
-  #   print res['Message']
 
   res = pstdhepsplit.finalizeProd()
   if not res['OK']:
