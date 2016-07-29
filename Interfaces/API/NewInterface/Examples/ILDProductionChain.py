@@ -1,11 +1,10 @@
 '''
-Created on Mar 26, 2012
 
-@author: Stephane Poss
+Create Chain of productions for ILD
 
-Modified to perform ILD reconstruction.
+:author: S. Poss, A.Sailer, C. Calancha
+:since: Mar 26, 2012
 
-C. Calancha
 '''
 
 #pylint: disable=invalid-name, wrong-import-position
