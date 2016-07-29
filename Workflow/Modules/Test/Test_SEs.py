@@ -33,8 +33,9 @@ class SETestCase( unittest.TestCase ):
   lfntestfile = ''
   storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
   #storageelements = [ "CERN-DST-EOS" ]
-  options = ['-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive",
-             "-o/DIRAC/Setup=ILC-Test"]
+  options = [ '-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive",
+              '-o', "/DIRAC/Setup=ILC-Test",
+            ]
 
   @classmethod
   def setUpClass( cls ):
@@ -182,12 +183,13 @@ class SETestCase( unittest.TestCase ):
     """Replicates the random file to another storage element and checks if it worked
     """
     try:
-      result = subprocess.check_output(["dirac-dms-replicate-lfn",
-                                        self.lfntestfile, site, "-ddd"]+self.options)
+      cmd = ["dirac-dms-replicate-lfn",
+             self.lfntestfile, site, "-ddd"]+self.options
+      result = subprocess.check_output( cmd )
       self.assertOperationSuccessful(result, "Failed replicating file")
     except subprocess.CalledProcessError as err:
       print err.output
-      raise subprocess.CalledProcessError("1", "substitute cmd")
+      raise RuntimeError( "Command %s failed " % cmd )
 
   def removeFileAllowFailing ( self ):
     """Removes the random file from the storage elements, if it exists.
