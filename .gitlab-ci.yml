@@ -7,7 +7,7 @@ before_script:
     - mv ILCDIRAC ILCDIRAC_commit
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
-    - ./dirac-install -V ILCDIRAC -r v26-pre1 -g 2016-06-27
+    - ./dirac-install -V ILCDIRAC -r v26r0 -g 2016-06-27
     - rm -rf DIRAC
     - mkdir DIRAC
     - cd DIRAC
@@ -26,24 +26,6 @@ before_script:
 
 stages:
     - test
-#
-#pylint5:
-#  stage: test
-#  tags:
-#    - docker
-#  image: ilcdirac/slc5-base
-#  script:
-#    - source ../bashrc
-#    - .gitlab-ci.d/run-pylint.sh
-#
-# unittest5:
-#   stage: test
-#   tags:
-#     - docker
-#   image: ilcdirac/slc5-base
-#   script:
-#     - source ../bashrc
-#     - .gitlab-ci.d/run-unittests.sh
 
 pylint6:
   stage: test
@@ -75,6 +57,18 @@ cvmfstests6:
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - .gitlab-ci.d/run-cvmfstests.sh
 
+cvmfstests7:
+  stage: test
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - source ../bashrc
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - .gitlab-ci.d/run-cvmfstests.sh
+
 pylint7:
   stage: test
   tags:
@@ -98,6 +92,19 @@ setests6:
   tags:
     - docker
   image: ilcdirac/slc6-base
+  script:
+    - source ../bashrc
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - .gitlab-ci.d/run-setests.sh
+
+
+setests7:
+  stage: test
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
   script:
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
