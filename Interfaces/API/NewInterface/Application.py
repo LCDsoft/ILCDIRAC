@@ -307,6 +307,19 @@ class Application(object): #pylint: disable=too-many-instance-attributes
           val = "Not defined"
         self._log.notice("  %s: %s"%( key, val))
 
+  def checkProductionMetaData(self, metaDict ):
+    """ check that the production metadata coming out of this application is correct.
+    Implemented in applications where this is necessary. Called from `Job.append`
+
+    :param dict metaDict: production job metadata dictionary, will be updated
+    :returns: S_OK, S_ERROR
+    """
+    self._log.debug( "Checking production metadata for application %s " % self.__class__.__name__ )
+    for key, val in metaDict.iteritems():
+      self._log.debug( "%s: %s" % (key, val) )
+
+    return S_OK()
+
 
 ########################################################################################
 #    More private methods: called by the applications of the jobs, but not by the users

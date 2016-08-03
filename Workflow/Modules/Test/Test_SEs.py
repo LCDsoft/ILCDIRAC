@@ -28,13 +28,14 @@ class SETestCase( unittest.TestCase ):
 
 
   localtestfile = 'testfile'
-  lfntestfilename = "testfile.txt"
+  lfntestfilename = "testfile_uploaded.txt"
   lfntestfilepath = "/ilc/user/"
   lfntestfile = ''
   storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
   #storageelements = [ "CERN-DST-EOS" ]
-  options = ['-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive",
-             "-o/DIRAC/Setup=ILC-Test"]
+  options = [ '-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive",
+              '-o', "/DIRAC/Setup=ILC-Test",
+            ]
 
   @classmethod
   def setUpClass( cls ):
@@ -125,7 +126,7 @@ class SETestCase( unittest.TestCase ):
     
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename),
                     "Received wrong file")
-
+    self.removeDownloadedFile()
   
   #@unittest.skip("demonstrating skipping")
   def test_removal_all( self ):
@@ -182,12 +183,13 @@ class SETestCase( unittest.TestCase ):
     """Replicates the random file to another storage element and checks if it worked
     """
     try:
-      result = subprocess.check_output(["dirac-dms-replicate-lfn",
-                                        self.lfntestfile, site, "-ddd"]+self.options)
+      cmd = ["dirac-dms-replicate-lfn",
+             self.lfntestfile, site, "-ddd"]+self.options
+      result = subprocess.check_output( cmd )
       self.assertOperationSuccessful(result, "Failed replicating file")
     except subprocess.CalledProcessError as err:
       print err.output
-      raise subprocess.CalledProcessError("1", "substitute cmd")
+      raise RuntimeError( "Command %s failed " % cmd )
 
   def removeFileAllowFailing ( self ):
     """Removes the random file from the storage elements, if it exists.
@@ -204,3 +206,11 @@ class SETestCase( unittest.TestCase ):
     """
     return [(site1, site2) for site1 in self.storageelements for site2 in
             self.storageelements if site1 != site2]
+
+  def removeDownloadedFile( self ):
+    """ remove the lfn test file if it exists locally """
+    if os.path.exists( self.lfntestfilename ):
+      try:
+        os.unlink ( self.lfntestfilename )
+      except EnvironmentError as err:
+        print "failed to remove lfn", repr(err)

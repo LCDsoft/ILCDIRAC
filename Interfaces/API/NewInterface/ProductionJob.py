@@ -13,7 +13,9 @@ cannot be (and should not be) used like the
 
 import os
 import shutil
+import pprint
 
+from collections import defaultdict
 from decimal import Decimal
 
 from DIRAC                                                  import S_OK, S_ERROR, gLogger
@@ -63,7 +65,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self.description = ''
 
     self.finalpaths = []
-    self.finalMetaDict = {}
+    self.finalMetaDict = defaultdict( dict )
+    self.prodMetaDict = {}
     self.finalMetaDictNonSearch = {}
     self.metadict_external = {}
     self.outputStorage = ''
@@ -411,9 +414,10 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       finalpaths = finalpaths.rstrip("/")
       finalpaths += "/"+str(self.transfid).zfill(8)
       finals.append(finalpaths)
-      self.finalMetaDict[finalpaths] = {"ProdID" : self.transfid}
-      if 'ILDConfigVersion' in self.prodparameters:
-        self.finalMetaDict[finalpaths].update({"ILDConfig":self.prodparameters['ILDConfigVersion']})
+      self.finalMetaDict[finalpaths].update( { "ProdID": self.transfid } )
+      self.finalMetaDict[finalpaths].update( self.prodMetaDict )
+      # if 'ILDConfigVersion' in self.prodparameters:
+      #   self.finalMetaDict[finalpaths].update({"ILDConfig":self.prodparameters['ILDConfigVersion']})
         
       if self.nbevts:
         self.finalMetaDict[finalpaths].update({'NumberOfEvents' : self.jobFileGroupSize * self.nbevts})
@@ -520,12 +524,14 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         self.finalMetaDictNonSearch[finalpath].update(self.metadict_external)  
     
     info.append('- Registered metadata: ')
-    for key, val in self.finalMetaDict.iteritems():
-      info.append('    %s = %s' % (key, val))
+    for path, metadata in sorted( self.finalMetaDict.iteritems() ):
+      info.append('    %s = %s' % (path, metadata))
     info.append('- Registered non searchable metadata: ')
-    for key, val in self.finalMetaDictNonSearch.iteritems():
-      info.append('    %s = %s' % (key, val))
-      
+    for path, metadata in sorted( self.finalMetaDictNonSearch.iteritems() ):
+      info.append('    %s = %s' % (path, metadata))
+
+    pprint.pprint( info )
+
     infoString = '\n'.join(info)
     self.prodparameters['DetailedInfo'] = infoString
     
@@ -536,7 +542,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     res = self._registerMetadata()
     if not res['OK']:
-      self.log.error("Could not register the following directories :", "%s" % str(res['Failed']))
+      self.log.error("Could not register the following directories :", "%s" % str(res))
     return S_OK()  
   #############################################################################
   
@@ -550,7 +556,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     prevent_registration = self.ops.getValue("Production/PreventMetadataRegistration", False)
     
     if self.dryrun or prevent_registration:
-      self.log.notice("Would have created and registered the following", str(self.finalMetaDict))
+      self.log.notice("Would have created and registered the following\n",
+                      "\n ".join( [ " * %s: %s" %( par, val ) for par,val in self.finalMetaDict.iteritems() ] ) )
       self.log.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
       return S_OK()
     
@@ -572,9 +579,25 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       else:
         self.log.error('Failed to create directory:', result['Message'])
         failed.append(path)
-      result = self.fc.setMetadata(path.rstrip("/"), meta)
+
+      ## Get existing metadata, if it is the same don't set it again, otherwise throw error
+      existingMetadata = self.fc.getDirectoryUserMetadata( path.rstrip("/") )
+      metaCopy = dict(meta)
+      if existingMetadata['OK']:
+        failure = False
+        for key, value in existingMetadata['Value'].iteritems():
+          if key in meta and meta[key] != value:
+            self.log.error( "Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)" % ( path, key, value, meta[key] ) )
+            failure = True
+          elif key in meta and meta[key] == value:
+            metaCopy.pop(key, None)
+        if failure:
+          return S_ERROR( "Error when setting new metadata, already existing metadata disagrees!" )
+
+      result = self.fc.setMetadata(path.rstrip("/"), metaCopy)
       if not result['OK']:
-        self.log.error("Could not preset metadata", "%s" % str(meta))
+        self.log.error("Could not preset metadata", "%s" % str(metaCopy))
+        self.log.error("Could not preset metadata", "%s" % result['Message'] )
 
     for path, meta in self.finalMetaDictNonSearch.items():
       result = self.fc.createDirectory(path)
@@ -715,7 +738,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     path = self.basepath  
     ###Need to resolve file names and paths
     if self.energy:
-      self.finalMetaDict[self.basepath + energypath] = {"Energy":int(self.energy)}
+      self.finalMetaDict[self.basepath + energypath] = {"Energy":str(self.energy)}
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
       path = self.basepath + energypath + evttypepath + application.detectortype + "/REC"
       self.finalMetaDict[self.basepath + energypath + evttypepath] = {"EvtType":self.evttype}
@@ -777,7 +800,6 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
   def _jobSpecificModules(self, application, step):
     return application._prodjobmodules(step)
 
-
   def getEnergyPath(self):
     """returns the energy path 250gev or 3tev or 1.4tev etc."""
     energy = Decimal(str(self.energy))
@@ -796,10 +818,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     return energyPath
 
 
-  def _checkMetaKeys( self, metakeys ):
+  def _checkMetaKeys( self, metakeys, extendFileMeta=False ):
     """ check if metadata keys are allowed to be metadata
 
     :param list metakeys: metadata keys for production metadata
+    :param bool extendFileMeta: also use FileMetaFields for checking meta keys
     :returns: S_OK, S_ERROR
     """
 
@@ -808,6 +831,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       print "Could not contact File Catalog"
       return S_ERROR("Could not contact File Catalog")
     metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
+    if extendFileMeta:
+      metaFCkeys.extend( res['Value']['FileMetaFields'].keys() )
 
     for key in metakeys:
       for meta in metaFCkeys:
