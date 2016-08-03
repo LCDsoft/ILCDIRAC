@@ -36,7 +36,7 @@ class DDSim( DDInterfaceMixin, LCApplication ):
 
   def __init__(self, paramdict = None):
     self.startFrom = 0
-    self.randomSeed = 0
+    self.randomSeed = -1
     self.detectorModel = ''
     super(DDSim, self).__init__( paramdict )
     ##Those 5 need to come after default constructor
