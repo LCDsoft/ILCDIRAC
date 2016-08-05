@@ -63,7 +63,7 @@ def printUsers():
   clip.setURLs()
   
   from DIRAC.Core.Security.VOMSService import VOMSService
-  voms = VOMSService(clip.adminUrl, clip.attributeUrl)
+  voms = VOMSService( vo=clip.voName, adminUrl=clip.adminUrl, attributesUrl=clip.attributeUrl )
   res = voms.admListMembers()
   if not res['OK']:
     gLogger.error(res['Message'])
