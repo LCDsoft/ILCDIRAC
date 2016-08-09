@@ -5,7 +5,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from mock import patch, mock_open, MagicMock as Mock
+from mock import patch, mock_open, call, MagicMock as Mock
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.OverlayInput import OverlayInput
@@ -460,6 +460,98 @@ class TestOverlayExecute( unittest.TestCase ):
     assertDiracSucceedsWith_equals( result, 2948, self )
     fcc_mock.findFilesByMetadata.assert_called_once_with(
       { 'EvtType' : 'ilc_evt_testme', 'ProdID' : 82492, 'Datatype' : 'SIM', 'Machine' : 'ilc' } )
+
+  def test_getfilesfromFC( self ):
+    ops_mock = Mock()
+    ops_mock.getValue.side_effect = [ '1245', 2849, None ]
+    self.over.ops = ops_mock
+    fcc_mock = Mock()
+    fcc_mock.findFilesByMetadata.return_value = S_OK( '1245' )
+    self.over.fcc = fcc_mock
+    self.over.energy = 9842
+    self.over.useEnergyForFileLookup = True
+    self.over.detectormodel = 'myTestDetectorv021'
+    self.over.machine = 'clic_cdr'
+    self.over.detector = 'overlaydetector'
+    assertDiracSucceeds( self.over._OverlayInput__getFilesFromFC(), self )
+    fcc_mock.findFilesByMetadata.assert_called_once_with(
+      { 'Energy' : '9842', 'EvtType' : None, 'Datatype' : 'SIM', 'DetectorModel' : 'myTestDetectorv021',
+        'Machine' : 'clic', 'ProdID' : '1245' } )
+
+  def test_getfilesfromlyon( self ):
+    import subprocess
+    popen_mock = Mock()
+    popen_mock.communicate.side_effect = [ ( 'myfile1\nfile1923\n813tev_collision  ', 'ignoreme' ),
+                                           ( 'file1.stdhep\nsome_other_file', 'ignoreme' ), ( '', 'ignoreme' ),
+                                           ( '\nlast_file.txt', 'ignoreme' ) ]
+    lyon_dict = { 'ProdID' : 121345, 'Energy' : '813', 'EvtType' : 'myTestEvt',
+                  'DetectorType' : 'myTestDetectorv3' }
+    with patch('subprocess.Popen', new=Mock(return_value=popen_mock)) as proc_mock:
+      proc_command_dir = '/ilc/prod/clic/813/myTestEvt/myTestDetectorv3/SIM/00121345/'
+      assertDiracSucceedsWith_equals( self.over._OverlayInput__getFilesFromLyon( lyon_dict ),
+                                      [ proc_command_dir + 'myfile1/file1.stdhep',
+                                        proc_command_dir + 'myfile1/some_other_file',
+                                        proc_command_dir + 'file1923/', proc_command_dir + '813tev_collision/',
+                                        proc_command_dir + '813tev_collision/last_file.txt' ], self )
+      assertEqualsImproved( proc_mock.mock_calls,
+                            [ call( [ 'nsls', proc_command_dir ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + 'myfile1' ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + 'file1923' ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + '813tev_collision' ],
+                                    stdout=subprocess.PIPE ) ], self )
+
+  def test_getfilesfromlyon_ignore_all( self ):
+    import subprocess
+    popen_mock = Mock()
+    popen_mock.communicate.side_effect = [ ( 'mypaths/dirac_directory/some/other/stuff\nmy/dir ', 'ignoreme' ),
+                                           ( 'other_file/dirac_directory', 'ignoreme' ) ]
+    lyon_dict = { 'ProdID' : 121345, 'Energy' : '813', 'EvtType' : 'myTestEvt',
+                  'DetectorType' : 'myTestDetectorv3' }
+    with patch('subprocess.Popen', new=Mock(return_value=popen_mock)) as proc_mock:
+      proc_command_dir = '/ilc/prod/clic/813/myTestEvt/myTestDetectorv3/SIM/00121345/'
+      assertDiracFailsWith( self.over._OverlayInput__getFilesFromLyon( lyon_dict ), 'file list is empty',
+                            self )
+      assertEqualsImproved( proc_mock.mock_calls,
+                            [ call( [ 'nsls', proc_command_dir ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + 'my/dir' ], stdout=subprocess.PIPE ) ], self )
+
+  def test_getfilesfromcastor( self ):
+    self.over.machine = 'testMach12'
+    import subprocess
+    popen_mock = Mock()
+    popen_mock.communicate.side_effect = [ ( 'myfile1\nfile1923\n813tev_collision  ', 'ignoreme' ),
+                                           ( 'file1.stdhep\nsome_other_file', 'ignoreme' ), ( '', 'ignoreme' ),
+                                           ( '\nlast_file.txt', 'ignoreme' ) ]
+    castor_dict = { 'ProdID' : 121345, 'Energy' : '813', 'EvtType' : 'myTestEvt',
+                    'DetectorType' : 'myTestDetectorv3' }
+    with patch('subprocess.Popen', new=Mock(return_value=popen_mock)) as proc_mock:
+      proc_command_dir = '/castor/cern.ch/grid/ilc/prod/testMach12/813/myTestEvt/myTestDetectorv3/SIM/00121345/'
+      assertDiracSucceedsWith_equals( self.over._OverlayInput__getFilesFromCastor( castor_dict ),
+                                      [ proc_command_dir + 'myfile1/file1.stdhep',
+                                        proc_command_dir + 'myfile1/some_other_file',
+                                        proc_command_dir + 'file1923/', proc_command_dir + '813tev_collision/',
+                                        proc_command_dir + '813tev_collision/last_file.txt' ], self )
+      assertEqualsImproved( proc_mock.mock_calls,
+                            [ call( [ 'nsls', proc_command_dir ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + 'myfile1' ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + 'file1923' ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + '813tev_collision' ],
+                                    stdout=subprocess.PIPE ) ], self )
+
+  def test_getfilesfromcastor_ignoreall( self ):
+    import subprocess
+    popen_mock = Mock()
+    popen_mock.communicate.side_effect = [ ( 'mypaths/dirac_directory/some/other/stuff\nmy/dir ', 'ignoreme' ),
+                                           ( 'other_file/dirac_directory', 'ignoreme' ) ]
+    castor_dict = { 'ProdID' : 121345, 'Energy' : '813', 'EvtType' : 'myTestEvt',
+                    'DetectorType' : 'myTestDetectorv3' }
+    with patch('subprocess.Popen', new=Mock(return_value=popen_mock)) as proc_mock:
+      proc_command_dir = '/castor/cern.ch/grid/ilc/prod/clic_cdr/813/myTestEvt/myTestDetectorv3/SIM/00121345/'
+      assertDiracFailsWith( self.over._OverlayInput__getFilesFromCastor( castor_dict ), 'file list is empty',
+                            self )
+      assertEqualsImproved( proc_mock.mock_calls,
+                            [ call( [ 'nsls', proc_command_dir ], stdout=subprocess.PIPE ),
+                              call( [ 'nsls', proc_command_dir + 'my/dir' ], stdout=subprocess.PIPE ) ], self )
 
 def get_castor_lines( expanded_lfn ):
   result = [ [
