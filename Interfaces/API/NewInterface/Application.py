@@ -637,14 +637,14 @@ class Application(object): #pylint: disable=too-many-instance-attributes
     return adict
 
   #############################################################################
-  def _reportError( self, message, name = '', **kwargs ):
+  def _reportError( self, message, short_name = '', **kwargs ):
     """Internal Function. Gets caller method name and arguments, formats the 
        information and adds an error to the global error dictionary to be 
        returned to the user. 
        Stolen from DIRAC Job Class
     """
-    className = name
-    if not name:
+    className = short_name
+    if not short_name:
       className = __name__
     methodName = sys._getframe( 1 ).f_code.co_name
     arguments = []
