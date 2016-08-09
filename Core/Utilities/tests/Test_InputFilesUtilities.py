@@ -10,6 +10,8 @@ from DIRAC import gLogger, S_OK, S_ERROR
 
 __RCSID__ = "$Id$"
 
+MODULE_NAME = 'ILCDIRAC.Core.Utilities.InputFilesUtilities'
+
 class TestgetNumberOfEvents( unittest.TestCase ):
   """tests of getNumberOfEvents"""
   def setUp(self):
@@ -31,7 +33,7 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     fcMock.getDirectoryUserMetadata = Mock(return_value=S_OK({"NumberOfEvents":500}))
     fcMock.getFileUserMetadata = Mock(return_value=S_OK({"NumberOfEvents":500}))
 
-    with patch( "ILCDIRAC.Core.Utilities.InputFilesUtilities.FileCatalogClient", new=Mock(return_value=fcMock)):
+    with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
       res = getNumberOfEvents(self.inputfiles)
     self.assertEqual(res['Value']['nbevts'],1000, res.get("Message",''))
 
@@ -40,7 +42,7 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     fcMock = Mock()
     fcMock.getDirectoryUserMetadata = Mock(return_value=S_OK({"NumberOfEvents":500}))
     fcMock.getFileUserMetadata = Mock(return_value=S_OK({"NumberOfEvents":500}))
-    with patch( "ILCDIRAC.Core.Utilities.InputFilesUtilities.FileCatalogClient", new=Mock(return_value=fcMock)):
+    with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
       res = getNumberOfEvents([self.inputfile])
     self.assertEqual(res['Value']['nbevts'],500, res.get("Message",''))
 
@@ -49,7 +51,7 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     fcMock = Mock()
     fcMock.getDirectoryUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     fcMock.getFileUserMetadata = Mock(return_value=S_ERROR("No Such File"))
-    with patch( "ILCDIRAC.Core.Utilities.InputFilesUtilities.FileCatalogClient", new=Mock(return_value=fcMock)):
+    with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
       res = getNumberOfEvents(['/no/such/file'])
     self.assertFalse(res['OK'], res.get("Message",''))
 
@@ -58,7 +60,7 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     fcMock = Mock()
     fcMock.getDirectoryUserMetadata = Mock(return_value=S_ERROR("No Such File"))
     fcMock.getFileUserMetadata = Mock(return_value=S_ERROR("No Such File"))
-    with patch( "ILCDIRAC.Core.Utilities.InputFilesUtilities.FileCatalogClient", new=Mock(return_value=fcMock)):
+    with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
       res = getNumberOfEvents(['/no/such/file', '/no/such2/file2'])
     self.assertFalse(res['OK'], res.get("Message",''))
 
