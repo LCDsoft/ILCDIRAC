@@ -112,8 +112,8 @@ class AppTestCase( unittest.TestCase ):
   def test_setters( self ):
     self.app.setSteeringFile( '/nonexistant/dir/mysteerfile')
     self.assertFalse( self.app.inputSB )
-    self.app.setSteeringFile( 'lfn://mydir/mysteerfile')
-    assertEqualsImproved( self.app.inputSB, [ 'lfn://mydir/mysteerfile' ], self )
+    self.app.setSteeringFile( 'lfn:/mydir/mysteerfile')
+    assertEqualsImproved( self.app.inputSB, [ 'lfn:/mydir/mysteerfile' ], self )
     self.app.proparameters = {}
     self.app.detectortype = 'mytestdetector'
     self.app.datatype = 'mytestdatatype'
@@ -125,11 +125,11 @@ class AppTestCase( unittest.TestCase ):
     self.app.inputSB = []
     assertDiracFailsWith( self.app.setInputFile( True ),
                           'Problem with ILCDIRAC.Interfaces.API.NewInterface.Application.setInputFile', self )
-    self.app.setInputFile( 'lfn://mydir/input.file' )
-    assertEqualsImproved( self.app.inputSB, [ 'lfn://mydir/input.file' ], self )
+    self.app.setInputFile( 'lfn:/mydir/input.file' )
+    assertEqualsImproved( self.app.inputSB, [ 'lfn:/mydir/input.file' ], self )
     self.app.inputSB = []
-    self.app.setInputFile( [ '/invalid/dir/myfile.txt', 'lfn://valid/dir/myfile.txt' ] )
-    assertEqualsImproved( self.app.inputSB, [ 'lfn://valid/dir/myfile.txt' ], self )
+    self.app.setInputFile( [ '/invalid/dir/myfile.txt', 'lfn:/valid/dir/myfile.txt' ] )
+    assertEqualsImproved( self.app.inputSB, [ 'lfn:/valid/dir/myfile.txt' ], self )
 
   def test_private_methods( self ):
     with patch.object(self.app, '_applicationModule', new=Mock(return_value=Mock())) as module_mock:

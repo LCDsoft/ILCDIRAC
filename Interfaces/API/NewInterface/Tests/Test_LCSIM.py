@@ -64,10 +64,10 @@ class LCSIMTestCase( unittest.TestCase ):
 
   def test_setaliasproperties_lfn( self ):
     with patch('os.path.exists', new=Mock(return_value=False)):
-      self.lcs.setAliasProperties( 'LFN://myAlias.Properties.Test' )
-    assertEqualsImproved( self.lcs.aliasProperties, 'LFN://myAlias.Properties.Test', self )
+      self.lcs.setAliasProperties( 'LFN:/myAlias.Properties.Test' )
+    assertEqualsImproved( self.lcs.aliasProperties, 'LFN:/myAlias.Properties.Test', self )
     self.assertFalse( self.lcs._errorDict )
-    assertEqualsImproved( self.lcs.inputSB, [ 'LFN://myAlias.Properties.Test' ], self )
+    assertEqualsImproved( self.lcs.inputSB, [ 'LFN:/myAlias.Properties.Test' ], self )
 
   def test_setdetectormodel( self ):
     with patch('os.path.exists', new=Mock(return_value=False)):
@@ -85,10 +85,10 @@ class LCSIMTestCase( unittest.TestCase ):
 
   def test_setdetectormodel_lfn( self ):
     with patch('os.path.exists', new=Mock(return_value=False)):
-      self.lcs.setDetectorModel( 'LFN://dir/other_dir/DetectorTestmeModel.ilc' )
-    assertEqualsImproved( self.lcs.detectorModel, 'LFN://dir/other_dir/DetectorTestmeModel.ilc', self )
+      self.lcs.setDetectorModel( 'LFN:/dir/other_dir/DetectorTestmeModel.ilc' )
+    assertEqualsImproved( self.lcs.detectorModel, 'LFN:/dir/other_dir/DetectorTestmeModel.ilc', self )
     self.assertFalse( self.lcs._errorDict )
-    assertEqualsImproved( self.lcs.inputSB, [ 'LFN://dir/other_dir/DetectorTestmeModel.ilc' ], self )
+    assertEqualsImproved( self.lcs.inputSB, [ 'LFN:/dir/other_dir/DetectorTestmeModel.ilc' ], self )
 
   def test_settrackingstrategy( self ):
     with patch('os.path.exists', new=Mock(return_value=False)):
@@ -106,10 +106,10 @@ class LCSIMTestCase( unittest.TestCase ):
 
   def test_settrackingstrategy_lfn( self ):
     with patch('os.path.exists', new=Mock(return_value=False)):
-      self.lcs.setTrackingStrategy( 'LFN://my/track/strat.txt' )
-    assertEqualsImproved( self.lcs.trackingStrategy, 'LFN://my/track/strat.txt', self )
+      self.lcs.setTrackingStrategy( 'LFN:/my/track/strat.txt' )
+    assertEqualsImproved( self.lcs.trackingStrategy, 'LFN:/my/track/strat.txt', self )
     self.assertFalse( self.lcs._errorDict )
-    assertEqualsImproved( self.lcs.inputSB, [ 'LFN://my/track/strat.txt' ], self )
+    assertEqualsImproved( self.lcs.inputSB, [ 'LFN:/my/track/strat.txt' ], self )
 
   def test_setextraparams( self ):
     self.assertFalse( self.lcs.willBeCut )
@@ -222,7 +222,7 @@ class LCSIMTestCase( unittest.TestCase ):
     import inspect
     self.lcs.version = 'v2.4'
     self.lcs.steeringFile = ''
-    self.lcs.trackingStrategy = 'lfn://myTestStrat'
+    self.lcs.trackingStrategy = 'lfn:/myTestStrat'
     self.lcs.detectorModel = 'correctDetector.zip'
     self.lcs._jobtype = 'notUser'
     self.lcs._listofoutput = []
@@ -243,5 +243,5 @@ class LCSIMTestCase( unittest.TestCase ):
       assertEqualsImproved( self.lcs._listofoutput, expected_output_list, self )
       prodparam_dict = self.lcs.prodparameters
       assertEqualsImproved( ( prodparam_dict['detectorType'], prodparam_dict['lcsim_steeringfile'],
-                              prodparam_dict['lcsim_trackingstrategy'] ), ( 'SID' , '', 'lfn://myTestStrat' ),
+                              prodparam_dict['lcsim_trackingstrategy'] ), ( 'SID' , '', 'lfn:/myTestStrat' ),
                             self  )

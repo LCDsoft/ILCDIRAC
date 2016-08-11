@@ -27,12 +27,12 @@ class GenericAppTestCase( unittest.TestCase ):
 
   def test_setters( self ):
     self.assertFalse( self.gapp._errorDict )
-    assertDiracSucceeds( self.gapp.setScript( 'lfn://my/script.sh'), self )
+    assertDiracSucceeds( self.gapp.setScript( 'lfn:/my/script.sh'), self )
     assertDiracSucceeds( self.gapp.setArguments( 'arg1 arg2 -t arg3 /h?' ), self )
     assertDiracSucceeds( self.gapp.setDependency( { 'mylibrary' : 'v1.0test', 'mokka' : 'v1002' } ), self )
     self.assertFalse( self.gapp._errorDict )
     assertEqualsImproved( ( self.gapp.script, self.gapp.inputSB, self.gapp.arguments, self.gapp.dependencies ),
-                          ( 'lfn://my/script.sh', [ 'lfn://my/script.sh' ], 'arg1 arg2 -t arg3 /h?',
+                          ( 'lfn:/my/script.sh', [ 'lfn:/my/script.sh' ], 'arg1 arg2 -t arg3 /h?',
                             { 'mylibrary' : 'v1.0test', 'mokka' : 'v1002' } ), self )
 
   def test_setters_typeerrors( self ):
@@ -96,7 +96,7 @@ class GenericAppTestCase( unittest.TestCase ):
                                                               call( 'other_library','v100testme' ) ], self )
 
   def test_checkconsistency( self ):
-    self.gapp.script = 'lfn://totally/valid/path.sh'
+    self.gapp.script = 'lfn:/totally/valid/path.sh'
     assertDiracSucceeds( self.gapp._checkConsistency(), self )
 
   def test_checkconsistency_noscript( self ):
