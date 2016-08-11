@@ -257,7 +257,6 @@ class InternalJobTestCase( unittest.TestCase ):
     self.job.indirection_for_checkArgs( 246, types.ListType )
     self.assertTrue( self.job.errorDict )
 
-  @unittest.skip( 'Currently doesnt work. The desired error is recognized but execution continues and KeyError is thrown' )
   def test_checkargs_9( self ):
     self.job.indirection_2_for_checkArgs( 1, types.IntType )
     self.assertTrue( self.job.errorDict )
