@@ -195,11 +195,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     DIRAC.exit = abort_test
-    try:
+    with self.assertRaises( KeyboardInterrupt ) as ki:
       self.prol.uploadProcessListToFileCatalog( 'asd', 'v1' )
-      self.fail()
-    except KeyboardInterrupt as ki:
-      assertEqualsImproved( ki.args, ( 'abort_my_test', ), self )
+    key_interrupt = ki.exception
+    assertEqualsImproved( key_interrupt.args, ( 'abort_my_test', ), self )
     DIRAC.gConfig = backup_conf
 
   def test_uploadproclist_upload_fails( self ):
@@ -218,11 +217,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     DIRAC.exit = abort_test
-    try:
+    with self.assertRaises( KeyboardInterrupt ) as ki:
       self.prol.uploadProcessListToFileCatalog( 'asd', 'v1' )
-      self.fail()
-    except KeyboardInterrupt as ki:
-      assertEqualsImproved( ki.args, ( 'abort_my_test', ), self )
+    key_interrupt = ki.exception
+    assertEqualsImproved( key_interrupt.args, ( 'abort_my_test', ), self )
     DIRAC.gConfig = backup_conf
 
   def test_uploadproclist_copy_and_commit_fail( self ):
