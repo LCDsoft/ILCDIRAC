@@ -681,6 +681,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
         self.moba.generateFailoverFile()
         assertEqualsImproved( re.value, 'test_tojsonerror', self )
 
+#TODO Fix this/remove tests?
   def test_redirectlogoutput( self ):
     self.moba.eventstring = None
     log_mock = Mock()

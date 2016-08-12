@@ -76,6 +76,7 @@ class TestPrepareLibs( unittest.TestCase ):
       assertEqualsImproved( len( getcwd_mock.mock_calls ), 2, self )
 
   def test_main( self ):
+    backup_sys = sys.modules['sys']
     sys_mock = Mock()
     sys_mock.argv = [ 'something', 'myothertestpath' ]
     sys.modules['sys'] = sys_mock
@@ -84,8 +85,10 @@ class TestPrepareLibs( unittest.TestCase ):
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
       assertEqualsImproved( main(), 0, self )
+    sys.modules['sys'] = backup_sys
 
   def test_main_no_args( self ):
+    backup_sys = sys.modules['sys']
     sys_mock = Mock()
     sys_mock.argv = [ 'something' ]
     sys.modules['sys'] = sys_mock
@@ -94,8 +97,10 @@ class TestPrepareLibs( unittest.TestCase ):
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
       assertEqualsImproved( main(), 1, self )
+    sys.modules['sys'] = backup_sys
 
   def test_main_remove_fails( self ):
+    backup_sys = sys.modules['sys']
     sys_mock = Mock()
     sys_mock.argv = [ 'something', 'myothertestpath' ]
     sys.modules['sys'] = sys_mock
@@ -104,4 +109,4 @@ class TestPrepareLibs( unittest.TestCase ):
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError( 'test_cannot_remove_os_err' )) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
       assertEqualsImproved( main(), 1, self )
-
+    sys.modules['sys'] = backup_sys

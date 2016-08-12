@@ -12,6 +12,8 @@ import unittest
 import os
 import pwd
 from mock import patch, MagicMock as Mock
+
+import pytest
 from DIRAC import S_OK
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds, running_on_docker
 #from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
@@ -21,6 +23,7 @@ __RCSID__ = "$Id$"
 MODULEBASE_NAME = 'ILCDIRAC.Workflow.Modules.ModuleBase'
 USERJOB_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.UserJob'
 
+@pytest.mark.integration
 class JobTestCase( unittest.TestCase ):
   """ Base class for the ProductionJob test cases
   """

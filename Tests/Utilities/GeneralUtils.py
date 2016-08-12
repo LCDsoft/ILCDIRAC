@@ -13,7 +13,7 @@ def assertEqualsImproved( val1, val2, assertobject ):
   :param T val2: Second value, compared to val1
   :param TestCase assertobject: Testcase object, used to gain the base assertEquals method.
   """
-  assertobject.assertEquals( val1, val2, "Test expected these values to be the same, but they were not!\n First value = %s,\n Second value = %s" % (repr(val1), repr(val2)) )
+  assertobject.assertEquals( val1, val2, "Test expected these values to be the same, but they were not!\n First value    = %s,\n Second value   = %s" % (repr(val1), repr(val2)) )
 
 def assertInImproved( val1, val2, assertobject ):
   """Asserts that val1 is contained in val2 and automatically generates a meaningful error message. Only disadvantage is that you have to check 1 method up in the stacktrace.
@@ -44,6 +44,15 @@ def assertEqualsXmlTree( root1, root2, assertobject):
     child2 = root2.find( child1.tag )
     assert child2 is not None
     assertEqualsXmlTree( child1, child2, assertobject )
+
+def assertContentEqualsList( list1, list2, assertobject ):
+  """Asserts that two lists contain the same elements, regardless of order, else a useful debug message is returned
+  Checks if both list have the same length first, then checks if each element of one list  is contained in the
+  other list.
+  """
+  assertEqualsImproved( len(list1), len(list2), assertobject )
+  for elem1 in list1:
+    assertInImproved( elem1, list2, assertobject )
 
 def assertDiracFailsWith( result, errorstring, assertobject):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).

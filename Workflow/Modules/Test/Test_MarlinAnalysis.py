@@ -370,25 +370,25 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
       mock_copy.assert_called_with('testdir/PandoraSettings.xml',
                                    '%s/PandoraSettings.xml' % os.getcwd())
 
-  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123')))
-  @patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles")))
-  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, True, True, True, True]))
-  @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
-  @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
-  @patch("%s.MarlinAnalysis.runMarlin" % MODULE_NAME, new=Mock(return_value=S_OK([""])))
-  @patch("%s.shutil.copy" % MODULE_NAME)
-  @patch("%s.MarlinAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("someDetector.xml")))
-  def test_runit_complete_dd( self, mock_copy ):
+  def test_runit_complete_dd( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
     self.marAna.stepStatus = S_OK()
     self.marAna.workflowStatus = S_OK()
     self.marAna.detectorModel = "someDetector.xml"
-    result = self.marAna.runIt()
-    assertDiracSucceeds( result, self )
-    mock_copy.assert_called_with('testdir/PandoraSettings.xml',
-                                 '%s/PandoraSettings.xml' % os.getcwd())
+    with patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))), \
+         patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
+         patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
+         patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, True, True, True, True])), \
+         patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
+         patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
+         patch("%s.MarlinAnalysis.runMarlin" % MODULE_NAME, new=Mock(return_value=S_OK([""]))), \
+         patch("%s.shutil.copy" % MODULE_NAME) as mock_copy, \
+         patch("%s.MarlinAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("someDetector.xml"))):
+      result = self.marAna.runIt()
+      assertDiracSucceeds( result, self )
+      mock_copy.assert_called_with('testdir/PandoraSettings.xml',
+                                   '%s/PandoraSettings.xml' % os.getcwd())
 
   @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_ERROR('')))
   def test_getenvscript_getsoftwarefolderfails( self ):

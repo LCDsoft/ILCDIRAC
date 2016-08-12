@@ -184,73 +184,76 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
 </marlin>      
     """
 
+  def setUp( self ):
+    self.dep1 = { 'app' : True, 'version' : True }
+    self.dep2 = { 'app' : True, 'version' : True }
+    self.dep3 = { 'app' : True, 'version' : True }
 
-  dep1 = { 'app' : True, 'version' : True }
-  dep2 = { 'app' : True, 'version' : True }
-  dep3 = { 'app' : True, 'version' : True }
-
-  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('aFolder'), S_OK('bFolder')]))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True]))
-  @patch("%s.removeLibc" % MODULE_NAME)
-  def test_getnewldlibs_cornercase( self, mock_removelibc ):
+  def test_getnewldlibs_cornercase( self ):
     # TODO: Understand method: Currently this method ignores every library path except the last one in the list and just ignores if getSoftwareFolder fails
     reference = os.environ.get('LD_LIBRARY_PATH', '')
-    mock_removelibc.return_value=True
     if 'LD_LIBRARY_PATH' in os.environ:
-      result = PrepareOptionFiles.getNewLDLibs(None, None, None)
+      with patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('aFolder'), S_OK('bFolder')])), \
+           patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2, self.dep3])), \
+           patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True])), \
+           patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)) as mock_removelibc:
+        result = PrepareOptionFiles.getNewLDLibs(None, None, None)
     else:
-      with patch.dict('os.environ', { 'LD_LIBRARY_PATH' : '' }):
+      with patch.dict('os.environ', { 'LD_LIBRARY_PATH' : '' }), \
+           patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('aFolder'), S_OK('bFolder')])), \
+           patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2, self.dep3])), \
+           patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True])), \
+           patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)) as mock_removelibc:
         result = PrepareOptionFiles.getNewLDLibs(None, None, None)
     self.assertEquals("%s:%s" % ('bFolder/LDLibs', reference), result)
     mock_removelibc.assert_any_call("aFolder/lib")
     mock_removelibc.assert_any_call("bFolder/LDLibs")
 
-  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, False, False, False]))
-  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewldlibs_nochange( self ):
     reference = os.environ.get('LD_LIBRARY_PATH', '')
-    self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None,
+    with patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')])), \
+         patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2, self.dep3])), \
+         patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, False, False, False])), \
+         patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)):
+      self.assertEquals(reference, PrepareOptionFiles.getNewLDLibs(None, None,
                                                                  None))
 
-  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('basetest'), S_ERROR()]))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, False]))
-  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.os.environ" % MODULE_NAME, {})
   def test_getnewldlibs_noldlibpath( self ):
-    self.assertEquals('basetest/lib', PrepareOptionFiles.getNewLDLibs(None,
-                                                                      None,
-                                                                      None))
+    with patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('basetest'), S_ERROR()])), \
+         patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2, self.dep3])), \
+         patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, False])), \
+         patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)), \
+         patch("%s.os.environ" % MODULE_NAME, {}):
+      self.assertEquals('basetest/lib', PrepareOptionFiles.getNewLDLibs(None,
+                                                                        None,
+                                                                        None))
 
-  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2]))
-  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('bFolder')]))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True]))
-  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewpath_cornercase( self ):
     # TODO: Understand method: Currently this method ignores every path except the last one in the list and just ignores if getSoftwareFolder fails
     reference = os.environ['PATH']
-    self.assertEquals("%s:%s" % ('bFolder/bin', reference),
-                      PrepareOptionFiles.getNewPATH(None, None, None))
+    with patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK('bFolder')])), \
+         patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2])), \
+         patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False, False, True])), \
+         patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)):
+      self.assertEquals( "%s:%s" % ('bFolder/bin', reference),
+                         PrepareOptionFiles.getNewPATH(None, None, None))
 
-  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')]))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, False]))
-  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
   def test_getnewpath_nochange( self ):
     reference = os.environ['PATH']
-    self.assertEquals(reference, PrepareOptionFiles.getNewPATH(None, None, None))
+    with patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK(''), S_OK('')])), \
+         patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2, self.dep3])), \
+         patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, False])), \
+         patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)):
+      self.assertEquals(reference, PrepareOptionFiles.getNewPATH(None, None, None))
 
-  @patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[dep1, dep2, dep3]))
-  @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK("testfolder"), S_ERROR()]))
-  @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False]))
-  @patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.os.environ" % MODULE_NAME, {})
   def test_getnewpath_nokey( self ):
-    self.assertEquals("testfolder/bin",
-                      PrepareOptionFiles.getNewPATH(None, None, None))
+    with patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(side_effect=[S_ERROR(), S_OK("testfolder"), S_ERROR()])), \
+         patch("%s.resolveDeps" % MODULE_NAME, new=Mock(return_value=[self.dep1, self.dep2, self.dep3])), \
+         patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[True, False])), \
+         patch("%s.removeLibc" % MODULE_NAME, new=Mock(return_value=True)), \
+         patch("%s.os.environ" % MODULE_NAME, {}):
+      self.assertEquals( "testfolder/bin",
+                         PrepareOptionFiles.getNewPATH(None, None, None) )
 
   def test_prepareWhizFile( self ):
     file_contents = [ [ 'asdseed123', '314s.sqrtsfe89u', 'n_events143417',

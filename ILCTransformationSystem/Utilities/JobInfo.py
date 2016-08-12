@@ -1,7 +1,6 @@
 """Job Information"""
 
 from itertools import izip_longest
-import re
 
 __RCSID__ = "$Id$"
 
@@ -64,12 +63,12 @@ class JobInfo( object ):
     """check if some files are missing and therefore some files exist """
     return not ( self.allFilesExist() or self.allFilesMissing() )
   
-  def getJobInformation( self, jobMon ):
+  def getJobInformation( self, dILC ):
     """get all the information for the job"""
-    jdlList = self.__getJDL( jobMon )
-    self.__getOutputFiles( jdlList )
-    self.__getTaskID( jdlList )
-    self.__getInputFile( jdlList )
+    jdlParameters = self.__getJDL( dILC )
+    self.__getOutputFiles( jdlParameters )
+    self.__getTaskID( jdlParameters )
+    self.__getInputFile( jdlParameters )
 
   def getTaskInfo( self, tasksDict, lfnTaskDict ):
     """extract the task information from the taskDict"""
@@ -117,77 +116,39 @@ class JobInfo( object ):
       request = result['Value']['Successful'][self.jobID]
       self.pendingRequest = request.Status not in ("Done","Canceled")
     
-  def __getJDL( self, jobMon ):
-    """return jdlList for this job"""
-    res = jobMon.getJobJDL(int(self.jobID), False)
+  def __getJDL( self, dILC ):
+    """return jdlParameterDictionary for this job"""
+    res = dILC.getJobJDL( int(self.jobID) )
     if not res['OK']:
       raise RuntimeError( "Failed to get jobJDL: %s" % res['Message'] )
-    jdlString = res['Value']
-    jdlList = jdlString.split('\n')
-    return jdlList
+    jdlParameters = res['Value']
+    return jdlParameters
 
-  def __getOutputFiles( self, jdlList ):
+  def __getOutputFiles( self, jdlParameters ):
     """get the Production Outputfiles for the given Job"""
-    if 'ProductionOutputData = "' in "".join(jdlList):
-      lfns = JobInfo.__getSingleLFN( jdlList )
-    else:
-      lfns = JobInfo.__getMultiLFN(jdlList)
+    lfns = jdlParameters.get( 'ProductionOutputData', [] )
+    if isinstance( lfns, basestring ):
+      lfns = [ lfns ]
     self.outputFiles = lfns
     
-  def __getInputFile( self, jdlList ):
+  def __getInputFile( self, jdlParameters ):
     """get the Inputdata for the given job"""
-    for val in jdlList:
-      if 'InputData' in val:
-        lfn = re.search('".*"', val)
-        lfn = lfn.group(0).strip('"')
-        self.inputFile = lfn
-        
-  def __getTaskID( self, jdlList ):
-    """get the taskID """
-    for val in jdlList:
-      if 'TaskID' in val:
-        try:
-          self.taskID = int(val.strip(";").split("=")[1].strip(' "'))
-        except ValueError:
-          print "*"*80
-          print "ERROR"
-          print val
-          print self
-          print "*"*80
-          raise
-        break
-    
-    
-  @staticmethod
-  def __getSingleLFN(jdlList):
-    """get the only productionOutputData LFN from the jdlString"""
-    for val in jdlList:
-      if 'ProductionOutputData' in val:
-        lfn = re.search('".*"', val)
-        lfn = lfn.group(0).strip('"')
-        return [lfn]
-    return []
+    lfn = jdlParameters.get( 'InputData', None )
+    self.inputFile = lfn
 
-  @staticmethod
-  def __getMultiLFN( jdlList ):
-    """ get multiple outputfiles """
-    lfns = []
-    counter = 0
-    getEm = False
-    for val in jdlList:
-      if 'ProductionOutputData' in val:
-        counter += 1
-        continue
-      if counter == 1 and '{' in val:
-        getEm = True
-        continue
-      if '}' in val and getEm:
-        break
-      if getEm:
-        lfn = re.search('".*"', val)
-        lfn = lfn.group(0).strip('"')
-        lfns.append(lfn)
-    return lfns
+  def __getTaskID( self, jdlParameters ):
+    """get the taskID """
+    if 'TaskID' not in jdlParameters:
+      return
+    try:
+      self.taskID = int(jdlParameters.get( 'TaskID', None ))
+    except ValueError:
+      print "*"*80
+      print "ERROR"
+      print jdlParameters.get( 'TaskID', None )
+      print self
+      print "*"*80
+      raise
 
   def setJobDone( self , tInfo ):
     """mark job as done in wms and transformationsystem"""

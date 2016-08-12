@@ -1,31 +1,54 @@
+[v26r0p2]
+
+* Core:
+
+NEW: More Unite tests
+NEW: Based on DIRAC v6r15p12 (-alpha?) Fixe for ILCDIRAC-703
+
+FIX: `dirac-ilc-list-users` needed to be adapted for interface change in `VOMSService`, ILCDIRAC-702
+
+* ILCTransformationSystem:
+
+FIX: DataRecoveryAgent using DiraAPI getJobJDL function to get dictionary of JDLs, ILCDIRAC-705
+
+* Interfaces:
+
+FIX: Fix exception in internal `_reportError` function when function argument is 'name'
+
+[v26r0p1]
+
+* Core:
+
+NEW: Based on DIRAC v6r15p11 (-alpha) to solve a problem with accessing files on RAL
+
 [v26r0]
 
-Core:
+* Core:
 
 NEW: Based on DIRAC v6r15p10
 NEW: Many unittests for Utilities and other modules
 CHANGE: Removed obsolete modules
 
-Workflow:
+* Workflow:
 
 FIX: DDSim randomSeed will be set to the jobID by default
 
-Interfaces:
+* Interfaces:
 
 FIX: ILDProductionJob code cleaned and some bugs fixed, ILCDIRAC-641
 FIX: Some more errors from application configurations will now be reported before submission
 
-Utilities:
+* Utilities:
 
 FIX: Clean code in CombinedSoftwareInstallation. Unnecessary call to os.path.join.
 FIX: PrepareLibs refactored
 FIX: PrepareOption files refactored for better maintanability
 
-Resources:
+* Resources:
 
 CHANGE: Go back to XROOTStorage from DIRAC
 
-ILCTransformationSystem:
+* ILCTransformationSystem:
 
 NEW: Add script to create "moving" transformations. Moving files from one SE to another (replicate and the remove replica)
 
