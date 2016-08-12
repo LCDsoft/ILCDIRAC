@@ -1,3 +1,26 @@
+[v26r0p2]
+
+* Core:
+
+NEW: More Unite tests
+NEW: Based on DIRAC v6r15p12 (-alpha?) Fixe for ILCDIRAC-703
+
+FIX: `dirac-ilc-list-users` needed to be adapted for interface change in `VOMSService`, ILCDIRAC-702
+
+* ILCTransformationSystem:
+
+FIX: DataRecoveryAgent using DiraAPI getJobJDL function to get dictionary of JDLs, ILCDIRAC-705
+
+* Interfaces:
+
+FIX: Fix exception in internal `_reportError` function when function argument is 'name'
+
+[v26r0p1]
+
+* Core:
+
+NEW: Based on DIRAC v6r15p11 (-alpha) to solve a problem with accessing files on RAL
+
 [v26r0]
 
 * Core:
