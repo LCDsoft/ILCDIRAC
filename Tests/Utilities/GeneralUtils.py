@@ -54,6 +54,14 @@ def assertContentEqualsList( list1, list2, assertobject ):
   for elem1 in list1:
     assertInImproved( elem1, list2, assertobject )
 
+def assertDiracFails( result, assertobject):
+  """Asserts that result, which is the return value of a dirac method call, is an S_ERROR.
+
+  :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertobject.assertFalse( result['OK'] )
+
 def assertDiracFailsWith( result, errorstring, assertobject):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).
 
