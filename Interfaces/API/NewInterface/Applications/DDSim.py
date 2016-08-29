@@ -113,8 +113,10 @@ class DDSim( DDInterfaceMixin, LCApplication ):
                                  "outputDataSE":'@{OutputSE}'})
 
       self.prodparameters['detectorType'] = self.detectortype
-      if self.detectorModel:
-        self.prodparameters['slic_detectormodel'] = self.detectorModel
+      #FIXME: Delete old code, detectorModel is checked for False already
+      #if self.detectorModel:
+        #self.prodparameters['slic_detectormodel'] = self.detectorModel
+      self.prodparameters['slic_detectormodel'] = self.detectorModel
 
     if not self.startFrom :
       self._log.info('No startFrom defined for DDSim : start from the beginning')
