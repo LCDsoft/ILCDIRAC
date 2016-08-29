@@ -164,11 +164,12 @@ class Marlin( DDInterfaceMixin, LCApplication ):
       return S_ERROR('Version not set!')
 
     if self.steeringFile:
-      if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
-        #res = Exists(self.SteeringFile)
-        res = S_OK()
-        if not res['OK']:
-          return res
+      #FIXME: delete dead code
+      #if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
+        ##res = Exists(self.SteeringFile)
+        #res = S_OK()
+        #if not res['OK']:
+          #return res
       if os.path.exists(self.steeringFile):
         res = checkXMLValidity(self.steeringFile)
         if not res['OK']:
@@ -176,12 +177,13 @@ class Marlin( DDInterfaceMixin, LCApplication ):
 
     if not self.gearFile :
       self._log.info('GEAR file not given, will not use any gear file')
-    if self.gearFile:
-      if not os.path.exists(self.gearFile) and not self.gearFile.lower().count("lfn:"):
-        #res = Exists(self.gearFile)
-        res = S_OK()
-        if not res['OK']:
-          return res
+    #FIXME: delete dead code
+    #if self.gearFile:
+      #if not os.path.exists(self.gearFile) and not self.gearFile.lower().count("lfn:"):
+        ##res = Exists(self.gearFile)
+        #res = S_OK()
+        #if not res['OK']:
+          #return res
 
     if self._jobtype != 'User':
       if not self.outputFile:

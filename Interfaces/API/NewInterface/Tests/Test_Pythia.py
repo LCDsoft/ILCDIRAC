@@ -24,9 +24,6 @@ class PythiaTestCase( unittest.TestCase ):
     """set up the objects"""
     self.pyt = Pythia( {} )
 
-  def test_something( self ):
-    pass
-
   def test_userjobmodules( self ):
     module_mock = Mock()
     assertDiracSucceeds( self.pyt._userjobmodules( module_mock ), self )
