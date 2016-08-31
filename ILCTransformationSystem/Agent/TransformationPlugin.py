@@ -3,6 +3,7 @@ Sub class of TransformationPlugin to allow for extending the ILD sim jobs
 """
 
 from DIRAC.TransformationSystem.Agent.TransformationPlugin import TransformationPlugin as DTP
+from DIRAC.Core.Utilities.List import breakListIntoChunks
 from DIRAC import S_OK, S_ERROR
 
 class TransformationPlugin(DTP):
@@ -82,3 +83,33 @@ class TransformationPlugin(DTP):
         break
     return S_OK( newTasks )
     
+  def _BroadcastProcessed( self ):
+    """ this plug-in only creates tasks for files which have descendents
+    """
+    inputFiles = self.data
+    self.util.logInfo( "Number of input files before selection: %d " % len( inputFiles ) )
+
+    ## query only a maximum of 200 files in one go
+    inputFileLists = breakListIntoChunks( inputFiles.keys(), 200 )
+
+    for ifList in inputFileLists:
+      resDesc = self.util.fc.getFileDescendents( ifList, depths=1 )
+      self.util.logDebug( "Result from getFileDescendents: %s " % resDesc )
+      if not resDesc['OK']:
+        return resDesc
+      descendents = resDesc['Value']
+
+      for lfn in ifList:
+        if lfn not in descendents['Successful']:
+          self.util.logDebug( "Removed: %s, not in succesful " % lfn )
+          inputFiles.pop( lfn, None )
+        elif not descendents['Successful'][lfn]:
+          self.util.logDebug( "Removed: %s no descendents" % lfn )
+          inputFiles.pop( lfn, None )
+
+      self.util.logWarn( "Failed getDescendents: %s " % descendents['Failed'] )
+
+    self.util.logInfo( "Number of input files after selection: %d " % len( inputFiles ) )
+
+    self.data = inputFiles
+    return self._Broadcast()
