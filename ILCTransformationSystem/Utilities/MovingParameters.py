@@ -16,6 +16,7 @@ class Params(object):
     self.datatype = None
     self.errorMessages = []
     self.extraname = ''
+    self.forcemoving = False
 
   def setProdID(self,prodID):
     self.prodID = prodID
@@ -41,6 +42,10 @@ class Params(object):
     self.extraname = extraname
     return S_OK()
 
+  def setForcemoving(self, _forcemoving):
+    self.forcemoving = True
+    return S_OK()
+
   def registerSwitches(self, script):
     """ register command line arguments
 
@@ -48,7 +53,8 @@ class Params(object):
     """
 
     script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
-    script.setUsageMessage("""%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName""" % script.scriptName)
+    script.registerSwitch("F", "Forcemoving", "Move GEN or SIM files even if they do not have descendents", self.setForcemoving)
+    script.setUsageMessage("""%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F]""" % script.scriptName)
 
   def checkSettings(self, script):
     """check if all required parameters are set, print error message and return S_ERROR if not"""
@@ -61,7 +67,6 @@ class Params(object):
       self.setTargetSE( args[1] )
       self.setSourceSE( args[2] )
       self.setDatatype( args[3] )
-
     from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkAndGetProdProxy
     ret = checkAndGetProdProxy()
     if not ret['OK']:
