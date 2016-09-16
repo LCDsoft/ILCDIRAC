@@ -86,6 +86,11 @@ class TransformationPlugin(DTP):
   def _BroadcastProcessed( self ):
     """ this plug-in only creates tasks for files which have descendents
     """
+    transformationStatus = self.params['Status']
+    if transformationStatus in ('Flush', ):
+      self.util.logInfo( "Flushing transformation, passing all files on" )
+      return self._Broadcast()
+
     inputFiles = self.data
     self.util.logInfo( "Number of input files before selection: %d " % len( inputFiles ) )
 
