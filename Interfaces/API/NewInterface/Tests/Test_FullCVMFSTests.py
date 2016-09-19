@@ -72,7 +72,7 @@ class JobTestCase( unittest.TestCase ):
                           gearFile='GearOutput.xml',
                           lcsimPreSteeringFile=myLCSimPreSteeringFile,
                           lcsimPostSteeringFile=myLCSimPostSteeringFile,
-                          ddsimVersion="ILCSoft-01-17-09",
+                          ddsimVersion="ILCSoft-2016-09-12_gcc48",
                           ddsimDetectorModel="CLIC_o2_v03",
                           ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep",
                           inputFilesPath = 'LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',

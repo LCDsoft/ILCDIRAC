@@ -493,7 +493,7 @@ class TestCreater(object):
     myjob.setPlatform("x86_64-slc5-gcc43-opt")
     myjob.setOutputSandbox(["*.log","*.xml", "*.sh"])
     myjob._addParameter( myjob.workflow, 'TestFailover', 'String', True, 'Test failoverRequest')
-    myjob._addParameter( myjob.workflow, 'Platform', 'String', "x86_64-slc5-gcc43-opt", 'Test failoverRequest')
+    myjob._addParameter( myjob.workflow, 'Platform', 'JDL', "x86_64-slc5-gcc43-opt", 'OS Platform')
     if self.ildConfig:
       myjob.setILDConfig(self.ildConfig)
     return myjob
