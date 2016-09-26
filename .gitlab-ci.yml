@@ -61,7 +61,7 @@ cvmfstests7:
   stage: test
   tags:
     - docker
-  image: ilcdirac/cc7-base
+  image: ilcdirac/cc7-extra
   script:
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
@@ -104,7 +104,7 @@ setests7:
   stage: test
   tags:
     - docker
-  image: ilcdirac/cc7-base
+  image: ilcdirac/cc7-extra
   script:
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
