@@ -689,7 +689,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput( 1, 'mytestmessage' ) )
-      if print_mock.getvalue() not in [ 'mytestmessage\n', '' ]:
+      #if print_mock.getvalue() not in [ 'mytestmessage\n', '' ]:
+      if print_mock.getvalue() not in [ 'mytestmessage\n' ]:
         self.fail( 'Suitable output not found' )
       self.assertFalse( open_mock.called )
       assertEqualsImproved( self.moba.stdError, 'mytestmessage', self )
@@ -705,8 +706,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput(
         0, 'testevent123 has happened! quick, print it!' ) )
-      if print_mock.getvalue() not in [ 'testevent123 has happened! quick, print it!\n', '' ]:
-        self.fail( 'Suitable output not found' )
+      #if print_mock.getvalue() not in [ 'testevent123 has happened! quick, print it!\n', '' ]:
+      if print_mock.getvalue() not in [ 'testevent123 has happened! quick, print it!\n' ]:
+       self.fail( 'Suitable output not found' )
       self.assertFalse( open_mock.called )
       assertEqualsImproved( self.moba.stdError, '', self )
 
