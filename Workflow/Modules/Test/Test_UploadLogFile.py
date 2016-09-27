@@ -2,10 +2,10 @@
 Unit tests for the UploadLogFile module
 """
 
+import sys
 import unittest
 from mock import patch, call, MagicMock as Mock
 
-from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile 
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
   assertEqualsImproved, assertDiracFailsWith, assertDiracFails, \
   assertDiracSucceeds, assertDiracSucceedsWith, assertDiracSucceedsWith_equals
@@ -24,6 +24,10 @@ class UploadLogFileTestCase( unittest.TestCase ):
 
   def setUp( self ):
     """set up the objects"""
+    # Mock out modules that spawn other threads
+    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+
+    from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
     self.ulf = UploadLogFile()
     self.ulf.jobID = 8194
     self.ulf.workflow_commons = { 'Request' : 'something' }
@@ -42,9 +46,10 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch('%s.glob.glob' % MODULE_NAME, new=Mock(side_effect=glob_list)), \
          patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(side_effect=[ False, True, True, True ])):
       assertDiracSucceeds( self.ulf.execute(), self )
+      # TODO use self.ulf.logSizeLimit instead of the fix 20971520?
       assertEqualsImproved( log_mock.error.mock_calls, [
         call('Failed to resolve input parameters:', 'my_testerr'),
-        call('Log file found to be greater than maximum of 100000000 bytes', 'file_2'),
+        call('Log file found to be greater than maximum of 20971520 bytes', 'file_2'),
         call('Completely failed to select relevant log files.', 'Could not determine log files') ], self )
 
   def test_execute_nologs( self ):
