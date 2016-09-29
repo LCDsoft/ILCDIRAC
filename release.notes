@@ -1,3 +1,23 @@
+[v26r0p3]
+
+* Core:
+
+NEW: Based on DIRAC v6r15p17
+FIX: ILCDIRAC-718 pilots at KEK not matching jobs
+FIX: ILCDIRAC-713 dirac-dms-find-lfns produced output files not readable by other dirac commands
+
+NEW: Tests also running on Centos7 now
+
+
+* ILCTransformationSystem:
+
+NEW: plugin BroadcastProcessed to create transformations to move only files with descendents
+NEW: dirac-ilc-moving-transformation creates BroadcastProcessed transformations for GEN/SIM files
+
+* Workflow:
+
+FIX: Hopefully clearer message when packages are not found directly on CVMFS, ILCDIRAC-708
+
 [v26r0p2]
 
 * Core:
