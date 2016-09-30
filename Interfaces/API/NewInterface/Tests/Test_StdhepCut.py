@@ -127,12 +127,3 @@ class StdhepCutTestCase( unittest.TestCase ):
                      'outputDataSE' : '@{OutputSE}' }, self.shc._listofoutput )
     self.assertIn( 'nbevts_kept', self.shc.prodparameters )
     self.assertIn( 'cut_file', self.shc.prodparameters )
-
-
-
-
-
-
-
-
-
