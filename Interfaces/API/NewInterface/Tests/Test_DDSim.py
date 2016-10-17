@@ -155,7 +155,6 @@ class DDSimTestCase( unittest.TestCase ):
         self.assertIn( keyword, self.dds.prodparameters )
 
 #pylint: disable=protected-access
-
 class TestDDSim( unittest.TestCase ):
   """tests for the DDSim interface"""
 
@@ -165,7 +164,6 @@ class TestDDSim( unittest.TestCase ):
   def tearDown( self ):
     """cleanup any files"""
     pass
-
 
   @patch( "ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim.getKnownDetectorModels",
           new = Mock(return_value=S_OK({'CLIC_o2_v03':"/some/path"})))
