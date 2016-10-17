@@ -8,9 +8,9 @@ py.test Workflow/Modules/Test/Test_SEs.py
 SE_RESULT=""
 if [ $? -eq 0 ]
 then
-  SE_RESULT="Storage unit tests successful"
+  SE_RESULT="Storage element tests successful"
 else
-  SE_RESULT="Storage unit tests failed! Check what failed."
+  SE_RESULT="Storage element tests failed! Check what failed."
 fi
 
 export PYTEST_ADDOPTS=$PYTEST_ADDOPTS" --cov-append"
@@ -19,9 +19,9 @@ py.test Interfaces/API/NewInterface/Tests/Test_FullCVMFSTests.py
 CVMFS_RESULT=""
 if [ $? -eq 0 ]
 then
-  CVMFS_RESULT="Storage unit tests successful"
+  CVMFS_RESULT="CVMFS system tests successful"
 else
-  CVMFS_RESULT="Storage unit tests failed! Check what failed."
+  CVMFS_RESULT="CVMFS system failed! Check what failed."
 fi
 
 export PYTEST_ADDOPTS=$PYTEST_ADDOPTS" -m 'not integration'"
@@ -30,9 +30,9 @@ py.test
 UNIT_RESULT=""
 if [ $? -eq 0 ]
 then
-  UNIT_RESULT="Storage unit tests successful"
+  UNIT_RESULT="Unit tests successful"
 else
-  UNIT_RESULT="Storage unit tests failed! Check what failed."
+  UNIT_RESULT="Unit tests failed! Check what failed."
 fi
 
 echo "########################################################################"
