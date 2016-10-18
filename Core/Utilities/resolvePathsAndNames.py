@@ -9,7 +9,42 @@ __RCSID__ = "$Id$"
 import os
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
+from ILCDIRAC.Core.Utilities.FilenameEncoder  
 
+###############################################################################
+def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
+  '''  Build the output file names based on inputfile name and job property
+  :param  string inputfile : Input file name, either *.stdhep or *.slcio 
+  :param  string outfileOriginal : Output file name before change
+  :param  string int prodID : Production ID
+  :param  string int jobID  : jobID
+
+  '''
+  finp = FilenameEncoder()
+  inpitem = finp.decodeFilename(inputfile)
+
+  forig = FilenameEncoder()
+  origitem = forig.decodeFilename(outfileOriginal)
+
+  outfile = ""
+  if inpitem["F"] == "stdhep" :
+    inpitem["s"] = origitem["s"]
+    inpitem["m"] = origitem["m"]
+    inpitem["d"] = "sim"
+    inpitem["t"] = str(prodID).zfill(8)
+    inpitem["j"] = str(jobID)
+    outfile   = finp.convert( "sim", "file", inpitem )
+  elif inpitem["F"] == "slcio" :
+    if inputfile[0:1] == "s" : # Input is simfile
+      inpitem["r"] = origitem["r"]
+      inpitem["d"] = "rec"
+      inpitem["t"] = str(prodID).zfill(8)
+      inpitem["j"] = str(jobID)
+      outfile  = finp.convert( "rec", "file", inpitem )
+   
+   return outfile
+
+###############################################################################
 def getProdFilename(filename, prodID, jobID):
   """ Build the output file names based of local job property.
 
@@ -30,6 +65,7 @@ def getProdFilename(filename, prodID, jobID):
     outfile = name[0] + "_" + str(prodID) + "_" + str(jobID) + ".root"
   return outfile
 
+###############################################################################
 def resolveIFpaths(inputfiles):
   """ Try to find out in which sub-directory are each file. In the future, should be useless if
   PoolXMLCatalog can be used.
