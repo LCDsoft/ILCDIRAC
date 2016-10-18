@@ -120,7 +120,7 @@ class FilenameEncoder():
   
      dirs = fullpath.split("/")
      filename = dirs[len(dirs)-1]
-     ftemp    = filename
+     ftemp    = re.sub(r'-(\d+).slcio', r'.j\1.slcio', filename)  # Special treatment for DBD sim files.
      for k in range(0, len(replaceList)):
        old=replaceList[k][0]
        ftemp=ftemp.replace(replaceList[k][0], replaceList[k][1])
@@ -128,6 +128,7 @@ class FilenameEncoder():
      filemeta = {}
      for token in ftemp.split(separator) :
        conv=re.sub(r'^(\d)',r'n\1',token)
+
        conv=conv.replace("stdhep", "Fstdhep")
        conv=conv.replace("slcio" , "Fslcio")
        key=conv[0:1]
@@ -204,7 +205,6 @@ if __name__ == "__main__" :
 # Akiya Miyamoto, 13-October-2016
 #
   argvs = sys.argv
-
   file = "/ilc/prod/ilc/ild/test/temp1/gensplit/500-TDR_ws/3f/run001/E0500-TDR_ws.Pae_ell.Gwhizard-1.95.eB.pL.I37538.01_001.stdhep"
   file = "E0500-TDR_ws.Pae_ell.Gwhizard-1.95.eB.pL.I37538.001.stdhep"
   if len(argvs) > 1 :
@@ -221,7 +221,7 @@ if __name__ == "__main__" :
   print "######### Sim Filename, directory, meta values "
 # Encode stdhep file name
   fileitem = fe.decodeFilename(file)
-#   pprint.pprint(filemeta)
+  pprint.pprint(fileitem)
 
   fileitem["s"]="v01-14-01-p00"  # ILDConfig version for Sim
   fileitem["m"]="ILD_o1_v05"  # Detector model
@@ -258,7 +258,7 @@ if __name__ == "__main__" :
   print "######### Rec Filename, directory, meta values "
 # Encode sim filename in order to build rec/dst files, directories
   recitem=fe.decodeFilename(simfile)
-#   pprint.pprint(recmeta)
+  pprint.pprint(recitem)
   recitem["r"]="v01-16-p05_500"  # ILDConfig version for Marlin
   recitem["d"]="rec"  # data type 
   recitem["t"]="7643" # #Production ID
@@ -298,6 +298,59 @@ if __name__ == "__main__" :
   print "dstdir="+dstdir
   pprint.pprint(dstmeta)
 
-
   del fe
+
+# ===========================================================================
+# Construct rec and DST file from DBD Sim file 
+# ===========================================================================
+
+  simfile = "sv01-14-01-p00.mILD_o1_v05.E1000-B1b_ws.I200006.P4f_ww_h.eL.pR-00262.slcio"
+  print 
+  print "In the case of DBD Sim file as an input"  
+  print "simfile ="+simfile 
+
+  fe = FilenameEncoder()
+  fe.rules["rec"]["file"] = "%r.%s.%m.%E.%I.%P.%e.%p.%d.%t.%j.slcio"  # Apply special rule, because "n" infor. not available.
+  fe.rules["dst"]["file"] = "%r.%s.%m.%E.%I.%P.%e.%p.%d.%t.%j.slcio"
+# Encode sim filename in order to build rec/dst files, directories
+  recitem=fe.decodeFilename(simfile)
+  pprint.pprint(recmeta)
+  recitem["r"]="v01-16-p05_500"  # ILDConfig version for Marlin
+  recitem["d"]="rec"  # data type
+  recitem["t"]="7654" # #Production ID
+  recitem["j"]="3232" # Job number
+  recdiritem = recitem
+  recdiritem["B"]="/ilc/prod/ilc/ild/test/temp1"
+  recdiritem["J"]="%3.3d"% ( int(recitem["j"])/ 1000 )
+  recdiritem["C"]="1f_3f"
+  recmetaitem = copy.deepcopy(recdiritem)
+  recmetaitem["D"]="REC"
+  energy_machine=recdiritem["E"].split("-")             #
+  recmetaitem["w"]=energy_machine[0]                 # Energy
+  recmetaitem["o"]=energy_machine[1]                 # Mcahine parameters
+#
+  recfile = fe.convert( "rec", "file", recitem )
+  recdir  = fe.convert( "rec", "dir",  recdiritem )
+  recmeta = fe.convert( "rec", "meta", recmetaitem )
+  print "recfile="+recfile
+  print "recdir="+recdir
+  pprint.pprint( recmeta )
+
+#
+
+  print "######### Rec Filename, directory, meta values "
+  dstitem         = copy.deepcopy(recitem)
+  dstdiritem      = copy.deepcopy(recdiritem)
+  dstmetaitem     = copy.deepcopy(recmetaitem)
+
+  dstitem["d"]     = "dst"
+  dstdiritem["d"]  = "dst"
+  dstmetaitem["d"] = "dst"
+
+  dstfile = fe.convert( "dst", "file", dstitem )
+  dstdir  = fe.convert( "dst", "dir",  dstdiritem)
+  dstmeta = fe.convert( "dst", "meta", dstmetaitem )
+  print "dstfile="+dstfile
+  print "dstdir="+dstdir
+  pprint.pprint(dstmeta)
 
