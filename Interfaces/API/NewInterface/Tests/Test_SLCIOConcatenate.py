@@ -27,9 +27,6 @@ class SLCIOConcatenateTestCase( unittest.TestCase ):
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLCIOConcatenate
     self.sco = SLCIOConcatenate( {} )
 
-  def test_something( self ):
-    pass
-
   def test_userjobmodules( self ):
     module_mock = Mock()
     assertDiracSucceeds( self.sco._userjobmodules( module_mock ), self )

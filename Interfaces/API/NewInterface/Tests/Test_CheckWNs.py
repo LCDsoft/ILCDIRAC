@@ -23,9 +23,6 @@ class CheckWNsTestCase( unittest.TestCase ):
     """set up the objects"""
     self.cwn = CheckWNs( {} )
 
-  def test_something( self ):
-    pass
-
   def test_userjobmodules( self ):
     module_mock = Mock()
     assertDiracSucceeds( self.cwn._userjobmodules( module_mock ), self )
