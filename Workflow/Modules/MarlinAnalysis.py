@@ -169,14 +169,13 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
                       os.path.join(os.getcwd(), pandorasettings))
         except EnvironmentError, x:
           self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
-           
-    self.inputGEAR = os.path.basename(self.inputGEAR)
-    if self.inputGEAR and not os.path.exists(self.inputGEAR):
-      if steeringfiledirname:
-        if os.path.exists(os.path.join(steeringfiledirname, self.inputGEAR)):
-          self.inputGEAR = os.path.join(steeringfiledirname, self.inputGEAR)
-        
-    
+
+    if self.inputGEAR:
+      self.inputGEAR = os.path.basename(self.inputGEAR)
+      if self.inputGEAR and not os.path.exists(self.inputGEAR) and steeringfiledirname \
+         and os.path.exists(os.path.join(steeringfiledirname, self.inputGEAR)):
+        self.inputGEAR = os.path.join(steeringfiledirname, self.inputGEAR)
+
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
       if steeringfiledirname:

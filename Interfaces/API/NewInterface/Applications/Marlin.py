@@ -41,6 +41,12 @@ class Marlin( DDInterfaceMixin, LCApplication ):
   >>> marlin.setOutputFile( "output_job123.slcio" )
   >>> ...
 
+  .. versionchanged:: v26r0p4
+
+    The default value for the GearFile was removed. It used to be
+    "GearOutput.xml" but as reconstruction based on DD4hep is not using gear
+    files a default value is more dangerous than before.
+
   """
   def __init__(self, paramdict = None):
 
@@ -169,16 +175,13 @@ class Marlin( DDInterfaceMixin, LCApplication ):
           return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
 
     if not self.gearFile :
-      self._log.info('GEAR file not given, will use GearOutput.xml (default from Mokka, CLIC_ILD_CDR model)')
+      self._log.info('GEAR file not given, will not use any gear file')
     if self.gearFile:
       if not os.path.exists(self.gearFile) and not self.gearFile.lower().count("lfn:"):
         #res = Exists(self.gearFile)
         res = S_OK()
         if not res['OK']:
           return res
-
-    if not self.gearFile:
-      self.gearFile = 'GearOutput.xml'
 
     if self._jobtype != 'User':
       if not self.outputFile:
