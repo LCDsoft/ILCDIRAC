@@ -3,9 +3,10 @@
 # Note that this script requires a proxy to be executed
 echo "Please check that a valid dirac proxy is available before executing the cvmfs tests."
 source .gitlab-ci.d/set-reportstyle.sh
-py.test Workflow/Modules/Test/Test_SEs.py
 
 SE_RESULT=""
+py.test Workflow/Modules/Test/Test_SEs.py
+
 if [ $? -eq 0 ]
 then
   SE_RESULT="Storage element tests successful"
@@ -14,9 +15,9 @@ else
 fi
 
 export PYTEST_ADDOPTS=$PYTEST_ADDOPTS" --cov-append"
+CVMFS_RESULT=""
 py.test Interfaces/API/NewInterface/Tests/Test_FullCVMFSTests.py
 
-CVMFS_RESULT=""
 if [ $? -eq 0 ]
 then
   CVMFS_RESULT="CVMFS system tests successful"
@@ -25,9 +26,9 @@ else
 fi
 
 export PYTEST_ADDOPTS=$PYTEST_ADDOPTS" -m 'not integration'"
+UNIT_RESULT=""
 py.test
 
-UNIT_RESULT=""
 if [ $? -eq 0 ]
 then
   UNIT_RESULT="Unit tests successful"
