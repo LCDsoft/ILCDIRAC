@@ -100,6 +100,21 @@ def assertDiracSucceedsWith_equals( result, expected_res, assertobject ):
   assertDiracSucceeds( result, assertobject )
   assertobject.assertEquals( expected_res, result['Value'] )
 
+def assertMockCalls( mock_object_method, argslist, assertobject ):
+  """ Asserts that the passed mocked method has been called with the arguments provided in argslist.
+
+  :param Mock mock_object_method: Method of a mock object that is under test
+  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  """
+  from mock import call
+  call_list = []
+  for args in argslist:
+    if isinstance( args, tuple ):
+      call_list.append( call( *args ) )
+    else:
+      call_list.append( call( args ) )
+  assertEqualsImproved( mock_object_method.mock_calls, call_list, assertobject )
+
 def running_on_docker():
   """ Returns whether the code is currently being executed in a docker VM or on a local (dev) machine.
   This is achieved by checking wether /home/<currently logged in user> exists.
