@@ -243,7 +243,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = installDependencies( ( 'AppName', 'appvers' ), 'myconf', 'myareas' )
       assertDiracSucceeds( result, self )
       assertMockCalls( install_mock, [ ( 'myareas', [ 'myappname1', '203.0' ], 'myconf' ),
-                                       ( 'myareas', [ 'myappname2', '138.1' ], 'myconf' ) ], self )
+                                       ( 'myareas', [ 'myappname2', '138.1' ], 'myconf' ) ],
+                       self, only_these_calls = False )
       dep_mock.assert_called_once_with( 'myconf', 'appname', 'appvers' )
 
   def test_install_deps_nodeps( self ):
