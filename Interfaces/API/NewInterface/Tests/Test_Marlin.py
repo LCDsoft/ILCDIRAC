@@ -90,7 +90,7 @@ class MarlinTestCase( unittest.TestCase ):
                        'outputDataSE' : '@{OutputSE}' }, self.mar._listofoutput )
       for keyword in [ 'detectorType', 'marlin_gearfile', 'marlin_steeringfile' ]:
         self.assertIn( keyword, self.mar.prodparameters )
-      assertEqualsImproved( self.mar.gearFile, 'GearOutput.xml', self )
+      assertEqualsImproved( self.mar.gearFile, None, self )
 
   def test_checkconsistency_noversion( self ):
     self.mar.version = None
