@@ -6,40 +6,40 @@ import copy
 class FilenameEncoder(object):
   '''
 
-  class FilenameEncoder
-
-  A utility class to decide a output filename from a input file name
-  According to the file name convension used by ILD.
+  A utility class to decode a output filename from an input file name
+  according to the file name convension used by ILD.
   Once rules are defined, output file, directory and meta values
-  can be generated base on the DICT object. See __main__
+  can be generated base on the :mod:`dict` object. See __main__
   attached below.
 
   Examples to use this class will be found in ILCDIRAC/Core/Utilities/tests/Test_FilenameEncoder.py
 
   Following keys are used for ILDProduction
-  [meta] is meta key defined for corresponding directory
-  %s: ILDConfig for simulation
-  %r: ILDConfig for Marlin
-  %m: Detector model
-  %E: Energy-Machine
-  %I: GenProcessID
-  %P: ProcessName
-  %C: Event Class
-  %e: electron polarization or type of photon beam
-  %p: positron polarization or type of photon beam
-  %d: Data type (sim, rec, dst, dstm, .. )
-  %t: Production ID
-  %T: Directory name for Production ID
-  %n: Generator file number
-  %j: Job number
-  %J: Sub directory ( Job number/1000.  Namely 000, 001, 002, ... )
-  %F: File type
-  %B: Base directory
-  %D: Upper case Data type. Used for meta value
-  %w: Energy. for meta value
-  %o: Machine parameter. such as TDR_ws for meta value
+  [meta] is meta key defined for corresponding directory::
 
-  Akiya Miyamoto, 18 October 2016
+      %s: ILDConfig for simulation
+      %r: ILDConfig for Marlin
+      %m: Detector model
+      %E: Energy-Machine
+      %I: GenProcessID
+      %P: ProcessName
+      %C: Event Class
+      %e: electron polarization or type of photon beam
+      %p: positron polarization or type of photon beam
+      %d: Data type (sim, rec, dst, dstm, .. )
+      %t: Production ID
+      %T: Directory name for Production ID
+      %n: Generator file number
+      %j: Job number
+      %J: Sub directory ( Job number/1000.  Namely 000, 001, 002, ... )
+      %F: File type
+      %B: Base directory
+      %D: Upper case Data type. Used for meta value
+      %w: Energy. for meta value
+      %o: Machine parameter. such as TDR_ws for meta value
+
+  :author: Akiya Miyamoto
+  :date: 18 October 2016
 
   '''
 
@@ -100,10 +100,10 @@ class FilenameEncoder(object):
 
     Save rules for various name generation.
 
-    :param dict rule : Rule(s) to make file names, directory name, or directory meta values
-                       Example will be found in __init__ statements
+    :param dict rule: Rule(s) to make file names, directory name, or directory meta values
+                       Example will be found in c'tor statements
     :param str datatype: data tytpe to which the defined rule is applied. For example, "sim", "rec", or "dst"
-    :param str category: a kind of ruleis whether it is for file name("file"), directory name("dir"),
+    :param str category: a kind of rule is whether it is for file name("file"), directory name("dir"),
        or directory meta values ("meta")
 
     '''
@@ -121,9 +121,9 @@ class FilenameEncoder(object):
     Calls file name, directory converter, or meta value maker depending on the input arguments
     and returns filename/directory name as a string or directory meta key and value as a dict object
 
-    :param str datatype : datatype defined by rules, for example sim, rec, dst, ...
-    :param str category : Type of output converted.  file, dir (directory) or meta ( meta values )
-    :param dict  values : Dictionary object for key word replacement
+    :param str datatype: datatype defined by rules, for example sim, rec, dst, ...
+    :param str category: Type of output converted.  file, dir (directory) or meta ( meta values )
+    :param dict  values: Dictionary object for key word replacement
 
     :returns: file name or directory name as a string or a directory meta value if category is "meta"
 
@@ -141,12 +141,12 @@ def decodeFilename( fullpath, separator="." ) :
 
   Decode a file name to Key and Value according to the DBD file name convention.
   File name is splitted by ".", each item is decoded assuming it consits of
-  1 character of key followed by key value.  Excpetion seen in DBD generator
+  1 character of key followed by key value.  Exception seen in DBD generator
   files are also handled. Only basename of fullpath is used, even if direcories
   are included in fullpath.
 
-  :params str fullpath: File name in fullpath is decoded.
-  :returns: returns a dict object containing key and it's value.
+  :param str fullpath: File name in fullpath is decoded.
+  :returns: returns a dict object containing key and its value.
 
   '''
 
@@ -185,16 +185,17 @@ def makeFilename( fileformat, filemeta, preonly=True ) :
   '''
 
   Make a filename, namely, Replace fileformat according to the filemeta.
-  Filemeta is a DICT objects, each entry being key and value.
+  Filemeta is a :mod:`dict` objects, each entry being key and value.
   As a default, key is one character and "%[key]" in fileformat is
   replaced by "value".  If preonly is "False", "%[key]%" is replaced by value.
   In this case, [key] can be more than one character.
   Filename could be any string, like a fullpath.
 
-  :params str fileformat: A string consists of keys
-  :params dict filemeta:  A dict object of keys and values
+  :param str fileformat: A string consisting of keys
+  :param dict filemeta:  A dict object of keys and values
 
-  :returns: filename by string
+  :returns: filename
+  :rtype: str
   '''
   filename=fileformat
   for key, value in filemeta.iteritems() :
@@ -210,15 +211,16 @@ def makeFilename( fileformat, filemeta, preonly=True ) :
 def makeDirMetaData( metaformat, items ):
   '''
 
-  Returns a DICT object which should be used for directory meta key and value
+  Returns a :mod:`dict` object which should be used for directory meta key and value
   definition.  "%[key]" strings in a dict object, metaformat, is
-  replaced according to items and a reusltant DICT object is returned.
+  replaced according to items and a reusltant :mod:`dict` object is returned.
 
-  :params dict metaformat: Dictionary object defining the format. The key's and value's of
-  metaformat should be string containing "%[key]"
-  :params dict items: "%[key]"s in metaformat are replaced by a matching key-value in items
+  :param dict metaformat: Dictionary object defining the format. The key's and value's of
+       metaformat should be string containing "%[key]"
+  :param dict items: "%[key]"s in metaformat are replaced by a matching key-value in items
 
-  :returns: dict object
+  :returns: Dictionary of directories and their metadata keys and values
+  :rtype: dict
 
   '''
   meta={}
