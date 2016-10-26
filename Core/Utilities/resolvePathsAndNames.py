@@ -9,8 +9,7 @@ __RCSID__ = "$Id$"
 import os
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
-from ILCDIRAC.Core.Utilities.FilenameEncoder  
-
+from ILCDIRAC.Core.Utilities.FilenameEncoder import FilenameEncoder, decodeFilename
 ###############################################################################
 def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
   '''  Build the output file names based on inputfile name and job property
@@ -21,10 +20,9 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
 
   '''
   finp = FilenameEncoder()
-  inpitem = finp.decodeFilename(inputfile)
+  inpitem = decodeFilename(inputfile)
 
-  forig = FilenameEncoder()
-  origitem = forig.decodeFilename(outfileOriginal)
+  origitem = decodeFilename(outfileOriginal)
 
   outfile = ""
   if inpitem["F"] == "stdhep" :
@@ -42,7 +40,7 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
       inpitem["j"] = str(jobID)
       outfile  = finp.convert( "rec", "file", inpitem )
    
-   return outfile
+  return outfile
 
 ###############################################################################
 def getProdFilename(filename, prodID, jobID):
