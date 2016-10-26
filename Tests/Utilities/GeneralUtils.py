@@ -101,7 +101,29 @@ def assertDiracSucceedsWith_equals( result, expected_res, assertobject ):
   assertobject.assertEquals( expected_res, result['Value'] )
 
 def assertMockCalls( mock_object_method, argslist, assertobject ):
-  """ Asserts that the passed mocked method has been called with the arguments provided in argslist.
+  """ Asserts that the passed mocked method has been called with the arguments provided in argslist, in any order.
+
+  :param Mock mock_object_method: Method of a mock object that is under test
+  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  """
+  from mock import call
+  mock_call_list = list( mock_object_method.mock_calls ) # Creates a copy of the mock_calls list with references to the original elements (shallow copy), a bit faster than copy.copy( mock_calls )
+  call_list = []
+  for args in argslist:
+    if isinstance( args, tuple ):
+      call_list.append( call( *args ) )
+    else:
+      call_list.append( call( args ) )
+
+  for expected_call in call_list:
+    try:
+      mock_call_list.remove( expected_call )
+    except ValueError as v_err:
+      assertobject.fail( 'Expected the mock to be called with the passed arglist but that was not the case: %s\n List of expected calls: %s \n List of actual calls: %s' % ( v_err, argslist, mock_object_method.mock_calls ) )
+  # TODO test these two new methods, find way to handle positional arguments, beautify output
+
+def assertMockCalls_ordered( mock_object_method, argslist, assertobject ):
+  """ Asserts that the passed mocked method has been called with the arguments provided in argslist, in exactly the given order.
 
   :param Mock mock_object_method: Method of a mock object that is under test
   :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
