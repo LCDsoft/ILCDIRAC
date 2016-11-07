@@ -1,3 +1,24 @@
+[v26r0p4]
+
+* Core:
+
+NEW: Based on DIRAC v6r15p23
+
+* Interfaces
+
+CHANGE: The Marlin application no longer has a default GearFile because having a gear file causes problems when dd4hep geometry is used instead.
+
+
+* DataManagement:
+
+CHANGE: (from DIRAC): dirac-dms-find-lfns command signature changed, now the PATH argument has to be used to define the basepath for the search
+
+* ILCTransformation
+
+FIX: dirac-ilc-production-summary: fix bug causing a crash when whizard details did not exist
+
+
+
 [v26r0p3]
 
 * Core:
