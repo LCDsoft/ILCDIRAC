@@ -6,8 +6,16 @@
 from DIRAC                                          import gLogger
 from DIRAC.Interfaces.API.Job                       import Job
 from ILCDIRAC.Core.Utilities.ProductionData         import constructProductionLFNs
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames   import getProdFilenameFromInput
 
 __RCSID__ = "$Id$"
+
+ILDJOBTYPES = [ 'MCGeneration_ILD',
+                'MCSimulation_ILD',
+                'MCReconstruction_ILD',
+                'MCReconstruction_Overlay_ILD',
+                'Split_ILD',
+              ]
 
 class OutputDataPolicy(object):
   """ This module is called from the TransformationSystem
@@ -37,8 +45,16 @@ class OutputDataPolicy(object):
     if inputData:
       commons['InputData'] = inputData
 
-    gLogger.debug(commons)
     result = constructProductionLFNs(commons)
     if not result['OK']:
       gLogger.error(result['Message'])
+      return result
+
+    if commons['JobType'] in ILDJOBTYPES and commons['InputData']:
+      for index, outputFile in enumerate( result['Value']['ProductionOutputData'] ):
+        outputFileILD = getProdFilenameFromInput( commons['InputData'], outputFile, prodID, jobID )
+        result['Value']['ProductionOutputData'][index] = outputFileILD
+        gLogger.debug( "Changed output file name from '%s' to '%s' " % ( outputFile, outputFileILD ) )
+
+
     return result

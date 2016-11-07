@@ -78,8 +78,14 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self.plugin = 'Standard'
     self.prodGroup = ''
 
-    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction', 
-                      'MCReconstruction_Overlay', 'Merge', 'Split']
+    self.prodTypes = ['MCGeneration', 'MCSimulation', 'Test', 'MCReconstruction',
+                      'MCReconstruction_Overlay', 'Merge', 'Split',
+                      'MCGeneration_ILD',
+                      'MCSimulation_ILD',
+                      'MCReconstruction_ILD',
+                      'MCReconstruction_Overlay_ILD',
+                      'Split_ILD'
+                     ]
     self.prodparameters = {}
     self.prodparameters['NbInputFiles'] = 1
     self.prodparameters['nbevts']  = 0 

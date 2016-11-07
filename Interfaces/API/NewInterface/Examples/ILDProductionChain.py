@@ -222,7 +222,7 @@ if activesplitstdhep and meta:
   pstdhepsplit.setEvtType(my_evttype)
   # pstdhepsplit.setUseSoftTagInPath(False)
   pstdhepsplit.setLogLevel("verbose")
-  pstdhepsplit.setProdType('Split')
+  pstdhepsplit.setProdType('Split_ILD')
   pstdhepsplit.setBannedSites(banned_sites)
   pstdhepsplit.setProdPlugin('Limited') # exit with error: it seems i need
                                         # to set the Prod. plugin
@@ -288,7 +288,7 @@ if ild_sim and meta:
   pmo.setUseSoftTagInPath(True)
   pmo.setEvtType(my_evttype)
   pmo.setLogLevel("verbose")
-  pmo.setProdType('MCSimulation')
+  pmo.setProdType('MCSimulation_ILD')
   pmo.setBannedSites(banned_sites)
   pmo.setInputSandbox( input_sand_box )
   # pmo.setDestination(LCG_SITE)
@@ -377,7 +377,7 @@ if ild_rec and meta:
   pma.setDryRun(dryrun)
   pma.setILDConfig(ILDConfig)
   pma.setLogLevel("verbose")
-  pma.setProdType('MCReconstruction')
+  pma.setProdType('MCReconstruction_ILD')
 
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
@@ -420,7 +420,7 @@ if ild_rec_ov and meta:
   # pmao.setUseSoftTagInPath(False)
   pmao.setEvtType(my_evttype)
   pmao.setLogLevel("verbose")
-  pmao.setProdType('MCReconstruction_Overlay')
+  pmao.setProdType('MCReconstruction_Overlay_ILD')
   pmao.setBannedSites(banned_sites)
 
   res = pmao.setInputDataQuery(meta)
