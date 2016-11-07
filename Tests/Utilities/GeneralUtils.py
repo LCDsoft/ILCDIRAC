@@ -54,6 +54,14 @@ def assertContentEqualsList( list1, list2, assertobject ):
   for elem1 in list1:
     assertInImproved( elem1, list2, assertobject )
 
+def assertDiracFails( result, assertobject):
+  """Asserts that result, which is the return value of a dirac method call, is an S_ERROR.
+
+  :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertobject.assertFalse( result['OK'] )
+
 def assertDiracFailsWith( result, errorstring, assertobject):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).
 
@@ -91,6 +99,47 @@ def assertDiracSucceedsWith_equals( result, expected_res, assertobject ):
   """
   assertDiracSucceeds( result, assertobject )
   assertobject.assertEquals( expected_res, result['Value'] )
+
+def assertMockCalls( mock_object_method, argslist, assertobject, only_these_calls = True ):
+  """ Asserts that the passed mocked method has been called with the arguments provided in argslist, in any order.
+
+  :param Mock mock_object_method: Method of a mock object that is under test
+  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :param TestCase assertobject: The TestCase instance running the tests, in order to gain access to the assertion methods
+  :param bool only_these_calls: Indicates what happens if the calls in argslist is a strict subset of the actual call list. True means the assertion fails, False means the assertion holds.
+  """
+  from mock import call
+  mock_call_list = list( mock_object_method.mock_calls ) # Creates a copy of the mock_calls list with references to the original elements (shallow copy), a bit faster than copy.copy( mock_calls )
+  call_list = []
+  for args in argslist:
+    if isinstance( args, tuple ):
+      call_list.append( call( *args ) )
+    else:
+      call_list.append( call( args ) )
+
+  for expected_call in call_list:
+    try:
+      mock_call_list.remove( expected_call )
+    except ValueError as v_err:
+      assertobject.fail( 'Expected the mock to be called with the passed arglist but that was not the case: %s\n List of expected calls: %s \n List of actual calls: %s' % ( v_err, argslist, mock_object_method.mock_calls ) )
+  # TODO test these two new methods, find way to handle positional arguments, beautify output
+  if only_these_calls:
+    assertobject.assertFalse( mock_call_list, "The following calls were made on the mock object but don't have a respective entry in the argslist: %s" % mock_call_list )
+
+def assertMockCalls_ordered( mock_object_method, argslist, assertobject ):
+  """ Asserts that the passed mocked method has been called with the arguments provided in argslist (and only those arguments), in exactly the given order.
+
+  :param Mock mock_object_method: Method of a mock object that is under test
+  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  """
+  from mock import call
+  call_list = []
+  for args in argslist:
+    if isinstance( args, tuple ):
+      call_list.append( call( *args ) )
+    else:
+      call_list.append( call( args ) )
+  assertEqualsImproved( mock_object_method.mock_calls, call_list, assertobject )
 
 def running_on_docker():
   """ Returns whether the code is currently being executed in a docker VM or on a local (dev) machine.

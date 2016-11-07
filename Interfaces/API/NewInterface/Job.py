@@ -346,6 +346,7 @@ class Job(DiracJob):
                            __name__,
                            **self._getArgsDict( 1 )
                          )
+        continue
 
       if not isinstance( args[argName], argType):
         self._reportError( 'Argument \'%s\' is not of type %s' % ( argName, argType ),

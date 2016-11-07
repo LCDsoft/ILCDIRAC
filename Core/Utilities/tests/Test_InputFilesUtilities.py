@@ -5,6 +5,7 @@ tests for InputFilesUtilities
 import unittest
 from mock import MagicMock as Mock, patch
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
@@ -63,6 +64,50 @@ class TestgetNumberOfEvents( unittest.TestCase ):
     with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
       res = getNumberOfEvents(['/no/such/file', '/no/such2/file2'])
     self.assertFalse(res['OK'], res.get("Message",''))
+
+  def test_getnumberofevents_othercases( self ):
+    # Expected behavior:
+    # If one file in a directory, get its tags, if Number of events defined go to next entry
+    # Else go to directory and check there. if nbevts go to next
+    # Else iterate over all files in directory.
+    # If numberevents defined nowhere, method fails
+    file_meta_dict = { '/unique/dir/file3' : S_OK( { 'Luminosity' : '49.2' } ),
+                       '/one/file/myfile' : S_OK( { 'NumberOfEvents' : '14' } ),
+                       '/other/myfile2' : S_OK( { 'Luminosity' : 1489, 'NumberOfEvents' : 941.2 } ),
+                       '/a/b/c/Dir1/someFile' : S_OK( { 'NumberOfEvents' : '14' } ),
+                       '/a/b/c/Dir1/other_file' : S_OK( { 'NumberOfEvents' : '14' } ),
+                       '/a/b/c/Dir1/dontforget_me' : S_OK( { 'NumberOfEvents' : '14' } ) }
+    directory_meta_dict = { '/a/b/c/Dir1' : S_OK( { 'Luminosity' : 84.1, 'evttype' : 'testEvt' } ),
+                            '/unique/dir' : S_OK( { 'NumberOfEvents' : 814, 'Luminosity' : None } ),
+                            '/other' : S_OK( { 'NumberOfEvents' : None, 'Luminosity' : None } ),
+                            '/one/file' : S_OK( {} ) }
+    fcMock = Mock()
+    fcMock.getDirectoryUserMetadata = Mock(side_effect=lambda path: directory_meta_dict[path])
+    fcMock.getFileUserMetadata = Mock(side_effect=lambda filename : file_meta_dict[filename] )
+    with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
+      assertDiracSucceedsWith_equals( getNumberOfEvents( [ '/a/b/c/Dir1/someFile', '', '/a/b/c/Dir1/other_file',
+                                                           '/unique/dir/file3', '', '', '',
+                                                           '/a/b/c/Dir1/dontforget_me', '/one/file/myfile',
+                                                           '/other/myfile2' ] ),
+                                      { 'AdditionalMeta': { 'evttype' : 'testEvt' }, 'EvtType' : '',
+                                        'lumi' : 1790.5, 'nbevts' : 1811 }, self )
+
+  def test_getnumberofevents_rarecase( self ):
+    file_meta_dict = { '/a/b/c/Dir1/someFile' : S_OK( { 'NumberOfEvents' : '14' } ),
+                       '/a/b/c/Dir1/other_file' : S_OK( { 'Luminosity' : '14.5' } ),
+                       '/a/b/c/Dir1/dontforget_me' : S_OK( { 'NumberOfEvents' : '14' } ) }
+    directory_meta_dict = { '/a/b/c/Dir1' : S_ERROR( { 'Luminosity' : 84.25, 'evttype' : 'testEvt' } ),
+                            '/unique/dir' : S_ERROR( { 'NumberOfEvents' : 814, 'Luminosity' : None } ),
+                            '/other' : S_ERROR( { 'NumberOfEvents' : None, 'Luminosity' : None } ),
+                            '/one/file' : S_OK( {} ) }
+    fcMock = Mock()
+    fcMock.getDirectoryUserMetadata = Mock(side_effect=lambda path: directory_meta_dict[path])
+    fcMock.getFileUserMetadata = Mock(side_effect=lambda filename : file_meta_dict[filename] )
+    with patch( "%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=fcMock)):
+      assertDiracSucceedsWith_equals( getNumberOfEvents( [ '/a/b/c/Dir1/someFile', '', '/a/b/c/Dir1/other_file',
+                                                           '', '', '', '/a/b/c/Dir1/dontforget_me' ] ),
+                                      { 'AdditionalMeta': {}, 'EvtType' : '', 'lumi' : 14.5, 'nbevts' : 28 },
+                                      self )
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestgetNumberOfEvents )

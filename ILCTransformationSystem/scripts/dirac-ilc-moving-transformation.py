@@ -29,7 +29,12 @@ def _createTrafo():
     gLogger.error("ERROR: Missing settings")
     return 1
   from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
-  resCreate = createMovingTransformation( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
+  resCreate = createMovingTransformation( clip.targetSE,
+                                          clip.sourceSE,
+                                          clip.prodID,
+                                          clip.datatype,
+                                          clip.extraname,
+                                          clip.forcemoving )
   if not resCreate['OK']:
     return 1
   return 0

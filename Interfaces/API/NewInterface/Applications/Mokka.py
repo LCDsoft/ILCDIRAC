@@ -150,11 +150,12 @@ class Mokka(LCApplication):
     if not self.steeringFile :
       return S_ERROR('No Steering File')
 
-    if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
-      #res = Exists(self.SteeringFile)
-      res = S_OK()
-      if not res['OK']:
-        return res
+    #FIXME: delete dead code
+    #if not os.path.exists(self.steeringFile) and not self.steeringFile.lower().count("lfn:"):
+      ##res = Exists(self.SteeringFile)
+      #res = S_OK()
+      #if not res['OK']:
+        #return res
 
     #res = self._checkRequiredApp()
     #if not res['OK']:

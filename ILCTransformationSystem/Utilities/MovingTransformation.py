@@ -7,7 +7,7 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
-def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=''):
+def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname='', forceMoving=False):
   """Creates the replication transformation based on the given parameters
 
   
@@ -16,6 +16,7 @@ def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=
   :param int prodID: Production ID of files to be moved
   :param str datatype: DataType of files to be moved
   :param str extraname: addition to the transformation name, only needed if the same transformation was already created
+  :param bool forceMoving: Move always, even if GEN/SIM files don't have descendents
   :returns: S_OK, S_ERROR
   """
 
@@ -32,7 +33,10 @@ def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=
   trans.setLongDescription( description )
   trans.setType( 'Replication' )
   trans.setGroup( 'Moving' )
-  trans.setPlugin( 'Broadcast' )
+  if datatype in ( 'GEN', 'SIM' ) and not forceMoving:
+    trans.setPlugin( 'BroadcastProcessed' )
+  else:
+    trans.setPlugin( 'Broadcast' )
 
   transBody = [ ("ReplicateAndRegister", { "SourceSE":sourceSE, "TargetSE":targetSE }),
                 ("RemoveReplica", { "TargetSE":sourceSE } ),

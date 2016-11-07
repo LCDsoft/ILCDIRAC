@@ -360,7 +360,8 @@ def checkCVMFS(platform, app):
   envScript = Operations().getValue(csPath + "/CVMFSEnvScript" ,"")
   if cvmfspath and os.path.exists(cvmfspath):
     return S_OK((cvmfspath, envScript))
-  DIRAC.gLogger.info("Cannot find package on cvmfs:", Operations().getOptionsDict(csPath))
+  message = "Package %s version %s not found natively on cvmfs," % ( name, version )
+  DIRAC.gLogger.info( message + " will try to use shared area instead: " + str( Operations().getOptionsDict(csPath) ) )
   return S_ERROR('Missing CVMFS!')
 
 def unzip_file_into_dir(myfile, mydir):

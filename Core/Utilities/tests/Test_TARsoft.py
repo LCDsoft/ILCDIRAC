@@ -8,7 +8,7 @@ from mock import mock_open, patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
-  assertDiracSucceeds, assertDiracSucceedsWith_equals
+  assertDiracSucceeds, assertDiracSucceedsWith_equals, assertMockCalls
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
@@ -144,10 +144,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       remove_mock.assert_called_once_with( file_to_check )
       isdir_mock.assert_called_once_with( file_to_check )
       exists_mock.assert_called_with( file_to_check )
-      err_mock.assert_any_call( 'Failed deleting testFile_deleteMe2.txt because :',
-                                'OSError test_remove_cannot_error' )
-      err_mock.assert_any_call(
-        'Oh Oh, something was not right, the directory testFile_deleteMe2.txt is still here' )
+      assertMockCalls( err_mock, [
+        ( 'Failed deleting testFile_deleteMe2.txt because :', 'OSError test_remove_cannot_error' ),
+        'Oh Oh, something was not right, the directory testFile_deleteMe2.txt is still here' ], self )
 
   def test_delete_old_dir( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import deleteOld
@@ -171,10 +170,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       remove_mock.assert_called_once_with( file_to_check )
       isdir_mock.assert_called_once_with( file_to_check )
       exists_mock.assert_called_with( file_to_check )
-      err_mock.assert_any_call( 'Failed deleting /delete/that because :',
-                                "<type 'exceptions.OSError'> test_remove_dir_cannot_error" )
-      err_mock.assert_any_call(
-        'Oh Oh, something was not right, the directory /delete/that is still here' )
+      assertMockCalls( err_mock, [
+        ( 'Failed deleting /delete/that because :', "<type 'exceptions.OSError'> test_remove_dir_cannot_error" ),
+        'Oh Oh, something was not right, the directory /delete/that is still here' ], self )
+
 
   def test_download_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
@@ -243,8 +242,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
          patch('%s.installInAnyArea' % MODULE_NAME) as install_mock:
       result = installDependencies( ( 'AppName', 'appvers' ), 'myconf', 'myareas' )
       assertDiracSucceeds( result, self )
-      install_mock.assert_any_call( 'myareas', ['myappname1', '203.0'], 'myconf' )
-      install_mock.assert_any_call( 'myareas', ['myappname2', '138.1'], 'myconf' )
+      assertMockCalls( install_mock, [ ( 'myareas', [ 'myappname1', '203.0' ], 'myconf' ),
+                                       ( 'myareas', [ 'myappname2', '138.1' ], 'myconf' ) ],
+                       self, only_these_calls = False )
       dep_mock.assert_called_once_with( 'myconf', 'appname', 'appvers' )
 
   def test_install_deps_nodeps( self ):
@@ -262,8 +262,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
          patch('%s.installInAnyArea' % MODULE_NAME, new=Mock(side_effect=[S_OK(), S_ERROR()])) as install_mock:
       result = installDependencies( ( 'AppName', 'appvers' ), 'myconf', 'myareas' )
       assertDiracFailsWith( result, "failed to install dependency: ['myappname2', '138.1']", self )
-      install_mock.assert_any_call( 'myareas', ['myappname1', '203.0'], 'myconf' )
-      install_mock.assert_any_call( 'myareas', ['myappname2', '138.1'], 'myconf' )
+      assertMockCalls( install_mock, [ ( 'myareas', [ 'myappname1', '203.0' ], 'myconf' ),
+                                       ( 'myareas', [ 'myappname2', '138.1' ], 'myconf' ) ], self )
       dep_mock.assert_called_once_with( 'myconf', 'appname', 'appvers' )
 
   def test_install_in_any_area( self ):
@@ -271,9 +271,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     with patch('%s.installSinglePackage' % MODULE_NAME, new=Mock(side_effect=[S_ERROR('not here'), S_ERROR('neither here'), S_OK('Bingo')])) as install_mock:
       assertDiracSucceeds( installInAnyArea( [ 'area1', 'otherarea', 'thisonesurelyworks' ],
                                              'myapplication2', 'jobconf' ), self )
-      install_mock.assert_any_call( 'myapplication2', 'jobconf', 'area1' )
-      install_mock.assert_any_call( 'myapplication2', 'jobconf', 'otherarea' )
-      install_mock.assert_any_call( 'myapplication2', 'jobconf', 'thisonesurelyworks' )
+      assertMockCalls( install_mock, [ ( 'myapplication2', 'jobconf', 'area1' ),
+                                       ( 'myapplication2', 'jobconf', 'otherarea' ),
+                                       ( 'myapplication2', 'jobconf', 'thisonesurelyworks' ) ], self )
 
   def test_install_in_any_area_fail_all( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installInAnyArea
@@ -281,9 +281,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertDiracFailsWith( installInAnyArea( [ 'area1', 'otherarea', 'thisonesurelyworks' ],
                                               'myapplication3', 'jobconf' ), 'failed to install software',
                             self )
-      install_mock.assert_any_call( 'myapplication3', 'jobconf', 'area1' )
-      install_mock.assert_any_call( 'myapplication3', 'jobconf', 'otherarea' )
-      install_mock.assert_any_call( 'myapplication3', 'jobconf', 'thisonesurelyworks' )
+      assertMockCalls( install_mock, [ ( 'myapplication3', 'jobconf', 'area1' ),
+                                       ( 'myapplication3', 'jobconf', 'otherarea' ),
+                                       ( 'myapplication3', 'jobconf', 'thisonesurelyworks' ) ], self )
 
   def test_install_single_package( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installSinglePackage
@@ -306,10 +306,11 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     with patch('%s.Operations.getValue' % MODULE_NAME, new=Mock(side_effect=['tarball_loc', True, 'mymd5sum', 'mytarURL'])) as getval_mock:
       result = getTarBallLocation( ('complicated_app', 'v201'), 'complex_config', 'dummy_area' )
       assertDiracSucceedsWith_equals( result, [ 'tarball_loc', 'mytarURL', True, 'mymd5sum' ], self )
-      getval_mock.assert_any_call('/AvailableTarBalls/complex_config/complicated_app/v201/TarBall', '')
-      getval_mock.assert_any_call('/AvailableTarBalls/complex_config/complicated_app/v201/Overwrite', False)
-      getval_mock.assert_any_call('/AvailableTarBalls/complex_config/complicated_app/v201/Md5Sum', '')
-      getval_mock.assert_any_call('/AvailableTarBalls/complex_config/complicated_app/TarBallURL', '')
+      assertMockCalls( getval_mock, [ ( '/AvailableTarBalls/complex_config/complicated_app/v201/TarBall', '' ),
+                                      ( '/AvailableTarBalls/complex_config/complicated_app/v201/Overwrite', False ),
+                                      ( '/AvailableTarBalls/complex_config/complicated_app/v201/Md5Sum', '' ),
+                                      ( '/AvailableTarBalls/complex_config/complicated_app/TarBallURL', '' ) ],
+                       self )
 
   def test_get_tarball_location_noapptar( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import getTarBallLocation
@@ -353,15 +354,12 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
                               '/my/basefolder/otherdir/main.py' ]
       expected = [[]]
       FileUtil.checkFileInteractions( self, mo, expected_open_calls, expected, handles )
-      assertDiracSucceedsWith_equals( result, ['/my/basefolder'], self )
+      assertDiracSucceedsWith_equals( result, [ '/my/basefolder' ], self )
       chdir_mock.assert_called_once_with( 'mytestarea398' )
       isfile_mock.assert_called_once_with( '/my/basefolder' )
-      exists_mock.assert_any_call( '/my/basefolder/md5_checksum.md5' )
-      exists_mock.assert_any_call( '/my/basefolder/appfile1.txt' )
-      exists_mock.assert_any_call( '/my/basefolder/appfile2.ppt' )
-      exists_mock.assert_any_call( '/my/basefolder/myapp/importantfile.bin' )
-      exists_mock.assert_any_call( '/my/basefolder/otherdir/main.py' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 5, self )
+      assertMockCalls( exists_mock, [ '/my/basefolder/md5_checksum.md5', '/my/basefolder/appfile1.txt',
+                                      '/my/basefolder/appfile2.ppt', '/my/basefolder/myapp/importantfile.bin',
+                                      '/my/basefolder/otherdir/main.py' ], self )
 
   def test_check_lcsim_jar( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
@@ -399,9 +397,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertDiracFailsWith( result, 'corrupted install: file /my/otherfolder/appfile2.ppt', self )
       chdir_mock.assert_called_once_with( 'mytestarea398' )
       isfile_mock.assert_called_once_with( '/my/otherfolder' )
-      exists_mock.assert_any_call( '/my/otherfolder/md5_checksum.md5' )
-      exists_mock.assert_any_call( '/my/otherfolder/appfile1.txt' )
-      exists_mock.assert_any_call( '/my/otherfolder/appfile2.ppt' )
+      assertMockCalls( exists_mock, [ '/my/otherfolder/md5_checksum.md5', '/my/otherfolder/appfile1.txt',
+                                      '/my/otherfolder/appfile2.ppt' ], self )
 
   def test_check_no_checksum_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
@@ -414,7 +411,6 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       chdir_mock.assert_called_once_with( 'mytestarea398' )
       isfile_mock.assert_called_once_with( '/base/' )
       exists_mock.assert_called_once_with( '/base/md5_checksum.md5' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
       warn_mock.assert_called_once_with( 'The application does not come with md5 checksum file:',
                                          ('appname', 'version') )
 
@@ -451,10 +447,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       FileUtil.checkFileInteractions( self, mo, expected_open_calls, expected, handles )
       chdir_mock.assert_called_once_with( 'mytestarea398' )
       isfile_mock.assert_called_once_with( '/my/basefolder' )
-      exists_mock.assert_any_call( '/my/basefolder/md5_checksum.md5' )
-      exists_mock.assert_any_call( '/my/basefolder/appfile1.txt' )
-      exists_mock.assert_any_call( '/my/basefolder/appfile2.ppt' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 3, self )
+      assertMockCalls( exists_mock, [ '/my/basefolder/md5_checksum.md5', '/my/basefolder/appfile1.txt',
+                                      '/my/basefolder/appfile2.ppt' ], self )
 
   def test_check_empty_checksum_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
@@ -474,8 +468,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       chdir_mock.assert_called_once_with( 'mytestarea398' )
       self.assertFalse( warn_mock.called )
       isfile_mock.assert_called_once_with( '/my/basefolder' )
-      exists_mock.assert_any_call( '/my/basefolder/md5_checksum.md5' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
+      exists_mock.assert_called_once_with( '/my/basefolder/md5_checksum.md5' )
 
   def test_check_missing_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
@@ -508,10 +501,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertDiracFailsWith( result, 'incomplete install: the file /hidden/dir/appfile2.ppt is missing', self )
       chdir_mock.assert_called_once_with( 'mytestarea398' )
       isfile_mock.assert_called_once_with( '/hidden/dir' )
-      exists_mock.assert_any_call( '/hidden/dir/md5_checksum.md5' )
-      exists_mock.assert_any_call( '/hidden/dir/appfile1.txt' )
-      exists_mock.assert_any_call( '/hidden/dir/appfile2.ppt' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 3, self )
+      assertMockCalls( exists_mock, [ '/hidden/dir/md5_checksum.md5', '/hidden/dir/appfile1.txt',
+                                      '/hidden/dir/appfile2.ppt' ], self )
 
   def test_configure_slic( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -526,16 +517,14 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('SLIC', 'version1000'), 'configurationArea', ['ILCApplication3002'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
-      assertEqualsImproved( len(addfolder_mock.mock_calls), 1, self )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/slic/' )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/lcdd/' )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/xerces/' )
       exists_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/packages/xerces/' )
-      assertEqualsImproved( len(listdir_mock.mock_calls), 3, self )
+      assertMockCalls( listdir_mock, [ '/cool/dir/ILCApplication3002/packages/slic/',
+                                       '/cool/dir/ILCApplication3002/packages/lcdd/',
+                                       '/cool/dir/ILCApplication3002/packages/xerces/' ], self )
       assertEqualsImproved( os.environ[ 'SLIC_DIR' ], '/cool/dir/ILCApplication3002', self )
       assertEqualsImproved( os.environ[ 'SLIC_VERSION' ], 'myslicpaths', self )
       assertEqualsImproved( os.environ[ 'XERCES_VERSION' ], 'myxercespaths', self )
@@ -558,10 +547,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       libc_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/LDLibs' )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       self.assertFalse( addfolder_mock.called )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/slic/' )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/lcdd/' )
       exists_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/packages/xerces/' )
-      assertEqualsImproved( len(listdir_mock.mock_calls), 2, self )
+      assertMockCalls( listdir_mock, [ '/cool/dir/ILCApplication3002/packages/slic/',
+                                       '/cool/dir/ILCApplication3002/packages/lcdd/' ], self )
       assertEqualsImproved( os.environ[ 'SLIC_DIR' ], '/cool/dir/ILCApplication3002', self )
       assertEqualsImproved( len(os.environ), 1, self )
 
@@ -578,15 +566,13 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('SLIC', 'version1000'), 'configurationArea', ['ILCApplication3002'] )
       assertDiracSucceeds( result, self ) # FIXME: OSError in configureSlic is ignored... Intentional?
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
-      assertEqualsImproved( len(addfolder_mock.mock_calls), 1, self )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/slic/' )
-      listdir_mock.assert_any_call( '/cool/dir/ILCApplication3002/packages/lcdd/' )
       self.assertFalse( exists_mock.called )
-      assertEqualsImproved( len(listdir_mock.mock_calls), 2, self )
+      assertMockCalls( listdir_mock, [ '/cool/dir/ILCApplication3002/packages/slic/',
+                                       '/cool/dir/ILCApplication3002/packages/lcdd/' ], self )
       assertEqualsImproved( os.environ[ 'SLIC_DIR' ], '/cool/dir/ILCApplication3002', self )
       assertEqualsImproved( len(os.environ), 1, self )
 
@@ -601,8 +587,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
                           ['ILCApplication3002'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
 
@@ -617,12 +603,11 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('ROOT', 'v9084u'), 'configurationArea', ['myres'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/current/working/dir/myres/LDLibs' )
-      libc_mock.assert_any_call( '/current/working/dir/myres/lib' )
+      assertMockCalls( libc_mock, [ '/current/working/dir/myres/LDLibs', '/current/working/dir/myres/lib' ],
+                       self  )
       isdir_mock.assert_called_once_with( '/current/working/dir/myres/lib' )
-      addfolder_mock.assert_called_with( '/current/working/dir/myres/lib' )
-      assertEqualsImproved( len(addfolder_mock.mock_calls), 2, self )
-      assertEqualsImproved( addfolder_mock.mock_calls[0], addfolder_mock.mock_calls[1], self )
+      assertMockCalls( addfolder_mock, [ '/current/working/dir/myres/lib' ] * 2,
+                       self )
       assertEqualsImproved( os.environ['PATH'], '/current/working/dir/myres/bin:mypath', self )
       assertEqualsImproved( os.environ['PYTHONPATH'], '/current/working/dir/myres/lib:pythonic_path', self )
       assertEqualsImproved( os.environ['ROOTSYS'], '/current/working/dir/myres', self )
@@ -639,12 +624,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('Java', 'v9084u'), 'configurationArea', ['res'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/java/res/LDLibs' )
-      libc_mock.assert_any_call( '/java/res/lib' )
+      assertMockCalls( libc_mock, [ '/java/res/LDLibs', '/java/res/lib' ], self )
       isdir_mock.assert_called_once_with( '/java/res/lib' )
-      addfolder_mock.assert_called_with( '/java/res/lib' )
-      assertEqualsImproved( len( addfolder_mock.mock_calls ), 2, self )
-      assertEqualsImproved( addfolder_mock.mock_calls[0], addfolder_mock.mock_calls[1], self )
+      assertMockCalls( addfolder_mock, [ '/java/res/lib' ] * 2, self )
       assertEqualsImproved( os.environ['PATH'], '/java/res/bin:mypath', self )
       assertEqualsImproved( len(os.environ), 1, self )
 
@@ -660,8 +642,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('LCIO', 'v9084u'), 'configurationArea', ['retval'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/my/lcio/retval/LDLibs' )
-      libc_mock.assert_any_call( '/my/lcio/retval/lib' )
+      assertMockCalls( libc_mock, [ '/my/lcio/retval/LDLibs', '/my/lcio/retval/lib' ], self )
       isdir_mock.assert_called_once_with( '/my/lcio/retval/lib' )
       addfolder_mock.assert_called_once_with( '/my/lcio/retval/lib' )
       subproc_mock.assert_called_once_with( ['java', '-Xmx1536m', '-Xms256m', '-version'] )
@@ -680,11 +661,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('LCIO', 'version1000'), 'configurationArea', ['ILCApplication3002'] )
       assertDiracFailsWith( result, 'something is wrong with java', self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
-      assertEqualsImproved( len(addfolder_mock.mock_calls), 1, self )
       subproc_mock.assert_called_once_with( ['java', '-Xmx1536m', '-Xms256m', '-version'] )
 
   def test_configure_lcsim( self ):
@@ -698,8 +678,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('LCSIM', 'v9084u'), 'configurationArea', ['ILCApplication3002'] )
       assertDiracFailsWith( result, 'something is wrong with java', self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       subproc_mock.assert_called_once_with( ['java', '-Xmx1536m', '-Xms256m', '-version'] )
@@ -716,8 +696,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('StdHEPCutJava', 'v9084u'), 'configurationArea', ['ILCApplication3002'] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       subproc_mock.assert_called_once_with( ['java', '-Xmx1536m', '-Xms256m', '-version'] )
@@ -734,8 +714,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = configure( ('StdHEPCutJava', 'v9084u'), 'configurationArea', ['ILCApplication3002'] )
       assertDiracFailsWith( result, 'java was not found on this machine, cannot proceed', self )
       chdir_mock.assert_called_once_with( 'configurationArea' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/LDLibs' )
-      libc_mock.assert_any_call( '/cool/dir/ILCApplication3002/lib' )
+      assertMockCalls( libc_mock, [ '/cool/dir/ILCApplication3002/LDLibs', '/cool/dir/ILCApplication3002/lib' ],
+                       self )
       isdir_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       addfolder_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/lib' )
       subproc_mock.assert_called_once_with( ['java', '-Xmx1536m', '-Xms256m', '-version'] )
@@ -821,10 +801,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
                                 'mycurrenttestdir' )
       assertDiracSucceeds( result, self )
       # change dir to current dir after every step
-      chdir_mock.assert_called_with( 'mycurrenttestdir' )
-      assertEqualsImproved( len(chdir_mock.mock_calls), 5, self )
-      for i in xrange(0, len(chdir_mock.mock_calls) - 1):
-        assertEqualsImproved( chdir_mock.mock_calls[i], chdir_mock.mock_calls[i+1], self )
+      assertMockCalls( chdir_mock, [ 'mycurrenttestdir' ] * 5, self )
       get_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'configToTest', 'secret_area' )
       install_mock.assert_called_once_with( ('testAppLication', 'version1.01.'), 'APP_TAR',
                                             'http://myTar.url', False, '1234MyMd5', 'secret_area' )
@@ -924,8 +901,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       checklock_mock.assert_called_once_with( 'myapptarbase.lock' )
       chdir_mock.assert_called_once_with( 'mytestArea' )
       md5check_mock.assert_called_once_with( 'myapptarbase.tar.gz', 'Mymd5sumTest' )
-      exists_mock.assert_any_call( 'myapptarbase' )
-      exists_mock.assert_called_with( '/my/cwd/test/myapptarbase.tar.gz' )
+      assertMockCalls( exists_mock, [ 'myapptarbase', '/my/cwd/test/myapptarbase.tar.gz' ], self )
 
   def test_install_checklockage_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import install
@@ -987,7 +963,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       result = install(('appname', 'appvers'), 'app_tar.tar.gz', 'tarballURL', False, 'md5sum', 'area')
       assertDiracFailsWith( result, 'failed to download software', self )
       clearlock_mock.assert_called_once_with( 'app_tar.lock' )
-      exists_mock.assert_any_call( '/my/cwd/test/app_tar.tar.gz')
+      assertMockCalls( exists_mock, [ 'app_tar', '/my/cwd/test/app_tar.tar.gz' ], self )
 
   def test_install_md5check_cannot_remove_old_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import install
