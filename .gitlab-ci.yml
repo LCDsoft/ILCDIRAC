@@ -7,7 +7,7 @@ before_script:
     - mv ILCDIRAC ILCDIRAC_commit
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
-    - ./dirac-install -V ILCDIRAC -r v26r0p3 -g 2016-11-03
+    - ./dirac-install -V ILCDIRAC -r v26r0p4 -g 2016-11-03
     - rm -rf DIRAC
     - mkdir DIRAC
     - cd DIRAC
@@ -18,6 +18,7 @@ before_script:
     - mv ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
+    - unset REQUESTS_CA_BUNDLE
     - pip install --upgrade pip pylint mock MySQL-python #coverage Check if we need coverage
     - easy_install pytest-cov pytest-randomly #pyparsing
     - cd ILCDIRAC
