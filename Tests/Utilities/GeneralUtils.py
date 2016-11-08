@@ -48,11 +48,18 @@ def assertEqualsXmlTree( root1, root2, assertobject):
 def assertListContentEquals( list1, list2, assertobject ):
   """Asserts that two lists contain the same elements, regardless of order, else a useful debug message is returned
   Checks if both list have the same length first, then checks if each element of one list  is contained in the
-  other list.
+  other list. Duplicates have to be in the lists the same amount of times.
   """
   assertEqualsImproved( len(list1), len(list2), assertobject )
+  # Code similar to assertMockCalls but can't reuse
+  tmp_compare_list = list( list2 ) # Copies the references of the second list (shallow copy)
   for elem1 in list1:
-    assertInImproved( elem1, list2, assertobject )
+    try:
+      tmp_compare_list.remove( elem1 )
+    except ValueError as v_err:
+      assertobject.fail( 'The two passed lists do not contain the same elements.\n %s was not found (often enough) in the second list. Original lists: \n %s \n %s \n Error: %s' % ( elem1, list1, list2, v_err ) )
+
+  assertobject.assertFalse( tmp_compare_list, 'The two passed lists do not contain the same elements. The following elements from the second list are not contained (often enough) in the first list: %s\n Original lists: \n %s \n %s \n ' % ( tmp_compare_list, list1, list2 ) )
 
 def assertDiracFails( result, assertobject):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR.
