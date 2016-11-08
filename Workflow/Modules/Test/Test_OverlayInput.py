@@ -346,7 +346,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       if unlink_called:
         remove_mock.assert_called_with( 'overlayinput.sh' )
       else:
-        self.assertFalse( remove_mock )
+        self.assertFalse( remove_mock.called )
       # Check if output to files is correct
       FileUtil.checkFileInteractions( self, mo, expected_opens, expected, handles )
       if is_ral:

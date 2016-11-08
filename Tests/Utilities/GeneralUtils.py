@@ -127,8 +127,8 @@ def assertMockCalls( mock_object_method, argslist, assertobject, only_these_call
   for expected_call in call_list:
     try:
       mock_call_list.remove( expected_call )
-    except ValueError as v_err:
-      assertobject.fail( 'Expected the mock to be called with the passed arglist but that was not the case: %s\n List of expected calls: %s \n List of actual calls: %s' % ( v_err, argslist, mock_object_method.mock_calls ) )
+    except ValueError:
+      assertobject.fail( 'Expected the mock to be called with the passed arglist but that was not the case for the call %s\n List of expected calls: %s \n List of actual calls: %s' % ( expected_call, argslist, mock_call_list ) )
   # TODO test these two new methods, find way to handle positional arguments, beautify output
   if only_these_calls:
     assertobject.assertFalse( mock_call_list, "The following calls were made on the mock object but don't have a respective entry in the argslist: %s" % mock_call_list )
