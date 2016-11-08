@@ -45,7 +45,7 @@ def assertEqualsXmlTree( root1, root2, assertobject):
     assert child2 is not None
     assertEqualsXmlTree( child1, child2, assertobject )
 
-def assertContentEqualsList( list1, list2, assertobject ):
+def assertListContentEquals( list1, list2, assertobject ):
   """Asserts that two lists contain the same elements, regardless of order, else a useful debug message is returned
   Checks if both list have the same length first, then checks if each element of one list  is contained in the
   other list.

@@ -2,12 +2,12 @@
 """Test the ProcessList module"""
 
 import unittest
-from mock import patch, call, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertContentEqualsList, \
-  assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertListContentEquals, \
+  assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -82,7 +82,7 @@ class ProcessListComplexTestCase( unittest.TestCase ):
                             self.prol.existsProcess( 'myTestProcDeleteMeToo' ) ),
                           ( '/test/cs/path/ball.tar', 'my/file.in', S_OK(True), S_OK(True), S_OK(False),
                             S_OK(False) ), self )
-    assertContentEqualsList( self.prol.getProcesses(), [ 'myTestProcDeleteMe', 'MytestProcess' ], self )
+    assertListContentEquals( self.prol.getProcesses(), [ 'myTestProcDeleteMe', 'MytestProcess' ], self )
     all_processes_dict = self.prol.getProcessesDict()
     assertEqualsImproved( len(all_processes_dict), 2, self )
     assertEqualsImproved( ('myTestProcDeleteMe' in all_processes_dict, 'MytestProcess' in all_processes_dict),
@@ -172,9 +172,9 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     with patch('shutil.copy') as copy_mock, \
          patch('subprocess.call') as proc_mock:
       self.prol.uploadProcessListToFileCatalog( '/my/secret/path/processlist.whiz', 'v120' )
-      assertEqualsImproved( copy_mock.mock_calls, [
-        call( 'myTestProcess.list', '/afs/cern.ch/eng/clic/software/whizard/whizard_195/' ),
-        call( 'myTestProcess.list', '/local/path/proc.list' ) ], self )
+      assertMockCalls( copy_mock, [
+        ( 'myTestProcess.list', '/afs/cern.ch/eng/clic/software/whizard/whizard_195/' ),
+        ( 'myTestProcess.list', '/local/path/proc.list' ) ], self )
       proc_mock.assert_called_once_with(
         [ 'svn', 'ci', '/afs/cern.ch/eng/clic/software/whizard/whizard_195/proc.list',
           "-m'Process list for whizard version v120'" ], shell=False )
