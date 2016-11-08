@@ -6,11 +6,11 @@ Test the GenericApplication module
 
 import unittest
 
-from mock import patch, call, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication import GenericApplication
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
-  assertDiracSucceeds
+  assertDiracSucceeds, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -92,8 +92,7 @@ class GenericAppTestCase( unittest.TestCase ):
     self.gapp._job = job_mock
     self.gapp.dependencies = { 'mydependency' : 'v1', 'other_library' : 'v100testme' }
     self.gapp._setStepParametersValues( Mock() )
-    assertEqualsImproved( job_mock._addSoftware.mock_calls, [ call( 'mydependency', 'v1'),
-                                                              call( 'other_library','v100testme' ) ], self )
+    assertMockCalls( job_mock._addSoftware, [ ( 'mydependency', 'v1' ), ( 'other_library', 'v100testme' ) ], self )
 
   def test_checkconsistency( self ):
     self.gapp.script = 'lfn:/totally/valid/path.sh'

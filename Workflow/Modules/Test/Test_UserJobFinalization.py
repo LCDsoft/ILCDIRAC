@@ -3,13 +3,13 @@
 
 import os
 import unittest
-from mock import patch, mock_open, MagicMock as Mock
+from mock import patch, call, mock_open, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
   assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, \
-  assertDiracSucceedsWith_equals
+  assertDiracSucceedsWith_equals, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -160,19 +160,17 @@ class TestUserJobFinalization( unittest.TestCase ):
           'filedict' : 475 } }, filesUploaded )
       assertDiracSucceeds( result, self )
       assertEqualsImproved( result['Value'], dict(cleanUp=False), self )
-      shuffle_mock.assert_any_call( [ 'testSite1', 'testSite2', 'myTestSite',
-                                      'privateSite4', 'etc' ] )
-      shuffle_mock.assert_called_with( [ 'testSite1', 'testSite2', 'myTestSite',
-                                         'privateSite4', 'etc' ])
-      transfer_mock.transferAndRegisterFileFailover.assert_called_with(
-        'filename1test', '/my/local/path/Testme.txt', 'LFN:/ilc/mytest/LFN.txt',
-        'etc', [ 'testSite1', 'testSite2', 'myTestSite', 'privateSite4' ],
-        fileCatalog='blaCatalogTestme', fileMetaDict=89546 )
-      transfer_mock.transferAndRegisterFileFailover.assert_any_call(
-        'my_other_testfile', '/my/local/path/Testme2.txt',
-        'LFN:/ilc/othertest/new_lfn.lfn', 'testSite1',
-        [ 'testSite2', 'myTestSite', 'privateSite4', 'etc' ],
-        fileCatalog='blaCatalogTestme', fileMetaDict=475 )
+      assertMockCalls( shuffle_mock, [ [ 'testSite1', 'testSite2', 'myTestSite', 'privateSite4', 'etc' ],
+                                       [ 'testSite1', 'testSite2', 'myTestSite', 'privateSite4', 'etc' ] ],
+                       self )
+      assertEqualsImproved( transfer_mock.transferAndRegisterFileFailover.mock_calls,
+                            [ call( 'my_other_testfile', '/my/local/path/Testme2.txt',
+                                    'LFN:/ilc/othertest/new_lfn.lfn', 'testSite1',
+                                    [ 'testSite2', 'myTestSite', 'privateSite4', 'etc' ],
+                                    fileCatalog='blaCatalogTestme', fileMetaDict=475 ),
+                              call( 'filename1test', '/my/local/path/Testme.txt', 'LFN:/ilc/mytest/LFN.txt',
+                                    'etc', [ 'testSite1', 'testSite2', 'myTestSite', 'privateSite4' ],
+                                    fileCatalog='blaCatalogTestme', fileMetaDict=89546 ) ], self )
       self.assertIn( 'LFN:/ilc/mytest/LFN.txt', filesUploaded )
       self.assertIn( 'LFN:/ilc/othertest/new_lfn.lfn', filesUploaded )
 
@@ -253,18 +251,15 @@ class TestUserJobFinalization( unittest.TestCase ):
       }, filesUploaded )
       assertDiracSucceeds( result, self )
       assertEqualsImproved( result['Value'], dict(cleanUp=True), self )
-      shuffle_mock.assert_called_with( [ 'onlyAvailableSE' ] )
-      transfer_mock.transferAndRegisterFileFailover.assert_any_call(
-        'workingFile1', '/my/local/first/path', 'LFN:/ilc/some/dir/file1.txt',
-        'someOtherSite', [ 'onlyAvailableSE' ], fileCatalog='myCat',
-        fileMetaDict=8520 )
-      transfer_mock.transferAndRegisterFileFailover.assert_called_with(
-        'thisFileWorks.too', '/dir/current/local.lfn', 'LFN:/ilc/mydir/file2.ppt',
-        'someOtherOtherSite', [ 'onlyAvailableSE' ], fileCatalog='myCat',
-        fileMetaDict=98453 )
-      self.assertIn( 'LFN:/ilc/mydir/file2.ppt', filesUploaded )
-      self.assertIn( 'LFN:/ilc/some/dir/file1.txt', filesUploaded )
-      assertEqualsImproved( len(filesUploaded), 2, self )
+      assertMockCalls( shuffle_mock, [ [ 'onlyAvailableSE' ] ] * 4, self )
+      assertEqualsImproved( transfer_mock.transferAndRegisterFileFailover.mock_calls, [
+        call( 'workingFile1', '/my/local/first/path', 'LFN:/ilc/some/dir/file1.txt', 'someOtherSite',
+              [ 'onlyAvailableSE' ], fileCatalog = 'myCat', fileMetaDict = 8520 ),
+        call( 'fail_transfer', '/matterdoesnt', 'neither', 'someOtherSite', [ 'onlyAvailableSE' ],
+              fileCatalog = 'myCat', fileMetaDict = 92 ),
+        call( 'thisFileWorks.too', '/dir/current/local.lfn', 'LFN:/ilc/mydir/file2.ppt', 'someOtherOtherSite',
+              [ 'onlyAvailableSE' ], fileCatalog = 'myCat', fileMetaDict = 98453 ) ], self )
+      assertEqualsImproved( filesUploaded, [ 'LFN:/ilc/some/dir/file1.txt', 'LFN:/ilc/mydir/file2.ppt' ], self )
 
 @patch('%s.UserJobFinalization.logWorkingDirectory' % MODULE_NAME, new=Mock())
 class TestExecute( unittest.TestCase ):
@@ -336,12 +331,11 @@ class TestExecute( unittest.TestCase ):
     assertEqualsImproved( len(transfer_mock.transferAndRegisterFile.mock_calls), 14, self )
     self.assertFalse( transfer_mock.transferAndRegisterFileFailover.called )
     dataman_mock = dataman_mock()
-    dataman_mock.replicateAndRegister.assert_any_call(
-      '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/filenames.jar',
-      'myTestReceivingSE' )
-    dataman_mock.replicateAndRegister.assert_called_with(
-      '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/list_of.txt',
-      'myTestReceivingSE' )
+    assertMockCalls( dataman_mock.replicateAndRegister,
+                     [ ('/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/filenames.jar',
+                        'myTestReceivingSE' ),
+                       ( '/myTestVirtualOrga/testpre/m/myTestOwner123RichGuy/my/User/OPPath/list_of.txt',
+                         'myTestReceivingSE' ) ], self, only_these_calls = False )
     assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
 
   def test_execute_not_last_step( self ):
@@ -518,10 +512,9 @@ class TestExecute( unittest.TestCase ):
                           14, self )
     self.assertFalse( transfer_mock.transferAndRegisterFileFailover.called )
     dataman_mock = dataman_mock()
-    dataman_mock.replicateAndRegister.assert_any_call( 'LFN:/ilc/mydir/file2.ppt',
-                                                       'myTestReceivingSE')
-    dataman_mock.replicateAndRegister.assert_called_with( 'LFN:/ilc/some/dir/file1.txt',
-                                                          'myTestReceivingSE' )
+    assertMockCalls( dataman_mock.replicateAndRegister, [ ( 'LFN:/ilc/mydir/file2.ppt', 'myTestReceivingSE' ),
+                                                          ( 'LFN:/ilc/some/dir/file1.txt', 'myTestReceivingSE' ) ],
+                     self, only_these_calls = False )
 
 TRANSFER_AND_REGISTER_DICT = { 'fail_transfer' : S_ERROR( 'myrandomerror' ),
                                'workingFile1' : S_OK(),

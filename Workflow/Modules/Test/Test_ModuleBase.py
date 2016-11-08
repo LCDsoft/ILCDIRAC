@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """ Test the ModuleBase module """
 
+from StringIO import StringIO
 import sys
 import unittest
 from mock import patch, call, mock_open, MagicMock as Mock
-from StringIO import StringIO
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase, generateRandomString
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
   assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, \
-  assertDiracSucceedsWith_equals
+  assertDiracSucceedsWith_equals, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -29,6 +29,8 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     random_string_2 = generateRandomString()
     assertEqualsImproved( len(random_string_1), 8, self )
     assertEqualsImproved( len(random_string_2), 8, self )
+    assert isinstance( random_string_1, basestring )
+    assert isinstance( random_string_2, basestring )
 
   def test_constructor( self ):
     log_mock_noproxy = Mock()
@@ -109,17 +111,19 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/cur/working/dir')) as getcwd_mock:
       result = self.moba.execute()
     assertDiracSucceedsWith_equals( result, None, self )
-    assertEqualsImproved( copytree_mock.mock_calls, [
-      call( 'steering/file/path/entry.steeringfile', './entry.steeringfile' ),
-      call( 'steering/file/path/failcopyingonthis', './failcopyingonthis' ),
-      call( 'ild/test/configpath/ildfile.entry', './ildfile.entry'),
-      call( 'ild/test/configpath/ild_failcopyhere', './ild_failcopyhere') ], self )
-    assertEqualsImproved( copy2_mock.mock_calls,
-                          call( 'steering/file/path/lastfile.sf', './lastfile.sf' ),
-                          call( 'ild/test/configpath/lastfile.ild', './lastfile.ild' ) )
-    assertEqualsImproved( len(listdir_mock.mock_calls), 3, self )
-    self.assertNotEquals( listdir_mock.mock_calls[0], listdir_mock.mock_calls[1] )
-    assertEqualsImproved( len(isdir_mock.mock_calls), 6, self )
+    assertMockCalls( copytree_mock, [ ( 'steering/file/path/entry.steeringfile', './entry.steeringfile' ),
+                                      ( 'steering/file/path/failcopyingonthis', './failcopyingonthis' ),
+                                      ( 'ild/test/configpath/ildfile.entry', './ildfile.entry'),
+                                      ( 'ild/test/configpath/ild_failcopyhere', './ild_failcopyhere') ], self )
+    assertMockCalls( copy2_mock, [ ( 'steering/file/path/lastfile.sf', './lastfile.sf' ),
+                                   ( 'ild/test/configpath/lastfile.ild', './lastfile.ild' ) ], self )
+    assertMockCalls( listdir_mock, [ 'steering/file/path', 'ild/test/configpath', '/test/cur/working/dir' ], self )
+    assertMockCalls( isdir_mock, [ 'steering/file/path/entry.steeringfile',
+                                   'steering/file/path/failcopyingonthis',
+                                   'steering/file/path/lastfile.sf',
+                                   'ild/test/configpath/ildfile.entry',
+                                   'ild/test/configpath/ild_failcopyhere',
+                                   'ild/test/configpath/lastfile.ild' ], self )
     getcwd_mock.assert_called_once_with()
 
   def test_setappstat( self ):
@@ -131,7 +135,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.setApplicationStatus( 'my_test_status' ),
                                     'mytest_success!!!', self )
-    self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
+    self.assertFalse( log_mock.called )
+    self.assertFalse( log_mock.warn.called )
+    self.assertFalse( log_mock.err.called )
     report_mock.setApplicationStatus.assert_called_once_with( 'my_test_status', True )
 
   def test_setappstat_local( self ):
@@ -164,7 +170,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock.sendStoredStatusInfo.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.sendStoredStatusInfo(), 'mytest_success!!!', self )
-    self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
+    self.assertFalse( log_mock.called )
+    self.assertFalse( log_mock.warn.called )
+    self.assertFalse( log_mock.err.called )
     report_mock.sendStoredStatusInfo.assert_called_once_with()
 
   def test_sendstoredstatinfo_local( self ):
@@ -197,7 +205,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'mytestName', 135 ),
                                     'mytest_success!!!', self )
-    self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
+    self.assertFalse( log_mock.called )
+    self.assertFalse( log_mock.warn.called )
+    self.assertFalse( log_mock.err.called )
     report_mock.setJobParameter.assert_called_once_with( 'mytestName', '135', True )
 
   def test_setjobparameter_local( self ):
@@ -231,7 +241,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(),
                                     'mytest_success!!!', self )
-    self.assertFalse( log_mock.called and log_mock.warn.called and log_mock.err.called )
+    self.assertFalse( log_mock.called )
+    self.assertFalse( log_mock.warn.called )
+    self.assertFalse( log_mock.err.called )
     report_mock.sendStoredJobParameters.assert_called_once_with()
 
   def test_sendstoredjobparameters_local( self ):
@@ -387,8 +399,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
             'path': '/dir/clid/user/myothertestfile.txt',
             'GUID': 'test_myGuid_2'} }
       assertDiracSucceedsWith_equals( result, expected_dict, self )
-      assertEqualsImproved( guid_mock.mock_calls, [
-        call('testfile_allworks.stdhep'), call('myothertest_file') ], self )
+      assertMockCalls( guid_mock, [ 'testfile_allworks.stdhep', 'myothertest_file' ], self )
 
   def test_resolveinputvars( self ):
     mb = self.moba

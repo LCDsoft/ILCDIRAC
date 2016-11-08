@@ -346,7 +346,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       if unlink_called:
         remove_mock.assert_called_with( 'overlayinput.sh' )
       else:
-        remove_mock.assert_not_called()
+        self.assertFalse( remove_mock )
       # Check if output to files is correct
       FileUtil.checkFileInteractions( self, mo, expected_opens, expected, handles )
       if is_ral:
@@ -498,7 +498,7 @@ class TestOverlayExecute( unittest.TestCase ):
                               call( [ 'nsls', proc_command_dir + 'myfile1' ], stdout=subprocess.PIPE ),
                               call( [ 'nsls', proc_command_dir + 'file1923' ], stdout=subprocess.PIPE ),
                               call( [ 'nsls', proc_command_dir + '813tev_collision' ],
-                                    stdout=subprocess.PIPE ) ], self )
+                                    stdout=subprocess.PIPE ) ], self ) # Checks for expected calls on the mock
 
   def test_getfilesfromlyon_ignore_all( self ):
     import subprocess

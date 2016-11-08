@@ -9,7 +9,8 @@ from mock import call, mock_open, patch, MagicMock as Mock
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.WhizardAnalysis import WhizardAnalysis
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
-  assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals
+  assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith_equals, \
+  assertMockCalls
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
@@ -229,9 +230,8 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       result = self.wha.runIt()
       assertDiracSucceedsWith_equals( result, {
         'OutputFile' : 'mytestwhizardOutputFile' }, self )
-      assertEqualsImproved( open_mock.mock_calls, [
-        call('Whizard_myTestV1_Run_testStep12.sh', 'w'), call('mytestAppLOg'),
-        call( 'whizard.out', 'r') ], self )
+      assertMockCalls( open_mock, [ ( 'Whizard_myTestV1_Run_testStep12.sh', 'w' ), 'mytestAppLOg',
+                                    ( 'whizard.out', 'r' ) ], self )
       check_runit_for_parameters( self, whiz_options_mock, getops_mock,
                                   genmodel_mock, expected_calls, handles,
                                   appstat_mock, exists_mock, rename_mock,
@@ -241,7 +241,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
                                   expected_chmod, expected_glob,
                                   expected_shell, expected_copy, expected_genmodel,
                                   expected_getops, expected_remove )
-      assertEqualsImproved( self.wha.workflow_commons[ 'Info'], {
+      assertEqualsImproved( self.wha.workflow_commons[ 'Info' ], {
         'xsection' : { '843' : { 'xsection' : 12.1, 'err_xsection' : 489.3,
                                  'fraction' :  91.2 } } }, self )
       assertEqualsImproved( self.wha.workflow_commons[ 'Luminosity' ], 92847,
@@ -287,11 +287,9 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       getlibs_mock.assert_called_once_with( 'myTestPlatform', 'whizard', '' )
       resolvdep_mock.assert_called_once_with( 'myTestPlatform', 'whizard', '' )
       removlib_mock.assert_called_once_with( 'my/test/soft/dir/lib' )
-      getsoft_mock.assert_any_call( 'myTestPlatform', 'whizard', '' )
-      getsoft_mock.assert_any_call( 'myTestPlatform', 'mytestdep', '4.2' )
-      getsoft_mock.assert_any_call( 'myTestPlatform', 'faulty_dep_testme',
-                                    'invalid' )
-      assertEqualsImproved( len(getsoft_mock.mock_calls), 3, self )
+      assertMockCalls( getsoft_mock, [ ( 'myTestPlatform', 'whizard', '' ),
+                                       ( 'myTestPlatform', 'mytestdep', '4.2' ),
+                                       ( 'myTestPlatform', 'faulty_dep_testme', 'invalid' ) ], self )
 
   def test_runit_whizardin_fails( self ):
     self.wha.useGridFiles = True
@@ -382,8 +380,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in',
                                          './whizardnew.in' )
       genmodel_mock.hasModel.assert_called_once_with( True )
-      genmodel_mock.getFile.assert_any_call( True )
-      assertEqualsImproved( len(genmodel_mock.mock_calls), 3, self )
+      assertMockCalls( genmodel_mock.getFile, [ True, True ], self )
 
   def test_runit_model_undefined( self ):
     exists_dict = { 'list.txt' : True, 'LesHouches.msugra_1.in' : False }
@@ -447,7 +444,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       assertDiracFailsWith( self.wha.runIt(),
                             'failed to obtain mywhizardtestfile.in', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
+      exists_mock.assert_called_once_with( 'list.txt' )
       appstat_mock.assert_called_once_with( 'Failed getting whizard.in file' )
 
   def test_runit_changeandreturn_fails( self ):
@@ -482,9 +479,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
          patch('%s.WhizardOptions' % MODULE_NAME, new=whiz_options_mock):
       assertDiracFailsWith( self.wha.runIt(), 'changeandret_err_testme', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      exists_mock.assert_any_call( 'list.txt' )
-      exists_mock.assert_any_call( 'LesHouches.msugra_1.in' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
+      assertMockCalls( exists_mock, [ 'list.txt', 'LesHouches.msugra_1.in' ], self )
       self.assertFalse( appstat_mock.called )
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in',
                                          './whizardnew.in' )
@@ -725,44 +720,32 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       #FIXME: makeWhizardDotCut1 currently cant fail (although it operates on files?!)
       assertDiracFailsWith( self.wha.runIt(), 'whizard did not produce the expected log', self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      assertEqualsImproved( exists_mock.mock_calls, [
-        call( 'list.txt' ), call( 'LesHouches.msugra_1.in' ),
-        call( 'Whizard_myTestV1_Run_testStep12.sh' ), call( 'mytestAppLOg' ),
-        call('mytestAppLOg') ], self )
-      assertEqualsImproved( remove_mock.mock_calls, [
-        call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ], self )
-      assertEqualsImproved( appstat_mock.mock_calls, [
-        call( 'Whizard myTestV1 step testStep12'),
-        call( 'whizard failed terribly, you are doomed!' )], self )
+      assertMockCalls( exists_mock, [ 'list.txt', 'LesHouches.msugra_1.in',
+                                      'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg',
+                                      'mytestAppLOg' ], self )
+      assertMockCalls( remove_mock, [ 'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg' ], self )
+      assertMockCalls( appstat_mock, [ 'Whizard myTestV1 step testStep12',
+                                       'whizard failed terribly, you are doomed!' ], self )
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in',
                                          './whizardnew.in' )
       self.assertFalse( genmodel_mock.called )
       whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
       whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
-      assertEqualsImproved( remove_mock.mock_calls, [
-        call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ], self )
+      assertMockCalls( remove_mock, [ 'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg' ], self )
       open_mock.assert_called_once_with('Whizard_myTestV1_Run_testStep12.sh', 'w')
-      write_calls = open_mock().write.mock_calls
-      expected_calls = [
-        call('#!/bin/sh \n'),
-        call('#####################################################################\n'),
-        call('# Dynamically generated script to run a production or analysis job. #\n'),
-        call('#####################################################################\n'),
-        call('declare -x PATH=my/test/soft/dir:$PATH\n'),
-        call('declare -x LD_LIBRARY_PATH=my/test/soft/dir/lib:my/lib/path\n'),
-        call('env | sort >> localEnv.log\n'), call('echo =============================\n'),
-        call('echo Printing content of whizard.in \n'), call('cat whizard.in\n'),
-        call('echo =============================\n'),
-        call('cp  my/test/soft/dir/whizard.mdl ./\n'),
-        call('ln -s LesHouches.msugra_1.in fort.71\n'),
-        call('cp file1.grb ./\n'), call('cp otherfile.grb ./\n'),
-        call('cp testfile.grc ./\n'), call('cp my/test/soft/dir/whizard.prc ./\n'),
-        call('echo =============================\n'),
-        call('echo Printing content of whizard.prc \n'), call('cat whizard.prc\n'),
-        call('echo =============================\n'),
-        call('whizard --simulation_input \'write_events_file = \"myTestEvents\"\' extraTestCLIargs 2>/dev/null\n'),
-        call('declare -x appstatus=$?\n'), call('exit $appstatus\n') ]
-      assertEqualsImproved( write_calls, expected_calls, self )
+      assertMockCalls( open_mock().write, [
+        '#!/bin/sh \n', '#####################################################################\n',
+        '# Dynamically generated script to run a production or analysis job. #\n',
+        '#####################################################################\n',
+        'declare -x PATH=my/test/soft/dir:$PATH\n',
+        'declare -x LD_LIBRARY_PATH=my/test/soft/dir/lib:my/lib/path\n', 'env | sort >> localEnv.log\n',
+        'echo =============================\n','echo Printing content of whizard.in \n', 'cat whizard.in\n',
+        'echo =============================\n', 'cp  my/test/soft/dir/whizard.mdl ./\n',
+        'ln -s LesHouches.msugra_1.in fort.71\n', 'cp file1.grb ./\n', 'cp otherfile.grb ./\n',
+        'cp testfile.grc ./\n', 'cp my/test/soft/dir/whizard.prc ./\n', 'echo =============================\n',
+        'echo Printing content of whizard.prc \n', 'cat whizard.prc\n', 'echo =============================\n',
+        'whizard --simulation_input \'write_events_file = \"myTestEvents\"\' extraTestCLIargs 2>/dev/null\n',
+        'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       chmod_mock.assert_called_once_with( 'Whizard_myTestV1_Run_testStep12.sh',
                                           0755 )
       shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"',
@@ -824,24 +807,17 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       assertDiracFailsWith( self.wha.runIt(), 'whizard Failed to produce STDHEP file',
                             self )
       getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
-      assertEqualsImproved( len(exists_mock.mock_calls), 7, self)
-      assertEqualsImproved( remove_mock.mock_calls, [
-        call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ],
-                            self )
-      assertEqualsImproved( appstat_mock.mock_calls, [
-        call( 'Whizard myTestV1 step testStep12'),
-        call( 'Whizard myTestV1 Failed to produce STDHEP file' ) ], self )
+      assertEqualsImproved( len(exists_mock.mock_calls), 7, self )
+      assertMockCalls( remove_mock, [ 'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg' ], self )
+      assertMockCalls( appstat_mock, [ 'Whizard myTestV1 step testStep12',
+                                       'Whizard myTestV1 Failed to produce STDHEP file' ], self )
       copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in',
                                          './whizardnew.in' )
       self.assertFalse( genmodel_mock.called )
       whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
       whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
-      assertEqualsImproved( remove_mock.mock_calls, [
-        call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ],
-                            self )
-      assertEqualsImproved( open_mock.mock_calls, [
-        call('Whizard_myTestV1_Run_testStep12.sh', 'w'), call('mytestAppLOg') ],
-                            self )
+      assertMockCalls( remove_mock, [ 'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg' ], self )
+      assertMockCalls( open_mock, [ ( 'Whizard_myTestV1_Run_testStep12.sh', 'w' ), 'mytestAppLOg' ], self )
       expected_calls = [
         [ call('#!/bin/sh \n'),
           call('#####################################################################\n'),
@@ -899,12 +875,11 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
                                                       'myparam'] }
     with patch('%s.open' % MODULE_NAME, mock_open(), create=True) as open_mock:
       assertDiracSucceeds( self.wha.makeWhizardDotCut1(), self )
-      open_mock.assert_any_call('whizard.cut1', 'w')
+      open_mock.assert_called_once_with('whizard.cut1', 'w')
       open_mock = open_mock()
-      check_lists_equal( open_mock.write.mock_calls, [
-        call('process myprocess\n'), call('  importantvalue\n'),
-        call('  dontmissme\n'), call('process key\n'), call('process param\n'),
-        call('  myparam\n'), call('  electron\n'), call('  myparam\n') ], self )
+      assertMockCalls( open_mock.write, [ 'process myprocess\n', '  importantvalue\n',
+                                          '  dontmissme\n', 'process key\n', 'process param\n',
+                                          '  myparam\n', '  electron\n', '  myparam\n' ], self )
       open_mock.close.assert_called_once_with()
 
 def check_lists_equal( list1, list2, assertobject ):
@@ -958,23 +933,16 @@ def check_logfiles( file_contents, assertobject ):
                           'Whizard Exited With Status 1', assertobject )
     getops_mock.getValue.assert_called_once_with( '/ProcessList/Location', '' )
     assertEqualsImproved( len(exists_mock.mock_calls), 6, assertobject )
-    assertEqualsImproved( remove_mock.mock_calls, [
-      call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ],
-                          assertobject )
-    assertEqualsImproved( appstat_mock.mock_calls, [
-      call( 'Whizard myTestV1 step testStep12'),
-      call( 'whizard Exited With Status 1' )], assertobject )
+    assertMockCalls( remove_mock, [ 'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg' ], assertobject )
+    assertMockCalls( appstat_mock, [ 'Whizard myTestV1 step testStep12', 'whizard Exited With Status 1' ],
+                     assertobject )
     copy_mock.assert_called_once_with( 'my/test/soft/dir/mywhizardTestFile.in',
                                        './whizardnew.in' )
     assertobject.assertFalse( genmodel_mock.called )
     whizopts_mock.changeAndReturn.assert_called_once_with( 9834 )
     whizopts_mock.toWhizardDotIn.assert_called_once_with( 'whizard.in' )
-    assertEqualsImproved( remove_mock.mock_calls, [
-      call('Whizard_myTestV1_Run_testStep12.sh'), call('mytestAppLOg') ],
-                          assertobject )
-    assertEqualsImproved( open_mock.mock_calls, [
-      call('Whizard_myTestV1_Run_testStep12.sh', 'w'),
-      call('mytestAppLOg') ], assertobject )
+    assertMockCalls( remove_mock, [ 'Whizard_myTestV1_Run_testStep12.sh', 'mytestAppLOg' ], assertobject )
+    assertMockCalls( open_mock, [ ( 'Whizard_myTestV1_Run_testStep12.sh', 'w'), 'mytestAppLOg'], assertobject )
     expected_calls = [ [
       call('#!/bin/sh \n'),
       call('#####################################################################\n'),
