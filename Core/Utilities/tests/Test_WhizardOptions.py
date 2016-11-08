@@ -3,11 +3,11 @@
 
 import unittest
 from xml.etree.ElementTree import fromstring
-from mock import mock_open, call, patch, MagicMock as Mock
+from mock import mock_open, patch, MagicMock as Mock
 
 from ILCDIRAC.Core.Utilities.WhizardOptions import WhizardOptions, getDict, main
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
-  assertDiracSucceeds, assertDiracSucceedsWith_equals, assertEqualsXmlTree, running_on_docker, assertMockCalls
+  assertDiracSucceeds, assertDiracSucceedsWith_equals, assertEqualsXmlTree, assertMockCalls
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
@@ -37,7 +37,7 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
   def test_toxml( self ):
     with patch('__builtin__.open', mock_open()) as open_mock:
       assertDiracSucceeds( self.whop.toXML( 'mytestOutputFile.xml' ), self )
-      assertMockCalls( open_mock, [ ( 'mytestOutputFile.xml', 'wb' ) ], self, only_these_calls = False )
+      open_mock.assert_any_call( 'mytestOutputFile.xml', 'wb' )
       self.assertTrue( len(open_mock().write.mock_calls) > 30 )
 
   def test_getmainfields( self ):
@@ -227,7 +227,7 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
     with patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       result = self.whop.toWhizardDotIn( 'mytestfile.xml' )
       assertDiracSucceeds( result, self )
-      assertMockCalls( open_mock, [ ( 'mytestfile.xml', 'w' ) ], self, only_these_calls = False )
+      open_mock.assert_any_call( 'mytestfile.xml', 'w' )
       assertMockCalls( open_mock().write, [ '&process_input\n test_bool = 0 0 0\n test_bool2 = 0.0 0.0\n test_integer = \n 1 20000\n 10 20000\n 1 20000\n/\n&beam_input\n test_float = dontchangeanything\n test_string = "some_teststring"\n test_noval = None\n/', '\n'], self )
 
   def test_fromwhizarddotin( self ):
