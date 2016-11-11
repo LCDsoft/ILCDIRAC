@@ -44,18 +44,17 @@ class StdHepSplit(ModuleBase):
     if not self.OutputFile:
       return S_ERROR( 'No output file defined' )
     
-    if 'IS_PROD' in self.workflow_commons:
-      if self.workflow_commons["IS_PROD"]:
-        if 'ProductionOutputData' in self.workflow_commons:
-          self.prod_outputdata = self.workflow_commons['ProductionOutputData'].split(";")
-          for obj in self.prod_outputdata:
-            if obj.lower().count("_gen_"):
-              self.OutputFile = os.path.basename(obj)
-        else:
-          self.OutputFile = getProdFilename(self.OutputFile,
-                                            int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))
-          
+    if 'IS_PROD' in self.workflow_commons and self.workflow_commons["IS_PROD"]:
+      if 'ProductionOutputData' in self.workflow_commons:
+        self.prod_outputdata = self.workflow_commons['ProductionOutputData'].split(";")
+        for obj in self.prod_outputdata:
+          if obj.lower().count("_gen_"):
+            self.OutputFile = os.path.basename(obj)
+      else:
+        self.OutputFile = getProdFilename(self.OutputFile,
+                                          int(self.workflow_commons["PRODUCTION_ID"]),
+                                          int(self.workflow_commons["JOB_ID"]))
+
     if not len(self.InputFile) and len(self.InputData):
       for files in self.InputData:
         if files.lower().find(".stdhep") > -1:
