@@ -21,9 +21,16 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     # Mock away DataManager import
     dataman_import_mock = Mock()
     dataman_import_mock.getFile.return_value = None
+    self.dm_backup = sys.modules.get( 'DIRAC.DataManagementSystem.Client.DataManager', -1 )
     sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_import_mock
     global dataman_mock
     dataman_mock = Mock()
+
+  def tearDown( self ):
+    if self.dm_backup != -1:
+      sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = self.dm_backup
+    else:
+      del sys.modules['DIRAC.DataManagementSystem.Client.DataManager']
 
   def test_importfails( self ): #pylint: disable=no-self-use
     """ Rather stupid test. The handling of an ImportError in hashlib internally imports hashlib as well...
@@ -44,8 +51,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
         else:
           importcounter = importcounter+1
       return realimport(name, globals, locals, fromlist, level)
+    backup_import = builtins.__import__
     builtins.__import__ = myimport
     from ILCDIRAC.Core.Utilities.TARsoft import createLock #pylint: disable=unused-variable
+    builtins.__import__ = backup_import
 
   def test_createlock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
@@ -173,7 +182,6 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertMockCalls( err_mock, [
         ( 'Failed deleting /delete/that because :', "<type 'exceptions.OSError'> test_remove_dir_cannot_error" ),
         'Oh Oh, something was not right, the directory /delete/that is still here' ], self )
-
 
   def test_download_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
@@ -1083,6 +1091,3 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       listdir_mock.assert_called_once_with( 'slic' )
 
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.TARsoft'
-
-
-

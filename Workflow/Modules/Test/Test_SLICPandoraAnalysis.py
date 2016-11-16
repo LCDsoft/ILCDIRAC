@@ -19,11 +19,16 @@ class TestSLICPandora( unittest.TestCase ):
   """
   def setUp( self ):
     # Mock out modules that spawn other threads
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
     self.spa = SLICPandoraAnalysis()
     self.spa.platform = 'myTestPlatform'
     self.spa.applicationLog = 'applogFile.test'
+
+  def tearDown( self ):
+    self.module_patcher.stop()
 
   def test_applicationSpecificInputs( self ):
     assertDiracSucceedsWith_equals( self.spa.applicationSpecificInputs(),

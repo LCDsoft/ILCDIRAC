@@ -2,7 +2,6 @@
 Tests for OverlayDB
 
 """
-import sys
 import unittest
 from mock import patch, MagicMock as Mock
 
@@ -14,16 +13,14 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.OverlaySystem.DB.OverlayDB'
 
-
 # pylint: disable=no-member
 class TestOverlayDB( unittest.TestCase ):
   """Tests of OverlayDB"""
   def setUp( self ):
     """ Prepare OverlayDB object
     """
-    self.backup_sys = sys.modules.get( 'DIRAC.ConfigurationSystem.Client.Utilities', -1 )
-    sys.modules[ 'DIRAC.ConfigurationSystem.Client.Utilities' ] = Mock()
     from ILCDIRAC.OverlaySystem.DB.OverlayDB import OverlayDB
+    from DIRAC.Core.Base.DB import DB
     value_dict = { '/Overlay/MaxConcurrentRunning' : 10, '/Overlay/Sites/testSite1/MaxConcurrentRunning' : 2,
                    '/Overlay/Sites/myOtherSite/MaxConcurrentRunning' : 2 }
     sections_dict = { '/Overlay/Sites/' : [ 'testSite1', 'myOtherSite' ] }
@@ -31,14 +28,9 @@ class TestOverlayDB( unittest.TestCase ):
     self.ops_mock.getValue.side_effect = lambda x, _ : value_dict[x]
     self.ops_mock.getSections.side_effect = lambda x : S_OK( sections_dict[x] )
     with patch('%s.Operations' % MODULE_NAME, new=Mock(return_value=self.ops_mock)), \
-         patch.object(OverlayDB, '_createTables', new=Mock()):
+         patch.object(OverlayDB, '_createTables', new=Mock()), \
+         patch.object(DB, '__init__', new=Mock()):
       self.odb = OverlayDB()
-
-  def tearDown( self ):
-    if self.backup_sys != -1:
-      sys.modules[ 'DIRAC.ConfigurationSystem.Client.Utilities' ] = self.backup_sys
-    else:
-      del sys.modules[ 'DIRAC.ConfigurationSystem.Client.Utilities' ]
 
   def test_getsites( self ):
     con_mock = Mock()
@@ -152,4 +144,3 @@ class TestOverlayDB( unittest.TestCase ):
     with patch('%s.OverlayDB._query' % MODULE_NAME, new=Mock(return_value=S_OK([[148]]))), \
          patch('%s.OverlayDB._update' % MODULE_NAME, new=Mock(return_value=S_ERROR('update_test_err'))):
       assertDiracFailsWith( self.odb.jobDone( 'my_TestSite1', con_mock ), 'update_test_err', self )
-#

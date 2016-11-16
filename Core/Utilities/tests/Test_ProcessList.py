@@ -165,8 +165,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     fileutil_mock.upload.return_value = S_OK('something')
     conf_mock = Mock()
     conf_mock.getOption.return_value = S_OK( '/local/path/proc.list' )
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = datmodule_mock
-    sys.modules['ILCDIRAC.Core.Utilities.FileUtils'] = fileutil_mock
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : datmodule_mock,
+                       'ILCDIRAC.Core.Utilities.FileUtils' : fileutil_mock }
+    module_patcher = patch.dict( sys.modules, mocked_modules )
+    module_patcher.start()
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     with patch('shutil.copy') as copy_mock, \
@@ -179,6 +181,7 @@ class ProcessListComplexTestCase( unittest.TestCase ):
         [ 'svn', 'ci', '/afs/cern.ch/eng/clic/software/whizard/whizard_195/proc.list',
           "-m'Process list for whizard version v120'" ], shell=False )
     DIRAC.gConfig = backup_conf
+    module_patcher.stop()
 
   def test_uploadproclist_remove_fails( self ):
     import sys
@@ -190,8 +193,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     fileutil_mock = Mock()
     conf_mock = Mock()
     conf_mock.getOption.return_value = S_OK( 'somepath' )
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = datmodule_mock
-    sys.modules['ILCDIRAC.Core.Utilities.FileUtils'] = fileutil_mock
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : datmodule_mock,
+                       'ILCDIRAC.Core.Utilities.FileUtils' : fileutil_mock }
+    module_patcher = patch.dict( sys.modules, mocked_modules )
+    module_patcher.start()
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     DIRAC.exit = abort_test
@@ -200,6 +205,7 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     key_interrupt = ki.exception
     assertEqualsImproved( key_interrupt.args, ( 'abort_my_test', ), self )
     DIRAC.gConfig = backup_conf
+    module_patcher.stop()
 
   def test_uploadproclist_upload_fails( self ):
     import sys
@@ -212,8 +218,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     fileutil_mock.upload.return_value = S_ERROR('something')
     conf_mock = Mock()
     conf_mock.getOption.return_value = S_OK( 'somepath' )
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = datmodule_mock
-    sys.modules['ILCDIRAC.Core.Utilities.FileUtils'] = fileutil_mock
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : datmodule_mock,
+                       'ILCDIRAC.Core.Utilities.FileUtils' : fileutil_mock }
+    module_patcher = patch.dict( sys.modules, mocked_modules )
+    module_patcher.start()
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     DIRAC.exit = abort_test
@@ -222,6 +230,7 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     key_interrupt = ki.exception
     assertEqualsImproved( key_interrupt.args, ( 'abort_my_test', ), self )
     DIRAC.gConfig = backup_conf
+    module_patcher.stop()
 
   def test_uploadproclist_copy_and_commit_fail( self ):
     import sys
@@ -234,8 +243,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     fileutil_mock.upload.return_value = S_OK('something')
     conf_mock = Mock()
     conf_mock.getOption.return_value = S_OK( 'somepath' )
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = datmodule_mock
-    sys.modules['ILCDIRAC.Core.Utilities.FileUtils'] = fileutil_mock
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : datmodule_mock,
+                       'ILCDIRAC.Core.Utilities.FileUtils' : fileutil_mock }
+    module_patcher = patch.dict( sys.modules, mocked_modules )
+    module_patcher.start()
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     DIRAC.exit = abort_test
@@ -243,6 +254,7 @@ class ProcessListComplexTestCase( unittest.TestCase ):
          patch('subprocess.call', new=Mock(side_effect=OSError('subproc_test_err'))):
       self.prol.uploadProcessListToFileCatalog( '/my/secret/path/processlist.whiz', 'v120' )
     DIRAC.gConfig = backup_conf
+    module_patcher.stop()
 
   def test_uploadproclist_skip_copy( self ):
     import sys
@@ -255,8 +267,10 @@ class ProcessListComplexTestCase( unittest.TestCase ):
     fileutil_mock.upload.return_value = S_OK('something')
     conf_mock = Mock()
     conf_mock.getOption.return_value = S_OK('')
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = datmodule_mock
-    sys.modules['ILCDIRAC.Core.Utilities.FileUtils'] = fileutil_mock
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : datmodule_mock,
+                       'ILCDIRAC.Core.Utilities.FileUtils' : fileutil_mock }
+    module_patcher = patch.dict( sys.modules, mocked_modules )
+    module_patcher.start()
     backup_conf = DIRAC.gConfig
     DIRAC.gConfig = conf_mock
     DIRAC.exit = abort_test
@@ -264,6 +278,7 @@ class ProcessListComplexTestCase( unittest.TestCase ):
          patch('subprocess.call', new=Mock(side_effect=IOError('dont_call_me_either'))):
       self.prol.uploadProcessListToFileCatalog( '/my/secret/path/processlist.whiz', 'v120' )
     DIRAC.gConfig = backup_conf
+    module_patcher.stop()
 
 def abort_test( _ ):
   """ Replaces DIRACs own exit method to be testable

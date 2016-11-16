@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Test the WhizardOption class"""
 
+import sys
 import unittest
 from xml.etree.ElementTree import fromstring
 from mock import mock_open, patch, MagicMock as Mock
@@ -262,7 +263,7 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('sys.argv', [ 'scriptname', 'filename.xml' ]), \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True ) as mo, \
-         patch.dict('sys.modules', { 'pprint' : pprint_mock }):
+         patch.dict( sys.modules, { 'pprint' : pprint_mock } ):
       mo.side_effect = (h for h in handles)
       assertEqualsImproved( main(), 0, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )
@@ -285,7 +286,7 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('sys.argv', [ 'scriptname', 'filename.xml', 'mymodel' ]), \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True ) as mo, \
-         patch.dict('sys.modules', { 'pprint' : pprint_mock }):
+         patch.dict( sys.modules, { 'pprint' : pprint_mock } ):
       mo.side_effect = (h for h in handles)
       assertEqualsImproved( main(), 0, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )
@@ -306,7 +307,7 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('sys.argv', [ 'scriptname', 'filename.xml', 'mymodel' ]), \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True ) as mo, \
-         patch.dict('sys.modules', { 'pprint' : pprint_mock }):
+         patch.dict( sys.modules, { 'pprint' : pprint_mock } ):
       mo.side_effect = (h for h in handles)
       assertEqualsImproved( main(), 1, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )
@@ -320,7 +321,7 @@ class TestWhizardOptions( unittest.TestCase ): #pylint: disable=too-many-public-
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('sys.argv', [ 'scriptname', 'filename.xml', 'mymodel' ]), \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True ) as mo, \
-         patch.dict('sys.modules', { 'pprint' : pprint_mock }):
+         patch.dict( sys.modules, { 'pprint' : pprint_mock } ):
       mo.side_effect = (h for h in handles)
       assertEqualsImproved( main(), 1, self )
       mo.assert_called_once_with( 'filename.xml', 'r' )

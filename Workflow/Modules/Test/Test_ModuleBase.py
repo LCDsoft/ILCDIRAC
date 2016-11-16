@@ -21,8 +21,13 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
   """
   def setUp( self ):
     # Mock out modules that spawn other threads
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     self.moba = ModuleBase()
+
+  def tearDown( self ):
+    self.module_patcher.stop()
 
   def test_randomstring( self ):
     random_string_1 = generateRandomString()

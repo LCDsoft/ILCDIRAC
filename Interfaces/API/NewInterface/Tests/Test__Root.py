@@ -19,12 +19,17 @@ MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications._Root'
 class RootTestCase( unittest.TestCase ):
   """ Base class for the _Root test cases
   """
-  def setUp(self):
+  def setUp( self ):
     """set up the objects"""
     # Mock out modules that spawn other threads
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import _Root
     self.root = _Root( {} )
+
+  def tearDown( self ):
+    self.module_patcher.stop()
 
   def test_userjobmodules( self ):
     module_mock = Mock()

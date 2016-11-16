@@ -21,10 +21,15 @@ class TransformationPluginTestCase( unittest.TestCase ):
   """
   def setUp(self):
     """set up the objects"""
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
-    sys.modules['DIRAC.Resources.Catalog.FileCatalog.FileCatalog'] = Mock()
-    sys.modules['DIRAC.Resources.Catalog.FileCatalog'] = Mock()
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock(),
+                       'DIRAC.Resources.Catalog.FileCatalog.FileCatalog' : Mock(),
+                       'DIRAC.Resources.Catalog.FileCatalog' : Mock() }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     self.tfp = None # Stores the TransformationPlugin object
+
+  def tearDown( self ):
+    self.module_patcher.stop()
 
   def test_limited_add_up_to_maximum( self ):
     from ILCDIRAC.ILCTransformationSystem.Agent.TransformationPlugin import TransformationPlugin
@@ -110,8 +115,6 @@ class TransformationPluginTestCase( unittest.TestCase ):
     assertDiracFailsWith( self.tfp.run(), 'my_test_getcount_err', self )
 
   def test_limited_groupbyreplicas_fails( self ):
-    sys.modules['DIRAC.Resources.Catalog.FileCatalog.FileCatalog'] = Mock()
-    sys.modules['DIRAC.Resources.Catalog.FileCatalog'] = Mock()
     from ILCDIRAC.ILCTransformationSystem.Agent.TransformationPlugin import TransformationPlugin
     from DIRAC import S_OK, S_ERROR
     dataman_mock = Mock()

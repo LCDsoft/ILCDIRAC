@@ -20,12 +20,17 @@ MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit'
 class StdHepSplitTestCase( unittest.TestCase ):
   """ Base class for the StdHepSplit test cases
   """
-  def setUp(self):
+  def setUp( self ):
     """set up the objects"""
     # Mock out modules that spawn other threads
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit
     self.shs = StdHepSplit( {} )
+
+  def tearDown( self ):
+    self.module_patcher.stop()
 
   def test_userjobmodules( self ):
     module_mock = Mock()
