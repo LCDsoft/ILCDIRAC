@@ -6,7 +6,7 @@ import unittest
 from mock import patch, MagicMock as Mock
 
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
-  assertDiracSucceeds, assertDiracFails, assertMockCalls, assertDiracSucceedsWith
+  assertDiracSucceeds, assertMockCalls
 from DIRAC import S_OK, S_ERROR
 
 __RCSID__ = "$Id$"
