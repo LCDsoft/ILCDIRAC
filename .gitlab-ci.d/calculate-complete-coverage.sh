@@ -5,6 +5,7 @@ echo "Please check that a valid dirac proxy is available before executing the cv
 source .gitlab-ci.d/set-reportstyle.sh
 
 SE_RESULT=""
+export XrdSecPROTOCOL=gsi,unix
 py.test Workflow/Modules/Test/Test_SEs.py
 
 if [ $? -eq 0 ]
