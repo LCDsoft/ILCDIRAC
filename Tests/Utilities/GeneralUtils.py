@@ -32,7 +32,7 @@ def assertEqualsXml( elem1, elem2, assertobject ):
   assertEqualsImproved( elem1.tail, elem2.tail, assertobject )
   assertEqualsImproved( elem1.attrib, elem2.attrib, assertobject )
 
-def assertEqualsXmlTree( root1, root2, assertobject):
+def assertEqualsXmlTree( root1, root2, assertobject ):
   """ Asserts that the two passed XML trees and all their contained elements are equal.
   """
   print 'root1 = %s, root2 = %s' % (root1, root2)
@@ -61,7 +61,7 @@ def assertListContentEquals( list1, list2, assertobject ):
 
   assertobject.assertFalse( tmp_compare_list, 'The two passed lists do not contain the same elements. The following elements from the second list are not contained (often enough) in the first list: %s\n Original lists: \n %s \n %s \n ' % ( tmp_compare_list, list1, list2 ) )
 
-def assertDiracFails( result, assertobject):
+def assertDiracFails( result, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR.
 
   :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
@@ -69,7 +69,7 @@ def assertDiracFails( result, assertobject):
   """
   assertobject.assertFalse( result['OK'] )
 
-def assertDiracFailsWith( result, errorstring, assertobject):
+def assertDiracFailsWith( result, errorstring, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).
 
   :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
@@ -78,6 +78,16 @@ def assertDiracFailsWith( result, errorstring, assertobject):
   """
   assertobject.assertFalse( result['OK'] )
   assertobject.assertIn( errorstring.lower(), result['Message'].lower() )
+
+def assertDiracFailsWith_equals( result, retval, assertobject ):
+  """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with the retval object.
+
+  :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
+  :param object errorstring: Object expected to be contained in the error message
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertobject.assertFalse( result['OK'] )
+  assertEqualsImproved( retval, result['Message'], assertobject )
 
 def assertDiracSucceeds( result, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_OK, else print out the error message.
