@@ -12,7 +12,8 @@ from DIRAC import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim import DDSim
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
+  assertDiracSucceeds
 from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
@@ -286,7 +287,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
       res = job.createProduction( 'goodtestname' )
       assertDiracSucceeds( res, self )
       expected = [[]]
-      FileUtil.checkFileInteractions( self, mo, [( 'mytestworkflow.xml', 'r' )], expected, handles )
+      FileUtil.checkFileInteractions( self, mo, [ ( 'mytestworkflow.xml', 'r' ) ], expected, handles )
       all_mo.assert_any_call('Name.xml', 'w')
       all_mo_handle = all_mo()
       if ProductionJobSetInputDataQuery.HAS_PROXY:
@@ -545,12 +546,12 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
                                                                           job : 0, 'NumberOfEvents' : 1002 } }
     reference_dict_nonbofevts = { 'test1' : 1, '09ksrt' : '123tgvda', 'vdunivi' : -135, 21 : 'sdfg', job : 0 }
     job.finalMetaDict = reference_dict
-    assertEqualsImproved( reference_dict_nonbofevts, job.getMetadata(), self )
+    assertEqualsImproved( job.getMetadata(), reference_dict_nonbofevts, self )
     job.finalMetaDict = {}
-    assertEqualsImproved( {}, job.getMetadata(), self )
+    assertEqualsImproved( job.getMetadata(), {}, self )
     easy_dict = { 'key1' : 'value1', '1983jrtmfgik' : 1984137895, '198034' : job, '09842jtm' : '9k0femoqifu' }
     job.finalMetaDict = { '1' : easy_dict }
-    assertEqualsImproved( easy_dict, job.getMetadata(), self )
+    assertEqualsImproved( job.getMetadata(), easy_dict, self )
 
 class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
   """ Tests the jobSpecificParams method by calling append() and mocking out the other parts
@@ -604,7 +605,7 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.prodJob.jobFileGroupSize = 7
     self.myapp.numberOfEvents = 0
     assertDiracSucceeds( self.prodJob.append(self.myapp), self )
-    self.myapp.setNumberOfEvents.assert_called_with( 21 ) #TODO investigate 21 vs 3
+    self.myapp.setNumberOfEvents.assert_called_with( 21 )
 
   def test_jobSpecificParams_checkNbEvts_5( self ):
     self.prodJob.nbevts = 0
@@ -717,8 +718,8 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
          patch('__builtin__.open', mock_open()) as open_mock:
       self.prodJob.createWorkflow()
       assertEqualsImproved( len(move_mock.mock_calls), 1, self )
-      move_mock.assert_called_with( 'mysuperworkflow.xml', 'mysuperworkflow.xml.backup' )
-      assertEqualsImproved( remove_mock.mock_calls, [], self )
+      move_mock.assert_called_once_with( 'mysuperworkflow.xml', 'mysuperworkflow.xml.backup' )
+      self.assertFalse( remove_mock.called )
       assertEqualsImproved( len(open_mock.mock_calls), 4, self ) #Open, __enter__, write, __exit__
     assertDiracSucceeds( self.prodJob.setOutputSE( 'myoutputstorage_for_testing' ), self )
     assertEqualsImproved( self.prodJob.outputStorage, 'myoutputstorage_for_testing', self )

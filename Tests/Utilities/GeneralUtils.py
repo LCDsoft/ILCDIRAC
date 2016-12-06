@@ -32,7 +32,7 @@ def assertEqualsXml( elem1, elem2, assertobject ):
   assertEqualsImproved( elem1.tail, elem2.tail, assertobject )
   assertEqualsImproved( elem1.attrib, elem2.attrib, assertobject )
 
-def assertEqualsXmlTree( root1, root2, assertobject):
+def assertEqualsXmlTree( root1, root2, assertobject ):
   """ Asserts that the two passed XML trees and all their contained elements are equal.
   """
   print 'root1 = %s, root2 = %s' % (root1, root2)
@@ -45,16 +45,23 @@ def assertEqualsXmlTree( root1, root2, assertobject):
     assert child2 is not None
     assertEqualsXmlTree( child1, child2, assertobject )
 
-def assertContentEqualsList( list1, list2, assertobject ):
+def assertListContentEquals( list1, list2, assertobject ):
   """Asserts that two lists contain the same elements, regardless of order, else a useful debug message is returned
   Checks if both list have the same length first, then checks if each element of one list  is contained in the
-  other list.
+  other list. Duplicates have to be in the lists the same amount of times.
   """
   assertEqualsImproved( len(list1), len(list2), assertobject )
+  # Code similar to assertMockCalls but can't reuse
+  tmp_compare_list = list( list2 ) # Copies the references of the second list (shallow copy)
   for elem1 in list1:
-    assertInImproved( elem1, list2, assertobject )
+    try:
+      tmp_compare_list.remove( elem1 )
+    except ValueError as v_err:
+      assertobject.fail( 'The two passed lists do not contain the same elements.\n %s was not found (often enough) in the second list. Original lists: \n %s \n %s \n Error: %s' % ( elem1, list1, list2, v_err ) )
 
-def assertDiracFails( result, assertobject):
+  assertobject.assertFalse( tmp_compare_list, 'The two passed lists do not contain the same elements. The following elements from the second list are not contained (often enough) in the first list: %s\n Original lists: \n %s \n %s \n ' % ( tmp_compare_list, list1, list2 ) )
+
+def assertDiracFails( result, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR.
 
   :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
@@ -62,7 +69,7 @@ def assertDiracFails( result, assertobject):
   """
   assertobject.assertFalse( result['OK'] )
 
-def assertDiracFailsWith( result, errorstring, assertobject):
+def assertDiracFailsWith( result, errorstring, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).
 
   :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
@@ -71,6 +78,16 @@ def assertDiracFailsWith( result, errorstring, assertobject):
   """
   assertobject.assertFalse( result['OK'] )
   assertobject.assertIn( errorstring.lower(), result['Message'].lower() )
+
+def assertDiracFailsWith_equals( result, retval, assertobject ):
+  """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with the retval object.
+
+  :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
+  :param object errorstring: Object expected to be contained in the error message
+  :param TestCase assertobject: Testcase object, used to gain the assertX methods.
+  """
+  assertobject.assertFalse( result['OK'] )
+  assertEqualsImproved( retval, result['Message'], assertobject )
 
 def assertDiracSucceeds( result, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_OK, else print out the error message.
@@ -120,8 +137,8 @@ def assertMockCalls( mock_object_method, argslist, assertobject, only_these_call
   for expected_call in call_list:
     try:
       mock_call_list.remove( expected_call )
-    except ValueError as v_err:
-      assertobject.fail( 'Expected the mock to be called with the passed arglist but that was not the case: %s\n List of expected calls: %s \n List of actual calls: %s' % ( v_err, argslist, mock_object_method.mock_calls ) )
+    except ValueError:
+      assertobject.fail( 'Expected the mock to be called with the passed arglist but that was not the case for the call %s\n List of expected calls: %s \n List of actual calls: %s' % ( expected_call, argslist, mock_call_list ) )
   # TODO test these two new methods, find way to handle positional arguments, beautify output
   if only_these_calls:
     assertobject.assertFalse( mock_call_list, "The following calls were made on the mock object but don't have a respective entry in the argslist: %s" % mock_call_list )

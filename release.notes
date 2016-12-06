@@ -1,3 +1,13 @@
+[v26r0p5]
+
+* Core:
+
+NEW: Based on DIRAC v6r15p25
+
+*Interfaces:
+
+NEW: More tests for interface modules
+
 [v26r0p4]
 
 * Core:

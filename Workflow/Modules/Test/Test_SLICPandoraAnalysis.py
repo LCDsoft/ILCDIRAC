@@ -3,12 +3,12 @@
 
 import unittest
 import sys
-from mock import patch, call, mock_open, MagicMock as Mock
+from mock import patch, mock_open, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
   assertDiracFailsWith, assertDiracSucceeds, assertDiracSucceedsWith, \
-  assertDiracSucceedsWith_equals
+  assertDiracSucceedsWith_equals, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -19,11 +19,16 @@ class TestSLICPandora( unittest.TestCase ):
   """
   def setUp( self ):
     # Mock out modules that spawn other threads
-    sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = Mock()
+    mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
     self.spa = SLICPandoraAnalysis()
     self.spa.platform = 'myTestPlatform'
     self.spa.applicationLog = 'applogFile.test'
+
+  def tearDown( self ):
+    self.module_patcher.stop()
 
   def test_applicationSpecificInputs( self ):
     assertDiracSucceedsWith_equals( self.spa.applicationSpecificInputs(),
@@ -68,37 +73,28 @@ class TestSLICPandora( unittest.TestCase ):
              patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/my/curdir/test')), \
              patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock, patch('%s.os.remove' % MODULE_NAME) as remove_mock:
       assertDiracSucceeds( self.spa.runIt(), self )
-      assertEqualsImproved( exists_mock.mock_calls, [
-        call( 'testmodelDetector_pandora.xml' ),
-        call( '/secret/dir/testmodelDetector.zip' ),
-        call( '/secret/dir/testmodelDetector.zip' ),
-        call( '/secret/dir/testmodelDetector_pandora.xml' ),
-        call( 'SLICPandora__Run_465.sh'), call('./lib'),
-        call( 'applogFile.test' ), call( 'applogFile.test' ) ], self )
-      for opened_file in [
-          call( '/secret/dir/testmodelDetector.zip' ),
-          call( 'SLICPandora__Run_465.sh', 'w' ),
-          call( 'applogFile.test', 'r' ) ]:
-        self.assertIn( opened_file, open_mock.mock_calls )
+      assertMockCalls( exists_mock, [ 'testmodelDetector_pandora.xml', '/secret/dir/testmodelDetector.zip',
+                                      '/secret/dir/testmodelDetector.zip',
+                                      '/secret/dir/testmodelDetector_pandora.xml', 'SLICPandora__Run_465.sh',
+                                      './lib', 'applogFile.test', 'applogFile.test' ], self )
+      assertMockCalls( open_mock, [ '/secret/dir/testmodelDetector.zip', ( 'SLICPandora__Run_465.sh', 'w' ),
+                                    ( 'applogFile.test', 'r' ) ], self, only_these_calls = False )
       mo = mo()
-      assertEqualsImproved( unzip_mock.mock_calls, [
-        call( mo, '/my/curdir/test' ), call( mo, '/my/curdir/test') ], self )
+      assertMockCalls( unzip_mock, [ ( mo, '/my/curdir/test' ), ( mo, '/my/curdir/test') ], self )
       open_mock = open_mock()
-      assertEqualsImproved( open_mock.write.mock_calls, [
-        call('#!/bin/bash \n'),
-        call('#####################################################################\n'),
-        call('# Dynamically generated script to run a production or analysis job. #\n'),
-        call('#####################################################################\n'),
-        call('source myenvscriptpathtestme\n'), call('declare -x file=./Settings/\n'),
-        call('\nif [ -e "${file}" ]\nthen\n   declare -x PANDORASETTINGS=$file\nelse\n  if [ -d "${PANDORASETTINGSDIR}" ]\n  then\n    cp $PANDORASETTINGSDIR/*.xml .\n    declare -x PANDORASETTINGS=\n  fi\nfi\nif [ ! -e "${PANDORASETTINGS}" ]\nthen\n  echo "Missing PandoraSettings file"\n  exit 1\nfi  \n'),
-        call('echo =============================\n'), call('echo PATH is \n'),
-        call('echo $PATH | tr ":" "\n"  \n'), call('echo ==============\n'),
-        call('echo =============================\n'), call('echo LD_LIBRARY_PATH is \n'),
-        call('echo $LD_LIBRARY_PATH | tr ":" "\n"\n'), call('echo ============================= \n'),
-        call('env | sort >> localEnv.log\n'), call('PandoraFrontend -g /secret/dir/testmodelDetector_pandora.xml -c $PANDORASETTINGS -i ruinonslcio.test -o  -r 0 \n'),
-        call('declare -x appstatus=$?\n'), call('exit $appstatus\n') ], self )
-      assertEqualsImproved( remove_mock.mock_calls, [
-        call('SLICPandora__Run_465.sh' ), call( 'applogFile.test') ], self )
+      assertMockCalls( open_mock.write, [
+        '#!/bin/bash \n', '#####################################################################\n',
+        '# Dynamically generated script to run a production or analysis job. #\n',
+        '#####################################################################\n',
+        'source myenvscriptpathtestme\n', 'declare -x file=./Settings/\n',
+        '\nif [ -e "${file}" ]\nthen\n   declare -x PANDORASETTINGS=$file\nelse\n  if [ -d "${PANDORASETTINGSDIR}" ]\n  then\n    cp $PANDORASETTINGSDIR/*.xml .\n    declare -x PANDORASETTINGS=\n  fi\nfi\nif [ ! -e "${PANDORASETTINGS}" ]\nthen\n  echo "Missing PandoraSettings file"\n  exit 1\nfi  \n',
+        'echo =============================\n', 'echo PATH is \n', 'echo $PATH | tr ":" "\n"  \n',
+        'echo ==============\n', 'echo =============================\n', 'echo LD_LIBRARY_PATH is \n',
+        'echo $LD_LIBRARY_PATH | tr ":" "\n"\n', 'echo ============================= \n',
+        'env | sort >> localEnv.log\n',
+        'PandoraFrontend -g /secret/dir/testmodelDetector_pandora.xml -c $PANDORASETTINGS -i ruinonslcio.test -o  -r 0 \n',
+        'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
+      assertMockCalls( remove_mock, [ 'SLICPandora__Run_465.sh', 'applogFile.test' ], self )
       chmod_mock.assert_called_once_with( 'SLICPandora__Run_465.sh', 0755 )
       shell_mock.assert_called_once_with( 0, 'sh -c "./SLICPandora__Run_465.sh"',
                                           callbackFunction = self.spa.redirectLogOutput,
@@ -130,8 +126,7 @@ class TestSLICPandora( unittest.TestCase ):
   def test_runit_getsoftwarefolder_fails( self ):
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_ERROR('get_envscriptI_test_error'))) as getsoft_mock:
       assertDiracFailsWith( self.spa.runIt(), 'get_envscriptI_test_error', self )
-      getsoft_mock.assert_called_once_with( 'myTestPlatform', 'SLICPandora',
-                                            '', self.spa.getEnvScript )
+      getsoft_mock.assert_called_once_with( 'myTestPlatform', 'SLICPandora', '', self.spa.getEnvScript )
 
   def test_runit_resolveIFPaths_fails( self ):
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('myenvscriptpathtestme'))) as getsoft_mock, \
@@ -151,7 +146,7 @@ class TestSLICPandora( unittest.TestCase ):
              patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])) as exists_mock:
       assertDiracFailsWith( self.spa.runIt(),
                             'detector model xml was not found, exiting', self )
-      assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
+      assertMockCalls( exists_mock, [ 'testmodelDetector.xml', '/secret/dir/testmodelDetector.xml' ], self )
       resolve_mock.assert_called_once_with( 'testInput.file' )
 
   def test_runit_no_applog_created( self ):
@@ -165,6 +160,7 @@ class TestSLICPandora( unittest.TestCase ):
     self.spa.STEP_NUMBER = 465
     mo = mock_open()
     def replace_exists( path ):
+      """ Mock exists implementation """
       if path == 'applogFile.test':
         result = exists_dict[path]
         exists_dict[path] = False
@@ -183,38 +179,29 @@ class TestSLICPandora( unittest.TestCase ):
       assertDiracFailsWith( self.spa.runIt(),
                             'SLICPandora did not produce the expected log',
                             self )
-      assertEqualsImproved( exists_mock.mock_calls, [
-        call( 'testmodelDetector_pandora.xml' ),
-        call( '/secret/dir/testmodelDetector.zip' ),
-        call( '/secret/dir/testmodelDetector.zip' ),
-        call( '/secret/dir/testmodelDetector_pandora.xml' ),
-        call( 'SLICPandora__Run_465.sh'), call('./lib'),
-        call( 'applogFile.test' ), call( 'applogFile.test' ) ], self )
-      for opened_file in [ call( '/secret/dir/testmodelDetector.zip' ),
-                           call( 'SLICPandora__Run_465.sh', 'w') ]:
-        self.assertIn( opened_file, open_mock.mock_calls )
+      assertMockCalls( exists_mock, [ 'testmodelDetector_pandora.xml', '/secret/dir/testmodelDetector.zip',
+                                      '/secret/dir/testmodelDetector.zip',
+                                      '/secret/dir/testmodelDetector_pandora.xml', 'SLICPandora__Run_465.sh',
+                                      './lib', 'applogFile.test', 'applogFile.test' ], self )
+      assertMockCalls( open_mock, [ ('/secret/dir/testmodelDetector.zip' ), ( 'SLICPandora__Run_465.sh', 'w') ],
+                        self, only_these_calls = False )
       mo = mo()
       unzip_mock.assert_called_once_with( mo, '/my/curdir/test' )
       open_mock = open_mock()
-      assertEqualsImproved( open_mock.write.mock_calls, [
-        call('#!/bin/bash \n'),
-        call('#####################################################################\n'),
-        call('# Dynamically generated script to run a production or analysis job. #\n'),
-        call('#####################################################################\n'),
-        call('source myenvscriptpathtestme\n'),
-        call('declare -x file=./Settings/\n'),
-        call('\nif [ -e "${file}" ]\nthen\n   declare -x PANDORASETTINGS=$file\nelse\n  if [ -d "${PANDORASETTINGSDIR}" ]\n  then\n    cp $PANDORASETTINGSDIR/*.xml .\n    declare -x PANDORASETTINGS=\n  fi\nfi\nif [ ! -e "${PANDORASETTINGS}" ]\nthen\n  echo "Missing PandoraSettings file"\n  exit 1\nfi  \n'),
-        call('echo =============================\n'), call('echo PATH is \n'),
-        call('echo $PATH | tr ":" "\n"  \n'), call('echo ==============\n'),
-        call('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n'),
-        call('echo =============================\n'),
-        call('echo LD_LIBRARY_PATH is \n'),
-        call('echo $LD_LIBRARY_PATH | tr ":" "\n"\n'),
-        call('echo ============================= \n'),
-        call('env | sort >> localEnv.log\n'),call('PandoraFrontend -g /secret/dir/testmodelDetector_pandora.xml -c $PANDORASETTINGS -i ruinonslcio.test -o  -r 0 \n'),
-        call('declare -x appstatus=$?\n'), call('exit $appstatus\n') ], self )
-      assertEqualsImproved( remove_mock.mock_calls, [
-        call('SLICPandora__Run_465.sh' ), call( 'applogFile.test') ], self )
+      assertMockCalls( open_mock.write, [
+        '#!/bin/bash \n', '#####################################################################\n',
+        '# Dynamically generated script to run a production or analysis job. #\n',
+        '#####################################################################\n',
+        'source myenvscriptpathtestme\n', 'declare -x file=./Settings/\n',
+        '\nif [ -e "${file}" ]\nthen\n   declare -x PANDORASETTINGS=$file\nelse\n  if [ -d "${PANDORASETTINGSDIR}" ]\n  then\n    cp $PANDORASETTINGSDIR/*.xml .\n    declare -x PANDORASETTINGS=\n  fi\nfi\nif [ ! -e "${PANDORASETTINGS}" ]\nthen\n  echo "Missing PandoraSettings file"\n  exit 1\nfi  \n',
+        'echo =============================\n', 'echo PATH is \n',
+        'echo $PATH | tr ":" "\n"  \n', 'echo ==============\n',
+        'declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n', 'echo =============================\n',
+        'echo LD_LIBRARY_PATH is \n', 'echo $LD_LIBRARY_PATH | tr ":" "\n"\n',
+        'echo ============================= \n', 'env | sort >> localEnv.log\n',
+        'PandoraFrontend -g /secret/dir/testmodelDetector_pandora.xml -c $PANDORASETTINGS -i ruinonslcio.test -o  -r 0 \n',
+        'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
+      assertMockCalls( remove_mock, [ 'SLICPandora__Run_465.sh', 'applogFile.test' ], self )
       chmod_mock.assert_called_once_with( 'SLICPandora__Run_465.sh', 0755 )
       shell_mock.assert_called_once_with( 0, 'sh -c "./SLICPandora__Run_465.sh"',
                                           callbackFunction = self.spa.redirectLogOutput,
@@ -235,6 +222,7 @@ class TestSLICPandora( unittest.TestCase ):
     self.spa.ops = ops_mock
     mo = mock_open()
     def replace_exists( path ):
+      """ Mock exists implementation """
       if path == '/secret/dir/testmodelDetector.zip':
         result = exists_dict[path]
         exists_dict[path] = False
@@ -253,12 +241,10 @@ class TestSLICPandora( unittest.TestCase ):
       assertDiracFailsWith( self.spa.runIt(),
                             'could not find in cs the url for detector model',
                             self )
-      assertEqualsImproved( exists_mock.mock_calls, [
-        call( 'testmodelDetector_pandora.xml' ),
-        call( '/secret/dir/testmodelDetector.zip' ),
-        call( '/secret/dir/testmodelDetector.zip' ) ], self )
+      open_mock.assert_called_once_with( '/secret/dir/testmodelDetector.zip' )
+      assertMockCalls( exists_mock, [ 'testmodelDetector_pandora.xml', '/secret/dir/testmodelDetector.zip',
+                                      '/secret/dir/testmodelDetector.zip' ], self )
       unzip_mock.assert_called_once_with( mo(), '/my/curdir/test' )
-      open_mock.assert_any_call( '/secret/dir/testmodelDetector.zip' )
       open_mock = open_mock()
       self.assertFalse( open_mock.write.called )
       self.assertFalse( remove_mock.called )
@@ -281,6 +267,7 @@ class TestSLICPandora( unittest.TestCase ):
     self.spa.ops = ops_mock
     mo = mock_open( read_data='some_log_data\n Missing PandoraSettings file, but ignore this error :)')
     def replace_exists( path ):
+      """ Mock implementation of exists """
       result = exists_dict[path]
       if path == 'secret/dir/mySuperDetector.zip' or path == 'applogFile.test':
         exists_dict[path] = True
@@ -296,31 +283,26 @@ class TestSLICPandora( unittest.TestCase ):
              patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/my/curdir/test')), \
              patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, patch('%s.os.remove' % MODULE_NAME) as remove_mock:
       assertDiracSucceedsWith( self.spa.runIt(), 'SLICPandora V2 Successful', self )
-      assertEqualsImproved( exists_mock.mock_calls, [
-        call( 'secret/dir/mySuperDetector.zip' ),
-        call( 'secret/dir/mySuperDetector.zip' ),
-        call( '/my/curdir/test/secret/dir/mySuperDetector_pandora.xml' ),
-        call( 'SLICPandora_V2_Run_465.sh'), call('./lib'),
-        call( 'applogFile.test' ), call( 'applogFile.test' ) ], self )
-      for opened_file in [ call( 'SLICPandora_V2_Run_465.sh', 'w'),
-                           call( 'applogFile.test', 'r') ]:
-        self.assertIn( opened_file, open_mock.mock_calls )
+      assertMockCalls( exists_mock, [ 'secret/dir/mySuperDetector.zip', 'secret/dir/mySuperDetector.zip',
+                                      '/my/curdir/test/secret/dir/mySuperDetector_pandora.xml',
+                                      'SLICPandora_V2_Run_465.sh', './lib', 'applogFile.test',
+                                      'applogFile.test' ], self )
+      assertMockCalls( open_mock, [ ( 'SLICPandora_V2_Run_465.sh', 'w' ), ( 'applogFile.test', 'r') ],
+                       self, only_these_calls = False )
       mo = mo()
       open_mock = open_mock()
-      assertEqualsImproved( open_mock.write.mock_calls, [
-        call('#!/bin/bash \n'),
-        call('#####################################################################\n'),
-        call('# Dynamically generated script to run a production or analysis job. #\n'),
-        call('#####################################################################\n'),
-        call('source myenvscriptpathtestme\n'), call('declare -x file=./Settings/\n'),
-        call('\nif [ -e "${file}" ]\nthen\n   declare -x PANDORASETTINGS=$file\nelse\n  if [ -d "${PANDORASETTINGSDIR}" ]\n  then\n    cp $PANDORASETTINGSDIR/*.xml .\n    declare -x PANDORASETTINGS=\n  fi\nfi\nif [ ! -e "${PANDORASETTINGS}" ]\nthen\n  echo "Missing PandoraSettings file"\n  exit 1\nfi  \n'),
-        call('echo =============================\n'), call('echo PATH is \n'),
-        call('echo $PATH | tr ":" "\n"  \n'), call('echo ==============\n'),
-        call('echo =============================\n'), call('echo LD_LIBRARY_PATH is \n'),
-        call('echo $LD_LIBRARY_PATH | tr ":" "\n"\n'), call('echo ============================= \n'),
-        call('env | sort >> localEnv.log\n'),
-        call('PandoraFrontend /my/curdir/test/secret/dir/mySuperDetector_pandora.xml $PANDORASETTINGS ruinonslcio.test  0 \n'),
-        call('declare -x appstatus=$?\n'), call('exit $appstatus\n') ], self )
+      assertMockCalls( open_mock.write, [
+        '#!/bin/bash \n', '#####################################################################\n',
+        '# Dynamically generated script to run a production or analysis job. #\n',
+        '#####################################################################\n',
+        'source myenvscriptpathtestme\n', 'declare -x file=./Settings/\n',
+        '\nif [ -e "${file}" ]\nthen\n   declare -x PANDORASETTINGS=$file\nelse\n  if [ -d "${PANDORASETTINGSDIR}" ]\n  then\n    cp $PANDORASETTINGSDIR/*.xml .\n    declare -x PANDORASETTINGS=\n  fi\nfi\nif [ ! -e "${PANDORASETTINGS}" ]\nthen\n  echo "Missing PandoraSettings file"\n  exit 1\nfi  \n',
+        'echo =============================\n', 'echo PATH is \n', 'echo $PATH | tr ":" "\n"  \n',
+        'echo ==============\n', 'echo =============================\n', 'echo LD_LIBRARY_PATH is \n',
+        'echo $LD_LIBRARY_PATH | tr ":" "\n"\n', 'echo ============================= \n',
+        'env | sort >> localEnv.log\n',
+        'PandoraFrontend /my/curdir/test/secret/dir/mySuperDetector_pandora.xml $PANDORASETTINGS ruinonslcio.test  0 \n',
+        'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       chmod_mock.assert_called_once_with( 'SLICPandora_V2_Run_465.sh', 0755 )
       shell_mock.assert_called_once_with( 0, 'sh -c "./SLICPandora_V2_Run_465.sh"',
                                           callbackFunction = self.spa.redirectLogOutput,
@@ -331,8 +313,8 @@ class TestSLICPandora( unittest.TestCase ):
       self.assertFalse( remove_mock.called )
 
   def test_getenvscript( self ):
-    import inspect
     def replace_abspath( path ):
+      """ Mock abspath implementation """
       if path == 'SLICPandora.sh':
         return '/abs/test/path/SLICPandora.sh'
       else:
@@ -347,8 +329,8 @@ class TestSLICPandora( unittest.TestCase ):
          patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
          patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(side_effect=replace_abspath)) as abspath_mock:
         result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
-        assertEqualsImproved( len(exists_mock.mock_calls), 1, self )
-        assertEqualsImproved( len(abspath_mock.mock_calls), 1, self )
+        exists_mock.assert_called_once_with( 'PandoraFrontend' )
+        abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
         assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )
         chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
       getsoft_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
@@ -357,25 +339,23 @@ class TestSLICPandora( unittest.TestCase ):
       getpath_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       open_mock.assert_any_call( 'SLICPandora.sh', 'w' )
       open_mock = open_mock()
-      assertEqualsImproved( open_mock.write.mock_calls, [
-        call('#!/bin/sh \n') ,
-        call('############################################################\n'),
-        call('# Dynamically generated script to get the SLICPandora env. #\n'),
-        call('############################################################\n'),
-        call("declare -x PATH=/new/test/path:$PATH\n"),
-        call('declare -x ROOTSYS=/my/dir/test/me/ROOT\n'),
-        call('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n'),
-        call('declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n'),
-        call("declare -x PATH=.:$PATH\n" ) ], self )
+      assertMockCalls( open_mock.write, [
+        '#!/bin/sh \n', '############################################################\n',
+        '# Dynamically generated script to get the SLICPandora env. #\n',
+        '############################################################\n',
+        "declare -x PATH=/new/test/path:$PATH\n", 'declare -x ROOTSYS=/my/dir/test/me/ROOT\n',
+        'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n',
+        'declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n', "declare -x PATH=.:$PATH\n" ], self )
 
   def test_getenvscript_getsoftware_fails( self ):
-    with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_ERROR('getsoftware_test_err'))), patch('%s.SLICPandoraAnalysis.setApplicationStatus' % MODULE_NAME, new=Mock(return_value=S_ERROR())):
+    with patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_ERROR('getsoftware_test_err'))), \
+         patch('%s.SLICPandoraAnalysis.setApplicationStatus' % MODULE_NAME, new=Mock(return_value=S_ERROR())):
       result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       assertDiracFailsWith( result, 'getsoftware_test_err', self )
 
   def test_getenvscript_other_prefixpath( self ):
-    import inspect
     def replace_abspath( path ):
+      """ Mock implementation of os.path.abspath """
       if path == 'SLICPandora.sh':
         return '/abs/test/path/SLICPandora.sh'
       else:
@@ -391,8 +371,8 @@ class TestSLICPandora( unittest.TestCase ):
          patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(side_effect=replace_abspath)) as abspath_mock:
         result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
         chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
-        assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
-        assertEqualsImproved( len(abspath_mock.mock_calls), 1, self )
+        assertMockCalls( exists_mock, [ 'PandoraFrontend', '/my/dir/test/me/Executable/PandoraFrontend' ], self )
+        abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
       assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )
       getsoft_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       removelib_mock.assert_called_once_with( '/my/dir/test/me/LDLibs' )
@@ -400,16 +380,13 @@ class TestSLICPandora( unittest.TestCase ):
       getpath_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       open_mock.assert_any_call( 'SLICPandora.sh', 'w' )
       open_mock = open_mock()
-      assertEqualsImproved( open_mock.write.mock_calls, [
-        call('#!/bin/sh \n'),
-        call('############################################################\n'),
-        call('# Dynamically generated script to get the SLICPandora env. #\n'),
-        call('############################################################\n'),
-        call("declare -x PATH=/new/test/path:$PATH\n"),
-        call('declare -x ROOTSYS=/my/dir/test/me/ROOT\n'),
-        call('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n'),
-        call('declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n'),
-        call("declare -x PATH=/my/dir/test/me/Executable:$PATH\n" ) ], self )
+      assertMockCalls( open_mock.write, [
+        '#!/bin/sh \n', '############################################################\n',
+        '# Dynamically generated script to get the SLICPandora env. #\n',
+        '############################################################\n',
+        "declare -x PATH=/new/test/path:$PATH\n", 'declare -x ROOTSYS=/my/dir/test/me/ROOT\n',
+        'declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:/my/dir/test/me/LDLibs:/new/ldpath\n',
+        'declare -x PANDORASETTINGSDIR=/my/dir/test/me/Settings\n', "declare -x PATH=/my/dir/test/me/Executable:$PATH\n" ], self )
 
   def test_getenvscript_pandorafrontend_missing( self ):
     exists_dict = { 'PandoraFrontend' : False, '/my/dir/test/me/Executable/PandoraFrontend' : False }
@@ -428,5 +405,4 @@ class TestSLICPandora( unittest.TestCase ):
       getpath_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       self.assertFalse( open_mock.called )
       self.assertFalse( chmod_mock.called )
-      assertEqualsImproved( len(exists_mock.mock_calls), 2, self )
-
+      assertMockCalls( exists_mock, [ 'PandoraFrontend', '/my/dir/test/me/Executable/PandoraFrontend' ], self )

@@ -8,7 +8,7 @@ from mock import mock_open, patch, call, MagicMock as Mock
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
-  assertDiracFailsWith, assertDiracSucceeds
+  assertDiracFailsWith, assertDiracSucceeds, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -53,9 +53,7 @@ class TestWhizard( unittest.TestCase ):
       self.whiz.dumpWhizardDotIn( 'someFile.in' )
       self.whiz.addedtojob = False
       mo.assert_called_once_with( 'someFile.in', 'w' )
-      assertEqualsImproved( mo().write.mock_calls,
-                            [ call( TestWhizard.EXPECTED_PRINTOUT ),
-                              call( '\n' )], self )
+      assertMockCalls( mo().write, [ TestWhizard.EXPECTED_PRINTOUT, '\n' ], self )
     assertEqualsImproved( ( pdict, self.whiz.eventType,
                             self.whiz.globalEventType, self.whiz.luminosity,
                             self.whiz.randomSeed, self.whiz.parameterDict,

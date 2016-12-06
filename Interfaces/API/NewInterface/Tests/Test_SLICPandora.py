@@ -5,7 +5,7 @@ Test SLICPandora module
 """
 
 import unittest
-from mock import call, patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import SLICPandora

@@ -16,6 +16,16 @@ MODULE_NAME = 'ILCDIRAC.Core.Utilities.PrepareLibs'
 class TestPrepareLibs( unittest.TestCase ):
   """ Tests the removeLibc method
   """
+  def setUp( self ):
+    sys_mock = Mock()
+    sys_mock.argv = [ 'something', 'myothertestpath' ]
+    mocked_modules = { 'sys' : sys_mock }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
+
+  def tearDown( self ):
+    self.module_patcher.stop()
+
   def test_remove_libc( self ):
     with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'mytestpath', 'mytestpath', 'mytestpath' ]) ) as getcwd_mock, \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ) as chdir_mock, \
@@ -65,37 +75,28 @@ class TestPrepareLibs( unittest.TestCase ):
       assertMockCalls( getcwd_mock, [ () ] * 2, self )
 
   def test_main( self ):
-    backup_sys = sys.modules['sys']
-    sys_mock = Mock()
-    sys_mock.argv = [ 'something', 'myothertestpath' ]
-    sys.modules['sys'] = sys_mock
     with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
       assertEqualsImproved( main(), 0, self )
-    sys.modules['sys'] = backup_sys
 
   def test_main_no_args( self ):
-    backup_sys = sys.modules['sys']
+    self.module_patcher.stop()
     sys_mock = Mock()
     sys_mock.argv = [ 'something' ]
-    sys.modules['sys'] = sys_mock
+    mocked_modules = { 'sys' : sys_mock }
+    self.module_patcher = patch.dict( sys.modules, mocked_modules )
+    self.module_patcher.start()
     with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
       assertEqualsImproved( main(), 1, self )
-    sys.modules['sys'] = backup_sys
 
   def test_main_remove_fails( self ):
-    backup_sys = sys.modules['sys']
-    sys_mock = Mock()
-    sys_mock.argv = [ 'something', 'myothertestpath' ]
-    sys.modules['sys'] = sys_mock
     with patch( '%s.os.getcwd' % MODULE_NAME, new=Mock(side_effect=[ 'current_dir', 'myothertestpath', 'myothertestpath', 'myothertestpath' ]) ), \
          patch( '%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True) ), \
          patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError( 'test_cannot_remove_os_err' )) ), \
          patch( '%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[ 'directory_content1.txt', 'libc.so', 'libstdc++.so' ]) ):
       assertEqualsImproved( main(), 1, self )
-    sys.modules['sys'] = backup_sys

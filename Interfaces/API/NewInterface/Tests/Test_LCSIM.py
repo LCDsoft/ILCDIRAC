@@ -5,12 +5,12 @@ Test LCSIM module
 """
 
 import unittest
-from mock import call, patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import LCSIM
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
-  assertDiracSucceeds
+  assertDiracSucceeds, assertMockCalls
 
 __RCSID__ = "$Id$"
 
@@ -169,10 +169,7 @@ class LCSIMTestCase( unittest.TestCase ):
          patch.object(inspect.getmodule(LCSIM), 'checkXMLValidity', new=Mock(return_value=S_OK())) as xml_mock:
       assertDiracFailsWith( self.lcs._checkConsistency( 'myTestJob' ),
                             'you have to pass an existing .zip file', self )
-      exists_mock.assert_called_with( 'myTestStrat' )
-      assertEqualsImproved(
-        ( len( exists_mock.mock_calls ), exists_mock.mock_calls[0], exists_mock.mock_calls[2] ),
-        ( 3, exists_mock.mock_calls[1], call( 'myTestStrat' ) ), self )
+      assertMockCalls( exists_mock, [ 'myTestSteerFile.txt', 'myTestSteerFile.txt', 'myTestStrat' ], self )
       xml_mock.assert_called_once_with( 'myTestSteerFile.txt' )
 
   def test_checkconsistency_noversion( self ):

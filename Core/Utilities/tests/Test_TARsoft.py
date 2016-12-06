@@ -21,9 +21,16 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     # Mock away DataManager import
     dataman_import_mock = Mock()
     dataman_import_mock.getFile.return_value = None
+    self.dm_backup = sys.modules.get( 'DIRAC.DataManagementSystem.Client.DataManager', -1 )
     sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_import_mock
     global dataman_mock
     dataman_mock = Mock()
+
+  def tearDown( self ):
+    if self.dm_backup != -1:
+      sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = self.dm_backup
+    else:
+      del sys.modules['DIRAC.DataManagementSystem.Client.DataManager']
 
   def test_importfails( self ): #pylint: disable=no-self-use
     """ Rather stupid test. The handling of an ImportError in hashlib internally imports hashlib as well...
@@ -44,8 +51,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
         else:
           importcounter = importcounter+1
       return realimport(name, globals, locals, fromlist, level)
+    backup_import = builtins.__import__
     builtins.__import__ = myimport
     from ILCDIRAC.Core.Utilities.TARsoft import createLock #pylint: disable=unused-variable
+    builtins.__import__ = backup_import
 
   def test_createlock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
@@ -173,7 +182,6 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertMockCalls( err_mock, [
         ( 'Failed deleting /delete/that because :', "<type 'exceptions.OSError'> test_remove_dir_cannot_error" ),
         'Oh Oh, something was not right, the directory /delete/that is still here' ], self )
-
 
   def test_download_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
@@ -525,11 +533,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertMockCalls( listdir_mock, [ '/cool/dir/ILCApplication3002/packages/slic/',
                                        '/cool/dir/ILCApplication3002/packages/lcdd/',
                                        '/cool/dir/ILCApplication3002/packages/xerces/' ], self )
-      assertEqualsImproved( os.environ[ 'SLIC_DIR' ], '/cool/dir/ILCApplication3002', self )
-      assertEqualsImproved( os.environ[ 'SLIC_VERSION' ], 'myslicpaths', self )
-      assertEqualsImproved( os.environ[ 'XERCES_VERSION' ], 'myxercespaths', self )
-      assertEqualsImproved( os.environ[ 'LCDD_VERSION' ], 'mylcddpaths', self )
-      assertEqualsImproved( len(os.environ), 4, self )
+      assertEqualsImproved( os.environ, { 'SLIC_DIR' : '/cool/dir/ILCApplication3002',
+                                          'SLIC_VERSION' : 'myslicpaths', 'XERCES_VERSION' : 'myxercespaths',
+                                          'LCDD_VERSION' : 'mylcddpaths' }, self )
 
   def test_configure_slic_emptydirs( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -550,8 +556,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       exists_mock.assert_called_once_with( '/cool/dir/ILCApplication3002/packages/xerces/' )
       assertMockCalls( listdir_mock, [ '/cool/dir/ILCApplication3002/packages/slic/',
                                        '/cool/dir/ILCApplication3002/packages/lcdd/' ], self )
-      assertEqualsImproved( os.environ[ 'SLIC_DIR' ], '/cool/dir/ILCApplication3002', self )
-      assertEqualsImproved( len(os.environ), 1, self )
+      assertEqualsImproved( os.environ, { 'SLIC_DIR' : '/cool/dir/ILCApplication3002' }, self )
 
   def test_configure_slic_oserr( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -573,8 +578,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       self.assertFalse( exists_mock.called )
       assertMockCalls( listdir_mock, [ '/cool/dir/ILCApplication3002/packages/slic/',
                                        '/cool/dir/ILCApplication3002/packages/lcdd/' ], self )
-      assertEqualsImproved( os.environ[ 'SLIC_DIR' ], '/cool/dir/ILCApplication3002', self )
-      assertEqualsImproved( len(os.environ), 1, self )
+      assertEqualsImproved( os.environ, { 'SLIC_DIR' : '/cool/dir/ILCApplication3002' }, self )
 
   def test_configure_unknownapp( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -608,10 +612,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       isdir_mock.assert_called_once_with( '/current/working/dir/myres/lib' )
       assertMockCalls( addfolder_mock, [ '/current/working/dir/myres/lib' ] * 2,
                        self )
-      assertEqualsImproved( os.environ['PATH'], '/current/working/dir/myres/bin:mypath', self )
-      assertEqualsImproved( os.environ['PYTHONPATH'], '/current/working/dir/myres/lib:pythonic_path', self )
-      assertEqualsImproved( os.environ['ROOTSYS'], '/current/working/dir/myres', self )
-      assertEqualsImproved( len(os.environ), 3, self )
+      assertEqualsImproved( os.environ, { 'PATH' : '/current/working/dir/myres/bin:mypath',
+                                          'PYTHONPATH' : '/current/working/dir/myres/lib:pythonic_path',
+                                          'ROOTSYS' : '/current/working/dir/myres' }, self )
 
   def test_configure_java( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -627,8 +630,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertMockCalls( libc_mock, [ '/java/res/LDLibs', '/java/res/lib' ], self )
       isdir_mock.assert_called_once_with( '/java/res/lib' )
       assertMockCalls( addfolder_mock, [ '/java/res/lib' ] * 2, self )
-      assertEqualsImproved( os.environ['PATH'], '/java/res/bin:mypath', self )
-      assertEqualsImproved( len(os.environ), 1, self )
+      assertEqualsImproved( os.environ, { 'PATH' : '/java/res/bin:mypath' }, self )
 
   def test_configure_lcio( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -646,9 +648,8 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       isdir_mock.assert_called_once_with( '/my/lcio/retval/lib' )
       addfolder_mock.assert_called_once_with( '/my/lcio/retval/lib' )
       subproc_mock.assert_called_once_with( ['java', '-Xmx1536m', '-Xms256m', '-version'] )
-      assertEqualsImproved( len(os.environ), 2, self )
-      assertEqualsImproved( os.environ['LCIO'], '/my/lcio/retval', self )
-      assertEqualsImproved( os.environ['PATH'], '/my/lcio/retval/bin:PaTH_LCIO', self )
+      assertEqualsImproved( os.environ, { 'LCIO' : '/my/lcio/retval',
+                                          'PATH' : '/my/lcio/retval/bin:PaTH_LCIO' }, self )
 
   def test_configure_lcio_javafails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
@@ -686,7 +687,6 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
 
   def test_configure_stdhepcutjava( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import configure
-    import subprocess
     with patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/cool/dir/')), \
          patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
          patch('%s.removeLibc' % MODULE_NAME, new=Mock(return_value=True)) as libc_mock, \
@@ -778,15 +778,13 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     from ILCDIRAC.Core.Utilities.TARsoft import addFolderToLdLibraryPath
     with patch.dict(os.environ, {}, True):
       addFolderToLdLibraryPath( 'mytestfolder123' )
-      assertEqualsImproved( len(os.environ), 1, self )
-      assertEqualsImproved( os.environ['LD_LIBRARY_PATH'], 'mytestfolder123', self )
+      assertEqualsImproved( os.environ, { 'LD_LIBRARY_PATH' : 'mytestfolder123' }, self )
 
   def test_addfolder_to_ldlibrary_append( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import addFolderToLdLibraryPath
     with patch.dict(os.environ, { 'LD_LIBRARY_PATH' : 'prepath' }, True):
       addFolderToLdLibraryPath( 'other/TestFoldeR' )
-      assertEqualsImproved( len(os.environ), 1, self )
-      assertEqualsImproved( os.environ['LD_LIBRARY_PATH'], 'other/TestFoldeR:prepath', self )
+      assertEqualsImproved( os.environ, { 'LD_LIBRARY_PATH' : 'other/TestFoldeR:prepath' }, self )
 
   def test_install_package( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
@@ -1093,6 +1091,3 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       listdir_mock.assert_called_once_with( 'slic' )
 
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.TARsoft'
-
-
-
