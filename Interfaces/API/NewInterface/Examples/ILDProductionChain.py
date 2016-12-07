@@ -16,19 +16,19 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 
 
 from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJob
-from ILCDIRAC.Interfaces.API.NewInterface.Applications     import Mokka, Marlin, OverlayInput
+from ILCDIRAC.Interfaces.API.NewInterface.Applications     import Mokka, Marlin, OverlayInput, DDSim
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLCIOSplit, StdHepSplit
 
 
 
 # TODO: add evttype to the ProdGroup
-analysis         = 'ILD-DBD' ##Some analysis: the prods will belong to the ProdGroup
-my_evttype       = 'higgs_ffh'
-my_evtclass      = 'higgs'
+analysis         = 'ILD-DDSim-Test' ##Some analysis: the prods will belong to the ProdGroup
+my_evttype       = ''
+my_evtclass      = '3f'
 selectedfile     = 0
-prodid           = 6556
-genprocessname   = 'qqh_ww_4q'
-process          = '106730'
+prodid           = 500001
+genprocessname   = ''
+process          = ''
 energy           = 500. ##This is mostly needed to define easily the steering files and the overlay parameters
 analysis += '_' + my_evttype
 
@@ -41,12 +41,14 @@ GGToHadInt350  = 0.33
 GGToHadInt500  = 1.7
 GGToHadInt1000 = 4.1
 
-MarlinVer    = "ILCSoft-01-16-02-p1"
+MarlinVer    = "ILCSoft-01-19"
+DDSimVer     = "ILCSoft-01-19"
+
 ILDConfig = '' ## Set below for different energies
 MokkaVer     = "080003"
-MokkaILDConfig = "v01-14-01-p00"
+MokkaILDConfig = "v01-19"
 banned_sites = [""]
-dryrun       = False
+dryrun       = True
 # do not register anything nor create anything.
 # Should be used once the splitting-at-stdhep-level prods are submitted.
 
@@ -67,7 +69,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160623_42_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20161207_01_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -78,22 +80,22 @@ matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars
 matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype
 matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + MokkaILDConfig
 
-SE        = "KEK-SRM"
+SE        = "CERN-SRM"
 ###LCG_SITE  = "LCG.KEK.jp"
 input_sand_box = [""]
 ##This is where magic happens
 meta              = {}
 
-meta['Datatype']       = 'gen' # MOKKA or stdhepsplit or MOKKA+MARLIN
+#meta['Datatype']       = 'gen' # MOKKA or stdhepsplit or MOKKA+MARLIN
 #meta['Datatype']      = 'SIM' # JUST MARLIN / MARLIN_OVERLAY
 
 meta['Energy']         = meta_energy
 meta['Machine']        = 'ilc'
-meta['GenProcessName'] = genprocessname
+#meta['GenProcessName'] = genprocessname
 meta['MachineParams']  = machineParameters
 
 # GenProcessID or ProcessID
-if meta['Datatype'] == 'gen':
+if meta.get('Datatype', None) == 'gen':
   meta['GenProcessID'] = process
 else:
   meta['ProcessID'] = process
@@ -103,7 +105,9 @@ else:
   meta['EvtClass']      = my_evttype
   meta['MachineParams'] = machineParameters
   meta['ProdID']        = prodid
-    
+
+inputFileFolder= "/ilc/prod/ilc/ild/test/temp1/gensplit/500-TDR_ws/3f/run001"
+
 #DoSplit at stdhep level
 activesplitstdhep   = False
 nbevtsperfilestdhep = 500
@@ -133,9 +137,9 @@ activesplit   = False
 nbevtsperfile = 200
 
 #Do Reco with Overlay
-ild_rec_ov    = True
+ild_rec_ov    = False
 #Do Reco
-ild_rec       = False # please, use WITH OVERLAY
+ild_rec       = True # please, use WITH OVERLAY
 
 ###### Whatever is below is not to be touched... Or at least only when something changes
 
@@ -151,6 +155,13 @@ mo.setDetectorModel(detectorModel)
 mo.setSteeringFile("bbudsc_3evt.steer")
 ### Do not include '.tgz'
 mo.setDbSlice(dbslice)
+
+##Simulation ILD
+ddsim = DDSim()
+ddsim.setVersion(DDSimVer) ###SET HERE YOUR MOKKA VERSION, the software will come from the ILDConfig
+ddsim.setDetectorModel(detectorModel)
+ddsim.setSteeringFile("ddsim_steer.py")
+
 
 ##Split
 split = SLCIOSplit()
@@ -191,8 +202,9 @@ mao.setDebug()
 mao.setVersion(MarlinVer) ##PUT HERE YOUR MARLIN VERSION
 if ild_rec_ov:
   if energy in [250.0, 350.0, 500.0, 1000.0]:
-    mao.setSteeringFile("bbudsc_3evt_stdreco.xml")
+    mao.setSteeringFile("bbudsc_3evt_stdreco_ddd4hep.xml")
     mao.setGearFile("GearOutput.xml")
+    mao.setDetectorModel(detectorModel)
   else:
     print "Marlin: No reconstruction suitable for this energy"
 
@@ -206,6 +218,7 @@ if ild_rec:
   if energy in [250.0, 350.0, 500.0, 1000.0]:
     ma.setSteeringFile("stdreco.xml")
     ma.setGearFile("GearOutput.xml")
+    mao.setDetectorModel(detectorModel)
   else:
     print "Marlin: No reconstruction suitable for this energy %g"%(energy)
 
@@ -279,54 +292,54 @@ if activesplitstdhep and meta:
 if ild_sim and meta:
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
-  pmo = ILDProductionJob()
-  pmo.matchToInput = matchToInput_mokka
-  pmo.setDryRun(dryrun)
-  pmo.setProdPlugin('Standard')
-  pmo.setILDConfig(MokkaILDConfig)
-  pmo.setEvtClass(my_evtclass)
-  pmo.setUseSoftTagInPath(True)
-  pmo.setEvtType(my_evttype)
-  pmo.setLogLevel("verbose")
-  pmo.setProdType('MCSimulation_ILD')
-  pmo.setBannedSites(banned_sites)
-  pmo.setInputSandbox( input_sand_box )
-  # pmo.setDestination(LCG_SITE)
+  pSim = ILDProductionJob()
+  pSim.matchToInput = matchToInput_mokka
+  pSim.setDryRun(dryrun)
+  pSim.setProdPlugin('Standard')
+  pSim.setILDConfig(MokkaILDConfig)
+  pSim.setEvtClass(my_evtclass)
+  pSim.setUseSoftTagInPath(True)
+  pSim.setEvtType(my_evttype)
+  pSim.setLogLevel("verbose")
+  pSim.setProdType('MCSimulation_ILD')
+  pSim.setBannedSites(banned_sites)
+  pSim.setInputSandbox( input_sand_box )
+  # pSim.setDestination(LCG_SITE)
 
-  res = pmo.setInputDataQuery(meta)
+  res = pSim.setInputDataQuery(meta)
   if not res['OK']:
     print res['Message']
     exit(1)
-  pmo.setOutputSE(SE)
+  pSim.setOutputSE(SE)
   wname = process+"_"+str(energy)+"_ild_sim"
   wname += additional_name
-  pmo.setWorkflowName(wname)
-  pmo.setProdGroup(analysis+"_"+str(energy))
+  pSim.setWorkflowName(wname)
+  pSim.setProdGroup(analysis+"_"+str(energy))
   #Add the application
-  res = pmo.append(mo)
+  res = pSim.append(ddsim)### Not Mokka any more
   if not res['OK']:
     print res['Message']
     exit(1)
-  pmo.addFinalization(True,True,True,True)
+  pSim.addFinalization(True,True,True,True)
   descrp = "%s model" % detectorModel
 
   if additional_name:
     descrp += ", %s"%additional_name
-  pmo.setDescription(descrp)
-  res = pmo.createProduction()
+  pSim.setDescription(descrp)
+  res = pSim.createProduction()
   if not res['OK']:
     print res['Message']
 
-  res = pmo.setProcessIDInFinalPath()
+  res = pSim.setProcessIDInFinalPath()
   if not res['OK']:
     print res['Message']
 
-  res = pmo.finalizeProd()
+  res = pSim.finalizeProd()
   if not res['OK']:
     print res['Message']
     exit(1)
   #As before: get the metadata for this production to input into the next
-  meta = pmo.getMetadata()
+  meta = pSim.getMetadata()
 
 ##Split at slcio level (after sim)
 if activesplit and meta:
