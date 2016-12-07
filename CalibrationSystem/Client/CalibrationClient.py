@@ -28,21 +28,26 @@ class CalibrationClient(object):
     self.calibrationService = RPCClient('Calibration/Calibration')
     self.parameterSet = None
 
-  def requestNewParameters(self):
+  def requestNewParameters(self, stepID):
     """ Fetches the new parameter set from the service
 
-    :returns: parameter set for the new step
+    :param int stepID: ID of the step the worker finished last.
+    :returns: parameter set for the new step, or None if no new parameters are available yet
     :rtype: #FIXME
     """
-    return self.calibrationService.getNewParameters()
+    res = self.calibrationService.getNewParameters(stepID)
+    if res['OK']:
+      return res['Value']
+    else:
+      return None  # No new parameters computed yet. Wait a bit and try again.
 
-  def reportResult(self, result):
+  def reportResult(self, stepID, result):
     """ Sends the computed histogram back to the service
 
+    :param int stepID: ID of the step the worker was working on up to now.
     :param result: The histogram as computed by the calibration step run
     :returns: None
     """
-    stepID = 1  # FIXME:find way to gather this info
     res = self.calibrationService.submitResult(self.calibrationID, stepID, self.workerID, result)
     if not res['OK']:
       pass  # FIXME: Error handling? ignore?
