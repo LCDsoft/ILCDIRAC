@@ -20,7 +20,7 @@ class Params(object):
     self.version = ''
     self.platform = 'x86_64-slc5-gcc43-opt'
     self.comment = ''
-    self.applicationList = ''
+    self.applicationSet = set()
     self.dbSliceLocation = ''
     self.initScriptLocation = ''
     self.basePath = ''
@@ -36,7 +36,7 @@ class Params(object):
 
   def setName(self, optionValue):
     apps = optionValue.split(',')
-    self.applicationList = [ _.strip() for _ in apps ]
+    self.applicationSet = { _.strip() for _ in apps }
     return S_OK()
 
   def setComment(self, optionValue):
@@ -62,27 +62,30 @@ class Params(object):
 
   def checkConsistency(self):
     """Check if all necessary parameter were defined"""
+
+    if not self.applicationSet:
+      return S_ERROR("No applications have beend defined")
+
     if not self.version:
       return S_ERROR("Version must be given")
 
-    if not self.initScriptLocation:
-      return S_ERROR("Initscript location is not defined")
+    appListLower = { _.lower() for _ in self.applicationSet }
 
-    if not self.basePath:
-      return S_ERROR("BasePath is not defined")
+    if 'ildconfig' not in appListLower or len(appListLower) > 1:
 
-    if not self.applicationList:
-      return S_ERROR("No applications have beend defined")
+      if not self.initScriptLocation:
+        return S_ERROR("Initscript location is not defined")
 
-    appListLower = [ _.lower() for _ in self.applicationList ]
+      if not self.basePath:
+        return S_ERROR("BasePath is not defined")
 
     if 'mokka' in appListLower and not self.dbSliceLocation:
       return S_ERROR("Mokka in application list, but not dbSlice location given")
 
-    if 'ildconfig' in appListLower and not self.ildConfigPath and not self.dbSliceLocation:
+    if 'ildconfig' in appListLower and not self.ildConfigPath:
       return S_ERROR("ILDConfig in application list, but no location given")
 
-    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation ):
+    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation, self.ildConfigPath ):
       if val and not os.path.exists(val):
         gLogger.error("Cannot find this path:", val)
         return S_ERROR("CVMFS not mounted, or path is misstyped")
@@ -122,7 +125,7 @@ class CVMFSAdder(object):
                            basepath = cliParams.basePath,
                            initsctipt = cliParams.initScriptLocation
                          )
-    self.applications = cliParams.applicationList
+    self.applications = cliParams.applicationSet
     self.detmodels = {}
     self.csAPI = CSAPI()
 
@@ -200,7 +203,8 @@ class CVMFSAdder(object):
       elif application == 'ildconfig':
         del csParameter['CVMFSEnvScript']
         csParameter['CVMFSPath'] = self.cliParams.ildConfigPath
-        csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
+        if self.cliParams.dbSliceLocation:
+          csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
 
       resInsert = self.insertApplicationToCS(application, csParameter)
       if not resInsert['OK']:
