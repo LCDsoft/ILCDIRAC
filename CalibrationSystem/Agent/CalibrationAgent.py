@@ -24,6 +24,7 @@ class CalibrationAgent(AgentModule):
   def initialize(self):
     """ Initialization of the Agent
     """
+    self.calibrationService = RPCClient('Calibration/Calibration')
     self.currentCalibrations = []  # Contains IDs (int) of the calibrations
     self.currentJobStatuses = {}  # Contains a mapping calibrationID -> dict, the dict contains a mapping
     # WorkerID (int) -> jobStatus (enum)
@@ -38,15 +39,19 @@ class CalibrationAgent(AgentModule):
     #remove it from data structures. If too many jobs failed, ask Service for resubmission. Then replace old
     #job status dict with new one
     #To clear up: Can a job disappear from this list? Or what happens if node crashes.
+    currentStatuses = self.fetchJobStatuses()
+    targetJobNumbers = self.calibrationService.getNumberOfJobsPerCalibration()
+    self.requestResubmission(self.__calculateJobsToBeResubmitted(currentStatuses, targetJobNumbers))
     return S_OK()
 
   def fetchJobStatuses(self):
-    """ Requests the statuses of all CalibrationService jobs and returns them
+    """ Requests the statuses of all CalibrationService jobs and returns them, mapped from
+    calibrationID -> workerID -> jobStatus.
 
-    :returns: Dictionary of type workerID (int) -> jobStatus (enum)
+    :returns: Dictionary of type calibrationID -> dict, with dict of type workerID (int) -> jobStatus (enum)
     :rtype: dict
     """
-    result = {1381: 'OK', 11743: 'FAILED'}
+    result = {2: {1381: 'OK', 11743: 'FAILED'}}
     #result = someAPICall('CalibrationService')
     return result
 
@@ -56,5 +61,24 @@ class CalibrationAgent(AgentModule):
     :param list failedJobs: List of 2-tuples ( calibrationID, workerID )
     :returns: None
     """
-    calibrationService = RPCClient('CalibrationSystem')  # FIXME: check name
-    calibrationService.resubmitJobs(failedJobs)  # FIXME: Check for error
+    self.calibrationService.resubmitJobs(failedJobs)  # FIXME: Check for error
+
+  def __getWorkerIDFromJobName(self, jobname):
+    """ Extracts the worker ID from the raw job name.
+
+    :param basestring jobname: name of the job in the DIRAC DB
+    :returns: the worker ID contained in the name string
+    :rtype: int
+    """
+    pass
+
+  def __calculateJobsToBeResubmitted(self, jobStatusDict, targetNumberDict):
+    """ Checks if any of the active calibrations have not enough jobs running and if that is the case
+    adds the worker nodes that need resubmission to a list that is returned.
+
+    :param dict jobStatusDict: Dictionary with a mapping from calibrationID -> dict, with dict having a mapping workerID -> jobStatus
+    :param dict targetNumberDict: Dictionary with a mapping from calibrationID -> number of jobs originally alotted to the calibration
+    :returns: List containing 2-tuples ( calibrationID, workerID )
+    :rtype: list
+    """
+    pass
