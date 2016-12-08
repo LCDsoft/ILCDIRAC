@@ -191,8 +191,8 @@ class ILDProductionJob( ProductionJob ):
         if not len(compatmeta):
             print 'ERROR, compatmeta is empty: this is expected when dryrun = True'
 
-        print 'compatmeta contains ProcessID? (%s) See below:'%compatmeta
-        pprint.pprint(self.compatmeta)
+        # print 'compatmeta contains ProcessID? (%s) See below:'%compatmeta
+        # pprint.pprint(self.compatmeta)
 
         self.log.verbose( "Using %s to build path" % str( compatmeta ) )
         if 'EvtClass' in compatmeta and not self.evtclass:
@@ -208,18 +208,17 @@ class ILDProductionJob( ProductionJob ):
                                       "evttype with setEvtType at least one "
                                       "should be." )
 
-        if 'GenProcessName' in compatmeta:
-            self.genprocname = compatmeta['GenProcessName']
-
-        if not self.genprocname:
-            return self._reportError( "GenProcessName is missing! It should appear in the basename")
-
-        if 'GenProcessID' in compatmeta:
-            self.processID = JobHelpers.getValue( compatmeta['GenProcessID'], int, (int, long) )
-        elif 'ProcessID' in compatmeta:
-            self.processID = JobHelpers.getValue( compatmeta['ProcessID'], int, (int, long) )
-        else:
-            return self._reportError( "Cannot find ProcessID, it's mandatory for path definition" )
+        # APS: No longer possible to use these fields at this point
+        # if 'GenProcessName' in compatmeta:
+        #     self.genprocname = compatmeta['GenProcessName']
+        # if not self.genprocname:
+        #     return self._reportError( "GenProcessName is missing! It should appear in the basename")
+        # if 'GenProcessID' in compatmeta:
+        #     self.processID = JobHelpers.getValue( compatmeta['GenProcessID'], int, (int, long) )
+        # elif 'ProcessID' in compatmeta:
+        #     self.processID = JobHelpers.getValue( compatmeta['ProcessID'], int, (int, long) )
+        # else:
+        #     return self._reportError( "Cannot find ProcessID, it's mandatory for path definition" )
 
         if 'Energy' in compatmeta:
             self.energycat = JobHelpers.getValue( compatmeta['Energy'], str, (int, long, basestring) )
@@ -427,13 +426,14 @@ class ILDProductionJob( ProductionJob ):
         metap = {}
         ## Drop ILDConfig, MachineParams, Energy from this list, they are set at different level
         ## SoftwareTag is only sometimes at the prodID level
-        for imeta in ['GenProcessName',
-                      'NumberOfEvents',
-                      'BeamParticle1','BeamParticle2',
-                      'PolarizationB1','PolarizationB2']:
-            if imeta in self.compatmeta:
-                print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
-                metap.update( {imeta : self.compatmeta[imeta]} )
+        ## UPDATE: None of these are guaranteed to be the same any more so we cannot use them for metadata to search
+        # for imeta in [ 'NumberOfEvents',
+        #                'BeamParticle1','BeamParticle2',
+        #                'PolarizationB1','PolarizationB2'
+        #              ]:
+        #     if imeta in self.compatmeta:
+        #         print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
+        #         metap.update( {imeta : self.compatmeta[imeta]} )
 
         ## Add software to non-searchable metadata
         curpackage = "%s.%s" % (application.appname, application.version)
@@ -486,9 +486,8 @@ class ILDProductionJob( ProductionJob ):
         # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include
         # EvtClass automatically)
         if not self.basename:
-
-            if 'SoftwareTag' in self.compatmeta:
-                if application.appname == 'mokka': # sim
+            if 'ILDConfigVersion' in self.prodparameters:
+                if application.appname in ( 'mokka', 'ddsim' ): # sim
                     self.basename = 's' + self.prodparameters['ILDConfigVersion']
                 elif application.appname == 'marlin': # reco
                     self.basename = 'r' + self.prodparameters['ILDConfigVersion']
@@ -500,10 +499,12 @@ class ILDProductionJob( ProductionJob ):
                     self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
                 # need extension if planning to use additional modules (LCIOSplit)
             else:
-                if application.datatype != 'gen': # for stdhepsplit we dont need to return
+                if application.datatype not in ( 'gen', 'gensplit' ): # for stdhepsplit we dont need to return
                     self._reportError(" Printing metadata before exit:")
                     pprint.pprint( self.compatmeta )
-                    return self._reportError( "'SoftwareTag' should be defined to build the path")
+                    pprint.pprint( self.prodparameters )
+                    
+                    return self._reportError( "'ILDConfigVersion' should be defined to build the path")
 
         if 'DetectorModel' in self.compatmeta:
             self.basename += '.m' + self.compatmeta['DetectorModel']
@@ -522,12 +523,12 @@ class ILDProductionJob( ProductionJob ):
         elif 'ProcessID' in self.compatmeta:
             self.basename += '.I' + str( self.compatmeta['ProcessID'] )
 
-        if 'GenProcessName' in self.compatmeta:
-            self.basename += '.P' + self.compatmeta['GenProcessName']
-        elif self.genprocname:
-            self.basename += '.P' + self.genprocname
-        else:
-            return self._reportError( "GenProcessName is missing! It should appear in the basename")
+        # if 'GenProcessName' in self.compatmeta:
+        #     self.basename += '.P' + self.compatmeta['GenProcessName']
+        # elif self.genprocname:
+        #     self.basename += '.P' + self.genprocname
+        # else:
+        #     return self._reportError( "GenProcessName is missing! It should appear in the basename")
 
         for i in ( 1, 2 ):
           bp = 'BeamParticle%s' % i
@@ -603,3 +604,12 @@ class ILDProductionJob( ProductionJob ):
                   return S_ERROR( "Application does not know which model to use, so the production does not either." )
 
       return S_OK()
+
+    def getMetadata(self):
+        """ Return the corresponding metadata of the last step
+        """
+        metadict = super(ILDProductionJob, self).getMetadata()
+        #As this is not supposed to be a searchable thing, or because they are different for different files
+        for key in ['NumberOfEvents','GenProcessName','ProcessID']:
+            metadict.pop(key,None)
+        return metadict
