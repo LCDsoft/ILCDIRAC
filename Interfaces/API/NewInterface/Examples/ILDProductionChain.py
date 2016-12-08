@@ -23,7 +23,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLCIOSplit, St
 
 # TODO: add evttype to the ProdGroup
 analysis         = 'ILD-DDSim-Test' ##Some analysis: the prods will belong to the ProdGroup
-my_evttype       = ''
+my_evttype       = '3f'
 my_evtclass      = '3f'
 selectedfile     = 0
 prodid           = 500001
@@ -41,14 +41,14 @@ GGToHadInt350  = 0.33
 GGToHadInt500  = 1.7
 GGToHadInt1000 = 4.1
 
-MarlinVer    = "ILCSoft-01-19"
-DDSimVer     = "ILCSoft-01-19"
+MarlinVer    = "ILCSoft-01-19_gcc48"
+DDSimVer     = "ILCSoft-01-19_gcc48"
 
 ILDConfig = '' ## Set below for different energies
 MokkaVer     = "080003"
-MokkaILDConfig = "v01-19"
+MokkaILDConfig = "v01-19_lcgeo"
 banned_sites = [""]
-dryrun       = True
+dryrun       = False
 # do not register anything nor create anything.
 # Should be used once the splitting-at-stdhep-level prods are submitted.
 
@@ -69,12 +69,12 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20161207_01_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20161207_20_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
 # as input for the same production. Also speed up the job submission.
-basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc/mc-dbd/ild/' )
+basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc/mc-dbd/test/ild' ).rstrip("/")
 
 matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
 matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype
@@ -86,17 +86,19 @@ input_sand_box = [""]
 ##This is where magic happens
 meta              = {}
 
-#meta['Datatype']       = 'gen' # MOKKA or stdhepsplit or MOKKA+MARLIN
+meta['Datatype']       = 'gensplit' # MOKKA or stdhepsplit or MOKKA+MARLIN
 #meta['Datatype']      = 'SIM' # JUST MARLIN / MARLIN_OVERLAY
 
 meta['Energy']         = meta_energy
 meta['Machine']        = 'ilc'
 #meta['GenProcessName'] = genprocessname
 meta['MachineParams']  = machineParameters
+meta['ProdID']         = prodid
 
 # GenProcessID or ProcessID
-if meta.get('Datatype', None) == 'gen':
-  meta['GenProcessID'] = process
+if meta.get('Datatype', None) in ('gen', 'gensplit'):
+  #meta['GenProcessID'] = process
+  pass
 else:
   meta['ProcessID'] = process
   # These parameters automatically retrieved if you run Mokka. If
@@ -227,7 +229,7 @@ if ild_rec:
 ### HERE WE DEFINE THE PRODUCTIONS
 if activesplitstdhep and meta:
   pstdhepsplit = ILDProductionJob()
-  pstdhepsplit.basepath = '/ilc/prod/ilc/mc-dbd.generated/ild/' # Sailer suggestion
+  pstdhepsplit.basepath = '/ilc/prod/ilc/mc-dbd.generated/ild' # Sailer suggestion
   pstdhepsplit.matchToInput = matchToInput_stdhepsplit
   pstdhepsplit.setDryRun(dryrun)
   #pstdhepsplit.setILDConfig(ILDConfig) ## stdhepsplit does not need ILDConfig
@@ -391,6 +393,7 @@ if ild_rec and meta:
   pma.setILDConfig(ILDConfig)
   pma.setLogLevel("verbose")
   pma.setProdType('MCReconstruction_ILD')
+  pma.setEvtType(my_evttype)
 
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
