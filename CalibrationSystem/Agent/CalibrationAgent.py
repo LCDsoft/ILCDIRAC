@@ -70,7 +70,16 @@ class CalibrationAgent(AgentModule):
     :returns: the worker ID contained in the name string
     :rtype: int
     """
-    pass
+    return int(jobname.split('_')[4])
+
+  def __getCalibrationIDFromJobName(self, jobname):
+    """ Extracts the calibration ID from the raw job name.
+
+    :param basestring jobname: name of the job in the DIRAC DB
+    :returns: the calibration ID contained in the name string
+    :rtype: int
+    """
+    return int(jobname.split('_')[2])
 
   def __calculateJobsToBeResubmitted(self, jobStatusDict, targetNumberDict):
     """ Checks if any of the active calibrations have not enough jobs running and if that is the case

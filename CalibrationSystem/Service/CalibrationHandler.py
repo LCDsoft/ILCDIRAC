@@ -55,13 +55,34 @@ class CalibrationRun(object):
     self.currentStep = 0
     self.currentParameterSet = None
     self.numberOfJobs = numberOfJobs
+    self.calibrationFinished = False
 
-  def submitInitialJobs(self):
+  def submitInitialJobs(self, calibrationID):
     """ Submit the calibration jobs to the workers for the first time.
     Use a specially crafted application that runs repeated Marlin reconstruction steps
+
+    :param int calibrationID: ID of this calibration. Needed for the jobName parameter
+    :returns: None
     """
+    from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+    from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+    dirac = DiracILC(True, 'some_job_repository.rep')
     for _ in xrange(0, self.numberOfJobs):
-      pass  # FIXME: Construct and submit special jobs
+      curWorkerID = 1  # FIXME: Get ID of worker somehow
+      curJob = UserJob()
+      curJob.setName('CalibrationService_calid_%s_workerid_%s' % (calibrationID, curWorkerID))
+      curJob.setJobGroup('CalibrationService_calib_job')
+
+      #curJob.setCPUTime(86400)
+      #curJob.setInputSandbox(["file1","file2"])
+      #curJob.setOutputSandbox(["fileout1","fileout2", "*.out", "*.log"])
+      #curJob.setOutputData(["somefile1","somefile2"],"some/path","CERN-SRM")
+      #from ILCDIRAC.Interfaces.API.NewInterface.Applications import CalibrationApp
+      #ca = CalibrationApp()
+      #res = curJob.append(ca)
+      #curJob.submit( dirac )
+      #FIXME: Construct and submit special jobs
+      #FIXME: Maybe move creation of job object to its own method and share code with resubmitJob method?
 
   def addResult(self, stepID, workerID, result):
     """ Add a reconstruction result to the list of other results
@@ -79,9 +100,11 @@ class CalibrationRun(object):
     """ Returns the current parameters
 
     :param int stepIDOnWorker: The ID of the step the worker just completed.
-    :returns: If there is a new parameter set, a S_OK dict containing the updated parameter set. Else a S_ERROR
+    :returns: If the computation is finished, returns S_OK containing a success message string. If there is a new parameter set, a S_OK dict containing the updated parameter set. Else a S_ERROR
     :rtype: dict
     """
+    if self.calibrationFinished:
+      return S_OK('Calibration finished! End job now.')
     if self.currentStep > stepIDOnWorker:
       return S_OK(self.currentParameterSet)
     else:
@@ -95,6 +118,8 @@ class CalibrationRun(object):
     """
     self.__calculateNewParams()
     self.currentStep += 1
+    if self.currentStep > 15:  # FIXME: Implement real stopping criterion
+      self.calibrationFinished = True
     #self.activeWorkers = dict()
 
   def __calculateNewParams(self):
@@ -103,7 +128,8 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    histograms = [self.stepResults[key] for key in self.stepResults.keys()]
+    histograms = [self.stepResults[key] for key in self.stepResults.keys(
+        )]  # FIXME: Use dict method that returns set of key, value pairs or similar?
     print histograms  # Calculate mean of histograms
 
   def resubmitJob(self, workerID):
@@ -168,11 +194,8 @@ class CalibrationHandler(RequestHandler):
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(steeringFile, softwareVersion, inputFiles, numberOfJobs)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
-    newRun.submitInitialJobs()
+    newRun.submitInitialJobs(calibrationID)
     return S_OK(calibrationID)
-
-  auth_getNewParameters = ['all']
-  types_getNewParameters = [int, int, int]
 
   def export_getNewParameters(self, calibrationID, workerID, stepIDOnWorker):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration

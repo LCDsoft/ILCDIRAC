@@ -32,7 +32,7 @@ class CalibrationClient(object):
     """ Fetches the new parameter set from the service
 
     :param int stepID: ID of the step the worker finished last.
-    :returns: parameter set for the new step, or None if no new parameters are available yet
+    :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step, or None if no new parameters are available yet
     :rtype: #FIXME
     """
     res = self.calibrationService.getNewParameters(stepID)
