@@ -3,6 +3,7 @@
     Supervises the state of the jobs started by the CalibrationService and requests resubmission if
     too many failed.
 """
+from collections import defaultdict
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
@@ -51,8 +52,14 @@ class CalibrationAgent(AgentModule):
     :returns: Dictionary of type calibrationID -> dict, with dict of type workerID (int) -> jobStatus (enum)
     :rtype: dict
     """
-    result = {2: {1381: 'OK', 11743: 'FAILED'}}
-    #result = someAPICall('CalibrationService')
+    result = defaultdict({})
+    jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
+    jobIDs = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})['Value']
+    jobStatuses = jobMonitoringService.getJobsParameters(jobIDs, ['Name', 'Status'])['Value']
+    for _, attrDict in jobStatuses.iteritems():
+      jobName = attrDict['Name']
+      curCalibration = self.__getCalibrationIDFromJobName(jobName)
+      result[curCalibration].update({self.__getWorkerIDFromJobName(jobName): attrDict['Status']})
     return result
 
   def requestResubmission(self, failedJobs):
