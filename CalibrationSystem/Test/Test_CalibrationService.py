@@ -3,12 +3,10 @@ Unit tests for the CalibrationService
 """
 
 import unittest
-from collections import defaultdict
-from mock import mock_open, patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
-from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler, \
-    CalibrationRun, CalibrationResult
+    CalibrationRun
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
     assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
