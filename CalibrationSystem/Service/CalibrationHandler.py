@@ -116,19 +116,20 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    self.__calculateNewParams()
+    self.__calculateNewParams(self.currentStep)
     self.currentStep += 1
     if self.currentStep > 15:  # FIXME: Implement real stopping criterion
       self.calibrationFinished = True
     #self.activeWorkers = dict()
 
-  def __calculateNewParams(self):
+  def __calculateNewParams(self, stepID):
     """ Calculates the new parameter set from the returned histograms. Only call if enough
     results have been reported back!
 
+    :param int stepID: ID of the current step
     :returns: None
     """
-    histograms = [self.stepResults[key] for key in self.stepResults.keys(
+    histograms = [self.stepResults[stepID] for key in self.stepResults.keys(
         )]  # FIXME: Use dict method that returns set of key, value pairs or similar?
     print histograms  # Calculate mean of histograms
 
@@ -157,26 +158,6 @@ class CalibrationHandler(RequestHandler):
     """
     pass
 
-  auth_submitResult = ['all']
-  types_submitResult = [int, int, int, list]
-
-  def export_submitResult(self, calibrationID, stepID, workerID, resultHistogram):
-    """ Called from the worker node to report the result of the calibration to the service
-
-    :param int calibrationID: ID of the current calibration run
-    :param int stepID: ID of the step in this calibration
-    :param int workerID: ID of the reporting worker
-    :param list resultHistogram: The histogram containing the result of the reconstruction run
-    :returns: S_OK in case of success
-    :rtype: dict
-    """
-    calibration = CalibrationHandler.activeCalibrations[calibrationID]
-    if stepID is calibration.currentStep:  # Only add result if it belongs to current step
-      calibration.addResult(stepID, workerID, resultHistogram)
-      if self.enoughResults(calibrationID, stepID):
-        calibration.endCurrentStep()
-    return S_OK()
-
   auth_createCalibration = ['all']
   types_createCalibration = [basestring, basestring, list, int]
 
@@ -197,7 +178,50 @@ class CalibrationHandler(RequestHandler):
     newRun.submitInitialJobs(calibrationID)
     return S_OK(calibrationID)
 
-  def export_getNewParameters(self, calibrationID, workerID, stepIDOnWorker):
+  auth_submitResult = ['all']
+  types_submitResult = [int, int, int, list]
+
+  def export_submitResult(self, calibrationID, stepID, workerID, resultHistogram):
+    """ Called from the worker node to report the result of the calibration to the service
+
+    :param int calibrationID: ID of the current calibration run
+    :param int stepID: ID of the step in this calibration
+    :param int workerID: ID of the reporting worker
+    :param list resultHistogram: The histogram containing the result of the reconstruction run
+    :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step), S_ERROR if the requested calibration can not be found.
+    :rtype: dict
+    """
+    #TODO: Anmerkung Marco: Evtl via agent checken alle X sekunden
+    calibration = CalibrationHandler.activeCalibrations.get( calibrationID, None )
+    if not calibration:
+      return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
+    if stepID is calibration.currentStep: #Only add result if it belongs to current step
+      calibration.addResult( stepID, workerID, resultHistogram )
+      if self.finalInterimResultReceived( calibrationID, stepID ):
+        calibration.endCurrentStep()
+    return S_OK()
+
+  finishedJobsForNextStep = 0.8 # X% of all jobs must have finished in order for the next step to begin.
+  def finalInterimResultReceived( self, calibrationID, stepID ):
+    """ Called after receiving a result. Checks if adding exactly this result means we now have enough
+    results to compute a new ParameterSet. (this method will return False, False, ..., False, True,
+    False, False, ..., False)
+
+    :param int calibrationID: The ID of the calibration to check
+    :param int stepID: The ID of the current step of that calibration
+    :returns: True if it is just now possible to go on to the next step, False if it's not possible yet or has been the case already
+    :rtype: bool
+    """
+    #FIXME: Find out of this is susceptible to race condition
+    import math
+    currentRun = CalibrationHandler.activeCalibrations[ calibrationID ]
+    numberOfResults = currentRun.stepResults[ stepID ].getNumberOfResults()
+    maxNumberOfJobs = currentRun.numberOfJobs
+    return numberOfResults is math.ceil( CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs )
+
+  auth_getNewParameters = [ 'all' ]
+  types_getNewParameters = [ int, int, int ]
+  def export_getNewParameters( self, calibrationID, workerID, stepIDOnWorker ):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
     :param int calibrationID: ID of the calibration being run on the worker
@@ -212,6 +236,7 @@ class CalibrationHandler(RequestHandler):
                                                                               workerID))
       return S_ERROR("calibrationID is not in active calibrations: %s" % calibrationID)
     return CalibrationHandler.activeCalibrations[calibrationID].getNewParameters(stepIDOnWorker)
+    #FIXME: This doesn't actually use the workerID at all. but needs fixing in several files.
 
   auth_resubmitJobs = ['all']
   types_resubmitJobs = [list]
@@ -231,7 +256,7 @@ class CalibrationHandler(RequestHandler):
       CalibrationHandler.activeCalibrations[calibrationID].resubmitJob(workerID)
     if failedPairs:
       return S_ERROR(('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs,
-                      failedPairs))
+                      failedPairs))  # FIXME: maybe dont break DIRAC code conventions
     else:
       return S_OK()
 
