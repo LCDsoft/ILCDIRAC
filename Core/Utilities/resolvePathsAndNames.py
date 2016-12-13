@@ -14,13 +14,13 @@ from ILCDIRAC.Core.Utilities.FilenameEncoder import FilenameEncoder, decodeFilen
 def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
   '''  Build the output file names based on inputfile name and job property
 
-  :param str inputfile: Input file name, either \\*.stdhep or \\*.slcio
-  :param str outfileOriginal: Output file name before change
+  :param str inputfile: Input file LFN, either \\*.stdhep or \\*.slcio
+  :param str outfileOriginal: Output file LFN before change
   :param prodID: Production ID
   :type prodID: `str`, `int`
   :param jobID: jobID
   :type jobID: `str`, `int`
-
+  :returns: Full LFN to changed output file
   '''
   finp = FilenameEncoder()
   inpitem = decodeFilename(inputfile)
@@ -43,7 +43,8 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
       inpitem["j"] = str(jobID)
       outfile  = finp.convert( "rec", "file", inpitem )
 
-  return outfile
+  basepath = os.path.dirname( outfileOriginal )
+  return os.path.join( basepath, outfile )
 
 ###############################################################################
 def getProdFilename(filename, prodID, jobID):
