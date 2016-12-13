@@ -125,6 +125,12 @@ class UploadOutputDataTestCase( unittest.TestCase ):
                                                        { 'outputFile' : 'myoutputfile_dst.slcio' } ) )
     self.assertTrue( myoutputlist )
 
+  def test_gettreatedoutputlist_fullcase_5( self ):
+    myoutputlist = {}
+    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_and_some_more_dst_1' ], myoutputlist,
+                                                       { 'outputFile' : 'myoutputfile_dst.slcio' } ) )
+    self.assertTrue( myoutputlist )
+
   def test_gettreatedoutputlist_sim_fails( self ):
     myoutputlist = {}
     self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_sim' ], myoutputlist,

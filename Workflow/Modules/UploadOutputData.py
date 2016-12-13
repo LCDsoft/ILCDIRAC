@@ -335,8 +335,8 @@ class UploadOutputData(ModuleBase):
       for fType in ('_gen', '_sim', '_rec', '_dst'):
         ### No idea why the second thing is necessary, but it is there in the original function
         if fType in expectedOutputFile and ( fType != '_dst' or '_dst_' in productionFile.lower() ):
-          filePrototype = outputfileObject['outputFile'].split(fType)[0]+fType
-          if filePrototype in productionFile:
+          filePrototype = outputfileObject['outputFile'].split(fType)[0]
+          if filePrototype in productionFile and fType in productionFile:
             appdict.update(outputfileObject)
             appdict['outputFile'] = productionFile+extension
             treatedOutputlist[productionFile] = appdict
