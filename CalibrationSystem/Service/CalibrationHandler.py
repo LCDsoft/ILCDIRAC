@@ -292,3 +292,22 @@ class CalibrationHandler(RequestHandler):
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
 #In that case, the calibration should be removed from activeCalibrations and the result stored.
 #Should we then kill all jobs of that calibration?
+
+####################################################################
+#                                                                  #
+#         Testcode, not to be used by production code              #
+#                                                                  #
+####################################################################
+
+  auth_resetService = ['all']  # FIXME: Restrict to test usage only
+  types_resetService = []
+
+  def export_resetService(self):
+    """ Called only by test methods! Resets the service so it can be tested.
+
+    :returns: S_OK on success. (Should always succeed)
+    :rtype: dict
+    """
+    CalibrationHandler.activeCalibrations = {}
+    CalibrationHandler.calibrationCounter = 0
+    return S_OK()

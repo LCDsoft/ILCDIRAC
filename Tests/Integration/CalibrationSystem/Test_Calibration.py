@@ -4,10 +4,17 @@ Integration tests for the CalibrationService
 
 from collections import defaultdict
 import unittest
+from DIRAC.Core.Base.Script import parseCommandLine
 from DIRAC.Core.DISET.RPCClient import RPCClient
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals, assertEqualsImproved
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals, assertEqualsImproved, \
+    assertDiracSucceeds
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler, \
     CalibrationResult
+
+
+__RCSID__ = "$Id$"
+
+parseCommandLine()
 
 
 class TestCalibrationBase(unittest.TestCase):
@@ -17,7 +24,7 @@ class TestCalibrationBase(unittest.TestCase):
     self.calibrationService = RPCClient('Calibration/Calibration')
 
   def tearDown(self):
-    pass
+    assertDiracSucceeds(self.calibrationService.resetService(), self)
 
 
 class TestCalibrationService(TestCalibrationBase):
@@ -40,7 +47,7 @@ class TestCalibrationService(TestCalibrationBase):
     del CalibrationHandler.activeCalibrations[1]
     CalibrationHandler.calibrationCounter = 0
 
-  def test_something(self):
+  def test_submitresult(self):
     pass
 
 
