@@ -36,7 +36,7 @@ class TestCalibrationService(TestCalibrationBase):
                                                   ['test.input1', 'other_input.txt'], 10),
         1, self)
     internals = self.calibrationService.getInternals()
-    assertDiracSucceeds(internals, self)
+    assert internals['OK']
     (calibrations, _) = internals['Value']
     assert 1 in calibrations
     createdRun = calibrations[1]
