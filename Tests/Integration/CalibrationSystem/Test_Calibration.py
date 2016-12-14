@@ -35,17 +35,17 @@ class TestCalibrationService(TestCalibrationBase):
         self.calibrationService.createCalibration('mySteerTest.file', 'softV.1',
                                                   ['test.input1', 'other_input.txt'], 10),
         1, self)
-    assert 1 in CalibrationHandler.activeCalibrations
-    createdRun = CalibrationHandler.activeCalibrations[1]
+    internals = self.calibrationService.resetService()
+    assertDiracSucceeds(internals, self)
+    (calibrations, _) = internals['Value']
+    assert 1 in calibrations
+    createdRun = calibrations[1]
     assertEqualsImproved(
         (createdRun.steeringFile, createdRun.softwareVersion, createdRun.inputFiles,
          createdRun.numberOfJobs, createdRun.calibrationFinished, createdRun.currentStep,
          createdRun.stepResults, createdRun.currentParameterSet),
         ('mySteerTest.file', 'softV.1', ['test.input1', 'other_input.txt'], 10, False, 0,
             defaultdict(CalibrationResult), None), self)
-    # cleanup
-    del CalibrationHandler.activeCalibrations[1]
-    CalibrationHandler.calibrationCounter = 0
 
   def test_submitresult(self):
     pass

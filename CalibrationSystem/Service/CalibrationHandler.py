@@ -311,3 +311,15 @@ class CalibrationHandler(RequestHandler):
     CalibrationHandler.activeCalibrations = {}
     CalibrationHandler.calibrationCounter = 0
     return S_OK()
+
+  auth_getInternals = ['all']  # FIXME: Restrict to test usage only
+  types_getInternals = []
+
+  def export_getInternals(self):
+    """ Called only by test methods! Returns the class variables of this service,
+    exposing its internals and making it testable.
+
+    :returns: S_OK containing a tuple with the active calibrations dict and the calibrationCounter
+    :rtype: dict
+    """
+    return S_OK((CalibrationHandler.activeCalibrations, CalibrationHandler.calibrationCounter))
