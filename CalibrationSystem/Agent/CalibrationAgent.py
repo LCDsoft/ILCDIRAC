@@ -43,6 +43,7 @@ class CalibrationAgent(AgentModule):
     currentStatuses = self.fetchJobStatuses()
     targetJobNumbers = self.calibrationService.getNumberOfJobsPerCalibration()
     self.requestResubmission(self.__calculateJobsToBeResubmitted(currentStatuses, targetJobNumbers))
+    self.calibrationService.checkStepIncrement()
     return S_OK()
 
   def fetchJobStatuses(self):

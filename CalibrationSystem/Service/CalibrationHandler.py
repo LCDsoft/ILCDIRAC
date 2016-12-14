@@ -197,26 +197,40 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
     if stepID is calibration.currentStep: #Only add result if it belongs to current step
       calibration.addResult( stepID, workerID, resultHistogram )
-      if self.finalInterimResultReceived( calibrationID, stepID ):
+    return S_OK()
+
+  auth_checkStepIncrement = ['all']
+  types_checkStepIncrement = []
+
+  def export_checkStepIncrement(self):
+    """ Should only be called by the agent. Periodically checks whether there are any running
+    Calibrations that received enough results to start the next step.
+
+    :returns: S_OK when the check has been ended.
+    :rtype: dict
+    """
+    for calibrationID in CalibrationHandler.activeCalibrations:
+      calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
+      if self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
     return S_OK()
 
   finishedJobsForNextStep = 0.8 # X% of all jobs must have finished in order for the next step to begin.
-  def finalInterimResultReceived( self, calibrationID, stepID ):
+
+  def finalInterimResultReceived(self, calibration, stepID):
     """ Called after receiving a result. Checks if adding exactly this result means we now have enough
     results to compute a new ParameterSet. (this method will return False, False, ..., False, True,
     False, False, ..., False)
 
-    :param int calibrationID: The ID of the calibration to check
+    :param CalibrationRun calibration: The calibration to check
     :param int stepID: The ID of the current step of that calibration
     :returns: True if it is just now possible to go on to the next step, False if it's not possible yet or has been the case already
     :rtype: bool
     """
     #FIXME: Find out of this is susceptible to race condition
     import math
-    currentRun = CalibrationHandler.activeCalibrations[ calibrationID ]
-    numberOfResults = currentRun.stepResults[ stepID ].getNumberOfResults()
-    maxNumberOfJobs = currentRun.numberOfJobs
+    numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
+    maxNumberOfJobs = calibration.numberOfJobs
     return numberOfResults is math.ceil( CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs )
 
   auth_getNewParameters = [ 'all' ]
