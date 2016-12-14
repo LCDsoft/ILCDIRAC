@@ -35,7 +35,7 @@ class TestCalibrationService(TestCalibrationBase):
         self.calibrationService.createCalibration('mySteerTest.file', 'softV.1',
                                                   ['test.input1', 'other_input.txt'], 10),
         1, self)
-    internals = self.calibrationService.resetService()
+    internals = self.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
     (calibrations, _) = internals['Value']
     assert 1 in calibrations

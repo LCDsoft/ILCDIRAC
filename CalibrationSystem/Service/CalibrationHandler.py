@@ -322,4 +322,6 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing a tuple with the active calibrations dict and the calibrationCounter
     :rtype: dict
     """
-    return S_OK((CalibrationHandler.activeCalibrations, CalibrationHandler.calibrationCounter))
+    import copy
+    return S_OK((copy.deepcopy(CalibrationHandler.activeCalibrations),
+                 copy.deepcopy(CalibrationHandler.calibrationCounter)))
