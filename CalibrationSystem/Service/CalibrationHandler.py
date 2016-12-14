@@ -49,13 +49,13 @@ class CalibrationRun(object):
     self.steeringFile = steeringFile
     self.softwareVersion = softwareVersion
     self.inputFiles = inputFiles
-    #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     self.stepResults = defaultdict(CalibrationResult)
-    #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
     self.currentStep = 0
     self.currentParameterSet = None
     self.numberOfJobs = numberOfJobs
     self.calibrationFinished = False
+    #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
+    #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
 
   def submitInitialJobs(self, calibrationID):
     """ Submit the calibration jobs to the workers for the first time.
@@ -191,7 +191,7 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step), S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
-    #TODO: Anmerkung Marco: Evtl via agent checken alle X sekunden
+    #TODO: Anmerkung Marco: Evtl via agent checken alle X sekunden, Fix race condition
     calibration = CalibrationHandler.activeCalibrations.get( calibrationID, None )
     if not calibration:
       return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
