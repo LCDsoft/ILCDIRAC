@@ -202,7 +202,7 @@ class CalibrationHandler(RequestHandler):
   auth_checkStepIncrement = ['all']
   types_checkStepIncrement = []
 
-  def export_checkStepIncrement(self):
+  def export_checkStepIncrement(self):  # FIXME: Rename all of this honestly
     """ Should only be called by the agent. Periodically checks whether there are any running
     Calibrations that received enough results to start the next step.
 
@@ -325,3 +325,23 @@ class CalibrationHandler(RequestHandler):
     import copy
     return S_OK((copy.deepcopy(CalibrationHandler.activeCalibrations),
                  copy.deepcopy(CalibrationHandler.calibrationCounter)))
+
+  auth_setRunValues = ['all']
+  types_setRunValues = [int, int, int, bool]
+
+  def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
+    """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
+    gets the parameterSet as current parameter set and the stepFinished status.
+
+    :param int calibrationID: ID of the calibration whose values are to be changed.
+    :param int currentStpe: step the calibration is set to.
+    :param int parameterSet: New parameterSet for the CalibrationRun
+    :param bool calFinished: New calibrationFinished status for the CalibrationRun
+    :returns: S_OK after it has finished
+    :rtype: dict
+    """
+    calibration = CalibrationHandler.activeCalibrations[calibrationID]
+    calibration.currentStep = currentStep
+    calibration.currentParameterSet = parameterSet
+    calibration.calibrationFinished = calFinished
+    return S_OK()
