@@ -93,7 +93,7 @@ class CalibrationRun(object):
     :returns: None
     """
     self.stepResults[stepID].addResult(workerID, result)
-    #FIXME: Do we add old step results?
+    #FIXME: Do we add old step results? Current status is no, ensured in CalibrationHandler
     #FIXME: Do we delete old interim results?
 
   def getNewParameters(self, stepIDOnWorker):
@@ -322,12 +322,10 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing a tuple with the active calibrations dict and the calibrationCounter
     :rtype: dict
     """
-    import copy
-    return S_OK((copy.deepcopy(CalibrationHandler.activeCalibrations),
-                 copy.deepcopy(CalibrationHandler.calibrationCounter)))
-
-  auth_setRunValues = ['all']
-  types_setRunValues = [int, int, int, bool]
+#    import copy
+#    return S_OK( ( copy.deepcopy( CalibrationHandler.activeCalibrations ),
+#                   copy.deepcopy( CalibrationHandler.calibrationCounter ) ) )
+    return S_OK((CalibrationHandler.activeCalibrations, CalibrationHandler.calibrationCounter))
 
   def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
     """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
