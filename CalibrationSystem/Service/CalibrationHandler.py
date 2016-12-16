@@ -322,10 +322,10 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing a tuple with the active calibrations dict and the calibrationCounter
     :rtype: dict
     """
-#    import copy
+    import copy
 #    return S_OK( ( copy.deepcopy( CalibrationHandler.activeCalibrations ),
 #                   copy.deepcopy( CalibrationHandler.calibrationCounter ) ) )
-    return S_OK((CalibrationHandler.activeCalibrations, CalibrationHandler.calibrationCounter))
+    return S_OK(copy.deepcopy(CalibrationHandler.calibrationCounter))
 
   def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
     """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
