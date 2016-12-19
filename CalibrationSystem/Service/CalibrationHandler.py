@@ -323,9 +323,12 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
     import copy
-#    return S_OK( ( copy.deepcopy( CalibrationHandler.activeCalibrations ),
+    import pickle
+#    return S_OK( pickle.dumps( TestMe() ) )
+    return S_OK((pickle.dumps(CalibrationHandler.activeCalibrations),
+                 copy.deepcopy(CalibrationHandler.calibrationCounter)))
+#    return S_OK( ( copy.deepcopy( { 1 : TestMe() } ),
 #                   copy.deepcopy( CalibrationHandler.calibrationCounter ) ) )
-    return S_OK(copy.deepcopy(CalibrationHandler.calibrationCounter))
 
   def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
     """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
@@ -343,3 +346,10 @@ class CalibrationHandler(RequestHandler):
     calibration.currentParameterSet = parameterSet
     calibration.calibrationFinished = calFinished
     return S_OK()
+
+
+class TestMe(object):
+  #  def __init__( self ):
+  #    self.i = 0
+  #    self.something = None
+  pass
