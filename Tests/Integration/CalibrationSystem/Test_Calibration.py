@@ -75,8 +75,16 @@ class TestCalibrationService(TestCalibrationBase):
         assertEqualsImproved(actual['Message'], expectation['Message'], self)
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
-    (calibrations, counter) = internals['Value']
-    assert counter is 11
+    # Internals returns the calibrations dictionary in serialized form by the pickles module. With the loads method
+    # it is deserialized. However, this requires the hack to put the CalibrationHandler module into sys.modules
+    # since else pickles doesn't work.
+    import pickle
+    from ILCDIRAC.CalibrationSystem.Service import CalibrationHandler
+    import sys
+    sys.modules['CalibrationHandler'] = CalibrationHandler
+    dump, counter = internals['Value']
+    calibrations = pickle.loads(dump)
+    assert counter is 10
     assert 0 not in calibrations
     empty_calibs = [2, 3, 5, 6, 7, 9]
     # Assert unconsidered calibrations didn't change

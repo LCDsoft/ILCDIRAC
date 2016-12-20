@@ -318,17 +318,17 @@ class CalibrationHandler(RequestHandler):
   def export_getInternals(self):
     """ Called only by test methods! Returns the class variables of this service,
     exposing its internals and making it testable.
+    The activeCalibration dictionary is serialized using the dumps method from the pickle module.
+    This is done since for an unknown reason one cannot return objects of custom (i.e. non-default python)
+    classes through a service (else a socket timeout occurs).
 
-    :returns: S_OK containing a tuple with the active calibrations dict and the calibrationCounter
+    :returns: S_OK containing a tuple with the active calibrations dict (serialized with the pickle module) and the calibrationCounter
     :rtype: dict
     """
     import copy
     import pickle
-#    return S_OK( pickle.dumps( TestMe() ) )
     return S_OK((pickle.dumps(CalibrationHandler.activeCalibrations),
                  copy.deepcopy(CalibrationHandler.calibrationCounter)))
-#    return S_OK( ( copy.deepcopy( { 1 : TestMe() } ),
-#                   copy.deepcopy( CalibrationHandler.calibrationCounter ) ) )
 
   def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
     """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
@@ -346,10 +346,3 @@ class CalibrationHandler(RequestHandler):
     calibration.currentParameterSet = parameterSet
     calibration.calibrationFinished = calFinished
     return S_OK()
-
-
-class TestMe(object):
-  #  def __init__( self ):
-  #    self.i = 0
-  #    self.something = None
-  pass
