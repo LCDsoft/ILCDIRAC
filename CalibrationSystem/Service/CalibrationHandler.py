@@ -108,7 +108,7 @@ class CalibrationRun(object):
     if self.currentStep > stepIDOnWorker:
       return S_OK(self.currentParameterSet)
     else:
-      return S_ERROR('No new parameter set available yet.')
+      return S_ERROR('No new parameter set available yet. Current step in service: %s, step on worker: %s' % (self.currentStep, stepIDOnWorker))
 
   def endCurrentStep(self):
     """ Calculates the new parameter set based on the results from the computations and prepares the object
@@ -218,20 +218,19 @@ class CalibrationHandler(RequestHandler):
   finishedJobsForNextStep = 0.8 # X% of all jobs must have finished in order for the next step to begin.
 
   def finalInterimResultReceived(self, calibration, stepID):
-    """ Called after receiving a result. Checks if adding exactly this result means we now have enough
-    results to compute a new ParameterSet. (this method will return False, False, ..., False, True,
-    False, False, ..., False)
+    """ Called periodically. Checks for the given calibration if we now have enough results to compute
+    a new ParameterSet.
 
     :param CalibrationRun calibration: The calibration to check
     :param int stepID: The ID of the current step of that calibration
-    :returns: True if it is just now possible to go on to the next step, False if it's not possible yet or has been the case already
+    :returns: True if enough results have been submitted, False otherwise
     :rtype: bool
     """
     #FIXME: Find out of this is susceptible to race condition
     import math
     numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
     maxNumberOfJobs = calibration.numberOfJobs
-    return numberOfResults is math.ceil( CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs )
+    return numberOfResults >= math.ceil(CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs)
 
   auth_getNewParameters = [ 'all' ]
   types_getNewParameters = [ int, int, int ]
@@ -249,7 +248,11 @@ class CalibrationHandler(RequestHandler):
                                                                               calibrationID,
                                                                               workerID))
       return S_ERROR("calibrationID is not in active calibrations: %s" % calibrationID)
-    return CalibrationHandler.activeCalibrations[calibrationID].getNewParameters(stepIDOnWorker)
+    res = CalibrationHandler.activeCalibrations[calibrationID].getNewParameters(stepIDOnWorker)
+    cal = CalibrationHandler.activeCalibrations[calibrationID]
+    res['additionalinfo'] = 'Called with calibrationID %s workerID %s stepidonworker %s, status of calibration:\n curStep %s curparamset %s calFinished %s' % (
+        calibrationID, workerID, stepIDOnWorker, cal.currentStep, cal.currentParameterSet, cal.calibrationFinished)
+    return res
     #FIXME: This doesn't actually use the workerID at all. but needs fixing in several files.
 
   auth_resubmitJobs = ['all']
@@ -330,6 +333,9 @@ class CalibrationHandler(RequestHandler):
     return S_OK((pickle.dumps(CalibrationHandler.activeCalibrations),
                  copy.deepcopy(CalibrationHandler.calibrationCounter)))
 
+  auth_setRunValues = ['all']
+  types_setRunValues = [int, int, object, bool]
+
   def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
     """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
     gets the parameterSet as current parameter set and the stepFinished status.
@@ -341,7 +347,9 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK after it has finished
     :rtype: dict
     """
-    calibration = CalibrationHandler.activeCalibrations[calibrationID]
+    calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
+    if not calibration:
+      return S_ERROR('Calibration with ID %s not in active calibrations.' % calibrationID)
     calibration.currentStep = currentStep
     calibration.currentParameterSet = parameterSet
     calibration.calibrationFinished = calFinished

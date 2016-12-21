@@ -8,14 +8,44 @@ from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.Script import parseCommandLine
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals, assertEqualsImproved, \
-    assertDiracSucceeds, assertDiracFailsWith, assertDiracSucceedsWith
+    assertDiracSucceeds, assertDiracFailsWith, assertDiracSucceedsWith, assertDictEquals_dynamic
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
 
 
 __RCSID__ = "$Id$"
 
 
-class TestCalibrationBase(unittest.TestCase):
+def calibrationresult_is_equal(actual_res, expected_res, assertobject):
+  """ Checks if two passed CalibrationResult objects contain the same data.
+
+  :param CalibrationResult actual_res: Object created by the calls on the code under test
+  :param CalibrationResult expected_res: Object with the expected values
+  :param TestCase assertobject: The testcase, used to gain the assertion methods
+  :returns: None, raises AssertionError if they're not equal
+  :rtype: None
+  """
+  assertEqualsImproved( actual_res.results, expected_res.results, assertobject )
+
+def extract_calibrationdict_and_counter( internals ):
+  """ Returns a pair ( calibrationsDict, calibrationCounter ) (type: dict, int) from the passed
+  return value of the getInternals method of the CalibrationService.
+
+  :param dict internals: return value of the getInternals method. Should be a S_OK dict with a pair including the serialized calibrations dict.
+  :returns: The pair ( calibrationsDict, calibrationCounter )
+  :rtype: Pair
+  """
+  # Internals returns the calibrations dictionary in serialized form by the pickles module. With the loads method
+  # it is deserialized. However, this requires the hack to put the CalibrationHandler module into sys.modules
+  # since else pickles doesn't work.
+  import pickle
+  from ILCDIRAC.CalibrationSystem.Service import CalibrationHandler
+  import sys
+  sys.modules[ 'CalibrationHandler' ] = CalibrationHandler
+  dump, counter = internals[ 'Value' ]
+  calibrations = pickle.loads( dump )
+  return ( calibrations, counter )
+
+class TestCalibrationBase( unittest.TestCase ):
   """ Provides the basic common test fixtures. Creates a RPCClient to the CalibrationService. """
 
   @classmethod
@@ -32,14 +62,14 @@ class TestCalibrationBase(unittest.TestCase):
 class TestCalibrationService(TestCalibrationBase):
   """ Tests the public CalibrationService methods. """
 
-  def atest_createCalibration(self):
+  def test_createCalibration(self):
     assertDiracSucceedsWith_equals(
         TestCalibrationService.calibrationService.createCalibration('mySteerTest.file', 'softV.1',
                                                                     ['test.input1', 'other_input.txt'], 10),
         1, self)
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
-    (calibrations, _) = internals['Value']
+    (calibrations, _) = extract_calibrationdict_and_counter(internals)
     assert 1 in calibrations
     createdRun = calibrations[1]
     assertEqualsImproved(
@@ -75,15 +105,7 @@ class TestCalibrationService(TestCalibrationBase):
         assertEqualsImproved(actual['Message'], expectation['Message'], self)
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
-    # Internals returns the calibrations dictionary in serialized form by the pickles module. With the loads method
-    # it is deserialized. However, this requires the hack to put the CalibrationHandler module into sys.modules
-    # since else pickles doesn't work.
-    import pickle
-    from ILCDIRAC.CalibrationSystem.Service import CalibrationHandler
-    import sys
-    sys.modules['CalibrationHandler'] = CalibrationHandler
-    dump, counter = internals['Value']
-    calibrations = pickle.loads(dump)
+    calibrations, counter = extract_calibrationdict_and_counter(internals)
     assert counter is 10
     assert 0 not in calibrations
     empty_calibs = [2, 3, 5, 6, 7, 9]
@@ -100,28 +122,28 @@ class TestCalibrationService(TestCalibrationBase):
     expected_dict[0].results[7842] = [9.2, 3.2, 1.0]
     expected_dict[0].results[9831] = [1.2, 0.21, 9.8]
     expected_dict[0].results[2] = [0.2, 0.7, 10.20]
-    assertEqualsImproved((cur_cal.currentStep, cur_cal.stepResults, cur_cal.calibrationFinished,
-                          cur_cal.currentParameterSet),
-                         (0, expected_dict, False, None), self)
+    assertEqualsImproved((cur_cal.currentStep, cur_cal.calibrationFinished, cur_cal.currentParameterSet),
+                         (0, False, None), self)
+    assertDictEquals_dynamic(cur_cal.stepResults, expected_dict, self, calibrationresult_is_equal)
     cur_cal = calibrations[4]
     expected_dict = defaultdict(CalibrationResult)
     expected_dict[0].results[43] = []
-    assertEqualsImproved((cur_cal.currentStep, cur_cal.stepResults, cur_cal.calibrationFinished,
-                          cur_cal.currentParameterSet),
-                         (0, expected_dict, False, None), self)
+    assertEqualsImproved((cur_cal.currentStep, cur_cal.calibrationFinished, cur_cal.currentParameterSet),
+                         (0, False, None), self)
+    assertDictEquals_dynamic(cur_cal.stepResults, expected_dict, self, calibrationresult_is_equal)
     cur_cal = calibrations[8]
     expected_dict = defaultdict(CalibrationResult)
     expected_dict[0].results[8472] = [1.2]
     expected_dict[0].results[9013] = [4.3, 2.2, 5.4]
-    assertEqualsImproved((cur_cal.currentStep, cur_cal.stepResults, cur_cal.calibrationFinished,
-                          cur_cal.currentParameterSet),
-                         (0, expected_dict, False, None), self)
+    assertEqualsImproved((cur_cal.currentStep, cur_cal.calibrationFinished, cur_cal.currentParameterSet),
+                         (0, False, None), self)
+    assertDictEquals_dynamic(cur_cal.stepResults, expected_dict, self, calibrationresult_is_equal)
     cur_cal = calibrations[10]
     expected_dict = defaultdict(CalibrationResult)
     expected_dict[0].results[3] = [9013.2, 10.2, 3]
-    assertEqualsImproved((cur_cal.currentStep, cur_cal.stepResults, cur_cal.calibrationFinished,
-                          cur_cal.currentParameterSet),
-                         (0, expected_dict, False, None), self)
+    assertEqualsImproved((cur_cal.currentStep, cur_cal.calibrationFinished, cur_cal.currentParameterSet),
+                         (0, False, None), self)
+    assertDictEquals_dynamic(cur_cal.stepResults, expected_dict, self, calibrationresult_is_equal)
 
   def atest_increment_step(self):
     """ Creates several calibrations, adds results to some, and runs the checkStepIncrement method.
@@ -158,28 +180,30 @@ class TestCalibrationService(TestCalibrationBase):
     expected_steps = [0, 0, 1, 1, 0, 0, 1, 0, 0, 1]
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
-    (calibrations, counter) = internals['Value']
-    assertEqualsImproved(counter, 11, self)
+    (calibrations, counter) = extract_calibrationdict_and_counter(internals)
+    assertEqualsImproved(counter, 10, self)
     for i in xrange(0, 10):
       assertEqualsImproved(calibrations[i + 1].currentStep, expected_steps[i], self)
+      print 'Check successful for step %s' % i
 
-  def atest_getnumberofjobs(self):
+  @unittest.skip('currently takes 3 minutes ')  # FIXME: fix long runtime
+  def test_getnumberofjobs(self):
     job_amounts = [10, 2, 148, 3, 190, 10000, 50, 0, 45987, 1378]
-    for i in zip(xrange(0, 10), job_amounts):
-      assertDiracSucceedsWith(TestCalibrationService.calibrationService.createCalibration(
-          'mySteerTest.file', 'softV.1', ['test.input1', 'other_input.txt'], job_amounts[i]), i + 1, self)
+    for i, job_amount in zip(xrange(0, 10), job_amounts):
+      assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.createCalibration(
+          'mySteerTest.file', 'softV.1', ['test.input1', 'other_input.txt'], job_amount), i + 1, self)
     assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNumberOfJobsPerCalibration(),
                                    {1: 10, 2: 2, 3: 148, 4: 3, 5: 190, 6: 10000, 7: 50,
                                     8: 0, 9: 45987, 10: 1378}, self)
 
-  def atest_getnumberofjobs_empty(self):
+  def test_getnumberofjobs_empty(self):
     assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNumberOfJobsPerCalibration(),
                                    {}, self)
 
-  def atest_getnewparams(self):
+  def test_getnewparams(self):
     create_n_calibrations(TestCalibrationService.calibrationService, 5, self, 10)
     assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(6, 1, 2),
-                         'calibrationID is not in active calibrations: 11', self)
+                         'calibrationID is not in active calibrations: 6', self)
     TestCalibrationService.calibrationService.setRunValues(1, 12, [2.1, 2.4, 1000.2], False)
     TestCalibrationService.calibrationService.setRunValues(2, 1, [198, 2.9, 0.2], False)
     TestCalibrationService.calibrationService.setRunValues(3, 0, [1.2], False)
