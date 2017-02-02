@@ -279,7 +279,6 @@ class CalibrationHandler(RequestHandler):
     res['additionalinfo'] = 'Called with calibrationID %s stepidonworker %s, status of calibration:\n curStep %s curparamset %s calFinished %s' % (
         calibrationID, stepIDOnWorker, cal.currentStep, cal.currentParameterSet, cal.calibrationFinished)
     return res
-    #FIXME: This doesn't actually use the workerID at all. but needs fixing in several files.
 
   auth_resubmitJobs = ['all']
   types_resubmitJobs = [list]

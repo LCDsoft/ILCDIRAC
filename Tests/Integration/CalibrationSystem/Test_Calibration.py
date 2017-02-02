@@ -145,7 +145,7 @@ class TestCalibrationService(TestCalibrationBase):
                          (0, False, None), self)
     assertDictEquals_dynamic(cur_cal.stepResults, expected_dict, self, calibrationresult_is_equal)
 
-  def atest_increment_step(self):
+  def test_increment_step(self):
     """ Creates several calibrations, adds results to some, and runs the checkStepIncrement method.
     Then checks if the expected calibrations increased their step counters.
     """
@@ -177,16 +177,15 @@ class TestCalibrationService(TestCalibrationBase):
       assertDiracSucceeds(TestCalibrationService.calibrationService.submitResult(
           10, 0, 20 + i, [random.random(), random.random(), random.random()]), self)
     TestCalibrationService.calibrationService.checkStepIncrement()
-    expected_steps = [0, 0, 1, 1, 0, 0, 1, 0, 0, 1]
+    expected_steps = [0, 0, 1, 0, 0, 0, 1, 0, 0, 1]
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
     (calibrations, counter) = extract_calibrationdict_and_counter(internals)
     assertEqualsImproved(counter, 10, self)
     for i in xrange(0, 10):
       assertEqualsImproved(calibrations[i + 1].currentStep, expected_steps[i], self)
-      print 'Check successful for step %s' % i
 
-  @unittest.skip('currently takes 3 minutes ')  # FIXME: fix long runtime
+  #@unittest.skip( 'currently takes 3 minutes ') #FIXME: fix long runtime
   def test_getnumberofjobs(self):
     job_amounts = [10, 2, 148, 3, 190, 10000, 50, 0, 45987, 1378]
     for i, job_amount in zip(xrange(0, 10), job_amounts):
@@ -200,6 +199,16 @@ class TestCalibrationService(TestCalibrationBase):
     assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNumberOfJobsPerCalibration(),
                                    {}, self)
 
+  def test_setrunvals(self):
+    create_n_calibrations(TestCalibrationService.calibrationService, 5, self, 10)
+    res = TestCalibrationService.calibrationService.setRunValues(1, 12, [2.1, 2.4, 1000.2], False)
+    assertDiracSucceeds(res, self)
+    (calibrations, counter) = extract_calibrationdict_and_counter(
+        TestCalibrationService.calibrationService.getInternals())
+    assert counter is 5
+    cal = calibrations[1]
+    assert cal.currentStep is 12
+
   def test_getnewparams(self):
     create_n_calibrations(TestCalibrationService.calibrationService, 5, self, 10)
     assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(6, 1, 2),
@@ -209,8 +218,8 @@ class TestCalibrationService(TestCalibrationBase):
     TestCalibrationService.calibrationService.setRunValues(3, 0, [1.2], False)
     TestCalibrationService.calibrationService.setRunValues(4, 523, [2.1, 2.4, 1000.2], True)
     TestCalibrationService.calibrationService.setRunValues(5, 43, [2.1, 2.4, 1000.2], False)
-    assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(1, 1, 1),
-                         'no new parameter set available', self)
+    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(1, 1, 1),
+                                   [2.1, 2.4, 1000.2], self)
     assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(2, 0, 0),
                                    [198, 2.9, 0.2], self)
     assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(3, 0, 0),

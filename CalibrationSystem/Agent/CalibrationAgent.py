@@ -40,13 +40,14 @@ class CalibrationAgent(AgentModule):
     #remove it from data structures. If too many jobs failed, ask Service for resubmission. Then replace old
     #job status dict with new one
     #To clear up: Can a job disappear from this list? Or what happens if node crashes.
-    currentStatuses = self.fetchJobStatuses()
+    currentStatuses = CalibrationAgent.fetchJobStatuses()
     targetJobNumbers = self.calibrationService.getNumberOfJobsPerCalibration()
     self.requestResubmission(self.__calculateJobsToBeResubmitted(currentStatuses, targetJobNumbers))
     self.calibrationService.checkForStepIncrement()
     return S_OK()
 
-  def fetchJobStatuses(self):
+  @classmethod
+  def fetchJobStatuses(cls):
     """ Requests the statuses of all CalibrationService jobs and returns them, mapped from
     calibrationID -> workerID -> jobStatus.
 
