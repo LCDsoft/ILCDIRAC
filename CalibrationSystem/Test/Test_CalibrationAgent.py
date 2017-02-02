@@ -100,7 +100,7 @@ class CalibrationAgentTest(unittest.TestCase):
                      9135: workermappings[2], 98245: workermappings[3]}
     targetNumberDict = {89214: 100, 9824: 20, 9135: 1200, 98245: 35}
     result = self.calag._CalibrationAgent__calculateJobsToBeResubmitted(jobStatusDict, targetNumberDict)
-    countResubmissions = defaultdict(0)
+    countResubmissions = defaultdict(int)  # defaults to 0
     for calibrationID, _ in result:
       countResubmissions[calibrationID] += 1
     assertEqualsImproved((countResubmissions[89124], countResubmissions[9824],

@@ -54,7 +54,7 @@ class CalibrationAgent(AgentModule):
     :returns: Dictionary of type calibrationID -> dict, with dict of type workerID (int) -> jobStatus (enum)
     :rtype: dict
     """
-    result = defaultdict({})
+    result = defaultdict(dict)  # defaults to {}
     jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
     jobIDs = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})['Value']
     jobStatuses = jobMonitoringService.getJobsParameters(jobIDs, ['Name', 'Status'])['Value']
