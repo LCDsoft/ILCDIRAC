@@ -3,6 +3,7 @@ Integration tests for the CalibrationService
 """
 
 from collections import defaultdict
+import pytest
 import unittest
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.Script import parseCommandLine
@@ -59,6 +60,8 @@ class TestCalibrationBase( unittest.TestCase ):
   def tearDown(self):
     assertDiracSucceeds(TestCalibrationService.calibrationService.resetService(), self)
 
+
+@pytest.mark.integration
 class TestCalibrationService(TestCalibrationBase):
   """ Tests the public CalibrationService methods. """
 
@@ -146,7 +149,7 @@ class TestCalibrationService(TestCalibrationBase):
     assertDictEquals_dynamic(cur_cal.stepResults, expected_dict, self, calibrationresult_is_equal)
 
   def test_increment_step(self):
-    """ Creates several calibrations, adds results to some, and runs the checkStepIncrement method.
+    """ Creates several calibrations, adds results to some, and runs the checkForStepIncrement method.
     Then checks if the expected calibrations increased their step counters.
     """
     import random
@@ -176,13 +179,14 @@ class TestCalibrationService(TestCalibrationBase):
     for i in xrange(0, 9):
       assertDiracSucceeds(TestCalibrationService.calibrationService.submitResult(
           10, 0, 20 + i, [random.random(), random.random(), random.random()]), self)
-    TestCalibrationService.calibrationService.checkStepIncrement()
+    TestCalibrationService.calibrationService.checkForStepIncrement()
     expected_steps = [0, 0, 1, 0, 0, 0, 1, 0, 0, 1]
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
     (calibrations, counter) = extract_calibrationdict_and_counter(internals)
     assertEqualsImproved(counter, 10, self)
     for i in xrange(0, 10):
+      print 'in step %s' % i
       assertEqualsImproved(calibrations[i + 1].currentStep, expected_steps[i], self)
 
   #@unittest.skip( 'currently takes 3 minutes ') #FIXME: fix long runtime
@@ -211,22 +215,22 @@ class TestCalibrationService(TestCalibrationBase):
 
   def test_getnewparams(self):
     create_n_calibrations(TestCalibrationService.calibrationService, 5, self, 10)
-    assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(6, 1, 2),
+    assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(6, 2),
                          'calibrationID is not in active calibrations: 6', self)
     TestCalibrationService.calibrationService.setRunValues(1, 12, [2.1, 2.4, 1000.2], False)
     TestCalibrationService.calibrationService.setRunValues(2, 1, [198, 2.9, 0.2], False)
     TestCalibrationService.calibrationService.setRunValues(3, 0, [1.2], False)
     TestCalibrationService.calibrationService.setRunValues(4, 523, [2.1, 2.4, 1000.2], True)
     TestCalibrationService.calibrationService.setRunValues(5, 43, [2.1, 2.4, 1000.2], False)
-    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(1, 1, 1),
+    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(1, 1),
                                    [2.1, 2.4, 1000.2], self)
-    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(2, 0, 0),
+    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(2, 0),
                                    [198, 2.9, 0.2], self)
-    assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(3, 0, 0),
+    assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(3, 0),
                          'no new parameter set available', self)
-    assertDiracSucceedsWith(TestCalibrationService.calibrationService.getNewParameters(4, 1, 2),
+    assertDiracSucceedsWith(TestCalibrationService.calibrationService.getNewParameters(4, 2),
                             'Calibration finished', self)
-    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(5, 1, 42),
+    assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNewParameters(5, 42),
                                    [2.1, 2.4, 1000.2], self)
 
 #pylint: disable=invalid-name

@@ -92,9 +92,9 @@ class CalibrationHandlerTest(unittest.TestCase):
     with patch.object(CalibrationRun, 'resubmitJob', new=Mock()):
       res = self.calh.export_resubmitJobs(calIDsWorkIDs)
       assertDiracFails(res, self)
-      assertInImproved('Could not resubmit all jobs', res['Message'][0], self)
-      assertInImproved('[(198735, 1357)]', res['Message'][0], self)
-      assertEqualsImproved([(198735, 1357)], res['Message'][1], self)
+      assertInImproved('Could not resubmit all jobs', res['Message'], self)
+      assertInImproved('[(198735, 1357)]', res['Message'], self)
+      assertEqualsImproved([(198735, 1357)], res['failed_pairs'], self)
 
   def test_getnumberofjobs(self):
     calrun_mock_1 = Mock()

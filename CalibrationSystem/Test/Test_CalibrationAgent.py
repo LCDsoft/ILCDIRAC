@@ -62,10 +62,10 @@ class CalibrationAgentTest(unittest.TestCase):
       assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
           'CalibrationService_calid_sixteen_workerid_twenty'), 149814, self)
 
-  def test_calcjobresubmittal(self):
+  def atest_calcjobresubmittal(self):
     jobStatusDict = {}  # FIXME: Add ids
     targetNumberDict = {89214: 100, 9824: 20, 9135: 1200, 98245: 35}
-    result = self.calAgent._CalibrationAgent__calculateJobsToBeResubmitted(jobStatusDict, targetNumberDict)
+    result = self.calag._CalibrationAgent__calculateJobsToBeResubmitted(jobStatusDict, targetNumberDict)
     countResubmissions = defaultdict(0)
     for calibrationID, workerID in result:
       countResubmissions[calibrationID] += 1
