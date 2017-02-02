@@ -102,9 +102,9 @@ class CalibrationAgent(AgentModule):
     for calibrationID, workerDict in jobStatusDict.iteritems():
       possibly_successful_jobs = []
       failed_jobs = []
-      for workerID, jobStatus in workerDict:
+      for workerID, jobStatus in workerDict.iteritems():
         if jobStatus in CalibrationAgent.JOB_STATUS_POTENTIAL_SUCCESS:
-          possibly_successful_jobs.append(workerID)
+          possibly_successful_jobs.append(workerID)  # FIXME: Currently unused
         elif jobStatus in CalibrationAgent.JOB_STATUS_FAILED:
           failed_jobs.append(workerID)
       failed_ratio = float(len(failed_jobs)) / float(targetNumberDict[calibrationID])

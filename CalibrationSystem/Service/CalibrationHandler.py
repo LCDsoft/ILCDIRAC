@@ -167,7 +167,7 @@ class CalibrationRun(object):
     :param int workerID: ID of the worker where the job failed
     :returns: None
     """
-    #TODO: Resubmit job
+    #TODO: Implement Resubmit job
     pass
 
 

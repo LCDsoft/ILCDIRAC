@@ -2,10 +2,12 @@
 Unit tests for the CalibrationAgent
 """
 
+from collections import defaultdict
+import itertools
 import unittest
 from mock import patch, MagicMock as Mock
 from ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent import CalibrationAgent
-from ILCDIRAC.Tests.Utilities.GeneralUtils import \
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved
 
 __RCSID__ = "$Id$"
@@ -62,15 +64,55 @@ class CalibrationAgentTest(unittest.TestCase):
       assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
           'CalibrationService_calid_sixteen_workerid_twenty'), 149814, self)
 
-  def atest_calcjobresubmittal(self):
-    jobStatusDict = {}  # FIXME: Add ids
+  def test_calcjobresubmittal(self):
+    workermappings = [{}, {}, {}, {}]
+    for i in xrange(0, 4):
+      if i == 0:  # 100 jobs in total, 87 are ok - expectation: No jobs to be resubmitted
+        for j in xrange(25, 301, 6):  # adds 46 jobs
+          workermappings[i][j] = 'Running'
+        assert len(workermappings[i]) == 46
+        for j in xrange(28, 274, 6):  # adds 41 jobs
+          workermappings[i][j] = 'Finished'
+        assert len(workermappings[i]) == 87
+        for j in xrange(1, 25, 2):  # adds 12 jobs
+          workermappings[i][j] = 'Killed'
+        workermappings[i][2] = 'Failed'
+        assert len(workermappings[i]) == 100
+      elif i == 1:  # 20 jobs in total, 10 failed - expectation: Resubmit those 10
+        for j in xrange(13, 73, 6):  # adds 10 jobs
+          workermappings[i][j] = 'Finished'
+        assert len(workermappings[i]) == 10
+        for j in xrange(100, 128, 4):  # adds 7 jobs
+          workermappings[i][j] = 'Killed'
+        assert len(workermappings[i]) == 17
+        for j in xrange(1, 7, 2):  # adds 3 jobs
+          workermappings[i][j] = 'Failed'
+        assert len(workermappings[i]) == 20
+      elif i == 2:  # 1200 jobs, all running - expectation: No resubmission
+        for j in xrange(1, 1201):  # adds 1200 jobs
+          workermappings[i][j] = 'Running'
+        assert len(workermappings[i]) == 1200
+      else:  # 35 jobs, all killed - expectation: Resubmit all
+        for j in xrange(1, 70, 2):  # adds 35 jobs
+          workermappings[i][j] = 'Killed'
+        assert len(workermappings[i]) == 35
+    jobStatusDict = {89214: workermappings[0], 9824: workermappings[1],
+                     9135: workermappings[2], 98245: workermappings[3]}
     targetNumberDict = {89214: 100, 9824: 20, 9135: 1200, 98245: 35}
     result = self.calag._CalibrationAgent__calculateJobsToBeResubmitted(jobStatusDict, targetNumberDict)
     countResubmissions = defaultdict(0)
-    for calibrationID, workerID in result:
+    for calibrationID, _ in result:
       countResubmissions[calibrationID] += 1
-      #FIXME: Assert workerID in jobStatusDict
-    #FIXME: Assert enough jobs are being resubmitted
+    assertEqualsImproved((countResubmissions[89124], countResubmissions[9824],
+                          countResubmissions[9135], countResubmissions[98245]),
+                         (0, 10, 0, 35), self)
+    expected_resubmissions = [[], itertools.chain(xrange(100, 128, 4), xrange(1, 7, 2)),
+                              [], xrange(1, 70, 2)]
+    calibIDs = [89124, 9824, 9135, 98245]
+    assert len(expected_resubmissions) == len(calibIDs)
+    for i, expectation in zip(calibIDs, expected_resubmissions):
+      for expected_workerid in expectation:
+        assertInImproved((i, expected_workerid), result, self)
 
   def test_requestResubmission(self):
     self.calag.requestResubmission([(13875, 137), (1735, 1938), (90452, 4981)])

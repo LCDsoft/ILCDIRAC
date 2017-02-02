@@ -169,5 +169,3 @@ class CalibrationHandlerTest(unittest.TestCase):
   def atest_submitInitialJobs(self):
     pass  # FIXME: Finish atest
 
-#TODO: Integration test cases: Put service into well-defined state, then call export_ methods from client code. Run on VOILCDIRAC.
-#Methods to test: submitResult, resubmitJobs, getNumberofJobsPerCalibration
