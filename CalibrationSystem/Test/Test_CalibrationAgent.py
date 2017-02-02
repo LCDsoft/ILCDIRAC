@@ -5,9 +5,8 @@ Unit tests for the CalibrationAgent
 import unittest
 from mock import patch, MagicMock as Mock
 from ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent import CalibrationAgent
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
-    assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls
+from ILCDIRAC.Tests.Utilities.GeneralUtils import \
+    assertEqualsImproved
 
 __RCSID__ = "$Id$"
 
@@ -63,10 +62,10 @@ class CalibrationAgentTest(unittest.TestCase):
       assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
           'CalibrationService_calid_sixteen_workerid_twenty'), 149814, self)
 
-  def atest_calcjobresubmittal(self):
+  def test_calcjobresubmittal(self):
     jobStatusDict = {}  # FIXME: Add ids
     targetNumberDict = {89214: 100, 9824: 20, 9135: 1200, 98245: 35}
-    result = self.calAgent.__calculateJobsToBeResubmitted(jobStatusDict, targetNumberDict)
+    result = self.calAgent._CalibrationAgent__calculateJobsToBeResubmitted(jobStatusDict, targetNumberDict)
     countResubmissions = defaultdict(0)
     for calibrationID, workerID in result:
       countResubmissions[calibrationID] += 1

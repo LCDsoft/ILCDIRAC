@@ -119,14 +119,14 @@ class CalibrationHandlerTest(unittest.TestCase):
     testRun = CalibrationRun('', '', [], 13)
     testRun.calibrationFinished = True
     CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 139, 193),
+    assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 193),
                             'Calibration finished! End job now', self)
 
   def test_getnewparams_nonewparamsyet(self):
     testRun = CalibrationRun('', '', [], 13)
     testRun.currentStep = 149
     CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracFailsWith(self.calh.export_getNewParameters(2489, 139, 149),
+    assertDiracFailsWith(self.calh.export_getNewParameters(2489, 149),
                          'No new parameter set available yet', self)
 
   def test_getnewparams_newparams(self):
@@ -134,15 +134,34 @@ class CalibrationHandlerTest(unittest.TestCase):
     testRun.currentStep = 36
     testRun.currentParameterSet = 982435
     CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracSucceedsWith_equals(self.calh.export_getNewParameters(2489, 139, 35),
+    assertDiracSucceedsWith_equals(self.calh.export_getNewParameters(2489, 35),
                                    982435, self)
 
   def test_getnewparams_inactive_calibration(self):
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
         self.calh.export_createCalibration('', '', [], 0)
-    assertDiracFailsWith(self.calh.export_getNewParameters(135, 824, 913),
+    assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
                          'CalibrationID is not in active calibrations: 135', self)
+
+  def test_calculate_params(self):
+    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
+    a = [1, 2.3, 5]
+    b = [0, 0.2, -0.5]
+    c = [-10, -5.4, 2]
+    obj = CalibrationRun('file', 'v123', 'input', 123)
+    res = CalibrationResult()
+    res.addResult(2384, a)
+    res.addResult(742, b)
+    res.addResult(9354, c)
+    obj.stepResults[42] = res
+    actual = obj._CalibrationRun__calculateNewParams(42)  # pylint: disable=no-member
+    expected = [-3.0, -0.9666666666666668, 2.1666666666666665]
+    assert len(actual) == len(expected)
+    for expected_value, actual_value in zip(expected, actual):
+      self.assertTrue(abs(expected_value - actual_value) <= max(1e-09 * max(abs(expected_value),
+                                                                            abs(actual_value)), 0.0),
+                      'Expected values to be (roughly) the same, but they were not:\n Actual = %s,\n Expected = %s' % (actual_value, expected_value))
 
   def atest_resubmitJob(self):
     pass  # FIXME: Finish atest
