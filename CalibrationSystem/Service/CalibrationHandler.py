@@ -122,6 +122,23 @@ class CalibrationRun(object):
       self.calibrationFinished = True
     #self.activeWorkers = dict()
 
+  def __addLists(self, list1, list2):
+    """ Adds two lists together by adding the first element, second element, and so on. Throws an exception
+    if the lists have a different number of elements.
+
+    :param list list1: List of lists that should be added element-wise to another
+    :param list list2: Other list of lists that should be added element-wise
+    :returns: The list [ list1[0]+list2[0], list1[1]+list2[1], ... ]
+    :rtype: list
+    """
+    if len(list1) != len(list2):
+      raise ValueError('The two lists do not have the same number of elements. \n List 1: %s \n List 2: %s'
+                       % (list1, list2))
+    result = []
+    for a, b in zip(list1, list2):
+      result.append(a + b)
+    return result
+
   def __calculateNewParams(self, stepID):
     """ Calculates the new parameter set from the returned histograms. Only call if enough
     results have been reported back!
@@ -129,9 +146,19 @@ class CalibrationRun(object):
     :param int stepID: ID of the current step
     :returns: None
     """
-    histograms = [self.stepResults[stepID] for key in self.stepResults.keys(
-        )]  # FIXME: Use dict method that returns set of key, value pairs or similar?
-    print histograms  # Calculate mean of histograms
+    histograms = [self.stepResults[stepID].results[key] for key in self.stepResults[stepID].results.keys()]
+    if not histograms:
+      raise ValueError('No step results provided!')
+    length = len(histograms)
+    # Sum over elements of histograms
+    result = histograms[0]
+    for i in xrange(1, length):
+      result = self.__addLists(result, histograms[i])
+    # Divide by number of elements to calculate arithmetic mean
+    number_of_elements = len(result)
+    for i in xrange(0, number_of_elements):
+      result[i] = result[i] / float(number_of_elements)
+    return result
 
   def resubmitJob(self, workerID):
     """ Resubmits a job to the worker with the given ID, passing the current parameterSet.
@@ -191,18 +218,18 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step), S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
-    #TODO: Anmerkung Marco: Evtl via agent checken alle X sekunden, Fix race condition
+    #TODO: Fix race condition(if it exists)
     calibration = CalibrationHandler.activeCalibrations.get( calibrationID, None )
     if not calibration:
       return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
-    if stepID is calibration.currentStep: #Only add result if it belongs to current step
+    if stepID is calibration.currentStep:  # Only add result if it belongs to current step. Else ignore (it's ok)
       calibration.addResult( stepID, workerID, resultHistogram )
     return S_OK()
 
-  auth_checkStepIncrement = ['all']
-  types_checkStepIncrement = []
+  auth_checkForStepIncrement = ['all']
+  types_checkForStepIncrement = []
 
-  def export_checkStepIncrement(self):  # FIXME: Rename all of this honestly
+  def export_checkForStepIncrement(self):
     """ Should only be called by the agent. Periodically checks whether there are any running
     Calibrations that received enough results to start the next step.
 
@@ -233,25 +260,24 @@ class CalibrationHandler(RequestHandler):
     return numberOfResults >= math.ceil(CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs)
 
   auth_getNewParameters = [ 'all' ]
-  types_getNewParameters = [ int, int, int ]
-  def export_getNewParameters( self, calibrationID, workerID, stepIDOnWorker ):
+  types_getNewParameters = [int, int]
+
+  def export_getNewParameters(self, calibrationID, stepIDOnWorker):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
     :param int calibrationID: ID of the calibration being run on the worker
-    :param int workerID: ID of the worker
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set
     :rtype: dict
     """
     if calibrationID not in self.activeCalibrations:
       gLogger.error("CalibrationID is not in active calibrations:",
-                    "Active Calibrations:%s , asked for %s from worker %s" % (self.activeCalibrations,
-                                                                              calibrationID,
-                                                                              workerID))
+                    "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
+                                                               calibrationID))
       return S_ERROR("calibrationID is not in active calibrations: %s" % calibrationID)
     res = CalibrationHandler.activeCalibrations[calibrationID].getNewParameters(stepIDOnWorker)
     cal = CalibrationHandler.activeCalibrations[calibrationID]
-    res['additionalinfo'] = 'Called with calibrationID %s workerID %s stepidonworker %s, status of calibration:\n curStep %s curparamset %s calFinished %s' % (
-        calibrationID, workerID, stepIDOnWorker, cal.currentStep, cal.currentParameterSet, cal.calibrationFinished)
+    res['additionalinfo'] = 'Called with calibrationID %s stepidonworker %s, status of calibration:\n curStep %s curparamset %s calFinished %s' % (
+        calibrationID, stepIDOnWorker, cal.currentStep, cal.currentParameterSet, cal.calibrationFinished)
     return res
     #FIXME: This doesn't actually use the workerID at all. but needs fixing in several files.
 
@@ -272,8 +298,9 @@ class CalibrationHandler(RequestHandler):
         continue
       CalibrationHandler.activeCalibrations[calibrationID].resubmitJob(workerID)
     if failedPairs:
-      return S_ERROR(('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs,
-                      failedPairs))  # FIXME: maybe dont break DIRAC code conventions
+      result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
+      result['failed_pairs'] = failedPairs
+      return result
     else:
       return S_OK()
 

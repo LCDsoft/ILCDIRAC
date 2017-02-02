@@ -33,9 +33,9 @@ class CalibrationClient(object):
 
     :param int stepID: ID of the step the worker finished last.
     :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step, or None if no new parameters are available yet
-    :rtype: #FIXME
+    :rtype: list
     """
-    res = self.calibrationService.getNewParameters(stepID)
+    res = self.calibrationService.getNewParameters(self.calibrationID, stepID)
     if res['OK']:
       return res['Value']
     else:
