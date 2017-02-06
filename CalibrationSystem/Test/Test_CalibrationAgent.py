@@ -6,6 +6,7 @@ from collections import defaultdict
 import itertools
 import unittest
 from mock import patch, MagicMock as Mock
+from DIRAC import S_OK
 from ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent import CalibrationAgent
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved
@@ -64,7 +65,7 @@ class CalibrationAgentTest(unittest.TestCase):
       assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
           'CalibrationService_calid_sixteen_workerid_twenty'), 149814, self)
 
-  def test_calcjobresubmittal(self):
+  def test_calcjobresubmittal(self):  # pylint: disable=too-many-branches
     workermappings = [{}, {}, {}, {}]
     for i in xrange(0, 4):
       if i == 0:  # 100 jobs in total, 87 are ok - expectation: No jobs to be resubmitted
@@ -119,4 +120,19 @@ class CalibrationAgentTest(unittest.TestCase):
     self.rpc_mock().resubmitJobs.assert_called_once_with([(13875, 137), (1735, 1938), (90452, 4981)])
 
   def test_fetchJobStatuses(self):
-    pass  # FIXME: Implement mocked calls
+    jobmon_mock = Mock()
+    jobmon_mock().getJobs.return_value = S_OK([417251, 12741, 4178])
+    jobmon_mock().getJobsParameters.return_value = S_OK({
+        'some_cal_1': {'Name': 'A_CalID_123_WorkID_123', 'Status': 'Running'},
+        'some_cal_2': {'Name': 'A_CalID_4289_WorkID_742', 'Status': 'Failed'},
+        'some_cal_3': {'Name': 'A_CalID_123_WorkID_124', 'Status': 'Running'},
+        'some_cal_4': {'Name': 'A_CalID_1_WorkID_2', 'Status': 'Finished'},
+        'some_other_cal': {'Name': 'A_CalID_1_WorkID_918437', 'Status': 'Killed'}})
+    with patch('%s.RPCClient' % MODULE_NAME, new=jobmon_mock):
+      status_dict = CalibrationAgent.fetchJobStatuses()
+      assertEqualsImproved(status_dict, {123: {123: 'Running', 124: 'Running'}, 4289: {742: 'Failed'},
+                                         1: {2: 'Finished', 918437: 'Killed'}}, self)
+    jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
+    jobmon_mock().getJobsParameters.assert_called_once_with([417251, 12741, 4178], ['Name', 'Status'])
+
+    #TODO: continue here

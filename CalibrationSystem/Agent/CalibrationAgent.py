@@ -58,12 +58,12 @@ class CalibrationAgent(AgentModule):
     jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
     jobIDs = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})['Value']
     jobStatuses = jobMonitoringService.getJobsParameters(jobIDs, ['Name', 'Status'])['Value']
-    for _, attrDict in jobStatuses.iteritems():
+    for attrDict in jobStatuses.values():
       jobName = attrDict['Name']
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
       result[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
                                      attrDict['Status']})
-    return result
+    return dict(result)
 
   RESUBMISSION_RETRIES = 5  # How often the agent tries to resubmit jobs before giving up
 
