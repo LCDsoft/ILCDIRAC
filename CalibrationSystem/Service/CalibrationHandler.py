@@ -56,6 +56,7 @@ class CalibrationRun(object):
     self.calibrationFinished = False
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
+    #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs to be accessed by the agent in the case of resubmission
 
   def submitInitialJobs(self, calibrationID):
     """ Submit the calibration jobs to the workers for the first time.
@@ -135,8 +136,8 @@ class CalibrationRun(object):
       raise ValueError('The two lists do not have the same number of elements. \n List 1: %s \n List 2: %s'
                        % (list1, list2))
     result = []
-    for a, b in zip(list1, list2):
-      result.append(a + b)
+    for first_elem, second_elem in zip(list1, list2):
+      result.append(first_elem + second_elem)
     return result
 
   def __calculateNewParams(self, stepID):
@@ -167,7 +168,7 @@ class CalibrationRun(object):
     :param int workerID: ID of the worker where the job failed
     :returns: None
     """
-    #TODO: Implement Resubmit job
+    #TODO: Implement Resubmit job, receive information what the failed job was working on somehow.
     pass
 
 

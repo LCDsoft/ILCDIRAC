@@ -3,6 +3,7 @@ Unit tests for the CalibrationService
 """
 
 import unittest
+import pytest
 from mock import patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler, \
@@ -16,7 +17,7 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Service.CalibrationHandler'
 
-#pylint: disable=protected-access
+#pylint: disable=protected-access,too-many-public-methods,,no-member
 
 
 class CalibrationHandlerTest(unittest.TestCase):
@@ -67,7 +68,8 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_createcalibration(self):
     CalibrationHandler.calibrationCounter = 834 - 1  # newly created Calibration gets ID 834
-    result = self.calh.export_createCalibration('steeringfile', 'version', ['inputfile1', 'inputfile2'], 12)
+    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+      result = self.calh.export_createCalibration('steeringfile', 'version', ['inputfile1', 'inputfile2'], 12)
     assertDiracSucceedsWith_equals(result, 834, self)
     testRun = CalibrationHandler.activeCalibrations[834]
     assertEqualsImproved(
@@ -146,14 +148,14 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_calculate_params(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
-    a = [1, 2.3, 5]
-    b = [0, 0.2, -0.5]
-    c = [-10, -5.4, 2]
+    result1 = [1, 2.3, 5]
+    result2 = [0, 0.2, -0.5]
+    result3 = [-10, -5.4, 2]
     obj = CalibrationRun('file', 'v123', 'input', 123)
     res = CalibrationResult()
-    res.addResult(2384, a)
-    res.addResult(742, b)
-    res.addResult(9354, c)
+    res.addResult(2384, result1)
+    res.addResult(742, result2)
+    res.addResult(9354, result3)
     obj.stepResults[42] = res
     actual = obj._CalibrationRun__calculateNewParams(42)  # pylint: disable=no-member
     expected = [-3.0, -0.9666666666666668, 2.1666666666666665]
@@ -163,9 +165,79 @@ class CalibrationHandlerTest(unittest.TestCase):
                                                                             abs(actual_value)), 0.0),
                       'Expected values to be (roughly) the same, but they were not:\n Actual = %s,\n Expected = %s' % (actual_value, expected_value))
 
+  def test_endcurrentstep(self):
+    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
+    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+      self.calh.export_createCalibration('', '', [], 0)
+    self.calh.activeCalibrations[1].currentStep = 15
+    result1 = [1, 2.3, 5]
+    result2 = [0, 0.2, -0.5]
+    result3 = [-10, -5.4, 2]
+    res = CalibrationResult()
+    res.addResult(2384, result1)
+    res.addResult(742, result2)
+    res.addResult(9354, result3)
+    self.calh.activeCalibrations[1].stepResults[15] = res
+    self.calh.activeCalibrations[1].endCurrentStep()
+    self.assertTrue(self.calh.activeCalibrations[1].calibrationFinished, 'Expecting calibration to be finished')
+
+  def test_endcurrentstep_not_finished(self):
+    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
+    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+      self.calh.export_createCalibration('', '', [], 0)
+    self.calh.activeCalibrations[1].currentStep = 14
+    result1 = [1, 2.3, 5]
+    result2 = [0, 0.2, -0.5]
+    result3 = [-10, -5.4, 2]
+    res = CalibrationResult()
+    res.addResult(2384, result1)
+    res.addResult(742, result2)
+    res.addResult(9354, result3)
+    self.calh.activeCalibrations[1].stepResults[14] = res
+    self.calh.activeCalibrations[1].endCurrentStep()
+    self.assertFalse(self.calh.activeCalibrations[1].calibrationFinished,
+                     'Expecting calibration to be finished')
+
+  def test_addlists_work(self):
+    # Simple case
+    test_list_1 = [1, 148]
+    test_list_2 = [-3, 0.2]
+    testobj = CalibrationRun('', '', [], 0)
+    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+    assertEqualsImproved([-2, 148.2], res, self)
+
+  def test_addlists_work_2(self):
+    # More complex case
+    test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
+    test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
+    testobj = CalibrationRun('', '', [], 0)
+    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+    assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
+                          ['a', False, 'some_entry', {}]], res, self)
+
+  def test_addlists_empty(self):
+    test_list_1 = []
+    test_list_2 = []
+    testobj = CalibrationRun('', '', [], 0)
+    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+    assertEqualsImproved([], res, self)
+
+  def test_addlists_incompatible(self):
+    test_list_1 = [1, 83, 0.2, -123]
+    test_list_2 = [1389, False, '']
+    testobj = CalibrationRun('', '', [], 0)
+    with pytest.raises(ValueError) as ve:
+      testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+    assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
+
+  def test_calcnewparams_no_values(self):
+    testrun = CalibrationRun('', '', [], 0)
+    with pytest.raises(ValueError) as ve:
+      testrun._CalibrationRun__calculateNewParams(1)
+    assertInImproved('no step results provided', ve.__str__().lower(), self)
+
   def atest_resubmitJob(self):
-    pass  # FIXME: Finish atest
+    pass  # FIXME: Finish atest once corresponding method is written
 
   def atest_submitInitialJobs(self):
-    pass  # FIXME: Finish atest
-
+    pass  # FIXME: Finish atest once corresponding method is written

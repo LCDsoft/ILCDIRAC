@@ -5,8 +5,9 @@ Unit tests for the CalibrationAgent
 from collections import defaultdict
 import itertools
 import unittest
+import pytest
 from mock import patch, MagicMock as Mock
-from DIRAC import S_OK
+from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent import CalibrationAgent
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved
@@ -116,8 +117,46 @@ class CalibrationAgentTest(unittest.TestCase):
         assertInImproved((i, expected_workerid), result, self)
 
   def test_requestResubmission(self):
+    # assert nothing is thrown
     self.calag.requestResubmission([(13875, 137), (1735, 1938), (90452, 4981)])
     self.rpc_mock().resubmitJobs.assert_called_once_with([(13875, 137), (1735, 1938), (90452, 4981)])
+
+  def test_requestResubmission_permanent_fail(self):
+    # Calibration 1 works, Calibration 5 always fails
+    def mock_resubmit(failedJobs):
+      """ Mocks the resubmission method of the service """
+      if ((1, 419857) in failedJobs and len(failedJobs) == 4) or \
+         (len(failedJobs) == 1 and (5, 713) in failedJobs):
+        result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: [(5,713)]')
+        result['failed_pairs'] = [(5, 713)]
+        return result
+      else:
+        raise IOError('test failed. list should never be empty.')
+    self.rpc_mock().resubmitJobs.side_effect = mock_resubmit
+    with pytest.raises(RuntimeError) as re:
+      self.calag.requestResubmission([(1, 2847), (5, 713), (1, 419857), (1, 1498)])
+      assertInImproved('cannot resubmit the necessary failed jobs', re.message.lower(), self)
+      assertInImproved('5,713', re.message.lower(), self)
+
+  def test_requestResubmission_fail_then_success(self):
+    def mock_resubmit(failedJobs):
+      """ Mocks the resubmission method of the service """
+      print 'failedJobs: %s' % failedJobs
+      if (3, 13135) in failedJobs and len(failedJobs) == 5:
+        result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: [(6,39105),(2,1843)]')
+        result['failed_pairs'] = [(6, 39105), (2, 1843)]
+        return result
+      elif len(failedJobs) == 2 and (2, 1843) in failedJobs and (6, 39105) in failedJobs:
+        result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: [(6,39105)')
+        result['failed_pairs'] = [(6, 39105)]
+        return result
+      elif len(failedJobs) == 1 and (6, 39105) in failedJobs:
+        return S_OK()
+      else:
+        raise IOError('test failed. list should never be empty.')
+    self.rpc_mock().resubmitJobs.side_effect = mock_resubmit
+    # assert nothing is thrown
+    self.calag.requestResubmission([(2, 1843), (3, 19485), (3, 13135), (3, 1835), (6, 39105)])
 
   def test_fetchJobStatuses(self):
     jobmon_mock = Mock()
@@ -135,4 +174,3 @@ class CalibrationAgentTest(unittest.TestCase):
     jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
     jobmon_mock().getJobsParameters.assert_called_once_with([417251, 12741, 4178], ['Name', 'Status'])
 
-    #TODO: continue here
