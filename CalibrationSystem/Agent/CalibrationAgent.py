@@ -73,20 +73,20 @@ class CalibrationAgent(AgentModule):
     :param list failedJobs: List of 2-tuples ( calibrationID, workerID )
     :returns: None
     """
+    jobs_to_resubmit = failedJobs
     number_of_tries = 0
     result = S_ERROR()
     while not result['OK'] and number_of_tries < CalibrationAgent.RESUBMISSION_RETRIES:
-      result = self.calibrationService.resubmitJobs(failedJobs)
+      result = self.calibrationService.resubmitJobs(jobs_to_resubmit)
+      number_of_tries += 1
       # FIXME: ResubmitJobs will probably be implemented in a way that would allow some resubmissions to fail and some to work.
       # Thus, this method would need a list of all resubmissions that have yet to be done, which is updated
       # in each iteration. once it is empty, the method returns. If it takes too long, RuntimeError is raised
       if result['OK']:
         return
+      else:
+        jobs_to_resubmit = result['failed_pairs']
     raise RuntimeError('Cannot resubmit the necessary failed jobs. Problem: %s' % result)
-
-  JOB_STATUS_POTENTIAL_SUCCESS = ['Running', 'Finished']  # FIXME: What are the correct names for this
-  JOB_STATUS_FAILED = ['Failed', 'Killed']  # FIXME: See above
-  RESUBMISSION_THRESHOLD = 0.13  # When this percentage of jobs failed for good, resubmit new ones #FIXME: Tune this parameter
 
   def __calculateJobsToBeResubmitted(self, jobStatusDict, targetNumberDict):
     """ Checks if any of the active calibrations have not enough jobs running and if that is the case

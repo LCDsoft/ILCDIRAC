@@ -126,8 +126,8 @@ class CalibrationRun(object):
     """ Adds two lists together by adding the first element, second element, and so on. Throws an exception
     if the lists have a different number of elements.
 
-    :param list list1: List of lists that should be added element-wise to another
-    :param list list2: Other list of lists that should be added element-wise
+    :param list list1: List that should be added element-wise to another
+    :param list list2: Other list that should be added element-wise
     :returns: The list [ list1[0]+list2[0], list1[1]+list2[1], ... ]
     :rtype: list
     """
