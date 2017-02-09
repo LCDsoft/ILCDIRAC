@@ -267,18 +267,17 @@ class CalibrationHandler(RequestHandler):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
     :param int calibrationID: ID of the calibration being run on the worker
-    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set
+    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
-    if calibrationID not in self.activeCalibrations:
+    cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
+    if not cal:
       gLogger.error("CalibrationID is not in active calibrations:",
                     "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
                                                                calibrationID))
       return S_ERROR("calibrationID is not in active calibrations: %s" % calibrationID)
-    res = CalibrationHandler.activeCalibrations[calibrationID].getNewParameters(stepIDOnWorker)
-    cal = CalibrationHandler.activeCalibrations[calibrationID]
-    res['additionalinfo'] = 'Called with calibrationID %s stepidonworker %s, status of calibration:\n curStep %s curparamset %s calFinished %s' % (
-        calibrationID, stepIDOnWorker, cal.currentStep, cal.currentParameterSet, cal.calibrationFinished)
+    res = cal.getNewParameters(stepIDOnWorker)
+    res['current_step'] = cal.currentStep
     return res
 
   auth_resubmitJobs = ['all']

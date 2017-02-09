@@ -161,7 +161,7 @@ class CalibrationAgentTest(unittest.TestCase):
   def test_fetchJobStatuses(self):
     jobmon_mock = Mock()
     jobmon_mock().getJobs.return_value = S_OK([417251, 12741, 4178])
-    jobmon_mock().getJobsParameters.return_value = S_OK({
+    jobmon_mock().getJobParameters.return_value = S_OK({
         'some_cal_1': {'Name': 'A_CalID_123_WorkID_123', 'Status': 'Running'},
         'some_cal_2': {'Name': 'A_CalID_4289_WorkID_742', 'Status': 'Failed'},
         'some_cal_3': {'Name': 'A_CalID_123_WorkID_124', 'Status': 'Running'},
@@ -172,5 +172,5 @@ class CalibrationAgentTest(unittest.TestCase):
       assertEqualsImproved(status_dict, {123: {123: 'Running', 124: 'Running'}, 4289: {742: 'Failed'},
                                          1: {2: 'Finished', 918437: 'Killed'}}, self)
     jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
-    jobmon_mock().getJobsParameters.assert_called_once_with([417251, 12741, 4178], ['Name', 'Status'])
+    jobmon_mock().getJobParameters.assert_called_once_with([417251, 12741, 4178], ['Name', 'Status'])
 
