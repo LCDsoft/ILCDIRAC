@@ -57,7 +57,19 @@ class CalibrationAgent(AgentModule):
     result = defaultdict(dict)  # defaults to {}
     jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
     jobIDs = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})['Value']
-    jobStatuses = jobMonitoringService.getJobsParameters(jobIDs, ['Name', 'Status'])['Value']
+    jobStatuses = jobMonitoringService.getJobParameters(jobIDs, ['Name', 'Status'])['Value']
+    #TODO: Secure for failure
+    # Possible statuses in DIRAC: Received	Job is received by the DIRAC WMS
+    #Checking:	Job is being checked for sanity by the DIRAC WMS
+    #Waiting:	Job is entered into the Task Queue and is waiting to picked up for execution
+    #Running:	Job is running
+    #Stalled:	Job has not shown any sign of life since 2 hours while in the Running state
+    #Completed:	Job finished execution of the user application, but some pending operations remain
+    #Done:	Job is fully finished
+    #Failed:	Job is finished unsuccessfully
+    #Killed:	Job received KILL signal from the user
+    #Deleted:	Job is marked for deletion
+    # see https://twiki.cern.ch/twiki/bin/view/LHCb/DiracWebPortalJobmonitor
     for attrDict in jobStatuses.values():
       jobName = attrDict['Name']
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
