@@ -792,11 +792,15 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
                                        expected_return_value ):
     """Helper function to test prepareSteeringFile.
 
-    :param list file_contents: List of lists containing the mocked file contents. i-th element is a list whose j-th element is the j-th line of the file it represents. No \n necessary
-    :param list args: Arguments for the call of prepareSteeringFile
-    :param list expected_file_tuples: List of tuples with the filename and mode of opened files. Has to be in order
-    :param list expected: The expected output of the file operations. List of lists, the i-th element represents the output to the i-th file. Lines have to end with \n
-    :param expected_return_value: The value the call should return
+    :param file_contents: List of lists containing the mocked file contents. i-th element is a list whose j-th element is the j-th line of the file it represents. No \n necessary
+    :type file_contents: `python:list`
+    :param args: Arguments for the call of prepareSteeringFile
+    :type args: `python:list`
+    :param expected_file_tuples: List of tuples with the filename and mode of opened files. Has to be in order
+    :type expected_file_tuples: `python:list`
+    :param expected: The expected output of the file operations. List of lists, the i-th element represents the output to the i-th file. Lines have to end with \n
+    :type expected: `python:list`
+    :param object expected_return_value: The value the call should return
     """
     assertEqualsImproved(len(file_contents), len(expected), self)
 

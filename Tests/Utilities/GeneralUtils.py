@@ -122,7 +122,8 @@ def assertMockCalls( mock_object_method, argslist, assertobject, only_these_call
   """ Asserts that the passed mocked method has been called with the arguments provided in argslist, in any order.
 
   :param Mock mock_object_method: Method of a mock object that is under test
-  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :param argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :type argslist: `python:list`
   :param TestCase assertobject: The TestCase instance running the tests, in order to gain access to the assertion methods
   :param bool only_these_calls: Indicates what happens if the calls in argslist is a strict subset of the actual call list. True means the assertion fails, False means the assertion holds.
   """
@@ -148,7 +149,8 @@ def assertMockCalls_ordered( mock_object_method, argslist, assertobject ):
   """ Asserts that the passed mocked method has been called with the arguments provided in argslist (and only those arguments), in exactly the given order.
 
   :param Mock mock_object_method: Method of a mock object that is under test
-  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :param argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :type argslist: `python:list`
   """
   from mock import call
   call_list = []

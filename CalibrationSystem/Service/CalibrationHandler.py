@@ -25,7 +25,8 @@ class CalibrationResult(object):
     """ Adds a result from a given worker to the object
 
     :param int workerID: ID of the worker providing the result
-    :param list result: list of floats representing the returned histogram
+    :param result: list of floats representing the returned histogram
+    :type result: `python:list`
     :returns: None
     """
     self.results[workerID] = result
@@ -90,7 +91,8 @@ class CalibrationRun(object):
 
     :param int stepID: ID of the step
     :param int workerID: ID of the worker providing the result
-    :param list result: reconstruction histogram from the worker node
+    :param result: reconstruction histogram from the worker node
+    :type result: `python:list`
     :returns: None
     """
     self.stepResults[stepID].addResult(workerID, result)
@@ -127,8 +129,10 @@ class CalibrationRun(object):
     """ Adds two lists together by adding the first element, second element, and so on. Throws an exception
     if the lists have a different number of elements.
 
-    :param list list1: List that should be added element-wise to another
-    :param list list2: Other list that should be added element-wise
+    :param list1: List that should be added element-wise to another
+    :type list1: `python:list`
+    :param list2: Other list that should be added element-wise
+    :type list2: `python:list`
     :returns: The list [ list1[0]+list2[0], list1[1]+list2[1], ... ]
     :rtype: list
     """
@@ -194,7 +198,8 @@ class CalibrationHandler(RequestHandler):
 
     :param basestring steeringFile: Steering file used in the calibration
     :param basestring softwareVersion: Version of the software
-    :param list inputFiles: Input files for the calibration
+    :param inputFiles: Input files for the calibration
+    :type inputFiles: `python:list`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
@@ -215,7 +220,8 @@ class CalibrationHandler(RequestHandler):
     :param int calibrationID: ID of the current calibration run
     :param int stepID: ID of the step in this calibration
     :param int workerID: ID of the reporting worker
-    :param list resultHistogram: The histogram containing the result of the reconstruction run
+    :param resultHistogram: The histogram containing the result of the reconstruction run
+    :type resultHistogram: `python:list`
     :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step), S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
@@ -286,7 +292,8 @@ class CalibrationHandler(RequestHandler):
   def export_resubmitJobs(self, failedJobs):
     """ Takes a list of workerIDs and resubmits a job with the current parameterset there
 
-    :param list failedJobs: List of pairs of the form (calibrationID, workerID)
+    :param failedJobs: List of pairs of the form (calibrationID, workerID)
+    :type failedJobs: `python:list`
     :returns: S_OK if successful, else a S_ERROR with a pair ( errorstring, list_of_failed_id_pairs )
     :rtype: dict
     """

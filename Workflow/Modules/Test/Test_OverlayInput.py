@@ -310,11 +310,14 @@ class TestOverlayUnittests( unittest.TestCase ):
 
     :param str mylfn: file path (LFN)
     :param method scriptmethod: getLyonFile etc
-    :param list of list of strings expected: Expected output in the script file (list of lists with all touched files)
+    :param expected: Expected output in the script file (list of list of strings containing all touched files)
+    :type expected: `python:list`
     :param str should_fail_with: Error message the method should return (in a S_ERROR structure)
-    :param list of bool exists_sideeff: Return values of the os.path.exists method
+    :param exists_sideeff: Return values of the os.path.exists method
+    :type exists_sideeff: `python:list`
     :param bool unlink_called: indicates whether os.unlink is expected to be called or not
-    :param list of pair of string expected_opens: a list of (filename, mode) pairs of all opened files
+    :param expected_opens: a list of (filename, mode) pairs of all opened files
+    :type expected_opens: `python:list`
     """
     # Set default list values
     if exists_sideeff is None:
