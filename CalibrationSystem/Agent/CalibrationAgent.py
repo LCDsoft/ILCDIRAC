@@ -40,10 +40,18 @@ class CalibrationAgent(AgentModule):
     #remove it from data structures. If too many jobs failed, ask Service for resubmission. Then replace old
     #job status dict with new one
     #To clear up: Can a job disappear from this list? Or what happens if node crashes.
-    currentStatuses = CalibrationAgent.fetchJobStatuses()
-    targetJobNumbers = self.calibrationService.getNumberOfJobsPerCalibration()
+    res = CalibrationAgent.fetchJobStatuses()
+    if not res['OK']:
+      return res
+    currentStatuses = res['Value']
+    res = self.calibrationService.getNumberOfJobsPerCalibration()
+    if not res['OK']:
+      return res
+    targetJobNumbers = res['Value']
     self.requestResubmission(self.__calculateJobsToBeResubmitted(currentStatuses, targetJobNumbers))
-    self.calibrationService.checkForStepIncrement()
+    res = self.calibrationService.checkForStepIncrement()
+    if not res['OK']:
+      return res
     return S_OK()
 
   @classmethod
@@ -56,8 +64,15 @@ class CalibrationAgent(AgentModule):
     """
     result = defaultdict(dict)  # defaults to {}
     jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
-    jobIDs = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})['Value']
-    jobStatuses = jobMonitoringService.getJobParameters(jobIDs, ['Name', 'Status'])['Value']
+    res = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})
+    if not res['OK']:
+      #FIXME: Some logging message
+      return S_ERROR('Failed getting job IDs from job DB! Error: %s' % res)
+    jobIDs = res['Value']
+    res = jobMonitoringService.getJobParameters(jobIDs, ['Name', 'Status'])
+    if not res['OK']:
+      pass
+    jobStatuses = res['Value']
     #TODO: Secure for failure
     # Possible statuses in DIRAC: Received	Job is received by the DIRAC WMS
     #Checking:	Job is being checked for sanity by the DIRAC WMS
@@ -75,7 +90,7 @@ class CalibrationAgent(AgentModule):
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
       result[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
                                      attrDict['Status']})
-    return dict(result)
+    return S_OK(dict(result))
 
   RESUBMISSION_RETRIES = 5  # How often the agent tries to resubmit jobs before giving up
 

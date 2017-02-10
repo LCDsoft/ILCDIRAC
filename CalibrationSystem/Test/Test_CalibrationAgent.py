@@ -169,8 +169,10 @@ class CalibrationAgentTest(unittest.TestCase):
         'some_other_cal': {'Name': 'A_CalID_1_WorkID_918437', 'Status': 'Killed'}})
     with patch('%s.RPCClient' % MODULE_NAME, new=jobmon_mock):
       status_dict = CalibrationAgent.fetchJobStatuses()
-      assertEqualsImproved(status_dict, {123: {123: 'Running', 124: 'Running'}, 4289: {742: 'Failed'},
-                                         1: {2: 'Finished', 918437: 'Killed'}}, self)
+      assertEqualsImproved(status_dict, S_OK({123: {123: 'Running', 124: 'Running'},
+                                              4289: {742: 'Failed'},
+                                              1: {2: 'Finished', 918437: 'Killed'},
+                                              'OK': True}, self))
     jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
     jobmon_mock().getJobParameters.assert_called_once_with([417251, 12741, 4178], ['Name', 'Status'])
 
