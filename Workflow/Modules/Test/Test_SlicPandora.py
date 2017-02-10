@@ -7,6 +7,7 @@ import os
 import shutil
 import urllib2
 import tempfile
+import ssl
 
 from DIRAC import gLogger
 #from ILCDIRAC.Workflow.Modules.SLICPandoraAnalysis import SLICPandoraAnalysis
@@ -38,10 +39,15 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
     self.zipfile = "clic_sid_cdr.zip"
 
     attempts = 0
+
+    ## create a fake ssl context to avoid checking certificate
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     
     while attempts < 3:
       try:
-        response = urllib2.urlopen(detURL, timeout = 5)
+        response = urllib2.urlopen(detURL, timeout = 5, context=ctx)
         content = response.read()
         with open( self.zipfile, 'w' ) as zipF:
           zipF.write( content )
