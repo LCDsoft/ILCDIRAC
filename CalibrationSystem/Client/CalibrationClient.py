@@ -45,6 +45,8 @@ class CalibrationClient(object):
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.
 
+  MAXIMUM_REPORT_TRIES = 10
+
   def reportResult(self, stepID, result):
     """ Sends the computed histogram back to the service
 
@@ -52,9 +54,13 @@ class CalibrationClient(object):
     :param result: The histogram as computed by the calibration step run
     :returns: None
     """
-    res = self.calibrationService.submitResult(self.calibrationID, stepID, self.workerID, result)
-    if not res['OK']:
-      pass  # FIXME: Error handling? ignore?
+    attempt = 0
+    while attempt < CalibrationClient.MAXIMUM_REPORT_TRIES:
+      res = self.calibrationService.submitResult(self.calibrationID, stepID, self.workerID, result)
+      if res['OK']:
+        return
+      attempt = attempt + 1
+    print ''  # FIXME: Error handling? ignore?
 
 
 def runCalibration(calibrationID, workerID, command):
@@ -69,6 +75,8 @@ def runCalibration(calibrationID, workerID, command):
   while True:  # FIXME: Find stoppig criterion
     current_params = calibration_client.requestNewParameters(current_step)
     subprocess.check_output([command, current_params])  # FIXME: Ensure this is how we can pass the new parameter
+    #FIXME: This currently lacks the information at which offset the worker performs the calibration.
+    #Suggested fix: Write class WorkerInfo as a wrapper for the offset+the histogram+anything else this might need
     current_step = calibration_client.currentStep
 
 
