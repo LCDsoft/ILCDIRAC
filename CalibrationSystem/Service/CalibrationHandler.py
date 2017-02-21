@@ -7,9 +7,26 @@ distribute reconstruction workloads among them
 from collections import defaultdict
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
+from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 
 
 __RCSID__ = "$Id$"
+
+
+class WorkerInfo(object):
+  """ Wrapper class to store information needed by workers to compute their result. """
+
+  def __init__(self, parameterSet, offset):
+    """ Creates a new WorkerInfo object, passed to the worker nodes to enable them to compute their results.
+
+    :param object parameterSet: The histogram to use for the calibration.
+    :param int offset: The offset in the event file, used to determine starting point of this computation.
+    """
+    self.parameterSet = parameterSet
+    self.offset = offset
+
+  def getInfo(self):
+    return (self.parameterSet, self.offset)
 
 #pylint: disable=no-self-use
 
@@ -59,6 +76,7 @@ class CalibrationRun(object):
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs to be accessed by the agent in the case of resubmission
 
+  @executeWithUserProxy
   def submitInitialJobs(self, calibrationID):
     """ Submit the calibration jobs to the workers for the first time.
     Use a specially crafted application that runs repeated Marlin reconstruction steps
@@ -69,22 +87,31 @@ class CalibrationRun(object):
     from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
     from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
     dirac = DiracILC(True, 'some_job_repository.rep')
+    results = []
     for _ in xrange(0, self.numberOfJobs):
-      curWorkerID = 1  # FIXME: Get ID of worker somehow
+      curWorkerID = 1  # FIXME: Decide ID of worker somehow
       curJob = UserJob()
+      curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
-
-      #curJob.setCPUTime(86400)
+      #job_args = '%s %s my_command_to_launch_job' % ( calibrationID, curWorkerID )
+      #curJob.setExecutable( 'CalibrationSystem/Client/CalibrationClient.py', arguments = job_args,
+      #                      logFile = 'pfa_test.log' )
+      curJob.setExecutable('/bin/echo', arguments='Hello world!', logFile='pfa_test.log')
+      curJob.setCPUTime(3600)
       #curJob.setInputSandbox(["file1","file2"])
-      #curJob.setOutputSandbox(["fileout1","fileout2", "*.out", "*.log"])
+      curJob.setInputSandbox([])
+      curJob.setOutputSandbox(['*.log'])
       #curJob.setOutputData(["somefile1","somefile2"],"some/path","CERN-SRM")
       #from ILCDIRAC.Interfaces.API.NewInterface.Applications import CalibrationApp
       #ca = CalibrationApp()
       #res = curJob.append(ca)
-      #curJob.submit( dirac )
+      res = curJob.submit(dirac)
+      print 'submitted job successfully! %s' % res
+      results.append(res)
       #FIXME: Construct and submit special jobs
       #FIXME: Maybe move creation of job object to its own method and share code with resubmitJob method?
+    return results
 
   def addResult(self, stepID, workerID, result):
     """ Add a reconstruction result to the list of other results
@@ -121,8 +148,10 @@ class CalibrationRun(object):
     """
     self.__calculateNewParams(self.currentStep)
     self.currentStep += 1
-    if self.currentStep > 15:  # FIXME: Implement real stopping criterion
+    #if self.currentStep > 15: #FIXME: Implement real stopping criterion
+    if self.currentStep > 1:  # FIXME: replace with line above after testing
       self.calibrationFinished = True
+      #FIXME: Decide how a job finishing should be handled - set this flag to True and have user poll, do something actively here, etc...
     #self.activeWorkers = dict()
 
   def __addLists(self, list1, list2):
@@ -165,6 +194,7 @@ class CalibrationRun(object):
       result[i] = result[i] / float(number_of_elements)
     return result
 
+  @executeWithUserProxy
   def resubmitJob(self, workerID):
     """ Resubmits a job to the worker with the given ID, passing the current parameterSet.
     This is caused by a worker node crashing/a job failing.
@@ -191,9 +221,10 @@ class CalibrationHandler(RequestHandler):
     pass
 
   auth_createCalibration = ['all']
-  types_createCalibration = [basestring, basestring, list, int]
+  types_createCalibration = [basestring, basestring, list, int, basestring, basestring]
 
-  def export_createCalibration(self, steeringFile, softwareVersion, inputFiles, numberOfJobs):
+  def export_createCalibration(self, steeringFile, softwareVersion, inputFiles, numberOfJobs,
+                               proxyUserName, proxyUserGroup):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring steeringFile: Steering file used in the calibration
@@ -208,8 +239,18 @@ class CalibrationHandler(RequestHandler):
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(steeringFile, softwareVersion, inputFiles, numberOfJobs)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
-    newRun.submitInitialJobs(calibrationID)
-    return S_OK(calibrationID)
+    #newRun.submitInitialJobs( calibrationID )
+    #return S_OK( calibrationID )
+    #FIXME: Find out how to get username and group for this.
+    #FIXME: Check if lock is necessary.(Race condition?)
+    # , executionLock = False ) #pylint: disable=unexpected-keyword-arg
+    res = newRun.submitInitialJobs(calibrationID, proxyUserName=proxyUserName, proxyUserGroup=proxyUserGroup)
+    if _calibration_creation_failed(res):
+      # FIXME: This should be treated, since the successfully submitted jobs will still run
+      ret_val = S_ERROR('Submitting at least one of the jobs failed')
+      ret_val['calibrations'] = res
+      return ret_val
+    return S_OK((calibrationID, res))
 
   auth_submitResult = ['all']
   types_submitResult = [int, int, int, list]
@@ -302,7 +343,8 @@ class CalibrationHandler(RequestHandler):
       if calibrationID not in CalibrationHandler.activeCalibrations:
         failedPairs.append((calibrationID, workerID))
         continue
-      CalibrationHandler.activeCalibrations[calibrationID].resubmitJob(workerID)
+      CalibrationHandler.activeCalibrations[calibrationID].resubmitJob(
+          workerID, proxyUserName='', proxyUserGroup='')  # pylint: disable=unexpected-keyword-arg
     if failedPairs:
       result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
       result['failed_pairs'] = failedPairs
@@ -387,3 +429,41 @@ class CalibrationHandler(RequestHandler):
     calibration.currentParameterSet = parameterSet
     calibration.calibrationFinished = calFinished
     return S_OK()
+
+  auth_getopts = ['all']
+  types_getopts = [basestring]
+
+  def export_getopts(self, option):
+    """ Returns the value of the option stored in the gConfig that this service accesses.
+
+    :param basestring option: name of the option to be queried
+    :returns: S_OK containing the value of the option
+    :rtype: dict
+    """
+    from DIRAC import gConfig
+    return S_OK(gConfig.getValue(option))
+
+  auth_getproxy_info = ['all']
+  types_getproxy_info = []
+
+  def export_getproxy_info(self):
+    """ Returns the info of the proxy this service is using.
+
+    :returns: S_OK containing the proxy info
+    :rtype: dict
+    """
+    from DIRAC.Core.Security.ProxyInfo import getProxyInfo
+    return S_OK(getProxyInfo())
+
+
+def _calibration_creation_failed(results):
+  """ Returns whether or not the creation of all calibration jobs was successful.
+
+  :param results: List of S_OK/S_ERROR dicts that were returned by the submission call
+  :returns: True if everything was successful, False otherwise
+  :rtype: bool
+  """
+  success = True
+  for job_result in results:
+    success = success and job_result['OK']
+  return not success

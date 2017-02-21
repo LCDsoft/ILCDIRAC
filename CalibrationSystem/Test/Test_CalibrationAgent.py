@@ -174,4 +174,3 @@ class CalibrationAgentTest(unittest.TestCase):
                                               1: {2: 'Finished', 918437: 'Killed'}}), self)
     jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
     jobmon_mock().getJobParameters.assert_called_once_with([417251, 12741, 4178], ['Name', 'Status'])
-

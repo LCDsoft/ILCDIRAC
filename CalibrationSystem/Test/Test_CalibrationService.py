@@ -4,7 +4,7 @@ Unit tests for the CalibrationService
 
 import unittest
 import pytest
-from mock import patch, MagicMock as Mock
+from mock import call, patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler, \
     CalibrationRun
@@ -38,9 +38,11 @@ class CalibrationHandlerTest(unittest.TestCase):
     CalibrationHandler.activeCalibrations = {}
     CalibrationHandler.calibrationCounter = 0
 
+# FIXME: Change tests to reflect new way of starting calibration creation
+
   def test_submitresult(self):
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
-      self.calh.export_createCalibration('', '', [], 0)
+      self.calh.export_createCalibration('', '', [], 0, '', '')
     assertDiracSucceeds(self.calh.export_submitResult(1, 0, 8234, [12.2, 1.2, .3]), self)
     assertEqualsImproved(CalibrationHandler.activeCalibrations[1].stepResults[0].results[8234],
                          [12.2, 1.2, 0.3], self)
@@ -48,7 +50,7 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_submitresult_old_stepid(self):
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
-        self.calh.export_createCalibration('', '', [], 0)
+        self.calh.export_createCalibration('', '', [], 0, '', '')
     CalibrationHandler.activeCalibrations[27].currentStep = 13
     assertDiracSucceeds(self.calh.export_submitResult(27, 12, 9841, [5, 6, 2, 1, 7]), self)
     for i in xrange(0, 30):
@@ -58,19 +60,20 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_submitresult_wrong_calibrationID(self):
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
-        self.calh.export_createCalibration('', '', [], 0)
+        self.calh.export_createCalibration('', '', [], 0, '', '')
     res = self.calh.export_submitResult(54, 1, 9841, [5, 6, 2, 1, 7])
-    assertDiracFailsWith(res,
-                         'Calibration with id 54 not found', self)
+    assertDiracFailsWith(res, 'Calibration with id 54 not found', self)
     for i in xrange(0, 50):
       assertEqualsImproved(CalibrationHandler.activeCalibrations[27].stepResults[i].getNumberOfResults(),
                            0, self)
 
   def test_createcalibration(self):
     CalibrationHandler.calibrationCounter = 834 - 1  # newly created Calibration gets ID 834
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
-      result = self.calh.export_createCalibration('steeringfile', 'version', ['inputfile1', 'inputfile2'], 12)
-    assertDiracSucceedsWith_equals(result, 834, self)
+    job_mock = Mock()
+    with patch.object(CalibrationRun, 'submitInitialJobs', new=job_mock):
+      result = self.calh.export_createCalibration('steeringfile', 'version', ['inputfile1', 'inputfile2'],
+                                                  12, '', '')
+    assertDiracSucceedsWith_equals(result, (834, job_mock()), self)
     testRun = CalibrationHandler.activeCalibrations[834]
     assertEqualsImproved(
         (testRun.steeringFile, testRun.softwareVersion, testRun.inputFiles, testRun.numberOfJobs),
@@ -84,7 +87,10 @@ class CalibrationHandlerTest(unittest.TestCase):
     CalibrationHandler.activeCalibrations[498626] = CalibrationRun('', '', [], 0)
     with patch.object(CalibrationRun, 'resubmitJob', new=Mock()) as resubmit_mock:
       assertDiracSucceeds(self.calh.export_resubmitJobs(calIDsWorkIDs), self)
-      assertMockCalls(resubmit_mock, [1249, 1357, 4368], self)
+      assertEqualsImproved(resubmit_mock.mock_calls, [call(1249, proxyUserGroup='', proxyUserName=''),
+                                                      call(1357, proxyUserGroup='', proxyUserName=''),
+                                                      call(4368, proxyUserGroup='', proxyUserName='')],
+                           self)
 
   def test_resubmitjobs_fails(self):
     calIDsWorkIDs = [(138, 1249), (198735, 1357), (498626, 4368)]
@@ -142,7 +148,7 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_getnewparams_inactive_calibration(self):
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
-        self.calh.export_createCalibration('', '', [], 0)
+        self.calh.export_createCalibration('', '', [], 0, '', '')
     assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
                          'CalibrationID is not in active calibrations: 135', self)
 
@@ -168,7 +174,7 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_endcurrentstep(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
-      self.calh.export_createCalibration('', '', [], 0)
+      self.calh.export_createCalibration('', '', [], 0, '', '')
     self.calh.activeCalibrations[1].currentStep = 15
     result1 = [1, 2.3, 5]
     result2 = [0, 0.2, -0.5]
@@ -184,7 +190,7 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_endcurrentstep_not_finished(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
     with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
-      self.calh.export_createCalibration('', '', [], 0)
+      self.calh.export_createCalibration('', '', [], 0, '', '')
     self.calh.activeCalibrations[1].currentStep = 14
     result1 = [1, 2.3, 5]
     result2 = [0, 0.2, -0.5]

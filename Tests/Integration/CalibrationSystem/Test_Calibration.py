@@ -3,14 +3,15 @@ Integration tests for the CalibrationService
 """
 
 from collections import defaultdict
-import pytest
 import unittest
+import pytest
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.Script import parseCommandLine
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals, assertEqualsImproved, \
     assertDiracSucceeds, assertDiracFailsWith, assertDiracSucceedsWith, assertDictEquals_dynamic
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
+from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
 
 
 __RCSID__ = "$Id$"
@@ -66,10 +67,8 @@ class TestCalibrationService(TestCalibrationBase):
   """ Tests the public CalibrationService methods. """
 
   def test_createCalibration(self):
-    assertDiracSucceedsWith_equals(
-        TestCalibrationService.calibrationService.createCalibration('mySteerTest.file', 'softV.1',
-                                                                    ['test.input1', 'other_input.txt'], 10),
-        1, self)
+    assertDiracSucceedsWith(createCalibration('mySteerTest.file', 'softV.1',
+                                              ['test.input1', 'other_input.txt'], 10), 1, self)
     internals = TestCalibrationService.calibrationService.getInternals()
     assertDiracSucceeds(internals, self)
     (calibrations, _) = extract_calibrationdict_and_counter(internals)
@@ -84,7 +83,7 @@ class TestCalibrationService(TestCalibrationBase):
 
   def test_submitresult(self):
     # Create 10 basic calibrations
-    create_n_calibrations(TestCalibrationService.calibrationService, 10, self, 10)
+    create_n_calibrations(10, self, 10)
     results = []
     results.append(TestCalibrationService.calibrationService.submitResult(1, 0, 7842, [9.2, 3.2, 1.0]))
     results.append(TestCalibrationService.calibrationService.submitResult(11, 0, 2, [9.2, 3.2, 1.0]))
@@ -153,7 +152,7 @@ class TestCalibrationService(TestCalibrationBase):
     Then checks if the expected calibrations increased their step counters.
     """
     import random
-    create_n_calibrations(TestCalibrationService.calibrationService, 10, self, 10)
+    create_n_calibrations(10, self, 10)
     # 8 Results necessary to increase the step
     assertDiracSucceeds(TestCalibrationService.calibrationService.submitResult(1, 0, 3, [1.2, .2, .3]), self)
     assertDiracSucceeds(TestCalibrationService.calibrationService.submitResult(1, 0, 5, [15, .1, .2]), self)
@@ -191,20 +190,21 @@ class TestCalibrationService(TestCalibrationBase):
 
   #@unittest.skip( 'currently takes 3 minutes ') #FIXME: fix long runtime
   def test_getnumberofjobs(self):
-    job_amounts = [10, 2, 148, 3, 190, 10000, 50, 0, 45987, 1378]
+    job_amounts = [10, 2, 6, 3, 9, 7, 4, 0, 8, 1]
     for i, job_amount in zip(xrange(0, 10), job_amounts):
-      assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.createCalibration(
-          'mySteerTest.file', 'softV.1', ['test.input1', 'other_input.txt'], job_amount), i + 1, self)
+      assertDiracSucceedsWith(createCalibration('mySteerTest.file', 'softV.1',
+                                                ['test.input1', 'other_input.txt'],
+                                                job_amount), i + 1, self)
     assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNumberOfJobsPerCalibration(),
-                                   {1: 10, 2: 2, 3: 148, 4: 3, 5: 190, 6: 10000, 7: 50,
-                                    8: 0, 9: 45987, 10: 1378}, self)
+                                   {1: 10, 2: 2, 3: 6, 4: 3, 5: 9, 6: 7, 7: 4,
+                                    8: 0, 9: 8, 10: 1}, self)
 
   def test_getnumberofjobs_empty(self):
     assertDiracSucceedsWith_equals(TestCalibrationService.calibrationService.getNumberOfJobsPerCalibration(),
                                    {}, self)
 
   def test_setrunvals(self):
-    create_n_calibrations(TestCalibrationService.calibrationService, 5, self, 10)
+    create_n_calibrations(5, self, 10)
     res = TestCalibrationService.calibrationService.setRunValues(1, 12, [2.1, 2.4, 1000.2], False)
     assertDiracSucceeds(res, self)
     (calibrations, counter) = extract_calibrationdict_and_counter(
@@ -214,7 +214,7 @@ class TestCalibrationService(TestCalibrationBase):
     assert cal.currentStep is 12
 
   def test_getnewparams(self):
-    create_n_calibrations(TestCalibrationService.calibrationService, 5, self, 10)
+    create_n_calibrations(5, self, 10)
     assertDiracFailsWith(TestCalibrationService.calibrationService.getNewParameters(6, 2),
                          'calibrationID is not in active calibrations: 6', self)
     TestCalibrationService.calibrationService.setRunValues(1, 12, [2.1, 2.4, 1000.2], False)
@@ -236,19 +236,17 @@ class TestCalibrationService(TestCalibrationBase):
 #pylint: disable=invalid-name
 
 
-def create_n_calibrations(calibrationService, n, assertobject, amountOfJobs=10):
+def create_n_calibrations(n, assertobject, amountOfJobs=10):
   """ Creates n default calibrations to be further used by tests.
 
-  :param RPCClient calibrationService: calibrationService used by the test
   :param int n: Amount of jobs created
   :param TestCase assertobject: the test case, used to gain the assert methods
   :param int amountOfJobs: number of jobs created in each calibration run. (constant for all runs)
   :returns: None
   """
   for i in xrange(0, n):
-    res = calibrationService.createCalibration('mySteerTest.file', 'softV.1',
-                                               ['test.input1', 'other_input.txt'], amountOfJobs)
-    assertDiracSucceedsWith_equals(res, i + 1, assertobject)
+    res = createCalibration('mySteerTest.file', 'softV.1', ['test.input1', 'other_input.txt'], amountOfJobs)
+    assertDiracSucceedsWith(res, i + 1, assertobject)
 
 if __name__ == '__main__':
   suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCalibrationService)

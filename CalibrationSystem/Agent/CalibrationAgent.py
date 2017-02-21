@@ -29,7 +29,6 @@ class CalibrationAgent(AgentModule):
     self.currentCalibrations = []  # Contains IDs (int) of the calibrations
     self.currentJobStatuses = {}  # Contains a mapping calibrationID -> dict, the dict contains a mapping
     # WorkerID (int) -> jobStatus (enum)
-    #TODO: Dict calibrationID -> numberOfJobs ?
     return S_OK()
 
   def execute(self):

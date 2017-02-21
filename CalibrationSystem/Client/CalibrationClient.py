@@ -6,8 +6,9 @@ about the results of their reconstruction
 
 import subprocess
 import sys
-#from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RPCClient import RPCClient
+from DIRAC import S_ERROR, gLogger
+from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
 
 __RCSID__ = "$Id$"
@@ -32,7 +33,7 @@ class CalibrationClient(object):
     self.parameterSet = None
 
   def requestNewParameters(self, stepID):
-    """ Fetches the new parameter set from the service and updates the step counter in this object with the new value.
+    """ Fetches the new parameter set from the service and updates the step counter in this object with the new value. Throws a ValueError if the calibration ended already.
 
     :param int stepID: ID of the step the worker finished last.
     :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step, or None if no new parameters are available yet
@@ -40,6 +41,8 @@ class CalibrationClient(object):
     """
     res = self.calibrationService.getNewParameters(self.calibrationID, stepID)
     if res['OK']:
+      if isinstance(res['Value'], basestring):
+        raise ValueError('No more new parameters: End calibration')
       self.currentStep = res['current_step']
       return res['Value']
     else:
@@ -60,10 +63,15 @@ class CalibrationClient(object):
       if res['OK']:
         return
       attempt = attempt + 1
-    print ''  # FIXME: Error handling? ignore?
+    # FIXME: Decide if this is the correct way to handle this failure
+    raise IOError('Could not report result back to CalibrationService.')
 
 
 def runCalibration(calibrationID, workerID, command):
+  res = subprocess.check_output(['echo', 'Hello World!'])
+  gLogger.warn('printed: %s', res)
+
+def runCalibration2( calibrationID, workerID, command ):
   """ Executes the calibration on this worker.
 
   :param string command: The command to start the calibration, when one appends the current histogram to it.
@@ -73,13 +81,39 @@ def runCalibration(calibrationID, workerID, command):
   calibration_client = CalibrationClient(calibrationID, workerID)
   current_step = 1
   while True:  # FIXME: Find stoppig criterion
-    current_params = calibration_client.requestNewParameters(current_step)
+    try:
+      current_params = calibration_client.requestNewParameters(current_step)
+    except ValueError:
+      gLogger.log('Ending calibration run on this worker.')
+      break
     subprocess.check_output([command, current_params])  # FIXME: Ensure this is how we can pass the new parameter
     #FIXME: This currently lacks the information at which offset the worker performs the calibration.
     #Suggested fix: Write class WorkerInfo as a wrapper for the offset+the histogram+anything else this might need
     current_step = calibration_client.currentStep
 
 
+def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
+  """ Starts a calibration.
+
+  :param basestring steeringFile: Steering file used in the calibration
+  :param basestring softwareVersion: Version of the software
+  :param inputFiles: Input files for the calibration
+  :type inputFiles: `python:list`
+  :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
+  :returns: S_OK containing ID of the calibration, or S_ERROR if something went wrong
+  :rtype: dict
+  """
+  res = getProxyInfo()
+  if not res['OK'] or 'group' not in res['Value'] or 'username' not in res['Value']:
+    err = S_ERROR('Problem with the proxy, need to know user and group: %s' % res)
+    return err
+  calibrationService = RPCClient('Calibration/Calibration')
+  return calibrationService.createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs,
+                                              res['Value']['username'], res['Value']['group'])
+
 if __name__ == '__main__':
+  if len(sys.argv) < 4:
+    print 'Not enogh arguments!\nUsage: calibrationID workerID command\nPassed parameters were %s' % sys.argv
+    exit(2)
   # Assume argv[1] is calibrationID, argv[2] is workerID, rest is histogram
   exit(runCalibration(sys.argv[1], sys.argv[2], sys.argv[3:]))
