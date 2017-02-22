@@ -84,7 +84,7 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     Check consistency of the DDSim application, this is called from the `Job` instance
 
     :param job: The instance of the job
-    :type job: `Job`
+    :type job: ~ILCDIRAC.Interfaces.API.NewInterface.Job.Job
     :returns: S_OK/S_ERROR
     """
 

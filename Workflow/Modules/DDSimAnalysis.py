@@ -6,11 +6,11 @@ Run DDSim
 '''
 
 import os
-import tarfile
+
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, unzip_file_into_dir, getSoftwareFolder
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, getSoftwareFolder
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
@@ -73,7 +73,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
       - prepare the steering file and command line parameters
       - run DDSim on this steering file and catch the exit status
 
-    :return: S_OK(), S_ERROR()
+    :rtype: S_OK, S_ERROR
     """
     self.result = S_OK()
     if not self.platform:
@@ -267,28 +267,6 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
 
     os.chmod(envName, 0755)
     return S_OK(os.path.abspath(envName))
-
-  def _extractTar( self, extension=".tar.gz" ):
-    """ extract the detector tarball for the detectorModel """
-    try:
-      detTar = tarfile.open(self.detectorModel + extension, "r:gz")
-      detTar.extractall()
-      xmlPath = os.path.abspath(os.path.join(self.detectorModel, self.detectorModel+".xml") )
-      return S_OK(xmlPath)
-    except (RuntimeError, OSError, IOError) as e:
-      self.log.error( "Failed to untar detector model", str(e) )
-      return S_ERROR( "Failed to untar detector model" )
-
-  def _extractZip( self ):
-    """ extract the detector zip file for the detectorModel """
-    try:
-      self.log.notice("Exracting zip file")
-      unzip_file_into_dir(open(self.detectorModel + ".zip"), os.getcwd())
-      xmlPath = os.path.join(os.getcwd(), self.detectorModel, self.detectorModel+".xml")
-      return S_OK( xmlPath )
-    except (RuntimeError, OSError, IOError) as err: #RuntimeError is for zipfile
-      self.log.error('Failed to unzip detector model: ', str(err))
-      return S_ERROR('Failed to unzip detector model')
 
   def _determineRandomSeed(self):
     """determine what the randomSeed should be, depends on production or not
