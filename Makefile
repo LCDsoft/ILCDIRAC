@@ -207,5 +207,5 @@ completeDocumentation: releasenotes
 	@echo "or run make install"
 
 install: completeDocumentation
-	rsync -delete -artvu build/html/ /afs/cern.ch/eng/clic/data/doc/ilcdiracdoc/
+	rsync -delete -artvu build/html/ /eos/project/l/lcd-web/www/doc/ilcdiracdoc/
 	@echo "Copied documentation to the web"
