@@ -31,7 +31,7 @@ iLCDirac
 .. code::
     
     @article{ilcDiracLC,
-             author        = "Grefe, G and Poss, S and Sailer, A and Tsaregorodtsev, A",
+             author        = "Grefe, C and Poss, S and Sailer, A and Tsaregorodtsev, A",
              title         = "{ILCDIRAC, a DIRAC extension for the Linear Collider community}",
              journal       = "J. Phys.: Conf. Ser.",
              collaboration = "on behalf of The CLIC Detector and Physics Study (CLICdp)",

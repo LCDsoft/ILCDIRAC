@@ -65,7 +65,7 @@ author = u'S.Sposs,R.Ete,C.Grefe,P.Majewski,A.Sailer,M.Petric'
 # built documents.
 #
 # The short X.Y version.
-version = '25.0'
+version = '26.0'
 # The full version, including alpha/beta/rc tags.
 
 ##Get release from ILCDIRAC Tag
