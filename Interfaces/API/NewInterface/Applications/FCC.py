@@ -225,20 +225,20 @@ class FCC(LCApplication):
           return S_ERROR('Version, Name and Platform have to be set!')        
  
 
+        fcc_app_name = self.__class__.__name__
+
+
+        fcc_app_log = fcc_app_name + '.log'
 
 
         #**************************************************MINIMUM REQUIREMENTS CHECKING*******************************************************#
         if '' == self.fcc_executable or '' == self.fcc_conf_file  :
-            message = "\nError in parsing this application : " + self.fcc_app_name
+            message = "\nError in parsing this application : " + fcc_app_name
             message += "\nYou have to provide at least an executable and a configuration file for each application\n"
             return S_ERROR(message)    
             
         #**************************************************MINIMUM REQUIREMENTS CHECKING*******************************************************#
 
-        fcc_app_name = self.__class__.__name__
-
-
-        fcc_app_log = fcc_app_name + '.log'
 
 
         # We add the log to the ouput sandbox
@@ -852,7 +852,6 @@ class FCCAnalysis(FCC):
         FCC.__init__(self,fcc_output_file, fcc_input_files , number_of_events , extraInputs, extraOutputs)
 
         self.fcc_conf_file = fcc_conf_file
-
 
         self.fcc_executable = executable    
 
