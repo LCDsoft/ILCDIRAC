@@ -9,12 +9,9 @@ import subprocess
 
 # DIRAC libraries
 __RCSID__ = "$Id$"
-from DIRAC.Core.Utilities.Subprocess                       import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, generateRandomString
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder, getEnvironmentScript
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles            import getNewLDLibs
-from ILCDIRAC.Core.Utilities.ResolveDependencies           import resolveDeps
-from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
+
+from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getEnvironmentScript
 from DIRAC import gLogger, S_OK, S_ERROR
 
 
