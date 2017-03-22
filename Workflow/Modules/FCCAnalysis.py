@@ -18,12 +18,14 @@ from DIRAC import gLogger, S_OK, S_ERROR
 
 
 # If user need files on EOS, it should put EOS full path (xrootd://...)
+# in input files
 # else if the file is in eospublic, user can also put relative path to eospublic (/eos/user/...)
-# because we take care of that, indeed we download the given relative EOS path to the sandbox
-# however, inside the job, you have to call the basename path 
+# because we take care of that, indeed we download the given EOS path to the sandbox
+# however, inside the job, you have to give the basename path (only filename) 
     
 # Xrootd python API used for EOS 
-# Here we make a copy from EOS public to CE
+# Here we use xrootd python API to copy paths from EOS public to CE
+# Now we know from FCC application that they exist
 
 from XRootD import client
 from XRootD.client.flags import DirListFlags, OpenFlags, MkDirFlags, QueryCode
@@ -198,8 +200,6 @@ class FCCAnalysis(ModuleBase):
         # before the job command, we set the FCC environment
 
         shebang = "#!/bin/bash"
-        test1 = "echo $LD_LIBRARY_PATH"
-        test3 = "unset LD_LIBRARY_PATH"
 
         #if not self.environment_script.startswith('/cvmfs/'):
         #    self.environment_script = os.path.abspath(os.path.basename(self.environment_script))

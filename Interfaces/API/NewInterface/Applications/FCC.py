@@ -8,12 +8,13 @@ import types
 
 
 # If user need files on EOS, it should put EOS full path (xrootd://...)
+# in input files
 # else if the file is in eospublic, user can also put relative path to eospublic (/eos/user/...)
-# because we take care of that, indeed we download the given relative EOS path to the sandbox
-# however, inside the job, you have to call the basename path 
+# because we take care of that, indeed we download the given EOS path to the sandbox
+# however, inside the job, you have to give the basename path (only filename) 
     
 # Xrootd python API used for EOS 
-# Here we just make an 'existence' checking
+# Here we use xrootd python API to check EOS paths existence only
 
 from XRootD import client
 from XRootD.client.flags import DirListFlags, OpenFlags, MkDirFlags, QueryCode
@@ -47,7 +48,7 @@ class FCC(LCApplication):
     def __init__(self,fcc_output_file, fcc_input_files , number_of_events , extraInputs, extraOutputs):
 
         
-        # Attributes starting with '_' are not usefull for execution module
+        # Attributes starting with '_' are not usefull for the execution module (FCCAnalysis)
         # Underscore used here to make distinction and give an 'invisibility'
         # to the parameters sent to the execution module
 
@@ -93,7 +94,7 @@ class FCC(LCApplication):
         # pre-output sandbox
         self._outputSB = []
 
-        #************************* Do we keep this ? *******************************************
+        #************************* Do we keep this ? - START *******************************************
 
         #self.outputDstPath = ''
         #self.outputDstFile = ''
@@ -104,6 +105,7 @@ class FCC(LCApplication):
         #self.datatype = 'REC'
         #self.detectortype = 'ILD'
       
+        #************************* Do we keep this ? - END *******************************************
 
 
         super(FCC, self).__init__()
@@ -123,9 +125,7 @@ class FCC(LCApplication):
 
 
 
-
-    #************************* Do we keep this ? *******************************************    
-
+    #************************* Do we keep this ? - START *******************************************    
     
 
     def setOutputRecFile(self, outputRecFile, path = None):
@@ -209,6 +209,8 @@ class FCC(LCApplication):
           return S_ERROR('prodjobmodules failed')
         return S_OK()
 
+    #************************* Do we keep this ? - END *******************************************
+
     
 
     #********************************************************************#
@@ -245,11 +247,12 @@ class FCC(LCApplication):
         # (I think it is already done by DIRAC)
         self._outputSB += [fcc_app_log]
 
-        # All local input files are checked before added to the sandbox
+        # All input files are put in paths (pre-sandbox)
+        # because they are checked before being added to the sandbox
         self.paths += [self.fcc_conf_file]  
 
 
-        # We add extra (in/out)puts to the pre-sandbox
+        # We add extra (in/out)puts
         self.paths += self._extraInputs
 
         self._outputSB += self._extraOutputs
@@ -263,7 +266,9 @@ class FCC(LCApplication):
         consistency_result = self._update_sandbox(self._fccsw_path,self.paths,self.fcc_conf_file)
         
 
-        # This output can be used as input for another application       
+        # setOutputFile informs the job that this application has an output file
+        # This output can be used as input for another application
+        # In this way, getInputFromapp method knows the ouput file of the given application        
         if '' != self.fcc_output_file:
             self.setOutputFile(self.fcc_output_file)
 
@@ -398,6 +403,7 @@ class FCC(LCApplication):
                 moduleinstance.setValue(attribute,attribute_value)
 
             
+        #************************* Do we keep this ? *******************************************
 
         #moduleinstance.setValue("configuration_file",              self.configuration_file)
         #moduleinstance.setValue("executable",              self.executable)
@@ -471,11 +477,11 @@ class FCC(LCApplication):
 
 
 
-    #*****************************************************#
-    # Function name : _copy                               #
-    # role : it copies entire folders required by the job #
-    # considering applied filters                         # 
-    #*****************************************************#
+    #***********************************************#
+    # Function name : _copy                         #
+    # role : it copies folders required by the job  #
+    # considering applied filters                   # 
+    #***********************************************#
         
     def _copy(self,temp_folder,actual_folder,tar_extension,filtered_extension,exclude_or_include):
 
@@ -587,12 +593,13 @@ class FCC(LCApplication):
     
 
 
-    #**************************************************#
-    # Function name : _find_path                       #
-    # input : file_name                                #
-    # role : check if file/folder exists on AFS,CVMFS  #
-    # before checking on EOS                           #
-    #**************************************************#
+    #*****************************************************#
+    # Function name : _find_path                          #
+    # input : file_name                                   #
+    # role : check if file/folder exists on AFS,CVMFS     #
+    # before checking on EOS (only if user do not         #
+    # specify xrootd protocol)                            #
+    #*****************************************************#
 
     def _find_path(self,path,file_or_dir='file'):
         
@@ -648,7 +655,7 @@ class FCC(LCApplication):
                 if 'OK' in consistency_result and not consistency_result['OK'] :
                     return consistency_result
 
-                # if file does not exist consistency fails
+                # if file does not exist then consistency fails
                 if not is_exist:
                     message = "\nThe path '" + path + "'" + upload_path_message
                     print message
@@ -766,10 +773,10 @@ class FCC(LCApplication):
     
         return consistency_result
         
-    #******************************************************************#
-    # Function name : _copy_sandbox_subfolders                         #
-    # role : copy in the temporary sandbox, folders needed by the job  #
-    #******************************************************************#
+    #*******************************************************************#
+    # Function name : _copy_sandbox_subfolders                          #
+    # role : copy in the temporary sandbox, folders required by the job #
+    #*******************************************************************#
             
     def _copy_sandbox_subfolders(self):
     
