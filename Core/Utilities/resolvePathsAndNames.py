@@ -47,14 +47,25 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
   return os.path.join( basepath, outfile )
 
 ###############################################################################
-def getProdFilename(filename, prodID, jobID):
+def getProdFilename(filename, prodID, jobID, workflow_commons=None):
   """ Build the output file names based of local job property.
+
+  If workflow_commons is given and contains a ProductionOutputData entry of
+  basestring that file is returned
 
   :param str filename: File name before change
   :param int prodID: Production ID
   :param int jobID: Job ID
+  :param dict workflow_commons: workflow_commons dictionary
   :return: the modified file name
+
   """
+  if workflow_commons is not None and \
+     workflow_commons.get('ProductionOutputData') and \
+     isinstance( workflow_commons.get('ProductionOutputData'), basestring ):
+    outfile = workflow_commons.get('ProductionOutputData')
+    return os.path.basename(outfile)
+
   outfile = ""
   if filename.count(".slcio"):
     name = filename.split(".slcio")
