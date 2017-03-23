@@ -27,7 +27,7 @@ my_evttype       = '3f'
 my_evtclass      = '3f'
 selectedfile     = 0
 prodid           = 500001
-genprocessname   = ''
+genprocessname   = 'ae_ell'
 process          = ''
 energy           = 500. ##This is mostly needed to define easily the steering files and the overlay parameters
 analysis += '_' + my_evttype
@@ -69,7 +69,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20161207_20_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20170322_02_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -91,7 +91,7 @@ meta['Datatype']       = 'gensplit' # MOKKA or stdhepsplit or MOKKA+MARLIN
 
 meta['Energy']         = meta_energy
 meta['Machine']        = 'ilc'
-#meta['GenProcessName'] = genprocessname
+meta['GenProcessName'] = genprocessname
 meta['MachineParams']  = machineParameters
 meta['ProdID']         = prodid
 
