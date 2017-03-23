@@ -56,20 +56,26 @@ detectorModel = 'ILD_o1_v05'    ##OR anything valid, but be careful with the ove
 dbslice = "mokka-08-00-dbdump.sql"
 
 machineParameters = 'TDR_ws'
-if energy == 1000.:
-  # ILDConfig         = 'v01-14-01-p00' # this is wrong!
-  ILDConfig         = ILDConfig or 'v01-16-p03'
-  machineParameters = 'B1b_ws'
-elif energy == 500.:
-  ILDConfig     = ILDConfig or 'v01-16-p05_500'
-elif energy == 350.:
-  ILDConfig     = ILDConfig or 'v01-16-p09_350'
-elif energy == 250.:
-  ILDConfig     = ILDConfig or 'v01-16-p10_250'
-else:
-  print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20170322_02_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+
+## This needs to be adapted when using lcgeo geometry
+# if energy == 1000.:
+#   # ILDConfig         = 'v01-14-01-p00' # this is wrong!
+#   ILDConfig         = ILDConfig or 'v01-16-p03'
+#   machineParameters = 'B1b_ws'
+# elif energy == 500.:
+#   ILDConfig     = ILDConfig or 'v01-16-p05_500'
+# elif energy == 350.:
+#   ILDConfig     = ILDConfig or 'v01-16-p09_350'
+# elif energy == 250.:
+#   ILDConfig     = ILDConfig or 'v01-16-p10_250'
+# else:
+#   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
+
+## ILDConfig for Marlin with DD4hep Geometry
+ILDConfig = "v01-19_lcgeo"
+
+additional_name   = '_' + genprocessname + '_20170322_03_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
