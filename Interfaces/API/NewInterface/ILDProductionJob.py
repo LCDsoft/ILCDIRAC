@@ -208,9 +208,9 @@ class ILDProductionJob( ProductionJob ):
                                       "evttype with setEvtType at least one "
                                       "should be." )
 
+        if 'GenProcessName' in compatmeta:
+            self.genprocname = compatmeta['GenProcessName']
         # APS: No longer possible to use these fields at this point
-        # if 'GenProcessName' in compatmeta:
-        #     self.genprocname = compatmeta['GenProcessName']
         # if not self.genprocname:
         #     return self._reportError( "GenProcessName is missing! It should appear in the basename")
         # if 'GenProcessID' in compatmeta:
@@ -610,6 +610,6 @@ class ILDProductionJob( ProductionJob ):
         """
         metadict = super(ILDProductionJob, self).getMetadata()
         #As this is not supposed to be a searchable thing, or because they are different for different files
-        for key in ['NumberOfEvents','GenProcessName','ProcessID']:
+        for key in ['NumberOfEvents','ProcessID']:
             metadict.pop(key,None)
         return metadict
