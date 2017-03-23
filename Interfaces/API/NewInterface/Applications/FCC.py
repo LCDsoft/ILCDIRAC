@@ -10,16 +10,15 @@ import shutil
 import types
 
 
-"""If user needs files on EOS, it should put EOS full path (xrootd://...)
+"""
+If user needs files on EOS, it should put EOS full path (xrootd://...)
 in input files
 else if the file is in eospublic, user can also put relative path to eospublic (/eos/user/...)
 because we take care of that, indeed we download the given EOS path to the sandbox
 however, inside the job, you have to give the basename path (only filename)
 
 Xrootd python API used for EOS
-Here, we use xrootd python API to check EOS paths existence only
-
-"""
+Here, we use xrootd python API to check EOS paths existence only"""
 
 from XRootD import client
 from XRootD.client.flags import DirListFlags, OpenFlags
@@ -40,7 +39,7 @@ class FCC(LCApplication):
 
     def __init__(self, fcc_output_file, fcc_input_files,
                  number_of_events, extraInputs, extraOutputs):
-        """it specifies location of the execution module, its name and parameters
+        """It specifies location of the execution module, its name and parameters
 
         :param fcc_output_file: The output file of the application (data)
         :param fcc_input_files: The input files of the application (data)
@@ -56,13 +55,10 @@ class FCC(LCApplication):
 
         """
 
-
-
-        """Attributes starting with '_' are not usefull for the execution module (FCCAnalysis)
-           Underscore used here to make distinction and give an 'invisibility'
-           to the attributes we do not want pass as parameters for the execution module
-
         """
+        Attributes starting with '_' are not usefull for the execution module (FCCAnalysis)
+        Underscore used here to make distinction and give an 'invisibility'
+        to the attributes we do not want pass as parameters for the execution module"""
 
         # required
         self.fcc_executable = ''
@@ -73,17 +69,16 @@ class FCC(LCApplication):
 
         self.number_of_events = number_of_events
 
-        """transform str to list for future iteration
-            like that user can provide a list of paths or a single path as string
-            else
-            transform list to set to avoid duplicates if there are duplicates
-            (DIRAC already do this check before sending the sandbox)
-
         """
+        transform str to list for future iteration
+        like that user can provide a list of paths or a single path as string
+        else
+        transform list to set to avoid duplicates if there are duplicates
+        (DIRAC already do this check before sending the sandbox)"""
 
-        self._extra_inputs = [extraInputs] if str is type(extraInputs) else set(extraInputs)
+        self._extra_inputs = [extraInputs] if isinstance(extraInputs, str) else set(extraInputs)
 
-        self._extra_outputs = [extraOutputs] if str is type(extraOutputs) else set(extraOutputs)
+        self._extra_outputs = [extraOutputs] if isinstance(extraOutputs, str) else set(extraOutputs)
 
 
         # fccsw path of FCCSW software
@@ -121,16 +116,13 @@ class FCC(LCApplication):
         self.version = "vXYZ"
         self.platform = 'x86_64-slc5-gcc43-opt'
 
-    """PUT ABSOLUTE PATH HERE (AFS,EOS...) BUT RELATIVE PATH INSIDE THE JOB
-        Example of how to add 'extra' files or folders that can be used by the job on the CE 
-        fccsw._add_paths(['/my/path/foo.bar','/my/path/HelloWorld'])
-    
-    """
+        """
+        PUT ABSOLUTE PATH HERE (AFS,EOS...) BUT RELATIVE PATH INSIDE THE JOB
+        Example of how to add 'extra' files or folders that can be used by the job on the CE
+        fccsw._add_paths(['/my/path/foo.bar','/my/path/HelloWorld'])"""
 
     def _add_paths(self, paths):
-        self.paths += [paths] if str is type(paths) else set(paths)
-
-
+        self.paths += [paths] if isinstance(paths, str) else set(paths)
 
     #************************* Do we keep this ? - START *******************************************
 
@@ -156,16 +148,15 @@ class FCC(LCApplication):
 
     #************************* Do we keep this ? - END *******************************************
 
-
     def _checkConsistency(self, job=None):
         """It checks minimum requirements of the FCC application
-           and update sandbox with files required by the FCC application
+        and update sandbox with files required by the FCC application
 
-           :param job: The job containing the application
-           :type job: DIRAC.Interfaces.API.Job.Job
+        :param job: The job containing the application
+        :type job: DIRAC.Interfaces.API.Job.Job
 
-           :return: The success or failure of the consistency
-           :rtype: DIRAC.S_OK
+        :return: The success or failure of the consistency
+        :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
         """
 
@@ -206,11 +197,10 @@ class FCC(LCApplication):
         consistency_result = self._update_sandbox(self._fccsw_path, self.paths, self.fcc_conf_file)
 
 
-        """setOutputFile informs the job that this application has an output file
-           This output can be used as input for another application
-           In this way, getInputFromapp method knows the ouput file of the given application
-
         """
+        setOutputFile informs the job that this application has an output file
+        This output can be used as input for another application
+        In this way, getInputFromapp method knows the ouput file of the given application"""
 
         if self.fcc_output_file == '':
             self.setOutputFile(self.fcc_output_file)
@@ -222,13 +212,12 @@ class FCC(LCApplication):
         # in a temporary working directory
         self._copy_sandbox_subfolders()
 
-        """Sandbox can be set up at the application level or at the job level
-           Sandbox files coming from application or the job are all picked
-           and putting on the same final destination which is a list of paths
-           in the JDL file (see Input Sandbox parameter)
-           no need to re-add them again at the job level
-
         """
+        Sandbox can be set up at the application level or at the job level
+        Sandbox files coming from application or the job are all picked
+        and putting on the same final destination which is a list of paths
+        in the JDL file (see Input Sandbox parameter)
+        no need to re-add them again at the job level"""
 
         #if not job is None:
         #    job.inputsandbox += self.inputSB
@@ -255,8 +244,6 @@ class FCC(LCApplication):
 
         return consistency_result
 
-
-
     def _applicationModule(self):
         """It passes parameter names of the module
            FCC to the execution module FCCAnalysis
@@ -265,17 +252,16 @@ class FCC(LCApplication):
 
         md1 = self._createModuleDefinition()
 
-        """We 'transfer' all attributes (the 'public' ones) to the module FCCAnalysis
-           like that, we do not need to call md1.addParameter() for each attribute we want
-           If we plan to use a dictionnary keys instead of class attributes
-           It is possible to pass this dictionnary from user script (client side)
-           to FCC class (server side) and we do not iterate over class attributes
-           but over dictionnary keys like that, we can add dynamically 'attributes'
-           without adding them statically on these classes before
-           which will reduce stuff like (modifying classes of the client, classes of the server
-           and merging the new classes with the gitlab repository of ILCDirac)
-
         """
+        We 'transfer' all attributes (the 'public' ones) to the module FCCAnalysis
+        like that, we do not need to call md1.addParameter() for each attribute we want
+        If we plan to use a dictionnary keys instead of class attributes
+        It is possible to pass this dictionnary from user script (client side)
+        to FCC class (server side) and we do not iterate over class attributes
+        but over dictionnary keys like that, we can add dynamically 'attributes'
+        without adding them statically on these classes before
+        which will reduce stuff like (modifying classes of the client, classes of the server
+        and merging the new classes with the gitlab repository of ILCDirac)"""
 
         for attribute in dir(self):
             #attribute starting with _ are not usefull for execution module
@@ -286,29 +272,26 @@ class FCC(LCApplication):
 
         return md1
 
-
-
     def _applicationModuleValues(self, moduleinstance):
         """It passes parameter values of the module
-           FCC to the execution module FCCAnalysis
+        FCC to the execution module FCCAnalysis
 
-           :param moduleinstance: The module we load (FCCAnalysis)
-
-        """
-
-
-        """We 'transfer' all attributes (the 'public' ones) to the module FCCAnalysis
-           like that, we do not need to call md1.addParameter() for each attribute we want
-           If we plan to use a dictionnary keys instead of class attributes
-           It is possible to pass this dictionnary from user script (client side)
-           to FCC class (server side)
-           and we do not iterate over class attributes but over dictionnary keys
-           like that, we can add dynamically 'attributes' without adding them
-           statically on these classes before which will reduce stuff like
-           (modifying classes of the client, classes of the server
-           and merging the new classes with the gitlab repository of ILCDirac)
+        :param moduleinstance: The module we load (FCCAnalysis)
 
         """
+
+
+        """
+        We 'transfer' all attributes (the 'public' ones) to the module FCCAnalysis
+        like that, we do not need to call md1.addParameter() for each attribute we want
+        If we plan to use a dictionnary keys instead of class attributes
+        It is possible to pass this dictionnary from user script (client side)
+        to FCC class (server side)
+        and we do not iterate over class attributes but over dictionnary keys
+        like that, we can add dynamically 'attributes' without adding them
+        statically on these classes before which will reduce stuff like
+        (modifying classes of the client, classes of the server
+        and merging the new classes with the gitlab repository of ILCDirac)"""
 
 
         for attribute in dir(self):
@@ -317,7 +300,6 @@ class FCC(LCApplication):
                 attribute_name = 'self.' + attribute
                 attribute_value = str(eval(attribute_name))
                 moduleinstance.setValue(attribute, attribute_value)
-
 
     def _checkWorkflowConsistency(self):
 
@@ -330,16 +312,15 @@ class FCC(LCApplication):
             stepinstance.setLink("InputFile", self._inputappstep.getType(), "OutputFile")
         return S_OK()
 
-
     def _read_from_file(self, file_name):
-        """read a file and return its content
+        """Read a file and return its content
 
-            :param file_name: The path of the file to read
+        :param file_name: The path of the file to read
 
-            :type file_name: str
+        :type file_name: str
 
-            :return: The content of the file
-            :rtype: str
+        :return: The content of the file
+        :rtype: str
 
         """
 
@@ -352,19 +333,19 @@ class FCC(LCApplication):
 
     def _create_temp_tree_from_files(self, files, fccsw_path):
         """Given a relative tree path of file to the local FCCSW folder of the user
-           these paths are in the configuration file e.g. geant_pgun_fullsim.py
-           it looks for this file, recreates the relative tree in a temporary folder
-           containing only this file and not all files of the source folder
-           Finally, the '1 file' folder will be added to the DIRAC sandbox
+        these paths are in the configuration file e.g. geant_pgun_fullsim.py
+        it looks for this file, recreates the relative tree in a temporary folder
+        containing only this file and not all files of the source folder
+        Finally, the '1 file' folder will be added to the DIRAC sandbox
 
-           :param files: The files specified in the configuration file
-           :param fccsw_path: The local path of FCCSW
+        :param files: The files specified in the configuration file
+        :param fccsw_path: The local path of FCCSW
 
-           :type files: list
-           :type fccsw_path: str
+        :type files: list
+        :type fccsw_path: str
 
-           :return: success or failure of checking file
-           :rtype: DIRAC.S_OK
+        :return: success or failure of checking file
+        :rtype: DIRAC.S_OK
 
         """
 
@@ -391,22 +372,20 @@ class FCC(LCApplication):
 
         return S_OK()
 
-
-
     def _copy(self, temp_folder, actual_folder,
               filtered_extension, exclude_or_include):
         """It copies folders required by the job
-           considering applied filters
+        considering applied filters
 
-           :param temp_folder: The temporary working directory (destination) used for the sandboxing
-           :param actual_folder: The original (source) path of folder looked by the copy process
-           :param filtered_extension: The extension of file we (do not) want
-           :param exclude_or_include: extension is excluded or included
+        :param temp_folder: The temporary working directory (destination) used for the sandboxing
+        :param actual_folder: The original (source) path of folder looked by the copy process
+        :param filtered_extension: The extension of file we (do not) want
+        :param exclude_or_include: extension is excluded or included
 
-           :type temp_folder: str
-           :type actual_folder: str
-           :type filtered_extension: list
-           :type exclude_or_include: bool
+        :type temp_folder: str
+        :type actual_folder: str
+        :type filtered_extension: list
+        :type exclude_or_include: bool
 
         """
 
@@ -428,14 +407,12 @@ class FCC(LCApplication):
 
                     shutil.copyfile(abs_path_src, abs_path_dst)
 
-
-
     def _XRootDStatus2Dictionnary(self, XRootDStatus):
         """Parse status object generated by
-           xrootd API when looking for EOS path
+        xrootd API when looking for EOS path
 
-           :param XRootDStatus: status returned by xrootd API
-           :return: The existence of the path
+        :param XRootDStatus: status returned by xrootd API
+        :return: The existence of the path
 
 
         """
@@ -466,18 +443,16 @@ class FCC(LCApplication):
             msg = "EOS Path checking failed, please enter a valid path"
             return S_ERROR(msg)
 
-
     def _find_eos_file(self, file_name):
         """Check if file exists on EOS
-           before sending the job to DIRAC
+        before sending the job to DIRAC
 
-           :param: The file the function looks for in EOS
+        :param: The file the function looks for in EOS
 
-           :return: The full path of the file and its existence
-           :rtype: str
+        :return: The full path of the file and its existence
+        :rtype: str
 
         """
-
 
         eos_file_full_path = self._eos_mgm_url + '/' + file_name
 
@@ -496,8 +471,6 @@ class FCC(LCApplication):
             return file_name, False, consistency_result
         else:
             return eos_file_full_path, True, consistency_result
-
-
 
     def _find_eos_folder(self, folder_name):
         """Check if folder exists on EOS
@@ -521,14 +494,14 @@ class FCC(LCApplication):
 
     def _find_path(self, path):
         """Check if file/folder exists on AFS,CVMFS
-           before checking on EOS (only if user do not
-           specify xrootd protocol)
+        before checking on EOS (only if user do not
+        specify xrootd protocol)
 
-           :param path: The path to look for
-           :type path: str
+        :param path: The path to look for
+        :type path: str
 
-           :return: The full path and its existence
-           :rtype: str
+        :return: The full path and its existence
+        :rtype: str
 
         """
 
@@ -561,7 +534,6 @@ class FCC(LCApplication):
             else:
                 return path, False, consistency_result
 
-
     def _upload_sandbox_with_application_files(self, paths):
         """Upload all extra folders or files specified by the user for an application
 
@@ -569,7 +541,7 @@ class FCC(LCApplication):
         :type paths: list
 
         :return: The success or the failure of the operation
-        :rtype: DIRAC.S_OK
+        :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
         """
 
@@ -618,7 +590,7 @@ class FCC(LCApplication):
 
     def _upload_sandbox_with_fccsw_files(self, fccsw_path, fcc_conf_file):
         """Upload files called in FCCSW configuration file
-           and required folders relative to FCCSW (InstallArea,Detector)
+        and required folders relative to FCCSW (InstallArea,Detector)
 
         :param fccsw_path: The local path of FCCSW
         :param fcc_conf_file: The path of the configuration file
@@ -627,7 +599,7 @@ class FCC(LCApplication):
         :type fcc_conf_file: str
 
         :return: The success or the failure of the operation
-        :rtype: DIRAC.S_OK
+        :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
         """
 
@@ -677,19 +649,18 @@ class FCC(LCApplication):
 
         return consistency_result
 
-
     def _update_sandbox(self, fccsw_path, paths, fcc_conf_file):
         """Check the files and folders required by the job
-           and add them to the sandbox
-           Indeed, it calls upload_sandbox_with_* functions
+        and add them to the sandbox
+        Indeed, it calls upload_sandbox_with_* functions
 
-           :param fccsw_path: The local path of FCCSW
-           :param paths: The paths the application has to add to the sandbox
-           :param fcc_conf_file: The path of the configuration file
+        :param fccsw_path: The local path of FCCSW
+        :param paths: The paths the application has to add to the sandbox
+        :param fcc_conf_file: The path of the configuration file
 
-           :type fccsw_path: str
-           :type paths: list
-           :type fcc_conf_file: str
+        :type fccsw_path: str
+        :type paths: list
+        :type fcc_conf_file: str
 
         """
 
@@ -741,7 +712,6 @@ class FCC(LCApplication):
             self.inputSB += copied_folders
 
 
-
 class FCCSW(FCC):
     """It defines an FCCSW application"""
 
@@ -754,7 +724,6 @@ class FCCSW(FCC):
 
         self._fccsw_path = fccsw_path
         self.fcc_conf_file = fcc_conf_file
-
 
     def _checkConsistency(self, job=None):
 
@@ -779,10 +748,7 @@ class FCCSW(FCC):
 
 
 class FCCAnalysis(FCC):
-    """It defines an FCCAnalysis application
-       by default, it runs FCCPHYSICS
-
-    """
+    """It defines an FCCAnalysis application, by default, it runs FCCPHYSICS"""
 
     def __init__(self, executable='fcc-pythia8-generate', fcc_conf_file="", fcc_output_file="",
                  fcc_input_files="", number_of_events="", extraInputs=(), extraOutputs=()):

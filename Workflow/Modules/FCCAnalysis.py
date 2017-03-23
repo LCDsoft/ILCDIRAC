@@ -18,27 +18,22 @@ from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from DIRAC import gLogger, S_OK, S_ERROR
 
-"""If user needs files on EOS, it should put EOS full path (xrootd://...)
+"""
+If user needs files on EOS, it should put EOS full path (xrootd://...)
 in input files
 else if the file is in eospublic, user can also put relative path to eospublic (/eos/user/...)
 because we take care of that, indeed we download the given EOS path to the sandbox
 however, inside the job, you have to give the basename path (only filename)
 
 Xrootd python API used for EOS
-Here, we use xrootd python API to download EOS paths ot the CE
-
-"""
+Here, we use xrootd python API to download EOS paths ot the CE"""
 
 from XRootD import client
 from XRootD.client.flags import DirListFlags, OpenFlags
 
 
 class FCCAnalysis(ModuleBase):
-
-    """Generate a script that will run the FCC
-       application considering module parameters
-
-    """
+    """Generate a script that will run the FCC application considering module parameters"""
 
     def __init__(self):
 
@@ -84,28 +79,27 @@ class FCCAnalysis(ModuleBase):
             return self.finalStatusReport(status)
 
 
-        """For files (coming from AFS and EOS) uploaded to the sandbox,
-           replace the given full path by the CE working directory path
-           because the given full path is no longer accessible
-           (true for AFS but for EOS, need to add xrootd://... before eos paths), 
-        
-           For FCC applications some attributes contain path
-           and also the dynamic module paramaters
-           we correct path (replace AFS/EOS orginal path by CE cwd) for all attributes that are paths
-           and for extra user paths too
-        
-           We have transfered all attributes (the 'public' ones) to the module FCCAnalysis
-           like that, we do not need to call md1.addParameter() for each attribute we want
-           If we plan to use a dictionnary keys instead of class attributes
-           It is possible to pass this dictionnary from user script (client side) to FCC class (server side)
-           and we do not iterate over class attributes but over dictionnary keys
-           like that, we can add dynamically 'attributes' without adding them statically on these classes before
-           which will reduce stuff like (modifying classes of the client, classes of the server
-           and merging the new classes with the gitlab repository of ILCDirac) 
-           These dynamic parameters can be catched here and we can also have a parameter which is a bash command 
-           that can be evaluated here, but this functionnality has been disabled        
-
         """
+        For files (coming from AFS and EOS) uploaded to the sandbox,
+        replace the given full path by the CE working directory path
+        because the given full path is no longer accessible
+        (true for AFS but for EOS, need to add xrootd://... before eos paths), 
+    
+        For FCC applications some attributes contain path
+        and also the dynamic module paramaters
+        we correct path (replace AFS/EOS orginal path by CE cwd) for all attributes that are paths
+        and for extra user paths too
+    
+        We have transfered all attributes (the 'public' ones) to the module FCCAnalysis
+        like that, we do not need to call md1.addParameter() for each attribute we want
+        If we plan to use a dictionnary keys instead of class attributes
+        It is possible to pass this dictionnary from user script (client side) to FCC class (server side)
+        and we do not iterate over class attributes but over dictionnary keys
+        like that, we can add dynamically 'attributes' without adding them statically on these classes before
+        which will reduce stuff like (modifying classes of the client, classes of the server
+        and merging the new classes with the gitlab repository of ILCDirac) 
+        These dynamic parameters can be catched here and we can also have a parameter which is a bash command 
+        that can be evaluated here, but this functionnality has been disabled"""
 
         # for example, fcc_conf_file is an attribute of FCC
         for attribute in dir(self):
@@ -165,11 +159,11 @@ class FCCAnalysis(ModuleBase):
     def chmod(self, file, permission):
         """Set the permission of a file
 
-           :param file: The file to set the permission
-           :param permisssion: The permission ('W', 'R' or 'X')
+        :param file: The file to set the permission
+        :param permisssion: The permission ('W', 'R' or 'X')
 
-           :type file: str
-           :type permission: str
+        :type file: str
+        :type permission: str
 
         """
 
@@ -187,17 +181,15 @@ class FCCAnalysis(ModuleBase):
         # append the new permission to the existing one
         os.chmod(file, mode | permission)
 
-
-
     def generate_bash_script(self, commands, script_name):
         """Generate a bash script containing the environment setup
-           and the command related to the FCC application
+        and the command related to the FCC application
 
-           :param commands: The command to call the application
-           :param script_name: The name of the generated script
+        :param commands: The command to call the application
+        :param script_name: The name of the generated script
 
-           :type commands: list
-           :type script_name: str
+        :type commands: list
+        :type script_name: str
 
         """
 
@@ -229,18 +221,17 @@ class FCCAnalysis(ModuleBase):
 
         return status
 
-
     def write2file(self, operation, file_name, filetext):
         """Create a new file and
-           write the given content into this file
+        write the given content into this file
 
-           :param operation: The operation('w' or 'a') of the writting operation
-           :param file_name: The name of the created file
-           :param filetext: The content of the file
+        :param operation: The operation('w' or 'a') of the writting operation
+        :param file_name: The name of the created file
+        :param filetext: The content of the file
 
-           :type operation: str
-           :type file_name: str
-           :type filetext: str
+        :type operation: str
+        :type file_name: str
+        :type filetext: str
 
         """
 
@@ -257,16 +248,16 @@ class FCCAnalysis(ModuleBase):
 
     def generate_script_on_the_fly(self, sysconfig, appname, appversion):
         """Normally, generate dynamically the
-           fcc environment script but nothing for the moment
-           Called if CVMFS is not available
+        fcc environment script but nothing for the moment
+        Called if CVMFS is not available
 
-           :param sysconfig: The platform required by the application
-           :param appname: The name of the application
-           :param appversion: The version of the application
+        :param sysconfig: The platform required by the application
+        :param appname: The name of the application
+        :param appversion: The version of the application
 
-           :type operation: str
-           :type file_name: str
-           :type filetext: str
+        :type operation: str
+        :type file_name: str
+        :type filetext: str
 
         """
         # we do not generate the environment script like in MarlinAnalysis etc...
@@ -276,11 +267,10 @@ class FCCAnalysis(ModuleBase):
 
         return S_ERROR('environment script not found, can not generate one dynamically')
 
-
     def runIt(self):
         """Get environment script path from 'dirac.cfg' file
-           according to the version, application and platform
-           (Called by Agent, Must be called get_environment)
+        according to the version, application and platform
+        (Called by Agent, Must be called get_environment)
 
         """
 
