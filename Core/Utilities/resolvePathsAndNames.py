@@ -9,15 +9,67 @@ __RCSID__ = "$Id$"
 import os
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
+from ILCDIRAC.Core.Utilities.FilenameEncoder import FilenameEncoder, decodeFilename
+###############################################################################
+def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
+  '''  Build the output file names based on inputfile name and job property
 
-def getProdFilename(filename, prodID, jobID):
+  If outfileOriginal starts with 's' we assume a simulation job, if it starts
+  with 'r' we assume a reconstruction job
+
+  :param str inputfile: Input file LFN, either \\*.stdhep or \\*.slcio
+  :param str outfileOriginal: Output file LFN before change
+  :param prodID: Production ID
+  :type prodID: `str`, `int`
+  :param jobID: jobID
+  :type jobID: `str`, `int`
+  :returns: Full LFN to changed output file
+
+  '''
+  finp = FilenameEncoder()
+  inpitem = decodeFilename(inputfile)
+
+  origitem = decodeFilename(outfileOriginal)
+  originalOutputBaseName = os.path.basename( outfileOriginal )
+
+  outfile = ""
+  if originalOutputBaseName.startswith("s"):
+    inpitem["s"] = origitem["s"]
+    inpitem["m"] = origitem["m"]
+    inpitem["d"] = "sim"
+    inpitem["t"] = str(prodID).zfill(8)
+    inpitem["j"] = str(jobID)
+    outfile   = finp.convert( "sim", "file", inpitem )
+  elif originalOutputBaseName.startswith("r"):
+    inpitem["r"] = origitem["r"]
+    inpitem["d"] = origitem["d"]
+    inpitem["t"] = str(prodID).zfill(8)
+    inpitem["j"] = str(jobID)
+    outfile  = finp.convert( origitem["d"], "file", inpitem )
+
+  basepath = os.path.dirname( outfileOriginal )
+  return os.path.join( basepath, outfile )
+
+###############################################################################
+def getProdFilename(filename, prodID, jobID, workflow_commons=None):
   """ Build the output file names based of local job property.
 
-  :param string filename: File name before change
+  If workflow_commons is given and contains a ProductionOutputData entry of
+  basestring that file is returned
+
+  :param str filename: File name before change
   :param int prodID: Production ID
   :param int jobID: Job ID
+  :param dict workflow_commons: workflow_commons dictionary
   :return: the modified file name
+
   """
+  if workflow_commons is not None and \
+     workflow_commons.get('ProductionOutputData') and \
+     isinstance( workflow_commons.get('ProductionOutputData'), basestring ):
+    outfile = workflow_commons.get('ProductionOutputData')
+    return os.path.basename(outfile)
+
   outfile = ""
   if filename.count(".slcio"):
     name = filename.split(".slcio")
@@ -30,6 +82,7 @@ def getProdFilename(filename, prodID, jobID):
     outfile = name[0] + "_" + str(prodID) + "_" + str(jobID) + ".root"
   return outfile
 
+###############################################################################
 def resolveIFpaths(inputfiles):
   """ Try to find out in which sub-directory are each file. In the future, should be useless if
   PoolXMLCatalog can be used.

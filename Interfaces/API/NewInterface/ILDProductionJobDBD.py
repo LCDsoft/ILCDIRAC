@@ -24,10 +24,10 @@ __RCSID__ = "$Id$"
 #pylint: disable=R0902
 #pylint: disable=R0904
 
-class ILDProductionJob( ProductionJob ):
+class ILDProductionJobDBD( ProductionJob ):
     """ILD Production Jobs definition"""
     def __init__( self ):
-        super( ILDProductionJob, self ).__init__()
+        super( ILDProductionJobDBD, self ).__init__()
         self.machine = 'ilc'
         self.experiment = 'ILC_ILD'
         self.basepath = self.ops.getValue( '/Production/%s/BasePath' % self.experiment, '/ilc/prod/ilc/mc-dbd/ild/' )
@@ -39,7 +39,6 @@ class ILDProductionJob( ProductionJob ):
         self.evtclass = ''
         self.evttype = ''
         self.genprocname = ''
-        self.usesofttag = False
         self.matchToInput=''
 
 
@@ -47,16 +46,6 @@ class ILDProductionJob( ProductionJob ):
         """ Help to find faster the input directory
         """
         self.matchToInput = matchToInput
-
-
-    def setSoftwareTagInFinalPath( self, softwaretag ):
-        """ I need softwaretag registered on the splitted stdhep files
-        """
-        for finalpaths in self.finalpaths:
-            self.finalMetaDict[finalpaths].update({"SoftwareTag":softwaretag})
-
-        return S_OK()
-
 
     def setProcessIDInFinalPath( self ):
         """ ILD name convention dont include ProcessID in the path name
@@ -83,12 +72,6 @@ class ILDProductionJob( ProductionJob ):
         """ ILD convention add gen process name in the basename of LFN's
         """
         self.genprocname = genprocname
-
-    def setUseSoftTagInPath( self, usesoft = True):
-        """ At DBD simulation uses a lower ilcsoftware version than reconstruction
-            That version is included in the path
-        """
-        self.usesofttag = usesoft
 
     # def __swapGenProcNameEvtType( self ):
     #     """ ILD has swapped these two meta fields at different energies
@@ -243,7 +226,7 @@ class ILDProductionJob( ProductionJob ):
         if not self.energycat:# FIXME
             print "Printing metadata before exit:"
             pprint.pprint( self.compatmeta )
-            return self._reportError("ERROR::ILDProductionJob.py: self.energycat is null")
+            return self._reportError("ERROR::ILDProductionJobDBD.py: self.energycat is null")
 
         self.energy = Decimal( self.energycat )    
         
@@ -471,7 +454,7 @@ class ILDProductionJob( ProductionJob ):
             self.log.error( "Failed to check production Meta Data", resMD['Message'] )
             return resMD
 
-        return super(ILDProductionJob, self).append( application )
+        return super(ILDProductionJobDBD, self).append( application )
 
     def __createFileName(self, application): #pylint: disable=too-many-branches
         """ create the filename for ILD productions
@@ -486,9 +469,8 @@ class ILDProductionJob( ProductionJob ):
         # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include
         # EvtClass automatically)
         if not self.basename:
-
-            if 'SoftwareTag' in self.compatmeta:
-                if application.appname == 'mokka': # sim
+            if 'ILDConfigVersion' in self.prodparameters:
+                if application.appname in ( 'mokka', 'ddsim' ): # sim
                     self.basename = 's' + self.prodparameters['ILDConfigVersion']
                 elif application.appname == 'marlin': # reco
                     self.basename = 'r' + self.prodparameters['ILDConfigVersion']
@@ -500,10 +482,11 @@ class ILDProductionJob( ProductionJob ):
                     self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
                 # need extension if planning to use additional modules (LCIOSplit)
             else:
-                if application.datatype != 'gen': # for stdhepsplit we dont need to return
+                if application.datatype not in ( 'gen', 'gensplit'): # for stdhepsplit we dont need to return
                     self._reportError(" Printing metadata before exit:")
                     pprint.pprint( self.compatmeta )
-                    return self._reportError( "'SoftwareTag' should be defined to build the path")
+                    pprint.pprint( self.prodparameters )
+                    return self._reportError( "'ILDConfigVersion' should be defined to build the path")
 
         if 'DetectorModel' in self.compatmeta:
             self.basename += '.m' + self.compatmeta['DetectorModel']

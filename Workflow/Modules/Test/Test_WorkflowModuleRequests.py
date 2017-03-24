@@ -1213,7 +1213,7 @@ class TestUploadOutputData( ModulesTestCase ):
     proddata = self.uod.workflow_commons['ProductionOutputData'].split(";")
     olist = {}
     for obj in self.uod.outputList:
-      self.uod.getTreatedOutputlist(proddata, olist, obj)
+      self.uod.getTreatedOutputlistNew(proddata, olist, obj)
 
     self.uod.log.debug ( "OList: %s " % olist )
     filesFound = [f in olist for f in ('h_nunu_dst_4193_2766', 'h_nunu_rec_4193_2766') ]

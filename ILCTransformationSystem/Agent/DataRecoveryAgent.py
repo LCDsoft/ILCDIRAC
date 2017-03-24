@@ -160,6 +160,7 @@ class DataRecoveryAgent( AgentModule ):
                                            not job.otherTasks and \
                                            job.status=='Failed' and \
                                            job.fileStatus in ASSIGNEDSTATES and \
+                                           job.inputFile not in self.inputFilesProcessed and \
                                            job.inputFileExists and \
                                            job.errorCount > MAXRESET,
                          Actions=lambda job,tInfo: [ job.setInputMaxReset(tInfo) ]
@@ -171,6 +172,7 @@ class DataRecoveryAgent( AgentModule ):
                                            not job.otherTasks and \
                                            job.status=='Failed' and \
                                            job.fileStatus in ASSIGNEDSTATES and \
+                                           job.inputFile not in self.inputFilesProcessed and \
                                            job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo) ]
                        ),
@@ -181,6 +183,7 @@ class DataRecoveryAgent( AgentModule ):
                                            not job.otherTasks and \
                                            job.status=='Done' and \
                                            job.fileStatus in ASSIGNEDSTATES and \
+                                           job.inputFile not in self.inputFilesProcessed and \
                                            job.inputFileExists,
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo), job.setJobFailed(tInfo) ]
                        ),

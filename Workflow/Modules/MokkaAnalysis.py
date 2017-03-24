@@ -84,7 +84,9 @@ class MokkaAnalysis(ModuleBase):
               self.InputFile = [os.path.basename(obj)]
         else:
           self.OutputFile = getProdFilename(self.OutputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))
+                                            int(self.workflow_commons["JOB_ID"]),
+                                            self.workflow_commons,
+                                           )
           #if 'WhizardOutput' in self.workflow_commons:
           #  self.InputFile = getProdFilename(self.workflow_commons["WhizardOutput"],
           #                                    int(self.workflow_commons["PRODUCTION_ID"]),

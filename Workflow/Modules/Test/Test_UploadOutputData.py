@@ -97,65 +97,57 @@ class UploadOutputDataTestCase( unittest.TestCase ):
 
   def test_gettreatedoutputlist_nodata( self ):
     olist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [], olist, { 'outputFile' :
-                                                                    '/inval/dir/myoutputfile.txt' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [], olist, { 'outputFile' :
+                                                                       '/inval/dir/myoutputfile.txt' } ) )
     self.assertFalse( olist )
 
   def test_gettreatedoutputlist_fullcase( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_gen' ], myoutputlist,
-                                                       { 'outputFile' : 'myoutputfile_gen.stdhep' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_gen' ], myoutputlist,
+                                                          { 'outputFile' : 'myoutputfile_gen.stdhep' } ) )
     self.assertTrue( myoutputlist )
 
   def test_gettreatedoutputlist_fullcase_2( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_sim' ], myoutputlist,
-                                                       { 'outputFile' : 'myoutputfile_sim.slcio' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_sim' ], myoutputlist,
+                                                          { 'outputFile' : 'myoutputfile_sim.slcio' } ) )
     self.assertTrue( myoutputlist )
 
   def test_gettreatedoutputlist_fullcase_3( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_rec' ], myoutputlist,
-                                                       { 'outputFile' : 'myoutputfile_rec.slcio' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_rec' ], myoutputlist,
+                                                          { 'outputFile' : 'myoutputfile_rec.slcio' } ) )
     self.assertTrue( myoutputlist )
 
   def test_gettreatedoutputlist_fullcase_4( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_dst_1' ], myoutputlist,
-                                                       { 'outputFile' : 'myoutputfile_dst.slcio' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_dst_1' ], myoutputlist,
+                                                          { 'outputFile' : 'myoutputfile_dst.slcio' } ) )
+    self.assertTrue( myoutputlist )
+
+  def test_gettreatedoutputlist_fullcase_5( self ):
+    myoutputlist = {}
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_and_some_more_dst_1' ], myoutputlist,
+                                                          { 'outputFile' : 'myoutputfile_dst.slcio' } ) )
     self.assertTrue( myoutputlist )
 
   def test_gettreatedoutputlist_sim_fails( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_sim' ], myoutputlist,
-                                                       { 'outputFile' :
-                                                         '/invalid/dir/myoutputfile_sim.slcio' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_sim' ], myoutputlist,
+                                                          { 'outputFile' :
+                                                            '/invalid/dir/myoutputfile_sim.slcio' } ) )
     self.assertFalse( myoutputlist )
 
   def test_gettreatedoutputlist_rec_fails( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_rec' ], myoutputlist,
-                                                       { 'outputFile' :
-                                                         '/invalid/dir/myoutputfile_rec.slcio' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_rec' ], myoutputlist,
+                                                          { 'outputFile' :
+                                                            '/invalid/dir/myoutputfile_rec.slcio' } ) )
     self.assertFalse( myoutputlist )
 
   def test_gettreatedoutputlist_dst_fails( self ):
     myoutputlist = {}
-    self.assertIsNone( self.upod.getTreatedOutputlist( [ 'myoutputfile_dst_1' ], myoutputlist,
-                                                       { 'outputFile' :
-                                                         '/invalid/dir/myoutputfile_dst.slcio' } ) )
+    self.assertIsNone( self.upod.getTreatedOutputlistNew( [ 'myoutputfile_dst_1' ], myoutputlist,
+                                                          { 'outputFile' :
+                                                            '/invalid/dir/myoutputfile_dst.slcio' } ) )
     self.assertFalse( myoutputlist )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
