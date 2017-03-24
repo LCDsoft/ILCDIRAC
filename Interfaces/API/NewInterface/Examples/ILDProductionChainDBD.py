@@ -7,6 +7,8 @@ Create Chain of productions for ILD
 
 '''
 
+import os
+
 #pylint: disable=invalid-name, wrong-import-position
 
 from DIRAC.Core.Base import Script
@@ -67,7 +69,7 @@ elif energy == 250.:
 else:
   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-additional_name   = '_' + genprocessname + '_20160623_42_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_DBD_20170323_1_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -280,18 +282,19 @@ if ild_sim and meta:
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
   pmo = ILDProductionJobDBD()
+  pmo.basepath = my_basepath
   pmo.matchToInput = matchToInput_mokka
   pmo.setDryRun(dryrun)
   pmo.setProdPlugin('Standard')
   pmo.setILDConfig(MokkaILDConfig)
   pmo.setEvtClass(my_evtclass)
-  pmo.setUseSoftTagInPath(True)
   pmo.setEvtType(my_evttype)
   pmo.setLogLevel("verbose")
   pmo.setProdType('MCSimulation')
   pmo.setBannedSites(banned_sites)
   pmo.setInputSandbox( input_sand_box )
   # pmo.setDestination(LCG_SITE)
+  pmo.setNbOfTasks(nbtasks_sim)
 
   res = pmo.setInputDataQuery(meta)
   if not res['OK']:
@@ -374,6 +377,7 @@ if ild_rec and meta:
   #######################
   #Define the reconstruction prod
   pma = ILDProductionJobDBD()
+  pma.basepath = my_basepath
   pma.setDryRun(dryrun)
   pma.setILDConfig(ILDConfig)
   pma.setLogLevel("verbose")
@@ -414,6 +418,7 @@ if ild_rec_ov and meta:
   #Define the reconstruction prod
   pmao = ILDProductionJobDBD()
   pmao.matchToInput = matchToInput_marlin
+  pmao.basepath = my_basepath
   pmao.setDryRun(dryrun)
   pmao.setILDConfig(ILDConfig)
   pmao.setEvtClass(my_evtclass)
