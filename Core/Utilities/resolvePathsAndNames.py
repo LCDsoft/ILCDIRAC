@@ -14,6 +14,9 @@ from ILCDIRAC.Core.Utilities.FilenameEncoder import FilenameEncoder, decodeFilen
 def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
   '''  Build the output file names based on inputfile name and job property
 
+  If outfileOriginal starts with 's' we assume a simulation job, if it starts
+  with 'r' we assume a reconstruction job
+
   :param str inputfile: Input file LFN, either \\*.stdhep or \\*.slcio
   :param str outfileOriginal: Output file LFN before change
   :param prodID: Production ID
@@ -21,27 +24,28 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
   :param jobID: jobID
   :type jobID: `str`, `int`
   :returns: Full LFN to changed output file
+
   '''
   finp = FilenameEncoder()
   inpitem = decodeFilename(inputfile)
 
   origitem = decodeFilename(outfileOriginal)
+  originalOutputBaseName = os.path.basename( outfileOriginal )
 
   outfile = ""
-  if inpitem["F"] == "stdhep" :
+  if originalOutputBaseName.startswith("s"):
     inpitem["s"] = origitem["s"]
     inpitem["m"] = origitem["m"]
     inpitem["d"] = "sim"
     inpitem["t"] = str(prodID).zfill(8)
     inpitem["j"] = str(jobID)
     outfile   = finp.convert( "sim", "file", inpitem )
-  elif inpitem["F"] == "slcio" :
-    if inputfile[0:1] == "s" : # Input is simfile
-      inpitem["r"] = origitem["r"]
-      inpitem["d"] = "rec"
-      inpitem["t"] = str(prodID).zfill(8)
-      inpitem["j"] = str(jobID)
-      outfile  = finp.convert( "rec", "file", inpitem )
+  elif originalOutputBaseName.startswith("r"):
+    inpitem["r"] = origitem["r"]
+    inpitem["d"] = origitem["d"]
+    inpitem["t"] = str(prodID).zfill(8)
+    inpitem["j"] = str(jobID)
+    outfile  = finp.convert( origitem["d"], "file", inpitem )
 
   basepath = os.path.dirname( outfileOriginal )
   return os.path.join( basepath, outfile )
