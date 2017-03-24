@@ -93,6 +93,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self._addParameter(self.workflow, "IS_PROD", 'JDL', True, "This job is a production job")
     if not script:
       self.__setDefaults()
+
+    self._recBasePaths = {}
       
   #############################################################################
   def __setDefaults(self):
@@ -862,3 +864,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     elif len(res['Value']) < 1:
       return self._reportError('Could not find any directories corresponding to the query issued')
     return res
+
+  def setReconstructionBasePaths( self, recPath, dstPath ):
+    """ set the output Base paths for the reconstruction REC and DST files """
+    self._recBasePaths['REC'] = recPath
+    self._recBasePaths['DST'] = dstPath
