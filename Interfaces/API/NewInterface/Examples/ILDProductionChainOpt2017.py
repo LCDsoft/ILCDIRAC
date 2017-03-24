@@ -94,6 +94,8 @@ basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc
 matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
 matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype
 matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + ILDConfigSim
+recPath = '/ilc/prod/ilc/mc-dbd/ild/'
+dstPath = '/ilc/prod/ilc/mc-dbd.log/ild/'
 
 SE        = "CERN-SRM"
 ###LCG_SITE  = "LCG.KEK.jp"
@@ -422,6 +424,7 @@ if ild_rec and meta:
   pma.setLogLevel("verbose")
   pma.setProdType('MCReconstruction_ILD')
   pma.setEvtType(my_evttype)
+  pma.setReconstructionBasePaths(recPath, dstPath)
 
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
@@ -466,6 +469,7 @@ if ild_rec_ov and meta:
   pmao.setLogLevel("verbose")
   pmao.setProdType('MCReconstruction_Overlay_ILD')
   pmao.setBannedSites(banned_sites)
+  pmao.setReconstructionBasePaths(recPath, dstPath)
 
   res = pmao.setInputDataQuery(meta)
   if not res['OK']:
