@@ -75,7 +75,7 @@ machineParameters = 'TDR_ws'
 ## ILDConfig for Marlin with DD4hep Geometry
 ILDConfig = "v01-19_lcgeo"
 
-additional_name   = '_' + genprocessname + '_20170322_03_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+additional_name   = '_' + genprocessname + '_20170324_02_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -210,7 +210,7 @@ mao.setDebug()
 mao.setVersion(MarlinVer) ##PUT HERE YOUR MARLIN VERSION
 if ild_rec_ov:
   if energy in [250.0, 350.0, 500.0, 1000.0]:
-    mao.setSteeringFile("bbudsc_3evt_stdreco_ddd4hep.xml")
+    mao.setSteeringFile("bbudsc_3evt_stdreco_dd4hep.xml")
     mao.setGearFile("GearOutput.xml")
     mao.setDetectorModel(detectorModel)
   else:
@@ -224,7 +224,7 @@ ma.setVersion(MarlinVer)
 ma.setEnergy(energy)
 if ild_rec:
   if energy in [250.0, 350.0, 500.0, 1000.0]:
-    ma.setSteeringFile("stdreco.xml")
+    ma.setSteeringFile("bbudsc_3evt_stdreco_dd4hep.xml")
     ma.setGearFile("GearOutput.xml")
     mao.setDetectorModel(detectorModel)
   else:
