@@ -1,3 +1,26 @@
+[v26r0p6]
+
+* Core
+
+NEW: FilenameEncoder by Akiya Miyamoto
+CHANGE: OutputDataPolicy: "*_ILD" production types use FilenameEncoder
+
+* Interfaces:
+
+CHANGE: Rename ILDProductionJob to ILDProductionJobDBD for DBD productions
+CHANGE: Rename ILDProductionChain to ILDProductionChainDBD
+
+NEW: ILDProductionJobOpt2017: Production job class using the FilenameEncoder
+NEW: ILDProductionChainOpt2017: using ILDProductionJobOpt2017
+
+* ILCTransformationSystem:
+
+FIX: DataRecoveryAgent: Fixed a bug that caused files to be reset too often
+
+* Workflow:
+
+CHANGE: DDSim Workflow module is now picking up ProductionOutputdata from WorkflowCommons instead of re-creating the filename
+
 [v26r0p5]
 
 * Core:
