@@ -43,18 +43,19 @@ class FCCAnalysis(ModuleBase):
 
 
         self.fcc_executable = ''
-        self.fcc_arguments = ''
         self.fcc_conf_file = ''
         self.fcc_input_files = ''
         self.fcc_output_file = ''
         self.fccsw_path = ''
         self.number_of_events = ''
         self.environment_script = ''
+        self.paths = []
 
+
+        self.job_name = ''
         self.version = ''
         self.platform = ''
-        self.job_name = ''
-
+        
         self.debug = True
         self.log = gLogger.getSubLogger("FCCAnalysis")
 
