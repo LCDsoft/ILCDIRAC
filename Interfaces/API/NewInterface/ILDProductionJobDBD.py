@@ -39,7 +39,6 @@ class ILDProductionJobDBD( ProductionJob ):
         self.evtclass = ''
         self.evttype = ''
         self.genprocname = ''
-        self.usesofttag = False
         self.matchToInput=''
 
 
@@ -47,16 +46,6 @@ class ILDProductionJobDBD( ProductionJob ):
         """ Help to find faster the input directory
         """
         self.matchToInput = matchToInput
-
-
-    def setSoftwareTagInFinalPath( self, softwaretag ):
-        """ I need softwaretag registered on the splitted stdhep files
-        """
-        for finalpaths in self.finalpaths:
-            self.finalMetaDict[finalpaths].update({"SoftwareTag":softwaretag})
-
-        return S_OK()
-
 
     def setProcessIDInFinalPath( self ):
         """ ILD name convention dont include ProcessID in the path name
@@ -83,12 +72,6 @@ class ILDProductionJobDBD( ProductionJob ):
         """ ILD convention add gen process name in the basename of LFN's
         """
         self.genprocname = genprocname
-
-    def setUseSoftTagInPath( self, usesoft = True):
-        """ At DBD simulation uses a lower ilcsoftware version than reconstruction
-            That version is included in the path
-        """
-        self.usesofttag = usesoft
 
     # def __swapGenProcNameEvtType( self ):
     #     """ ILD has swapped these two meta fields at different energies
@@ -486,9 +469,8 @@ class ILDProductionJobDBD( ProductionJob ):
         # Final name being e.g. NAME_rec.slcio, need to define NAME, maybe based on meta data (include
         # EvtClass automatically)
         if not self.basename:
-
-            if 'SoftwareTag' in self.compatmeta:
-                if application.appname == 'mokka': # sim
+            if 'ILDConfigVersion' in self.prodparameters:
+                if application.appname in ( 'mokka', 'ddsim' ): # sim
                     self.basename = 's' + self.prodparameters['ILDConfigVersion']
                 elif application.appname == 'marlin': # reco
                     self.basename = 'r' + self.prodparameters['ILDConfigVersion']
@@ -503,7 +485,8 @@ class ILDProductionJobDBD( ProductionJob ):
                 if application.datatype not in ( 'gen', 'gensplit'): # for stdhepsplit we dont need to return
                     self._reportError(" Printing metadata before exit:")
                     pprint.pprint( self.compatmeta )
-                    return self._reportError( "'SoftwareTag' should be defined to build the path")
+                    pprint.pprint( self.prodparameters )
+                    return self._reportError( "'ILDConfigVersion' should be defined to build the path")
 
         if 'DetectorModel' in self.compatmeta:
             self.basename += '.m' + self.compatmeta['DetectorModel']
