@@ -512,17 +512,9 @@ class ILDProductionJobDBD( ProductionJob ):
         else:
             return self._reportError( "GenProcessName is missing! It should appear in the basename")
 
-        for i in ( 1, 2 ):
-          bp = 'BeamParticle%s' % i
-          if bp in self.compatmeta:
-              self.basename += '.'
-              if self.compatmeta[ bp ] == 'e1':
-                  self.basename += 'e'
-              elif self.compatmeta[ bp ] == 'E1':
-                  self.basename += 'p'
-              else:
-                  self.basename += self.compatmeta[ bp ]
-          self.basename += self.compatmeta.get( 'PolarizationB%s' % i, '' )
+        ##always use e and p for beam polarisation fields
+        self.basename += '.e%s' % self.compatmeta.get( 'PolarizationB1', '' )
+        self.basename += '.p%s' % self.compatmeta.get( 'PolarizationB2', '' )
 
         return S_OK()
 
