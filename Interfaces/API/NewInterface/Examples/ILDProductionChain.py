@@ -43,10 +43,12 @@ GGToHadInt1000 = 4.1
 
 MarlinVer    = "ILCSoft-01-19_gcc48"
 DDSimVer     = "ILCSoft-01-19_gcc48"
+DDSimILDConfig = "v01-19_lcgeo"
 
 ILDConfig = '' ## Set below for different energies
 MokkaVer     = "080003"
-MokkaILDConfig = "v01-19_lcgeo"
+MokkaILDConfig = "v01-17-11-p01"
+
 banned_sites = [""]
 dryrun       = False
 # do not register anything nor create anything.
@@ -56,6 +58,8 @@ detectorModel = 'ILD_o1_v05'    ##OR anything valid, but be careful with the ove
 dbslice = "mokka-08-00-dbdump.sql"
 
 machineParameters = 'TDR_ws'
+
+UseDD4hepGeometry = False
 
 
 ## This needs to be adapted when using lcgeo geometry
@@ -72,10 +76,15 @@ machineParameters = 'TDR_ws'
 # else:
 #   print "ILDConfig ILD: No ILDConfig defined for this energy (%.1f GeV)"%energy
 
-## ILDConfig for Marlin with DD4hep Geometry
-ILDConfig = "v01-19_lcgeo"
+## ILDConfig for Marlin with or without DD4hep Geometry
+ILDConfigRec_DD = "v01-19_lcgeo"
+ILDConfigRec    = "v01-17-11-p01"
 
-additional_name   = '_' + genprocessname + '_20170324_02_' + str(selectedfile) + '_ildconfig-' + ILDConfig
+ILDConfig = ILDConfigRec_DD if UseDD4hepGeometry else ILDConfigRec
+
+ILDConfigSim = DDSimILDConfig if UseDD4hepGeometry else MokkaILDConfig
+
+additional_name   = '_' + genprocessname + '_20170324_06_' + str(selectedfile) + '_ildconfig-' + ILDConfig
 
 energyMachinePars        = meta_energy + '-' + machineParameters
 # Following variables avoid output from stdhepsplit being used
@@ -84,7 +93,7 @@ basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc
 
 matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
 matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype
-matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + MokkaILDConfig
+matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + ILDConfigSim
 
 SE        = "CERN-SRM"
 ###LCG_SITE  = "LCG.KEK.jp"
@@ -165,10 +174,12 @@ mo.setSteeringFile("bbudsc_3evt.steer")
 mo.setDbSlice(dbslice)
 
 ##Simulation ILD
-ddsim = DDSim()
-ddsim.setVersion(DDSimVer) ###SET HERE YOUR MOKKA VERSION, the software will come from the ILDConfig
-ddsim.setDetectorModel(detectorModel)
-ddsim.setSteeringFile("ddsim_steer.py")
+ddsim = None
+if UseDD4hepGeometry:
+  ddsim = DDSim()
+  ddsim.setVersion(DDSimVer) ###SET HERE YOUR MOKKA VERSION, the software will come from the ILDConfig
+  ddsim.setDetectorModel(detectorModel)
+  ddsim.setSteeringFile("ddsim_steer.py")
 
 
 ##Split
@@ -210,9 +221,13 @@ mao.setDebug()
 mao.setVersion(MarlinVer) ##PUT HERE YOUR MARLIN VERSION
 if ild_rec_ov:
   if energy in [250.0, 350.0, 500.0, 1000.0]:
-    mao.setSteeringFile("bbudsc_3evt_stdreco_dd4hep.xml")
-    mao.setGearFile("GearOutput.xml")
-    mao.setDetectorModel(detectorModel)
+    if UseDD4hepGeometry:
+      mao.setSteeringFile("bbudsc_3evt_stdreco_dd4hep.xml")
+      mao.setGearFile("GearOutput.xml")
+      mao.setDetectorModel(detectorModel)
+    else:
+      mao.setSteeringFile("bbudsc_3evt_stdreco.xml")
+      mao.setGearFile("GearOutput.xml")
   else:
     print "Marlin: No reconstruction suitable for this energy"
 
@@ -224,9 +239,13 @@ ma.setVersion(MarlinVer)
 ma.setEnergy(energy)
 if ild_rec:
   if energy in [250.0, 350.0, 500.0, 1000.0]:
-    ma.setSteeringFile("bbudsc_3evt_stdreco_dd4hep.xml")
-    ma.setGearFile("GearOutput.xml")
-    mao.setDetectorModel(detectorModel)
+    if UseDD4hepGeometry:
+      ma.setSteeringFile("bbudsc_3evt_stdreco_dd4hep.xml")
+      ma.setGearFile("GearOutput.xml")
+      ma.setDetectorModel(detectorModel)
+    else:
+      ma.setSteeringFile("bbudsc_3evt_stdreco.xml")
+      ma.setGearFile("GearOutput.xml")
   else:
     print "Marlin: No reconstruction suitable for this energy %g"%(energy)
 
@@ -304,7 +323,7 @@ if ild_sim and meta:
   pSim.matchToInput = matchToInput_mokka
   pSim.setDryRun(dryrun)
   pSim.setProdPlugin('Standard')
-  pSim.setILDConfig(MokkaILDConfig)
+  pSim.setILDConfig(ILDConfigSim)
   pSim.setEvtClass(my_evtclass)
   pSim.setUseSoftTagInPath(True)
   pSim.setEvtType(my_evttype)
@@ -324,7 +343,10 @@ if ild_sim and meta:
   pSim.setWorkflowName(wname)
   pSim.setProdGroup(analysis+"_"+str(energy))
   #Add the application
-  res = pSim.append(ddsim)### Not Mokka any more
+  if UseDD4hepGeometry:
+    res = pSim.append(ddsim)
+  else:
+    res = pSim.append(mo)
   if not res['OK']:
     print res['Message']
     exit(1)
@@ -396,7 +418,7 @@ if ild_rec and meta:
   #Define the reconstruction prod
   pma = ILDProductionJob()
   pma.setDryRun(dryrun)
-  pma.setILDConfig(ILDConfig)
+  pma.setILDConfig(ILDConfigRec)
   pma.setLogLevel("verbose")
   pma.setProdType('MCReconstruction_ILD')
   pma.setEvtType(my_evttype)
@@ -437,7 +459,7 @@ if ild_rec_ov and meta:
   pmao = ILDProductionJob()
   pmao.matchToInput = matchToInput_marlin
   pmao.setDryRun(dryrun)
-  pmao.setILDConfig(ILDConfig)
+  pmao.setILDConfig(ILDConfigRec)
   pmao.setEvtClass(my_evtclass)
   # pmao.setUseSoftTagInPath(False)
   pmao.setEvtType(my_evttype)
