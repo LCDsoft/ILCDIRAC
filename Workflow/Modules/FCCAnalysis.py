@@ -12,11 +12,11 @@ import stat
 import subprocess
 
 # DIRAC libraries
-__RCSID__ = "$Id$"
-
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from DIRAC import gLogger, S_OK, S_ERROR
+
+from XRootD import client
 
 """
 If user needs files on EOS, it should put EOS full path (xrootd://...)
@@ -28,8 +28,8 @@ however, inside the job, you have to give the basename path (only filename)
 Xrootd python API used for EOS
 Here, we use xrootd python API to download EOS paths ot the CE"""
 
-from XRootD import client
-from XRootD.client.flags import DirListFlags, OpenFlags
+# DIRAC libraries
+__RCSID__ = "$Id$"
 
 
 class FCCAnalysis(ModuleBase):
@@ -55,7 +55,6 @@ class FCCAnalysis(ModuleBase):
         self.job_name = ''
         self.version = ''
         self.platform = ''
-        
         self.debug = True
         self.log = gLogger.getSubLogger("FCCAnalysis")
 
@@ -71,7 +70,7 @@ class FCCAnalysis(ModuleBase):
 
 
         # Try to locate environment script in 'dirac.cfg' file
-        res = self.runIt()
+        res = self.get_environment_script()
 
         # if error then exit
         if 'OK' in res and not res['OK']:
@@ -147,7 +146,7 @@ class FCCAnalysis(ModuleBase):
 
         # main command
         bash_commands = ['%s %s %s' % (self.fcc_executable, self.fcc_conf_file,
-                                          self.number_of_events)]
+                                       self.number_of_events)]
         status = self.generate_bash_script(bash_commands, self.script_name)
 
 
@@ -247,7 +246,7 @@ class FCCAnalysis(ModuleBase):
             print(message)
             return S_ERROR(message)
 
-    def generate_script_on_the_fly(self, sysconfig, appname, appversion):
+    def generate_script_on_the_fly(self, sysconfig="", appname="", appversion=""):
         """Normally, generate dynamically the
         fcc environment script but nothing for the moment
         Called if CVMFS is not available
@@ -266,12 +265,12 @@ class FCCAnalysis(ModuleBase):
 
         #return S_OK(os.path.join(os.getcwd(),'init_fcc.sh'))
 
+        print('%s %s %s' % (sysconfig, appname, appversion))
         return S_ERROR('environment script not found, can not generate one dynamically')
 
-    def runIt(self):
+    def get_environment_script(self):
         """Get environment script path from 'dirac.cfg' file
         according to the version, application and platform
-        (Called by Agent, Must be called get_environment)
 
         """
 
@@ -290,4 +289,3 @@ class FCCAnalysis(ModuleBase):
         status = 0
 
         return self.finalStatusReport(status)
-

@@ -9,6 +9,13 @@ import re
 import shutil
 import types
 
+# DIRAC libraries
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
+from DIRAC import S_OK, S_ERROR
+from DIRAC.Core.Workflow.Parameter import Parameter
+
+from XRootD import client
+from XRootD.client.flags import DirListFlags, OpenFlags
 
 """
 If user needs files on EOS, it should put EOS full path (xrootd://...)
@@ -20,15 +27,8 @@ however, inside the job, you have to give the basename path (only filename)
 Xrootd python API used for EOS
 Here, we use xrootd python API to check EOS paths existence only"""
 
-from XRootD import client
-from XRootD.client.flags import DirListFlags, OpenFlags
-
 __RCSID__ = "$Id$"
 
-# DIRAC libraries
-from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
-from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Workflow.Parameter import Parameter
 
 class FCC(LCApplication):
     """Like existing applications such Marlin, Pythia ...
