@@ -500,7 +500,7 @@ class ILDProductionJobDBD( ProductionJob ):
                     self._reportError( "Drop 'SoftwareTag' from metadata: not needed for stdhepsplit app" )
                 # need extension if planning to use additional modules (LCIOSplit)
             else:
-                if application.datatype != 'gen': # for stdhepsplit we dont need to return
+                if application.datatype not in ( 'gen', 'gensplit'): # for stdhepsplit we dont need to return
                     self._reportError(" Printing metadata before exit:")
                     pprint.pprint( self.compatmeta )
                     return self._reportError( "'SoftwareTag' should be defined to build the path")
