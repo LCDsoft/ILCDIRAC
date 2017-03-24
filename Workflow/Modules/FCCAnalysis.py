@@ -146,8 +146,8 @@ class FCCAnalysis(ModuleBase):
                                                          os.path.basename(path)), force=True)
 
         # main command
-        bash_commands = ['%s %s %s %s' % (self.fcc_executable, self.fcc_conf_file,
-                                          self.number_of_events, self.fcc_arguments)]
+        bash_commands = ['%s %s %s' % (self.fcc_executable, self.fcc_conf_file,
+                                          self.number_of_events)]
         status = self.generate_bash_script(bash_commands, self.script_name)
 
 
