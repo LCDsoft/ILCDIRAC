@@ -129,7 +129,7 @@ class FCCAnalysis(ModuleBase):
 
                 elif attribute_value.startswith('/eos/'):
                     # download file from EOS to CE
-                    status = self.myclient.copy(self.EOS_MGM_URL + '/' + attribute_value,
+                    status = self.myclient.copy(self.eos_mgm_url + '/' + attribute_value,
                                                 os.path.join(os.getcwd(),
                                                              os.path.basename(attribute_value)),
                                                 force=True)
@@ -140,7 +140,7 @@ class FCCAnalysis(ModuleBase):
         paths = eval(self.paths)
         for path in paths:
             if path.startswith('/eos/'):
-                status = self.myclient.copy(self.EOS_MGM_URL +'/' + path,
+                status = self.myclient.copy(self.eos_mgm_url +'/' + path,
                                             os.path.join(os.getcwd(),
                                                          os.path.basename(path)), force=True)
 
