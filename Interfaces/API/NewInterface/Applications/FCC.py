@@ -457,7 +457,7 @@ class FCC(LCApplication):
         eos_file_full_path = self._eos_mgm_url + '/' + file_name
 
         with client.File() as eos_file:
-            # OpenFlags.UPDATE to make pylint of ILCDirac tests happy
+            # OpenFlags.UPDATE removed to make pylint of ILCDirac tests happy
             file_status = eos_file.open(eos_file_full_path)
 
 
@@ -486,7 +486,7 @@ class FCC(LCApplication):
 
         eos_folder_full_path = self._eos_mgm_url + '/' + folder_name
 
-        # DirListFlags.STAT to make pylint of ILCDirac tests happy
+        # DirListFlags.STAT removed to make pylint of ILCDirac tests happy
         status, listing = self._myclient.dirlist(folder_name)
 
         if listing is None:
