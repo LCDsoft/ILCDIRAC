@@ -24,10 +24,10 @@ __RCSID__ = "$Id$"
 #pylint: disable=R0902
 #pylint: disable=R0904
 
-class ILDProductionJob( ProductionJob ):
+class ILDProductionJobOpt2017( ProductionJob ):
     """ILD Production Jobs definition"""
     def __init__( self ):
-        super( ILDProductionJob, self ).__init__()
+        super( ILDProductionJobOpt2017, self ).__init__()
         self.machine = 'ilc'
         self.experiment = 'ILC_ILD'
         self.basepath = self.ops.getValue( '/Production/%s/BasePath' % self.experiment, '/ilc/prod/ilc/mc-dbd/ild/' )
@@ -242,7 +242,7 @@ class ILDProductionJob( ProductionJob ):
         if not self.energycat:# FIXME
             print "Printing metadata before exit:"
             pprint.pprint( self.compatmeta )
-            return self._reportError("ERROR::ILDProductionJob.py: self.energycat is null")
+            return self._reportError("ERROR::ILDProductionJobOpt2017.py: self.energycat is null")
 
         self.energy = Decimal( self.energycat )    
         
@@ -471,7 +471,7 @@ class ILDProductionJob( ProductionJob ):
             self.log.error( "Failed to check production Meta Data", resMD['Message'] )
             return resMD
 
-        return super(ILDProductionJob, self).append( application )
+        return super(ILDProductionJobOpt2017, self).append( application )
 
     def __createFileName(self, application): #pylint: disable=too-many-branches
         """ create the filename for ILD productions
@@ -608,7 +608,7 @@ class ILDProductionJob( ProductionJob ):
     def getMetadata(self):
         """ Return the corresponding metadata of the last step
         """
-        metadict = super(ILDProductionJob, self).getMetadata()
+        metadict = super(ILDProductionJobOpt2017, self).getMetadata()
         #As this is not supposed to be a searchable thing, or because they are different for different files
         for key in ['NumberOfEvents','ProcessID']:
             metadict.pop(key,None)

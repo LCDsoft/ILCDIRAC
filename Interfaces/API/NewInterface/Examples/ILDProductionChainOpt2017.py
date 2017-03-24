@@ -15,7 +15,7 @@ Script.parseCommandLine()
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 
 
-from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJob import ILDProductionJob
+from ILCDIRAC.Interfaces.API.NewInterface.ILDProductionJobOpt2017 import ILDProductionJobOpt2017
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import Mokka, Marlin, OverlayInput, DDSim
 from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLCIOSplit, StdHepSplit
 
@@ -253,7 +253,7 @@ if ild_rec:
 ###################################################################################
 ### HERE WE DEFINE THE PRODUCTIONS
 if activesplitstdhep and meta:
-  pstdhepsplit = ILDProductionJob()
+  pstdhepsplit = ILDProductionJobOpt2017()
   pstdhepsplit.basepath = '/ilc/prod/ilc/mc-dbd.generated/ild' # Sailer suggestion
   pstdhepsplit.matchToInput = matchToInput_stdhepsplit
   pstdhepsplit.setDryRun(dryrun)
@@ -319,7 +319,7 @@ if activesplitstdhep and meta:
 if ild_sim and meta:
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
-  pSim = ILDProductionJob()
+  pSim = ILDProductionJobOpt2017()
   pSim.matchToInput = matchToInput_mokka
   pSim.setDryRun(dryrun)
   pSim.setProdPlugin('Standard')
@@ -375,7 +375,7 @@ if ild_sim and meta:
 if activesplit and meta:
   #######################
   ## Split the input files.
-  psplit =  ILDProductionJob()
+  psplit =  ILDProductionJobOpt2017()
   psplit.setDryRun(dryrun)
   psplit.setCPUTime(30000)
   psplit.setLogLevel("verbose")
@@ -416,7 +416,7 @@ if activesplit and meta:
 if ild_rec and meta:
   #######################
   #Define the reconstruction prod
-  pma = ILDProductionJob()
+  pma = ILDProductionJobOpt2017()
   pma.setDryRun(dryrun)
   pma.setILDConfig(ILDConfigRec)
   pma.setLogLevel("verbose")
@@ -456,7 +456,7 @@ if ild_rec and meta:
 if ild_rec_ov and meta:
   #######################
   #Define the reconstruction prod
-  pmao = ILDProductionJob()
+  pmao = ILDProductionJobOpt2017()
   pmao.matchToInput = matchToInput_marlin
   pmao.setDryRun(dryrun)
   pmao.setILDConfig(ILDConfigRec)
