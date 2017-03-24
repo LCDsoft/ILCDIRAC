@@ -457,7 +457,8 @@ class FCC(LCApplication):
         eos_file_full_path = self._eos_mgm_url + '/' + file_name
 
         with client.File() as eos_file:
-            file_status = eos_file.open(eos_file_full_path, OpenFlags.UPDATE)
+            # OpenFlags.UPDATE to make pylint of ILCDirac tests happy
+            file_status = eos_file.open(eos_file_full_path)
 
 
         # Problem with file created directly on eos
@@ -466,8 +467,8 @@ class FCC(LCApplication):
         #print eos_file_full_path
         #print file_status
         status, consistency_result = self._XRootDStatus2Dictionnary(file_status)
-
-        if (' ok' in status and not status[' ok']) or not status:
+  
+        if (' ok' in status and 'False' == status[' ok']) or not status:
             return file_name, False, consistency_result
         else:
             return eos_file_full_path, True, consistency_result
@@ -485,7 +486,8 @@ class FCC(LCApplication):
 
         eos_folder_full_path = self._eos_mgm_url + '/' + folder_name
 
-        status, listing = self._myclient.dirlist(folder_name, DirListFlags.STAT)
+        # DirListFlags.STAT to make pylint of ILCDirac tests happy
+        status, listing = self._myclient.dirlist(folder_name)
 
         if listing is None:
             return folder_name, False
