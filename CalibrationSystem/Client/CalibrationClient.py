@@ -84,7 +84,7 @@ def runCalibration2( calibrationID, workerID, command ):
     try:
       current_params = calibration_client.requestNewParameters(current_step)
     except ValueError:
-      gLogger.log('Ending calibration run on this worker.')
+      gLogger.warn('Ending calibration run on this worker.')
       break
     subprocess.check_output([command, current_params])  # FIXME: Ensure this is how we can pass the new parameter
     #FIXME: This currently lacks the information at which offset the worker performs the calibration.
