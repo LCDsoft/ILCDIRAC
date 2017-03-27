@@ -16,7 +16,7 @@ class DD4hepMixin( object ):
   def _getDetectorXML( self ):
     """returns the path to the detector XML file
 
-    Checks the Configurartion System for the Path to DetectorModels or extracts the input sandbox detector xml files
+    Checks the Configuration System for the Path to DetectorModels or extracts the input sandbox detector xml files
 
     :returns: S_OK(PathToXMLFile), S_ERROR
     """
