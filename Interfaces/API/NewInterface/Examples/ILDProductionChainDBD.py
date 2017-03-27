@@ -79,6 +79,8 @@ basepath = Operations().getValue( '/Production/ILC_ILD/BasePath', '/ilc/prod/ilc
 matchToInput_stdhepsplit = '/ilc/prod/ilc/mc-dbd/generated/' + energyMachinePars + '/' + my_evtclass
 matchToInput_mokka       = '/ilc/prod/ilc/mc-dbd.generated/' + energyMachinePars + '/' + my_evttype
 matchToInput_marlin      = basepath + "sim/" + energyMachinePars + '/' + my_evttype + '/' + detectorModel + '/' + MokkaILDConfig
+recPath = '/ilc/prod/ilc/mc-dbd/ild/'
+dstPath = '/ilc/prod/ilc/mc-dbd.log/ild/'
 
 SE        = "KEK-SRM"
 ###LCG_SITE  = "LCG.KEK.jp"
@@ -125,10 +127,11 @@ else:
 
 #Do Sim
 ild_sim  = True
-#nbtasks = 1 #Take 10 files from input meta data query result
+nbtasks_sim = 10
+#nbtasks_sim = 1 #Take 10 files from input meta data query result
+#It can be extended with dirac-ilc-add-tasks-to-prod
 #It's possible to get this number automatically by getting the number of events per file (if known)
 #nbtasks = math.ceil(number_of_events_to_process/nb_events_per_signal_file) #needs import math
-#can be extended with dirac-ilc-add-tasks-to-prod
 
 #DoSplit
 activesplit   = False
@@ -136,8 +139,10 @@ nbevtsperfile = 200
 
 #Do Reco with Overlay
 ild_rec_ov    = True
+nbtasks_rec_ov = -1 # See comment on nbtasks_sim 
 #Do Reco
 ild_rec       = False # please, use WITH OVERLAY
+nbtasks_rec = -1 # See comment on nbtasks_sim
 
 ###### Whatever is below is not to be touched... Or at least only when something changes
 
@@ -228,7 +233,7 @@ if activesplitstdhep and meta:
   pstdhepsplit.setBannedSites(banned_sites)
   pstdhepsplit.setProdPlugin('Limited') # exit with error: it seems i need
                                         # to set the Prod. plugin
-
+  pstdhepsplit.setNbOfTasks(nbtasks_split)
 
   # generated files has not SoftwareTag: we exclude it from inputdataquery, but
   # reinserted at the end of the module to be used in the next simulation module
@@ -270,7 +275,6 @@ if activesplitstdhep and meta:
   if not res['OK']:
     print res['Message']
     exit(1)
-  pstdhepsplit.setNbOfTasks(nbtasks_split)
   #As before: get the metadata for this production to input into the next
   meta = pstdhepsplit.getMetadata()
   if tmp_softwaretag_val: # reinsert SoftwareTag: used in path construction
@@ -294,6 +298,7 @@ if ild_sim and meta:
   pmo.setBannedSites(banned_sites)
   pmo.setInputSandbox( input_sand_box )
   # pmo.setDestination(LCG_SITE)
+  pmo.setProdPlugin('Limited')
   pmo.setNbOfTasks(nbtasks_sim)
 
   res = pmo.setInputDataQuery(meta)
@@ -382,6 +387,8 @@ if ild_rec and meta:
   pma.setILDConfig(ILDConfig)
   pma.setLogLevel("verbose")
   pma.setProdType('MCReconstruction')
+  pma.setProdPlugin('Limited')
+  pma.setNbOfTasks(nbtasks_rec)
 
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
@@ -427,6 +434,9 @@ if ild_rec_ov and meta:
   pmao.setLogLevel("verbose")
   pmao.setProdType('MCReconstruction_Overlay')
   pmao.setBannedSites(banned_sites)
+  pmao.setReconstructionBasePaths(recPath, dstPath)
+  pmao.setProdPlugin('Limited')
+  pmao.setNbOfTasks(nbtasks_rec_ov)
 
   res = pmao.setInputDataQuery(meta)
   if not res['OK']:
