@@ -567,7 +567,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     self.assertEqual( res['Message'], "Failed to get list of DetectorModels from the ConfigSystem" )
 
   @patch("os.path.exists", new=Mock(return_value=True) )
-  @patch("%s.unzip_file_into_dir" % MODULE_NAME, new=Mock() )
+  @patch("%s.unzip_file_into_dir" % DD4H_NAME, new=Mock() )
   def test_DDSim_getDetectorXML_CustomWithOfficialName( self ):
     """DDSim.getDetectorXML CustomTarball with official name........................................"""
     gLogger.setLevel("ERROR")
