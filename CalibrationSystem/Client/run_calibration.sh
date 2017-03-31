@@ -1,3 +1,5 @@
+#!/bin/bash
+
 source $1/init_ilcsoft.sh # Directory which to source
 /usr/bin/krenew
 export KRB5CCNAME=FILE:./credentials.krb5 
