@@ -12,17 +12,16 @@ In principle, starting a calibration is very simple, you just need three (and a 
 .. code-block:: python
 
     numberOfJobs = 100
-    from DIRAC.Core.DISET.RPCClient import RPCClient
-    calibrationService = RPCClient( 'Calibration/Calibration' )
-    result = calibrationService.createCalibration( 'steering.file', 'software_version', [ 'inputfile.1', 'inputfile.2' ], numberOfJobs )
+    from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
+    result = createCalibration( 'steering.file', 'software_version', [ 'inputfile.1', 'inputfile.2' ], numberOfJobs )
 
 Usually you will want to check that everything worked. In case of success, ``createCalibration`` returns you the ID of the newly created calibration in the DIRAC ``S_OK`` structure. This is needed to later fetch the result, so you usually want to change this to:
 
 .. code-block:: python
 
-    from DIRAC.Core.DISET.RPCClient import RPCClient
-    calibrationService = RPCClient( 'Calibration/Calibration' )
-    result = calibrationService.createCalibration( 'steering.file', 'software_version', [ 'inputfile.1', 'inputfile.2' ], 100 )
+    numberOfJobs = 100
+    from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
+    result = createCalibration( 'steering.file', 'software_version', [ 'inputfile.1', 'inputfile.2' ], numberOfJobs )
     if not result[ 'OK ' ]:
       raise RuntimeError( 'Creating calibration failed! Something went wrong, fix this please' )
     calibrationID = result[ 'Value' ]
@@ -48,11 +47,11 @@ This assumes the ID of the calibration you started is still stored in ``calibrat
 Overview of the technical design
 --------------------------------
 
-The CalibrationSystem consists of three main parts - a Service, an Agent, and the code for the worker nodes. In essence, the CalibrationService is running all the time and waits for the user or the system to issue a command. Users can create a new Calibration by creating an ``RPCClient`` and calling ``createCalibration``.
-The worker nodes use the service to report back their interim results of each iteration of the calibration as well as asking ('polling') if there is a new parameter set available for their computation, as long as they've finished their computation and not yet received a new parameter set.
+The CalibrationSystem consists of three main parts - a Service, an Agent, and the code for the worker nodes. In essence, the CalibrationService is running all the time and waits for the user or the system to issue a command. Users can create a new Calibration by using the Client-provided method ``createCalibration``.
+The worker nodes use the service to report back their interim results of each iteration of the calibration as well as asking ('polling') if there is a new parameter set available for their computation and if so for which step, as long as they've finished their computation and not yet received a new parameter set.
 The Agent tells the service when to resubmit which jobs.
 Without one of these commands (technical necessities have been omitted), the service will execute nothing - aside from initializing itself.
 
 The Agent has a special method that it will execute every X seconds. The CalibrationSystem uses it to check the status of the system and thus to decide which calibration steps have been finished and which are still running. In short, the Agent will ask the DIRAC system for the status of all calibration jobs. Then it will check if any calibrations have too few jobs running and resubmit the ones necessary. Finally, it determines all calibrations which can advance to the next step in their computation and orders them to do so.
 
-The Client runs a loop: Once the program is started on the worker node, it will ask the Service for its first set of parameters. Subsequently, it computes its result and reports this result to the service. After it has reported this result, it will continuously ask the Service every X seconds for a new set of parameters. After the last step is computed, the program terminates on the worker node.
+The Client runs a loop: Once the program is started on the worker node, it will ask the Service for its first set of parameters. Subsequently, it computes its result and reports this result to the service. After it has reported this result, it will continuously ask the Service every X seconds for a new set of parameters and at which part of the calibration the worker is. After the last step is computed, the program terminates on the worker node.
