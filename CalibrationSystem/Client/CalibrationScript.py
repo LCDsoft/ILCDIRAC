@@ -11,13 +11,14 @@ import shutil
 import stat
 import sys
 import subprocess
+#from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient
 
 #Parameters etc.
 
 ILCSOFT_PATH = "/cvmfs/clicdp.cern.ch/iLCSoft/builds/2017-02-17/x86_64-slc6-gcc62-opt"
 PANDORA_ANALYSIS_PATH = "%s/PandoraAnalysis/HEAD/" % ILCSOFT_PATH  # change if not HEAD
 SOURCE_FILE = "%s/init_ilcsoft.sh" % ILCSOFT_PATH
-GEOMETRY_MODEL_NAME = 'CLIC_o3_v07'
+GEOMETRY_MODEL_NAME = 'CLIC_o3_v08'
 SLCIO_PATH = "/afs/cern.ch/user/j/jebbing/particles/%s/" % GEOMETRY_MODEL_NAME
 #Derive slcio file locations
 GAMMA_PATH = "%s/gamma/10/" % SLCIO_PATH
@@ -113,8 +114,8 @@ def init():
       GAMMA_FILES, MUON_FILES, KAON_FILES, PATH, PYTHON_READ_SCRIPTS, MARLIN_XML, ROOT_FILE_GENERATION, \
       ROOT_FILES, XML_GENERATION, KAON_ROOT_FILES, PHOTON_ROOT_FILES, MUON_ROOT_FILES
 
+  #source_script( SOURCE_FILE )
   ilcsoft_dir = os.environ.get('ILCSOFT', '')
-  source_script(SOURCE_FILE)
   os.environ['PATH'] = '%s/bin:%s' % (PANDORA_ANALYSIS_PATH, os.environ.get('PATH', ''))
   if not os.path.isdir(PANDORA_ANALYSIS_PATH):
     print 'Error! PandoraAnalysis does not exist!'
@@ -128,10 +129,10 @@ def init():
                                                           '-name', '%s' % PANDORA_SETTINGS_FILE]).rstrip()
   PANDORA_LIKELIHOOD_DATAFILE = execute_and_return_output(['find', '%s/MarlinPandora/' % ilcsoft_dir,
                                                            '-name', 'PandoraLikelihoodData9EBin.xml']).rstrip()
-  GAMMA_FILES = execute_and_return_output(
-      ['python', 'Xml_Generation/countMatches.py', GAMMA_PATH, SLCIO_FORMAT]).split(' ')
-  MUON_FILES = execute_and_return_output(
-      ['python', 'Xml_Generation/countMatches.py', MUON_PATH, SLCIO_FORMAT]).split(' ')
+  GAMMA_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
+                                           GAMMA_PATH, SLCIO_FORMAT]).split(' ')
+  MUON_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
+                                          MUON_PATH, SLCIO_FORMAT]).split(' ')
   KAON_FILES = execute_and_return_output(
       ['python', 'Xml_Generation/countMatches.py', KAON_PATH, SLCIO_FORMAT]).split(' ')
   if not GAMMA_FILES[0] or not MUON_FILES[0] or not KAON_FILES[0]:
@@ -168,11 +169,10 @@ def init():
   KAON_ROOT_FILES = "%s/Root_Files/pfoAnalysis_%s_GeV_Energy_K0L_SN_*.root" % (PATH, KAON_L_ENERGY_CALIBRATION)
   PHOTON_ROOT_FILES = "%s/Root_Files/pfoAnalysis_%s_GeV_Energy_gamma_SN_*.root" % (PATH, PHOTON_ENERGY_CALIBRATION)
   MUON_ROOT_FILES = "%s/Root_Files/pfoAnalysis_%s_GeV_Energy_mu-_SN_*.root" % (PATH, MUON_ENERGY_CALIBRATION)
-  source_script(SOURCE_FILE)
+  #source_script( SOURCE_FILE )
   os.chdir(ROOT_FILE_GENERATION)
   for script_file in ['condorSupervisor_Calibration.sh', 'DummyCondorSupervisor.sh', 'Marlin_Calibration.sh']:
     _make_executable(script_file)
-
 
 def ecal_digitisation():
   """ Executes the ECAL Digitisation
@@ -188,22 +188,25 @@ def ecal_digitisation():
                ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, HCAL_BARREL_TIME_WINDOW_MAX,
                HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX, ECAL_ENDCAP_TIME_WINDOW_MAX,
                DD4HEP_COMPACT_XML]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   os.chdir(ROOT_FILE_GENERATION)
   runfile = 'Marlin_Runfile_%s_GeV_Energy_gamma.txt' % PHOTON_ENERGY_CALIBRATION
   #FIXME: Run marlin on the contents of this file
+  shutil.copy('%s/PandoraSettingsDefault.xml' % XML_GENERATION, '%s' %
+              ROOT_FILE_GENERATION)  # FIXME: remove this hardcoded sh*t
+  shutil.copy('%s/GearOutput.xml' % PATH, '%s' % ROOT_FILE_GENERATION)  # FIXME: remove this hardcoded sh*t
   for line in open(runfile):
-    execute_and_return_output(['Marlin', line])
-  execute_and_return_output(['ECalDigitisation_ContainedEvents', '-a', PHOTON_ROOT_FILES, '-b',
-                             PHOTON_ENERGY_CALIBRATION, '-c', 'DIGITISATION_ACCURACY', '-d',
-                             OUTPUT_PATH, '-e', '90'])
-  os.chdir('PYTHON_READ_SCRIPTS')
-  CALIBR_ECAL = execute_and_return_output(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
-                                           PHOTON_ENERGY_CALIBRATION, CALIBR_ECAL, 'Calibration_Constant'])
-  ECAL_MEAN = execute_and_return_output(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
-                                         PHOTON_ENERGY_CALIBRATION, CALIBR_ECAL, 'Mean'])
+    print execute_and_return_output(['Marlin', line.rstrip()])
+  execute_and_convert(['ECalDigitisation_ContainedEvents', '-a', PHOTON_ROOT_FILES, '-b',
+                       PHOTON_ENERGY_CALIBRATION, '-c', 'DIGITISATION_ACCURACY', '-d',
+                       OUTPUT_PATH, '-e', '90'])
+  os.chdir(PYTHON_READ_SCRIPTS)
+  CALIBR_ECAL = float(execute_and_convert(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
+                                           PHOTON_ENERGY_CALIBRATION, CALIBR_ECAL, 'Calibration_Constant']))
+  ECAL_MEAN = float(execute_and_convert(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
+                                         PHOTON_ENERGY_CALIBRATION, CALIBR_ECAL, 'Mean']))
+  # Floating point division because ecal_mean is float and dividend is calculated first
   FRACTIONAL_ERROR_ECAL_MEAN = abs((PHOTON_ENERGY_CALIBRATION - ECAL_MEAN) / PHOTON_ENERGY_CALIBRATION)
-
 
 def hcal_digitisation():
   """ Executes the HCAL Digitisation
@@ -220,36 +223,35 @@ def hcal_digitisation():
                ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, HCAL_BARREL_TIME_WINDOW_MAX,
                HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX, ECAL_ENDCAP_TIME_WINDOW_MAX,
                DD4HEP_COMPACT_XML]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   os.chdir(ROOT_FILE_GENERATION)
   runfile = 'Marlin_Runfile_%s_GeV_Energy_K0L.txt' % KAON_L_ENERGY_CALIBRATION
   #FIXME: Run marlin on the contents of this file
   for line in open(runfile):
-    execute_and_return_output(['Marlin', line])
-  execute_and_return_output(['HCalDigitisation_ContainedEvents', '-a', KAON_ROOT_FILES, '-b',
-                             KAON_L_ENERGY_CALIBRATION, '-c', DIGITISATION_ACCURACY, '-d', OUTPUT_PATH,
-                             '-e', '90', '-f', NUMBER_HCAL_LAYERS, '-g', 'Barrel', '-i', '0.2', '-j', '0.6'])
-  execute_and_return_output(['HCalDigitisation_ContainedEvents', '-a', KAON_ROOT_FILES, '-b',
-                             KAON_L_ENERGY_CALIBRATION, '-c', DIGITISATION_ACCURACY, '-d', OUTPUT_PATH,
-                             '-e', '90', '-f', NUMBER_HCAL_LAYERS, '-g', 'EndCap', '-i', '0.8', '-j', '0.9'])
+    execute_and_return_output(['Marlin', line.rstrip()])
+  execute_and_convert(['HCalDigitisation_ContainedEvents', '-a', KAON_ROOT_FILES, '-b',
+                       KAON_L_ENERGY_CALIBRATION, '-c', DIGITISATION_ACCURACY, '-d', OUTPUT_PATH,
+                       '-e', '90', '-f', NUMBER_HCAL_LAYERS, '-g', 'Barrel', '-i', '0.2', '-j', '0.6'])
+  execute_and_convert(['HCalDigitisation_ContainedEvents', '-a', KAON_ROOT_FILES, '-b',
+                       KAON_L_ENERGY_CALIBRATION, '-c', DIGITISATION_ACCURACY, '-d', OUTPUT_PATH,
+                       '-e', '90', '-f', NUMBER_HCAL_LAYERS, '-g', 'EndCap', '-i', '0.8', '-j', '0.9'])
   os.chdir(PYTHON_READ_SCRIPTS)
-  CALIBR_HCAL_BARREL = execute_and_return_output(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
+  CALIBR_HCAL_BARREL = float(execute_and_convert(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
                                                   KAON_L_KINETIC_ENERGY_CALIBRATION, CALIBR_HCAL_BARREL,
-                                                  'Barrel', 'Calibration_Constant'])
-  CALIBR_HCAL_ENDCAP = execute_and_return_output(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
+                                                  'Barrel', 'Calibration_Constant']))
+  CALIBR_HCAL_ENDCAP = float(execute_and_convert(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
                                                   KAON_L_KINETIC_ENERGY_CALIBRATION, CALIBR_HCAL_ENDCAP,
-                                                  'EndCap', 'Calibration_Constant'])
-  hcal_barrel_mean = execute_and_return_output(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
+                                                  'EndCap', 'Calibration_Constant']))
+  hcal_barrel_mean = float(execute_and_convert(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
                                                 KAON_L_KINETIC_ENERGY_CALIBRATION, CALIBR_HCAL_BARREL,
-                                                'Barrel', 'Mean'])
-  HCAL_ENDCAP_MEAN = execute_and_return_output(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
+                                                'Barrel', 'Mean']))
+  HCAL_ENDCAP_MEAN = float(execute_and_convert(['python', 'HCal_Digi_Extract.py', CALIBRATION_FILE,
                                                 KAON_L_KINETIC_ENERGY_CALIBRATION, CALIBR_HCAL_ENDCAP,
-                                                'EndCap', 'Mean'])
+                                                'EndCap', 'Mean']))
   FRACTIONAL_ERROR_HCAL_BARREL_MEAN = abs(
       (KAON_L_KINETIC_ENERGY_CALIBRATION - hcal_barrel_mean) / KAON_L_KINETIC_ENERGY_CALIBRATION)
   FRACTIONAL_ERROR_HCAL_ENDCAP_MEAN = abs(
       (KAON_L_KINETIC_ENERGY_CALIBRATION - HCAL_ENDCAP_MEAN) / KAON_L_KINETIC_ENERGY_CALIBRATION)
-
 
 def muon_digitisation():
   """ Executes the Muon Digitisation
@@ -265,23 +267,23 @@ def muon_digitisation():
                ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, HCAL_BARREL_TIME_WINDOW_MAX,
                HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX, ECAL_ENDCAP_TIME_WINDOW_MAX,
                DD4HEP_COMPACT_XML]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   os.chdir(ROOT_FILE_GENERATION)
   runfile = 'Marlin_Runfile_%s_GeV_Energy_mu-.txt' % MUON_ENERGY_CALIBRATION
   #FIXME: Run marlin on the contents of this file
   for line in open(runfile):
-    execute_and_return_output(['Marlin', line])
-  execute_and_return_output(['HCalDigitisation_DirectionCorrectionDistribution', '-a', KAON_ROOT_FILES,
-                             '-B', KAON_L_ENERGY_CALIBRATION, '-c', OUTPUT_PATH])
-  execute_and_return_output(['SimCaloHitEnergyDistribution', '-a', MUON_ROOT_FILES, '-b',
-                             MUON_ENERGY_CALIBRATION, '-c', OUTPUT_PATH])
+    execute_and_return_output(['Marlin', line.rstrip()])
+  execute_and_convert(['HCalDigitisation_DirectionCorrectionDistribution', '-a', KAON_ROOT_FILES,
+                       '-B', KAON_L_ENERGY_CALIBRATION, '-c', OUTPUT_PATH])
+  execute_and_convert(['SimCaloHitEnergyDistribution', '-a', MUON_ROOT_FILES, '-b',
+                       MUON_ENERGY_CALIBRATION, '-c', OUTPUT_PATH])
   os.chdir(PYTHON_READ_SCRIPTS)
   absorber_scintillator_ratio = (ABSORBER_THICKNESS_ENDCAP * SCINTILLATOR_THICKNESS_RING) / \
       (ABSORBER_THICKNESS_RING * SCINTILLATOR_THICKNESS_ENDCAP)
-  mip_peak_ratio = execute_and_return_output(['python', 'HCal_Ring_Digi_Extract.py',
-                                              CALIBRATION_FILE, MUON_ENERGY_CALIBRATION])
-  direction_correction_ratio = execute_and_return_output(['python', 'HCal_Direction_Corrections_Extract.py',
-                                                          CALIBRATION_FILE, KAON_L_ENERGY_CALIBRATION])
+  mip_peak_ratio = float(execute_and_convert(['python', 'HCal_Ring_Digi_Extract.py',
+                                              CALIBRATION_FILE, MUON_ENERGY_CALIBRATION]))
+  direction_correction_ratio = float(execute_and_convert(['python', 'HCal_Direction_Corrections_Extract.py',
+                                                          CALIBRATION_FILE, KAON_L_ENERGY_CALIBRATION]))
   CALIBR_HCAL_OTHER = direction_correction_ratio * mip_peak_ratio * absorber_scintillator_ratio * \
       CALIBR_HCAL_ENDCAP * KAON_L_KINETIC_ENERGY_CALIBRATION / HCAL_ENDCAP_MEAN
   if not CALIBR_HCAL_OTHER:
@@ -296,18 +298,19 @@ def gev_to_mip_constants():
   :rtype: None
   """
   global ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, ECAL_MIP_MPV, HCAL_MIP_MPV
-  execute_and_return_output(['PandoraPFACalibrate_MipResponse', '-a', MUON_ROOT_FILES, '-b',
-                             MUON_ENERGY_CALIBRATION, '-c', 'outputPath'])
+  execute_and_convert(['PandoraPFACalibrate_MipResponse', '-a', MUON_ROOT_FILES, '-b',
+                       MUON_ENERGY_CALIBRATION, '-c', 'outputPath'])
   os.chdir(PYTHON_READ_SCRIPTS)
-  ECAL_GEV_TO_MIP = execute_and_return_output(['python', 'Extract_GeVToMIP.py', CALIBRATION_FILE,
-                                               MUON_ENERGY_CALIBRATION, 'ECal'])
-  HCAL_GEV_TO_MIP = execute_and_return_output(['python', 'Extract_GeVToMIP.py', CALIBRATION_FILE,
-                                               MUON_ENERGY_CALIBRATION, 'HCal'])
-  MUON_GEV_TO_MIP = execute_and_return_output(['python', 'Extract_GeVToMIP.py', CALIBRATION_FILE,
-                                               MUON_ENERGY_CALIBRATION, 'Muon'])
-  ECAL_MIP_MPV = execute_and_return_output(['python', 'Extract_SimCaloHitMIPMPV.py', CALIBRATION_FILE, 'ECal'])
-  HCAL_MIP_MPV = execute_and_return_output(['python', 'Extract_SimCaloHitMIPMPV.py', CALIBRATION_FILE, 'HCal'])
-
+  ECAL_GEV_TO_MIP = float(execute_and_convert(['python', 'Extract_GeVToMIP.py', CALIBRATION_FILE,
+                                               MUON_ENERGY_CALIBRATION, 'ECal']))
+  HCAL_GEV_TO_MIP = float(execute_and_convert(['python', 'Extract_GeVToMIP.py', CALIBRATION_FILE,
+                                               MUON_ENERGY_CALIBRATION, 'HCal']))
+  MUON_GEV_TO_MIP = float(execute_and_convert(['python', 'Extract_GeVToMIP.py', CALIBRATION_FILE,
+                                               MUON_ENERGY_CALIBRATION, 'Muon']))
+  ECAL_MIP_MPV = float(execute_and_convert(['python', 'Extract_SimCaloHitMIPMPV.py',
+                                            CALIBRATION_FILE, 'ECal']))
+  HCAL_MIP_MPV = float(execute_and_convert(['python', 'Extract_SimCaloHitMIPMPV.py',
+                                            CALIBRATION_FILE, 'HCal']))
 
 def electromagnetic_energy_scale():
   """ Calibrates using the gamma events
@@ -323,23 +326,22 @@ def electromagnetic_energy_scale():
                ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, HCAL_BARREL_TIME_WINDOW_MAX,
                HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX, ECAL_ENDCAP_TIME_WINDOW_MAX,
                DD4HEP_COMPACT_XML]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   os.chdir(ROOT_FILE_GENERATION)
   runfile = 'Marlin_Runfile_%s_GeV_Energy_gamma.txt' % PHOTON_ENERGY_CALIBRATION
   #FIXME: Run marlin on the contents of this file
   for line in open(runfile):
-    execute_and_return_output(['Marlin', line])
-  execute_and_return_output(['PandoraPFACalibrate_EMScale', '-a', PHOTON_ROOT_FILES, '-b',
-                             PHOTON_ENERGY_CALIBRATION, '-c', PANDORA_PFA_ACCURACY, '-d',
-                             OUTPUT_PATH, '-e', 90])
+    execute_and_return_output(['Marlin', line.rstrip()])
+  execute_and_convert(['PandoraPFACalibrate_EMScale', '-a', PHOTON_ROOT_FILES, '-b',
+                       PHOTON_ENERGY_CALIBRATION, '-c', PANDORA_PFA_ACCURACY, '-d',
+                       OUTPUT_PATH, '-e', 90])
   os.chdir(PYTHON_READ_SCRIPTS)
-  ECAL_TO_EM = execute_and_return_output(['python', 'EM_Extract.py', CALIBRATION_FILE,
-                                          PHOTON_ENERGY_CALIBRATION, ECAL_TO_EM, 'Calibration_Constant'])
+  ECAL_TO_EM = float(execute_and_convert(['python', 'EM_Extract.py', CALIBRATION_FILE,
+                                          PHOTON_ENERGY_CALIBRATION, ECAL_TO_EM, 'Calibration_Constant']))
   HCAL_TO_EM = ECAL_TO_EM
-  em_mean = execute_and_return_output(['python', 'EM_Extract.py', CALIBRATION_FILE,
-                                       PHOTON_ENERGY_CALIBRATION, ECAL_TO_EM, 'Mean'])
+  em_mean = float(execute_and_convert(['python', 'EM_Extract.py', CALIBRATION_FILE,
+                                       PHOTON_ENERGY_CALIBRATION, ECAL_TO_EM, 'Mean']))
   FRACTIONAL_EM_ERROR = abs((PHOTON_ENERGY_CALIBRATION - em_mean) / PHOTON_ENERGY_CALIBRATION)
-
 
 def hadronic_energy_scale():
   """ Calibrates using the kaonL events
@@ -356,38 +358,38 @@ def hadronic_energy_scale():
                ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, HCAL_BARREL_TIME_WINDOW_MAX,
                HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX, ECAL_ENDCAP_TIME_WINDOW_MAX,
                DD4HEP_COMPACT_XML]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   os.chdir(ROOT_FILE_GENERATION)
   runfile = 'Marlin_Runfile_%s_GeV_Energy_K0L.txt' % PHOTON_ENERGY_CALIBRATION
   #FIXME: Run marlin on the contents of this file
   for line in open(runfile):
-    execute_and_return_output(['Marlin', line])
+    execute_and_return_output(['Marlin', line.rstrip()])
     # HCalToHad and ECalToHad Calibration
   if HADRONIC_SCALE_SETTING_PANDORA == 'CSM':
-    execute_and_return_output(['PandoraPFACalibrate_HadronicScale_ChiSquareMethod', '-a', KAON_ROOT_FILES,
-                               '-b', KAON_L_ENERGY_CALIBRATION, '-c', PANDORA_PFA_ACCURACY, '-d',
-                               OUTPUT_PATH, '-e', NUMBER_HCAL_LAYERS])
+    execute_and_convert(['PandoraPFACalibrate_HadronicScale_ChiSquareMethod', '-a', KAON_ROOT_FILES,
+                         '-b', KAON_L_ENERGY_CALIBRATION, '-c', PANDORA_PFA_ACCURACY, '-d',
+                         OUTPUT_PATH, '-e', NUMBER_HCAL_LAYERS])
   elif HADRONIC_SCALE_SETTING_PANDORA == 'TEM':
-    execute_and_return_output(['PandoraPFACalibrate_HadronicScale_TotalEnergyMethod', '-a', KAON_ROOT_FILES,
-                               '-b', KAON_L_ENERGY_CALIBRATION, '-c', PANDORA_PFA_ACCURACY, '-d',
-                               OUTPUT_PATH, '-e', '90', '-f', NUMBER_HCAL_LAYERS])
+    execute_and_convert(['PandoraPFACalibrate_HadronicScale_TotalEnergyMethod', '-a', KAON_ROOT_FILES,
+                         '-b', KAON_L_ENERGY_CALIBRATION, '-c', PANDORA_PFA_ACCURACY, '-d',
+                         OUTPUT_PATH, '-e', '90', '-f', NUMBER_HCAL_LAYERS])
   else:
     print 'Select a calibration method.'
-  # Update HCTH and ECTH
-  os.chdir(PYTHON_READ_SCRIPTS)
-  HCAL_TO_HAD = execute_and_return_output(['python', 'Had_Extract.py', CALIBRATION_FILE,
-                                           KAON_L_ENERGY_CALIBRATION, 'HCTH', HCAL_TO_HAD,
-                                           'Calibration_Constant', HADRONIC_SCALE_SETTING_PANDORA])
-  ECAL_TO_HAD = execute_and_return_output(['python', 'Had_Extract.py', CALIBRATION_FILE,
-                                           KAON_L_ENERGY_CALIBRATION, 'ECTH', ECAL_TO_HAD,
-                                           'Calibration_Constant', HADRONIC_SCALE_SETTING_PANDORA])
-  HCAL_TO_HAD_FOM = execute_and_return_output(['python', 'Had_Extract.py', CALIBRATION_FILE,
-                                               KAON_L_ENERGY_CALIBRATION, 'HCTH', HCAL_TO_HAD,
-                                               'FOM', HADRONIC_SCALE_SETTING_PANDORA])
-  ECAL_TO_HAD_FOM = execute_and_return_output(['python', 'Had_Extract.py', CALIBRATION_FILE,
-                                               KAON_L_ENERGY_CALIBRATION, 'ECTH', ECAL_TO_HAD,
-                                               'FOM', HADRONIC_SCALE_SETTING_PANDORA])
-  # Limits on reconstruction
+    # Update HCTH and ECTH
+    os.chdir(PYTHON_READ_SCRIPTS)
+    HCAL_TO_HAD = float(execute_and_convert(['python', 'Had_Extract.py', CALIBRATION_FILE,
+                                             KAON_L_ENERGY_CALIBRATION, 'HCTH', HCAL_TO_HAD,
+                                             'Calibration_Constant', HADRONIC_SCALE_SETTING_PANDORA]))
+    ECAL_TO_HAD = float(execute_and_convert(['python', 'Had_Extract.py', CALIBRATION_FILE,
+                                             KAON_L_ENERGY_CALIBRATION, 'ECTH', ECAL_TO_HAD,
+                                             'Calibration_Constant', HADRONIC_SCALE_SETTING_PANDORA]))
+    HCAL_TO_HAD_FOM = float(execute_and_convert(['python', 'Had_Extract.py', CALIBRATION_FILE,
+                                                 KAON_L_ENERGY_CALIBRATION, 'HCTH', HCAL_TO_HAD,
+                                                 'FOM', HADRONIC_SCALE_SETTING_PANDORA]))
+    ECAL_TO_HAD_FOM = float(execute_and_convert(['python', 'Had_Extract.py', CALIBRATION_FILE,
+                                                 KAON_L_ENERGY_CALIBRATION, 'ECTH', ECAL_TO_HAD,
+                                                 'FOM', HADRONIC_SCALE_SETTING_PANDORA]))
+    # Limits on reconstruction
   if HADRONIC_SCALE_SETTING_PANDORA == 'CSM':
     HCAL_TO_HAD_UL = KAON_L_KINETIC_ENERGY_CALIBRATION * UPPER_LIMIT
     HCAL_TO_HAD_LL = KAON_L_KINETIC_ENERGY_CALIBRATION * LOWER_LIMIT
@@ -414,14 +416,14 @@ def finalize_calibration():
                CALIBR_HCAL_OTHER, MHHHE, ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP,
                HCAL_BARREL_TIME_WINDOW_MAX, HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX,
                ECAL_ENDCAP_TIME_WINDOW_MAX, OUTPUT_PATH]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   os.chdir(XML_GENERATION)
   call_list = ['python', 'Xml_Generate_Output.py', ECAL_TO_EM, HCAL_TO_EM, ECAL_TO_HAD, HCAL_TO_HAD,
                CALIBR_ECAL, CALIBR_HCAL_BARREL, CALIBR_HCAL_ENDCAP, CALIBR_HCAL_OTHER, MHHHE,
                ECAL_GEV_TO_MIP, HCAL_GEV_TO_MIP, MUON_GEV_TO_MIP, HCAL_BARREL_TIME_WINDOW_MAX,
                HCAL_ENDCAP_TIME_WINDOW_MAX, ECAL_BARREL_TIME_WINDOW_MAX, ECAL_ENDCAP_TIME_WINDOW_MAX,
                OUTPUT_PATH]
-  execute_and_return_output(call_list)
+  execute_and_convert(call_list)
   with open(CALIBR_RESULTS_FILE) as res_file:
     res_file.write("""#Calibration data for %s with Cassette
 #Commands used: %s
@@ -450,7 +452,19 @@ OUTPUT_ENERGY_CORRECTION_POINTS=%s""" % (GEOMETRY_MODEL_NAME, sys.argv, CALIBR_E
   print 'All done!'
 
 
-def _make_executable(filename):
+def _convert_to_str(non_str_list):
+  """ Takes a list and converts each entry to str and returns this new list.
+
+  :param non_str_list: A list which contains a mixture of strings and non-strings, which can all be converted to strings.
+  :returns: List with all entries converted to str
+  :rtype: list
+  """
+  result = []
+  for entry in non_str_list:
+    result.append(str(entry))
+  return result
+
+def _make_executable( filename ):
   """ Adds the user executable flag to the given file.
 
   :param basestring filename: path to the file (absolute or relative)
@@ -503,6 +517,16 @@ def execute_and_return_output(command):
   return res
 
 
+def execute_and_convert(command_list):
+  """ Takes a list, casts every entry of said list to string and executes it in a subprocess.
+
+  :param list command_list: List for a subprocess to execute, that may contain castable non-strings
+  :returns: output of the command
+  :rtype: basestring
+  """
+  call_list = _convert_to_str(command_list)
+  return execute_and_return_output(call_list)
+
 def main():
   """ Runs the actual calibration.
 
@@ -510,6 +534,7 @@ def main():
   :rtype: None
   """
   init()
+  print 'initialisation finished'
   while True:  # Do-while loop
     ecal_digitisation()
     if FRACTIONAL_ERROR_ECAL_MEAN < DIGITISATION_ACCURACY:
@@ -526,7 +551,7 @@ def main():
     electromagnetic_energy_scale()
     if FRACTIONAL_EM_ERROR < PANDORA_PFA_ACCURACY:
       break
-  print 'ecal_digit finished'
+  print 'electromagnet_energy_scale finished'
   while True:  # Do-while loop
     hadronic_energy_scale()
     if HCAL_TO_HAD_FOM >= HCAL_TO_HAD_UL or HCAL_TO_HAD_FOM <= HCAL_TO_HAD_LL \
@@ -535,6 +560,19 @@ def main():
   print 'hadronic_energy finished'
   finalize_calibration()
 
+
+def initial_calibration():
+  """ Code that should be executed on the Worker nodes when the calibration is being run.
+
+  :returns: Nothing
+  :rtype: None
+  """
+  calID = 1
+  workerID = 2
+  #client = CalibrationClient( calID, workerID )
+  init()
+  result = ecal_digitisation()
+  #client.reportResult( result ) #FIXME continue
 
 if __name__ == '__main__':
   main()
