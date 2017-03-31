@@ -68,7 +68,7 @@ class CalibrationAgent(AgentModule):
       #FIXME: Some logging message
       return S_ERROR('Failed getting job IDs from job DB! Error: %s' % res)
     jobIDs = res['Value']
-    res = jobMonitoringService.getJobParameters(jobIDs, ['Name', 'Status'])
+    res = jobMonitoringService.getJobsParameters(_convert_to_int_list(jobIDs), ['JobName', 'Status'])
     if not res['OK']:
       pass
     jobStatuses = res['Value']
@@ -85,7 +85,7 @@ class CalibrationAgent(AgentModule):
     #Deleted:	Job is marked for deletion
     # see https://twiki.cern.ch/twiki/bin/view/LHCb/DiracWebPortalJobmonitor
     for attrDict in jobStatuses.values():
-      jobName = attrDict['Name']
+      jobName = attrDict['JobName']
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
       result[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
                                      attrDict['Status']})
@@ -160,3 +160,15 @@ class CalibrationAgent(AgentModule):
     """
     return int(jobname.split('_')[2])
 
+
+def _convert_to_int_list(non_int_list):
+  """ Takes a list and converts each entry to an integer, returning this new list.
+
+  :param list non_int_list: List that contains entries that may not be integers but can be cast
+  :returns: List that only contains integers.
+  :rtype: list
+  """
+  result = []
+  for entry in non_int_list:
+    result.append(int(entry))
+  return result
