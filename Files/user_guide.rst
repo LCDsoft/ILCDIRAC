@@ -12,8 +12,8 @@ In principle, starting a calibration is very simple, you just need three (and a 
 .. code-block:: python
 
     numberOfJobs = 100
-    from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
-    result = createCalibration( 'steering.file', 'software_version', [ 'inputfile.1', 'inputfile.2' ], numberOfJobs )
+    from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import setConfig, createCalibration
+    result = createCalibration( 'steering_file.xml', 'software_version', [ '/afs/cern.ch/user/j/jebbing/particles/CLIC_o3_v08/gamma/10', '/afs/cern.ch/user/j/jebbing/particles/CLIC_o3_v08/mu-/10', <...> ], numberOfJobs )
 
 Usually you will want to check that everything worked. In case of success, ``createCalibration`` returns you the ID of the newly created calibration in the DIRAC ``S_OK`` structure. This is needed to later fetch the result, so you usually want to change this to:
 
@@ -21,7 +21,7 @@ Usually you will want to check that everything worked. In case of success, ``cre
 
     numberOfJobs = 100
     from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
-    result = createCalibration( 'steering.file', 'software_version', [ 'inputfile.1', 'inputfile.2' ], numberOfJobs )
+    result = createCalibration( 'steering_file.xml', 'software_version', [ '/afs/cern.ch/user/j/jebbing/particles/CLIC_o3_v08/gamma/10', '/afs/cern.ch/user/j/jebbing/particles/CLIC_o3_v08/mu-/10', <...> ], numberOfJobs )
     if not result[ 'OK ' ]:
       raise RuntimeError( 'Creating calibration failed! Something went wrong, fix this please' )
     calibrationID = result[ 'Value' ]
