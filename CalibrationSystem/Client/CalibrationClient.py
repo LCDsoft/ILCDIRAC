@@ -9,7 +9,7 @@ import sys
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from DIRAC import S_ERROR, gLogger
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
-
+from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationPhase
 
 __RCSID__ = "$Id$"
 
@@ -28,49 +28,64 @@ class CalibrationClient(object):
     """
     self.calibrationID = calibrationID
     self.workerID = workerID
+    self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStep = -1
     self.calibrationService = RPCClient('Calibration/Calibration')
     self.parameterSet = None
 
-  def requestNewParameters(self, stepID):
+  def requestNewParameters(self):
     """ Fetches the new parameter set from the service and updates the step counter in this object with the new value. Throws a ValueError if the calibration ended already.
 
-    :param int stepID: ID of the step the worker finished last.
     :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step, or None if no new parameters are available yet
     :rtype: list
     """
-    res = self.calibrationService.getNewParameters(self.calibrationID, stepID)
+    res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
     if res['OK']:
       if isinstance(res['Value'], basestring):
-        raise ValueError('No more new parameters: End calibration')
+        return res
+      self.currentPhase = res['current_phase']
       self.currentStep = res['current_step']
       return res['Value']
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.
 
+  def jumpToStep(self, phaseID, stepID):
+    """ Jumps to the passed step and phase.
+
+    :param int phaseID: ID of the phase to jump to, see CalibrationPhase
+    :param int stepID: ID of the step to jump to
+    :returns: nothing
+    :rtype: None
+    """
+    self.currentPhase = phaseID
+    self.currentStep = stepID
+
   MAXIMUM_REPORT_TRIES = 10
 
-  def reportResult(self, stepID, result):
+  def reportResult(self, result):
     """ Sends the computed histogram back to the service
 
-    :param int stepID: ID of the step the worker was working on up to now.
     :param result: The histogram as computed by the calibration step run
     :returns: None
     """
     attempt = 0
     while attempt < CalibrationClient.MAXIMUM_REPORT_TRIES:
-      res = self.calibrationService.submitResult(self.calibrationID, stepID, self.workerID, result)
+      res = self.calibrationService.submitResult(self.calibrationID, self.currentPhase,
+                                                 self.currentStep, self.workerID, result)
       if res['OK']:
         return
       attempt = attempt + 1
     # FIXME: Decide if this is the correct way to handle this failure
     raise IOError('Could not report result back to CalibrationService.')
 
+#FIXME: UNUSED, DELETE
+
 
 def runCalibration(calibrationID, workerID, command):
   res = subprocess.check_output(['echo', 'Hello World!'])
   gLogger.warn('printed: %s', res)
 
+#FIXME: UNUSED, DELETE
 def runCalibration2( calibrationID, workerID, command ):
   """ Executes the calibration on this worker.
 
