@@ -178,7 +178,9 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
   def test_runit_no_steeringfile( self ):
     exists_dict = { 'PandoraSettings.xml' : False, 'testGear.input' : False,
                     '/steeringdir/testGear.input' : True,
-                    '/steeringdir/PandoraSettings.xml' : True, '' : True }
+                    '/steeringdir/PandoraSettings.xml' : True, '' : True,
+                    'lib': True,
+                  }
     def replace_exists( path ):
       return exists_dict[path]
     self.marAna.platform = "Testplatform123"
@@ -607,7 +609,9 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.applicationLog = 'testLog.mymarlin'
     self.marAna.extraCLIarguments = 'testMyArgs'
     exists_dict = { './lib/lddlib' : True, 'Marlin_VT_Run_935.sh' : True,
-                    './lib/marlin_dll' : True, 'myXML.test' : True, 'testLog.mymarlin' : False }
+                    './lib/marlin_dll' : True, 'myXML.test' : True, 'testLog.mymarlin' : False,
+                    './lib/': False,
+                  }
     def replace_exists( path ):
       return exists_dict[path]
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
@@ -641,7 +645,7 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
       assertMockCalls( exists_mock, [ 'Marlin_VT_Run_935.sh', './lib/lddlib', './lib/marlin_dll',
-                                      './lib/lddlib', 'myXML.test', 'testLog.mymarlin' ], self )
+                                      './lib/lddlib', 'myXML.test', 'testLog.mymarlin', './lib/'], self )
       shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"',
                                           callbackFunction=self.marAna.redirectLogOutput,
                                           bufferLimit=20971520 )
@@ -654,7 +658,9 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.debug = False
     self.marAna.extraCLIarguments = 'testMyArgs'
     exists_dict = { './lib/lddlib' : False, 'Marlin_V1T_Run_932.sh' : False,
-                    'inputxmlMy.test' : False }
+                    'inputxmlMy.test' : False,
+                    './lib/': False,
+                  }
     def replace_exists( path ):
       return exists_dict[path]
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)), \
@@ -680,7 +686,9 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.applicationLog = 'testLog.mymarlin'
     self.marAna.extraCLIarguments = 'testMyArgs'
     exists_dict = { './lib/lddlib' : False, 'Marlin_VT_Run_935.sh' : True,
-                    'myXML.test' : True, 'testLog.mymarlin' : False }
+                    'myXML.test' : True, 'testLog.mymarlin' : False,
+                    './lib/': True,
+                  }
     def replace_exists( path ):
       return exists_dict[path]
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
@@ -698,6 +706,7 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
         '# Dynamically generated script to run a production or analysis job. #\n',
         '#####################################################################\n',
         'source TestEnvscript.path\n', 'declare -x MARLIN_DLL=marlin_dll.test.so\n',
+        'declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n',
         'declare -x PATH=$ROOTSYS/bin:$PATH\n', 'declare -x MARLIN_DEBUG=1\n',
         '\nif [ -e "${PANDORASETTINGS}" ]\nthen\n   cp $PANDORASETTINGS .\nfi    \n',
         'echo =============================\n', 'echo LD_LIBRARY_PATH is\n',
@@ -708,7 +717,7 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
       assertMockCalls( exists_mock, [ 'Marlin_VT_Run_935.sh', './lib/lddlib', 'myXML.test',
-                                      'testLog.mymarlin' ], self )
+                                      'testLog.mymarlin', './lib/' ], self )
       shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"',
                                           callbackFunction=self.marAna.redirectLogOutput,
                                           bufferLimit=20971520 )
@@ -723,7 +732,9 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.extraCLIarguments = 'testMyArgs'
     exists_dict = { './lib/lddlib' : False, 'Marlin_VT_Run_935.sh' : True,
                     './lib/marlin_dll' : False, 'myXML.test' : True,
-                    'testLog.mymarlin' : False }
+                    'testLog.mymarlin' : False,
+                    './lib/': False,
+                  }
     def replace_exists( path ):
       return exists_dict[path]
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)) as exists_mock, \
@@ -753,7 +764,7 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       remove_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh' )
       assertMockCalls( exists_mock, [ 'Marlin_VT_Run_935.sh', './lib/lddlib', './lib/marlin_dll',
-                                      './lib/lddlib', 'myXML.test', 'testLog.mymarlin' ], self )
+                                      './lib/lddlib', 'myXML.test', 'testLog.mymarlin', './lib/' ], self )
       shell_mock.assert_called_once_with( 0, 'sh -c "./Marlin_VT_Run_935.sh"',
                                           callbackFunction=self.marAna.redirectLogOutput,
                                           bufferLimit=20971520 )
