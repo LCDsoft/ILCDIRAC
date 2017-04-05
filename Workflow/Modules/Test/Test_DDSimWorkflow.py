@@ -72,8 +72,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     """DDSim.runit ................................................................................."""
     self.ddsim.platform = "Windows"
     self.ddsim.applicationLog = self.logFileName
-    ## side effect for Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, False, True] ) ):
+    ## side effect for Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, False, False, True] ) ):
       res = self.ddsim.runIt()
     print res
     assertDiracSucceeds( res, self )
@@ -87,8 +87,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.platform = "Windows"
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.InputFile = "pairs.hepmc"
-    ## side effect for Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, False, True] ) ):
+    ## side effect for Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertEqual( self.ddsim.InputFile, ["pairs.hepmc"] )
@@ -118,8 +118,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.InputFile = "pairs.hepmc"
     self.ddsim.ignoreapperrors = False
-    ## side effect for Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, False, False] ) ):
+    ## side effect for Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, False, False, False] ) ):
       res = self.ddsim.runIt()
     self.assertIn( "did not produce the expected log", res['Message'] )
 
@@ -133,8 +133,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.InputFile = "pairs.hepmc"
     self.ddsim.ignoreapperrors = True
-    ## side effect for Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, False, False] ) ):
+    ## side effect for Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, False, False, False] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
 
@@ -152,8 +152,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       scr.write("content")
     with open(self.logFileName, "w") as scr:
       scr.write("content")
-    ## side effect for Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[True, True, True] ) ):
+    ## side effect for Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[True, False, True, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
 
@@ -165,8 +165,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.platform = "Windows"
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.SteeringFile = "mySteering.py"
-    ## side effect for Steering1, Steering2, Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[True, True, False, False, True] ) ):
+    ## side effect for Steering1, Steering2, Script, userlib, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[True, True, False, False, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertEqual( self.ddsim.SteeringFile, "mySteering.py" )
@@ -182,8 +182,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.platform = "Windows"
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.SteeringFile = "mySteering.py"
-    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+    ## side effect for Steering1a, Steering1b, Steering2, Script, userlib, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     fullPath = os.path.join("SteerFold", "mySteering.py" )
@@ -235,8 +235,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.SteeringFile = "mySteering.py"
     self.ddsim.NumberOfEvents = 123
-    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+    ## side effect for Steering1a, Steering1b, Steering2, Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertIn( " --numberOfEvents 123 ", self.ddsim.extraCLIarguments )
@@ -255,8 +255,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.SteeringFile = "mySteering.py"
     self.ddsim.NumberOfEvents = 123
     self.ddsim.startFrom = 22
-    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+    ## side effect for Steering1a, Steering1b, Steering2, Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertIn( " --skipNEvents 22 ", self.ddsim.extraCLIarguments )
@@ -275,8 +275,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.SteeringFile = "mySteering.py"
     self.ddsim.NumberOfEvents = 123
     self.ddsim.debug = True
-    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+    ## side effect for Steering1a, Steering1b, Steering2, Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertIn( " --printLevel DEBUG ", self.ddsim.extraCLIarguments )
@@ -294,8 +294,8 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     self.ddsim.applicationLog = self.logFileName
     self.ddsim.SteeringFile = "mySteering.py"
     self.ddsim.OutputFile = "grailDiary.root"
-    ## side effect for Steering1a, Steering1b, Steering2, Script, log, logAfter
-    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, True] ) ):
+    ## side effect for Steering1a, Steering1b, Steering2, Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, False, True] ) ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertIn( " --outputFile grailDiary.root ", self.ddsim.extraCLIarguments )
