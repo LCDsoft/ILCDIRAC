@@ -154,6 +154,11 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     script.append('#####################################################################')
     script.append('source %s' % envScriptPath)
     script.append('echo =========')
+
+    ## for user provided libraries
+    if os.path.exists( "lib" ):
+      script.append( "export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH" )
+
     script.append('env | sort >> localEnv.log')
     script.append('echo ddsim:`which ddsim`')
     script.append('echo =========')
