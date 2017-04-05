@@ -1,3 +1,14 @@
+[v26r0p7]
+
+* Workflow
+
+NEW: DDSim: ddsim now allows a user to add their own plugins.
+     A tarball with the content lib/libmydd4hepplugin.so, lib/libmydd4hepplugin.components can be added to the input sandbox
+
+NEW: Marlin: Marlin also can use the dd4hep plugins provided by a users
+
+FIX: detector model zipfiles/tarballs for marlin were not working before
+
 [v26r0p6]
 
 * Core
