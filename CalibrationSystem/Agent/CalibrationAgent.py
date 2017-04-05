@@ -53,8 +53,7 @@ class CalibrationAgent(AgentModule):
       return res
     return S_OK()
 
-  @classmethod
-  def fetchJobStatuses(cls):
+  def fetchJobStatuses(self):
     """ Requests the statuses of all CalibrationService jobs and returns them, mapped from
     calibrationID -> workerID -> jobStatus.
 
@@ -65,8 +64,8 @@ class CalibrationAgent(AgentModule):
     jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
     res = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})
     if not res['OK']:
-      #FIXME: Some logging message
-      return S_ERROR('Failed getting job IDs from job DB! Error: %s' % res)
+      self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])
+      return S_ERROR('Failed getting job IDs from job DB!')
     jobIDs = res['Value']
     res = jobMonitoringService.getJobsParameters(_convert_to_int_list(jobIDs), ['JobName', 'Status'])
     if not res['OK']:
@@ -114,6 +113,10 @@ class CalibrationAgent(AgentModule):
         jobs_to_resubmit = result['failed_pairs']
     raise RuntimeError('Cannot resubmit the necessary failed jobs. Problem: %s' % result)
 
+  JOB_STATUS_ENDED = ['Failed', 'Killed', 'Done', 'Completed']
+  JOB_STATUS_RUNNING = ['Running', 'Waiting', 'Checking', 'Staging']
+  RESUBMISSION_THRESHOLD = 0.13  # When this percentage of jobs failed for good, resubmit new ones #FIXME: Tune this parameter
+
   def __calculateJobsToBeResubmitted(self, jobStatusDict, targetNumberDict):
     """ Checks if any of the active calibrations have not enough jobs running and if that is the case
     adds the worker nodes that need resubmission to a list that is returned.
@@ -129,9 +132,9 @@ class CalibrationAgent(AgentModule):
       possibly_successful_jobs = []
       failed_jobs = []
       for workerID, jobStatus in workerDict.iteritems():
-        if jobStatus in CalibrationAgent.JOB_STATUS_POTENTIAL_SUCCESS:
+        if jobStatus in CalibrationAgent.JOB_STATUS_RUNNING:
           possibly_successful_jobs.append(workerID)  # FIXME: Currently unused
-        elif jobStatus in CalibrationAgent.JOB_STATUS_FAILED:
+        elif jobStatus in CalibrationAgent.JOB_STATUS_ENDED:
           failed_jobs.append(workerID)
       failed_ratio = float(len(failed_jobs)) / float(targetNumberDict[calibrationID])
       if failed_ratio > CalibrationAgent.RESUBMISSION_THRESHOLD:
@@ -140,8 +143,8 @@ class CalibrationAgent(AgentModule):
           result.append((calibrationID, workerID))
     return result
 
-  @classmethod
-  def __getWorkerIDFromJobName(cls, jobname):
+  @staticmethod
+  def __getWorkerIDFromJobName(jobname):
     """ Extracts the worker ID from the raw job name.
 
     :param basestring jobname: name of the job in the DIRAC DB
@@ -150,8 +153,8 @@ class CalibrationAgent(AgentModule):
     """
     return int(jobname.split('_')[4])
 
-  @classmethod
-  def __getCalibrationIDFromJobName(cls, jobname):
+  @staticmethod
+  def __getCalibrationIDFromJobName(jobname):
     """ Extracts the calibration ID from the raw job name.
 
     :param basestring jobname: name of the job in the DIRAC DB

@@ -7,9 +7,10 @@ about the results of their reconstruction
 import subprocess
 import sys
 from DIRAC.Core.DISET.RPCClient import RPCClient
-from DIRAC import S_ERROR, gLogger
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationPhase
+from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 
 __RCSID__ = "$Id$"
 
@@ -32,6 +33,7 @@ class CalibrationClient(object):
     self.currentStep = -1
     self.calibrationService = RPCClient('Calibration/Calibration')
     self.parameterSet = None
+    self.log = gLogger.getSubLogger("CalibrationClient")
 
   def requestNewParameters(self):
     """ Fetches the new parameter set from the service and updates the step counter in this object with the new value. Throws a ValueError if the calibration ended already.
@@ -62,21 +64,25 @@ class CalibrationClient(object):
 
   MAXIMUM_REPORT_TRIES = 10
 
-  def reportResult(self, result):
-    """ Sends the computed histogram back to the service
+  def reportResult(self, rootFileName):
+    """ Sends the root file from PfoAnalysis back to the service
 
-    :param result: The histogram as computed by the calibration step run
+    :param rootFileName: The histogram as computed by the calibration step run
     :returns: None
     """
     attempt = 0
+
+    resultString = binaryFileToString(rootFileName)
+
     while attempt < CalibrationClient.MAXIMUM_REPORT_TRIES:
       res = self.calibrationService.submitResult(self.calibrationID, self.currentPhase,
-                                                 self.currentStep, self.workerID, result)
+                                                 self.currentStep, self.workerID, resultString)
       if res['OK']:
-        return
-      attempt = attempt + 1
-    # FIXME: Decide if this is the correct way to handle this failure
-    raise IOError('Could not report result back to CalibrationService.')
+        return S_OK()
+      self.log.warn("Failed to submit result, try %s: %s " % (attempt, res['Message']))
+      attempt += 1
+
+    return S_ERROR('Could not report result back to CalibrationService.')
 
 #FIXME: UNUSED, DELETE
 
@@ -112,12 +118,22 @@ def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
 
   :param basestring steeringFile: Steering file used in the calibration
   :param basestring softwareVersion: Version of the software
-  :param inputFiles: Input files for the calibration
-  :type inputFiles: `python:list`
+  :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns for each particle type
+  :type inputFiles: `python:dict`
   :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
   :returns: S_OK containing ID of the calibration, or S_ERROR if something went wrong
   :rtype: dict
   """
+
+  if not isinstance(inputFiles, dict):
+    gLogger.error("inputFiles is not a dictionary")
+    return S_ERROR("badParameter")
+
+  if not all(key in inputFiles for key in ("GAMMA", "KAON", "MUON")):
+    gLogger.error("Missing mandatory key in inputFiles dictionary ")
+    return S_ERROR("missing key")
+
+  #FIXME: move username check to service
   res = getProxyInfo()
   if not res['OK'] or 'group' not in res['Value'] or 'username' not in res['Value']:
     err = S_ERROR('Problem with the proxy, need to know user and group: %s' % res)

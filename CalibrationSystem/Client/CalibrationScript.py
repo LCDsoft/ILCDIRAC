@@ -197,6 +197,12 @@ def ecal_digitisation():
   shutil.copy('%s/GearOutput.xml' % PATH, '%s' % ROOT_FILE_GENERATION)  # FIXME: remove this hardcoded sh*t
   for line in open(runfile):
     print execute_and_return_output(['Marlin', line.rstrip()])
+  ecal_calculate_new_parmeters()
+
+
+def ecal_calculate_new_parmeters():
+  """ calculate the new parameters for the ecal """
+  global CALIBR_ECAL, ECAL_MEAN, FRACTIONAL_ERROR_ECAL_MEAN
   execute_and_convert(['ECalDigitisation_ContainedEvents', '-a', PHOTON_ROOT_FILES, '-b',
                        PHOTON_ENERGY_CALIBRATION, '-c', 'DIGITISATION_ACCURACY', '-d',
                        OUTPUT_PATH, '-e', '90'])
@@ -573,6 +579,7 @@ def initial_calibration():
   init()
   result = ecal_digitisation()
   #client.reportResult( result ) #FIXME continue
+
 
 if __name__ == '__main__':
   main()

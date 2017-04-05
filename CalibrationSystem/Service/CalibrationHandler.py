@@ -4,12 +4,14 @@ the calibration worker nodes and allows the creation of calibration runs. It wil
 distribute reconstruction workloads among them
 """
 
+import os
+
 from collections import defaultdict
 import xml.etree.ElementTree as ET
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
-
+from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = "$Id$"
 
@@ -17,11 +19,11 @@ __RCSID__ = "$Id$"
 class CalibrationPhase(object):
   """ Represents the different phases a calibration can be in.
   Since Python 2 does not have enums, this is hardcoded for the moment.
-  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi. """
+  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
   ECalDigi, HCalDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy = range(5)
 
-  @classmethod
-  def phaseIDFromString(cls, phase_name):
+  @staticmethod
+  def phaseIDFromString(phase_name):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
     :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
@@ -41,8 +43,29 @@ class CalibrationPhase(object):
     else:
       raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
 
-  @classmethod
-  def phaseNameFromID(cls, phaseID):
+  @staticmethod
+  def fileKeyFromPhase(phaseID):
+    """ Returns the ID of the given CalibrationPhase, passed as a string.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :returns: file key for this phase
+    :rtype: str
+    """
+    if phaseID == CalibrationPhase.ECalDigi:
+      return "GAMMA"
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return "KAON"
+    elif phaseID == CalibrationPhase.MuonDigi:
+      return "MUON"
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
+      return "GAMMA"
+    elif phaseID == CalibrationPhase.HadronicEnergy:
+      return "KAON"
+    else:
+      raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
+
+  @staticmethod
+  def phaseNameFromID(phaseID):
     """ Returns the name of the CalibrationPhase with the given ID, as a string
 
     :param int phaseID: ID of the enquired CalibrationPhase
@@ -151,8 +174,9 @@ class CalibrationRun(object):
                            logFile='pfa_test.log')
       curJob.setCPUTime(3600)
       inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
-      lcio_files = _getLCIOInputFiles(self.inputFiles[i])
-      inputSB += lcio_files
+      key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
+      lcioFile = _getLCIOInputFiles(self.inputFiles[key][i])
+      curJob.setInputData(lcioFile)
       curJob.setInputSandbox(inputSB)
       curJob.setOutputSandbox(['*.log'])
       res = curJob.submit(dirac)
@@ -210,7 +234,7 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    self.__calculateNewParams(self.currentStep)
+    self.__calculateNewParamsRoot( self.currentStep )
     self.currentStep += 1
     #if self.currentStep > 15: #FIXME: Implement real stopping criterion
     if self.currentStep > 1:  # FIXME: replace with line above after testing
@@ -262,6 +286,10 @@ class CalibrationRun(object):
       result[i] = result[i] / float(number_of_elements)
     return result
 
+  def __calculateNewParamsRoot(self, stepID):
+    """ run the pandora executable over the existing root files from the workers for given phase and step """
+    folder = "phase%s/step%s" % (self.currentPhase, stepID)
+
   @executeWithUserProxy
   def resubmitJob(self, workerID):
     """ Resubmits a job to the worker with the given ID, passing the current parameterSet.
@@ -288,17 +316,17 @@ class CalibrationHandler(RequestHandler):
     """
     pass
 
-  auth_createCalibration = ['all']
-  types_createCalibration = [basestring, basestring, list, int, basestring, basestring]
+  auth_createCalibration = ['authenticated']
+  types_createCalibration = [basestring, basestring, dict, int, basestring, basestring]
 
   def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs,
                                proxyUserName, proxyUserGroup):
     """ Called by users to create a calibration run (series of calibration iterations)
 
-    :param basestring steeringFile: Steering file used in the calibration
-    :param basestring ilcsoftPath: Path to the ilcsoft directory to be used, e.g. /cvmfs/clicdp.cern.ch/iLCSoft/builds/2017-02-17/x86_64-slc6-gcc62-opt
-    :param inputFiles: Input files for the calibration
-    :type inputFiles: `python:list`
+    :param basestring steeringFile: Steering file used in the calibration, LFN
+    :param basestring marlinversion: Version of the Marlin application to be used for reconstruction
+    :param inputFiles: Input files for the calibration. Dictionary
+    :type inputFiles: `python:dict`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
     :param basestring proxyUserName: Name of the user of the proxy the user is currently having
     :param basestring proxyUserGroup: Name of the group of the proxy the user is currently having
@@ -325,15 +353,18 @@ class CalibrationHandler(RequestHandler):
   auth_submitResult = ['all']
   types_submitResult = [int, int, int, int, list]
 
-  def export_submitResult(self, calibrationID, phaseID, stepID, workerID, resultHistogram):
+  auth_submitResult = ['authenticated']
+  types_submitResult = [int, int, int, int, basestring]
+
+  def export_submitResult(self, calibrationID, phaseID, stepID, workerID, rootFileContent):
     """ Called from the worker node to report the result of the calibration to the service
 
     :param int calibrationID: ID of the current calibration run
     :param int phaseID: ID of the phase the calibration is currently in
     :param int stepID: ID of the step in this calibration
     :param int workerID: ID of the reporting worker
-    :param resultHistogram: The histogram containing the result of the reconstruction run
-    :type resultHistogram: `python:list`
+    :param rootFileContent: The binary string content of the root file containing the result of the reconstruction run
+    :type rootFile: binary data string
     :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step), S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
@@ -343,10 +374,18 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
     # Only add result if it belongs to current step. Else ignore (it's ok)
     if phaseID is calibration.currentPhase and stepID is calibration.currentStep:
-      calibration.addResult( stepID, workerID, resultHistogram )
+      ## FIXME: use mkdir -p like implementation
+      try:
+        os.makedirs("phase%s/step%s" % (phaseID, stepID))
+      except OSError:
+        pass
+      newFilename = "phase%s/step%s/pfoanalysis_%s_%s.root" % (phaseID, stepID, phaseID, stepID)
+      stringToBinaryFile(rootFileContent, newFilename)
+
+      calibration.addResult(stepID, workerID, newFilename)
     return S_OK()
 
-  auth_checkForStepIncrement = ['all']
+  auth_checkForStepIncrement = ['authenticated']
   types_checkForStepIncrement = []
 
   def export_checkForStepIncrement(self):
@@ -379,7 +418,7 @@ class CalibrationHandler(RequestHandler):
     maxNumberOfJobs = calibration.numberOfJobs
     return numberOfResults >= math.ceil(CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs)
 
-  auth_getNewParameters = [ 'all' ]
+  auth_getNewParameters = ['authenticated']
   types_getNewParameters = [int, int]
 
   def export_getNewParameters(self, calibrationID, stepIDOnWorker):
@@ -402,7 +441,7 @@ class CalibrationHandler(RequestHandler):
     res['current_step'] = cal.currentStep
     return res
 
-  auth_resubmitJobs = ['all']
+  auth_resubmitJobs = ['authenticated']
   types_resubmitJobs = [list]
 
   def export_resubmitJobs(self, failedJobs):
@@ -427,7 +466,7 @@ class CalibrationHandler(RequestHandler):
     else:
       return S_OK()
 
-  auth_getNumberOfJobsPerCalibration = ['all']
+  auth_getNumberOfJobsPerCalibration = ['authenticated']
   types_getNumberOfJobsPerCalibration = []
 
   def export_getNumberOfJobsPerCalibration(self):
