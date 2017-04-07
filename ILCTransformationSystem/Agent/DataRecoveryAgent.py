@@ -57,7 +57,7 @@ class DataRecoveryAgent( AgentModule ):
                                                   ['MCReconstruction',
                                                    'MCSimulation',
                                                    'MCReconstruction_Overlay',
-                                                   'MCGenerations'] )
+                                                   'MCGeneration'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
     self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
 
@@ -247,7 +247,7 @@ class DataRecoveryAgent( AgentModule ):
                                                   ['MCReconstruction',
                                                    'MCSimulation',
                                                    'MCReconstruction_Overlay',
-                                                   'MCGenerations'] )
+                                                   'MCGeneration'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
     self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch"] )
     self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
@@ -315,7 +315,7 @@ class DataRecoveryAgent( AgentModule ):
     tasksDict=None
     lfnTaskDict=None
 
-    if transType != "MCGeneration":
+    if not transType.startswith( "MCGeneration" ):
       self.log.notice( "Getting tasks...")
       tasksDict = tInfo.checkTasksStatus()
       lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
@@ -326,7 +326,7 @@ class DataRecoveryAgent( AgentModule ):
 
   def checkJob( self, job, tInfo ):
     """ deal with the job """
-    checks = self.todo['MCGeneration'] if job.tType == 'MCGeneration' else self.todo['OtherProductions']
+    checks = self.todo['MCGeneration'] if job.tType.startswith('MCGeneration') else self.todo['OtherProductions']
     for do in checks:
       if do['Check'](job):
         do['Counter'] += 1
@@ -361,7 +361,7 @@ class DataRecoveryAgent( AgentModule ):
               job.getTaskInfo( tasksDict, lfnTaskDict )
             except TaskInfoException as e:
               self.log.error(" Skip Task, due to TaskInfoException: %s" % e )
-              if job.inputFile is None and job.tType != "MCGeneration":
+              if job.inputFile is None and not job.tType.startswith( "MCGeneration" ):
                 self.__failJobHard( job, tInfo )
               break
             fileJobDict[job.inputFile].append( job.jobID )
