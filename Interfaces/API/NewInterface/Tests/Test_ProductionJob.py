@@ -452,7 +452,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job = self.prodJob
     job.slicesize = 0
     testdict = { 'JobType' : 'mytest', 'Process' : 'mytestprocess', 'Energy' : 86451 }
-    job.currtrans = 651 #pylint: disable=R0204
+    job.currtrans = 651
     job.dryrun = True
     res = job.finalizeProd( 1387, testdict )
     assertDiracSucceeds( res, self )
