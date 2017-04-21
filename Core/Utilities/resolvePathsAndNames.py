@@ -15,7 +15,8 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
   '''  Build the output file names based on inputfile name and job property
 
   If outfileOriginal starts with 's' we assume a simulation job, if it starts
-  with 'r' we assume a reconstruction job
+  with 'r' we assume a reconstruction job, if starts with "E" we assume
+  a stdhepsplit job.
 
   :param str inputfile: Input file LFN, either \\*.stdhep or \\*.slcio
   :param str outfileOriginal: Output file LFN before change
@@ -39,13 +40,21 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
     inpitem["d"] = "sim"
     inpitem["t"] = str(prodID).zfill(8)
     inpitem["j"] = str(jobID)
-    outfile   = finp.convert( "sim", "file", inpitem )
+    outfile = finp.convert( "sim", "file", inpitem )
   elif originalOutputBaseName.startswith("r"):
     inpitem["r"] = origitem["r"]
     inpitem["d"] = origitem["d"]
     inpitem["t"] = str(prodID).zfill(8)
     inpitem["j"] = str(jobID)
     outfile  = finp.convert( origitem["d"], "file", inpitem )
+  elif originalOutputBaseName.startswith("E"):
+    inpitem["d"] = origitem["d"]
+    inpitem["n"] = origitem["n"]
+    inpitem["t"] = str(prodID).zfill(8)
+    inpitem["j"] = str(jobID)
+    outfile  = finp.convert( "gen", "file", inpitem )
+  else:  # Output as it is if not match above
+    outfile = originalOutputBaseName
 
   basepath = os.path.dirname( outfileOriginal )
   return os.path.join( basepath, outfile )
