@@ -783,6 +783,8 @@ class TestDRA( unittest.TestCase ):
     self.assertIn( 125, self.dra.jobCache )## was not popped
     self.assertIn( "Cannot send notification mail", out.getvalue() )
 
+    self.assertEqual( "", self.dra.notesToSend )
+
 
   def test_printSummary( self ):
     """test DataRecoveryAgent printSummary.........................................................."""

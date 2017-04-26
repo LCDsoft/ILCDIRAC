@@ -290,7 +290,7 @@ class DataRecoveryAgent( AgentModule ):
           result = notification.sendMail( address, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
           if not result['OK']:
             self.log.error( 'Cannot send notification mail', result['Message'] )
-        self.notesToSend = ""
+      self.notesToSend = ""
 
     return S_OK()
 
