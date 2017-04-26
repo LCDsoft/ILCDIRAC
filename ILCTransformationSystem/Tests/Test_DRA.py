@@ -35,10 +35,10 @@ class TestDRA( unittest.TestCase ):
   def tearDown ( self ):
     pass
 
-  def getTestMock( self ):
+  def getTestMock( self, nameID=0):
     """create a JobInfo object with mocks"""
     from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
-    testJob = Mock ( name = "jobInfoMock", spec=JobInfo )
+    testJob = Mock ( name = "jobInfoMock_%s" % nameID, spec=JobInfo )
     testJob.jobID = 1234567
     testJob.tType = "testType"
     testJob.otherTasks = None
@@ -645,7 +645,7 @@ class TestDRA( unittest.TestCase ):
     testJob.inputFileExists = True
     testJob.fileStatus = "Processed"
     self.dra.inputFilesProcessed = set()
-    self.dra._DataRecoveryAgent__failJobHard( testJob, tInfoMock ) #pylint: disable=no-member
+    self.dra._DataRecoveryAgent__failJobHard( testJob, tInfoMock ) #pylint: disable=protected-access, no-member
     self.assertIn( "cleanOutputs", tInfoMock.method_calls[0] )
     self.assertIn( "setJobFailed", tInfoMock.method_calls[1] )
     self.assertIn( "setInputDeleted", tInfoMock.method_calls[2] )
@@ -665,6 +665,21 @@ class TestDRA( unittest.TestCase ):
     self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
     self.assertEqual( self.dra.todo["OtherProductions"][14]["Counter"] , 1 )
     self.assertEqual( self.dra.todo["OtherProductions"][-1]["Counter"] , 2 )
+
+
+  def test_notOnlyKeepers( self ):
+    """ test for __notOnlyKeepers function """
+
+    funcToTest = self.dra._DataRecoveryAgent__notOnlyKeepers #pylint: disable=protected-access, no-member
+    self.assertTrue( funcToTest( "MCGeneration_ILD" ) )
+
+    self.dra.todo['OtherProductions'][0]["Counter"]=3 ## keepers
+    self.dra.todo['OtherProductions'][3]["Counter"]=0
+    self.assertFalse( funcToTest( "MCSimulation" ) )
+
+    self.dra.todo['OtherProductions'][0]["Counter"]=3 ## keepers
+    self.dra.todo['OtherProductions'][3]["Counter"]=3
+    self.assertTrue( funcToTest( "MCSimulation" ) )
 
   def test_checkAllJob( self ):
     """test for DataRecoveryAgent checkAllJobs ....................................................."""
@@ -694,6 +709,17 @@ class TestDRA( unittest.TestCase ):
     tInfoMock.reset_mock()
     self.dra.checkAllJobs( mockJobs, tInfoMock )
     self.assertIn( "ERROR: +++++ Exception:  ARGJob2", out.getvalue().strip() )
+
+    ### test inputFile None
+    out = StringIO()
+    sys.stdout = out
+    mockJobs = dict([ (i, self.getTestMock(nameID=i) ) for i in xrange(5) ] )
+    mockJobs[1].inputFile = None
+    mockJobs[1].getTaskInfo = Mock( side_effect = ( TaskInfoException("NoInputFile"), None ) )
+    mockJobs[1].tType = "MCSimulation"
+    tInfoMock.reset_mock()
+    self.dra.checkAllJobs( mockJobs, tInfoMock, taskDict, lfnTaskDict = True )
+    self.assertIn( "Failing job hard", out.getvalue().strip() )
 
   def test_execute( self ):
     """test for DataRecoveryAgent execute .........................................................."""
