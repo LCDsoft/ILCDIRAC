@@ -14,9 +14,15 @@ Usage:
 Use :func:`setExtraCLIArguments` in case you want to use command line parameters
 
 
-.. Todo::
+.. versionadded:: v26r0p7
 
-   * Handle user provided plugins for detector models or other things
+To use your own plugins, detector drivers, or custom lcgeo and dd4hep libraries add a
+tarball to the inputSandbox (via LFN) which contains the 'lib' folder with the
+shared object and the components file::
+
+   ./lib/liblcgeo.so
+   ./lib/liblcgeo.components
+   ./lib/...
 
 """
 import types
@@ -84,7 +90,7 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     Check consistency of the DDSim application, this is called from the `Job` instance
 
     :param job: The instance of the job
-    :type job: `Job`
+    :type job: ~ILCDIRAC.Interfaces.API.NewInterface.Job.Job
     :returns: S_OK/S_ERROR
     """
 

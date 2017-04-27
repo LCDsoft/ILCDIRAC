@@ -24,12 +24,13 @@ class FilenameEncoder(object):
       %I: GenProcessID
       %P: ProcessName
       %C: Event Class
+      %G: Generator program
       %e: electron polarization or type of photon beam
       %p: positron polarization or type of photon beam
-      %d: Data type (sim, rec, dst, dstm, .. )
+      %d: Data type (gen, sim, rec, dst, dstm, .. )
       %t: Production ID
       %T: Directory name for Production ID
-      %n: Generator file number
+      %n: Generator file number ( could be [0-9]+_[0-9]+, when splitted )
       %j: Job number
       %J: Sub directory ( Job number/1000.  Namely 000, 001, 002, ... )
       %F: File type
@@ -45,6 +46,15 @@ class FilenameEncoder(object):
 
   def __init__( self ):
     self.rules={}
+    self.rules["gen"]={}
+    self.rules["gen"]["file"] = "E%E.P%P.G%G.e%e.p%p.I%I.n%n.d_%d_%t_%j.%F"
+    self.rules["gen"]["dir"]  = "%B/%d/%E/%C/%T/%J"
+    self.rules["gen"]["meta"] = {"%B/%d"            :{"Datatype":"%D"},
+                                 "%B/%d/%E"         :{"Energy":"%w", "MachineParams":"%o"},
+                                 "%B/%d/%E/%C"      :{"EventClass":"%C"},
+                                 "%B/%d/%E/%C/%T"   :{"ProdID":"%t"},
+                                 "%B/%d/%E/%C/%T/%J":{"kJobNumber":"%J"} }
+
     self.rules["sim"]={}
     self.rules["sim"]["file"] = "s%s.m%m.E%E.I%I.P%P.e%e.p%p.n%n.d_%d_%t_%j.slcio"
     self.rules["sim"]["dir"]  = "%B/%d/%E/%C/%m/%s/%T/%J"
@@ -77,7 +87,7 @@ class FilenameEncoder(object):
     self.rules.clear()
 
 # =====================================================
-  def getARule(self, datatype, category="") :
+  def getARule(self, datatype, category=""):
     '''
 
     returns a rule (rules) defined.
@@ -89,10 +99,10 @@ class FilenameEncoder(object):
 
     '''
 
-    if category != "" :
+    if category != "":
       return self.rules[datatype][category]
-    else :
-      return self.rules[datatype]
+
+    return self.rules[datatype]
 
 # =====================================================
   def defineRules( self, rule, datatype="", category="" ):
@@ -107,15 +117,15 @@ class FilenameEncoder(object):
        or directory meta values ("meta")
 
     '''
-    if datatype == "" :
+    if datatype == "":
       self.rules = copy.deepcopy(rule)
-    elif category   == "" :
+    elif category   == "":
       self.rules.update(rule)
-    else :
+    else:
       self.rules[datatype][category] = rule
 
 # =====================================================
-  def convert( self, datatype, category, values ) :
+  def convert( self, datatype, category, values ):
     '''
 
     Calls file name, directory converter, or meta value maker depending on the input arguments
@@ -129,14 +139,13 @@ class FilenameEncoder(object):
 
     '''
 
-    if category == "meta" :
+    if category == "meta":
       return makeDirMetaData( self.rules[datatype]["meta"], values )
 
-    else :
-      return makeFilename( self.rules[datatype][category], values )
+    return makeFilename( self.rules[datatype][category], values )
 
 # =====================================================
-def decodeFilename( fullpath, separator="." ) :
+def decodeFilename( fullpath, separator="." ):
   '''
 
   Decode a file name to Key and Value according to the DBD file name convention.
@@ -151,8 +160,11 @@ def decodeFilename( fullpath, separator="." ) :
   '''
 
   filename = os.path.basename( fullpath )
-  ftemp    = re.sub(r'-(\d+).slcio', r'.j\1.slcio', filename)  # Special treatment for DBD sim files.
-  ftemp    = re.sub(r'([0-9a-zA-Z])_(sim|rec|dst)_(\d+_\d+).slcio', r'\1.d_\2_\3.slcio', ftemp) # Special treatment for ILDDirac old sim files.
+  if filename.count('_gen_'):
+    ftemp    = re.sub(r'([0-9a-zA-Z])_gen_([0-9]+_[0-9]+_[0-9]+).(stdhep|slcio)', r'\1.d_gen_\2.\3', filename) # Special treatment for ILDDirac old files.
+  else:
+    ftemp    = re.sub(r'-(\d+).slcio', r'.j\1.slcio', filename)  # Special treatment for DBD sim files.
+    ftemp    = re.sub(r'([0-9a-zA-Z])_(sim|rec|dst)_(\d+_\d+).slcio', r'\1.d_\2_\3.slcio', ftemp) # Special treatment for ILDDirac old files.
 
   replaceList=[ ["Gwhizard-1.95", "Gwhizard-1_95"] ]
   for replacement in replaceList:
@@ -166,22 +178,25 @@ def decodeFilename( fullpath, separator="." ) :
     conv=conv.replace("slcio" , "Fslcio")
     key=conv[0:1]
     value=conv[1:]
-    if key == "E" :
-      if value[0:1] == "0" :
+    if key == "E":
+      if value[0:1] == "0":
         value=value[1:]
     if key == "d" :  # special treatment for old file names with prodID and job number
-      if value[0:1] == "_" :
+      if value[0:1] == "_":
         dsplit = value[1:].split('_')
         value=dsplit[0]
         filemeta['t'] = dsplit[1]
-        filemeta['j'] = dsplit[2]
+        if len(dsplit) == 4 and value == 'gen':
+          filemeta['n'] = '%3.3d_%3.3d' % ( int(dsplit[2]), int(dsplit[3]) )
+        else:
+          filemeta['j'] = dsplit[2]
 
     filemeta[key]=value
 
   return filemeta
 
 # =================================================
-def makeFilename( fileformat, filemeta, preonly=True ) :
+def makeFilename( fileformat, filemeta, preonly=True ):
   '''
 
   Make a filename, namely, Replace fileformat according to the filemeta.
@@ -198,7 +213,7 @@ def makeFilename( fileformat, filemeta, preonly=True ) :
   :rtype: str
   '''
   filename=fileformat
-  for key, value in filemeta.iteritems() :
+  for key, value in filemeta.iteritems():
     target="%"+key
     if not preonly :
       target="%"+key+"%"
@@ -230,14 +245,14 @@ def makeDirMetaData( metaformat, items ):
     newkey=key
     newvalue=value
 #       print newkey
-    for kitem, kvalue in items.iteritems() :
+    for kitem, kvalue in items.iteritems():
       newkey=newkey.replace("%"+kitem, kvalue)
 
     itemmeta={}
-    for varkey, varvalue in newvalue.iteritems() :
+    for varkey, varvalue in newvalue.iteritems():
       vnew=varkey
       vval=varvalue
-      for kitem, kvalue in items.iteritems() :
+      for kitem, kvalue in items.iteritems():
         vnew=vnew.replace("%"+kitem, kvalue)
         vval=vval.replace("%"+kitem, kvalue)
         itemmeta[vnew]=vval

@@ -165,7 +165,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '100tev', self )
-      self.over.energy = 123.0 #pylint: disable=redefined-variable-type
+      self.over.energy = 123.0
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '123gev', self )

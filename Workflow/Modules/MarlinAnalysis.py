@@ -329,6 +329,9 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     script.write('#####################################################################\n')
     script.write("source %s\n" % env_script_path)
     script.write("declare -x MARLIN_DLL=%s\n" % marlin_dll)
+    ## needed for lcgeo detector components for example
+    if os.path.exists("./lib/"):
+      script.write('declare -x LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH\n')
     if os.path.exists("./lib/lddlib"):
       script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n') 
     script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')

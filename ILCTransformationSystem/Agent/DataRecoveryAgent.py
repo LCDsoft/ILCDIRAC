@@ -57,7 +57,7 @@ class DataRecoveryAgent( AgentModule ):
                                                   ['MCReconstruction',
                                                    'MCSimulation',
                                                    'MCReconstruction_Overlay',
-                                                   'MCGenerations'] )
+                                                   'MCGeneration'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
     self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
 
@@ -91,6 +91,7 @@ class DataRecoveryAgent( AgentModule ):
                  ],
                  'OtherProductions':
                  [ \
+                   ## should always be first!
                    dict( Message="One of many Successful: clean others",
                          ShortMessage="Other Tasks --> Keep",
                          Counter=0,
@@ -226,6 +227,13 @@ class DataRecoveryAgent( AgentModule ):
                           Check=lambda job: job.status not in ("Failed","Done"),
                           Actions=lambda job,tInfo: []
                         ),
+                   ##should always be the last one!
+                   dict ( Message="Failed Hard",
+                          ShortMessage="Failed Hard",
+                          Counter=0,
+                          Check=lambda job: False, ## never
+                          Actions=lambda job,tInfo: []
+                        ),
                  ]
                 }
     self.jobCache = defaultdict( lambda: (0, 0) )
@@ -247,7 +255,7 @@ class DataRecoveryAgent( AgentModule ):
                                                   ['MCReconstruction',
                                                    'MCSimulation',
                                                    'MCReconstruction_Overlay',
-                                                   'MCGenerations'] )
+                                                   'MCGeneration'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
     self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch"] )
     self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
@@ -274,7 +282,7 @@ class DataRecoveryAgent( AgentModule ):
       self.log.notice( "Running over Production: %s " % prodID )
       self.treatProduction( int(prodID), transName, transType )
 
-      if self.notesToSend:
+      if self.notesToSend and self.__notOnlyKeepers( transType ):
         ##remove from the jobCache because something happened
         self.jobCache.pop( int(prodID), None )
         notification = NotificationClient()
@@ -282,7 +290,7 @@ class DataRecoveryAgent( AgentModule ):
           result = notification.sendMail( address, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
           if not result['OK']:
             self.log.error( 'Cannot send notification mail', result['Message'] )
-        self.notesToSend = ""
+      self.notesToSend = ""
 
     return S_OK()
 
@@ -315,7 +323,7 @@ class DataRecoveryAgent( AgentModule ):
     tasksDict=None
     lfnTaskDict=None
 
-    if transType != "MCGeneration":
+    if not transType.startswith( "MCGeneration" ):
       self.log.notice( "Getting tasks...")
       tasksDict = tInfo.checkTasksStatus()
       lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )
@@ -326,7 +334,7 @@ class DataRecoveryAgent( AgentModule ):
 
   def checkJob( self, job, tInfo ):
     """ deal with the job """
-    checks = self.todo['MCGeneration'] if job.tType == 'MCGeneration' else self.todo['OtherProductions']
+    checks = self.todo['MCGeneration'] if job.tType.startswith('MCGeneration') else self.todo['OtherProductions']
     for do in checks:
       if do['Check'](job):
         do['Counter'] += 1
@@ -361,6 +369,8 @@ class DataRecoveryAgent( AgentModule ):
               job.getTaskInfo( tasksDict, lfnTaskDict )
             except TaskInfoException as e:
               self.log.error(" Skip Task, due to TaskInfoException: %s" % e )
+              if job.inputFile is None and not job.tType.startswith( "MCGeneration" ):
+                self.__failJobHard( job, tInfo )
               break
             fileJobDict[job.inputFile].append( job.jobID )
           self.checkJob( job, tInfo )
@@ -384,3 +394,36 @@ class DataRecoveryAgent( AgentModule ):
     for _name,checks in self.todo.iteritems():
       for do in checks:
         do['Counter'] = 0
+
+
+  def __failJobHard( self, job, tInfo ):
+    """ set job to failed and remove output files if there are any """
+    if job.inputFile is not None:
+      return
+    if job.status in ("Failed",) \
+       and job.allFilesMissing():
+      return
+    self.log.notice( "Failing job hard %s" % job )
+    self.notesToSend += "Failing job %s: no input file?\n" % job.jobID
+    self.notesToSend += str(job)+'\n'
+    self.todo['OtherProductions'][-1]['Counter'] += 1
+    job.cleanOutputs(tInfo)
+    job.setJobFailed(tInfo)
+    # if job.inputFile is not None:
+    #   job.setInputDeleted(tInfo)
+
+  def __notOnlyKeepers( self, transType ):
+    """check of we only have 'Keep' messages
+
+    in this case we do not have to send report email or run again next time
+
+    """
+    if transType.startswith('MCGeneration'):
+      return True
+
+    checks = self.todo['OtherProductions']
+    totalCount = 0
+    for check in checks[1:]:
+      totalCount += check['Counter']
+
+    return totalCount > 0

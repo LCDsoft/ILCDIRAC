@@ -333,13 +333,17 @@ class ILDProductionJobOpt2017( ProductionJob ):
         ildConfigPath = self.prodparameters.get( "ILDConfigVersion", "" ) + "/"
 
         path = self.basepath
+
+        if not self._recBasePaths:
+          self.setReconstructionBasePaths( self.basepath, self.basepath )
+
         # ##Need to resolve file names and paths
         # TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
         if hasattr( application, "setOutputRecFile" ) and not application.willBeCut:
 
             for outType in ( 'REC', 'DST' ):
 
-                metaPath = joinPathForMetaData( self.basepath, outType.lower() )
+                metaPath = joinPathForMetaData( self._recBasePaths[ outType ], outType.lower() )
                 self.finalMetaDict[ metaPath ] = { 'Datatype': outType }
 
                 metaPath = joinPathForMetaData( metaPath, energypath )

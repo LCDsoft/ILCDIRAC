@@ -676,7 +676,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.ModuleBase._getRequestContainer' % MODULE_NAME, new=Mock(return_value=container_mock)):
       with self.assertRaises( RuntimeError ) as re:
         self.moba.generateFailoverFile()
-        assertEqualsImproved( re.value, 'Failover request is not valid: test_fail-validate', self )
+        assertEqualsImproved( re.value, 'Failover request is not valid: test_fail-validate', self ) #pylint: disable=no-member
 
   def test_generatefailover_tojsonfails( self ):
     container_mock = Mock()
@@ -695,7 +695,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.ModuleBase._getRequestContainer' % MODULE_NAME, new=Mock(return_value=container_mock)):
       with self.assertRaises( RuntimeError ) as re:
         self.moba.generateFailoverFile()
-        assertEqualsImproved( re.value, 'test_tojsonerror', self )
+        assertEqualsImproved( re.value, 'test_tojsonerror', self ) #pylint: disable=no-member
 
 #TODO Fix this/remove tests?
   def test_redirectlogoutput( self ):
