@@ -1,3 +1,20 @@
+[v26r0p8]
+
+* Core:
+
+NEW: Based on v6r15p27
+
+NEW: ILD FilenameEncoder now also hadles files for Split transformations
+
+* ILCTransformationSystem
+
+FIX: DataRecoveryAgent: No longer send messages if nothing changed.
+FIX: DataRecoveryAgent: Deal with MCSimulation/MCReconstruction jobs where the inputFile does not exist
+
+* Interfaces
+
+FIX: Changes to ILDProductionChainOpt2017 and DBD: Define output SEs, limit number of jobs for all productions
+
 [v26r0p7]
 
 * Workflow
