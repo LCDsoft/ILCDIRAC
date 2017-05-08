@@ -1,3 +1,10 @@
+[v26r0p9]
+
+* Workflow:
+
+NEW: SLIC: allow user to preload libraries for SLIC. Add a tarball with folder 'preload' to the Sandbox. Libraries (files containing '.so' in that folder will be added to the LD_PRELOAD environment variable.
+
+
 [v26r0p8]
 
 * Core:
