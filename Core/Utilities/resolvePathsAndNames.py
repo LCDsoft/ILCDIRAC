@@ -48,8 +48,12 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
     inpitem["j"] = str(jobID)
     outfile  = finp.convert( origitem["d"], "file", inpitem )
   elif originalOutputBaseName.startswith("E"):
-    inpitem["d"] = origitem["d"]
-    inpitem["n"] = origitem["n"]
+    inpitem["d"] = "gen"
+    seqstr = origitem["n"].split("_")
+    if len(seqstr) > 1:  # Add sub-sequence number if found in the outfileOriginal
+      inpitem["n"]="_".join([inpitem["n"]]+seqstr[1:])
+    else:
+      inpitem["n"] = origitem["n"]
     inpitem["t"] = str(prodID).zfill(8)
     inpitem["j"] = str(jobID)
     outfile  = finp.convert( "gen", "file", inpitem )
