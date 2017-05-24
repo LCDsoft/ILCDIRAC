@@ -240,8 +240,6 @@ class Fcc(LCApplication):
     if self._fcc_output_file:
       self.setOutputFile(self._fcc_output_file)
 
-    #self.setLogFile(fcc_app_log)
-
     # Before submitting the job, we filter some folders required by FCCSW application
     # and we import the filtered folders to a temporary sandbox.
     if not self._set_filter_to_folders():
@@ -251,6 +249,14 @@ class Fcc(LCApplication):
 
     fcc_app_log = '%s.log' % self.fcc_app_index
 
+    if not self.logFile:
+      self.setLogFile(fcc_app_log)
+
+    # We add to the output sandbox default output files like logfile, standard output and standard error 
+    self._output_sandbox.add(fcc_app_log)
+    self._output_sandbox.add("%s.out" % self.fcc_app_index)
+    self._output_sandbox.add("%s.err" % self.fcc_app_index)
+    
     # self.inputSB is an attribute of the DIRAC Application and not of FCC.
     # The description file of the job (JDL file) contains a section for the input sandbox
     # This section is filled with a list of files (self.inputSB).

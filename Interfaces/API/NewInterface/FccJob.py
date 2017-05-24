@@ -71,9 +71,9 @@ class FccJob(UserJob):
   on client side and not on server side.
   """
 
-  def __init__(self, repository_name=""):
+  def __init__(self, script=None, repository_name=""):
 
-    super(FccJob, self).__init__()
+    super(FccJob, self).__init__(script)
 
     # DiracILC instance creation
     # 'False' means no repository, else put 'name_of_your_repo'
