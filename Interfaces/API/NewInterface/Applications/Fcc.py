@@ -35,14 +35,14 @@ class Fcc(LCApplication):
   """
 
   def __init__(self, fcc_output_file,
-         number_of_events, extraInputs, extraOutputs):
+         NumberOfEvents, extraInputs, extraOutputs):
     """FCC application generic attributes :
 
     :param fcc_output_file: The output file of the application
     :type fcc_output_file: str
 
-    :param number_of_events: The number of events
-    :type number_of_events: int
+    :param NumberOfEvents: The number of events
+    :type NumberOfEvents: int
 
     :param extraInputs: The local input files required by the application
     :type extraInputs: tuple
@@ -66,7 +66,7 @@ class Fcc(LCApplication):
     self.fcc_app_name = self.__class__.__name__
     self.fcc_app_index = ''
 
-    self.NumberOfEvents = number_of_events
+    self.NumberOfEvents = NumberOfEvents
 
     self._extra_inputs = set([extraInputs]) if extraInputs else set()
     self._extra_outputs = set([extraOutputs]) if extraOutputs else set()
@@ -834,15 +834,15 @@ class FccSw(Fcc):
       fccsw_path='/build/username/FCC/FCCSW'
     )
 
-  >>> FCC_SW.number_of_events = 1000
+  >>> FCC_SW.NumberOfEvents = 1000
 
   """
 
   def __init__(self, fcc_conf_file="", fcc_output_file="",
-         fccsw_path="", number_of_events=None, extraInputs=(), extraOutputs=()):
+         fccsw_path="", NumberOfEvents=None, extraInputs=(), extraOutputs=()):
 
     super(FccSw, self).__init__(fcc_output_file,
-                  number_of_events, extraInputs, extraOutputs)
+                  NumberOfEvents, extraInputs, extraOutputs)
 
     self.fccsw_path = fccsw_path
     self.fcc_conf_file = fcc_conf_file
@@ -981,15 +981,15 @@ class FccAnalysis(Fcc):
       fcc_conf_file='/cvmfs/fcc.cern.ch/sw/0.7/fcc-physics/0.1/x86_64-slc6-gcc49-opt/share/ee_ZH_Zmumu_Hbb.txt',
       fcc_output_file="ee_ZH_Zmumu_Hbb.root"
     )
-  >>> FCC_PHYSICS.number_of_events = 1000
+  >>> FCC_PHYSICS.NumberOfEvents = 1000
 
   """
 
   def __init__(self, executable='fcc-pythia8-generate', fcc_conf_file="", fcc_output_file="",
-         number_of_events=None, extraInputs=(), extraOutputs=()):
+         NumberOfEvents=None, extraInputs=(), extraOutputs=()):
 
     super(FccAnalysis, self).__init__(fcc_output_file,
-                      number_of_events, extraInputs, extraOutputs)
+                      NumberOfEvents, extraInputs, extraOutputs)
 
     self.fcc_conf_file = fcc_conf_file
     self.fcc_executable = executable
