@@ -429,7 +429,12 @@ class FccJob(UserJob):
       #self._input_sandbox = self._input_sandbox.union(application._input_sandbox)
 
     if self._output_sandbox:
-      super(FccJob, self).setOutputSandbox(list(self._output_sandbox))
+      result = super(FccJob, self).setOutputSandbox(list(self._output_sandbox))
+
+      if 'OK' in result and not result['OK']:
+        error_message = "Output Sandbox : Error in setting output sandbox"    
+        gLogger.error(error_message)
+        return False
 
     # Duplicates problem for setInputSandbox :
     # Calling many times setInputSandbox keep the last list and add new list
@@ -445,7 +450,12 @@ class FccJob(UserJob):
     # when _split_by_data() method is used (hence '_are_data_consumed_by_splitting' attribute)
 
     if self._data and not self._are_data_consumed_by_splitting:
-      super(FccJob, self).setInputData(list(self._data))
+      result = super(FccJob, self).setInputData(list(self._data))
+      
+      if 'OK' in result and not result['OK']:
+        error_message = "Input Data : Error in setting input data"    
+        gLogger.error(error_message)
+        return False
 
     submission = super(FccJob, self).submit(self.ILC, mode=self.mode)
 
@@ -475,7 +485,12 @@ class FccJob(UserJob):
     for data in self._data:
       # Job level
       # Like that the data will be downloaded in the job PWD
-      super(FccJob, self).setInputData(data)
+      result = super(FccJob, self).setInputData(data)
+
+      if 'OK' in result and not result['OK']:
+        error_message = "Input Data : Error in setting input data"    
+        gLogger.error(error_message)
+        return False
 
       # application level
       for application in self._user_applications:
