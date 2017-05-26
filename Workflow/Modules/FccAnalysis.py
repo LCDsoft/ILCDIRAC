@@ -34,13 +34,13 @@ class FccAnalysis(ModuleBase):
 
     self.enable = True
 
-    self.fcc_executable = ''
-    self.fcc_conf_file = ''
-    self.gaudi_options_file = ''
-    self.fcc_app_index = ''
+    self.fccExecutable = ''
+    self.fccConfFile = ''
+    self.gaudiOptionsFile = ''
+    self.fccAppIndex = ''
     self.split = ''
 
-    self.environment_script = ''
+    self.environmentScript = ''
 
     self.software = ''
     self.version = ''
@@ -48,7 +48,7 @@ class FccAnalysis(ModuleBase):
     self.debug = True
     self.log = gLogger.getSubLogger("FccAnalysis")
 
-    self.application_script = os.path.join(os.getcwd(), 'user_temp_job.sh')
+    self.applicationScript = os.path.join(os.getcwd(), 'user_temp_job.sh')
 
   def execute(self):
     """Main method called by the Agent.
@@ -64,81 +64,81 @@ class FccAnalysis(ModuleBase):
 
     # Worflow parameters given on the fly by parametric job functions
     if 'split' in self.workflow_commons:
-      debug_message = "Environment : Parameter 'split' given successfully"
-      debug_message += " with this value '%s'" % self.workflow_commons['split']
-      self.log.debug(debug_message)
+      debugMessage = "Environment : Parameter 'split' given successfully"
+      debugMessage += " with this value '%s'" % self.workflow_commons['split']
+      self.log.debug(debugMessage)
 
     self.log.info("Environment : Environment script look up...")
 
     # Try to locate environment script in 'dirac.cfg' file
-    if not self._get_environment_script():
-      error_message = "Environment : Environment script look up failed"
-      error_message += "\nFailed to get environment"
-      self.log.error(error_message)
-      return S_ERROR(error_message)
+    if not self._getEnvironmentScript():
+      errorMessage = "Environment : Environment script look up failed"
+      errorMessage += "\nFailed to get environment"
+      self.log.error(errorMessage)
+      return S_ERROR(errorMessage)
 
-    debug_message = "Environment : Environment script found at : %s" % (self.environment_script)
-    self.log.debug(debug_message)
+    debugMessage = "Environment : Environment script found at : %s" % (self.environmentScript)
+    self.log.debug(debugMessage)
 
     self.log.info("Environment : Environment script look up successfull")
 
-    if not self.fcc_conf_file.startswith('/cvmfs/'):
-      self.fcc_conf_file = os.path.abspath(os.path.basename(self.fcc_conf_file))
+    if not self.fccConfFile.startswith('/cvmfs/'):
+      self.fccConfFile = os.path.abspath(os.path.basename(self.fccConfFile))
 
-      if not os.path.exists(self.fcc_conf_file):
-        error_message = "Environment : FCC configuration file does not exist,"
-        error_message += " can not run FCC application"
-        self.log.error(error_message)
-        return S_ERROR(error_message)
+      if not os.path.exists(self.fccConfFile):
+        errorMessage = "Environment : FCC configuration file does not exist,"
+        errorMessage += " can not run FCC application"
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
 
     # FCC PHYSICS does not need this file so do not resolve it if it is not given
     # else 'abspath' will results in cwd.
-    if self.gaudi_options_file:
-      self.gaudi_options_file = os.path.abspath(os.path.basename(self.gaudi_options_file))
+    if self.gaudiOptionsFile:
+      self.gaudiOptionsFile = os.path.abspath(os.path.basename(self.gaudiOptionsFile))
 
 
-      if not os.path.exists(self.gaudi_options_file):
-        error_message = "Environment : Gaudi option file does not exist,"
-        error_message += " can not run FCC application"
-        self.log.error(error_message)
-        return S_ERROR(error_message)
+      if not os.path.exists(self.gaudiOptionsFile):
+        errorMessage = "Environment : Gaudi option file does not exist,"
+        errorMessage += " can not run FCC application"
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
 
-    debug_message = "Application code : Creation of the bash script"
-    debug_message += " to call the application with FCC module parameters..."
-    self.log.debug(debug_message)
+    debugMessage = "Application code : Creation of the bash script"
+    debugMessage += " to call the application with FCC module parameters..."
+    self.log.debug(debugMessage)
 
     # Main command
-    bash_commands = ['%s %s %s' %
-             (self.fcc_executable, self.fcc_conf_file, self.gaudi_options_file)]
+    bashCommands = ['%s %s %s' %
+             (self.fccExecutable, self.fccConfFile, self.gaudiOptionsFile)]
 
 
-    if not self._generate_bash_script(bash_commands):
-      error_message = "Application code : Creation of the bash script failed"
-      self.log.error(error_message)
-      return S_ERROR(error_message)
+    if not self._generateBashScript(bashCommands):
+      errorMessage = "Application code : Creation of the bash script failed"
+      self.log.error(errorMessage)
+      return S_ERROR(errorMessage)
 
     self.log.debug("Application code : Creation of the bash script successfull")
 
     # Call of the application
-    call = shellCall(0, self.application_script)
+    call = shellCall(0, self.applicationScript)
 
 
     if 'OK' in call and not call['OK']:
-      error_message = "Application code : Execution of application script failed"
-      self.log.error(error_message)
-      return S_ERROR(error_message)
+      errorMessage = "Application code : Execution of application script failed"
+      self.log.error(errorMessage)
+      return S_ERROR(errorMessage)
 
-    info_message = ["Application code : Execution of application script successfull"]
-    info_message += ["standard output is written to '%s.out'" % self.fcc_app_index]
-    info_message += ["standard error is written to '%s.err'" % self.fcc_app_index]
+    infoMessage = ["Application code : Execution of application script successfull"]
+    infoMessage += ["standard output is written to '%s.out'" % self.fccAppIndex]
+    infoMessage += ["standard error is written to '%s.err'" % self.fccAppIndex]
 
-    self.log.info('\n'.join(info_message))
+    self.log.info('\n'.join(infoMessage))
 
     self.log.debug("Application : Standard output creation...")
 
     # If error in writting standard output/error, let the application run successfully
 
-    if not self._write2file('w', os.path.join(os.getcwd(),'%s.out' % self.fcc_app_index), str(call['Value'][1])):
+    if not self._writeToFile('w', os.path.join(os.getcwd(),'%s.out' % self.fccAppIndex), str(call['Value'][1])):
       self.log.error("Application : Standard output creation failed")
     else:
       self.log.debug("Application : Standard output creation successfull")
@@ -146,7 +146,7 @@ class FccAnalysis(ModuleBase):
 
     self.log.debug("Application : Standard error creation...")
 
-    if not self._write2file('w', os.path.join(os.getcwd(),'%s.err' % self.fcc_app_index), str(call['Value'][2])):
+    if not self._writeToFile('w', os.path.join(os.getcwd(),'%s.err' % self.fccAppIndex), str(call['Value'][2])):
       self.log.error("Application : Standard error creation failed")
     else:
       self.log.debug("Application : Standard error creation successfull")
@@ -170,11 +170,11 @@ class FccAnalysis(ModuleBase):
 
     # Reflet chmod a+permission
     # Make the file x,r, or w for everyone
-    user_permission = eval('stat.S_I%sUSR' % permission)
-    group_permission = eval('stat.S_I%sGRP' % permission)
-    other_permission = eval('stat.S_I%sOTH' % permission)
+    userPermission = eval('stat.S_I%sUSR' % permission)
+    groupPermission = eval('stat.S_I%sGRP' % permission)
+    otherPermission = eval('stat.S_I%sOTH' % permission)
 
-    permission = user_permission | group_permission | other_permission
+    permission = userPermission | groupPermission | otherPermission
 
     # Get actual mode of the file
     mode = os.stat(file).st_mode
@@ -182,7 +182,7 @@ class FccAnalysis(ModuleBase):
     # Merge the new permission with the existing one
     os.chmod(file, mode | permission)
 
-  def _generate_bash_script(self, commands):
+  def _generateBashScript(self, commands):
     """This function generates a bash script containing the environment setup
     and the command related to the FCC application.
 
@@ -197,27 +197,27 @@ class FccAnalysis(ModuleBase):
     # Set environnement and execute the application
     shebang = "#!/bin/bash"
 
-    set_environment_script = 'source %s' % self.environment_script
-    bash_script_text = [shebang, set_environment_script] + commands
+    setEnvironmentScript = 'source %s' % self.environmentScript
+    bashScriptText = [shebang, setEnvironmentScript] + commands
 
     self.log.debug("Application command : %s" % '\n'.join(commands))
 
     # Write the temporary job
     self.log.debug("Application code : Bash script creation...")
 
-    if not self._write2file('w', self.application_script, '\n'.join(bash_script_text) + '\n'):
+    if not self._writeToFile('w', self.applicationScript, '\n'.join(bashScriptText) + '\n'):
       self.log.error("Application code : Bash script creation failed")
       return False
 
     self.log.debug("Application code : Bash script creation successfull")
 
     # Make the script executable and readable for all
-    self._chmod(self.application_script, 'R')
-    self._chmod(self.application_script, 'X')
+    self._chmod(self.applicationScript, 'R')
+    self._chmod(self.applicationScript, 'X')
 
     return True
 
-  def _generate_script_on_the_fly(self, sysconfig="", appname="", appversion=""):
+  def _generateScriptOnTheFly(self, sysconfig="", appname="", appversion=""):
     """Normally, this function generates dynamically the
     FCC environment script but nothing for the moment.
 
@@ -239,36 +239,36 @@ class FccAnalysis(ModuleBase):
     # Because if we do not have access to cvmfs, we can do nothing.
 
     #print('%s %s %s' % (sysconfig, appname, appversion))
-    error_message = 'Environment : Environment script not found'
-    error_message += ' for this configuration %s %s %s' % (sysconfig, appname, appversion)
-    error_message += ' can not generate one dynamically'
-    return S_ERROR(error_message)
+    errorMessage = 'Environment : Environment script not found'
+    errorMessage += ' for this configuration %s %s %s' % (sysconfig, appname, appversion)
+    errorMessage += ' can not generate one dynamically'
+    return S_ERROR(errorMessage)
 
-  def _get_environment_script(self):
+  def _getEnvironmentScript(self):
     """This function gets environment script path from 'dirac.cfg' file
     according to the version, software and platform.
 
     """
 
-    environment_script = getEnvironmentScript(self.platform, self.software,
-                          self.version, self._generate_script_on_the_fly)
+    environmentScript = getEnvironmentScript(self.platform, self.software,
+                          self.version, self._generateScriptOnTheFly)
 
-    if 'OK' in environment_script and not environment_script['OK']:
+    if 'OK' in environmentScript and not environmentScript['OK']:
       return False
 
-    self.environment_script = environment_script["Value"]
+    self.environmentScript = environmentScript["Value"]
 
-    return os.path.exists(self.environment_script)
+    return os.path.exists(self.environmentScript)
 
-  def _write2file(self, operation, file_name, filetext):
+  def _writeToFile(self, operation, fileName, filetext):
     """This function creates a new file and
     writes the given content into this file.
 
     :param operation: The operation('w' or 'a') of the writting operation
     :type operation: str
 
-    :param file_name: The name of the file to create
-    :type file_name: str
+    :param fileName: The name of the file to create
+    :type fileName: str
 
     :param filetext: The content of the file
     :type filetext: str
@@ -280,14 +280,14 @@ class FccAnalysis(ModuleBase):
 
     try:
       # Create file with 'operation' permission
-      with open(file_name, operation) as text_file:
-        text_file.write(filetext)
+      with open(fileName, operation) as textFile:
+        textFile.write(filetext)
     except IOError:
-      error_message = "Application : File write operation failed"
-      self.log.error(error_message)
+      errorMessage = "Application : File write operation failed"
+      self.log.error(errorMessage)
       return False
 
-    debug_message = "Application : File write operation successfull"
-    self.log.debug(debug_message)
+    debugMessage = "Application : File write operation successfull"
+    self.log.debug(debugMessage)
     return True
     
