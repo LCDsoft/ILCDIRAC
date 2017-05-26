@@ -19,8 +19,9 @@ before_script:
     - source bashrc
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
-    - pip install --upgrade pip pylint mock MySQL-python setuptools #coverage Check if we need coverage
-    - easy_install pytest-cov pytest-randomly #pyparsing
+    - pip install --upgrade pip
+    - pip install --upgrade setuptools
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly #coverage Check if we need coverage
     - cd ILCDIRAC
     - export HOME=/root/
 
