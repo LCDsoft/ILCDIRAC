@@ -21,6 +21,7 @@ before_script:
     - unset REQUESTS_CA_BUNDLE
     - pip install --upgrade pip
     - pip install --upgrade setuptools
+    - echo "done with setuptools"
     - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly #coverage Check if we need coverage
     - cd ILCDIRAC
     - export HOME=/root/
