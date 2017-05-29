@@ -4,7 +4,7 @@
      - ILCDIRAC.Workflow.Modules.FccAnalysis (this module)
 
    This module is called by 'DIRAC' that know it via the
-   attribute '_modulename' of Fcc module.
+   attribute '_modulename' of the Fcc module.
 
 """
 
@@ -85,11 +85,11 @@ class FccAnalysis(ModuleBase):
     if not self.fccConfFile.startswith('/cvmfs/'):
       self.fccConfFile = os.path.abspath(os.path.basename(self.fccConfFile))
 
-      if not os.path.exists(self.fccConfFile):
-        errorMessage = "Environment : FCC configuration file does not exist,"
-        errorMessage += " can not run FCC application"
-        self.log.error(errorMessage)
-        return S_ERROR(errorMessage)
+    if not os.path.exists(self.fccConfFile):
+      errorMessage = "Environment : FCC configuration file does not exist,"
+      errorMessage += " can not run FCC application"
+      self.log.error(errorMessage)
+      return S_ERROR(errorMessage)
 
     # FCC PHYSICS does not need this file so do not resolve it if it is not given
     # else 'abspath' will results in cwd.
@@ -217,30 +217,30 @@ class FccAnalysis(ModuleBase):
 
     return True
 
-  def _generateScriptOnTheFly(self, sysconfig="", appname="", appversion=""):
+  def _generateScriptOnTheFly(self, sysConfig="", appName="", appVersion=""):
     """Normally, this function generates dynamically the
     FCC environment script but nothing for the moment.
 
     Called if CVMFS is not available
     (CVMFS should be always available else FCC software can't run).
 
-    :param sysconfig: The platform required by the software
-    :type sysconfig: str
+    :param sysConfig: The platform required by the software
+    :type sysConfig: str
 
-    :param appname: The name of the software
-    :type appname: str
+    :param appName: The name of the software
+    :type appName: str
 
-    :param appversion: The version of the software
-    :type appversion: str
+    :param appVersion: The version of the software
+    :type appVersion: str
 
     """
 
     # We do not generate the environment script like in MarlinAnalysis etc...
     # Because if we do not have access to cvmfs, we can do nothing.
 
-    #print('%s %s %s' % (sysconfig, appname, appversion))
+    #print('%s %s %s' % (sysConfig, appName, appVersion))
     errorMessage = 'Environment : Environment script not found'
-    errorMessage += ' for this configuration %s %s %s' % (sysconfig, appname, appversion)
+    errorMessage += ' for this configuration %s %s %s' % (sysConfig, appName, appVersion)
     errorMessage += ' can not generate one dynamically'
     return S_ERROR(errorMessage)
 
@@ -260,7 +260,7 @@ class FccAnalysis(ModuleBase):
 
     return os.path.exists(self.environmentScript)
 
-  def _writeToFile(self, operation, fileName, filetext):
+  def _writeToFile(self, operation, fileName, fileText):
     """This function creates a new file and
     writes the given content into this file.
 
@@ -270,8 +270,8 @@ class FccAnalysis(ModuleBase):
     :param fileName: The name of the file to create
     :type fileName: str
 
-    :param filetext: The content of the file
-    :type filetext: str
+    :param fileText: The content of the file
+    :type fileText: str
 
     :return: success or failure of the write operation
     :rtype: bool
@@ -281,7 +281,7 @@ class FccAnalysis(ModuleBase):
     try:
       # Create file with 'operation' permission
       with open(fileName, operation) as textFile:
-        textFile.write(filetext)
+        textFile.write(fileText)
     except IOError:
       errorMessage = "Application : File write operation failed"
       self.log.error(errorMessage)
