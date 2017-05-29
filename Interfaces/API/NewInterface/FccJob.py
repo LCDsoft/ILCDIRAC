@@ -31,7 +31,7 @@ import os
 
 def _initDirac():
   """This function checks DIRAC environment."""
-  
+
   diracEnvMessage = ["DIRAC environment :"]
   diracEnvMessage += ["Please ensure that you set up correctly DIRAC environment e.g. :"]
   diracEnvMessage += ['source /afs/cern.ch/eng/clic/software/DIRAC/bashrc']
@@ -40,7 +40,7 @@ def _initDirac():
   try:
     os.environ["DIRAC"]
   except KeyError:
-    # Print default path of environment script as 'help'
+    # Print AFS path of environment script as 'help'
     # Here we use python quit() function and we do not use dirac exit
     # because DIRAC libraries are not yet imported
     print '\n'.join(diracEnvMessage)
@@ -174,8 +174,8 @@ class FccJob(UserJob):
 
     There are 3 types of submission :
 
-    - local without agent agent machinery
-    - local with agent
+    - local without agent machinery
+    - local with agent machinery
     - grid
 
     The advantage of the Local submission mode is
@@ -314,6 +314,12 @@ class FccJob(UserJob):
       return False
 
     for application in self._userApplications:
+          
+      # If application is reading events from files like input data files
+      # do not forget to give them to FCCDataSvc()
+      if self._data:
+        application._fccInputData = self._data
+
       if not self._addApplication(application):
         return False
 
@@ -343,8 +349,8 @@ class FccJob(UserJob):
     if not self._userApplications:
       errorMessage = ["FccJob : Your job is empty !"]
       errorMessage += ["You have to append at least one application"]
+      errorMessage += ["FccJob : FccJob _checkFccJobConsistency failed"]
       gLogger.error('\n'.join(errorMessage))
-      gLogger.error("FccJob : FccJob _checkFccJobConsistency failed")
       return False
 
     if split not in self._switch:
@@ -353,8 +359,8 @@ class FccJob(UserJob):
       errorMessage += ["- byData"]
       errorMessage += ["- byEvents"]
       errorMessage += ["- None"]
+      errorMessage += ["FccJob : FccJob _checkFccJobConsistency failed"]
       gLogger.error('\n'.join(errorMessage))
-      gLogger.error("FccJob : FccJob _checkFccJobConsistency() failed")
       return False
 
     if self._userFccswApplications:
@@ -363,8 +369,8 @@ class FccJob(UserJob):
       if not all(app.fccswPath == fccswPath for app in self._userFccswApplications):
         errorMessage = "Submission : You can't have many FCCSW applications"
         errorMessage += " running with different installations of FCCSW"
-        gLogger.error(errorMessage)
-        gLogger.error("FccJob : FccJob _checkFccJobConsistency failed()")
+        errorMessage += ["FccJob : FccJob _checkFccJobConsistency failed"]
+        gLogger.error('\n'.join(errorMessage))
         return False
 
     infoMessage = "FccJob : FccJob _checkFccJobConsistency() successfull"
@@ -372,35 +378,35 @@ class FccJob(UserJob):
 
     return True
 
-  def _printSubmission(self, SUBMISSION):
+  def _printSubmission(self, submission):
     """This function interprets dictionnary result returned by DIRAC submit call and prints
     relevant informations like ID of the job etc...
 
-    :param SUBMISSION: the returned value of submit call
-    :type SUBMISSION: str
+    :param submission: the returned value of submit call
+    :type submission: str
 
     :return: id of the job
     :rtype: str
 
     :Example:
 
-    >>> self._printSubmission(SUBMISSION)
+    >>> self._printSubmission(submission)
 
     """
 
     jobId = None
 
-    if 'OK' in SUBMISSION and not SUBMISSION['OK']:
+    if 'OK' in submission and not submission['OK']:
       submissionMessage = ['Submission : Submission Failure']
       submissionMessage += ['Please check the description of your job']
       submissionMessage += ['Pay attention to the following message :']
-      submissionMessage += [str(SUBMISSION['Message'])]
+      submissionMessage += [str(submission['Message'])]
       gLogger.error('\n'.join(submissionMessage))
       return False
 
     # no job ID is given in local submission
-    if 'JobID' in SUBMISSION:
-      jobId = SUBMISSION['JobID']
+    if 'JobID' in submission:
+      jobId = submission['JobID']
       submissionMessage = ["GRID Submission : The job with the following ID : "]
       submissionMessage += [str(jobId)]
       submissionMessage += ["has been submitted to the grid"]
@@ -418,7 +424,7 @@ class FccJob(UserJob):
 
   def _sendJob(self):
     """This function submits a job which may have been 're-computed' by the splitting stuff
-    and set output sandbox.
+    and set the output sandbox.
     """
 
     # We set the ouput sandbox here, after getting output sandbox files
@@ -432,7 +438,7 @@ class FccJob(UserJob):
       result = super(FccJob, self).setOutputSandbox(list(self._outputSandbox))
 
       if 'OK' in result and not result['OK']:
-        errorMessage = "Output Sandbox : Error in setting output sandbox"    
+        errorMessage = "Output Sandbox : Error in setting the output sandbox"    
         gLogger.error(errorMessage)
         return False
 
@@ -601,9 +607,14 @@ class FccJob(UserJob):
 
     jobIds = []
 
-    for event_per_job in mapEventJob:
+    for eventsPerJob in mapEventJob:
       for application in self._userApplications:
-        application.NumberOfEvents = event_per_job
+        # If application is reading events from files like input data files
+        # do not forget to give them to FCCDataSvc()
+        if self._data:
+          application._fccInputData = self._data
+    
+        application.NumberOfEvents = eventsPerJob
         if not self._addApplication(application):
           return False
 
@@ -621,7 +632,7 @@ class FccJob(UserJob):
     """This function casts number parameter to an integer.
     It also accepts 'string integer' parameter.
 
-    :param number: the number to cast (number of event, number of job)
+    :param number: the number to cast (number of events, number of jobs)
     :type number: str or int
 
     :return: success or failure of the casting
@@ -629,7 +640,7 @@ class FccJob(UserJob):
 
     :Example:
 
-    >>> self._toInt("1000")
+    >>> number = self._toInt("1000")
     """
 
     if not number:
