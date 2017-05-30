@@ -35,14 +35,14 @@ class Fcc(LCApplication):
   """
 
   def __init__(self, outputFile,
-         NumberOfEvents, extraInputs, extraOutputs):
+         numberOfEvents, extraInputs, extraOutputs):
     """FCC application generic attributes :
 
     :param outputFile: The output file of the application
     :type outputFile: str
 
-    :param NumberOfEvents: The number of events
-    :type NumberOfEvents: int
+    :param numberOfEvents: The number of events
+    :type numberOfEvents: int
 
     :param extraInputs: The local input files required by the application
     :type extraInputs: tuple
@@ -65,8 +65,6 @@ class Fcc(LCApplication):
     self._fccInputData = []
     self.fccAppName = self.__class__.__name__
     self.fccAppIndex = ''
-
-    self.NumberOfEvents = NumberOfEvents
 
     self._extraInputs = set([extraInputs]) if extraInputs else set()
     self._extraOutputs = set([extraOutputs]) if extraOutputs else set()
@@ -117,6 +115,7 @@ class Fcc(LCApplication):
     self.software = "fccsw"
     self.version = "v1.0"
     self.platform = "x86_64-slc6-gcc49-opt"
+    self.numberOfEvents = numberOfEvents
 
   def _applicationModule(self):
     """It transfers parameter names of the module
@@ -812,15 +811,15 @@ class FccSw(Fcc):
       fccswPath='/build/username/FCC/FCCSW'
     )
 
-  >>> fccSw.NumberOfEvents = 1000
+  >>> fccSw.numberOfEvents = 1000
 
   """
 
   def __init__(self, fccConfFile="", outputFile="",
-         fccswPath="", NumberOfEvents=None, extraInputs=(), extraOutputs=()):
+         fccswPath="", numberOfEvents=None, extraInputs=(), extraOutputs=()):
 
     super(FccSw, self).__init__(outputFile,
-                  NumberOfEvents, extraInputs, extraOutputs)
+                  numberOfEvents, extraInputs, extraOutputs)
 
     self.fccswPath = fccswPath
     self.fccConfFile = fccConfFile
@@ -922,7 +921,7 @@ class FccSw(Fcc):
     gaudiOptions += ["from Gaudi.Configuration import *"]
 
     # In putting -1, gaudi read all event of the file given to FCCDataSvc
-    eventSetting = "ApplicationMgr().EvtMax=%s" % self.NumberOfEvents
+    eventSetting = "ApplicationMgr().EvtMax=%s" % self.numberOfEvents
     gaudiOptions += [eventSetting]
 
     if self.logLevel:
@@ -981,15 +980,15 @@ class FccAnalysis(Fcc):
       fccConfFile='/cvmfs/fcc.cern.ch/sw/0.7/fcc-physics/0.1/x86_64-slc6-gcc49-opt/share/ee_ZH_Zmumu_Hbb.txt',
       outputFile="ee_ZH_Zmumu_Hbb.root"
     )
-  >>> FCC_PHYSICS.NumberOfEvents = 1000
+  >>> FCC_PHYSICS.numberOfEvents = 1000
 
   """
 
   def __init__(self, executable='fcc-pythia8-generate', fccConfFile="", outputFile="",
-         NumberOfEvents=None, extraInputs=(), extraOutputs=()):
+         numberOfEvents=None, extraInputs=(), extraOutputs=()):
 
     super(FccAnalysis, self).__init__(outputFile,
-                      NumberOfEvents, extraInputs, extraOutputs)
+                      numberOfEvents, extraInputs, extraOutputs)
 
     self.fccConfFile = fccConfFile
     self.fccExecutable = executable

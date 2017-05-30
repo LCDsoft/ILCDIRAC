@@ -98,6 +98,9 @@ class FccJob(UserJob):
     # Used for the checking of many fccsw installations
     self._userFccswApplications = set()
 
+    # Names of FCC applications 
+    self.fccAppNames = ['FccSw','FccAnalysis']
+
     self._outputSandbox = set()
     self._inputSandbox = set()
     self._fccStep = 0
@@ -120,7 +123,7 @@ class FccJob(UserJob):
     self._userApplications.add(application)
 
     # Used for the checking of many fccsw installations
-    if application.fccAppName.startswith('FccSw'):
+    if application.__class__.__name__.startswith(self.fccAppNames[0]):
       self._userFccswApplications.add(application)
 
 
@@ -245,12 +248,19 @@ class FccJob(UserJob):
 
     """
 
-    application.fccAppIndex = '%s_%d' % (application.fccAppName, self._fccStep)
+    # We set the application index here because job knows the number of applications
+    # This index is used after by the application to generate application log name etc...
+    appName = application.__class__.__name__
+    appIndex = '%s_%d' % (appName, self._fccStep)
+
+    # If it is an 'Fcc' application then set fccAppIndex attribute
+    if appName in self.fccAppNames:
+      application.fccAppIndex = appIndex
 
     self._fccStep += 1
 
     debugMessage = "Application : "
-    debugMessage += "Application '%s' appending..." % application.fccAppName
+    debugMessage += "Application '%s' appending..." % appName
     gLogger.debug(debugMessage)
 
     # If user calls setInputSandbox, we get the files in
@@ -261,7 +271,9 @@ class FccJob(UserJob):
     # all these files.
     # Indeed, We merge input sandbox files given at the application level
     # with the input sandbox files given at the job level.
-    if self._inputSandbox:
+
+    # If it is an 'Fcc' application then set _tempInputSandbox attribute
+    if appName in self.fccAppNames and self._inputSandbox:
       application._tempInputSandbox = application._tempInputSandbox.union(self._inputSandbox)
 
     try:
@@ -289,12 +301,12 @@ class FccJob(UserJob):
 
     if 'OK' in appAddition and not appAddition['OK']:
       errorMessage = "Application appending : "
-      errorMessage += "Application '%s' appending failed" % application.fccAppName
+      errorMessage += "Application '%s' appending failed" % appName
       gLogger.error(errorMessage)
       gLogger.error(appAddition['Message'])
       return False
 
-    debugMessage = "Application '%s' appending successfull" % application.fccAppIndex
+    debugMessage = "Application '%s' appending successfull" % appIndex
     gLogger.debug(debugMessage)
 
     return True
@@ -317,7 +329,9 @@ class FccJob(UserJob):
           
       # If application is reading events from files like input data files
       # do not forget to give them to FCCDataSvc()
-      if self._data:
+
+      # If it is an 'Fcc' application then set _fccInputData attribute
+      if application.__class__.__name__ in self.fccAppNames and self._data:
         application._fccInputData = self._data
 
       if not self._addApplication(application):
@@ -431,8 +445,10 @@ class FccJob(UserJob):
     # in setOutputSandbox() method
 
     for application in self._userApplications:
-      self._outputSandbox = self._outputSandbox.union(application._outputSandbox)
-      #self._inputSandbox = self._inputSandbox.union(application._inputSandbox)
+      # If it is an 'Fcc' application then set _outputSandbox attribute          
+      if application.__class__.__name__ in self.fccAppNames:    
+        self._outputSandbox = self._outputSandbox.union(application._outputSandbox)
+        #self._inputSandbox = self._inputSandbox.union(application._inputSandbox)
 
     if self._outputSandbox:
       result = super(FccJob, self).setOutputSandbox(list(self._outputSandbox))
@@ -503,7 +519,10 @@ class FccJob(UserJob):
         # For FCCSW :
         # This file is given as input file for FCCDataSvc()
         # in the gaudi configuration file 'gaudi_options.py'
-        application._fccInputData = [data]
+
+        # If it is an 'Fcc' application then set _fccInputData attribute
+        if application.__class__.__name__ in self.fccAppNames:
+          application._fccInputData = [data]
 
         if not self._addApplication(application):
           return False
@@ -526,10 +545,10 @@ class FccJob(UserJob):
 
     # All applications must have the same number of events
     # We can get this number from the first application for example
-    totalNumberOfEvents = next(iter(self._userApplications)).NumberOfEvents
+    totalNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
 
     # Ensure that all applications have the same total number of events
-    if not all(app.NumberOfEvents == totalNumberOfEvents for app in self._userApplications):
+    if not all(app.numberOfEvents == totalNumberOfEvents for app in self._userApplications):
       errorMessage = ["Job splitting : In splitting 'by events' method :"]
       errorMessage += ["Applications must have the same number of events"]
       gLogger.error('\n'.join(errorMessage))
@@ -610,11 +629,13 @@ class FccJob(UserJob):
     for eventsPerJob in mapEventJob:
       for application in self._userApplications:
         # If application is reading events from files like input data files
-        # do not forget to give them to FCCDataSvc()
-        if self._data:
+        # do not forget to give them to FCCDataSvc().
+
+        # If it is an 'Fcc' application then set _fccInputData attribute
+        if application.__class__.__name__ in self.fccAppNames and self._data:
           application._fccInputData = self._data
     
-        application.NumberOfEvents = eventsPerJob
+        application.numberOfEvents = eventsPerJob
         if not self._addApplication(application):
           return False
 
