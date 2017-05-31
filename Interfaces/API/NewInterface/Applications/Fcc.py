@@ -940,10 +940,11 @@ class FccSw(Fcc):
     fccswPodioOptions += ["import os"]
 
     if self._fccInputData:
-      self._fccInputData = ["os.path.abspath(os.path.basename('%s'))" % data
+      fccInputDataSubstitution = [ '%s' for data in self._fccInputData]
+      fccInputData = ["os.path.abspath(os.path.basename('%s'))" % data
                   for data in self._fccInputData]
       # We can provide many input files to FCCDataSvc() like this :
-      inputSetting = "FCCDataSvc().input=%s" % " ".join(self._fccInputData)
+      inputSetting = "FCCDataSvc().input='%s' %% (%s)" % (" ".join(fccInputDataSubstitution), ", ".join(fccInputData))
       fccswPodioOptions += [inputSetting]
       gaudiOptions += fccswPodioOptions
 
