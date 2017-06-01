@@ -256,7 +256,7 @@ class Fcc(LCApplication):
       self.setLogFile(fccAppLog)
 
     # We add to the output sandbox default output files like logfile, standard output and standard error 
-    self._outputSandbox.add(fccAppLog)
+    self._outputSandbox.add(self.logFile)
     self._outputSandbox.add("%s.out" % self.fccAppIndex)
     self._outputSandbox.add("%s.err" % self.fccAppIndex)
     
