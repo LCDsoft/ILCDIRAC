@@ -12,7 +12,6 @@
   FccPhysics = FccAnalysis(
     fccConfFile=
     '/cvmfs/fcc.cern.ch/sw/0.7/fcc-physics/0.1/x86_64-slc6-gcc49-opt/share/ee_ZH_Zmumu_Hbb.txt',
-
     outputFile="ee_ZH_Zmumu_Hbb.root",
   )
 
@@ -32,10 +31,11 @@ import os
 def _initDirac():
   """This function checks DIRAC environment."""
 
-  diracEnvMessage = ["DIRAC environment :"]
-  diracEnvMessage += ["Please ensure that you set up correctly DIRAC environment e.g. :"]
-  diracEnvMessage += ['source /afs/cern.ch/eng/clic/software/DIRAC/bashrc']
-
+  diracEnvMessage = (
+    "DIRAC environment :\n"
+    "Please ensure that you set up correctly DIRAC environment e.g. :\n"
+    "source /afs/cern.ch/eng/clic/software/DIRAC/bashrc"
+  )
   # DIRAC environment
   try:
     os.environ["DIRAC"]
@@ -43,7 +43,7 @@ def _initDirac():
     # Print AFS path of environment script as 'help'
     # Here we use python quit() function and we do not use dirac exit
     # because DIRAC libraries are not yet imported
-    print '\n'.join(diracEnvMessage)
+    print(diracEnvMessage)
     quit()
 
 _initDirac()
@@ -286,24 +286,28 @@ class FccJob(UserJob):
         # The problem is that when the proxy is outdated, DIRAC got an exception
         # but this exception is not raised, a message is printed to the stdout
         # (saying that PEM files are outdated).
-        errorMessage = "Application add operation : "
-        errorMessage += "Please, configure your proxy before submitting a job from DIRAC"
-        errorMessage += "\nIf you did not set up a proxy, try to refresh it "
-        errorMessage += "by typing :\n"
-        errorMessage += "dirac-proxy-init\n"
+        errorMessage = (
+          "Application add operation : "
+          "Please, configure your proxy before submitting a job from DIRAC\n"
+          "If you did not set up a proxy, try to refresh it "
+          "by typing :\n"
+          "dirac-proxy-init\n"
+        )
       else:
-        errorMessage = "Application add operation : Error in the description of the module"
-        errorMessage += "\nPlease pay attention to this message :"
-        errorMessage += str(excType) + " : " + str(excValue) + "\n"
+        errorMessage = (
+          "Application add operation : Error in the description of the module\n"
+          "Please pay attention to this message :\n"
+        )
+        errorMessage += '%s : %s\n' % (excType, excValue)
 
       gLogger.error(errorMessage)
       return False
 
     if 'OK' in appAddition and not appAddition['OK']:
       errorMessage = "Application appending : "
-      errorMessage += "Application '%s' appending failed" % appName
+      errorMessage += "Application '%s' appending failed\n" % appName
+      errorMessage += appAddition['Message']
       gLogger.error(errorMessage)
-      gLogger.error(appAddition['Message'])
       return False
 
     debugMessage = "Application '%s' appending successfull" % appIndex
@@ -318,11 +322,13 @@ class FccJob(UserJob):
     gLogger.info(infoMessage)
 
     if self.njobs:
-      errorMessage = ["Atomic submission : You did not specify a splitting method"]
-      errorMessage += ["So you do not have to set the number of jobs"]
-      errorMessage += ["If you want to split your job over the number of events"]
-      errorMessage += ["Please choose 'byEvents' for the 'split' parameter"]
-      gLogger.error('\n'.join(errorMessage))
+      errorMessage = (
+        "Atomic submission : You did not specify a splitting method\n"
+        "So you do not have to set the number of jobs\n"
+        "If you want to split your job over the number of events\n"
+        "Please choose 'byEvents' for the 'split' parameter"
+      )
+      gLogger.error(errorMessage)
       return False
 
     for application in self._userApplications:
@@ -361,30 +367,36 @@ class FccJob(UserJob):
     gLogger.info("FccJob : FccJob _checkFccJobConsistency()...")
 
     if not self._userApplications:
-      errorMessage = ["FccJob : Your job is empty !"]
-      errorMessage += ["You have to append at least one application"]
-      errorMessage += ["FccJob : FccJob _checkFccJobConsistency failed"]
-      gLogger.error('\n'.join(errorMessage))
+      errorMessage = (
+        "FccJob : Your job is empty !\n"
+        "You have to append at least one application\n"
+        "FccJob : FccJob _checkFccJobConsistency failed"
+      )
+      gLogger.error(errorMessage)
       return False
 
     if split not in self._switch:
-      errorMessage = ["Job splitting : Bad split value"]
-      errorMessage += ["Possible values are :"]
-      errorMessage += ["- byData"]
-      errorMessage += ["- byEvents"]
-      errorMessage += ["- None"]
-      errorMessage += ["FccJob : FccJob _checkFccJobConsistency failed"]
-      gLogger.error('\n'.join(errorMessage))
+      errorMessage = (
+        "Job splitting : Bad split value\n"
+        "Possible values are :\n"
+        "- byData\n"
+        "- byEvents\n"
+        "- None\n"
+        "FccJob : FccJob _checkFccJobConsistency failed"
+      )
+      gLogger.error(errorMessage)
       return False
 
     if self._userFccswApplications:
       fccswPath = next(iter(self._userFccswApplications)).fccswPath
 
       if not all(app.fccswPath == fccswPath for app in self._userFccswApplications):
-        errorMessage = "Submission : You can't have many FCCSW applications"
-        errorMessage += " running with different installations of FCCSW"
-        errorMessage += ["FccJob : FccJob _checkFccJobConsistency failed"]
-        gLogger.error('\n'.join(errorMessage))
+        errorMessage = (
+          "Submission : You can't have many FCCSW applications\n"
+          "running with different installations of FCCSW\n"
+          "FccJob : FccJob _checkFccJobConsistency failed"
+        )
+        gLogger.error(errorMessage)
         return False
 
     infoMessage = "FccJob : FccJob _checkFccJobConsistency() successfull"
@@ -411,28 +423,33 @@ class FccJob(UserJob):
     jobId = None
 
     if 'OK' in submission and not submission['OK']:
-      submissionMessage = ['Submission : Submission Failure']
-      submissionMessage += ['Please check the description of your job']
-      submissionMessage += ['Pay attention to the following message :']
-      submissionMessage += [str(submission['Message'])]
-      gLogger.error('\n'.join(submissionMessage))
+      submissionMessage = (
+        "Submission : Submission Failure\n"
+        "Please check the description of your job\n"
+        "Pay attention to the following message :\n"
+      )
+      submissionMessage += submission['Message']
+      gLogger.error(submissionMessage)
       return False
 
     # no job ID is given in local submission
     if 'JobID' in submission:
       jobId = submission['JobID']
-      submissionMessage = ["GRID Submission : The job with the following ID : "]
-      submissionMessage += [str(jobId)]
-      submissionMessage += ["has been submitted to the grid"]
-      submissionMessage += ["You can get output by visiting the DIRAC portal of your VO"]
-      submissionMessage += ["in the 'Job Monitor' tab or by typing :"]
-      submissionMessage += ["dirac-wms-job-get-output %d" % jobId]
+      submissionMessage = "GRID Submission : The job with the ID '%s' " % str(jobId)
+      submissionMessage += (
+        "has been submitted to the grid\n"
+        "You can get output by visiting the DIRAC portal of your VO\n"
+        "in the 'Job Monitor' tab or by typing :\n"
+      )
+      submissionMessage += "dirac-wms-job-get-output %d" % jobId
     else:
       jobId = "NO_ID_IN_LOCAL_SUBMISSION"
-      submissionMessage = ["Local Submission : The job has been submitted locally"]
-      submissionMessage += ["Output results should be retrieved in the Local_* folder"]
+      submissionMessage = (
+        "Local Submission : The job has been submitted locally\n"
+        "Output results should be retrieved in the Local_* folder"
+      )
 
-    gLogger.info('\n'.join(submissionMessage))
+    gLogger.info(submissionMessage)
 
     return jobId
 
@@ -489,14 +506,16 @@ class FccJob(UserJob):
   def _splitByData(self):
     """This function submits a job per input data."""
 
-    infoMessage = "Job splitting : Splitting 'by_data' method..."
+    infoMessage = "Job splitting : Splitting 'byData' method..."
     gLogger.info(infoMessage)
 
     # Ensure that data have been specified by setInputData() method
     if not self._data:
-      errorMessage = ["Job splitting : Can not continue, missing input data"]
-      errorMessage += ["Job splitting process needs input data"]
-      gLogger.error('\n'.join(errorMessage))
+      errorMessage = (
+        "Job splitting : Can not continue, missing input data\n"
+        "splitting 'byData' method needs input data"
+      )
+      gLogger.error(errorMessage)
       return False
 
     self._areDataConsumedBySplitting = True
@@ -510,7 +529,7 @@ class FccJob(UserJob):
       result = super(FccJob, self).setInputData(data)
 
       if 'OK' in result and not result['OK']:
-        errorMessage = "Input Data : Error in setting input data"    
+        errorMessage = "Job splitting : Error in setting input data"    
         gLogger.error(errorMessage)
         return False
 
@@ -540,7 +559,7 @@ class FccJob(UserJob):
   def _splitByEvents(self):
     """This function submits a job per subset of events."""
 
-    infoMessage = "Job splitting : splitting 'by events' method..."
+    infoMessage = "Job splitting : splitting 'byEvents' method..."
     gLogger.info(infoMessage)
 
     # All applications must have the same number of events
@@ -549,9 +568,8 @@ class FccJob(UserJob):
 
     # Ensure that all applications have the same total number of events
     if not all(app.numberOfEvents == totalNumberOfEvents for app in self._userApplications):
-      errorMessage = ["Job splitting : In splitting 'by events' method :"]
-      errorMessage += ["Applications must have the same number of events"]
-      gLogger.error('\n'.join(errorMessage))
+      errorMessage = "Job splitting : Applications must all have the same number of events"
+      gLogger.error(errorMessage)
       return False
 
     # 1st case : submit(njobs=3,eventsPerJob=10)
@@ -560,8 +578,10 @@ class FccJob(UserJob):
     # it is done after
 
     if self.eventsPerJob and self.njobs:
-      debugMessage = "Job splitting : 1st case"
-      debugMessage += " events per job and number of jobs has been given (easy)"
+      debugMessage = (
+        "Job splitting : 1st case"
+        " events per job and number of jobs has been given (easy)"
+      )
       gLogger.debug(debugMessage)
 
       mapEventJob = [self.eventsPerJob] * self.njobs
@@ -573,14 +593,18 @@ class FccJob(UserJob):
     # we can compute the unknown which is the number of jobs
 
     elif self.eventsPerJob and totalNumberOfEvents:
-      debugMessage = "Job splitting : 2nd case"
-      debugMessage += " only events per job has been given but we know the total"
-      debugMessage += " number of events, so we have to compute the number of jobs required"
+      debugMessage = (
+        "Job splitting : 2nd case"
+      " only events per job has been given but we know the total"
+      " number of events, so we have to compute the number of jobs required"
+      )
       gLogger.debug(debugMessage)
 
       if self.eventsPerJob > totalNumberOfEvents:
-        errorMessage = "Job splitting : The number of events per job has to be"
-        errorMessage += " lower than or equal to the total number of events"
+        errorMessage = (
+          "Job splitting : The number of events per job has to be"
+          " lower than or equal to the total number of events"
+        )
         gLogger.error(errorMessage)
         return False
 
@@ -597,15 +621,19 @@ class FccJob(UserJob):
     # If not then output error
 
     else:
-      debugMessage = "Job splitting : 3rd case"
-      debugMessage += " The number of jobs has to be given and the total number"
-      debugMessage += "  of events has to be set"
+      debugMessage = (
+        "Job splitting : 3rd case"
+        " The number of jobs has to be given and the total number"
+        " of events has to be set"
+      )
       gLogger.debug(debugMessage)
 
       if (not totalNumberOfEvents) or (totalNumberOfEvents < self.njobs):
-        errorMessage = ["Job splitting : The number of events has to be set"]
-        errorMessage += ["It has to be greater than or equal to the number of jobs"]
-        gLogger.error('\n'.join(errorMessage))
+        errorMessage = (
+          "Job splitting : The number of events has to be set\n"
+          "It has to be greater than or equal to the number of jobs"
+        )
+        gLogger.error(errorMessage)
         return False
 
       eventPerJobIntDiv = totalNumberOfEvents / self.njobs
@@ -618,11 +646,13 @@ class FccJob(UserJob):
           mapEventJob[suplement] += 1
 
 
-    debugMessage = ["Job splitting : Here is the 'distribution' of events over the jobs"]
-    debugMessage += ["A list element corresponds to a job and the element value"]
-    debugMessage += ["is the related number of events"]
-    debugMessage += [str(mapEventJob)]
-    gLogger.debug('\n'.join(debugMessage))
+    debugMessage = (
+      "Job splitting : Here is the 'distribution' of events over the jobs'\n"
+      "A list element corresponds to a job and the element value'\n"
+      "is the related number of events'\n"
+    )
+    debugMessage += str(mapEventJob)
+    gLogger.debug(debugMessage)
 
     jobIds = []
 
@@ -672,9 +702,11 @@ class FccJob(UserJob):
       if number <= 0:
         raise ValueError
     except ValueError:
-      errorMessage = ["Job splitting : Please, enter valid numbers :"]
-      errorMessage += ["'events per job' and 'number of jobs' must be positive integers"]
-      gLogger.error('\n'.join(errorMessage))
+      errorMessage = (
+        "Job splitting : Please, enter valid numbers :'\n"
+        "'events per job' and 'number of jobs' must be positive integers"
+      )
+      gLogger.error(errorMessage)
       return False
 
     return number

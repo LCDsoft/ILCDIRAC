@@ -192,9 +192,11 @@ class Fcc(LCApplication):
     self._log.info(infoMessage)
 
     if not (self.fccExecutable and self.fccConfFile):
-      errorMessage = "Consistency : Error in parsing '%s' application :" %  self.fccAppName
-      errorMessage += "\nYou have to provide at least an executable"
-      errorMessage += "and a configuration file for each application\n"
+      errorMessage = "Consistency : Error in parsing '%s' application :\n" %  self.fccAppName
+      errorMessage += (
+        "You have to provide at least an executable"
+        " and a configuration file for each application\n"
+      )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
@@ -524,9 +526,11 @@ class Fcc(LCApplication):
 
     """
 
-    uploadPathMessage = "does not exist\n"
-    uploadPathMessage += "Please ensure that your path exists in an accessible file system "
-    uploadPathMessage += "(AFS or CVMFS)"
+    uploadPathMessage = (
+      "does not exist\n"
+      "Please ensure that your path exists in an accessible file system "
+      "(AFS or CVMFS)"
+    )
 
     if not self._tempInputSandbox:
       warnMessage = "Sandboxing : Your application has an empty input sandbox"
@@ -545,8 +549,10 @@ class Fcc(LCApplication):
 
       if path.startswith('/afs/'):
         warnMessage = "Sandboxing : You plan to upload '%s'" % path
-        warnMessage += " which is stored on AFS"
-        warnMessage += "\nSTORING FILES ON AFS IS DEPRECATED"
+        warnMessage += (
+          " which is stored on AFS\n"
+          "STORING FILES ON AFS IS DEPRECATED"
+        )
 
         # We log the message in the warning level
         self._log.warn(warnMessage)
@@ -561,8 +567,10 @@ class Fcc(LCApplication):
       # if path is already in the sandbox, set type will kill duplicates
       self._inputSandbox.add(path)
 
-    debugMessage = "Sandboxing : Files required by FCC application"
-    debugMessage += " verified and added successfully to the sandbox"
+    debugMessage = (
+      "Sandboxing : Files required by FCC application"
+      " verified and added successfully to the sandbox"
+    )
 
     self._log.debug(debugMessage)
     return True
@@ -833,9 +841,11 @@ class FccSw(Fcc):
     self._log.debug("FCCSW specific consistency : _checkConsistency()...")
 
     if not(self.fccswPath and self.fccConfFile):
-      errorMessage = "FCCSW specific consistency : Error in parsing FCCSW application :"
-      errorMessage += "\nYou have to provide the path of FCCSW installation"
-      errorMessage += " and a valid configuration file"
+      errorMessage = (
+        "FCCSW specific consistency : Error in parsing FCCSW application :"
+        "\nYou have to provide the path of FCCSW installation"
+        " and a valid configuration file"
+      )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
@@ -843,13 +853,17 @@ class FccSw(Fcc):
     #self.fccConfFile = os.path.join(self.fccswPath, self.fccConfFile)
 
     if not os.path.exists(self.fccswPath):
-      errorMessage = "FCCSW specific consistency : You have to provide the valid path"
-      errorMessage += " of the FCCSW installation"
+      errorMessage = (
+        "FCCSW specific consistency : You have to provide the valid path"
+        " of the FCCSW installation"
+      )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    debugMessage = "FCCSW specific consistency : Creation of a temporary folder 'temp_fcc_dirac'"
-    debugMessage += " in the current working directory..."
+    debugMessage = (
+      "FCCSW specific consistency : Creation of a temporary folder 'temp_fcc_dirac'"
+      " in the current working directory..."
+    )
     self._log.debug(debugMessage)
 
     # First, it creates a temporary local directory for folders whose
@@ -880,7 +894,7 @@ class FccSw(Fcc):
     # Stuff to call gaudirun.py
     python = 'python'
     xenv = '`which xenv`'
-    xenv = '/cvmfs/fcc.cern.ch/sw/0.8/gaudi/v28r2/x86_64-slc6-gcc49-opt/scripts/xenv'
+    #xenv = '/cvmfs/fcc.cern.ch/sw/0.8/gaudi/v28r2/x86_64-slc6-gcc49-opt/scripts/xenv'
 
     # If InstallArea folder is on cvmfs so nothing to do
     # else download it because 'FCCSW.xenv' needs libraries from this folder

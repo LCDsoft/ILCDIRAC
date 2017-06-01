@@ -72,8 +72,10 @@ class FccAnalysis(ModuleBase):
 
     # Try to locate environment script in 'dirac.cfg' file
     if not self._getEnvironmentScript():
-      errorMessage = "Environment : Environment script look up failed"
-      errorMessage += "\nFailed to get environment"
+      errorMessage = (
+        "Environment : Environment script look up failed\n"
+        "Failed to get environment"
+      )
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
@@ -86,8 +88,10 @@ class FccAnalysis(ModuleBase):
       self.fccConfFile = os.path.abspath(os.path.basename(self.fccConfFile))
 
     if not os.path.exists(self.fccConfFile):
-      errorMessage = "Environment : FCC configuration file does not exist,"
-      errorMessage += " can not run FCC application"
+      errorMessage = (
+        "Environment : FCC configuration file does not exist,"
+        " can not run FCC application"
+      )
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
@@ -98,13 +102,17 @@ class FccAnalysis(ModuleBase):
 
 
       if not os.path.exists(self.gaudiOptionsFile):
-        errorMessage = "Environment : Gaudi option file does not exist,"
-        errorMessage += " can not run FCC application"
+        errorMessage = (
+          "Environment : Gaudi option file does not exist,"
+          " can not run FCC application"
+        )
         self.log.error(errorMessage)
         return S_ERROR(errorMessage)
 
-    debugMessage = "Application code : Creation of the bash script"
-    debugMessage += " to call the application with FCC module parameters..."
+    debugMessage = (
+      "Application code : Creation of the bash script"
+      " to call the application with FCC module parameters..."
+    )
     self.log.debug(debugMessage)
 
     # Main command
