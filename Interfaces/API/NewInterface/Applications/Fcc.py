@@ -131,6 +131,9 @@ class Fcc(LCApplication):
     md1.addParameter(Parameter("fccConfFile", "", "string", "", "", False, False,
                    "FCC configuration file"))
 
+    md1.addParameter(Parameter("gaudiOptionsFile", "", "string", "", "", False, False,
+                   "Gaudi configuration file"))
+
     md1.addParameter(Parameter("fccAppIndex", "", "string", "", "", False, False,
                    "FCC application index"))
 
@@ -155,6 +158,7 @@ class Fcc(LCApplication):
 
     moduleinstance.setValue("fccExecutable", self.fccExecutable)
     moduleinstance.setValue("fccConfFile", self.fccConfFile)
+    moduleinstance.setValue("gaudiOptionsFile", self.gaudiOptionsFile)
     moduleinstance.setValue("fccAppIndex", self.fccAppIndex)
     moduleinstance.setValue("software", self.software)
     moduleinstance.setValue("version", self.version)
