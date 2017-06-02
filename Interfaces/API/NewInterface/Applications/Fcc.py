@@ -457,7 +457,7 @@ class Fcc(LCApplication):
 
           debugMessage = (
             "Sandboxing : Copy of the file"
-            " '%(src)s' successfull to '%(dst)s'" % % {'src':source, 'dst':destination}
+            " '%(src)s' successfull to '%(dst)s'" % {'src':source, 'dst':destination}
           )
           self._log.debug(debugMessage)
 
@@ -923,8 +923,8 @@ class FccSw(Fcc):
 
     # Stuff to call gaudirun.py
     python = 'python'
-    xenv = '`which xenv`'
-    #xenv = '/cvmfs/fcc.cern.ch/sw/0.8/gaudi/v28r2/x86_64-slc6-gcc49-opt/scripts/xenv'
+    #xenv = '`which xenv`'
+    xenv = '/cvmfs/fcc.cern.ch/sw/0.8/gaudi/v28r2/x86_64-slc6-gcc49-opt/scripts/xenv'
 
     # If InstallArea folder is on cvmfs so nothing to do
     # else download it because 'FCCSW.xenv' needs libraries from this folder
