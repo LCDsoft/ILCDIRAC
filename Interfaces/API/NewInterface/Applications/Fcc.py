@@ -176,8 +176,10 @@ class Fcc(LCApplication):
 
     """
 
-    infoMessage = "Application general consistency :"
-    infoMessage += " _checkConsistency() on '%s'..." % self.fccAppName
+    infoMessage = (
+      "Application general consistency :"
+      " _checkConsistency() on '%(name)s'..." % {'name':self.fccAppName}
+    )
     self._log.info(infoMessage)
 
     if not (self.version  and  self.platform):
@@ -185,25 +187,27 @@ class Fcc(LCApplication):
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    infoMessage = "Consistency : Version and platform of the application set to :"
-    infoMessage += "\nversion : %s" % self.version
-    infoMessage += "\nplatform : %s" % self.platform
-
+    infoMessage = (
+      "Consistency : Version and platform of the application set to :"
+      "\nversion : %(version)s" 
+      "\nplatform : %(platform)s" % {'version':self.platform, 'platform':self.version}
+    )
     self._log.info(infoMessage)
 
     if not (self.fccExecutable and self.fccConfFile):
-      errorMessage = "Consistency : Error in parsing '%s' application :\n" %  self.fccAppName
-      errorMessage += (
+      errorMessage = (
+        "Consistency : Error in parsing '%(name)s' application :\n"
         "You have to provide at least an executable"
-        " and a configuration file for each application\n"
+        " and a configuration file for each application" % {'name':self.fccAppName}
       )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    debugMessage = "Consistency : Executable and configuration of the application set to :"
-    debugMessage += "\nexecutable : %s" % self.fccExecutable
-    debugMessage += "\nconfiguration : %s" % self.fccConfFile
-
+    debugMessage = (
+      "Consistency : Executable and configuration of the application set to :"
+      "\nexecutable : %(exec)s"
+      "\nconfiguration : %(conf)s" % {'exec':self.fccExecutable, 'conf':self.fccConfFile}
+    )
     self._log.debug(debugMessage)
 
     # We add the log to the ouput sandbox
@@ -279,31 +283,37 @@ class Fcc(LCApplication):
 
     """
 
-    infoMessage = '\n********************************FCC SUMMARY******************************'
-
-    infoMessage += "\nYou plan to submit this application with its corresponding log :"
-    infoMessage += '\n ' + self.fccAppName + ' --> ' + fccAppLog
-
+    infoMessage = (
+      "\n********************************FCC SUMMARY******************************\n"
+      "You plan to submit this application with its corresponding log :\n"
+      "%(name)s --> %(log)s" % {'name':self.fccAppName, 'log':self.logFile}
+    )
     self._log.info(infoMessage)
 
 
     if self._inputSandbox:
-      infoMessage = '\nHere is the content of its input sandbox :\n'
-      infoMessage += '\n'.join(self._inputSandbox)
+      infoMessage = (
+        "\nHere is the content of its input sandbox :\n%(input)s"
+        % {'input':'\n'.join(self._inputSandbox)}
+      )
       self._log.info(infoMessage)
 
     if self._outputSandbox:
-      infoMessage = '\nHere is the content of its output sandbox :\n'
-      infoMessage += '\n'.join(self._outputSandbox)
+      infoMessage = (
+        "\nHere is the content of its output sandbox :\n%(output)s"
+        % {'output':'\n'.join(self._outputSandbox)}
+      )
       self._log.info(infoMessage)
 
 
-    infoMessage = '\n********************************FCC SUMMARY******************************'
+    infoMessage = "\n********************************FCC SUMMARY******************************"
     self._log.info(infoMessage)
 
 
-    infoMessage = "Application general consistency : _checkConsistency()"
-    infoMessage += " on '%s' successfull" % self.fccAppName
+    infoMessage = (
+      "Application general consistency : _checkConsistency()"
+      " on '%(name)s' successfull" % {'name':self.fccAppName}
+    )
     self._log.info(infoMessage)
 
     # Flush application sandboxes
@@ -395,13 +405,17 @@ class Fcc(LCApplication):
       try:
         os.makedirs(tempFolder)
       except OSError:
-        errorMessage = "Sandboxing : Creation of the filtered folder"
-        errorMessage += " '%s' failed" % tempFolder
+        errorMessage = (
+          "Sandboxing : Creation of the filtered folder"
+          " '%(temp)s' failed" % {'temp':tempFolder}
+        )
         self._log.error(errorMessage)
         return False
 
-      debugMessage = "Sandboxing : Creation of the filtered folder"
-      debugMessage += " '%s' successfull" % tempFolder
+      debugMessage = (
+        "Sandboxing : Creation of the filtered folder"
+        " '%(temp)s' successfull" % {'temp':tempFolder}
+      )
       self._log.debug(debugMessage)
 
     for path in os.listdir(actualFolder):
@@ -441,8 +455,10 @@ class Fcc(LCApplication):
             self._log.error(errorMessage)
             return False
 
-          debugMessage = "Sandboxing : Copy of the file"
-          debugMessage += " '%s' successfull to '%s'" % (source, destination)
+          debugMessage = (
+            "Sandboxing : Copy of the file"
+            " '%(src)s' successfull to '%(dst)s'" % % {'src':source, 'dst':destination}
+          )
           self._log.debug(debugMessage)
 
     debugMessage = "Sandboxing : Folder '%s' filtering successfull" % tempFolder
@@ -526,12 +542,6 @@ class Fcc(LCApplication):
 
     """
 
-    uploadPathMessage = (
-      "does not exist\n"
-      "Please ensure that your path exists in an accessible file system "
-      "(AFS or CVMFS)"
-    )
-
     if not self._tempInputSandbox:
       warnMessage = "Sandboxing : Your application has an empty input sandbox"
       self._log.warn(warnMessage)
@@ -543,15 +553,19 @@ class Fcc(LCApplication):
 
       # If file does not exist then consistency fails
       if not isExist:
-        errorMessage = "Sandboxing : The path '%s' %s" % (path, uploadPathMessage)
+        errorMessage = (
+          "Sandboxing : The path '%(path)s' does not exist\n"
+          "Please ensure that your path exists in an accessible file system "
+          "(AFS or CVMFS)" % {'path':path}
+        )
         self._log.error(errorMessage)
         return False
 
       if path.startswith('/afs/'):
-        warnMessage = "Sandboxing : You plan to upload '%s'" % path
-        warnMessage += (
+        warnMessage = (
+          "Sandboxing : You plan to upload '%(path)s'"
           " which is stored on AFS\n"
-          "STORING FILES ON AFS IS DEPRECATED"
+          "STORING FILES ON AFS IS DEPRECATED" % {'path':path}
         )
 
         # We log the message in the warning level
@@ -560,8 +574,10 @@ class Fcc(LCApplication):
       # cvmfs paths do not need to be uploaded, they can be accessed remotely.
       # but for the moment do not be smart about it
       #if not path.startswith('/cvmfs/'):
-      debugMessage = "Sandboxing : The path '%s' required by the application" % path
-      debugMessage += " has been added to te sandbox"
+      debugMessage = (
+        "Sandboxing : The path '%(path)s' required by the application"
+        " has been added to te sandbox" % {'path':path}
+      )
       self._log.debug(debugMessage)
 
       # if path is already in the sandbox, set type will kill duplicates
@@ -625,10 +641,12 @@ class Fcc(LCApplication):
     for idx, actualFolder in enumerate(self._foldersToFilter):
 
       if not os.path.exists(actualFolder):
-        errorMessage = ["Sandboxing : _filterFolders() failed"]
-        errorMessage += ["The folder '%s' does not exist" % actualFolder]
-        errorMessage += ["Check if you're FCCSW installation is complete"]
-        self._log.error('\n'.join(errorMessage))
+        errorMessage = (
+          "Sandboxing : _filterFolders() failed\n"
+          "The folder '%(actual)s' does not exist\n"
+          "Check if you're FCCSW installation is complete" % {'actual':actualFolder}
+        )
+        self._log.error(errorMessage)
         return False
 
       if idx < len(self._filteredExtensions):
@@ -710,8 +728,10 @@ class Fcc(LCApplication):
     """
 
     if not files:
-      warnMessage = "Sandboxing : FCCSW configuration file"
-      warnMessage += " does not seem to need any additional '%s' files" % extension
+      warnMessage = (
+        "Sandboxing : FCCSW configuration file"
+        " does not seem to need any additional '%(ext)s' files" % {'ext':extension}
+      )
       self._log.warn(warnMessage)
       return True
 
@@ -723,8 +743,10 @@ class Fcc(LCApplication):
       # which will become the new location of the file.
       treeFullPath = os.path.join(self._tempCwd, tree)
 
-      debugMessage = "Sandboxing : Tree '%s' of additionnal" % treeFullPath
-      debugMessage += " '%s' files creation..." % extension
+      debugMessage = (
+        "Sandboxing : Tree '%(tree)s' of additionnal"
+        " '%(ext)s' files creation..." % {'tree':treeFullPath, 'ext':extension}
+      )
       self._log.debug(debugMessage)
 
       # We create the tree locally in the temporary folder
@@ -732,13 +754,17 @@ class Fcc(LCApplication):
         try:
           os.makedirs(treeFullPath)
         except OSError:
-          errorMessage = "Sandboxing : Tree '%s' of additionnal" % treeFullPath
-          errorMessage += " '%s' files creation failed" % extension
+          errorMessage = (
+            "Sandboxing : Tree '%(tree)s' of additionnal"
+            " '%(ext)s' files creation failed" % {'tree':treeFullPath, 'ext':extension}
+          )
           self._log.error(errorMessage)
           return False
 
-        debugMessage = "Sandboxing : Tree '%s' of additionnal" % treeFullPath
-        debugMessage += " '%s' files creation successfull" % extension
+        debugMessage = (
+          "Sandboxing : Tree '%(tree)s' of additionnal"
+          " '%(ext)s' files creation successfull" % {'tree':treeFullPath, 'ext':extension}
+        )
         self._log.debug(debugMessage)
 
       else:
@@ -771,13 +797,17 @@ class Fcc(LCApplication):
       try:
         shutil.copyfile(source, destination)
       except IOError, shutil.Error:
-        errorMessage = "Sandboxing : Additionnal files"
-        errorMessage += " '%s' copy failed" % source
+        errorMessage = (
+          "Sandboxing : Additionnal files"
+          " '%(src)s' copy failed" % {'src':source}
+        )
         self._log.error(errorMessage)
         return False
 
-    debugMessage = "Sandboxing : Additionnal files"
-    debugMessage += " '%s' copy successfull to '%s'" % (source, destination)
+    debugMessage = (
+      "Sandboxing : Additionnal files"
+      " '%(src)s' copy successfull to '%(dst)s'" % {'src':source, 'dst':destination}
+    )
     self._log.debug(debugMessage)
 
     return True
@@ -842,8 +872,8 @@ class FccSw(Fcc):
 
     if not(self.fccswPath and self.fccConfFile):
       errorMessage = (
-        "FCCSW specific consistency : Error in parsing FCCSW application :"
-        "\nYou have to provide the path of FCCSW installation"
+        "FCCSW specific consistency : Error in parsing FCCSW application :\n"
+        "You have to provide the path of FCCSW installation"
         " and a valid configuration file"
       )
       self._log.error(errorMessage)

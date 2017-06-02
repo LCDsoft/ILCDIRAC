@@ -259,8 +259,10 @@ class FccJob(UserJob):
 
     self._fccStep += 1
 
-    debugMessage = "Application : "
-    debugMessage += "Application '%s' appending..." % appName
+    debugMessage = (
+      "Application : "
+      "Application '%(name)s' appending..." % {'name':appName}
+    )
     gLogger.debug(debugMessage)
 
     # If user calls setInputSandbox, we get the files in
@@ -297,16 +299,16 @@ class FccJob(UserJob):
         errorMessage = (
           "Application add operation : Error in the description of the module\n"
           "Please pay attention to this message :\n"
+          "%(type)s : %(value)s\n" % {'type':excType, 'value':excValue}
         )
-        errorMessage += '%s : %s\n' % (excType, excValue)
-
       gLogger.error(errorMessage)
       return False
 
     if 'OK' in appAddition and not appAddition['OK']:
-      errorMessage = "Application appending : "
-      errorMessage += "Application '%s' appending failed\n" % appName
-      errorMessage += appAddition['Message']
+      errorMessage = (
+        "Application appending : "
+        "Application '%(name)s' appending failed\n%(msg)s" % {'name':appName, 'msg':appAddition['Message']}
+      )
       gLogger.error(errorMessage)
       return False
 
@@ -426,22 +428,21 @@ class FccJob(UserJob):
       submissionMessage = (
         "Submission : Submission Failure\n"
         "Please check the description of your job\n"
-        "Pay attention to the following message :\n"
+        "Pay attention to the following message :\n%(msg)s" % {'msg':submission['Message']}
       )
-      submissionMessage += submission['Message']
       gLogger.error(submissionMessage)
       return False
 
     # no job ID is given in local submission
     if 'JobID' in submission:
       jobId = submission['JobID']
-      submissionMessage = "GRID Submission : The job with the ID '%s' " % str(jobId)
-      submissionMessage += (
+      submissionMessage = (
+        "GRID Submission : The job with the ID '%(id)s' "
         "has been submitted to the grid\n"
         "You can get output by visiting the DIRAC portal of your VO\n"
         "in the 'Job Monitor' tab or by typing :\n"
+        "dirac-wms-job-get-output %(id)s" % {'id':str(jobId)}
       )
-      submissionMessage += "dirac-wms-job-get-output %d" % jobId
     else:
       jobId = "NO_ID_IN_LOCAL_SUBMISSION"
       submissionMessage = (
@@ -579,8 +580,8 @@ class FccJob(UserJob):
 
     if self.eventsPerJob and self.njobs:
       debugMessage = (
-        "Job splitting : 1st case"
-        " events per job and number of jobs has been given (easy)"
+        "Job splitting : 1st case\n"
+        "events per job and number of jobs has been given (easy)"
       )
       gLogger.debug(debugMessage)
 
@@ -594,9 +595,9 @@ class FccJob(UserJob):
 
     elif self.eventsPerJob and totalNumberOfEvents:
       debugMessage = (
-        "Job splitting : 2nd case"
-      " only events per job has been given but we know the total"
-      " number of events, so we have to compute the number of jobs required"
+        "Job splitting : 2nd case\n"
+        "Only events per job has been given but we know the total"
+        " number of events, so we have to compute the number of jobs required"
       )
       gLogger.debug(debugMessage)
 
@@ -622,8 +623,8 @@ class FccJob(UserJob):
 
     else:
       debugMessage = (
-        "Job splitting : 3rd case"
-        " The number of jobs has to be given and the total number"
+        "Job splitting : 3rd case\n"
+        "The number of jobs has to be given and the total number"
         " of events has to be set"
       )
       gLogger.debug(debugMessage)
@@ -649,9 +650,8 @@ class FccJob(UserJob):
     debugMessage = (
       "Job splitting : Here is the 'distribution' of events over the jobs'\n"
       "A list element corresponds to a job and the element value'\n"
-      "is the related number of events'\n"
+      "is the related number of events'\n%(map)s" % {'map':str(mapEventJob)}
     )
-    debugMessage += str(mapEventJob)
     gLogger.debug(debugMessage)
 
     jobIds = []

@@ -64,8 +64,10 @@ class FccAnalysis(ModuleBase):
 
     # Worflow parameters given on the fly by parametric job functions
     if 'split' in self.workflow_commons:
-      debugMessage = "Environment : Parameter 'split' given successfully"
-      debugMessage += " with this value '%s'" % self.workflow_commons['split']
+      debugMessage = (
+        "Environment : Parameter 'split' given successfully"
+        " with this value '%(split)s'" % {'split':self.workflow_commons['split']}
+      )
       self.log.debug(debugMessage)
 
     self.log.info("Environment : Environment script look up...")
@@ -79,7 +81,7 @@ class FccAnalysis(ModuleBase):
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    debugMessage = "Environment : Environment script found at : %s" % (self.environmentScript)
+    debugMessage = "Environment : Environment script found at : %s" % self.environmentScript
     self.log.debug(debugMessage)
 
     self.log.info("Environment : Environment script look up successfull")
@@ -136,11 +138,12 @@ class FccAnalysis(ModuleBase):
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    infoMessage = ["Application code : Execution of application script successfull"]
-    infoMessage += ["standard output is written to '%s.out'" % self.fccAppIndex]
-    infoMessage += ["standard error is written to '%s.err'" % self.fccAppIndex]
-
-    self.log.info('\n'.join(infoMessage))
+    infoMessage = (
+      "Application code : Execution of application script successfull\n"
+      "standard output is written to '%(idx)s.out'\n"
+      "standard error is written to '%(idx)s.err'" % {'idx':self.fccAppIndex}
+    )
+    self.log.info(infoMessage)
 
     self.log.debug("Application : Standard output creation...")
 
@@ -247,9 +250,11 @@ class FccAnalysis(ModuleBase):
     # Because if we do not have access to cvmfs, we can do nothing.
 
     #print('%s %s %s' % (sysConfig, appName, appVersion))
-    errorMessage = 'Environment : Environment script not found'
-    errorMessage += ' for this configuration %s %s %s' % (sysConfig, appName, appVersion)
-    errorMessage += ' can not generate one dynamically'
+    errorMessage = (
+      "Environment : Environment script not found"
+      " for this configuration %(conf)s %(name)s %(version)s'"
+      " can not generate one dynamically" % {'conf':sysConfig, 'name':appName, 'version':appVersion}
+    )
     return S_ERROR(errorMessage)
 
   def _getEnvironmentScript(self):
