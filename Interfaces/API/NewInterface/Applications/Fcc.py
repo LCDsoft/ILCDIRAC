@@ -190,7 +190,7 @@ class Fcc(LCApplication):
     infoMessage = (
       "Consistency : Version and platform of the application set to :"
       "\nversion : %(version)s" 
-      "\nplatform : %(platform)s" % {'version':self.platform, 'platform':self.version}
+      "\nplatform : %(platform)s" % {'version':self.version, 'platform':self.platform}
     )
     self._log.info(infoMessage)
 

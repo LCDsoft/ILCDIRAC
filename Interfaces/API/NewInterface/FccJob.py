@@ -91,6 +91,7 @@ class FccJob(UserJob):
     self.mode = ""
     self._switch = {}
     self.njobs = None
+    self.totalNumberOfEvents = None
     self.eventsPerJob = None
 
     self._userApplications = set()
