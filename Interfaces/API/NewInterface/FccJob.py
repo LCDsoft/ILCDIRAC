@@ -391,10 +391,10 @@ class FccJob(UserJob):
 
     # All applications must have the same number of events
     # We can get this number from the first application for example
-    totalNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
+    self.totalNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
 
     # Ensure that all applications have the same total number of events
-    if not all(app.numberOfEvents == totalNumberOfEvents for app in self._userApplications):
+    if not all(app.numberOfEvents == self.totalNumberOfEvents for app in self._userApplications):
       errorMessage = (
         "FccJob : Applications must all have the same number of events\n"
         "FccJob : FccJob _checkFccJobConsistency failed"
@@ -402,7 +402,7 @@ class FccJob(UserJob):
       gLogger.error(errorMessage)
       return False
 
-    if totalNumberOfEvents == -1 and not self._data:
+    if self.totalNumberOfEvents == -1 and not self._data:
       warnMessage = (
         "FccJob : You set the number of events to -1 without input data\n"
         "Was that intentional ?"
@@ -603,7 +603,7 @@ class FccJob(UserJob):
     # Given the number of events per job and total of number of event we want,
     # we can compute the unknown which is the number of jobs
 
-    elif self.eventsPerJob and totalNumberOfEvents:
+    elif self.eventsPerJob and self.totalNumberOfEvents:
       debugMessage = (
         "Job splitting : 2nd case\n"
         "Only events per job has been given but we know the total"
@@ -611,7 +611,7 @@ class FccJob(UserJob):
       )
       gLogger.debug(debugMessage)
 
-      if self.eventsPerJob > totalNumberOfEvents:
+      if self.eventsPerJob > self.totalNumberOfEvents:
         errorMessage = (
           "Job splitting : The number of events per job has to be"
           " lower than or equal to the total number of events"
@@ -620,8 +620,8 @@ class FccJob(UserJob):
         return False
 
 
-      numberOfJobsIntDiv = totalNumberOfEvents / self.eventsPerJob
-      numberOfJobsRest = totalNumberOfEvents % self.eventsPerJob
+      numberOfJobsIntDiv = self.totalNumberOfEvents / self.eventsPerJob
+      numberOfJobsRest = self.totalNumberOfEvents % self.eventsPerJob
 
       mapEventJob = [self.eventsPerJob] * numberOfJobsIntDiv
 
@@ -639,7 +639,7 @@ class FccJob(UserJob):
       )
       gLogger.debug(debugMessage)
 
-      if (not totalNumberOfEvents) or (totalNumberOfEvents < self.njobs):
+      if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.njobs):
         errorMessage = (
           "Job splitting : The number of events has to be set\n"
           "It has to be greater than or equal to the number of jobs"
@@ -647,8 +647,8 @@ class FccJob(UserJob):
         gLogger.error(errorMessage)
         return False
 
-      eventPerJobIntDiv = totalNumberOfEvents / self.njobs
-      eventPerJobRest = totalNumberOfEvents % self.njobs
+      eventPerJobIntDiv = self.totalNumberOfEvents / self.njobs
+      eventPerJobRest = self.totalNumberOfEvents % self.njobs
 
       mapEventJob = [eventPerJobIntDiv] * self.njobs
 
