@@ -389,6 +389,26 @@ class FccJob(UserJob):
       gLogger.error(errorMessage)
       return False
 
+    # All applications must have the same number of events
+    # We can get this number from the first application for example
+    totalNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
+
+    # Ensure that all applications have the same total number of events
+    if not all(app.numberOfEvents == totalNumberOfEvents for app in self._userApplications):
+      errorMessage = (
+        "FccJob : Applications must all have the same number of events\n"
+        "FccJob : FccJob _checkFccJobConsistency failed"
+      )
+      gLogger.error(errorMessage)
+      return False
+
+    if totalNumberOfEvents == -1 and not self._data:
+      warnMessage = (
+        "FccJob : You set the number of events to -1 without input data\n"
+        "Was that intentional ?"
+      )
+      gLogger.warn(warnMessage)
+
     if self._userFccswApplications:
       fccswPath = next(iter(self._userFccswApplications)).fccswPath
 
@@ -562,16 +582,6 @@ class FccJob(UserJob):
 
     infoMessage = "Job splitting : splitting 'byEvents' method..."
     gLogger.info(infoMessage)
-
-    # All applications must have the same number of events
-    # We can get this number from the first application for example
-    totalNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
-
-    # Ensure that all applications have the same total number of events
-    if not all(app.numberOfEvents == totalNumberOfEvents for app in self._userApplications):
-      errorMessage = "Job splitting : Applications must all have the same number of events"
-      gLogger.error(errorMessage)
-      return False
 
     # 1st case : submit(njobs=3,eventsPerJob=10)
     # trivial case => each job (total of 3) run applications of 10 events each
