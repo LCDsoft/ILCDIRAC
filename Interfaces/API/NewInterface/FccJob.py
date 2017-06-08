@@ -22,33 +22,6 @@
 
 # standard libraries
 import sys
-import os
-
-# It prints DIRAC environment script path available on AFS/CVMFS
-# If you have installed the DIRAC client
-# environment script must be here : ~/dirac/bashrc
-
-def _initDirac():
-  """This function checks DIRAC environment."""
-
-  diracEnvMessage = (
-    "DIRAC environment :\n"
-    "Please ensure that you set up correctly DIRAC environment e.g. :\n"
-    "source /afs/cern.ch/eng/clic/software/DIRAC/bashrc"
-  )
-  # DIRAC environment
-  try:
-    os.environ["DIRAC"]
-  except KeyError:
-    # Print AFS path of environment script as 'help'
-    # Here we use python quit() function and we do not use dirac exit
-    # because DIRAC libraries are not yet imported
-    print(diracEnvMessage)
-    quit()
-
-_initDirac()
-
-# After DIRAC environment checking done, we can import DIRAC libraries
 
 # DIRAC libraries
 from DIRAC.Core.Base import Script
@@ -89,6 +62,7 @@ class FccJob(UserJob):
     self._data = set()
     self._areDataConsumedBySplitting = False
     self.mode = ""
+    self.split = None
     self._switch = {}
     self.njobs = None
     self.totalNumberOfEvents = None
@@ -149,7 +123,7 @@ class FccJob(UserJob):
 
     """
 
-    self._data = self._outputSandbox.union(lfns) if isinstance(lfns, list) else self._data.union([lfns])
+    self._data = self._data.union(lfns) if isinstance(lfns, list) else self._data.union([lfns])
     #super(FccJob, self).setInputData(lfns)
 
   def setInputSandbox(self, files):
@@ -207,6 +181,7 @@ class FccJob(UserJob):
     """
 
     self.mode = mode
+    self.split = split
 
     self.eventsPerJob = self._toInt(eventsPerJob)
     self.njobs = self._toInt(njobs)
@@ -220,11 +195,11 @@ class FccJob(UserJob):
 
     gLogger.info("DIRAC : DIRAC submission beginning...")
 
-    if not self._checkFccJobConsistency(split):
+    if not self._checkFccJobConsistency():
       gLogger.info("DIRAC : DIRAC submission failed")
       dexit(1)
 
-    jobIds = self._switch[split]()
+    jobIds = self._switch[self.split]()
 
     if not jobIds:
       gLogger.info("DIRAC : DIRAC submission failed")
@@ -290,7 +265,7 @@ class FccJob(UserJob):
         # but this exception is not raised, a message is printed to the stdout
         # (saying that PEM files are outdated).
         errorMessage = (
-          "Application add operation : "
+          "Job error : "
           "Please, configure your proxy before submitting a job from DIRAC\n"
           "If you did not set up a proxy, try to refresh it "
           "by typing :\n"
@@ -334,6 +309,8 @@ class FccJob(UserJob):
       gLogger.error(errorMessage)
       return False
 
+    gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
+
     for application in self._userApplications:
           
       # If application is reading events from files like input data files
@@ -346,24 +323,25 @@ class FccJob(UserJob):
       if not self._addApplication(application):
         return False
 
-    # send one job
-    return self._sendJob()
+    jobId = self._sendJob()
 
-  def _checkFccJobConsistency(self, split):
+    gLogger.info("################## JOB SUBMISSION END ##################")
+
+    # send one job
+    return jobId
+
+  def _checkFccJobConsistency(self):
     """This function :
 
     - Checks if FccJob parameters are valid.
     - Detects if the user try to work with many FCCSW installations.
-
-    :param split: the splitting method to apply
-    :type split: str
 
     :return: success or failure of the consistency checking
     :rtype: bool
 
     :Example:
 
-    >>> self._checkFccJobConsistency(split)
+    >>> self._checkFccJobConsistency()
 
     """
 
@@ -378,7 +356,7 @@ class FccJob(UserJob):
       gLogger.error(errorMessage)
       return False
 
-    if split not in self._switch:
+    if self.split not in self._switch:
       errorMessage = (
         "Job splitting : Bad split value\n"
         "Possible values are :\n"
@@ -389,6 +367,9 @@ class FccJob(UserJob):
       )
       gLogger.error(errorMessage)
       return False
+
+    if self.njobs or self.eventsPerJob:
+      self.split = "byEvents"
 
     # All applications must have the same number of events
     # We can get this number from the first application for example
@@ -542,10 +523,18 @@ class FccJob(UserJob):
 
     self._areDataConsumedBySplitting = True
 
+    gLogger.info("Job splitting : Your submission consists of %d job(s)" % len(self._data))
+
     jobIds = []
 
     # Here, we submit a job for each data
-    for data in self._data:
+    for idx, data in enumerate(self._data):
+
+      gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
+      
+      infoMessage = "Job splitting : Sending job number %d with input data '%s' ..." % (idx+1, data)
+      gLogger.info(infoMessage)
+
       # Job level
       # Like that the data will be downloaded in the job PWD
       result = super(FccJob, self).setInputData(data)
@@ -572,7 +561,11 @@ class FccJob(UserJob):
       jobId = self._sendJob()
 
       if not jobId:
+        errorMessage = "Job splitting : Sending job number %d with input data '%s' failed" % (idx+1, data)
+        gLogger.error(errorMessage)    
         return False
+
+      gLogger.info("################## JOB SUBMISSION END ##################")
 
       jobIds.append(jobId)
 
@@ -592,7 +585,7 @@ class FccJob(UserJob):
     if self.eventsPerJob and self.njobs:
       debugMessage = (
         "Job splitting : 1st case\n"
-        "events per job and number of jobs has been given (easy)"
+        "events per job and number of jobs have been given (easy)"
       )
       gLogger.debug(debugMessage)
 
@@ -659,15 +652,23 @@ class FccJob(UserJob):
 
 
     debugMessage = (
-      "Job splitting : Here is the 'distribution' of events over the jobs'\n"
-      "A list element corresponds to a job and the element value'\n"
-      "is the related number of events'\n%(map)s" % {'map':str(mapEventJob)}
+      "Job splitting : Here is the 'distribution' of events over the jobs\n"
+      "A list element corresponds to a job and the element value"
+      " is the related number of events\n%(map)s" % {'map':str(mapEventJob)}
     )
     gLogger.debug(debugMessage)
 
+    gLogger.info("Job splitting : Your submission consists of %d job(s)" % len(mapEventJob))
+
     jobIds = []
 
-    for eventsPerJob in mapEventJob:
+    for idx, eventsPerJob in enumerate(mapEventJob):
+          
+      gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
+      
+      infoMessage = "Job splitting : Sending job number %d with number of events of '%d' ..." % (idx+1, eventsPerJob)
+      gLogger.info(infoMessage)
+
       for application in self._userApplications:
         # If application is reading events from files like input data files
         # do not forget to give them to FCCDataSvc().
@@ -684,7 +685,11 @@ class FccJob(UserJob):
       jobId = self._sendJob()
 
       if not jobId:
+        errorMessage = "Job splitting : Sending job number %d with number of events of '%d' failed" % (idx+1, eventsPerJob)
+        gLogger.error(errorMessage)
         return False
+
+      gLogger.info("################## JOB SUBMISSION END ##################")
 
       jobIds.append(jobId)
 
@@ -705,7 +710,7 @@ class FccJob(UserJob):
     >>> number = self._toInt("1000")
     """
 
-    if not number:
+    if None is number:
       return number
 
     try:
@@ -714,7 +719,7 @@ class FccJob(UserJob):
         raise ValueError
     except ValueError:
       errorMessage = (
-        "Job splitting : Please, enter valid numbers :'\n"
+        "Job splitting : Please, enter valid numbers :\n"
         "'events per job' and 'number of jobs' must be positive integers"
       )
       gLogger.error(errorMessage)
