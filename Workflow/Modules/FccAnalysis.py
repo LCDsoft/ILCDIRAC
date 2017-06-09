@@ -54,8 +54,8 @@ class FccAnalysis(ModuleBase):
     """Main method called by the Agent.
        The Application's call must reside here.
 
-       In fact, an FCC application consists on executing a bash script containing
-       an executable following by arguments provided by the Fcc module via module parameters.
+       In fact, an FCC application consists on calling a bash script executing
+       an executable followed by arguments provided by the Fcc module via module parameters.
 
     :return: The success or failure of the execution
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
@@ -134,12 +134,12 @@ class FccAnalysis(ModuleBase):
 
 
     if 'OK' in call and not call['OK']:
-      errorMessage = "Application code : Execution of application script failed"
+      errorMessage = "Application code : Execution of application's script failed"
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
     infoMessage = (
-      "Application code : Execution of application script successfull\n"
+      "Application code : Execution of application's script successfull\n"
       "standard output is written to '%(idx)s.out'\n"
       "standard error is written to '%(idx)s.err'" % {'idx':self.fccAppIndex}
     )
@@ -205,7 +205,7 @@ class FccAnalysis(ModuleBase):
 
     """
 
-    # Set environnement and execute the application
+    # Set environment and execute the application
     shebang = "#!/bin/bash"
 
     setEnvironmentScript = 'source %s' % self.environmentScript
@@ -213,7 +213,7 @@ class FccAnalysis(ModuleBase):
 
     self.log.debug("Application command : %s" % '\n'.join(commands))
 
-    # Write the temporary job
+    # Write the temporary application's script
     self.log.debug("Application code : Bash script creation...")
 
     if not self._writeToFile('w', self.applicationScript, '\n'.join(bashScriptText) + '\n'):
@@ -251,9 +251,9 @@ class FccAnalysis(ModuleBase):
 
     #print('%s %s %s' % (sysConfig, appName, appVersion))
     errorMessage = (
-      "Environment : Environment script not found"
-      " for this configuration %(conf)s %(name)s %(version)s'"
-      " can not generate one dynamically" % {'conf':sysConfig, 'name':appName, 'version':appVersion}
+      "Environment : Environment script not found\n"
+      "for this configuration : %(conf)s, %(name)s, %(version)s\n"
+      "Can not generate one dynamically" % {'conf':sysConfig, 'name':appName, 'version':appVersion}
     )
     return S_ERROR(errorMessage)
 

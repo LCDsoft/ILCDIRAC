@@ -210,10 +210,6 @@ class Fcc(LCApplication):
     )
     self._log.debug(debugMessage)
 
-    # We add the log to the ouput sandbox
-    # (I think it is already done by DIRAC)
-    #self._outputSandbox.add(fccAppLog)
-
     # All input files are put in the temporary sandbox for a
     # pre-checking before being added to the final sandbox
     self._tempInputSandbox.add(self.fccConfFile)
@@ -266,12 +262,15 @@ class Fcc(LCApplication):
     self._outputSandbox.add("%s.out" % self.fccAppIndex)
     self._outputSandbox.add("%s.err" % self.fccAppIndex)
     
-    # self.inputSB is an attribute of the DIRAC Application and not of FCC.
-    # The description file of the job (JDL file) contains a section for the input sandbox
-    # This section is filled with a list of files (self.inputSB).
-    # After user input files, application files, and application additionnal
-    # files checked in the temporary sandbox, we 'merge' our 'final input sandbox'
-    # to the DIRAC application input sandbox : self.inputSB
+    """
+    self.inputSB is an attribute of the DIRAC Application and not of FCC.
+    The description file of the job (JDL file) contains a section for the input sandbox
+    This section is filled with a list of files (self.inputSB).
+    After user input files, application files, and application additionnal
+    files checked in the temporary sandbox, we 'merge' our 'final input sandbox'
+    to the DIRAC application input sandbox : self.inputSB
+    """
+    
     self._inputSandbox = self._inputSandbox.union(self._foldersToFilter)
     self.inputSB = list(self._inputSandbox)
 
@@ -280,7 +279,6 @@ class Fcc(LCApplication):
     Whatever the level choosed, sandbox files are all put
     in the same final destination which is a list of paths
     in the JDL file (see Input Sandbox parameter of the JDL file).
-
     """
 
     infoMessage = (
@@ -372,6 +370,14 @@ class Fcc(LCApplication):
     Like that, we do not import unnecessary files to the sandbox.
     It is like we create a 'light' copy of the orginal folder.
 
+    If folders have to be filtered then, we do not have to add them directly to the sandbox
+    because it will put all content of folders.
+    
+    So we copy only the content we want in the filtered folder
+    inside the temporary folder 'temp_fcc_dirac'.
+
+    After, we add the filtered folders located in 'temp_fcc_dirac' to the sandbox.
+
     :param tempFolder: The temporary working directory (destination) used for the sandboxing
     :type tempFolder: str
 
@@ -388,13 +394,7 @@ class Fcc(LCApplication):
     :rtype: bool
 
     """
-
-    # If folders have to be filtered then, we do not have to add them directly to the sandbox
-    # because it will put all content of folders.
-    # So we copy only the content we want in the filtered folder
-    # inside the temporary folder 'temp_fcc_dirac'.
-    # After, we add the filtered folders located in 'temp_fcc_dirac' to the sandbox.
-
+    
     debugMessage = "Sandboxing : Checking of the filtered folder '%s'..." % tempFolder
     self._log.debug(debugMessage)
 
@@ -451,7 +451,7 @@ class Fcc(LCApplication):
           try:
             shutil.copyfile(source, destination)
           except IOError, shutil.Error:
-            errorMessage = "Sandboxing : The copy of the file '%s' failed"% destination
+            errorMessage = "Sandboxing : The copy of the file '%s' failed" % destination
             self._log.error(errorMessage)
             return False
 
@@ -472,7 +472,7 @@ class Fcc(LCApplication):
     :type path: str
 
     :return: The full path and its existence
-    :rtype: str, bool
+    :rtype: (str, bool)
 
     """
 
@@ -487,16 +487,16 @@ class Fcc(LCApplication):
     :rtype: bool
 
     """
-
+    
+    #installAreaFolder resolved and added in FccSw class
     #installAreaFolder = os.path.join(self.fccswPath, 'InstallArea')
     detectorFolder = os.path.join(self.fccswPath, 'Detector')
-    #fccsw_folders = [installAreaFolder, detectorFolder]
 
     # We do not need all the content of these folders hence the filtering
     self._foldersToFilter.add(detectorFolder)
 
     # Explanation
-    # InstallArea_folder : all dbg files are excluded
+    # InstallAreaFolder : all dbg files are excluded
     # detectorFolder : only xml files are included
     self._filteredExtensions += ['.dbg', '.xml']
     self._excludesOrIncludes += [True, False]
@@ -519,10 +519,12 @@ class Fcc(LCApplication):
     txtFiles = re.findall(r'="(.*.txt)', content)
     cmdFiles = re.findall(r'filename="(.*.cmd)', content)
 
-    # From these paths we re-create the tree in the temporary sandbox
-    # with only the desired file.
-    # In the configuration file, these paths are relative to FCCSW installation.
-    # e.g. Generation/data/foo.xml
+    """
+    From these paths we re-create the tree in the temporary sandbox
+    with only the desired file.
+    In the configuration file, these paths are relative to FCCSW installation.
+    e.g. Generation/data/foo.xml
+    """
 
     if not self._resolveTreeOfFiles(txtFiles, '.txt'):
       errorMessage = "Sandboxing : _resolveTreeOfFiles() failed"
@@ -568,20 +570,21 @@ class Fcc(LCApplication):
           "STORING FILES ON AFS IS DEPRECATED" % {'path':path}
         )
 
-        # We log the message in the warning level
+        # We log the message into the warning level
         self._log.warn(warnMessage)
 
       # cvmfs paths do not need to be uploaded, they can be accessed remotely.
-      # but for the moment do not be smart about it
+      # but for the moment do not be smart about it, add also cvmfs files,
+      # no need to check.
       #if not path.startswith('/cvmfs/'):
+      # if path is already in the sandbox, set type will kill duplicates
+      self._inputSandbox.add(path)
+
       debugMessage = (
         "Sandboxing : The path '%(path)s' required by the application"
         " has been added to te sandbox" % {'path':path}
       )
       self._log.debug(debugMessage)
-
-      # if path is already in the sandbox, set type will kill duplicates
-      self._inputSandbox.add(path)
 
     debugMessage = (
       "Sandboxing : Files required by FCC application"
@@ -685,7 +688,7 @@ class Fcc(LCApplication):
     :type fileName: str
 
     :return: The content of the file
-    :rtype: str
+    :rtype: str, str
 
     """
 
@@ -786,10 +789,12 @@ class Fcc(LCApplication):
         self._log.error(errorMessage)
         return False
 
+      # if paths already exists do not copy it
+      # go to the next file  
       if os.path.exists(destination):
         debugMessage = "Sandboxing : The file '%s' already exists" % destination
         self._log.debug(debugMessage)
-        return True
+        continue
 
       debugMessage = "Sandboxing : Additional file '%s' copy..." % source
       self._log.debug(debugMessage)
@@ -824,6 +829,9 @@ class Fcc(LCApplication):
 
     :param fileText: The content of the file
     :type fileText: str
+
+    :return: success or failure of the write operation
+    :rtype: bool
 
     """
 
@@ -954,16 +962,18 @@ class FccSw(Fcc):
       -  The number of event
       -  The gaudi log level
       -  The input file for FCCDataSvc
-    """
 
-    # There is 2 ways for configuring gaudirun.py
-    # 1) By using gaudirun.py options :
-    # e.g. ./gaudirun.py --option "ApplicationMgr().EvtMax=10"
-    # 2) By creating a new python script containing the gaudi configuration :
-    # This script has to be given as a second argument to gaudirun.py
-    # e.g. ./gaudirun.py geant_pgun_fullsim.py gaudi_options.py
-    # It then contains the event setting.
-    # We decided to choose the second one.
+    There is 2 ways for configuring gaudirun.py :
+    1) By using gaudirun.py options :
+    e.g. ./gaudirun.py --option "ApplicationMgr().EvtMax=10"
+    
+    2) By creating a new python script containing the gaudi configuration :
+    This script has to be given as a second argument to gaudirun.py
+    e.g. ./gaudirun.py geant_pgun_fullsim.py gaudi_options.py
+    It then contains the event setting...
+    We decided to choose the second one.
+
+    """
 
     gaudiOptions = ["from Configurables import ApplicationMgr"]
     gaudiOptions += ["from Gaudi.Configuration import *"]
@@ -977,10 +987,11 @@ class FccSw(Fcc):
         levelSetting = "ApplicationMgr().OutputLevel=%s" % self.logLevel
         gaudiOptions += [levelSetting]
       else:
-        message = ["FCCSW specific consistency : Invalid value for the log level"]
-        message += ["Possible values for the log level are :"]
-        message += [" ".join(self._logLevels)]
-        self._log.error("\n".join(message))
+        message = (
+          "FCCSW specific consistency : Invalid value for the log level\n"
+          "Possible values for the log level are :\n%(log)s" % {'log' : " ".join(self._logLevels)}
+        )
+        self._log.error(message)
         return False
 
     fccswPodioOptions = ["from Gaudi.Configuration import *"]

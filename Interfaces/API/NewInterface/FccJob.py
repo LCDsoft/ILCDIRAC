@@ -2,21 +2,21 @@
 
   This module implements FccJob class which provides Fcc job definition.
 
-  Here is an example of how to use FccJob to run FCC PHYSICS::
+  Here is an example of how to use FccJob to run FCC PHYSICS :
 
   from ILCDIRAC.Interfaces.API.NewInterface.FccJob import FccJob
   from ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc import FccAnalysis
 
-  j = FccJob()
+  job = FccJob()
 
-  FccPhysics = FccAnalysis(
+  fccPhysics = FccAnalysis(
     fccConfFile=
     '/cvmfs/fcc.cern.ch/sw/0.7/fcc-physics/0.1/x86_64-slc6-gcc49-opt/share/ee_ZH_Zmumu_Hbb.txt',
     outputFile="ee_ZH_Zmumu_Hbb.root",
   )
 
-  j.append(FccPhysics)
-  jobID = j.submit()
+  job.append(fccPhysics)
+  jobID = job.submit()
 
 """
 
@@ -38,7 +38,7 @@ class FccJob(UserJob):
     -  UserJob -> Job
 
   In addition to UserJob functionalities,
-  it proposes to split job over various parameters.
+  it proposes to split job according to various parameters.
 
   Contrary to the parametric functions, bulk submission is done
   on client side and not on server side.
@@ -73,7 +73,8 @@ class FccJob(UserJob):
     # Used for the checking of many fccsw installations
     self._userFccswApplications = set()
 
-    # Names of FCC applications 
+    # Names of all FCC applications
+    # Keep in mind that FccJob accepts also non FCC applications like Marlin, DDSIM etc...
     self.fccAppNames = ['FccSw','FccAnalysis']
 
     self._outputSandbox = set()
@@ -82,7 +83,7 @@ class FccJob(UserJob):
 
   def append(self, application):
     """Redefinition of Dirac.Interfaces.API.Job.append()
-    in order to save applications in a list.
+    in order to save applications into a set.
 
     We do not append now, we make splitting stuff and 're-compute'
     each application before really appending applications in
@@ -109,7 +110,7 @@ class FccJob(UserJob):
     We do not set input data now, we just save all them for the moment.
 
     In the splitting stuff, new jobs may be created. If the
-    'by_data' method is used then submit a job per input data.
+    'byData' method is used then submit a job per input data.
 
     Do not send each job with all input data, we
     have to set the right data for each job, data that
@@ -132,7 +133,7 @@ class FccJob(UserJob):
     sandbox computed in FCC application.
 
     So we save job inputs here and add them
-    later in _addApplication() method to the FCC application inputs.
+    later to the FCC application inputs in _addApplication() method.
     """
     self._inputSandbox = self._inputSandbox.union(files) if isinstance(files, list) else self._inputSandbox.union([files])
 
@@ -142,7 +143,7 @@ class FccJob(UserJob):
     sandbox computed in FCC application.
 
     So we save job outputs here and add them
-    later in _sendJob() method to the FCC application outputs.
+    later to the FCC application outputs in _sendJob() method.
     """
     self._outputSandbox = self._outputSandbox.union(files) if isinstance(files, list) else self._outputSandbox.union([files])
 
@@ -171,7 +172,7 @@ class FccJob(UserJob):
     :param mode: The submission mode
     :type mode: str
 
-    :return: the id(s)
+    :return: The id(s)
     :rtype: list
 
     :Example:
@@ -220,7 +221,7 @@ class FccJob(UserJob):
 
     :Example:
 
-    >>> self._addApplication(FCC_PHYSICS)
+    >>> self._addApplication(application)
 
     """
 
@@ -241,14 +242,16 @@ class FccJob(UserJob):
     )
     gLogger.debug(debugMessage)
 
-    # If user calls setInputSandbox, we get the files in
-    # the set '_inputSandbox' and add them to
-    # the temporary input sandbox of applications for a future checking.
-    # The temporary input sandbox of each application is 'extended'
-    # At the end, the final input sandbox take the set of
-    # all these files.
-    # Indeed, We merge input sandbox files given at the application level
-    # with the input sandbox files given at the job level.
+    """
+    If user calls setInputSandbox, we get the files in
+    the set '_inputSandbox' and add them to
+    the temporary input sandbox of applications for a future checking.
+    The temporary input sandbox of each application is 'extended'
+    At the end, the final input sandbox take the set of
+    all these files.
+    Indeed, We merge input sandbox files given at the application level
+    with the input sandbox files given at the job level.
+    """
 
     # If it is an 'Fcc' application then set _tempInputSandbox attribute
     if appName in self.fccAppNames and self._inputSandbox:
@@ -299,21 +302,11 @@ class FccJob(UserJob):
     infoMessage = "Job splitting : No splitting to apply,then 'atomic submission' will be used"
     gLogger.info(infoMessage)
 
-    if self.njobs:
-      errorMessage = (
-        "Atomic submission : You did not specify a splitting method\n"
-        "So you do not have to set the number of jobs\n"
-        "If you want to split your job over the number of events\n"
-        "Please choose 'byEvents' for the 'split' parameter"
-      )
-      gLogger.error(errorMessage)
-      return False
-
     gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
 
     for application in self._userApplications:
           
-      # If application is reading events from files like input data files
+      # If application reads events from files like input data files
       # do not forget to give them to FCCDataSvc()
 
       # If it is an 'Fcc' application then set _fccInputData attribute
@@ -345,13 +338,13 @@ class FccJob(UserJob):
 
     """
 
-    gLogger.info("FccJob : FccJob _checkFccJobConsistency()...")
+    gLogger.info("FccJob consistency : _checkFccJobConsistency()...")
 
     if not self._userApplications:
       errorMessage = (
         "FccJob : Your job is empty !\n"
         "You have to append at least one application\n"
-        "FccJob : FccJob _checkFccJobConsistency failed"
+        "FccJob consistency : _checkFccJobConsistency failed"
       )
       gLogger.error(errorMessage)
       return False
@@ -363,11 +356,13 @@ class FccJob(UserJob):
         "- byData\n"
         "- byEvents\n"
         "- None\n"
-        "FccJob : FccJob _checkFccJobConsistency failed"
+        "FccJob consistency : _checkFccJobConsistency failed"
       )
       gLogger.error(errorMessage)
       return False
 
+    # If the user sets these parameters so deduce that he wants
+    # to use "byEvents" method
     if self.njobs or self.eventsPerJob:
       self.split = "byEvents"
 
@@ -379,7 +374,7 @@ class FccJob(UserJob):
     if not all(app.numberOfEvents == self.totalNumberOfEvents for app in self._userApplications):
       errorMessage = (
         "FccJob : Applications must all have the same number of events\n"
-        "FccJob : FccJob _checkFccJobConsistency failed"
+        "FccJob consistency : _checkFccJobConsistency failed"
       )
       gLogger.error(errorMessage)
       return False
@@ -398,12 +393,12 @@ class FccJob(UserJob):
         errorMessage = (
           "Submission : You can't have many FCCSW applications\n"
           "running with different installations of FCCSW\n"
-          "FccJob : FccJob _checkFccJobConsistency failed"
+          "FccJob consistency : _checkFccJobConsistency failed"
         )
         gLogger.error(errorMessage)
         return False
 
-    infoMessage = "FccJob : FccJob _checkFccJobConsistency() successfull"
+    infoMessage = "FccJob consistency : _checkFccJobConsistency() successfull"
     gLogger.info(infoMessage)
 
     return True
@@ -435,7 +430,6 @@ class FccJob(UserJob):
       gLogger.error(submissionMessage)
       return False
 
-    # no job ID is given in local submission
     if 'JobID' in submission:
       jobId = submission['JobID']
       submissionMessage = (
@@ -445,6 +439,7 @@ class FccJob(UserJob):
         "in the 'Job Monitor' tab or by typing :\n"
         "dirac-wms-job-get-output %(id)s" % {'id':str(jobId)}
       )
+    # no job ID is given in local submission  
     else:
       jobId = "NO_ID_IN_LOCAL_SUBMISSION"
       submissionMessage = (
@@ -577,12 +572,14 @@ class FccJob(UserJob):
     infoMessage = "Job splitting : splitting 'byEvents' method..."
     gLogger.info(infoMessage)
 
-    # 1st case : submit(njobs=3,eventsPerJob=10)
-    # trivial case => each job (total of 3) run applications of 10 events each
-    # Do not consider number of event of the application (overwrite it)
-    # it is done after
-
     if self.eventsPerJob and self.njobs:
+      """
+      1st case : submit(njobs=3,eventsPerJob=10)
+      trivial case => each job (total of 3) run applications of 10 events each
+      Do not consider number of event of the application (overwrite it)
+      it is done after.
+      """
+      
       debugMessage = (
         "Job splitting : 1st case\n"
         "events per job and number of jobs have been given (easy)"
@@ -591,13 +588,15 @@ class FccJob(UserJob):
 
       mapEventJob = [self.eventsPerJob] * self.njobs
 
-    # 2nd case : submit(split="byEvents",eventsPerJob=10)
-    # In this case the number of events has to be set inside applications
-    # otherwise outputs error.
-    # Given the number of events per job and total of number of event we want,
-    # we can compute the unknown which is the number of jobs
-
     elif self.eventsPerJob and self.totalNumberOfEvents:
+      """
+      2nd case : submit(split="byEvents",eventsPerJob=10)
+      In this case, the number of events has to be set inside applications
+      otherwise outputs error.
+      Given the number of events per job and total of number of event we want,
+      we can compute the unknown which is the number of jobs.
+      """
+
       debugMessage = (
         "Job splitting : 2nd case\n"
         "Only events per job has been given but we know the total"
@@ -621,11 +620,13 @@ class FccJob(UserJob):
 
       mapEventJob += [numberOfJobsRest] if numberOfJobsRest != 0 else []
 
-    # 3rd case : submit(split='byEvents', njobs=10)
-    # So the total number of events has to be set inside application
-    # If not then output error
-
     else:
+      """  
+      3rd case : submit(split='byEvents', njobs=10)
+      So the total number of events has to be set inside application.
+      If not then outputs error.
+      """
+
       debugMessage = (
         "Job splitting : 3rd case\n"
         "The number of jobs has to be given and the total number"
@@ -654,7 +655,7 @@ class FccJob(UserJob):
     debugMessage = (
       "Job splitting : Here is the 'distribution' of events over the jobs\n"
       "A list element corresponds to a job and the element value"
-      " is the related number of events\n%(map)s" % {'map':str(mapEventJob)}
+      " is the related number of events :\n%(map)s" % {'map':str(mapEventJob)}
     )
     gLogger.debug(debugMessage)
 
@@ -666,11 +667,11 @@ class FccJob(UserJob):
           
       gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
       
-      infoMessage = "Job splitting : Sending job number %d with number of events of '%d' ..." % (idx+1, eventsPerJob)
+      infoMessage = "Job splitting : Sending job number %d with a number of events of '%d' ..." % (idx+1, eventsPerJob)
       gLogger.info(infoMessage)
 
       for application in self._userApplications:
-        # If application is reading events from files like input data files
+        # If application reads events from files like input data files
         # do not forget to give them to FCCDataSvc().
 
         # If it is an 'Fcc' application then set _fccInputData attribute
@@ -678,6 +679,7 @@ class FccJob(UserJob):
           application._fccInputData = self._data
     
         application.numberOfEvents = eventsPerJob
+
         if not self._addApplication(application):
           return False
 
@@ -685,7 +687,7 @@ class FccJob(UserJob):
       jobId = self._sendJob()
 
       if not jobId:
-        errorMessage = "Job splitting : Sending job number %d with number of events of '%d' failed" % (idx+1, eventsPerJob)
+        errorMessage = "Job splitting : Sending job number %d with a number of events of '%d' failed" % (idx+1, eventsPerJob)
         gLogger.error(errorMessage)
         return False
 
@@ -703,7 +705,7 @@ class FccJob(UserJob):
     :type number: str or int
 
     :return: success or failure of the casting
-    :rtype: bool
+    :rtype: bool, int or None
 
     :Example:
 
