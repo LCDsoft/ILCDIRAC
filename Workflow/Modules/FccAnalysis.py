@@ -119,7 +119,7 @@ class FccAnalysis(ModuleBase):
 
     # Main command
     bashCommands = ['%s %s %s' %
-             (self.fccExecutable, self.fccConfFile, self.gaudiOptionsFile)]
+                    (self.fccExecutable, self.fccConfFile, self.gaudiOptionsFile)]
 
 
     if not self._generateBashScript(bashCommands):
@@ -149,7 +149,7 @@ class FccAnalysis(ModuleBase):
 
     # If error in writting standard output/error, let the application run successfully
 
-    if not self._writeToFile('w', os.path.join(os.getcwd(),'%s.out' % self.fccAppIndex), str(call['Value'][1])):
+    if not self._writeToFile('w', os.path.join(os.getcwd(), '%s.out' % self.fccAppIndex), str(call['Value'][1])):
       self.log.error("Application : Standard output creation failed")
     else:
       self.log.debug("Application : Standard output creation successfull")
@@ -157,7 +157,7 @@ class FccAnalysis(ModuleBase):
 
     self.log.debug("Application : Standard error creation...")
 
-    if not self._writeToFile('w', os.path.join(os.getcwd(),'%s.err' % self.fccAppIndex), str(call['Value'][2])):
+    if not self._writeToFile('w', os.path.join(os.getcwd(), '%s.err' % self.fccAppIndex), str(call['Value'][2])):
       self.log.error("Application : Standard error creation failed")
     else:
       self.log.debug("Application : Standard error creation successfull")
@@ -264,7 +264,7 @@ class FccAnalysis(ModuleBase):
     """
 
     environmentScript = getEnvironmentScript(self.platform, self.software,
-                          self.version, self._generateScriptOnTheFly)
+                                             self.version, self._generateScriptOnTheFly)
 
     if 'OK' in environmentScript and not environmentScript['OK']:
       return False

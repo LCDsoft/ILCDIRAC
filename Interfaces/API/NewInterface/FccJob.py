@@ -26,10 +26,10 @@ import sys
 # DIRAC libraries
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
+from DIRAC import gLogger, exit as dexit
 
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
-from DIRAC import gLogger, exit as dexit
 
 
 class FccJob(UserJob):
@@ -75,7 +75,7 @@ class FccJob(UserJob):
 
     # Names of all FCC applications
     # Keep in mind that FccJob accepts also non FCC applications like Marlin, DDSIM etc...
-    self.fccAppNames = ['FccSw','FccAnalysis']
+    self.fccAppNames = ['FccSw', 'FccAnalysis']
 
     self._outputSandbox = set()
     self._inputSandbox = set()
@@ -192,7 +192,7 @@ class FccJob(UserJob):
 
     # Switch case python emulation
     self._switch = {"byEvents" : self._splitByEvents,
-            "byData" : self._splitByData, None : self._atomicSubmission}
+                    "byData" : self._splitByData, None : self._atomicSubmission}
 
     gLogger.info("DIRAC : DIRAC submission beginning...")
 
@@ -286,7 +286,8 @@ class FccJob(UserJob):
     if 'OK' in appAddition and not appAddition['OK']:
       errorMessage = (
         "Application appending : "
-        "Application '%(name)s' appending failed\n%(msg)s" % {'name':appName, 'msg':appAddition['Message']}
+        "Application '%(name)s' appending failed\n%(msg)s"
+        % {'name':appName, 'msg':appAddition['Message']}
       )
       gLogger.error(errorMessage)
       return False
@@ -305,7 +306,7 @@ class FccJob(UserJob):
     gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
 
     for application in self._userApplications:
-          
+
       # If application reads events from files like input data files
       # do not forget to give them to FCCDataSvc()
 
@@ -460,8 +461,8 @@ class FccJob(UserJob):
     # in setOutputSandbox() method
 
     for application in self._userApplications:
-      # If it is an 'Fcc' application then set _outputSandbox attribute          
-      if application.__class__.__name__ in self.fccAppNames:    
+      # If it is an 'Fcc' application then set _outputSandbox attribute
+      if application.__class__.__name__ in self.fccAppNames:
         self._outputSandbox = self._outputSandbox.union(application._outputSandbox)
         #self._inputSandbox = self._inputSandbox.union(application._inputSandbox)
 
@@ -469,7 +470,7 @@ class FccJob(UserJob):
       result = super(FccJob, self).setOutputSandbox(list(self._outputSandbox))
 
       if 'OK' in result and not result['OK']:
-        errorMessage = "Output Sandbox : Error in setting the output sandbox"    
+        errorMessage = "Output Sandbox : Error in setting the output sandbox"
         gLogger.error(errorMessage)
         return False
 
@@ -488,9 +489,9 @@ class FccJob(UserJob):
 
     if self._data and not self._areDataConsumedBySplitting:
       result = super(FccJob, self).setInputData(list(self._data))
-      
+
       if 'OK' in result and not result['OK']:
-        errorMessage = "Input Data : Error in setting input data"    
+        errorMessage = "Input Data : Error in setting input data"
         gLogger.error(errorMessage)
         return False
 
@@ -526,8 +527,11 @@ class FccJob(UserJob):
     for idx, data in enumerate(self._data):
 
       gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
-      
-      infoMessage = "Job splitting : Sending job number %d with input data '%s' ..." % (idx+1, data)
+
+      infoMessage = (
+        "Job splitting : Sending job number %(idx)d"
+        " with input data '%(data)s' ..." % {'idx':idx+1, 'data': data}
+      )
       gLogger.info(infoMessage)
 
       # Job level
@@ -556,8 +560,11 @@ class FccJob(UserJob):
       jobId = self._sendJob()
 
       if not jobId:
-        errorMessage = "Job splitting : Sending job number %d with input data '%s' failed" % (idx+1, data)
-        gLogger.error(errorMessage)    
+        errorMessage = (
+          "Job splitting : Sending job number %(idx)d"
+          " with input data '%(data)s' failed" % {'idx':idx+1, 'data': data}
+        )
+        gLogger.error(errorMessage)
         return False
 
       gLogger.info("################## JOB SUBMISSION END ##################")
@@ -621,7 +628,7 @@ class FccJob(UserJob):
       mapEventJob += [numberOfJobsRest] if numberOfJobsRest != 0 else []
 
     else:
-      """  
+      """
       3rd case : submit(split='byEvents', njobs=10)
       So the total number of events has to be set inside application.
       If not then outputs error.
@@ -659,15 +666,22 @@ class FccJob(UserJob):
     )
     gLogger.debug(debugMessage)
 
-    gLogger.info("Job splitting : Your submission consists of %d job(s)" % len(mapEventJob))
+    infoMessage = (
+      "Job splitting : Your submission consists"
+      " of %(number)d job(s)" % {'number':len(mapEventJob)}
+    )
+    gLogger.info(infoMessage)
 
     jobIds = []
 
     for idx, eventsPerJob in enumerate(mapEventJob):
           
       gLogger.info("################## JOB SUBMISSION BEGINNING ##################")
-      
-      infoMessage = "Job splitting : Sending job number %d with a number of events of '%d' ..." % (idx+1, eventsPerJob)
+
+      infoMessage = (
+        "Job splitting : Sending job number %(idx)d"
+        " with a number of events of '%(events)d' ..." % {'idx':idx+1, 'events':eventsPerJob}
+      )
       gLogger.info(infoMessage)
 
       for application in self._userApplications:
@@ -677,7 +691,7 @@ class FccJob(UserJob):
         # If it is an 'Fcc' application then set _fccInputData attribute
         if application.__class__.__name__ in self.fccAppNames and self._data:
           application._fccInputData = self._data
-    
+
         application.numberOfEvents = eventsPerJob
 
         if not self._addApplication(application):
@@ -687,7 +701,10 @@ class FccJob(UserJob):
       jobId = self._sendJob()
 
       if not jobId:
-        errorMessage = "Job splitting : Sending job number %d with a number of events of '%d' failed" % (idx+1, eventsPerJob)
+        errorMessage = (
+          "Job splitting : Sending job number %(idx)d"
+          "with a number of events of '%(events)d' failed" % {'idx':idx+1, 'events':eventsPerJob}
+        )
         gLogger.error(errorMessage)
         return False
 

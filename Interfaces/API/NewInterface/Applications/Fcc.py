@@ -949,7 +949,7 @@ class FccSw(Fcc):
 
     exe = 'gaudirun.py'
 
-    self.fccExecutable = 'exec %s %s --xml %s %s' %(python, xenv, argXenv, exe)
+    self.fccExecutable = 'exec %s %s --xml %s %s' % (python, xenv, argXenv, exe)
 
     self._log.debug("FCCSW specific consistency : _checkConsistency() successfull")
 
