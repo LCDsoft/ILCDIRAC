@@ -26,6 +26,7 @@ class FccAnalysis(ModuleBase):
   the FCC application considering FCC module parameters.
 
   It inherits from ModuleBase class.
+  
   """
 
   def __init__(self):

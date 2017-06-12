@@ -235,12 +235,12 @@ class Fcc(LCApplication):
     infoMessage = "Sandboxing : Sandboxing successfull"
     self._log.info(infoMessage)
 
-    """
-    setOutputFile() method informs the job that this application has an output file
-    This output can be used as input for another application.
-    In this way, app2.getInputFromApp(app1) method knows the ouput file of the given application
-    app1 thanks to its method setOutputFile().
-    """
+    
+    # setOutputFile() method informs the job that this application has an output file
+    # This output can be used as input for another application.
+    # In this way, app2.getInputFromApp(app1) method knows the ouput file of the given application
+    # app1 thanks to its method setOutputFile().
+    
 
     if self._fccOutputFile:
       self.setOutputFile(self._fccOutputFile)
@@ -262,24 +262,24 @@ class Fcc(LCApplication):
     self._outputSandbox.add("%s.out" % self.fccAppIndex)
     self._outputSandbox.add("%s.err" % self.fccAppIndex)
     
-    """
-    self.inputSB is an attribute of the DIRAC Application and not of FCC.
-    The description file of the job (JDL file) contains a section for the input sandbox
-    This section is filled with a list of files (self.inputSB).
-    After user input files, application files, and application additionnal
-    files checked in the temporary sandbox, we 'merge' our 'final input sandbox'
-    to the DIRAC application input sandbox : self.inputSB
-    """
+    
+    # self.inputSB is an attribute of the DIRAC Application and not of FCC.
+    # The description file of the job (JDL file) contains a section for the input sandbox
+    # This section is filled with a list of files (self.inputSB).
+    # After user input files, application files, and application additionnal
+    # files checked in the temporary sandbox, we 'merge' our 'final input sandbox'
+    # to the DIRAC application input sandbox : self.inputSB
+    
     
     self._inputSandbox = self._inputSandbox.union(self._foldersToFilter)
     self.inputSB = list(self._inputSandbox)
 
-    """
-    Sandbox can be set at the application level or at the job level.
-    Whatever the level choosed, sandbox files are all put
-    in the same final destination which is a list of paths
-    in the JDL file (see Input Sandbox parameter of the JDL file).
-    """
+    
+    # Sandbox can be set at the application level or at the job level.
+    # Whatever the level choosed, sandbox files are all put
+    # in the same final destination which is a list of paths
+    # in the JDL file (see Input Sandbox parameter of the JDL file).
+    
 
     infoMessage = (
       "\n********************************FCC SUMMARY******************************\n"
@@ -321,8 +321,9 @@ class Fcc(LCApplication):
     return S_OK(infoMessage)
 
   def _checkWorkflowConsistency(self):
-    """Summary of the application done after
-    application _checkConsistency() method.
+    """Summary of the application done in
+    _checkConsistency() method.
+
     """
     return self._checkRequiredApp()
 
@@ -351,9 +352,10 @@ class Fcc(LCApplication):
 
   def _flushSandboxes(self):
     """ Clear all sandboxes.
-     Usefull when the same application is appended many times.
-     But this possibility has been removed.
-     """
+    Usefull when the same application is appended many times.
+    But this possibility has been removed.
+
+    """
 
     # FCC Application attributes
     self._tempInputSandbox.clear()
@@ -519,12 +521,12 @@ class Fcc(LCApplication):
     txtFiles = re.findall(r'="(.*.txt)', content)
     cmdFiles = re.findall(r'filename="(.*.cmd)', content)
 
-    """
-    From these paths we re-create the tree in the temporary sandbox
-    with only the desired file.
-    In the configuration file, these paths are relative to FCCSW installation.
-    e.g. Generation/data/foo.xml
-    """
+    
+    # From these paths we re-create the tree in the temporary sandbox
+    # with only the desired file.
+    # In the configuration file, these paths are relative to FCCSW installation.
+    # e.g. Generation/data/foo.xml
+    
 
     if not self._resolveTreeOfFiles(txtFiles, '.txt'):
       errorMessage = "Sandboxing : _resolveTreeOfFiles() failed"
@@ -1020,6 +1022,7 @@ class FccSw(Fcc):
     """Redefinition of FCC._importToSandbox() method.
       FCCSW needs extra folders like 'InstallArea', 'Detector'
       and extra files specified in its configuration file.
+      
     """
 
     if not super(FccSw, self)._importToSandbox():

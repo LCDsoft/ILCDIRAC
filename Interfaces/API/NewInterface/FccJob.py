@@ -242,16 +242,16 @@ class FccJob(UserJob):
     )
     gLogger.debug(debugMessage)
 
-    """
-    If user calls setInputSandbox, we get the files in
-    the set '_inputSandbox' and add them to
-    the temporary input sandbox of applications for a future checking.
-    The temporary input sandbox of each application is 'extended'
-    At the end, the final input sandbox take the set of
-    all these files.
-    Indeed, We merge input sandbox files given at the application level
-    with the input sandbox files given at the job level.
-    """
+    
+    # If user calls setInputSandbox, we get the files in
+    # the set '_inputSandbox' and add them to
+    # the temporary input sandbox of applications for a future checking.
+    # The temporary input sandbox of each application is 'extended'
+    # At the end, the final input sandbox take the set of
+    # all these files.
+    # Indeed, We merge input sandbox files given at the application level
+    # with the input sandbox files given at the job level.
+    
 
     # If it is an 'Fcc' application then set _tempInputSandbox attribute
     if appName in self.fccAppNames and self._inputSandbox:
@@ -580,12 +580,12 @@ class FccJob(UserJob):
     gLogger.info(infoMessage)
 
     if self.eventsPerJob and self.njobs:
-      """
-      1st case : submit(njobs=3,eventsPerJob=10)
-      trivial case => each job (total of 3) run applications of 10 events each
-      Do not consider number of event of the application (overwrite it)
-      it is done after.
-      """
+      
+      # 1st case : submit(njobs=3,eventsPerJob=10)
+      # trivial case => each job (total of 3) run applications of 10 events each
+      # Do not consider number of event of the application (overwrite it)
+      # it is done after.
+      
       
       debugMessage = (
         "Job splitting : 1st case\n"
@@ -596,13 +596,13 @@ class FccJob(UserJob):
       mapEventJob = [self.eventsPerJob] * self.njobs
 
     elif self.eventsPerJob and self.totalNumberOfEvents:
-      """
-      2nd case : submit(split="byEvents",eventsPerJob=10)
-      In this case, the number of events has to be set inside applications
-      otherwise outputs error.
-      Given the number of events per job and total of number of event we want,
-      we can compute the unknown which is the number of jobs.
-      """
+      
+      # 2nd case : submit(split="byEvents",eventsPerJob=10)
+      # In this case, the number of events has to be set inside applications
+      # otherwise outputs error.
+      # Given the number of events per job and total of number of event we want,
+      # we can compute the unknown which is the number of jobs.
+      
 
       debugMessage = (
         "Job splitting : 2nd case\n"
@@ -628,11 +628,11 @@ class FccJob(UserJob):
       mapEventJob += [numberOfJobsRest] if numberOfJobsRest != 0 else []
 
     else:
-      """
-      3rd case : submit(split='byEvents', njobs=10)
-      So the total number of events has to be set inside application.
-      If not then outputs error.
-      """
+      
+      # 3rd case : submit(split='byEvents', njobs=10)
+      # So the total number of events has to be set inside application.
+      # If not then outputs error.
+      
 
       debugMessage = (
         "Job splitting : 3rd case\n"
