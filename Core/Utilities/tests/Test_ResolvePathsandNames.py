@@ -90,15 +90,39 @@ class ResolvePathsAndNamesTests(unittest.TestCase):
     out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
     self.assertEqual(out_lfn, outfile_new)
 
-  def test_ildprod_genslciopslit(self):
-    """test getProdFilenameFromInput Generator slcio ..........................................................."""
-    indir = "/ilc/prod/ilc/mc-dbd/generated/500-TDR_ws/higgs/"
-    outdir = "/ilc/prod/ilc/ild/test/temp1/mc-dbd.disk/ild/splitted/500-TDR_ws/higgs_ffh/00012930/000/"
-    input_file = indir + "E500-TDR_ws.Pqqh_ww_4q.Gwhizard-1_95.eL.pR.I106730.001.slcio"
-    outfile_original = outdir + "E500-TDR_ws.I106730.Pqqh_ww_4q.eL.pR_gen_12930_1_093.slcio"
-    prodid = 12930
-    jobid = 93
-    outfile_new = outdir + "E500-TDR_ws.Pqqh_ww_4q.Gwhizard-1_95.eL.pR.I106730.n001_093.d_gen_00012930_93.slcio"
+  def test_ildprod_stdhepsplit2(self):
+    """test getProdFilenameFromInput Generator stdhep 2..........................................................."""
+    indir = "/ilc/prod/ilc/mc-dbd/generated/500-TDR_ws/4f/"
+    outdir = "/ilc/prod/ilc/ild/test/temp1/mc-dbd.generated/ild/splitted/500-TDR_ws/4f/00008147/000/"
+    input_file = indir + "E500-TDR_ws.P4f_zz_sl.Gwhizard-1_95.eL.pR.I250014.031.stdhep"
+    outfile_original = outdir + "E500-TDR_ws_gen_8147_1_012.stdhep"
+    prodid = 8147
+    jobid = 87
+    outfile_new = outdir + "E500-TDR_ws.P4f_zz_sl.Gwhizard-1_95.eL.pR.I250014.n031_012.d_gen_00008147_87.stdhep"
+    out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
+    self.assertEqual(out_lfn, outfile_new)
+
+  def test_ildprod_stdhepsplit3(self):
+    """test getProdFilenameFromInput Generator stdhep 3..........................................................."""
+    indir = "/ilc/prod/ilc/mc-dbd/generated/500-TDR_ws/4f/"
+    outdir = "/ilc/prod/ilc/ild/test/temp1/mc-dbd.generated/ild/splitted/500-TDR_ws/4f/00008147/000/"
+    input_file = indir + "E500-TDR_ws.P4f_zz_sl.Gwhizard-1_95.eR.pL.I250016.004.stdhep"
+    outfile_original = outdir + "E500-TDR_ws_gen_8147_2_065.stdhep"
+    prodid = 8147
+    jobid = 125
+    outfile_new = outdir + "E500-TDR_ws.P4f_zz_sl.Gwhizard-1_95.eR.pL.I250016.n004_065.d_gen_00008147_125.stdhep"
+    out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
+    self.assertEqual(out_lfn, outfile_new)
+
+  def test_ildprod_stdhepsplit_slcio(self):
+    """test getProdFilenameFromInput Generator slcio  ..........................................................."""
+    indir = "/ilc/prod/ilc/mc-dbd/generated/500-TDR_ws/4f/"
+    outdir = "/ilc/prod/ilc/ild/test/temp1/mc-dbd.generated/ild/splitted/500-TDR_ws/4f/00008147/000/"
+    input_file = indir + "E500-TDR_ws.P4f_zz_sl.Gwhizard-1_95.eR.pL.I250016.004.slcio"
+    outfile_original = outdir + "E500-TDR_ws_gen_8147_2_065.slcio"
+    prodid = 8147
+    jobid = 125
+    outfile_new = outdir + "E500-TDR_ws.P4f_zz_sl.Gwhizard-1_95.eR.pL.I250016.n004_065.d_gen_00008147_125.slcio"
     out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
     self.assertEqual(out_lfn, outfile_new)
 

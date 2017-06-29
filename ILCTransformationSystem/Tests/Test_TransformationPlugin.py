@@ -97,7 +97,7 @@ class TransformationPluginTestCase( unittest.TestCase ):
     self.tfp = TransformationPlugin( 'Limited', trans_mock, dataman_mock )
     self.tfp.params[ 'MaxNumberOfTasks' ] = 59
     self.tfp.params[ 'TransformationID' ] = 78456
-    assertDiracFailsWith( self.tfp.run(), 'too many tasks', self )
+    assertDiracSucceedsWith_equals( self.tfp.run(), [], self )
 
   def test_limited_getcounters_fails( self ):
     from ILCDIRAC.ILCTransformationSystem.Agent.TransformationPlugin import TransformationPlugin

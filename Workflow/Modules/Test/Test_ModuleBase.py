@@ -69,17 +69,19 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
                             'failed to locate steering files mysteertestvers', self )
       steerdir_mock.assert_called_once_with( 'TRestPlatformMine', 'mySteerTestVers' )
 
-  def test_execute_ildconfig_fails( self ):
+  def test_execute_config_fails( self ):
     self.moba.platform = 'PlatformMineTest'
-    self.moba.workflow_commons['ILDConfigPackage'] = 'ILDConfigv102'
+    self.moba.workflow_commons['ClicConfigPackage'] = 'ClicConfigv102'
+    self.moba.workflow_commons['SomeOtherEntry'] = 'Args'
+    self.moba.workflow_commons['AndAnotherOne'] = 'Args'
     with patch('%s.checkCVMFS' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_err'))) as cvmfs_mock, \
          patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_other_err'))) as getsoft_mock:
       assertDiracFailsWith( self.moba.execute(),
-                            'Failed to locate ILDConfigv102 as config dir', self )
+                            'Failed to locate ClicConfigv102 as config dir', self )
       cvmfs_mock.assert_called_once_with( 'PlatformMineTest',
-                                          ( 'ildconfig', 'v102' ) )
+                                          ( 'clicconfig', 'v102' ) )
       getsoft_mock.assert_called_once_with( 'PlatformMineTest',
-                                            'ildconfig', 'v102' )
+                                            'clicconfig', 'v102' )
 
   def test_execute_runit_fails( self ):
     with patch('%s.ModuleBase.runIt' % MODULE_NAME, new=Mock(return_value=S_ERROR('runit_fails_test_err'))):

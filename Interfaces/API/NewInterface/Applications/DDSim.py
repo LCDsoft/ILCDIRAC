@@ -50,9 +50,17 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     self._moduledescription = 'Module to run DDSim'
     self.appname = 'ddsim'
     self.datatype = 'SIM'
-    self.detectortype = ''
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
     self._ops = Operations()
+
+  @property
+  def detectortype(self):
+    """  detectorType needed for transformations """
+    return self.detectorModel
+  @detectortype.setter
+  def detectortype(self, value ):
+    """ ignore setting of detector type for ddsim """
+    pass
 
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is the jobID.
@@ -94,8 +102,13 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     :returns: S_OK/S_ERROR
     """
 
-    ildconfig = job.workflow.parameters.find("ILDConfigPackage")
-    configversion = ildconfig.value if ildconfig else None
+    parameterName = [ pN for pN in job.workflow.parameters.getParametersNames() if 'ConfigPackage' in pN ]
+    if parameterName:
+      self._log.notice( "Found config parameter" , parameterName )
+      config = job.workflow.parameters.find( parameterName[0] )
+      configversion = config.value
+    else:
+      configversion = None
     ## Platform must always be defined
     platform = job.workflow.parameters.find("Platform").value
 

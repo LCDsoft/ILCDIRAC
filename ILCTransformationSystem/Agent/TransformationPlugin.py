@@ -30,7 +30,7 @@ class TransformationPlugin(DTP):
       if statustup[0]['Status'] in ['Assigned', 'Processed']:
         total_used += statustup[1]
     if total_used >= max_tasks and max_tasks > 0:
-      return S_ERROR('Too many tasks for this transformation')
+      return S_OK( [] )
     res = self.util.groupByReplicas( self.data, self.params['Status'] )
     if not res['OK']:
       return res

@@ -72,10 +72,12 @@ def _checkInCVMFS( cFile, platform, configversion ):
   """ check if the file is available on cvmfs or not """
 
   from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
-  version = configversion.split("ILDConfig")[1]
-  configPath = Operations().getValue( "/AvailableTarBalls/%(platform)s/ildconfig/%(version)s/CVMFSPath" % \
+  version = configversion.split("Config")[1]
+  app = configversion.split("Config")[0]+"Config"
+  configPath = Operations().getValue( "/AvailableTarBalls/%(platform)s/%(app)s/%(version)s/CVMFSPath" % \
                                          dict( version=version,
                                                platform=platform,
+                                               app=app.lower(),
                                              ),
                                       "" )
   if not configPath:

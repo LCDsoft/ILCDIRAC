@@ -48,8 +48,14 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
     inpitem["j"] = str(jobID)
     outfile  = finp.convert( origitem["d"], "file", inpitem )
   elif originalOutputBaseName.startswith("E"):
-    inpitem["d"] = origitem["d"]
-    inpitem["n"] = origitem["n"]
+    inpitem["d"] = "gen"
+    if "n" not in origitem:
+      inpitem["n"] = "001"
+    else:
+      if "_" not in origitem["n"]:
+        inpitem["n"] = origitem["n"]
+      else:
+        inpitem["n"] += "_" + origitem["n"].split( "_", 1 )[1]
     inpitem["t"] = str(prodID).zfill(8)
     inpitem["j"] = str(jobID)
     outfile  = finp.convert( "gen", "file", inpitem )

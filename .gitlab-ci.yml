@@ -7,7 +7,7 @@ before_script:
     - mv ILCDIRAC ILCDIRAC_commit
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
-    - ./dirac-install -V ILCDIRAC -r v27r0-pre1 -g 2016-11-03
+    - ./dirac-install -V ILCDIRAC -r v27r0-pre1 -g 2017-01-27
     - rm -rf DIRAC
     - mkdir DIRAC
     - cd DIRAC
@@ -19,6 +19,12 @@ before_script:
     - source bashrc
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
+    - pip install --upgrade pip
+    - pip install --upgrade setuptools || echo "done"
+    - pip install --upgrade setuptools_scm || echo "done scm"
+    - echo "done with setuptools"
+    - pip install --upgrade pylint mock MySQL-python
+    - easy_install pytest-cov pytest-randomly
     - cd ILCDIRAC
     - .gitlab-ci.d/upgradePython.sh
     - export HOME=/root/
@@ -34,6 +40,7 @@ pylint6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
 
 unittest6:
@@ -43,6 +50,7 @@ unittest6:
   image: ilcdirac/slc6-base
   script:
     - source ../bashrc
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-unittests.sh
 
 cvmfstests6:
@@ -76,6 +84,7 @@ pylint7:
   image: ilcdirac/cc7-base
   script:
     - source ../bashrc
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
 
 unittest7:
@@ -85,6 +94,7 @@ unittest7:
   image: ilcdirac/cc7-base
   script:
     - source ../bashrc
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-unittests.sh
 
 setests6:

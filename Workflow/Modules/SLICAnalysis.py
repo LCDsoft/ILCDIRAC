@@ -141,6 +141,14 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     script.write('# Dynamically generated script to run a production or analysis job. #\n')
     script.write('#####################################################################\n')
     script.write("source %s\n" % (env_script_path))
+
+    preloadDir = "%s/preload" % os.getcwd()
+    if os.path.exists( preloadDir ):
+      preadloadLibs = set( os.listdir( preloadDir ) )
+      preloadString =":".join( lib for lib in preadloadLibs if ".so" in lib )
+      script.write( 'declare -x LD_LIBRARY_PATH=%s:${LD_LIBRARY_PATH}\n' % preloadDir )
+      script.write( 'declare -x LD_PRELOAD=%s\n' % preloadString )
+
     script.write('echo =========\n')
     script.write('env | sort >> localEnv.log\n')
     script.write('echo SLIC:\n')
