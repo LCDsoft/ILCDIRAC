@@ -133,7 +133,16 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self.prodparameters['ILDConfigVersion'] = Version
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
     return S_OK()  
-  
+
+  def setClicConfig(self,version):
+    """ Define the ClicConfig package to obtain
+    """
+    appName = 'ClicConfig'
+    self._addSoftware(appName.lower(), version)
+    self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'ClicConfig package' )
+    return S_OK()
+
+
   def setDryRun(self, run):
     """ In case one wants to get all the info as if the prod was being submitted
     """
