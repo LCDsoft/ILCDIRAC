@@ -1,3 +1,18 @@
+[v26r0p10]
+
+* Interfaces:
+
+CHANGE: DDSim: use *detectorModel* as the *detectorType*, needed in CLIC productions
+NEW ProctionJob: add `setClicConfig` function to add ClicConfigPackage to productions
+
+* Core:
+
+CHANGE: Utilities.InstalledFiles: allow using arbitrary ConfigPackage to provide steering files. FOr now ILDConfig or ClicConfig defined in ConfigurationSystem
+
+* Workflow:
+
+NEW: `ModuleBase`: General `treatConfigPackage` function to replace treatILDConfigPackage backward compatible
+
 [v26r0p9]
 
 * Workflow:
