@@ -492,10 +492,9 @@ class ModuleBase(object):
       if not resSteering['OK']:
         return resSteering
 
-    if 'ILDConfigPackage' in self.workflow_commons:
-      resILDConf = self.treatILDConfigPackage()
-      if not resILDConf['OK']:
-        return resILDConf
+    resConf = self.treatConfigPackage()
+    if not resConf['OK']:
+      return resConf
 
     if self.SteeringFile:
       if os.path.exists(os.path.basename(self.SteeringFile)):
@@ -705,35 +704,54 @@ class ModuleBase(object):
         self.log.error('Could not copy %s here because :' % localFile, str(why) )
     return S_OK()
 
-  def treatILDConfigPackage(self):
-    """treat the ILDConfig software package"""
-    config_dir = self.workflow_commons['ILDConfigPackage']
-    ildConfigVersion = config_dir.replace("ILDConfig", "")
-    resCVMFS = checkCVMFS(self.platform, ('ildconfig', ildConfigVersion))
+  def treatConfigPackage( self ):
+    """treat the config software package
+
+    If a 'ConfigPackage' is part of the workflow_dictionary check for the
+    package and copy the steering files to the working directory. Existing files
+    are _not_ overwritten.
+
+    """
+
+    ## Find if there is a configPackage
+    configName = None
+    for key in self.workflow_commons:
+      if 'ConfigPackage' in key:
+        configName = key
+        break
+    if configName is None:
+      self.log.verbose( "No ConfigPackage set" )
+      return S_OK()
+
+    configType = configName.split('ConfigPackage')[0]
+    config_dir = self.workflow_commons[configName]
+    packageName = str(configType + 'Config').lower()
+    configVersion = config_dir.split('Config')[1]
+    resCVMFS = checkCVMFS(self.platform, (packageName, configVersion))
     if resCVMFS['OK']:
-      ildConfigPath = resCVMFS['Value'][0]
+      configPath = resCVMFS['Value'][0]
     else:
-      self.log.error("Cannot find ILDConfig on CVMFS" , ("Version: "+config_dir, resCVMFS['Message']) )
-      resLoc = getSoftwareFolder(self.platform, "ildconfig", ildConfigVersion)
+      self.log.error("Cannot find %sConfig on CVMFS" % configType, ("Version: "+config_dir, resCVMFS['Message']) )
+      resLoc = getSoftwareFolder(self.platform, packageName, configVersion)
       if resLoc['OK']:
-        ildConfigPath = resLoc['Value']
+        configPath = resLoc['Value']
       else:
         self.log.error("Cannot find %s" % config_dir, resLoc['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)
 
-    self.log.info("Found ILDConfig here:", ildConfigPath)
+    self.log.info("Found %sConfig here:" %configType, configPath)
 
-    list_f = os.listdir(ildConfigPath)
+    list_f = os.listdir(configPath)
     for localFile in list_f:
       if os.path.exists("./"+localFile):
         self.log.verbose("Found local file, don't overwrite:", localFile)
         #Do not overwrite local files with the same name
         continue
       try:
-        if os.path.isdir(os.path.join(ildConfigPath, localFile)):
-          shutil.copytree(os.path.join(ildConfigPath, localFile), "./"+localFile)
+        if os.path.isdir(os.path.join(configPath, localFile)):
+          shutil.copytree(os.path.join(configPath, localFile), "./"+localFile)
         else:
-          shutil.copy2(os.path.join(ildConfigPath, localFile), "./"+localFile)
+          shutil.copy2(os.path.join(configPath, localFile), "./"+localFile)
       except EnvironmentError as why:
         self.log.error('Could not copy %s here because %s!' % (localFile, str(why)))
     return S_OK()

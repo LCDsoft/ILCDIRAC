@@ -421,15 +421,15 @@ class TestModuleBase( ModulesTestCase ):
       self.assertEqual( logF.read().strip().splitlines(), message )
     self.assertEqual( message, out.getvalue().strip().splitlines() )
 
-  def test_MB_treatILDConfigPackage( self ):
-    """ModuleBase: treatILDConfigPackage............................................................"""
+  def test_MB_treatConfigPackage( self ):
+    """ModuleBase: treatConfigPackage..............................................................."""
     gLogger.setLevel("ERROR")
     self.mbase.platform = self.mbase.workflow_commons.get('Platform', self.mbase.platform)
     self.mbase.workflow_commons['ILDConfigPackage'] = "ILDConfigv01-16-p03"
     with patch( "ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation.checkCVMFS",
                 Mock( return_value=S_OK(("myILDConfig", "init.sh"))) #needs tuple
               ):
-      res = self.mbase.treatILDConfigPackage()
+      res = self.mbase.treatConfigPackage()
     self.assertTrue(res['OK'])
 
   def test_MB_resolveParametricInputData_1( self ):
