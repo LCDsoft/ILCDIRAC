@@ -20,13 +20,13 @@ before_script:
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
     - pip install --upgrade pip
+    - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
     - echo "done with setuptools"
     - pip install --upgrade pylint mock MySQL-python
-    - easy_install pytest-cov pytest-randomly
+    - pip install --upgrade pytest-cov pytest-randomly
     - cd ILCDIRAC
-    - .gitlab-ci.d/upgradePython.sh
     - export HOME=/root/
 
 
