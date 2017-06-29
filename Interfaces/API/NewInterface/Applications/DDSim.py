@@ -94,8 +94,13 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     :returns: S_OK/S_ERROR
     """
 
-    ildconfig = job.workflow.parameters.find("ILDConfigPackage")
-    configversion = ildconfig.value if ildconfig else None
+    parameterName = [ pN for pN in job.workflow.parameters.getParametersNames() if 'ConfigPackage' in pN ]
+    if parameterName:
+      self._log.notice( "Found config parameter" , parameterName )
+      config = job.workflow.parameters.find( parameterName[0] )
+      configversion = config.value
+    else:
+      configversion = None
     ## Platform must always be defined
     platform = job.workflow.parameters.find("Platform").value
 
