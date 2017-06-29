@@ -63,6 +63,7 @@ cvmfstests6:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
 
 cvmfstests7:
@@ -75,6 +76,7 @@ cvmfstests7:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
 
 pylint7:
@@ -107,6 +109,7 @@ setests6:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-setests.sh
 
 
@@ -120,4 +123,5 @@ setests7:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-setests.sh
