@@ -50,9 +50,17 @@ class DDSim( DDInterfaceMixin, LCApplication ):
     self._moduledescription = 'Module to run DDSim'
     self.appname = 'ddsim'
     self.datatype = 'SIM'
-    self.detectortype = ''
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
     self._ops = Operations()
+
+  @property
+  def detectortype(self):
+    """  detectorType needed for transformations """
+    return self.detectorModel
+  @detectortype.setter
+  def detectortype(self, value ):
+    """ ignore setting of detector type for ddsim """
+    pass
 
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is the jobID.
