@@ -19,7 +19,7 @@ __RCSID__ = "$Id$"
 
 def randomFolder():
   """ create a random string of 8 characters """
-  return ''.join(random.choice(string.ascii_lowercase) for _ in xrange(8))
+  return ''.join(random.SystemRandom().choice(string.ascii_lowercase) for _ in xrange(8))
 
 @pytest.mark.integration
 class SETestCase( unittest.TestCase ):
