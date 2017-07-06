@@ -13,6 +13,8 @@ Options:
    -F, --LogFile lfn                  Production log to download
    -O, --OutputDir localDir           Output directory (default ./)
    -P, --ProdID prodID                Download the log folder 000 for this production ID
+   -A, --All                          Get logs from all sub-directories
+   -N, --NoPrompt                     Do not query before download.
 
 :since: Mar 21, 2013
 :author: Stephane Poss
@@ -32,6 +34,8 @@ class _Params(object):
     self.logF = ''
     self.outputdir = './'
     self.prodid = ''
+    self.getAllSubdirs = False
+    self.noPromptBeforeDL = False
   def setLogFileD(self,opt):
     self.logD = opt
     return S_OK()
@@ -44,6 +48,13 @@ class _Params(object):
   def setProdID(self,opt):
     self.prodid = opt
     return S_OK()
+  def setAllGet(self,_):
+    self.getAllSubdirs = True
+    return S_OK()
+  def setNoPrompt(self,_):
+    self.noPromptBeforeDL = True
+    return S_OK()
+
   def registerSwitch(self):
     """registers switches"""
     Script.registerSwitch('D:', 'LogFileDir=', 'Production log dir to download', self.setLogFileD)
@@ -51,6 +62,8 @@ class _Params(object):
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
     Script.registerSwitch('P:', 'ProdID=', 'Production ID', self.setProdID)
+    Script.registerSwitch('A', 'All', 'Get logs from all sub-directories', self.setAllGet)
+    Script.registerSwitch('N', 'NoPrompt', 'No prompt before download', self.setNoPrompt)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
@@ -83,14 +96,22 @@ def _getProdLogs():
       dexit(1)
 
   if clip.logD:
-    res = promptUser('Are you sure you want to get ALL the files in this directory?')
-    if not res['OK']:
-      dexit()
-    choice = res['Value']
-    if choice.lower()=='n':
-      dexit(0)
-    res = logSE.getDirectory(clip.logD, localPath=clip.outputdir)
-    _printErrorReport(res)
+    if not clip.noPromptBeforeDL:
+      res = promptUser('Are you sure you want to get ALL the files in this directory?')
+      if not res['OK']:
+        dexit()
+      choice = res['Value']
+      if choice.lower()=='n':
+        dexit(0)
+  
+    if isinstance(clip.logD, str):
+      res = logSE.getDirectory(clip.logD, localPath=clip.outputdir)
+      _printErrorReport(res)
+    elif isinstance(clip.logD, list):
+      for logdir in clip.logD:
+        gLogger.notice('Getting log files from '+str(logdir))
+        res = logSE.getDirectory(logdir, localPath=clip.outputdir)
+        _printErrorReport(res)
 
   if clip.logF:
     res = logSE.getFile(clip.logF, localPath = clip.outputdir)
@@ -119,11 +140,25 @@ def _getLogFolderFromID( clip ):
     return result
 
   elif result['Value']:
-    lfn = result['Value'][0]
-    baseLFN = "/".join( lfn.split( '/' )[:-2] )
-    subFolderNumber = lfn.split( '/' )[-2]
-    clip.logD = os.path.join( baseLFN, 'LOG', subFolderNumber )
-    gLogger.notice( 'Setting logdir to %s' % clip.logD )
+    lfns = result['Value']
+    if len(lfns) == 1 or not clip.getAllSubdirs:
+      lfn = result['Value'][0]
+      baseLFN = "/".join( lfn.split( '/' )[:-2] )
+      subFolderNumber = lfn.split( '/' )[-2]
+      clip.logD = os.path.join( baseLFN, 'LOG', subFolderNumber )
+      gLogger.notice( 'Setting logdir to %s' % clip.logD )
+    else:
+      clip.logD=[]
+      lastdir = ""
+      for lfn in lfns:
+        baseLFN = "/".join( lfn.split( '/' )[:-2] )
+        subFolderNumber = lfn.split( '/' )[-2]
+        logdir = os.path.join( baseLFN, 'LOG', subFolderNumber ) 
+        if lastdir != logdir:
+          gLogger.notice( 'Setting logdir to %s' % logdir )
+          clip.logD.append(logdir) 
+          lastdir=logdir
+
   else:
     return S_ERROR( "Cannot discover the LogFilePath: No output files yet" )
 
