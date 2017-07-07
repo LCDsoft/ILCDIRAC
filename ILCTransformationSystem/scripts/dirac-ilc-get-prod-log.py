@@ -141,23 +141,18 @@ def _getLogFolderFromID( clip ):
 
   elif result['Value']:
     lfns = result['Value']
-    if len(lfns) == 1 or not clip.getAllSubdirs:
-      lfn = result['Value'][0]
-      baseLFN = "/".join( lfn.split( '/' )[:-2] )
+    baseLFN = "/".join( lfns[0].split( '/' )[:-2] )
+    if not clip.getAllSubdirs:
+       lfns = [ lfns[0] ]
+    clip.logD = []
+    lastdir = ""
+    for lfn in lfns:
       subFolderNumber = lfn.split( '/' )[-2]
-      clip.logD = os.path.join( baseLFN, 'LOG', subFolderNumber )
-      gLogger.notice( 'Setting logdir to %s' % clip.logD )
-    else:
-      clip.logD=[]
-      lastdir = ""
-      for lfn in lfns:
-        baseLFN = "/".join( lfn.split( '/' )[:-2] )
-        subFolderNumber = lfn.split( '/' )[-2]
-        logdir = os.path.join( baseLFN, 'LOG', subFolderNumber ) 
-        if lastdir != logdir:
-          gLogger.notice( 'Setting logdir to %s' % logdir )
-          clip.logD.append(logdir) 
-          lastdir=logdir
+      logdir = os.path.join( baseLFN, 'LOG', subFolderNumber ) 
+      if lastdir != logdir:
+        gLogger.notice( 'Setting logdir to %s' % logdir )
+        clip.logD.append(logdir) 
+        lastdir=logdir
 
   else:
     return S_ERROR( "Cannot discover the LogFilePath: No output files yet" )
