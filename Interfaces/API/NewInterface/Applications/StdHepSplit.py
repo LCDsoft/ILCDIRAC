@@ -26,6 +26,7 @@ class StdHepSplit(LCUtilityApplication):
   """
   def __init__(self, paramdict = None):
     self.numberOfEventsPerFile = 0
+    self.maxRead = 0
     super(StdHepSplit, self).__init__( paramdict )
     if not self.version:
       self.version = 'V2'
@@ -40,6 +41,20 @@ class StdHepSplit(LCUtilityApplication):
     """
     self._checkArgs( { 'numberofevents' : types.IntType } )
     self.numberOfEventsPerFile = numberofevents
+
+
+  def setMaxRead(self, maxRead):
+    """ set the number of events to get out of the input stdhep file
+
+    :param int maxRead: number of events to get out of the input stdhep file
+
+    .. note::
+
+      We already correct for the off-by-1 error of hepslit by using maxRead+1, which results in maxRead events read.
+
+    """
+    self._checkArgs( { 'maxRead' : types.IntType } )
+    self.maxRead = maxRead
 
 
 
@@ -58,6 +73,7 @@ class StdHepSplit(LCUtilityApplication):
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter( Parameter( "debug",            False,  "bool", "", "", False, False, "debug mode"))
+    m1.addParameter( Parameter( "maxRead", 0, "int", "", "", False, False, "max events to read"))
     m1.addParameter( Parameter( "nbEventsPerSlice",     0,   "int", "", "", False, False,
                                 "Number of events per output file"))
     return m1
@@ -65,6 +81,7 @@ class StdHepSplit(LCUtilityApplication):
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue('debug',            self.debug)
     moduleinstance.setValue('nbEventsPerSlice', self.numberOfEventsPerFile)
+    moduleinstance.setValue('maxRead',          self.maxRead)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
