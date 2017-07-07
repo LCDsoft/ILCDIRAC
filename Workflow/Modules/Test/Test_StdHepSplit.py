@@ -148,6 +148,50 @@ exit $?
       shell_mock.assert_called_once_with( 0, '"./StdHepSplit_12_Run_4.tcl"',
                                           callbackFunction = self.shs.redirectLogOutput, bufferLimit = 20971520 )
 
+  def test_execute_maxread( self ):
+    exists_dict = { 'StdHepSplit_V3_Run_4.tcl' : True, 'mytest_applog.log' : False }
+    expected_script ="""
+#!/bin/sh
+
+################################################################################
+# Dynamically generated script by LCIOConcatenate module                       #
+################################################################################
+
+declare -x LD_LIBRARY_PATH=mySplitDir/test/lib:/mydir/ldlibs/library
+
+mySplitDir/test//hepsplit --infile runonstd_test_hep --nw_per_file 16 --outpref /some/dir/mytestOutput_file --maxread 112
+
+exit $?
+
+"""
+    self.shs.applicationVersion = 'V3'
+    self.shs.STEP_NUMBER = 4
+    self.shs.nbEventsPerSlice = 16
+    self.shs.platform = 'TestPlatV1'
+    self.shs.InputFile = 'something'
+    self.shs.maxRead = 111
+    self.shs.applicationLog = 'mytest_applog.log'
+    open_mock = Mock()
+    self.shs.OutputFile = '/some/dir/mytestOutput_file.stdhep'
+    with patch('%s.StdHepSplit.resolveInputVariables' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+         patch('%s.resolveIFpaths' % MODULE_NAME, new=Mock(return_value=S_OK(['runonstd_test_hep']))), \
+         patch('%s.getSoftwareFolder' % MODULE_NAME, new=Mock(return_value=S_OK('mySplitDir/test/'))), \
+         patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='/mydir/ldlibs/library')) as getlibs_mock, \
+         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=lambda path: exists_dict[path])), \
+         patch('%s.os.remove' % MODULE_NAME, new=Mock()) as remove_mock, \
+         patch('%s.open' % MODULE_NAME, new=Mock(return_value=open_mock)) as file_mock, \
+         patch('%s.os.chmod' % MODULE_NAME, new=Mock()) as chmod_mock, \
+         patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK( ( 0, ) ))) as shell_mock:
+      assertDiracFailsWith( self.shs.execute(), 'failed reading the log file', self )
+      getlibs_mock.assert_called_once_with( 'TestPlatV1', 'stdhepsplit', 'V3' )
+      file_mock.assert_called_once_with( 'StdHepSplit_V3_Run_4.tcl', 'w' )
+      open_mock.close.assert_called_once_with()
+      open_mock.write.assert_called_once_with( expected_script )
+      remove_mock.assert_called_once_with( 'StdHepSplit_V3_Run_4.tcl' )
+      chmod_mock.assert_called_once_with( 'StdHepSplit_V3_Run_4.tcl', 0755 )
+      shell_mock.assert_called_once_with( 0, '"./StdHepSplit_V3_Run_4.tcl"',
+                                          callbackFunction = self.shs.redirectLogOutput, bufferLimit = 20971520 )
+
   def test_execute( self ):
     exists_dict = { 'StdHepSplit_12_Run_4.tcl' : False, 'mytest_applog.log' : True }
     self.shs.applicationVersion = 12
