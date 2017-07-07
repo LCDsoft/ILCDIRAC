@@ -459,6 +459,7 @@ class TestCreater(object):
     stdhepsplit.setVersion("V2")
     stdhepsplit.setNumberOfEventsPerFile(5)
     stdhepsplit.setOutputFile("teststdhepsplit.stdhep")
+    stdhepsplit.setMaxRead(10)
     return stdhepsplit
 
   @staticmethod
