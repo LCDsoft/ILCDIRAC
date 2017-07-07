@@ -77,11 +77,12 @@ class CLICDetProdChain( object ):
 
     :param bool dryRun: if False no productions are created
     :param bool gen: if True create generation production
+    :param bool spl: if True create split production
     :param bool sim: if True create simulation production
     :param bool rec: if True create reconstruction production
     :param bool over: if True create reconstruction production with overlay, if `rec` is False this flag is also False
     :param bool move: if True create moving transformations, the other move flags only take effect if this one is True
-    :param bool moveGen: if True move GEN files after they have been used in the production
+    :param bool moveGen: if True move GEN files after they have been used in the production, also for split files
     :param bool moveSim: if True move SIM files after they have been used in the production
     :param bool moveRev: if True move REC files when they were created
     :param bool moveDst: if True move DST files when they were created
@@ -93,6 +94,7 @@ class CLICDetProdChain( object ):
 
       #create transformations
       self._gen = False
+      self._spl = False
       self._sim = True
       self._rec = False
       self._over = False
@@ -109,13 +111,16 @@ class CLICDetProdChain( object ):
       return self._dryRun
     @property
     def gen( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._gen
+      return self._gen
+    @property
+    def spl( self ): #pylint: disable=missing-docstring
+      return self._spl
     @property
     def sim( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._sim
+      return self._sim
     @property
     def rec( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec
+      return self._rec
     @property
     def over( self ): #pylint: disable=missing-docstring
       return not self._dryRun and self._rec and self._over
@@ -124,7 +129,7 @@ class CLICDetProdChain( object ):
       return not self._dryRun and self._moves
     @property
     def moveGen( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._gen and self._moves and self._cleanGen
+      return not self._dryRun and (self._gen or self._spl) and self._moves and self._cleanGen
     @property
     def moveSim( self ): #pylint: disable=missing-docstring
       return not self._dryRun and self._sim and self._moves and self._cleanSim
@@ -140,6 +145,7 @@ class CLICDetProdChain( object ):
 [Flags]
 
 gen = %(_gen)s
+spl = %(_spl)s
 sim = %(_sim)s
 rec = %(_rec)s
 over = %(_over)s
@@ -159,6 +165,7 @@ dst=%(_cleanDst)s
 
       #create transformations
       self._gen = config.getboolean(FLAGS, 'gen')
+      self._spl = config.getboolean(FLAGS, 'spl')
       self._sim = config.getboolean(FLAGS, 'sim')
       self._rec = config.getboolean(FLAGS, 'rec')
       self._over = config.getboolean(FLAGS, 'over')
@@ -321,6 +328,24 @@ finalOutputSE = %(finalOutputSE)s
       3000.: ( lambda overlay: [ overlay.setBXOverlay(  60 ), overlay.setGGToHadInt( 3.2 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
     }
 
+  def createSplitApplication( self, splitType='stdhep' ):
+    """ create DDSim Application """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit, SLCIOSplit
+
+    if splitType.lower() == 'stdhep':
+      stdhepsplit = StdHepSplit()
+      stdhepsplit.setVersion("V3")
+      stdhepsplit.setNumberOfEventsPerFile( self.eventsPerJob )
+      stdhepsplit.datatype = 'gen'
+      return stdhepsplit
+
+    if  splitType.lower() == 'lcio':
+      split = SLCIOSplit()
+      split.setNumberOfEventsPerFile( self.eventsPerJob )
+      return stdhepsplit
+
+    raise NotImplementedError( 'unknown splitType: %s ' % splitType )
+
   def createDDSimApplication( self ):
     """ create DDSim Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
@@ -481,6 +506,50 @@ finalOutputSE = %(finalOutputSE)s
     reconstructionMeta = recProd.getMetadata()
     return reconstructionMeta
 
+  def createSplitProduction( self, meta, prodName, parameterDict, limited=False ):
+    """ create splitting transformation for splitting files """
+    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+    splitProd = ProductionJob()
+    splitProd.setProdPlugin( 'Limited' if limited else 'Standard' )
+    splitProd.setProdType( 'Split' )
+    splitProd.setLogLevel( self.productionLogLevel )
+    splitProd.dryrun = self._flags.dryRun
+
+    res = splitProd.setInputDataQuery(meta)
+    if not res['OK']:
+      print res['Message']
+      raise RuntimeError( 'Split production: failed to set inputDataQuery' )
+    splitProd.setOutputSE( self.outputSE )
+    splitProd.setWorkflowName( self._productionName( prodName, parameterDict, 'stdhepSplit' ) )
+    splitProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy )
+
+    #Add the application
+    res = splitProd.append( self.createSplitApplication( 'stdhep' ) )
+    if not res['OK']:
+      raise RuntimeError( 'Split production: failed to append application: %s' % res['Message'] )
+    splitProd.addFinalization(True,True,True,True)
+    description = 'Splitting stdhep files'
+
+    splitProd.setDescription( description )
+
+    res = splitProd.createProduction()
+    if not res['OK']:
+      print res['Message']
+
+    splitProd.addMetadataToFinalFiles( { "BeamParticle1": parameterDict['pname1'],
+                                         "BeamParticle2": parameterDict['pname2'],
+                                         "EPA_B1": parameterDict['epa_b1'],
+                                         "EPA_B2": parameterDict['epa_b2'],
+                                       }
+                                     )
+
+    res = splitProd.finalizeProd()
+    if not res['OK']:
+      raise RuntimeError( 'Split production: failed to finalize: %s' % res['Message'] )
+
+    return splitProd.getMetadata()
+
+
   def createMovingTransformation( self, meta, prodType ):
     """ create moving transformations for output files """
     if not self._flags.move:
@@ -505,12 +574,20 @@ finalOutputSE = %(finalOutputSE)s
   def createTransformations( self ):
     """ create all the transformations we want to create """
 
-    metaSimInput = dict( self._meta )
+    metaInput = dict( self._meta )
     prodName = self.process
 
     for parameterDict in self.getParameterDictionary( prodName ):
+      if self._flags.spl:
+        splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, limited=False)
+        self.createMovingTransformation( splitMeta, 'MCGeneration' )
+
       if self._flags.sim:
-        simMeta = self.createSimulationProduction( metaSimInput, prodName, parameterDict )
+        if self._flags.spl:
+          metaInput = splitMeta
+        # elif self._flags.gen:
+          #   metaInput = genMeta
+        simMeta = self.createSimulationProduction( metaInput, prodName, parameterDict )
         self.createMovingTransformation( simMeta, 'MCSimulation' )
 
       if self._flags.rec:
