@@ -106,3 +106,27 @@ class Params(object):
     gLogger.error("\n".join(self.errorMessages))
     script.showHelp()
     return S_ERROR()
+
+
+  def checkDatatype( self, prodID, datatype ):
+    """ check if the datatype makes sense for given production """
+    from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+    tClient = TransformationClient()
+    cond = dict( TransformationID=prodID )
+    trafo = tClient.getTransformations( cond )
+    if not trafo['OK']:
+      return trafo
+    if len(trafo['Value']) != 1:
+      return S_ERROR( "Did not get unique production for this prodID" )
+
+    trafoType = trafo['Value'][0]['Type'].split("_")[0]
+
+    dataTypes = { 'MCGeneration': ['GEN'],
+                  'MCSimulation': ['SIM'],
+                  'MCReconstruction': ['REC', 'DST'],
+                }.get( trafoType, [] )
+
+    if datatype not in dataTypes:
+      return S_ERROR( "Datatype %s doesn't fit production type %s" %( datatype, trafoType ) )
+
+    return S_OK()

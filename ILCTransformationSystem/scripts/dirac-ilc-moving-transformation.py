@@ -16,36 +16,11 @@ Options:
 """
 
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger, exit as dexit, S_ERROR, S_OK
+from DIRAC import gLogger, exit as dexit
 
 from ILCDIRAC.ILCTransformationSystem.Utilities.MovingParameters import Params
 
 __RCSID__ = "$Id$"
-
-
-def checkDatatype( prodID, datatype ):
-  """ check if the datatype makes sense for given production """
-  from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-  tClient = TransformationClient()
-  cond = dict( TransformationID=prodID )
-  trafo = tClient.getTransformations( cond )
-  if not trafo['OK']:
-    return trafo
-  if len(trafo['Value']) != 1:
-    return S_ERROR( "Did not get unique production for this prodID" )
-
-  trafoType = trafo['Value'][0]['Type'].split("_")[0]
-
-  dataTypes = { 'MCGeneration': ['GEN'],
-                'MCSimulation': ['SIM'],
-                'MCReconstruction': ['REC', 'DST'],
-              }.get( trafoType, [] )
-
-  if datatype not in dataTypes:
-    return S_ERROR( "Datatype %s doesn't fit production type %s" %( datatype, trafoType ) )
-
-  return S_OK()
-
 
 def _createTrafo():
   """reads command line parameters, makes check and creates replication transformation"""
@@ -58,7 +33,7 @@ def _createTrafo():
   from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
   for index, prodID in enumerate( clip.prodIDs ):
     datatype = clip.datatype if clip.datatype else ['GEN', 'SIM', 'REC'][ index % 3 ]
-    retData = checkDatatype( prodID, datatype )
+    retData = clip.checkDatatype( prodID, datatype )
     if not retData['OK']:
       gLogger.error( "Failed to check datatype", retData['Message'] )
       return 1
