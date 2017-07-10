@@ -143,7 +143,7 @@ def _getLogFolderFromID( clip ):
     lfns = result['Value']
     baseLFN = "/".join( lfns[0].split( '/' )[:-2] )
     if not clip.getAllSubdirs:
-       lfns = [ lfns[0] ]
+      lfns = lfns[:1]
     clip.logD = []
     lastdir = ""
     for lfn in lfns:
