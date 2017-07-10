@@ -197,6 +197,8 @@ dst=%(_cleanDst)s
 
     self.additionalName = None
 
+    self.eventsPerBaseFile = 1000
+
     self._flags = self.Flags()
 
     self.loadParameters( params )
@@ -242,6 +244,9 @@ dst=%(_cleanDst)s
       if config.has_option(PP, 'prodID'):
         self._prodID = config.getint(PP, 'prodID')
 
+      ##for split only
+      self.eventsPerBaseFile = config.getint('Split', 'NumberOfEventsInBaseFile')
+
     if parameter.dumpConfigFile:
       print self
       dexit(0)
@@ -279,6 +284,9 @@ finalOutputSE = %(finalOutputSE)s
 
 ## optional additional name
 # additionalName = %(additionalName)s
+
+[Split]
+NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
 %(_flags)s
 
@@ -337,6 +345,7 @@ finalOutputSE = %(finalOutputSE)s
       stdhepsplit.setVersion("V3")
       stdhepsplit.setNumberOfEventsPerFile( self.eventsPerJob )
       stdhepsplit.datatype = 'gen'
+      stdhepsplit.setMaxRead( self.eventsPerBaseFile )
       return stdhepsplit
 
     if  splitType.lower() == 'lcio':
