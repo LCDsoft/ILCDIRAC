@@ -1,3 +1,18 @@
+[v26r0p11]
+
+*ILCTransformationSystem
+
+NEW: dirac-ilc-get-prod-logs new options to get all files in a folder and to automatically start downloading without confirmation
+NEW dirac-ilc-moving-transformations: new option to set a prodID and have the three corresponding moving transformations: prodID/GEN, prodID+1/SIM and prodID+2/REC created. Added consistency check for Datatype
+
+*Interfaces
+
+NEW: Stdhepsplit: can now set the maxread option for hepslit
+
+*Workflow
+
+NEW: stdhepsplit will set the --maxread option of maxRead differs from 0
+
 [v26r0p10]
 
 * Interfaces:
