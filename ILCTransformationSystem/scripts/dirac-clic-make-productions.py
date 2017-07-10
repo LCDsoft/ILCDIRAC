@@ -393,18 +393,15 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
     marlin.setDebug()
     marlin.setVersion( self.softwareVersion )
     marlin.setDetectorModel( self.detectorModel )
+    marlin.detectortype = self.detectorModel
 
-    try:
-      steeringFile = {
-        350. : "clicReconstruction.xml",
-        380. : "clicReconstruction.xml",
-        420. : "clicReconstruction.xml",
-        1400.: "clicReconstruction.xml",
-        3000.: "clicReconstruction.xml",
-      }.get( self.energy )
-    except KeyError:
-      print "No marlin steeringFile defined for ", self.energy
-      raise RuntimeError( '1' )
+    steeringFile = {
+      350. : "clicReconstruction.xml",
+      380. : "clicReconstruction.xml",
+      420. : "clicReconstruction.xml",
+      1400.: "clicReconstruction.xml",
+      3000.: "clicReconstruction.xml",
+    }.get( self.energy, 'clicReconstruction.xml' )
 
     marlin.setSteeringFile( steeringFile )
     return marlin
@@ -590,17 +587,15 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
       if self._flags.spl:
         splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, limited=False)
         self.createMovingTransformation( splitMeta, 'MCGeneration' )
+        metaInput = splitMeta
 
       if self._flags.sim:
-        if self._flags.spl:
-          metaInput = splitMeta
-        # elif self._flags.gen:
-          #   metaInput = genMeta
         simMeta = self.createSimulationProduction( metaInput, prodName, parameterDict )
         self.createMovingTransformation( simMeta, 'MCSimulation' )
+        metaInput = simMeta
 
       if self._flags.rec:
-        recMeta = self.createReconstructionProduction( simMeta, prodName, parameterDict )
+        recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
 
 
