@@ -143,7 +143,7 @@ class TestMovingParams( unittest.TestCase ):
     self.sMock.getPositionalArgs.return_value = self.arguments
     ret = self.params.checkSettings( self.sMock )
     self.assertTrue( ret['OK'], ret.get( "Message", "") )
-    self.assertEqual( self.params.prodID, 12345 )
+    self.assertEqual( self.params.prodIDs, [12345] )
     self.assertEqual( self.params.sourceSE, "SourceSE" )
     self.assertEqual( self.params.targetSE, ["TargetSE"] )
     self.assertEqual( self.params.datatype, "GEN" )
