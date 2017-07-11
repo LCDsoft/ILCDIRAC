@@ -184,8 +184,8 @@ dst=%(_cleanDst)s
     self.prodGroup = 'several'
     self.process = 'gghad'
     self.detectorModel='CLIC_o3_v11'
-    self.softwareVersion = 'ILCSoft-2017-06-21_gcc62'
-    self.clicConfig = 'ILCSoft-2017-06-21'
+    self.softwareVersion = 'ILCSoft-2017-07-12_gcc62'
+    self.clicConfig = 'ILCSoft-2017-07-12'
     self.energy = 3000.
     self.eventsPerJob = 100
 
