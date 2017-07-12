@@ -113,11 +113,11 @@ def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
         outputfile.write(" n_events = %s\n" % nevts)
       elif lumi and line.count("luminosity"):
         outputfile.write(" luminosity = %s\n" % lumi)
-      elif line.count("write_events_file") and len(evttype):
+      elif line.count("write_events_file") and evttype:
         outputfile.write(" write_events_file = \"%s\" \n" % evttype)
       elif line.count("process_id"):
         outputfile.write(line)
-        if len(line.split("\"")[1]):
+        if line.split("\"")[1]:
           foundprocessid = True
       else:
         outputfile.write(line)
@@ -165,11 +165,11 @@ def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
           outputfile.write(value)
           written = True
           break # break from looping dict
-      if line.count("write_events_file") and len(evttype):
+      if line.count("write_events_file") and evttype:
         outputfile.write(' write_events_file = "%s" \n' % evttype)
       elif line.count("process_id"):
         outputfile.write(line)
-        if len(line.split("\"")[1]):
+        if line.split("\"")[1]:
           foundprocessid = True
       elif not written:
         outputfile.write(line)
@@ -206,7 +206,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
   macname = "mokkamac.mac"
   if len(mac) < 1:
     with open(macname, "w") as macfile:
-      if len(stdhepFile) > 0:
+      if stdhepFile:
         macfile.write("/generator/generator %s\n" % stdhepFile)
       macfile.write("/run/beamOn %s\n" % nbOfRuns)
   else:
@@ -372,7 +372,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
 
   for param in tree.findall('processor'):
     if 'name' in param.attrib:
-      if len(outputFile) > 0:
+      if outputFile:
         if param.attrib.get('name') == 'MyLCIOOutputProcessor' \
            or param.attrib.get('type') == 'LCIOOutputProcessor':
           subparams = param.findall('parameter')
@@ -382,7 +382,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               com = Comment("output file changed")
               param.insert(0, com)
       else:
-        if len(outputREC) > 0:
+        if outputREC:
           if param.attrib.get('name') in( 'MyLCIOOutputProcessor', 'Output_REC' ):
             subparams = param.findall('parameter')
             for subparam in subparams:
@@ -390,7 +390,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 subparam.text = outputREC
                 com = Comment("REC file changed")
                 param.insert(0, com)
-        if len(outputDST) > 0:
+        if outputDST:
           if param.attrib.get('name') in ( 'DSTOutput', 'Output_DST' ):
             subparams = param.findall('parameter')
             for subparam in subparams:
@@ -408,7 +408,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
             overlay = False
         if overlay: 
           files = getOverlayFiles()
-          if not len(files):
+          if not files:
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
             if subparam.attrib.get('name') == "BackgroundFileNames":
@@ -424,14 +424,14 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
             overlay = False
         if overlay: 
           files = getOverlayFiles(bkg_Type)
-          if not len(files):
+          if not files:
             return S_ERROR('Could not find any overlay files')
           for subparam in subparams:
             if subparam.attrib.get('name') == "InputFileNames":
               subparam.text = "\n".join(files)
               com = Comment("Overlay files changed")
               param.insert(0, com)
-            if subparam.attrib.get('name') == "NSkipEventsRandom" and len(files) > 0:
+            if subparam.attrib.get('name') == "NSkipEventsRandom" and files:
               com = Comment("NSkipEventsRandom Changed")
               subparam.text = "%d" % int( len(files) * eventsPerBackgroundFile )
 
@@ -500,7 +500,7 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
       output.write("/lcio/filename %s\n" % outputlcio)
     output.write("/lcio/runNumber %s\n" % randomseed)
     output.write(finaltext)
-    if len(stdhep) > 0:
+    if stdhep:
       output.write("/generator/filename %s\n" % stdhep)
     output.write("/generator/skipEvents %s\n" % startfrom)
     output.write("/random/seed %s\n" % (randomseed))
@@ -540,7 +540,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   except Exception, x:
     print "Found Exception %s %s" % (Exception, x)
     return S_ERROR("Found Exception %s %s" % (Exception, x))
-  if not len(inputslcio):
+  if not inputslcio:
     return S_ERROR("Empty input file list")
   baseelem = tree.getroot()
   if baseelem is None:
@@ -561,7 +561,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     filesinlcsim.append(newfile)
   #filesinlcsim.append(set)
 
-  if jars and len(jars) > 0:
+  if jars:
     classpath = tree.find("classpath")
     if classpath is not None:
       classpath.clear() #pylint: disable=E1101
@@ -675,7 +675,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
             return res
         driver.remove(driver.find('overlayFiles'))
         files = getOverlayFiles(bkg_Type)
-        if not len(files):
+        if not files:
           return S_ERROR('Could not find any overlay files')
         overlay = Element('overlayFiles')
         overlay.text = "\n".join(files)
