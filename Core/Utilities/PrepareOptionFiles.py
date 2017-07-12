@@ -369,7 +369,8 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   for param in tree.findall('processor'):
     if 'name' in param.attrib:
       if len(outputFile) > 0:
-        if param.attrib.get('name') == 'MyLCIOOutputProcessor':
+        if param.attrib.get('name') == 'MyLCIOOutputProcessor' \
+           or param.attrib.get('type') == 'LCIOOutputProcessor':
           subparams = param.findall('parameter')
           for subparam in subparams:
             if subparam.attrib.get('name') == 'LCIOOutputFile':
@@ -378,7 +379,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
               param.insert(0, com)
       else:
         if len(outputREC) > 0:
-          if param.attrib.get('name') == 'MyLCIOOutputProcessor':
+          if param.attrib.get('name') in( 'MyLCIOOutputProcessor', 'Output_REC' ):
             subparams = param.findall('parameter')
             for subparam in subparams:
               if subparam.attrib.get('name') == 'LCIOOutputFile':
@@ -386,7 +387,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                 com = Comment("REC file changed")
                 param.insert(0, com)
         if len(outputDST) > 0:
-          if param.attrib.get('name') == 'DSTOutput':
+          if param.attrib.get('name') in ( 'DSTOutput', 'Output_DST' ):
             subparams = param.findall('parameter')
             for subparam in subparams:
               if subparam.attrib.get('name') == 'LCIOOutputFile':
