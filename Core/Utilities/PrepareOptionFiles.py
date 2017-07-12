@@ -5,20 +5,24 @@ Provides a set of methods to prepare the option files needed by the ILC applicat
 :since: Jan 29, 2010
 """
 
-__RCSID__ = "$Id$"
+import os
 
-from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
 from xml.etree.ElementTree                                import Element
 from xml.etree.ElementTree                                import Comment
 from xml.etree.ElementTree                                import tostring
+
+from DIRAC import S_OK, gLogger, S_ERROR, gConfig
+
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
-import os
+
+
+__RCSID__ = "$Id$"
 
 def getNewLDLibs(platform, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
