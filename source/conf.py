@@ -14,8 +14,9 @@
 
 import sys
 import os
-import shlex
 import subprocess
+
+import fakeEnvironment #pylint: disable=unused-import
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -57,8 +58,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ILCDIRAC'
-copyright = u'2010--2016,CERN'
-author = u'S.Sposs,R.Ete,C.Grefe,P.Majewski,A.Sailer,M.Petric'
+copyright = u'2010--2017,CERN'
+author = u'S.Sposs,R.Ete,C.Grefe,P.Majewski,A.Sailer,M.Petric,J.Ebbing'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

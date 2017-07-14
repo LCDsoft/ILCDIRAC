@@ -25,7 +25,7 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
    DOC/ILCDIRAC/Interfaces/API/DiracILC.rst
    DOC/Examples/ExampleJobs.rst
    DOC/Files/user_guide.rst
-
+   DOC/Files/acknowledgements
 
 Scripts
 -------

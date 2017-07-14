@@ -86,7 +86,8 @@ def getsubpackages( abspath, direc):
     if "test" in dire.lower():
       continue
     #print os.path.join( DIRACPATH,abspath,dire, "__init__.py" )
-    if os.path.exists( os.path.join( DIRACPATH,abspath,dire, "__init__.py" ) ):
+    if os.path.exists( os.path.join( DIRACPATH,abspath,dire, "__init__.py" ) ) and \
+      dire != 'Productions':
       #packages.append( os.path.join( "DOC", abspath, dire) )
       packages.append( os.path.join( dire) )
   #print "packages",packages
@@ -96,7 +97,7 @@ def getmodules( _abspath, _direc, files ):
   """return list of subpackages with full path"""
   packages = []
   for filename in files:
-    if "test" in filename.lower():
+    if any( part in filename.lower() for part in ('test', ) ):
       continue
     if filename != "__init__.py":
       packages.append( filename.split(".py")[0] )
@@ -113,7 +114,7 @@ def createDoc():
     files = [ _ for _ in files if _.endswith(".py") ]
     if "__init__.py" not in files:
       continue
-    if "test" in root.lower():
+    if any( dire in root.lower() for dire in ('test', 'productions') ):
       continue
     #print root, direc, files
     modulename = root.split("/")[-1]
