@@ -18,7 +18,7 @@ Options:
 import ConfigParser
 
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK, exit as dexit
+from DIRAC import S_OK
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
@@ -57,11 +57,11 @@ class CLICDetProdChain( object ):
 
 
   :param str prodGroup: basename of the production group the productions are part of
-  :param str process: name of the process to generate or use in _meta data search
+  :param str process: name of the process to generate or use in meta data search
   :param str detectorModel: Detector Model to use in simulation/reconstruction
   :param str softwareVersion: softwareVersion to use for generation/simulation/reconstruction
   :param str clicConfig: Steering file version to use for simulation/reconstruction
-  :param float energy: energy to use for generation or _meta data search
+  :param float energy: energy to use for generation or meta data search
   :param in eventsPerJob: number of events per job
   :param str productionLogLevel: log level to use in production jobs
   :param str outputSE: output SE for production jobs
@@ -171,15 +171,16 @@ MoveTypes = %(moveTypes)s
       """ split the option string into separate values and set the corresponding flag """
       prodsToCreate = config.get( PRODUCTION_PARAMETERS, optString )
       for prodType in prodsToCreate.split(','):
+        if not prodType:
+          continue
         found = False
         for attribute, name in tuples:
-          print attribute, name
           if name.capitalize() == prodType.strip().capitalize():
             setattr( self, prefix+attribute, True )
             found = True
             break
         if not found:
-          raise AttributeError( "Unknown parameter: %s " % prodType )
+          raise AttributeError( "Unknown parameter: %r " % prodType )
 
     def loadFlags( self, config ):
       """ load flags values from configfile """
@@ -189,57 +190,58 @@ MoveTypes = %(moveTypes)s
   def __init__( self, params=None):
 
     self._machine = 'clic'
-    self._prodID = None
     self.prodGroup = 'several'
-    self.process = 'gghad'
     self.detectorModel='CLIC_o3_v11'
     self.softwareVersion = 'ILCSoft-2017-07-12_gcc62'
     self.clicConfig = 'ILCSoft-2017-07-12'
-    self.energy = 3000.
-    self.eventsPerJob = 100
-
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
+
+    self.eventsPerJobs = ''
+    self.energies = ''
+    self.processes = ''
+    self.prodIDs = ''
+    self.eventsPerBaseFiles = ''
 
     # final destination for files once they have been used
     self.finalOutputSE = 'CERN-SRM'
 
-    self.additionalName = None
-
-    self.eventsPerBaseFile = 1000
+    self.additionalName = params.additionalName
 
     self._flags = self.Flags()
 
     self.loadParameters( params )
 
-    self._flags._dryRun = params.dryRun
+    self._flags._dryRun = params.dryRun #pylint: disable=protected-access
 
-    if params.additionalName is not None:
-      self.additionalName = params.additionalName
 
-    #For meta data search
-    self._meta = { 'ProdID': self.prodID,
-                   'EvtType': self.process,
-                   'Energy' : self.metaEnergy,
-                   'Machine': self._machine,
-                 }
+
+
+  def meta( self, prodID, process, energy ):
+    """ return meta data dictionary, always new"""
+    return { 'ProdID': prodID,
+             'EvtType': process,
+             'Energy' : self.metaEnergy( energy ),
+             'Machine': self._machine,
+           }
 
 
   def loadParameters( self, parameter ):
     """ load parameters from config file """
 
     if parameter.prodConfigFilename is not None:
-      config = ConfigParser.SafeConfigParser( defaults=vars(self), dict_type=dict)
+      config = ConfigParser.SafeConfigParser( defaults=vars(self), dict_type=dict )
       config.read( parameter.prodConfigFilename )
       self._flags.loadFlags( config )
 
       self.prodGroup = config.get(PP, 'prodGroup')
-      self.process = config.get(PP, 'process')
       self.detectorModel = config.get(PP, 'detectorModel')
       self.softwareVersion = config.get(PP, 'softwareVersion')
       self.clicConfig = config.get(PP, 'clicConfig')
-      self.energy = config.getfloat(PP, 'energy')
-      self.eventsPerJob = config.getint(PP, 'eventsPerJob')
+
+      self.processes = config.get(PP, 'processes').split(',')
+      self.energies = config.get(PP, 'energies').split(',')
+      self.eventsPerJobs = config.get(PP, 'eventsPerJobs').split(',')
 
       self.productionLogLevel = config.get(PP, 'productionloglevel')
       self.outputSE = config.get(PP, 'outputSE')
@@ -250,20 +252,42 @@ MoveTypes = %(moveTypes)s
       if config.has_option(PP, 'additionalName'):
         self.additionalName = config.get(PP, 'additionalName')
 
-      if config.has_option(PP, 'prodID'):
-        self._prodID = config.getint(PP, 'prodID')
+      if config.has_option(PP, 'prodIDs'):
+        self.prodIDs = config.get(PP, 'prodIDs').split(',')
+      else:
+        self.prodIDs = []
 
       ##for split only
-      self.eventsPerBaseFile = config.getint('Split', 'NumberOfEventsInBaseFile')
+      self.eventsPerBaseFiles = config.get(PP, 'NumberOfEventsInBaseFiles').split(',')
+
+      self.processes = [ process.strip() for process in self.processes if process.strip() ]
+      self.energies = [ float(eng.strip()) for eng in self.energies if eng.strip() ]
+      self.eventsPerJobs = [ int( epj.strip() ) for epj in self.eventsPerJobs if epj.strip() ]
+      ## these do not have to exist so we fill them to the same length if they are not set
+      self.prodIDs = [ int( pID.strip() ) for pID in self.prodIDs if pID.strip() ]
+      self.prodIDs = self.prodIDs if self.prodIDs else [ 1 for _ in self.energies ]
+
+      if len(self.processes) != len(self.energies) or \
+         len(self.energies) != len(self.eventsPerJobs) or \
+         len( self.prodIDs) != len(self.eventsPerJobs):
+        raise AttributeError( "Lengths of Processes, Energies, and EventsPerJobs do not match" )
+
+      self.eventsPerBaseFiles = [ int( epb.strip() ) for epb in self.eventsPerBaseFiles if epb.strip() ]
+      self.eventsPerBaseFiles = self.eventsPerBaseFiles if self.eventsPerBaseFiles else [ -1 for _ in self.energies ]
+
+      if self._flags.spl and len(self.eventsPerBaseFiles) != len(self.energies):
+        raise AttributeError( "Length of eventsPerBaseFiles does not match: %d vs %d" %(
+          len(self.eventsPerBaseFiles), \
+          len(self.energies) ) )
 
     if parameter.dumpConfigFile:
       print self
-      dexit(0)
+      raise RuntimeError('')
 
-  def _productionName( self, prodName, parameterDict, prodType ):
+  def _productionName( self, prodName, metaDict, parameterDict, prodType ):
     """ create the production name """
     workflowName = "%s_%s_clic_%s_%s" %( parameterDict['process'],
-                                         self.energy,
+                                         metaDict['Energy'],
                                          prodType,
                                          prodName )
     if isinstance( self.additionalName, basestring):
@@ -276,15 +300,18 @@ MoveTypes = %(moveTypes)s
     return """
 [%(ProductionParameters)s]
 prodGroup = %(prodGroup)s
-process = %(process)s
 detectorModel = %(detectorModel)s
 softwareVersion = %(softwareVersion)s
 clicConfig = %(clicConfig)s
-energy = %(energy)s
-eventsPerJob = %(eventsPerJob)s
+eventsPerJobs = %(eventsPerJobs)s
 
+energies = %(energies)s
+processes = %(processes)s
 ## optional prodid to search for input files
-# prodid =
+# prodIDs =
+
+## number of events for input files to split productions
+NumberOfEventsInBaseFiles = %(eventsPerBaseFiles)s
 
 productionLogLevel = %(productionLogLevel)s
 outputSE = %(outputSE)s
@@ -294,21 +321,15 @@ finalOutputSE = %(finalOutputSE)s
 ## optional additional name
 # additionalName = %(additionalName)s
 
-[Split]
-NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
-
 %(_flags)s
+
 
 """ %( pDict )
 
-  @property
-  def metaEnergy( self ):
+  @staticmethod
+  def metaEnergy( energy ):
     """ return string of the energy with no digits """
-    return str(int( self.energy ))
-  @property
-  def prodID( self ):
-    """ return the prodID for meta data search, 1 by default """
-    return 1 if not self._prodID else self._prodID
+    return str( int( energy ) )
 
 
   @staticmethod
@@ -341,25 +362,26 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
       350. : ( lambda overlay: [ overlay.setBXOverlay( 300 ), overlay.setGGToHadInt( 0.0464 ), overlay.setDetectorModel( self.detectorModel ) ] ),
       420. : ( lambda overlay: [ overlay.setBXOverlay( 300 ), overlay.setGGToHadInt( 0.17 ),   overlay.setDetectorModel( self.detectorModel ) ] ),
       500. : ( lambda overlay: [ overlay.setBXOverlay( 300 ), overlay.setGGToHadInt( 0.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
-      1400.: ( lambda overlay: [ overlay.setBXOverlay(  60 ), overlay.setGGToHadInt( 1.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
-      3000.: ( lambda overlay: [ overlay.setBXOverlay(  60 ), overlay.setGGToHadInt( 3.2 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
+      1400.: ( lambda overlay: [ overlay.setBXOverlay(  20 ), overlay.setGGToHadInt( 1.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
+      3000.: ( lambda overlay: [ overlay.setBXOverlay(  20 ), overlay.setGGToHadInt( 3.2 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
     }
 
-  def createSplitApplication( self, splitType='stdhep' ):
-    """ create DDSim Application """
+  @staticmethod
+  def createSplitApplication( eventsPerJob, eventsPerBaseFile, splitType='stdhep' ):
+    """ create Split application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit, SLCIOSplit
 
     if splitType.lower() == 'stdhep':
       stdhepsplit = StdHepSplit()
       stdhepsplit.setVersion("V3")
-      stdhepsplit.setNumberOfEventsPerFile( self.eventsPerJob )
+      stdhepsplit.setNumberOfEventsPerFile( eventsPerJob )
       stdhepsplit.datatype = 'gen'
-      stdhepsplit.setMaxRead( self.eventsPerBaseFile )
+      stdhepsplit.setMaxRead( eventsPerBaseFile )
       return stdhepsplit
 
     if  splitType.lower() == 'lcio':
       split = SLCIOSplit()
-      split.setNumberOfEventsPerFile( self.eventsPerJob )
+      split.setNumberOfEventsPerFile( eventsPerJob )
       return stdhepsplit
 
     raise NotImplementedError( 'unknown splitType: %s ' % splitType )
@@ -374,28 +396,27 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
     ddsim.setDetectorModel( self.detectorModel )
     return ddsim
 
-  def createOverlayApplication( self ):
+  def createOverlayApplication( self, energy ):
     """ create Overlay Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
     overlay = OverlayInput()
     overlay.setMachine( 'clic_opt' )
-    overlay.setEnergy( self.energy )
+    overlay.setEnergy( energy )
     overlay.setBkgEvtType( 'gghad' )
     try:
-      self.overlayParameterDict().get( self.energy ) ( overlay )
+      self.overlayParameterDict().get( energy ) ( overlay )
     except KeyError:
-      print "No overlay parameters defined for", self.energy
-      raise RuntimeError( '1' )
+      raise RuntimeError( "No overlay parameters defined for" % energy )
 
     return overlay
 
-  def createMarlinWithOverlay( self ):
+  def createMarlinWithOverlay( self, energy ):
     """ create Marlin Application when overlay is enabled """
     ## no difference between with and without overlay at the moment
-    return self.createMarlinApplication()
+    return self.createMarlinApplication( energy )
 
 
-  def createMarlinApplication( self ):
+  def createMarlinApplication( self, energy ):
     """ create Marlin Application without overlay """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
@@ -410,7 +431,7 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
       420. : "clicReconstruction.xml",
       1400.: "clicReconstruction.xml",
       3000.: "clicReconstruction.xml",
-    }.get( self.energy, 'clicReconstruction.xml' )
+    }.get( energy, 'clicReconstruction.xml' )
 
     marlin.setSteeringFile( steeringFile )
     return marlin
@@ -426,16 +447,14 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
     simProd.setClicConfig( self.clicConfig )
     res = simProd.setInputDataQuery( meta )
     if not res['OK']:
-      print "Error creating Simulation Production:",res['Message']
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
     simProd.setOutputSE( self.outputSE )
-    simProd.setWorkflowName( self._productionName( prodName, parameterDict, 'sim') )
-    simProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy )
+    simProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'sim') )
+    simProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy( meta['Energy'] ) )
     #Add the application
     res = simProd.append( self.createDDSimApplication() )
     if not res['OK']:
-      print "Error creating simulation Production:", res[ 'Message' ]
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error creating simulation Production: %s" % res[ 'Message' ] )
     simProd.addFinalization(True,True,True,True)
     description = "Model: %s" % self.detectorModel
     if prodName:
@@ -443,8 +462,7 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
     simProd.setDescription( description )
     res = simProd.createProduction()
     if not res['OK']:
-      print "Error creating simulation production",res['Message']
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error creating simulation production: %s" % res['Message'] )
 
     simProd.addMetadataToFinalFiles( { 'BeamParticle1': parameterDict['pname1'],
                                        'BeamParticle2': parameterDict['pname2'],
@@ -455,8 +473,7 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
     res = simProd.finalizeProd()
     if not res['OK']:
-      print "Error finalizing simulation production", res[ 'Message' ]
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error finalizing simulation production: %s" % res[ 'Message' ] )
 
     simulationMeta = simProd.getMetadata()
     return simulationMeta
@@ -473,29 +490,26 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
     res = recProd.setInputDataQuery( meta )
     if not res['OK']:
-      print "Error setting inputDataQuery for Reconstruction production",res['Message']
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error setting inputDataQuery for Reconstruction production: %s " % res['Message'] )
 
     recProd.setOutputSE( self.outputSE )
     recType = 'rec_overlay' if self._flags.over else 'rec'
-    recProd.setWorkflowName( self._productionName( prodName, parameterDict, recType ) )
-    recProd.setProdGroup( "%s_%s" %( self.prodGroup, self.metaEnergy ) )
+    recProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, recType ) )
+    recProd.setProdGroup( "%s_%s" %( self.prodGroup, self.metaEnergy( meta['Energy'] ) ) )
 
     #Add overlay if needed
     if self._flags.over:
-      res = recProd.append( self.createOverlayApplication() )
+      res = recProd.append( self.createOverlayApplication( float( meta['Energy'] ) ) )
       if not res['OK']:
-        print "Error appending overlay to reconstruction transformation", res['Message']
-        raise RuntimeError( '1' )
+        raise RuntimeError( "Error appending overlay to reconstruction transformation: %s" % res['Message'] )
 
     #Add reconstruction
-    res = recProd.append( self.createMarlinApplication() )
+    res = recProd.append( self.createMarlinApplication( float( meta['Energy'] ) ) )
     if not res['OK']:
-      print "Error appending Marlin to reconstruction production", res['Message']
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error appending Marlin to reconstruction production: %s" % res['Message'] )
     recProd.addFinalization(True,True,True,True)
 
-    description = "CLICDet2017 %s" % self.energy
+    description = "CLICDet2017 %s" % meta['Energy']
     description += "Overlay" if self._flags.over else "No Overlay"
     if prodName:
       description += ", %s"%prodName
@@ -503,8 +517,7 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
     res = recProd.createProduction()
     if not res['OK']:
-      print "Error creating reconstruction production", res['Message']
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error creating reconstruction production: %s" % res['Message'] )
 
     recProd.addMetadataToFinalFiles( { 'BeamParticle1': parameterDict['pname1'],
                                        'BeamParticle2': parameterDict['pname2'],
@@ -515,13 +528,12 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
     res = recProd.finalizeProd()
     if not res['OK']:
-      print "Error finalising reconstruction production", res['Message']
-      raise RuntimeError( '1' )
+      raise RuntimeError( "Error finalising reconstruction production: %s " % res['Message'] )
 
     reconstructionMeta = recProd.getMetadata()
     return reconstructionMeta
 
-  def createSplitProduction( self, meta, prodName, parameterDict, limited=False ):
+  def createSplitProduction( self, meta, prodName, parameterDict, eventsPerJob, eventsPerBaseFile, limited=False ):
     """ create splitting transformation for splitting files """
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     splitProd = ProductionJob()
@@ -532,14 +544,13 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
     res = splitProd.setInputDataQuery(meta)
     if not res['OK']:
-      print res['Message']
-      raise RuntimeError( 'Split production: failed to set inputDataQuery' )
+      raise RuntimeError( 'Split production: failed to set inputDataQuery: %s' % res['Message'] )
     splitProd.setOutputSE( self.outputSE )
-    splitProd.setWorkflowName( self._productionName( prodName, parameterDict, 'stdhepSplit' ) )
-    splitProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy )
+    splitProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'stdhepSplit' ) )
+    splitProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy( meta['Energy'] ) )
 
     #Add the application
-    res = splitProd.append( self.createSplitApplication( 'stdhep' ) )
+    res = splitProd.append( self.createSplitApplication( eventsPerJob, eventsPerBaseFile, 'stdhep' ) )
     if not res['OK']:
       raise RuntimeError( 'Split production: failed to append application: %s' % res['Message'] )
     splitProd.addFinalization(True,True,True,True)
@@ -549,7 +560,7 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
 
     res = splitProd.createProduction()
     if not res['OK']:
-      print res['Message']
+      raise RuntimeError( "Failed to create split production: %s " % res['Message'] )
 
     splitProd.addMetadataToFinalFiles( { "BeamParticle1": parameterDict['pname1'],
                                          "BeamParticle2": parameterDict['pname2'],
@@ -580,32 +591,60 @@ NumberOfEventsInBaseFile = %(eventsPerBaseFile)s
                    'MCGeneration': 'GEN',
                  }[prodType]
     except KeyError:
-      print "ERROR creating MovingTransformation",prodType,"unknown"
+      raise RuntimeError( "ERROR creating MovingTransformation" + repr(prodType) + "unknown" )
 
     from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
     createMovingTransformation( targetSE, sourceSE, prodID, dataType )
 
 
-  def createTransformations( self ):
+  def _updateMeta( self, outputDict, inputDict, eventsPerJob ):
+    """ add some values from the inputDict to the outputDict to fake the input dataquery result in dryRun mode """
+    if not self._flags.dryRun:
+      outputDict.clear()
+      outputDict.update( inputDict )
+      return
+
+    for key, value in inputDict.iteritems():
+      if key not in outputDict:
+        outputDict[ key ] = value
+    outputDict['NumberOfEvents'] = eventsPerJob
+
+
+  def createTransformations( self, prodID, process, energy, eventsPerJob, eventsPerBaseFile):
     """ create all the transformations we want to create """
 
-    metaInput = dict( self._meta )
-    prodName = self.process
+    metaInput = self.meta( prodID, process, energy )
+    prodName = process
 
     for parameterDict in self.getParameterDictionary( prodName ):
       if self._flags.spl:
-        splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, limited=False)
+        splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, eventsPerJob,
+                                                eventsPerBaseFile, limited=False )
         self.createMovingTransformation( splitMeta, 'MCGeneration' )
-        metaInput = splitMeta
+        self._updateMeta( metaInput, splitMeta, eventsPerJob )
 
       if self._flags.sim:
         simMeta = self.createSimulationProduction( metaInput, prodName, parameterDict )
         self.createMovingTransformation( simMeta, 'MCSimulation' )
-        metaInput = simMeta
+        self._updateMeta( metaInput, simMeta, eventsPerJob )
 
       if self._flags.rec:
         recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
+
+
+  def createAllTransformations( self ):
+    """ loop over the list of processes, energies and possibly prodIDs to create all the productions """
+
+    for index, energy in enumerate( self.energies ):
+
+      process = self.processes[index]
+      prodID = self.prodIDs[index]
+      eventsPerJob = self.eventsPerJobs[index]
+      eventsPerBaseFile = self.eventsPerBaseFiles[index]
+
+      self.createTransformations( prodID, process, energy, eventsPerJob, eventsPerBaseFile )
+
 
 
 
@@ -618,5 +657,9 @@ if __name__ == "__main__":
   CHECKGROUP = checkOrGetGroupProxy( 'ilc_prod' )
   if not CHECKGROUP['OK']:
     exit(1)
-  CHAIN = CLICDetProdChain( CLIP )
-  CHAIN.createTransformations()
+  try:
+    CHAIN = CLICDetProdChain( CLIP )
+    CHAIN.createAllTransformations()
+  except (AttributeError, RuntimeError) as excp:
+    if str(excp) != '':
+      print "Failure to create transformations", repr(excp)
