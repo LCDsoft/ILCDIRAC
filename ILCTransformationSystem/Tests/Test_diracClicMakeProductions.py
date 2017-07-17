@@ -14,17 +14,108 @@ theScript = importlib.import_module("ILCDIRAC.ILCTransformationSystem.scripts.di
 
 __RCSID__ = "$Id$"
 
+CONFIG_DICT = {}
+
 class TestMaking( unittest.TestCase ):
-  """Test the creation of moving transformation"""
+  """Test the creation of transformation"""
 
   def setUp ( self ):
     self.tClientMock = Mock()
     self.tClientMock.createTransformationInputDataQuery.return_value = S_OK()
     self.tMock = Mock( return_value=self.tClientMock )
+    params = Mock()
+    params.additionalName = None
+    params.dryRun = True
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.CLICDetProdChain.loadParameters", new=Mock() ):
+      self.chain = theScript.CLICDetProdChain( params )
 
 
-  def tearDown ( self ):
-    pass
+    self.configDict = {
+      'prodGroup': "myProdGroup",
+      'detectorModel': 'myDetectorModel',
+      'softwareVersion': 'mySoftwareVersion',
+      'clicConfig': 'myClicConfig',
+      'processes': 'process1, process2',
+      'energies': '100, 200',
+      'eventsPerJobs': '1000, 2000',
+      'productionloglevel': 'DEBUGLEVEL3',
+      'outputSE': 'CERN-CASTOR',
+      'finalOutputSE': 'VAULT-101',
+      'additionalName': 'waitForIt',
+      'prodIDs': '123, 456',
+      'NumberOfEventsInBaseFiles': '5000, 6000',
+      'ProdTypes': 'Gen, Rec',
+      'MoveTypes': '',
+    }
+
+  def mockConfig( self, *args, **kwargs ): #pylint: disable=unused-argument
+    """ mock the configparser object """
+
+    self.assertEqual( args[0], theScript.PP )
+    return self.configDict[ args[1] ]
+
+  def test_meta( self ):
+    ret = self.chain.meta( 123, 'process', 555.5 )
+    self.assertEqual( {'ProdID': 123,
+                       'EvtType': 'process',
+                       'Energy': '555',
+                       'Machine': 'clic',
+                      }, ret )
+
+  def test_loadParameters( self ):
+    parameter = Mock()
+    parameter.prodConfigFilename = None
+    parameter.dumpConfigFile = None
+    self.chain.loadParameters( parameter )
+
+    c = self.chain
+
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter.prodConfigFilename = 'filename'
+
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      c.loadParameters( parameter )
+    self.assertEqual( c.prodGroup, "myProdGroup" )
+    self.assertEqual( c.detectorModel, "myDetectorModel" )
+    self.assertEqual( c.prodIDs, [123, 456] )
+    self.assertEqual( c.energies, [100, 200] )
+    self.assertEqual( c.eventsPerJobs, [1000, 2000] )
+    self.assertEqual( c.eventsPerBaseFiles, [5000, 6000] )
+
+    self.configDict['prodIDs'] = "123, 456, 789"
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ), \
+      self.assertRaisesRegexp( AttributeError, "Lengths of Processes"):
+      c.loadParameters( parameter )
+
+    cpMock.has_option.return_value = False
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      c.loadParameters( parameter )
+    self.assertEqual( c.prodIDs, [1, 1] )
+
+
+    self.configDict['NumberOfEventsInBaseFiles'] = "1000"
+    c._flags._spl = True
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ), \
+      self.assertRaisesRegexp( AttributeError, "Length of eventsPerBaseFiles"):
+      c.loadParameters( parameter )
+
+
+
+    parameter.prodConfigFilename = None
+    parameter.dumpConfigFile = True
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ), \
+      self.assertRaisesRegexp( RuntimeError, ''):
+      c.loadParameters( parameter )
+
+
 
 
 class TestMakingFlags( unittest.TestCase ):
@@ -98,8 +189,7 @@ ProdTypes = Gen, Sim, RecOver
 move = False
 
 #Datatypes to move: Gen, Sim, Rec, Dst
-MoveTypes = 
-""" )
+MoveTypes = \n""" )
 
 
   def test_loadFlags( self ):
@@ -120,13 +210,17 @@ MoveTypes =
     self.assertFalse( f._moveRec )
     self.assertTrue( f._moveDst )
 
+    myConfig.set( theScript.PRODUCTION_PARAMETERS, 'MoveTypes', 'gen, dst, badType' )
+    with self.assertRaisesRegexp( AttributeError, 'badType'):
+      self.flags.loadFlags( myConfig )
+
+
 class TestMakingParams( unittest.TestCase ):
   """Test the parameters for the moving creation script"""
 
   def setUp ( self ):
     self.params = theScript.Params()
 
-  @patch( "ILCDIRAC.Core.Utilities.CheckAndGetProdProxy.checkAndGetProdProxy", new = Mock( return_value=S_OK()) )
   def test_init( self ):
     self.assertIsNone( self.params.prodConfigFilename )
     self.assertFalse( self.params.dumpConfigFile )
