@@ -22,8 +22,6 @@ from DIRAC import S_OK, exit as dexit
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
-FLAGS = 'Flags'
-MOVING_FLAGS = 'Moving Flags'
 
 class Params(object):
   """Parameter Object"""
@@ -95,16 +93,20 @@ class CLICDetProdChain( object ):
       #create transformations
       self._gen = False
       self._spl = False
-      self._sim = True
+      self._sim = False
       self._rec = False
       self._over = False
 
       # create moving transformations
       self._moves = False
-      self._cleanGen = True
-      self._cleanSim = True
-      self._cleanRec = True
-      self._cleanDst = False
+      self._moveGen = False
+      self._moveSim = False
+      self._moveRec = False
+      self._moveDst = False
+
+      ## list of tuple to preserve order
+      self._prodTypes = [ ('gen','Gen'), ('spl','Split'), ('sim','Sim'), ('rec','Rec'), ('over','RecOver') ]
+      self._moveTypes = [ ('moveGen','Gen'), ('moveSim','Sim'), ('moveRec','Rec'), ('moveDst','Dst') ]
 
     @property
     def dryRun( self ): #pylint: disable=missing-docstring
@@ -120,62 +122,69 @@ class CLICDetProdChain( object ):
       return self._sim
     @property
     def rec( self ): #pylint: disable=missing-docstring
-      return self._rec
+      return self._rec and not self._over
     @property
     def over( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._over
+      return self._rec and self._over
     @property
     def move( self ): #pylint: disable=missing-docstring
       return not self._dryRun and self._moves
     @property
     def moveGen( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._gen or self._spl) and self._moves and self._cleanGen
+      return not self._dryRun and (self._gen or self._spl) and self._moves and self._moveGen
     @property
     def moveSim( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._sim and self._moves and self._cleanSim
+      return not self._dryRun and self._sim and self._moves and self._moveSim
     @property
     def moveRec( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._moves and self._cleanRec
+      return not self._dryRun and self._rec and self._moves and self._moveRec
     @property
     def moveDst( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._moves and self._cleanDst
+      return not self._dryRun and self._rec and self._moves and self._moveDst
+
 
     def __str__( self ):
+      pDict = vars(self)
+      pDict.update( prodOpts = ", ".join([ pTuple[1] \
+                                           for pTuple in self._prodTypes ] ) )
+      pDict.update( prodTypes = ", ".join([ pTuple[1] \
+                                            for pTuple in self._prodTypes \
+                                            if getattr( self, pTuple[0]) ] ) )
+      pDict.update( moveOpts = ", ".join([ pTuple[1] \
+                                            for pTuple in self._moveTypes ] ) )
+      pDict.update( moveTypes = ", ".join([ pTuple[1] \
+                                            for pTuple in self._moveTypes \
+                                            if getattr( self, '_'+pTuple[0] ) ] ) )
       return """
-[Flags]
 
-gen = %(_gen)s
-spl = %(_spl)s
-sim = %(_sim)s
-rec = %(_rec)s
-over = %(_over)s
+#Productions to create: %(prodOpts)s
+ProdTypes = %(prodTypes)s
 
 move = %(_moves)s
 
-[Moving Flags]
-## which files to move after they haven been used or created, only takes effect if move is True
-gen=%(_cleanGen)s
-sim=%(_cleanSim)s
-rec=%(_cleanRec)s
-dst=%(_cleanDst)s
+#Datatypes to move: %(moveOpts)s
+MoveTypes = %(moveTypes)s
 """ %( vars(self) )
+
+
+    def __splitStringToOptions( self, config, tuples, optString, prefix='_'):
+      """ split the option string into separate values and set the corresponding flag """
+      prodsToCreate = config.get( PRODUCTION_PARAMETERS, optString )
+      for prodType in prodsToCreate.split(','):
+        found = False
+        for attribute, name in tuples:
+          print attribute, name
+          if name.capitalize() == prodType.strip().capitalize():
+            setattr( self, prefix+attribute, True )
+            found = True
+            break
+        if not found:
+          raise AttributeError( "Unknown parameter: %s " % prodType )
 
     def loadFlags( self, config ):
       """ load flags values from configfile """
-
-      #create transformations
-      self._gen = config.getboolean(FLAGS, 'gen')
-      self._spl = config.getboolean(FLAGS, 'spl')
-      self._sim = config.getboolean(FLAGS, 'sim')
-      self._rec = config.getboolean(FLAGS, 'rec')
-      self._over = config.getboolean(FLAGS, 'over')
-
-      # create moving transformations
-      self._moves = config.getboolean(FLAGS, 'move')
-      self._cleanGen = config.getboolean(MOVING_FLAGS, 'gen')
-      self._cleanSim = config.getboolean(MOVING_FLAGS, 'sim')
-      self._cleanRec = config.getboolean(MOVING_FLAGS, 'rec')
-      self._cleanDst = config.getboolean(MOVING_FLAGS, 'dst')
+      self.__splitStringToOptions( config, self._prodTypes, 'ProdTypes', prefix='_' )
+      self.__splitStringToOptions( config, self._moveTypes, 'MoveTypes', prefix='_' )
 
   def __init__( self, params=None):
 
@@ -275,7 +284,7 @@ energy = %(energy)s
 eventsPerJob = %(eventsPerJob)s
 
 ## optional prodid to search for input files
-# prodid = ''
+# prodid =
 
 productionLogLevel = %(productionLogLevel)s
 outputSE = %(outputSE)s
