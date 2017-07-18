@@ -405,8 +405,8 @@ finalOutputSE = %(finalOutputSE)s
     overlay.setBkgEvtType( 'gghad' )
     try:
       self.overlayParameterDict().get( energy ) ( overlay )
-    except KeyError:
-      raise RuntimeError( "No overlay parameters defined for" % energy )
+    except TypeError:
+      raise RuntimeError( "No overlay parameters defined for %s GeV" % energy )
 
     return overlay
 
