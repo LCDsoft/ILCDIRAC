@@ -48,6 +48,11 @@ class TestMaking( unittest.TestCase ):
       'MoveTypes': '',
     }
 
+    self.pMockMod = Mock()
+    self.pjMock = Mock( name ="ProductionJob" )
+    self.pMockMod.return_value = self.pjMock
+    self.pjMock.getMetadata.return_value = {}
+
   def mockConfig( self, *args, **kwargs ): #pylint: disable=unused-argument
     """ mock the configparser object """
 
@@ -115,6 +120,121 @@ class TestMaking( unittest.TestCase ):
       self.assertRaisesRegexp( RuntimeError, ''):
       c.loadParameters( parameter )
 
+  def test_createMarlinApplication( self ):
+
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
+
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter = Mock()
+    parameter.prodConfigFilename = 'filename'
+    parameter.dumpConfigFile = False
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      self.chain.loadParameters( parameter )
+
+    ret = self.chain.createMarlinApplication( 300.0 )
+    self.assertIsInstance( ret, Marlin )
+    self.assertEqual( ret.detectortype, 'myDetectorModel' )
+    self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
+
+  def test_createDDSimApplication( self ):
+
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
+
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter = Mock()
+    parameter.prodConfigFilename = 'filename'
+    parameter.dumpConfigFile = False
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      self.chain.loadParameters( parameter )
+
+    ret = self.chain.createDDSimApplication()
+    self.assertIsInstance( ret, DDSim )
+    self.assertEqual( ret.steeringFile, 'clic_steer.py' )
+
+  def test_createSplitApplication( self ):
+
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit
+
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter = Mock()
+    parameter.prodConfigFilename = 'filename'
+    parameter.dumpConfigFile = False
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      self.chain.loadParameters( parameter )
+
+    ret = self.chain.createSplitApplication( 100, 1000, 'stdhep')
+    self.assertIsInstance( ret, StdHepSplit )
+    self.assertEqual( ret.datatype, 'gen' )
+    self.assertEqual( ret.maxRead, 1000 )
+    self.assertEqual( ret.numberOfEventsPerFile, 100 )
+
+  def test_createOverlayApplication( self ):
+
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
+
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter = Mock()
+    parameter.prodConfigFilename = 'filename'
+    parameter.dumpConfigFile = False
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      self.chain.loadParameters( parameter )
+    ret = self.chain.createOverlayApplication( 350 )
+    self.assertIsInstance( ret, OverlayInput )
+    self.assertEqual( ret.machine, 'clic_opt' )
+
+    with self.assertRaisesRegexp( RuntimeError, 'No overlay parameters'):
+      ret = self.chain.createOverlayApplication( 355 )
+
+
+  def test_createSplitProduction( self ):
+
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
+      retMeta = self.chain.createSplitProduction(
+        meta = { 'ProdID':23, 'Energy':350 },
+        prodName = "prodJamesProd",
+        parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
+        eventsPerJob = 007,
+        eventsPerBaseFile = 700,
+      )
+
+    self.assertEqual( retMeta, {} )
+
+  def test_createRecoProduction( self ):
+
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
+      retMeta = self.chain.createReconstructionProduction(
+        meta = { 'ProdID':23, 'Energy':350 },
+        prodName = "prodJamesProd",
+        parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
+      )
+
+    self.assertEqual( retMeta, {} )
+
+
+  def test_createSimProduction( self ):
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
+      retMeta = self.chain.createSimulationProduction(
+        meta = { 'ProdID':23, 'Energy':350 },
+        prodName = "prodJamesProd",
+        parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
+      )
+    self.assertEqual( retMeta, {} )
 
 
 
