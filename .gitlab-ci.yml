@@ -39,7 +39,7 @@ install:SL6:
   artifacts:
      paths:
        - installation
-     expire_in: 1 day
+     expire_in: 2 hours
 
 
 install:CC7:
@@ -72,7 +72,7 @@ install:CC7:
   artifacts:
      paths:
        - installation
-     expire_in: 1 day
+     expire_in: 2 hours
 
 
 unittest:SL6:
@@ -92,7 +92,7 @@ unittest:SL6:
   artifacts:
      paths:
        - installation/ILCDIRAC/.coverage
-     expire_in: 1 day
+     expire_in: 2 hours
 
 
 unittest:CC7:
@@ -112,7 +112,7 @@ unittest:CC7:
   artifacts:
      paths:
        - installation/ILCDIRAC/.coverage
-     expire_in: 1 day
+     expire_in: 2 hours
 
 
 pylint:SL6:
@@ -225,12 +225,27 @@ setests:CC7:
   allow_failure: true
 
 
-makedocs:
+compiledoc:
   stage: create
-  only:
-    - tags
+  dependencies:
+    - install:SL6
   script:
-    - echo "soon"
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - unset REQUESTS_CA_BUNDLE
+    - pip install sphinx==1.5.2
+    - yum install -y which patch
+    - rm -rf ILCDIRAC ## removes just the folder with the links
+    - git checkout origin/master -- release.notes ## get release notes from the master
+    - cd docs
+    - export PYTHONPATH=$PWD/source:$PYTHONPATH
+    - bash patchSphinx.sh
+    - make completeDocumentation
+  artifacts:
+    paths:
+      - installation/ILCDIRAC/docs/build/html
+    expire_in: 2 hours
 
 deploydoc:
   stage: deploy

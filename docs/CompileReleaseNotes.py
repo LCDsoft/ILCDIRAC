@@ -3,13 +3,14 @@
 compile the release notes
 
 """
-from DIRAC.Core.Utilities import Distribution
-from DIRAC import gLogger, S_OK, S_ERROR
 import os
 import re
 import sys
 
-def doit( tag ):
+from DIRAC.Core.Utilities import Distribution
+from DIRAC import gLogger, S_OK, S_ERROR
+
+def doit( tag=None ):
   """compile release notes rst file"""
   res = __generateReleaseNotes( tag )
   if not res['OK']:
@@ -102,7 +103,7 @@ def __generateReleaseNotes( version ):
   gLogger.info( "Loaded release.notes" )
   for rstFileName, singleVersion in ( ( "releasenotes.rst", True ),
                                       ( "releasehistory.rst", False ) ):
-    result = __generateRSTFile( releaseData, rstFileName, version, singleVersion )
+    result = __generateRSTFile( releaseData, rstFileName, version, singleVersion)
     if not result[ 'OK' ]:
       gLogger.error( "Could not generate %s: %s" % ( rstFileName, result[ 'Message' ] ) )
       continue
@@ -111,9 +112,9 @@ def __generateReleaseNotes( version ):
 def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
   """create the rst file from the release.notes """
   rstData = []
-  parsedPkgVersion = Distribution.parseVersionString( pkgVersion )
+  parsedPkgVersion = Distribution.parseVersionString( pkgVersion ) if pkgVersion is not None else (99, 99, 99, 99)
   for version, verData in releaseData:
-    if singleVersion and version != pkgVersion:
+    if singleVersion and version != pkgVersion and pkgVersion is not None:
       continue
     if Distribution.parseVersionString( version ) > parsedPkgVersion:
       continue
@@ -139,6 +140,9 @@ def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
         for entry in featureData[ key ]:
           rstData.append( " - %s" % entry )
         rstData.append( "" )
+    if pkgVersion is None and singleVersion:
+      print "Just taking the first entry in releaseNotes"
+      break
   #Write releasenotes.rst
   try:
     rstFilePath = os.path.join( os.getcwd(), "source", rstFileName )
@@ -152,11 +156,8 @@ def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
   
   
 if __name__=="__main__":
-  args = sys.argv
-  print "args",args
-  if not len(args) > 1:
-    print "Please give the tag for the release notes"
-    exit(1)
-  tag = args[1]
-  print "Tag found:", tag
-  exit( doit( tag ))
+  print "args",sys.argv
+  TAG = sys.argv[1] if len(sys.argv) > 1 else None
+  TAG = os.environ.get( "CI_COMMIT_TAG", TAG )
+  print "Tag found?:", TAG
+  exit( doit( TAG ))

@@ -192,7 +192,7 @@ pseudoxml:
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
 releasenotes:
-	python CompileReleaseNotes.py `git -C ${DIRAC}/ILCDIRAC describe --tags --abbrev=0`
+	python CompileReleaseNotes.py
 
 completeDocumentation: releasenotes
 	rm -rf DOC

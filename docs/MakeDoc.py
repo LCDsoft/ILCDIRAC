@@ -10,6 +10,7 @@ ORIGDIR = os.getcwd()
 
 BASEPATH = os.path.join( ORIGDIR, BASEPATH )
 
+IGNORE_FOLDERS = ( 'productions', 'source', 'test' )
 
 def mkdir( folder ):
   """create a folder, ignore if it exists"""
@@ -87,7 +88,7 @@ def getsubpackages( abspath, direc):
       continue
     #print os.path.join( DIRACPATH,abspath,dire, "__init__.py" )
     if os.path.exists( os.path.join( DIRACPATH,abspath,dire, "__init__.py" ) ) and \
-      dire != 'Productions':
+      dire.lower() not in IGNORE_FOLDERS:
       #packages.append( os.path.join( "DOC", abspath, dire) )
       packages.append( os.path.join( dire) )
   #print "packages",packages
@@ -114,7 +115,7 @@ def createDoc():
     files = [ _ for _ in files if _.endswith(".py") ]
     if "__init__.py" not in files:
       continue
-    if any( dire in root.lower() for dire in ('test', 'productions') ):
+    if any( dire in root.lower() for dire in IGNORE_FOLDERS ):
       continue
     #print root, direc, files
     modulename = root.split("/")[-1]

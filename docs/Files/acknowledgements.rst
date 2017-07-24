@@ -1,6 +1,8 @@
-Acknowledgements
-================
+Acknowledgements and References
+===============================
 
+Acknowledgements
+;;;;;;;;;;;;;;;;
 
 
 LCG Resources
@@ -23,7 +25,7 @@ Ref.: https://osgconnect.net/citations
 
 
 References
-==========
+;;;;;;;;;;
 
 iLCDirac
 --------
