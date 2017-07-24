@@ -41,7 +41,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.eventstring = ['ProgressHandler','event']
+    self.eventstring = ['ProgressHandler','event', 'EventNumber', 'StatusMonitor']
     self.envdict = {}
     self.ProcessorListToUse = []
     self.ProcessorListToExclude = []
