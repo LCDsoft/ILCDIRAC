@@ -258,9 +258,23 @@ maketag:
   stage: create
   only:
     - tags
+  tags:
+    - docker
+  dependencies:
+    - install:SL6
+  image: ilcdirac/cc7-extra
   script:
-    - echo "soon"
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../RELEASE
 
+  artifacts:
+    paths:
+      - RELEASE
 
 deploytag:
   stage: deploy
