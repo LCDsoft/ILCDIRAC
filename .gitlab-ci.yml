@@ -242,17 +242,11 @@ compiledoc:
     - export PYTHONPATH=$PWD/source:$PYTHONPATH
     - bash patchSphinx.sh
     - make completeDocumentation
+    - mv build/html ../../../ilcdiracdocAuto
   artifacts:
     paths:
-      - installation/ILCDIRAC/docs/build/html
+      - ilcdiracdocAuto
     expire_in: 2 hours
-
-deploydoc:
-  stage: deploy
-  only:
-    - tags
-  script:
-    - echo "soon"
 
 maketag:
   stage: create
@@ -270,15 +264,44 @@ maketag:
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init <<< $CERT_PASSPHRASE
-    - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../RELEASE
+    - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../ILCDIRACTars
 
   artifacts:
     paths:
-      - RELEASE
+      - ILCDIRACTars
+    expire_in: 2 hours
+
+
+deploydoc:
+  stage: deploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  only:
+    - tags
+  dependencies:
+    - compiledoc
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocAuto/"
+    CI_OUTPUT_DIR: "ilcdiracdocAuto"
+  script:
+    - deploy-eos
+  before_script: []
+  after_script: []
 
 deploytag:
   stage: deploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
     - tags
+  dependencies:
+    - maketag
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/ILCDIRACTars/"
+    CI_OUTPUT_DIR: "ILCDIRACTars"
   script:
-    - echo "soon"
+    - deploy-eos
+  before_script: []
+  after_script: []
