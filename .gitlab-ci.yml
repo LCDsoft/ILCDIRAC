@@ -1,122 +1,255 @@
 before_script:
-    #pre-installation script
-    - cd ..
-    - shopt -s extglob
-    - rm -rf !(ILCDIRAC)
-    - rm -rf .installCache
+  - source /cvmfs/clicdp.cern.ch/software/git/2.13.2/x86_64-slc6-gcc7-opt/setup.sh
+  - shopt -s extglob
+
+stages:
+  - install
+  - unittest
+  - integration
+  - create
+  - deploy
+
+install:SL6:
+  stage: install
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - cd ../
+    - rm -rf !(ILCDIRAC) .installCache
     - mv ILCDIRAC ILCDIRAC_commit
+    - mkdir ILCDIRAC; cd ILCDIRAC
+    - mkdir installation; cd installation
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
     - ./dirac-install -V ILCDIRAC -r v26r0p9 -g 2017-01-27
     - rm -rf DIRAC
-    - mkdir DIRAC
-    - cd DIRAC
-    - git clone https://github.com/DIRACGrid/DIRAC.git .
-    - git checkout origin/rel-v6r15
-    - cd ..
+    - git clone https://github.com/DIRACGrid/DIRAC.git --single-branch -b rel-v6r15 DIRAC
     - rm -rf ILCDIRAC
-    - mv ILCDIRAC_commit ILCDIRAC
+    - mv ../../ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
     - pip install --upgrade pip
+    - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - echo "done with setuptools"
-    - pip install --upgrade pylint mock MySQL-python
-    - easy_install pytest-cov pytest-randomly
-    - cd ILCDIRAC
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly
+    - cd ..
+  artifacts:
+     paths:
+       - installation
+     expire_in: 1 day
+
+
+install:CC7:
+  stage: install
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - cd ../
+    - rm -rf !(ILCDIRAC) .installCache
+    - mv ILCDIRAC ILCDIRAC_commit
+    - mkdir ILCDIRAC; cd ILCDIRAC
+    - mkdir installation; cd installation
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - chmod +x dirac-install
+    - ./dirac-install -V ILCDIRAC -r v26r0p9 -g 2017-01-27
+    - rm -rf DIRAC
+    - git clone https://github.com/DIRACGrid/DIRAC.git --single-branch -b rel-v6r15 DIRAC
+    - rm -rf ILCDIRAC
+    - mv ../../ILCDIRAC_commit ILCDIRAC
+    - source bashrc
+    - dirac-deploy-scripts
+    - unset REQUESTS_CA_BUNDLE
+    - pip install --upgrade pip
+    - pip uninstall -y distribute
+    - pip install --upgrade setuptools || echo "done"
+    - pip install --upgrade setuptools_scm || echo "done scm"
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly
+    - cd ..
+  artifacts:
+     paths:
+       - installation
+     expire_in: 1 day
+
+
+unittest:SL6:
+  stage: unittest
+  tags:
+    - docker
+  dependencies:
+    - install:SL6
+  image: ilcdirac/slc6-base
+  script:
     - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-unittests.sh
+  coverage: '/\d+\%\s*$/'
+  artifacts:
+     paths:
+       - installation/ILCDIRAC/.coverage
+     expire_in: 1 day
 
 
-stages:
-    - test
+unittest:CC7:
+  stage: unittest
+  tags:
+    - docker
+  dependencies:
+    - install:CC7
+  image: ilcdirac/cc7-base
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-unittests.sh
+  coverage: '/\d+\%\s*$/'
+  artifacts:
+     paths:
+       - installation/ILCDIRAC/.coverage
+     expire_in: 1 day
 
-pylint6:
-  stage: test
+
+pylint:SL6:
+  stage: integration
+  dependencies:
+   - install:SL6
   tags:
     - docker
   image: ilcdirac/slc6-base
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
 
-unittest6:
-  stage: test
+
+pylint:CC7:
+  stage: integration
   tags:
     - docker
-  image: ilcdirac/slc6-base
+  image: ilcdirac/cc7-base
+  dependencies:
+    - install:CC7
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-unittests.sh
+    - .gitlab-ci.d/run-pylint.sh
 
-cvmfstests6:
-  stage: test
+
+cvmfstests:SL6:
+  stage: integration
   tags:
     - docker
+  dependencies:
+    - install:SL6
+    - unittest:SL6
   image: ilcdirac/slc6-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - .gitlab-ci.d/run-cvmfstests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
-cvmfstests7:
-  stage: test
+
+cvmfstests:CC7:
+  stage: integration
   tags:
     - docker
+  dependencies:
+    - install:CC7
+    - unittest:CC7
   image: ilcdirac/cc7-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - .gitlab-ci.d/run-cvmfstests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
-pylint7:
-  stage: test
+
+setests:SL6:
+  stage: integration
   tags:
     - docker
-  image: ilcdirac/cc7-base
-  script:
-    - source ../bashrc
-    - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-pylint.sh
-
-unittest7:
-  stage: test
-  tags:
-    - docker
-  image: ilcdirac/cc7-base
-  script:
-    - source ../bashrc
-    - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-unittests.sh
-
-setests6:
-  stage: test
-  tags:
-    - docker
+  dependencies:
+    - install:SL6
+    - unittest:SL6
   image: ilcdirac/slc6-base
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init <<< $CERT_PASSPHRASE
     - .gitlab-ci.d/run-setests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
 
-setests7:
-  stage: test
+setests:CC7:
+  stage: integration
   tags:
     - docker
+  dependencies:
+    - install:CC7
+    - unittest:CC7
   image: ilcdirac/cc7-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init <<< $CERT_PASSPHRASE
     - .gitlab-ci.d/run-setests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
+
+
+makedocs:
+  stage: create
+  only:
+    - tags
+  script:
+    - echo "soon"
+
+deploydoc:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - echo "soon"
+
+maketag:
+  stage: create
+  only:
+    - tags
+  script:
+    - echo "soon"
+
+
+deploytag:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - echo "soon"
