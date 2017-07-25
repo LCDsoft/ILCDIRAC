@@ -44,6 +44,8 @@ install:SL6:
 
 install:CC7:
   stage: install
+  except:
+    - tags
   tags:
     - docker
   image: ilcdirac/cc7-base
@@ -77,6 +79,8 @@ install:CC7:
 
 unittest:SL6:
   stage: unittest
+  except:
+    - tags
   tags:
     - docker
   dependencies:
@@ -97,6 +101,8 @@ unittest:SL6:
 
 unittest:CC7:
   stage: unittest
+  except:
+    - tags
   tags:
     - docker
   dependencies:
@@ -117,6 +123,8 @@ unittest:CC7:
 
 pylint:SL6:
   stage: integration
+  except:
+    - tags
   dependencies:
    - install:SL6
   tags:
@@ -132,6 +140,8 @@ pylint:SL6:
 
 pylint:CC7:
   stage: integration
+  except:
+    - tags
   tags:
     - docker
   image: ilcdirac/cc7-base
@@ -147,6 +157,8 @@ pylint:CC7:
 
 cvmfstests:SL6:
   stage: integration
+  except:
+    - tags
   tags:
     - docker
   dependencies:
@@ -167,6 +179,8 @@ cvmfstests:SL6:
 
 cvmfstests:CC7:
   stage: integration
+  except:
+    - tags
   tags:
     - docker
   dependencies:
@@ -187,6 +201,8 @@ cvmfstests:CC7:
 
 setests:SL6:
   stage: integration
+  except:
+    - tags
   tags:
     - docker
   dependencies:
@@ -207,6 +223,8 @@ setests:SL6:
 
 setests:CC7:
   stage: integration
+  except:
+    - tags
   tags:
     - docker
   dependencies:
