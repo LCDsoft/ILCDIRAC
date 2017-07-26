@@ -260,10 +260,10 @@ compiledoc:
     - export PYTHONPATH=$PWD/source:$PYTHONPATH
     - bash patchSphinx.sh
     - make completeDocumentation
-    - mv build/html ../../../ilcdiracdocAuto
+    - mv build/html ../../../ilcdiracdoc
   artifacts:
     paths:
-      - ilcdiracdocAuto
+      - ilcdiracdoc
     expire_in: 2 hours
 
 maketag:
@@ -300,8 +300,8 @@ deploydoc:
   dependencies:
     - compiledoc
   variables:
-    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocAuto/"
-    CI_OUTPUT_DIR: "ilcdiracdocAuto"
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
+    CI_OUTPUT_DIR: "ilcdiracdoc"
   script:
     - deploy-eos
   before_script: []
