@@ -359,11 +359,11 @@ finalOutputSE = %(finalOutputSE)s
     values are lambda functions acting on an overlay application object
     """
     return {
-      350. : ( lambda overlay: [ overlay.setBXOverlay( 300 ), overlay.setGGToHadInt( 0.0464 ), overlay.setDetectorModel( self.detectorModel ) ] ),
-      420. : ( lambda overlay: [ overlay.setBXOverlay( 300 ), overlay.setGGToHadInt( 0.17 ),   overlay.setDetectorModel( self.detectorModel ) ] ),
-      500. : ( lambda overlay: [ overlay.setBXOverlay( 300 ), overlay.setGGToHadInt( 0.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
-      1400.: ( lambda overlay: [ overlay.setBXOverlay(  20 ), overlay.setGGToHadInt( 1.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
-      3000.: ( lambda overlay: [ overlay.setBXOverlay(  20 ), overlay.setGGToHadInt( 3.2 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
+      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setDetectorModel( self.detectorModel ) ] ),
+      420. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.17 ),   overlay.setDetectorModel( self.detectorModel ) ] ),
+      500. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
+      1400.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 1.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
+      3000.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 3.2 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
     }
 
   @staticmethod
