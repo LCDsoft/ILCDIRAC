@@ -411,7 +411,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
         assertEqualsImproved( proc[0].text, 'output file changed', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
-  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[]))
+  @patch("ILCDIRAC.Core.Utilities.MarlinXML.getOverlayFiles", new=Mock(return_value=[]))
   def test_prepareXMLFile_getoverlayEmpty( self ):
     #pylint: disable=unused-argument
     def parseModified( self, source, parser=None ):
@@ -425,7 +425,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       assertDiracFailsWith( result, 'could not find any overlay files', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
-  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[ 'overlayfile1', 'verycomplicated_other_file.txt' ]))
+  @patch("ILCDIRAC.Core.Utilities.MarlinXML.getOverlayFiles", new=Mock(return_value=[ 'overlayfile1', 'verycomplicated_other_file.txt' ]))
   def test_prepareXMLFile_getoverlayUsed( self ):
     #pylint: disable=unused-argument
     def parseModified( self, source, parser=None ):

@@ -19,6 +19,7 @@ from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.MarlinXML                    import setOverlayFilesParameter, setOutputFileParameter
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
 
 
@@ -292,6 +293,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug,
                    dd4hepGeoFile=None,
                    eventsPerBackgroundFile=0,
+                   overlay = False,
                   ):
   """Write out a xml file for Marlin
   
@@ -309,6 +311,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
   :param str dd4hepGeoFile: path to the dd4hep Geometry XML file, optional, default None
   :param int eventsPerBackgroundFile: number of events in each background file, optional, default 0
+  :param bool overlay: if overlay processors should be handled or not
   :return: S_OK
   """
   tree = ElementTree()
@@ -326,7 +329,6 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
 
   root = tree.getroot()
   ##Get all processors:
-  overlay = False
   processors = tree.findall('execute/processor')
   for processor in processors:
     if processor.attrib.get('name','').lower().count('overlaytiming'):
@@ -370,78 +372,25 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     globparams = tree.find("global")
     globparams.append(lciolist) #pylint: disable=E1101
 
-  for param in tree.findall('processor'):
-    if 'name' in param.attrib:
-      if outputFile:
-        if param.attrib.get('name') == 'MyLCIOOutputProcessor' \
-           or param.attrib.get('type') == 'LCIOOutputProcessor':
-          subparams = param.findall('parameter')
-          for subparam in subparams:
-            if subparam.attrib.get('name') == 'LCIOOutputFile':
-              subparam.text = outputFile
-              com = Comment("output file changed")
-              param.insert(0, com)
-      else:
-        if outputREC:
-          if param.attrib.get('name') in( 'MyLCIOOutputProcessor', 'Output_REC' ):
-            subparams = param.findall('parameter')
-            for subparam in subparams:
-              if subparam.attrib.get('name') == 'LCIOOutputFile':
-                subparam.text = outputREC
-                com = Comment("REC file changed")
-                param.insert(0, com)
-        if outputDST:
-          if param.attrib.get('name') in ( 'DSTOutput', 'Output_DST' ):
-            subparams = param.findall('parameter')
-            for subparam in subparams:
-              if subparam.attrib.get('name') == 'LCIOOutputFile':
-                subparam.text = outputDST
-                com = Comment("DST file changed")
-                param.insert(0, com)
-      # OverlayTiming  processor treatment
-      if param.attrib.get('name', '').lower().count('overlaytiming'):
-        subparams = param.findall('parameter')
-        for subparam in subparams:
-          if subparam.attrib.get('name') == 'NumberBackground' and subparam.attrib['value'] == '0.0':
-            overlay = False
-          if subparam.attrib.get('name') == 'NBunchtrain' and subparam.attrib['value'] == '0':
-            overlay = False
-        if overlay: 
-          files = getOverlayFiles()
-          if not files:
-            return S_ERROR('Could not find any overlay files')
-          for subparam in subparams:
-            if subparam.attrib.get('name') == "BackgroundFileNames":
-              subparam.text = "\n".join(files)
-              com = Comment("Overlay files changed")
-              param.insert(0, com)
-      # BGOverlay Processor Treatment
-      if param.attrib.get('name','').lower().count('bgoverlay'):
-        bkg_Type = 'aa_lowpt' #specific to ILD_DBD #FIXME
-        subparams = param.findall('parameter')
-        for subparam in subparams:
-          if subparam.attrib.get('name') == 'expBG' and (subparam.text == '0' or subparam.text == '0.0'):
-            overlay = False
-        if overlay: 
-          files = getOverlayFiles(bkg_Type)
-          if not files:
-            return S_ERROR('Could not find any overlay files')
-          for subparam in subparams:
-            if subparam.attrib.get('name') == "InputFileNames":
-              subparam.text = "\n".join(files)
-              com = Comment("Overlay files changed")
-              param.insert(0, com)
-            if subparam.attrib.get('name') == "NSkipEventsRandom" and files:
-              com = Comment("NSkipEventsRandom Changed")
-              subparam.text = "%d" % int( len(files) * eventsPerBackgroundFile )
+  resOF = setOutputFileParameter( tree, outputFile, outputREC, outputDST )
+  if not resOF['OK']:
+    return resOF
+  resOver = setOverlayFilesParameter( tree, overlay, eventsPerBackgroundFile )
+  if not resOver['OK']:
+    return resOver
 
-      ## Deal with the InitializeDD4hep parameter value for the XML File
-      if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
-        for subparam in param.findall('parameter'):
-          if subparam.attrib.get('name') == "DD4hepXMLFile":
-            subparam.text = dd4hepGeoFile
-            com = Comment("DD4hepGeoFile changed")
-            param.insert(0, com)
+  for param in tree.findall('processor'):
+    if 'name' not in param.attrib:
+      continue
+    ## Deal with the InitializeDD4hep parameter value for the XML File
+    if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
+      for subparam in param.findall('parameter'):
+        if subparam.attrib.get('name') == "DD4hepXMLFile":
+          subparam.text = dd4hepGeoFile
+          com = Comment("DD4hepGeoFile changed")
+          param.insert(0, com)
+
+
 
   #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
   root_str = fixedXML(tostring(root))
