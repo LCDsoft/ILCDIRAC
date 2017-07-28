@@ -5,24 +5,30 @@ Get the overlay files
 
 :author: sposs
 '''
+from decimal import Decimal
 
-__RCSID__ = "$Id$"
+import glob
+import os
+import random
+import subprocess
+import time
+from math import ceil, modf
 
-from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
+import DIRAC
 from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
 from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
 from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
-from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycles
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
-
 from DIRAC                                                   import S_OK, S_ERROR, gLogger
-import DIRAC
-from math import ceil, modf
 
-from decimal import Decimal
+from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
+from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycles
 
-import os, time, random, subprocess, glob
+
+
+__RCSID__ = "$Id$"
+
 
 def allowedBkg( bkg, energy = None, detector = None, detectormodel = None, machine = 'clic_cdr' ):
   """ Check is supplied bkg is allowed
@@ -131,7 +137,7 @@ class OverlayInput (ModuleBase):
 
     self.useEnergyForFileLookup = self.step_commons.get("useEnergyForFileLookup", self.useEnergyForFileLookup)
 
-    if len(self.InputData):
+    if self.InputData:
       if self.NumberOfEvents:
         self.nbsigeventsperfile = self.NumberOfEvents
       else:
@@ -392,8 +398,9 @@ class OverlayInput (ModuleBase):
           continue
         
         filesobtained.append(self.lfns[fileindex])
+        print "files now",filesobtained
       ##If no file could be obtained, need to make sure the job fails  
-      if len(usednumbers) == nbfiles and not len(filesobtained):
+      if len(usednumbers) == nbfiles and not filesobtained:
         fail = True
         break
 
@@ -699,7 +706,7 @@ fi\n""" % (basename, lfile))
       self.log.debug("Found these files: %s" % res)
 
     self.lfns = res['Value']
-    if not len(self.lfns):
+    if not self.lfns:
       self.log.error("No Overlay LFNs found")
       self.setApplicationStatus('OverlayProcessor got an empty list')
       return S_ERROR('OverlayProcessor got an empty list')
