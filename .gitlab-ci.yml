@@ -96,6 +96,7 @@ unittest:SL6:
   artifacts:
      paths:
        - installation/ILCDIRAC/.coverage
+       - installation/ILCDIRAC/htmlcov
      expire_in: 2 hours
 
 
@@ -118,6 +119,7 @@ unittest:CC7:
   artifacts:
      paths:
        - installation/ILCDIRAC/.coverage
+       - installation/ILCDIRAC/htmlcov
      expire_in: 2 hours
 
 
@@ -306,6 +308,26 @@ deploydoc:
     - deploy-eos
   before_script: []
   after_script: []
+
+
+deploydocManual:
+  stage: deploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  when: manual
+  dependencies:
+    - compiledoc
+    - unittest:SL6
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
+    CI_OUTPUT_DIR: "ilcdiracdoc"
+  script:
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - deploy-eos
+  before_script: []
+  after_script: []
+
 
 deploytag:
   stage: deploy
