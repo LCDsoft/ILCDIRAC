@@ -248,6 +248,9 @@ setests:CC7:
 
 compiledoc:
   stage: unittest
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
   dependencies:
     - install:SL6
   script:
