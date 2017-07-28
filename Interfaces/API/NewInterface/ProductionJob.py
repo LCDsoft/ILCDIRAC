@@ -637,7 +637,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       if not result['OK']:
         self.log.error("Could not preset metadata", "%s" % str(meta))        
 
-    if len(failed):
+    if failed:
       return  { 'OK' : False, 'Failed': failed}
     return S_OK()
   
