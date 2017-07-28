@@ -196,7 +196,6 @@ class OverlayInput (ModuleBase):
                                               self.BkgEvtType)
 
     self.log.info( "Number of Events Per BackgroundFile: %d " % self.nbofeventsperfile )
-    self.workflow_commons["OI_eventsPerBackgroundFile"] = self.nbofeventsperfile
 
     meta['EvtType'] = self.metaEventType
     meta['ProdID'] = res
@@ -715,6 +714,12 @@ fi\n""" % (basename, lfile))
       self.setApplicationStatus('OverlayInput failed to get files locally with message %s' % res['Message'])
       return S_ERROR('OverlayInput failed to get files locally')
     self.setApplicationStatus('OverlayInput finished getting all files successfully')
+
+    ## add overlay background information to workflow_commons
+    stepNumber = int( self.step_commons['STEP_NUMBER'] )
+    self.workflow_commons["OI_%i_eventType" % stepNumber] = self.metaEventType
+    self.workflow_commons["OI_%i_eventsPerBackgroundFile" % stepNumber] = self.nbofeventsperfile
+
     return S_OK('OverlayInput finished successfully')
 
   def __disableWatchDog( self ):

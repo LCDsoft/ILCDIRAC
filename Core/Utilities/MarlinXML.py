@@ -6,7 +6,7 @@ from DIRAC import S_OK, S_ERROR
 
 from ILCDIRAC.Core.Utilities.GetOverlayFiles import getOverlayFiles
 
-def setOverlayFilesParameter( tree, overlay=False, eventsPerBackgroundFile=0 ):
+def setOverlayFilesParameter( tree, overlayParam=None ):
   """ set the parameters for overlay processors in MarlinSteering xml
 
   treat processors and groups of processors
@@ -15,35 +15,36 @@ def setOverlayFilesParameter( tree, overlay=False, eventsPerBackgroundFile=0 ):
 
   :param tree: XML tree of marlin steering file
   """
-  resOT = __checkOverlayProcessor( tree, overlay, eventsPerBackgroundFile, 'overlaytiming', 'gghad'  )
-  if not resOT['OK']:
-    return resOT
-  overlay = resOT['Value']
+  if overlayParam is None:
+    return S_OK()
 
-  resBGO = __checkOverlayProcessor( tree, overlay, eventsPerBackgroundFile, 'bgoverlay', 'aa_lowpt' )
-  if not resBGO['OK']:
-    return resBGO
-  overlay = resBGO['Value']
+  for backgroundType, eventsPerBackgroundFile in overlayParam:
 
-  resGroupO = __checkOverlayGroup( tree, overlay, eventsPerBackgroundFile, 'overlaytiming', 'gghad' )
-  if not resGroupO['OK']:
-    return resGroupO
-  overlay = resGroupO['Value']
+    resOT = __checkOverlayProcessor( tree, eventsPerBackgroundFile, 'overlaytiming', backgroundType  )
+    if not resOT['OK']:
+      return resOT
+
+    resBGO = __checkOverlayProcessor( tree, eventsPerBackgroundFile, 'bgoverlay', backgroundType )
+    if not resBGO['OK']:
+      return resBGO
+
+    resGroupO = __checkOverlayGroup( tree, eventsPerBackgroundFile, 'overlaytiming', backgroundType )
+    if not resGroupO['OK']:
+      return resGroupO
 
   return S_OK()
 
-def __checkOverlayGroup( tree, overlay, eventsPerBackgroundFile, processorType, bkgType ):
+def __checkOverlayGroup( tree, eventsPerBackgroundFile, processorType, bkgType ):
   """ check if there is an OverlayProcessor, also handling overlay processors that get parameters from a group """
   groups = tree.findall('group')
   for group in groups:
     groupParameters = group.findall('parameter')
-    resG = __checkOverlayProcessor( group, overlay, eventsPerBackgroundFile, processorType, bkgType, groupParameters )
+    resG = __checkOverlayProcessor( group, eventsPerBackgroundFile, processorType, bkgType, groupParameters )
     if not resG['OK']:
       return resG
-    overlay = resG['Value']
-  return S_OK( overlay )
+  return S_OK()
 
-def __checkOverlayProcessor( tree, overlay, eventsPerBackgroundFile, processorType, bkgType, groupParameters=None,  ):
+def __checkOverlayProcessor( tree, eventsPerBackgroundFile, processorType, bkgType, groupParameters=None,  ):
   """ check the for the overlayTiming processor and set the appropriate parameter values """
   for processor in tree.findall('processor'):
     if processor.attrib.get('name', '').lower().count(processorType.lower()) or \
@@ -63,7 +64,7 @@ def __checkOverlayProcessor( tree, overlay, eventsPerBackgroundFile, processorTy
         __changeProcessorTagValue( processor, 'parameter', "NSkipEventsRandom",
                                    "%d" % int( len(files) * eventsPerBackgroundFile ), "NSkipEventsRandom Changed" )
 
-  return S_OK( overlay )
+  return S_OK()
 
 def setOutputFileParameter( tree, outputFile, outputREC, outputDST ):
   for processor in tree.findall('processor'):

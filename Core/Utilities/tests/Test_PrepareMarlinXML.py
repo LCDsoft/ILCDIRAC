@@ -172,7 +172,9 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputREC="outputrec.slcio",
                           outputDST="outputdst.slcio",
                           debug=False,
-                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam=[ ('gghad', 0) ],
+                        )
     self.assertTrue( res['OK'] )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfile.xml" )
     self.assertTrue( self.findProcessorInTree( "InitDD4hep" ), "Problem with InitDD4hep" )
@@ -238,7 +240,9 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputREC="outputrec.slcio",
                           outputDST="outputdst.slcio",
                           debug=True,
-                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam=[ ('gghad', 0) ],
+                        )
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprod.xml" )
     self.assertTrue( self.findProcessorInTree( "InitDD4hep" ),
@@ -270,7 +274,7 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputDST="outputdst.slcio",
                           debug=True,
                           dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
-                          eventsPerBackgroundFile=333
+                          overlayParam=[ ('aa_lowpt', 333) ],
                         )
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprodild.xml" )
@@ -346,7 +350,9 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputREC="outputrec.slcio",
                           outputDST="outputdst.slcio",
                           debug=True,
-                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam=[ ('gghad', 0) ],
+                        )
     self.assertFalse( res['OK'] )
     self.assertIn( "Could not find any overlay files", res['Message'] )
 
@@ -362,7 +368,9 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputREC="outputrec.slcio",
                           outputDST="outputdst.slcio",
                           debug=True,
-                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam=[ ('aa_lowpt', 0) ],
+                        )
     self.assertFalse( res['OK'] )
     self.assertIn( "Could not find any overlay files", res['Message'] )
 
@@ -454,7 +462,8 @@ class TestPrepareClicProdXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputDST="outputdst.slcio",
                           debug=False,
                           dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
-                          overlay=True)
+                          overlayParam=[ ( 'gghad', 0 ) ],
+                        )
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprod.xml" )
     self.assertTrue( *self.checkGlobalTag( "LCIOInputFiles", "mySLCIOInput.slcio" ) )

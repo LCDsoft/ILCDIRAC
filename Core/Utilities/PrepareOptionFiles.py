@@ -292,8 +292,7 @@ def fixedXML(element):
 def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug,
                    dd4hepGeoFile=None,
-                   eventsPerBackgroundFile=0,
-                   overlay = False,
+                   overlayParam=None,
                   ):
   """Write out a xml file for Marlin
   
@@ -310,8 +309,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   :param string outputDST: file name of DST
   :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
   :param str dd4hepGeoFile: path to the dd4hep Geometry XML file, optional, default None
-  :param int eventsPerBackgroundFile: number of events in each background file, optional, default 0
-  :param bool overlay: if overlay processors should be handled or not
+  :param int overlayParam: list of tuples of background type and number of events in each background file, optional, default None
   :return: S_OK
   """
   tree = ElementTree()
@@ -375,7 +373,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   resOF = setOutputFileParameter( tree, outputFile, outputREC, outputDST )
   if not resOF['OK']:
     return resOF
-  resOver = setOverlayFilesParameter( tree, overlay, eventsPerBackgroundFile )
+  resOver = setOverlayFilesParameter( tree, overlayParam )
   if not resOver['OK']:
     return resOver
 

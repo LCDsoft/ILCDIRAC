@@ -185,14 +185,18 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       self.log.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
 
-    eventsPerBackgroundFile=self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
-    self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+
+
+    resOver = self._checkRunOverlay()
+    if not resOver['OK']:
+      return resOver
+    overlayParam = resOver['Value']
 
     res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
                          self.debug,
                          dd4hepGeoFile=compactFile,
-                         eventsPerBackgroundFile=eventsPerBackgroundFile,
+                         overlayParam=overlayParam,
                         )
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
@@ -402,7 +406,24 @@ fi
     listofslcio = " ".join(runonslcio)
     
     return S_OK(listofslcio)
-  
+
+  def _checkRunOverlay( self ):
+    """ checks if overlay should be run and which overlay parameters are there, allows running multiple overlay input steps """
+    softwarePackages = self.workflow_commons.get('SoftwarePackages','').split(';')
+    overlayParam = []
+    for package in softwarePackages:
+      if package.lower().startswith('overlayinput'):
+        stepNumber = int( package.split('.')[1] ) + 1 # softwarepackages start at 0, STEP_NUMBER at 1
+        eventsPerBackgroundFile = self.workflow_commons.get("OI_%i_eventsPerBackgroundFile" % stepNumber)
+        backgroundType = self.workflow_commons.get("OI_%i_eventType" % stepNumber )
+        self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+        self.log.info( "Background type: %s " % backgroundType )
+        overlayParam.append( (backgroundType, eventsPerBackgroundFile ) )
+
+    #By default return False
+    return S_OK( overlayParam )
+
+
   def getEnvScript(self, sysconfig, appname, appversion):
     """ Called if CVMFS is not available
     """
