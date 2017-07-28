@@ -56,7 +56,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     if 'ParametricInputSandbox' in self.workflow_commons:
       paramsb = self.workflow_commons['ParametricInputSandbox']
       if not isinstance( paramsb, list ):
-        if len(paramsb):
+        if paramsb:
           paramsb = paramsb.split(";")
         else:
           paramsb = []
@@ -68,7 +68,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     self.outputDST = self.step_commons.get('outputDST', self.outputDST)
       
     if 'IS_PROD' in self.workflow_commons:
-      if self.workflow_commons["IS_PROD"] and len(self.OutputFile)==0:
+      if self.workflow_commons["IS_PROD"] and not self.OutputFile:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
         #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
@@ -97,7 +97,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
                                             int(self.workflow_commons["JOB_ID"]))]
           
         
-    if not len(self.InputFile) and len(self.InputData):
+    if not self.InputFile and self.InputData:
       for files in self.InputData:
         if files.lower().find(".slcio") > -1:
           self.InputFile.append(files)
@@ -281,7 +281,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     finallist = []
     items = marlindll.split(":")
     #Care for user defined list of processors, useful when someone does not want to run the full reco
-    if len(self.ProcessorListToUse):
+    if self.ProcessorListToUse:
       for processor in self.ProcessorListToUse:
         for item in items:
           if item.count(processor):
@@ -290,7 +290,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       finallist = items
     items = finallist
     #Care for user defined excluded list of processors, useful when someone does not want to run the full reco
-    if len(self.ProcessorListToExclude):
+    if self.ProcessorListToExclude:
       for item in items:
         for processor in self.ProcessorListToExclude:
           if item.count(processor):
