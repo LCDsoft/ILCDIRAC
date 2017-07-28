@@ -144,7 +144,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       return res
     env_script_path = res["Value"]
 
-    res = self.GetInputFiles()
+    res = self._getInputFiles()
     if not res['OK']:
       self.log.error("Failed getting input files:", res['Message'])
       return res
@@ -387,7 +387,7 @@ fi
     res = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)    
     return res
   
-  def GetInputFiles(self):
+  def _getInputFiles(self):
     """ Resolve the input files. But not if in the application definition it was decided
     that it should forget about the input.
     """

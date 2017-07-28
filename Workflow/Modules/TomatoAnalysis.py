@@ -75,7 +75,7 @@ class TomatoAnalysis(MarlinAnalysis):
 
     marlin_dll = res['Value']
     
-    res = self.GetInputFiles()
+    res = self._getInputFiles()
     if not res['OK']:
       self.log.error(res['Message'])
       return res
