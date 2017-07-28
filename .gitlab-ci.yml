@@ -5,6 +5,7 @@ before_script:
 stages:
   - install
   - unittest
+  - manualdeploy
   - integration
   - create
   - deploy
@@ -246,7 +247,7 @@ setests:CC7:
 
 
 compiledoc:
-  stage: create
+  stage: unittest
   dependencies:
     - install:SL6
   script:
@@ -311,7 +312,7 @@ deploydoc:
 
 
 deploydocManual:
-  stage: deploy
+  stage: manualdeploy
   tags:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
