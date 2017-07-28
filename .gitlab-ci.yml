@@ -269,7 +269,7 @@ compiledoc:
       - ilcdiracdoc
     expire_in: 2 hours
 
-maketag:
+maketarballs:
   stage: create
   only:
     - tags
@@ -338,7 +338,7 @@ deploytag:
   only:
     - tags
   dependencies:
-    - maketag
+    - maketarballs
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/ILCDIRACTars/"
     CI_OUTPUT_DIR: "ILCDIRACTars"
