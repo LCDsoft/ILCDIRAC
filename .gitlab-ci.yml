@@ -281,6 +281,7 @@ maketarballs:
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
+    - if [ -d "ILCDIRAC" ]; then echo "ILCDIRAC links still present! Failing!"; exit 1; fi
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
