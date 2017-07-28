@@ -125,13 +125,13 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
   
-  def setConfig(self,Version):
+  def setConfig(self,version):
     """ Define the Configuration package to obtain
     """
     appName = 'ILDConfig'
-    self._addSoftware(appName.lower(), Version)
-    self.prodparameters['ILDConfigVersion'] = Version
-    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+Version, 'ILDConfig package' )
+    self._addSoftware(appName.lower(), version)
+    self.prodparameters['ILDConfigVersion'] = version
+    self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()  
 
   def setClicConfig(self,version):
