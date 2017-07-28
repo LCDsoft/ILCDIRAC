@@ -470,7 +470,7 @@ fi\n""" % (basename, lfile))
   def getEOSFile(self, lfn):
     """ Use xrdcp to get the files from EOS
     """
-    prependpath = "/eos/clicdp/grid"
+    prependpath = "/eos/experiment/clicdp/grid"
     if not lfn.startswith(prependpath):
       lfile = prependpath + lfn
     else:
