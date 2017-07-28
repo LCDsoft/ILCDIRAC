@@ -212,5 +212,16 @@ class UserJob(Job):
     
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()
-  
-  
+
+
+  def setCLICConfig(self, version):
+    """Define the CLIC Configuration package to obtain, copies steering files
+    from CLIC Configuration folder to working directory
+
+    :param str version: version string, e.g.: 'ILCSoft-2017-07-27'
+    """
+    appName = 'ClicConfig'
+    self._addSoftware(appName.lower(), version)
+
+    self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'CLIC Config package' )
+    return S_OK()
