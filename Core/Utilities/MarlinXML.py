@@ -18,7 +18,7 @@ def setOverlayFilesParameter( tree, overlayParam=None ):
   if overlayParam is None:
     return S_OK()
 
-  for backgroundType, eventsPerBackgroundFile in overlayParam:
+  for backgroundType, eventsPerBackgroundFile, _processorName in overlayParam:
 
     resOT = __checkOverlayProcessor( tree, eventsPerBackgroundFile, 'overlaytiming', backgroundType  )
     if not resOT['OK']:

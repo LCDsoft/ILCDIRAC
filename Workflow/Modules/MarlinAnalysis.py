@@ -416,9 +416,10 @@ fi
         stepNumber = int( package.split('.')[1] ) + 1 # softwarepackages start at 0, STEP_NUMBER at 1
         eventsPerBackgroundFile = self.workflow_commons.get("OI_%i_eventsPerBackgroundFile" % stepNumber)
         backgroundType = self.workflow_commons.get("OI_%i_eventType" % stepNumber )
+        processorName = self.workflow_commons.get("OI_%i_processorName" % stepNumber, None )
         self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
         self.log.info( "Background type: %s " % backgroundType )
-        overlayParam.append( (backgroundType, eventsPerBackgroundFile ) )
+        overlayParam.append( (backgroundType, eventsPerBackgroundFile, processorName) )
 
     #By default return False
     return S_OK( overlayParam )

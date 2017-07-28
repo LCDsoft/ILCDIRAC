@@ -83,6 +83,7 @@ class OverlayInput (ModuleBase):
     self.useEnergyForFileLookup = True
     self.machine = 'clic_cdr'
     self.pathToOverlayFiles = ''
+    self.processorName = ''
 
   def applicationSpecificInputs(self):
 
@@ -726,6 +727,7 @@ fi\n""" % (basename, lfile))
     stepNumber = int( self.step_commons['STEP_NUMBER'] )
     self.workflow_commons["OI_%i_eventType" % stepNumber] = self.metaEventType
     self.workflow_commons["OI_%i_eventsPerBackgroundFile" % stepNumber] = self.nbofeventsperfile
+    self.workflow_commons["OI_%i_processorName" % stepNumber] = self.processorName
 
     return S_OK('OverlayInput finished successfully')
 

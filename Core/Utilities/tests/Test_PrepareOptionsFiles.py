@@ -421,7 +421,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile(
         'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
-        'outputfile', 'outputREC', 'outputdst', True, overlayParam=[( 'gghad', 0) ] )
+        'outputfile', 'outputREC', 'outputdst', True, overlayParam=[( 'gghad', 0, None) ] )
       assertDiracFailsWith( result, 'could not find any overlay files', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
@@ -435,7 +435,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile(
         'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
-        'outputfile', 'outputREC', 'outputdst', True, overlayParam=[( 'gghad', 0) ] )
+        'outputfile', 'outputREC', 'outputdst', True, overlayParam=[( 'gghad', 0, None) ] )
       assertDiracSucceeds( result, self )
       mytree = TestPrepareOptionsFile.currenttree
       procs = mytree.findall('processor')

@@ -309,7 +309,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   :param string outputDST: file name of DST
   :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
   :param str dd4hepGeoFile: path to the dd4hep Geometry XML file, optional, default None
-  :param int overlayParam: list of tuples of background type and number of events in each background file, optional, default None
+  :param int overlayParam: list of tuples of background type, number of events in each background file, and processorName; optional, default None
   :return: S_OK
   """
   tree = ElementTree()
