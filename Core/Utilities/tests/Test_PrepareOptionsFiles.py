@@ -1317,8 +1317,8 @@ def createXMLTreeForXML( flag = 0 ):
   """Creates a XML Tree to test prepareXMLFile()"""
   root = ET.Element("root")
   ex = ET.SubElement(root, 'execute')
-  ET.SubElement(ex, 'processor', name='OVERLAYTIMING')
-  ET.SubElement(ex, 'processor', name='BGoverlAY')
+  ET.SubElement(ex, 'processor', name='MYOVERLAYTIMING', type='OverlayTiming')
+  ET.SubElement(ex, 'processor', name='BGoverlAY', type='Overlay')
   glob = ET.SubElement(root, 'global')
   if flag >= 0:
     ET.SubElement(glob, 'parameter', name='LCIOInputFiles')
@@ -1330,8 +1330,8 @@ def createXMLTreeForXML( flag = 0 ):
   ET.SubElement(mlop, 'parameter', name='LCIOOutputFile')
   dst = ET.SubElement(root, 'processor', name='DSTOutput')
   ET.SubElement(dst, 'parameter', name='LCIOOutputFile')
-  olt = ET.SubElement(root, 'processor', name='OVERLAYTIMING')
-  bgo = ET.SubElement(root, 'processor', name='BGoverlAY')
+  olt = ET.SubElement(root, 'processor', name='MYOVERLAYTIMING', type='OVERLAYTIMING')
+  bgo = ET.SubElement(root, 'processor', name='BGoverlAY', type='OVERLAY')
   nbbgVal = '0.0'
   nbbtVal = '0'
   expbgVal = '0.0'

@@ -18,19 +18,15 @@ def setOverlayFilesParameter( tree, overlayParam=None ):
   if overlayParam is None:
     return S_OK()
 
-  for backgroundType, eventsPerBackgroundFile, _processorName in overlayParam:
-
-    resOT = __checkOverlayProcessor( tree, eventsPerBackgroundFile, 'overlaytiming', backgroundType  )
-    if not resOT['OK']:
-      return resOT
-
-    resBGO = __checkOverlayProcessor( tree, eventsPerBackgroundFile, 'bgoverlay', backgroundType )
-    if not resBGO['OK']:
-      return resBGO
-
-    resGroupO = __checkOverlayGroup( tree, eventsPerBackgroundFile, 'overlaytiming', backgroundType )
-    if not resGroupO['OK']:
-      return resGroupO
+  for backgroundType, eventsPerBackgroundFile, processorName in overlayParam:
+    processorsToCheck = [ processorName ] if processorName else [ 'overlaytiming', 'bgoverlay' ]
+    for processorType in processorsToCheck:
+      resOT = __checkOverlayProcessor( tree, eventsPerBackgroundFile, processorType.lower(), backgroundType  )
+      if not resOT['OK']:
+        return resOT
+      resGroupO = __checkOverlayGroup( tree, eventsPerBackgroundFile, processorType.lower(), backgroundType )
+      if not resGroupO['OK']:
+        return resGroupO
 
   return S_OK()
 
@@ -57,9 +53,9 @@ def __checkOverlayProcessor( tree, eventsPerBackgroundFile, processorType, bkgTy
       files = getOverlayFiles( bkgType )
       if not files:
         return S_ERROR('Could not find any overlay files')
-      if processorType.lower() == 'overlaytiming':
+      if 'overlaytiming' in processor.attrib.get('type', '').lower():
         __changeProcessorTagValue( processor, 'parameter', 'BackgroundFileNames', '\n'.join(files), "Overlay files changed", groupParameters )
-      if processorType.lower() == 'bgoverlay':
+      if processor.attrib.get('type', '').lower() == 'overlay':
         __changeProcessorTagValue( processor, 'parameter', "InputFileNames", "\n".join(files), "Overlay files changed" )
         __changeProcessorTagValue( processor, 'parameter', "NSkipEventsRandom",
                                    "%d" % int( len(files) * eventsPerBackgroundFile ), "NSkipEventsRandom Changed" )

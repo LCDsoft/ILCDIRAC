@@ -462,7 +462,7 @@ class TestPrepareClicProdXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputDST="outputdst.slcio",
                           debug=False,
                           dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
-                          overlayParam=[ ( 'gghad', 0, None ) ],
+                          overlayParam=[ ( 'gghad', 0, 'Overlay380GeV' ) ],
                         )
     self.assertTrue( res['OK'], res.get('Message') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputprod.xml" )
