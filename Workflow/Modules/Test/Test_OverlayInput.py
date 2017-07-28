@@ -173,7 +173,9 @@ class TestOverlayUnittests( unittest.TestCase ):
   def test_applicationSpecificInputs_with_setters( self ):
     tmp_dict = { 'Detector' : 'othertestdetectorv3000', 'Energy' : '10000GeV',
                  'BXOverlay' : '651', 'ggtohadint' : 9.5, 'ProdID' : 429875,
-                 'NbSigEvtsPerJob' : 94, 'BkgEvtType' : 'bgoijaf' }
+                 'NbSigEvtsPerJob' : 94, 'BkgEvtType' : 'bgoijaf',
+                 'STEP_NUMBER':1,
+               }
     self.over.step_commons = tmp_dict
     self.over.InputData = [ 'abc' ]
     self.over.NumberOfEvents = 15
@@ -367,6 +369,8 @@ class TestOverlayExecute( unittest.TestCase ):
     self.over.ggtohadint = 5
     self.over.nbofeventsperfile = 21
     self.over.nbinputsigfile = 2
+    self.over.site = "SomeSite"
+    self.over.step_commons = dict( STEP_NUMBER=3 )
 
 
   mockretval =  S_OK({'Successful' : {'testfile1.txt' : ['CERN-DIP-4' , 'KEK'],
