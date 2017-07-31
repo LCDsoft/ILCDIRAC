@@ -352,18 +352,19 @@ finalOutputSE = %(finalOutputSE)s
       plist.append({'process':process,'pname1':'e1', 'pname2':'E1', "epa_b1":'F', "epa_b2":'F', "isr_b1":'T', "isr_b2":'T'})
     return plist
 
-  def overlayParameterDict( self ):
+  @staticmethod
+  def overlayParameterDict():
     """ return dictionary that sets the parameters for the overlay application
 
     keys are floats
     values are lambda functions acting on an overlay application object
     """
     return {
-      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setDetectorModel( self.detectorModel ) ] ),
-      420. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.17 ),   overlay.setDetectorModel( self.detectorModel ) ] ),
-      500. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
-      1400.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 1.3 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
-      3000.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 3.2 ),    overlay.setDetectorModel( self.detectorModel ) ] ),
+      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
+      420. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.17 ),   overlay.setProcessorName( 'Overlay3TeV') ] ),
+      500. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.3 ),    overlay.setProcessorName( 'Overlay3TeV') ] ),
+      1400.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 1.3 ),    overlay.setProcessorName( 'Overlay3TeV') ] ),
+      3000.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 3.2 ),    overlay.setProcessorName( 'Overlay3TeV') ] ),
     }
 
   @staticmethod
@@ -403,6 +404,7 @@ finalOutputSE = %(finalOutputSE)s
     overlay.setMachine( 'clic_opt' )
     overlay.setEnergy( energy )
     overlay.setBkgEvtType( 'gghad' )
+    overlay.setDetectorModel( self.detectorModel )
     try:
       self.overlayParameterDict().get( energy ) ( overlay )
     except TypeError:
