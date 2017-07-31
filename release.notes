@@ -1,25 +1,25 @@
 [v26r0p11]
 *Interface
 
-NEW: (#136) new attribute `processorName` for `~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput.OverlayInput`. Set the name of the Marlin processor the input files belong to. This enables multiple use of the OverlayInput application to download files for different Marlin processors.
-CHANGE: (#136) `~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` change capitalisation of the *version* argument of :func:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.setConfig`
+NEW: (#136) new attribute *processorName* for :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput.OverlayInput`. Set the name of the Marlin processor the input files belong to. This enables multiple use of the OverlayInput application to download files for different Marlin processors.
+CHANGE: (#136) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` change capitalisation of the *version* argument of :func:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.setConfig`
 
 *ILCTransformationSystem
 
 NEW: (#128) `dirac-clic-make-productions` script to create productions for the new ddsim/marlin software chain
-NEW: (#124) dirac-ilc-get-prod-logs new options to get all files in a folder (-A) and to automatically start downloading without confirmation (-N)
+NEW: (#124) `dirac-ilc-get-prod-log` new options to get all files in a folder (-A) and to automatically start downloading without confirmation (-N)
 NEW: (#126) `dirac-ilc-moving-transformation`: new option (--allFor) to set a prodID and have the three corresponding moving transformations: prodID/GEN, prodID+1/SIM and prodID+2/REC created. Added consistency check for Datatype
 
 *Interfaces
 
-NEW: (#125) StdhepSplit: new property to set maxRead flag for the hepsplit application
+NEW: (#125) :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit.StdHepSplit`: new property to set maxRead flag for the hepsplit application
 
 *Workflow
 
-CHANGE: (#135) The output parser for Marlin will now pass lines containing 'EventNumber' or 'StatusMonitor' to the standard output, in addition to 'event' and 'ProgressHandler'
-CHANGE: (#136) `~ILCDIRAC.Workflow.Modules.OverlayInput` fix the path for /eos/experiment/clicdp to get files directly from EOS
-CHANGE: (#136) `~ILCDIRAC.Workflow.Modules.MarlinAnalysis` can now handle setting of parameters for Overlay processors defined in a processor group. Implemented in the new module `Core.Utilities.MarlinXML`
-NEW: (#125) StdhepSplit: set "--maxread" if maxRead is set for the application, no changes if maxRead is 0 for backward compatibility
+CHANGE: (#135) The output parser for :class:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis` will now pass lines containing 'EventNumber' or 'StatusMonitor' to the standard output, in addition to 'event' and 'ProgressHandler'
+CHANGE: (#136) :class:`~ILCDIRAC.Workflow.Modules.OverlayInput.OverlayInput` fix the path for /eos/experiment/clicdp to get files directly from EOS
+CHANGE: (#136) :class:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis` can now handle setting of parameters for Overlay processors defined in a processor group. Implemented in the new module `Core.Utilities.MarlinXML`
+NEW: (#125) :class:`~ILCDIRAC.Workflow.Modules.StdHepSplit.StdHepSplit`: set "--maxread" if maxRead is set for the application, no changes if maxRead is 0 for backward compatibility
 CHANGE: (#127) Marlin the DST/REC files for processors called Output_DST/Output_REC files in production environments are now handled as well. For Users all processors of Type LCIOOutputProcessor should be used to change the output file name, not just the one called 'MyLCIOOutputProcessor'
 
 *Docs
@@ -33,21 +33,21 @@ NEW: (#137) *docs/GetReleaseNotes.py* script to get the release notes from the m
 * Interfaces:
 
 CHANGE: DDSim: use *detectorModel* as the *detectorType*, needed in CLIC productions
-NEW ProctionJob: add `setClicConfig` function to add ClicConfigPackage to productions
+NEW ProctionJob: add :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setCLICConfig` function to add ClicConfigPackage to productions
 
 * Core:
 
-CHANGE: Utilities.InstalledFiles: allow using arbitrary ConfigPackage to provide steering files. FOr now ILDConfig or ClicConfig defined in ConfigurationSystem
+CHANGE: :mod:`~ILCDIRAC.Core.Utilities.InstalledFiles`: allow using arbitrary ConfigPackage to provide steering files. For now ILDConfig or ClicConfig defined in ConfigurationSystem
 
 * Workflow:
 
-NEW: `ModuleBase`: General `treatConfigPackage` function to replace treatILDConfigPackage backward compatible
+NEW: :class:`~ILCDIRAC.Workflow.Modules.ModuleBase.ModuleBase`: General :func:`~ILCDIRAC.Workflow.Modules.ModuleBase.ModuleBase.treatConfigPackage` function to replace treatILDConfigPackage backward compatible
 
 [v26r0p9]
 
 * Workflow:
 
-NEW: SLIC: allow user to preload libraries for SLIC. Add a tarball with folder 'preload' to the Sandbox. Libraries (files containing '.so' in that folder will be added to the LD_PRELOAD environment variable.
+NEW: :class:`~ILCDIRAC.Workflow.Modules.SLICAnalysis`: allow user to preload libraries for SLIC. Add a tarball with folder 'preload' to the Sandbox. Libraries (files containing '.so' in that folder will be added to the LD_PRELOAD environment variable.
 
 
 [v26r0p8]
@@ -83,7 +83,7 @@ FIX: detector model zipfiles/tarballs for marlin were not working before
 * Core
 
 NEW: FilenameEncoder by Akiya Miyamoto
-CHANGE: OutputDataPolicy: "*_ILD" production types use FilenameEncoder
+CHANGE: OutputDataPolicy: "\*_ILD" production types use FilenameEncoder
 
 * Interfaces:
 
@@ -159,7 +159,7 @@ FIX: Hopefully clearer message when packages are not found directly on CVMFS, IL
 NEW: More Unite tests
 NEW: Based on DIRAC v6r15p12 (-alpha?) Fixe for ILCDIRAC-703
 
-FIX: `dirac-ilc-list-users` needed to be adapted for interface change in `VOMSService`, ILCDIRAC-702
+FIX: `dirac-ilc-list-users` needed to be adapted for interface change in :mod:`DIRAC.Core.Security.VOMSService`, ILCDIRAC-702
 
 * ILCTransformationSystem:
 
