@@ -12,7 +12,7 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import exit as dexit
 
-from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
+from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import JobCreater, CLIParams
 
 def runTests():
   """runs the tests"""
@@ -41,7 +41,7 @@ def runTests():
                         lcsimPostSteeringFile=myLCSimPostSteeringFile
                       )
 
-  myTests = TestCreater(clip, parameterDict)
+  myTests = JobCreater(clip, parameterDict)
   res = myTests.checkForTests()
   if not res['OK']:
     dexit(1)

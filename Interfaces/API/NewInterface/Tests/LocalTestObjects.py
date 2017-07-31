@@ -153,7 +153,7 @@ class CLIParams( object ):
 
 # pylint: disable=too-many-public-methods
 # Test parameters, necessary due to amount of tests in this class.
-class TestCreater(object):
+class JobCreater(object):
   """contains all the versions and parameters to create all theses tests"""
 
   # pylint: disable=too-many-instance-attributes
@@ -191,7 +191,7 @@ class TestCreater(object):
     self.lcsimPreSteeringFile  = params.get( "lcsimPreSteeringFile" )
     self.lcsimPostSteeringFile = params.get( "lcsimPostSteeringFile" )
     ### other things needed to run tests
-    self.log = gLogger.getSubLogger("TestCreater")
+    self.log = gLogger.getSubLogger("JobCreater")
 
     from ILCDIRAC.Interfaces.API.DiracILC                  import DiracILC, __RCSID__ as drcsid
     from ILCDIRAC.Interfaces.API.NewInterface.UserJob      import __RCSID__ as jrcsid
@@ -778,7 +778,7 @@ class TestCreater(object):
     if not res['OK']:
       self.log.error("Failed adding Whizard:", res['Message'])
       return S_ERROR()
-    mystdsplit = TestCreater.getStdhepSplit()
+    mystdsplit = JobCreater.getStdhepSplit()
     mystdsplit.getInputFromApp(whsplit)
     res = jobwsplit.append(mystdsplit)
     if not res['OK']:
