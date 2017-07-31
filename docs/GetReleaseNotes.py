@@ -143,7 +143,7 @@ def collateReleaseNotes( prs ):
         elif line:
           splitline = line.split(":", 1)
           if splitline[0] == splitline[0].upper() and len(splitline) > 1:
-            line = "%s: (#%s) %s" % (splitline[0], prid, splitline[1].strip() )
+            line = "%s: (!%s) %s" % (splitline[0], prid, splitline[1].strip() )
           systemChangesDict[system].append( line )
 
     for system, changes in systemChangesDict.iteritems():
