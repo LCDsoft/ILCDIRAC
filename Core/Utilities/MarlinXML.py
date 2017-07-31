@@ -1,4 +1,7 @@
-""" utilities to treat Marlin XML Steering files """
+""" utilities to treat Marlin XML Steering files
+
+Implementations for Overlay processors can handle OverlayTiming and Overlay processor Type
+"""
 
 from xml.etree.ElementTree import Comment
 
@@ -6,20 +9,26 @@ from DIRAC import S_OK, S_ERROR
 
 from ILCDIRAC.Core.Utilities.GetOverlayFiles import getOverlayFiles
 
+DEFAULT_OVERLAY_PROCESSORS = [ 'overlaytiming', 'bgoverlay' ]
+
 def setOverlayFilesParameter( tree, overlayParam=None ):
   """ set the parameters for overlay processors in MarlinSteering xml
 
   treat processors and groups of processors
-  Set the "BackgroundFileNames" parameter in all cases.
-  Select bkgType based on FIXME
 
   :param tree: XML tree of marlin steering file
+  :param overlayParam: list of three tuples of backgroundType, eventsPerBackgroundFile, processorName
   """
-  if overlayParam is None:
+
+  overlayActive = __checkOverlayActive( tree )
+  if not overlayParam and not overlayActive:
     return S_OK()
 
+  if not overlayParam and overlayActive:
+    return S_ERROR( "Found active overlay processors, but no overlayInput was run" )
+
   for backgroundType, eventsPerBackgroundFile, processorName in overlayParam:
-    processorsToCheck = [ processorName ] if processorName else [ 'overlaytiming', 'bgoverlay' ]
+    processorsToCheck = [ processorName ] if processorName else DEFAULT_OVERLAY_PROCESSORS
     for processorType in processorsToCheck:
       resOT = __checkOverlayProcessor( tree, eventsPerBackgroundFile, processorType.lower(), backgroundType  )
       if not resOT['OK']:
@@ -29,6 +38,34 @@ def setOverlayFilesParameter( tree, overlayParam=None ):
         return resGroupO
 
   return S_OK()
+
+def __checkOverlayActive( tree ):
+  """ checks if the overlayProcessor would actually overlay anything, or if the parameters for number of events are 0
+
+  :returns: True or False
+  :rtype: bool
+  """
+  overlay = False
+  processors = tree.findall('execute/processor')
+  for processor in processors:
+    processorName = processor.attrib.get('name','').lower()
+    if any( processorName.count( pattern.lower() ) for pattern in DEFAULT_OVERLAY_PROCESSORS ):
+      overlay = True
+  if not overlay:
+    return False
+
+  for processor in tree.findall('processor'):
+    processorName =processor.attrib.get('name', '').lower()
+    processorType =processor.attrib.get('type', '').lower()
+    if any( processorName.count( pattern.lower() ) for pattern in DEFAULT_OVERLAY_PROCESSORS ) or \
+       any( processorType.count( pattern.lower() ) for pattern in DEFAULT_OVERLAY_PROCESSORS ):
+      for param in processor.findall('parameter'):
+        if param.attrib.get('name') in ( 'NumberBackground', 'NBunchtrain', 'expBG' ) and \
+           ( param.attrib.get('value') in ('0', '0.0') or param.text in ( '0', '0.0' ) ):
+          return False
+
+  return True
+
 
 def __checkOverlayGroup( tree, eventsPerBackgroundFile, processorType, bkgType ):
   """ check if there is an OverlayProcessor, also handling overlay processors that get parameters from a group """
@@ -41,15 +78,11 @@ def __checkOverlayGroup( tree, eventsPerBackgroundFile, processorType, bkgType )
   return S_OK()
 
 def __checkOverlayProcessor( tree, eventsPerBackgroundFile, processorType, bkgType, groupParameters=None,  ):
-  """ check the for the overlayTiming processor and set the appropriate parameter values """
+  """ check the for the overlay processor *processorType* and set the appropriate parameter values """
+
   for processor in tree.findall('processor'):
     if processor.attrib.get('name', '').lower().count(processorType.lower()) or \
        processor.attrib.get('type', '').lower().count(processorType.lower()):
-      for param in processor.findall('parameter') + ( groupParameters if groupParameters else [] ):
-        if param.attrib.get('name') in ( 'NumberBackground' , 'NBunchtrain', 'expBG' ) and \
-           ( param.attrib.get('value') in ('0', '0.0') or param.text in ( '0', '0.0' ) ):
-          return S_OK( False )
-
       files = getOverlayFiles( bkgType )
       if not files:
         return S_ERROR('Could not find any overlay files')

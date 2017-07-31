@@ -10,7 +10,7 @@ import unittest
 from xml.etree.ElementTree import ElementTree
 from mock import patch, MagicMock as Mock
 
-from DIRAC import S_OK, S_ERROR
+from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracFailsWith
 
 __RCSID__ = "$Id$"
 
@@ -374,6 +374,24 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
     self.assertFalse( res['OK'] )
     self.assertIn( "Could not find any overlay files", res['Message'] )
 
+  @patch("ILCDIRAC.Core.Utilities.MarlinXML.getOverlayFiles", new=Mock(return_value=[] ) )
+  def test_createFile_bgoverlay_failOverlayActive( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprod.xml",
+                          inputXML="marlininputild.xml",
+                          inputGEAR="gearMyFile.xml",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=True,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam=[],
+                        )
+    assertDiracFailsWith( res, 'Found active overlay processors', self )
+
+
   def test_createFile_parseError( self ):
 
     def parseModified( *_args, **_kwargs ):
@@ -423,8 +441,9 @@ class TestPrepareMarlinXMLFile( TestPrepareMarlinXMLFileBase ):
                           outputREC="outputrec.slcio",
                           outputDST="outputdst.slcio",
                           debug=False,
-                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml")
-    self.assertTrue( res['OK'] )
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam = [ ('gghad', 0, None ) ] )
+    self.assertTrue( res['OK'], res.get('Message', '') )
     self.testedTree = TestPrepareMarlinXMLFile.getTree( "outputfile.xml" )
     self.assertTrue( self.findProcessorInTree( "InitDD4hep" ),
                      "Problem with InitDD4hep" )
@@ -479,6 +498,24 @@ class TestPrepareClicProdXMLFile( TestPrepareMarlinXMLFileBase ):
     self.assertTrue( self.checkProcessorParameter(
       "Output_DST", "LCIOOutputFile", "outputdst.slcio") )
 
+
+
+  @patch("ILCDIRAC.Core.Utilities.MarlinXML.getOverlayFiles", new=Mock(return_value=[] ) )
+  def test_createFile_clicProd2017_noOverlayFiles( self ):
+    from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile
+    res = prepareXMLFile( finalxml="outputprod.xml",
+                          inputXML="clicReconstruction.xml",
+                          inputGEAR="",
+                          inputSLCIO="mySLCIOInput.slcio",
+                          numberofevts=501,
+                          outputFile= '',
+                          outputREC="outputrec.slcio",
+                          outputDST="outputdst.slcio",
+                          debug=False,
+                          dd4hepGeoFile="/cvmfs/monty.python.fr/myDetector.xml",
+                          overlayParam=[ ( 'gghad', 0, 'Overlay380GeV' ) ],
+                        )
+    assertDiracFailsWith( res, 'Could not find any overlay Files', self )
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareClicProdXMLFile )

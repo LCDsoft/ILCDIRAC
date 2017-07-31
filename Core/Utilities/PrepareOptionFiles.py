@@ -325,15 +325,6 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   elif not isinstance(inputSLCIO, basestring):
     return S_ERROR("inputSLCIO is neither string nor list! Actual type is %s " % type(inputSLCIO))
 
-  root = tree.getroot()
-  ##Get all processors:
-  processors = tree.findall('execute/processor')
-  for processor in processors:
-    if processor.attrib.get('name','').lower().count('overlaytiming'):
-      overlay = True
-    if processor.attrib.get('name','').lower().count('bgoverlay'):
-      overlay = True
-
   glob = tree.find('global')
   lciolistfound = False
   for param in glob.findall("parameter"): #pylint: disable=E1101
@@ -391,6 +382,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
 
 
   #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
+  root = tree.getroot()
   root_str = fixedXML(tostring(root))
   with open(finalxml,"w") as of:
     of.write(root_str)
