@@ -38,6 +38,7 @@ def __loadReleaseNotesFile( ):
   for rawLine in relaseContents:
     rawLine = makeJiraLink( rawLine )
     rawLine = makeDIRACLink( rawLine )
+    rawLine = makeILCDIRACMRLink( rawLine )
     line = rawLine.strip()
     if not line:
       continue
@@ -93,6 +94,13 @@ def makeDIRACLink( text ):
   diracLinkBase="http://lhcbproject.web.cern.ch/lhcbproject/dist/Dirac_project/installSource/releasenotes.DIRAC."
   text = re.sub( "(v6r[0-9]+p[0-9]+)", r"`\g<1> <%s\g<1>%s>`_" %(diracLinkBase, ".html" ) , text )
   return text
+
+def makeILCDIRACMRLink( text ):
+  """ turn (#123) into link to merge request """
+  ilcdiracLinkBase="https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/merge_requests/"
+  text = re.sub( r"\(#([0-9]+)\)", r"`(#\g<1>) <%s\g<1>>`_" %(ilcdiracLinkBase, ) , text )
+  return text
+
   
 def __generateReleaseNotes( version ):
   """create rst file from release notes """
