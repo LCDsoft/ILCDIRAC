@@ -189,11 +189,14 @@ MoveTypes = %(moveTypes)s
 
   def __init__( self, params=None):
 
+    from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+    self._ops = Operations( vo='ilc' )
+
     self._machine = 'clic'
     self.prodGroup = 'several'
-    self.detectorModel='CLIC_o3_v11'
-    self.softwareVersion = 'ILCSoft-2017-07-12_gcc62'
-    self.clicConfig = 'ILCSoft-2017-07-12'
+    self.detectorModel = self._ops.getValue( 'Production/CLIC/DefaultDetectorModel' )
+    self.softwareVersion = self._ops.getValue( 'Production/CLIC/DefaultSoftwareVersion' )
+    self.clicConfig = self._ops.getValue( 'Production/CLIC/DefaultConfigVersion' )
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
 
@@ -204,7 +207,7 @@ MoveTypes = %(moveTypes)s
     self.eventsPerBaseFiles = ''
 
     # final destination for files once they have been used
-    self.finalOutputSE = 'CERN-SRM'
+    self.finalOutputSE = self._ops.getValue( 'Production/CLIC/FailOverSE' )
 
     self.additionalName = params.additionalName
 

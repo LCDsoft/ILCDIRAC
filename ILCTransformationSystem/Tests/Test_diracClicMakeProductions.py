@@ -23,10 +23,15 @@ class TestMaking( unittest.TestCase ):
     self.tClientMock = Mock()
     self.tClientMock.createTransformationInputDataQuery.return_value = S_OK()
     self.tMock = Mock( return_value=self.tClientMock )
+    self.opsMock = Mock()
+    self.opsMock.getConfig = self.mockOpsConfig
     params = Mock()
     params.additionalName = None
     params.dryRun = True
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.CLICDetProdChain.loadParameters", new=Mock() ):
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.CLICDetProdChain.loadParameters",
+                new=Mock() ), \
+         patch( "DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations",
+                new=Mock( return_value=self.opsMock ) ):
       self.chain = theScript.CLICDetProdChain( params )
 
 
@@ -58,6 +63,18 @@ class TestMaking( unittest.TestCase ):
 
     self.assertEqual( args[0], theScript.PP )
     return self.configDict[ args[1] ]
+
+  def mockOpsConfig( self, *args, **kwargs ): #pylint: disable=unused-argument
+    """ mock the operations getConfig calls """
+    opsDict={
+      'DefaultDetectorModel': 'detModel',
+      'DefaultConfigVersion': 'Config',
+      'DefaultSoftwareVersion': 'Software',
+      'FailOverSE': 'FAIL=SRM',
+    }
+    self.assertIn( args[0], opsDict )
+    return opsDict[ args[0] ]
+
 
   def test_meta( self ):
     ret = self.chain.meta( 123, 'process', 555.5 )
@@ -152,7 +169,9 @@ class TestMaking( unittest.TestCase ):
     parameter.prodConfigFilename = 'filename'
     parameter.dumpConfigFile = False
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+                new=Mock(return_value=cpMock ) ), \
+         patch( "DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations",
+                new=Mock(return_value=self.opsMock ) ):
       self.chain.loadParameters( parameter )
 
     ret = self.chain.createDDSimApplication()
