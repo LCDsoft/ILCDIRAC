@@ -1,17 +1,30 @@
 [v26r0p11]
 
-*ILCTransformationSystem
+*Interface
 
-NEW: dirac-ilc-get-prod-logs new options to get all files in a folder and to automatically start downloading without confirmation
-NEW dirac-ilc-moving-transformations: new option to set a prodID and have the three corresponding moving transformations: prodID/GEN, prodID+1/SIM and prodID+2/REC created. Added consistency check for Datatype
+NEW: (#136) new attribute `processorName` for `~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput.OverlayInput`. Set the name of the Marlin processor the input files belong to. This enables multiple use of the OverlayInput application to download files for different Marlin processors.
+CHANGE: (#136) `~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` change capitalisation of the *version* argument of :func:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.setConfig`
+
+*Docs
+
+NEW: (#130) import documentation from ILCDIRAC-Ops repo, always compile docs
 
 *Interfaces
 
-NEW: Stdhepsplit: can now set the maxread option for hepslit
+NEW: (#125) StdhepSplit: new property to set maxRead flag for the hepsplit application
+
+*ILCTransformationSystem
+
+NEW: (#124) dirac-ilc-get-prod-logs new options to get all files in a folder (-A) and to automatically start downloading without confirmation (-N)
+NEW: (#126) `dirac-ilc-moving-transformation`: new option (--allFor) to set a prodID and have the three corresponding moving transformations: prodID/GEN, prodID+1/SIM and prodID+2/REC created. Added consistency check for Datatype
 
 *Workflow
 
-NEW: stdhepsplit will set the --maxread option of maxRead differs from 0
+CHANGE: (#135) The output parser for Marlin will now pass lines containing 'EventNumber' or 'StatusMonitor' to the standard output, in addition to 'event' and 'ProgressHandler'
+CHANGE: (#136) `~ILCDIRAC.Workflow.Modules.OverlayInput` fix the path for /eos/experiment/clicdp to get files directly from EOS
+CHANGE: (#136) `~ILCDIRAC.Workflow.Modules.MarlinAnalysis` can now handle setting of parameters for Overlay processors defined in a processor group. Implemented in the new module `Core.Utilities.MarlinXML`
+NEW: (#125) StdhepSplit: set "--maxread" if maxRead is set for the application, no changes if maxRead is 0 for backward compatibility
+CHANGE: (#127) Marlin the DST/REC files for processors called Output_DST/Output_REC files in production environments are now handled as well. For Users all processors of Type LCIOOutputProcessor should be used to change the output file name, not just the one called 'MyLCIOOutputProcessor'
 
 [v26r0p10]
 
