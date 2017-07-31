@@ -633,7 +633,7 @@ finalOutputSE = %(finalOutputSE)s
         self.createMovingTransformation( simMeta, 'MCSimulation' )
         self._updateMeta( metaInput, simMeta, eventsPerJob )
 
-      if self._flags.rec:
+      if self._flags.rec or self._flags.over:
         recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
 

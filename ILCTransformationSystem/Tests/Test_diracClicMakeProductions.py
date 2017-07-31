@@ -49,7 +49,7 @@ class TestMaking( unittest.TestCase ):
       'additionalName': 'waitForIt',
       'prodIDs': '123, 456',
       'NumberOfEventsInBaseFiles': '5000, 6000',
-      'ProdTypes': 'Gen, Rec',
+      'ProdTypes': 'Gen, RecOver',
       'MoveTypes': '',
     }
 
