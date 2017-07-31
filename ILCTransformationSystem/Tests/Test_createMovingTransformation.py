@@ -143,7 +143,7 @@ class TestMovingParams( unittest.TestCase ):
     self.sMock.getPositionalArgs.return_value = self.arguments
     ret = self.params.checkSettings( self.sMock )
     self.assertTrue( ret['OK'], ret.get( "Message", "") )
-    self.assertEqual( self.params.prodID, 12345 )
+    self.assertEqual( self.params.prodIDs, [12345] )
     self.assertEqual( self.params.sourceSE, "SourceSE" )
     self.assertEqual( self.params.targetSE, ["TargetSE"] )
     self.assertEqual( self.params.datatype, "GEN" )
@@ -182,6 +182,48 @@ class TestMovingParams( unittest.TestCase ):
     ret = self.params.setExtraname( "extraName" )
     self.assertTrue( ret['OK'], ret.get('Message',"") )
     self.assertEqual( "extraName", self.params.extraname )
+
+  @patch( "ILCDIRAC.Core.Utilities.CheckAndGetProdProxy.checkAndGetProdProxy", new = Mock( return_value=S_OK()) )
+  def test_checkDatatype( self ):
+    tMock = Mock()
+    tMock.getTransformations.return_value= S_OK( [dict(Type="MCReconstruction_Overlay")] )
+    with patch( "DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient",
+                new = Mock( return_value=tMock) ):
+      ret = self.params.checkDatatype( 123, "REC" )
+      self.assertTrue( ret['OK'], ret.get('Message',"") )
+
+
+  @patch( "ILCDIRAC.Core.Utilities.CheckAndGetProdProxy.checkAndGetProdProxy", new = Mock( return_value=S_OK()) )
+  def test_checkDatatype_fail0( self ):
+    tMock = Mock()
+    tMock.getTransformations.return_value= S_OK( [dict(Type="MCReconstruction_Overlay")] )
+    with patch( "DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient",
+                new = Mock( return_value=tMock) ):
+      ret = self.params.checkDatatype( 123, "Gen" )
+      self.assertFalse( ret['OK'], ret.get('Message',"") )
+
+
+  @patch( "ILCDIRAC.Core.Utilities.CheckAndGetProdProxy.checkAndGetProdProxy", new = Mock( return_value=S_OK()) )
+  def test_checkDatatype_fail1( self ):
+    tMock = Mock()
+    tMock.getTransformations.return_value= S_OK( [ dict(Type="MCReconstruction_Overlay"),
+                                                   dict(Type="MCReconstruction_Overlay"),
+                                                 ] )
+    with patch( "DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient",
+                new = Mock( return_value=tMock) ):
+      ret = self.params.checkDatatype( 123, "REC" )
+      self.assertFalse( ret['OK'], ret.get('Message',"") )
+
+
+  @patch( "ILCDIRAC.Core.Utilities.CheckAndGetProdProxy.checkAndGetProdProxy", new = Mock( return_value=S_OK()) )
+  def test_checkDatatype_fail2( self ):
+    tMock = Mock()
+    tMock.getTransformations.return_value= S_ERROR( 'Failed to do something' )
+    with patch( "DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient",
+                new = Mock( return_value=tMock) ):
+      ret = self.params.checkDatatype( 123, "REC" )
+      self.assertFalse( ret['OK'], ret.get('Message',"") )
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestMoving )

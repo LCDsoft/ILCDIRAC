@@ -5,20 +5,25 @@ Provides a set of methods to prepare the option files needed by the ILC applicat
 :since: Jan 29, 2010
 """
 
-__RCSID__ = "$Id$"
+import os
 
-from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from xml.etree.ElementTree                                import ElementTree
 from xml.etree.ElementTree                                import Element
 from xml.etree.ElementTree                                import Comment
 from xml.etree.ElementTree                                import tostring
+
+from DIRAC import S_OK, gLogger, S_ERROR, gConfig
+
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
+from ILCDIRAC.Core.Utilities.MarlinXML                    import setOverlayFilesParameter, setOutputFileParameter
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
-import os
+
+
+__RCSID__ = "$Id$"
 
 def getNewLDLibs(platform, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
@@ -109,11 +114,11 @@ def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
         outputfile.write(" n_events = %s\n" % nevts)
       elif lumi and line.count("luminosity"):
         outputfile.write(" luminosity = %s\n" % lumi)
-      elif line.count("write_events_file") and len(evttype):
+      elif line.count("write_events_file") and evttype:
         outputfile.write(" write_events_file = \"%s\" \n" % evttype)
       elif line.count("process_id"):
         outputfile.write(line)
-        if len(line.split("\"")[1]):
+        if line.split("\"")[1]:
           foundprocessid = True
       else:
         outputfile.write(line)
@@ -161,11 +166,11 @@ def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
           outputfile.write(value)
           written = True
           break # break from looping dict
-      if line.count("write_events_file") and len(evttype):
+      if line.count("write_events_file") and evttype:
         outputfile.write(' write_events_file = "%s" \n' % evttype)
       elif line.count("process_id"):
         outputfile.write(line)
-        if len(line.split("\"")[1]):
+        if line.split("\"")[1]:
           foundprocessid = True
       elif not written:
         outputfile.write(line)
@@ -202,7 +207,7 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
   macname = "mokkamac.mac"
   if len(mac) < 1:
     with open(macname, "w") as macfile:
-      if len(stdhepFile) > 0:
+      if stdhepFile:
         macfile.write("/generator/generator %s\n" % stdhepFile)
       macfile.write("/run/beamOn %s\n" % nbOfRuns)
   else:
@@ -287,7 +292,7 @@ def fixedXML(element):
 def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
                    numberofevts, outputFile, outputREC, outputDST, debug,
                    dd4hepGeoFile=None,
-                   eventsPerBackgroundFile=0,
+                   overlayParam=None,
                   ):
   """Write out a xml file for Marlin
   
@@ -304,7 +309,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   :param string outputDST: file name of DST
   :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
   :param str dd4hepGeoFile: path to the dd4hep Geometry XML file, optional, default None
-  :param int eventsPerBackgroundFile: number of events in each background file, optional, default 0
+  :param int overlayParam: list of tuples of background type, number of events in each background file, and processorName; optional, default None
   :return: S_OK
   """
   tree = ElementTree()
@@ -319,16 +324,6 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     inputSLCIO = " ".join(inputSLCIO)
   elif not isinstance(inputSLCIO, basestring):
     return S_ERROR("inputSLCIO is neither string nor list! Actual type is %s " % type(inputSLCIO))
-
-  root = tree.getroot()
-  ##Get all processors:
-  overlay = False
-  processors = tree.findall('execute/processor')
-  for processor in processors:
-    if processor.attrib.get('name','').lower().count('overlaytiming'):
-      overlay = True
-    if processor.attrib.get('name','').lower().count('bgoverlay'):
-      overlay = True
 
   glob = tree.find('global')
   lciolistfound = False
@@ -366,79 +361,28 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
     globparams = tree.find("global")
     globparams.append(lciolist) #pylint: disable=E1101
 
-  for param in tree.findall('processor'):
-    if 'name' in param.attrib:
-      if len(outputFile) > 0:
-        if param.attrib.get('name') == 'MyLCIOOutputProcessor':
-          subparams = param.findall('parameter')
-          for subparam in subparams:
-            if subparam.attrib.get('name') == 'LCIOOutputFile':
-              subparam.text = outputFile
-              com = Comment("output file changed")
-              param.insert(0, com)
-      else:
-        if len(outputREC) > 0:
-          if param.attrib.get('name') == 'MyLCIOOutputProcessor':
-            subparams = param.findall('parameter')
-            for subparam in subparams:
-              if subparam.attrib.get('name') == 'LCIOOutputFile':
-                subparam.text = outputREC
-                com = Comment("REC file changed")
-                param.insert(0, com)
-        if len(outputDST) > 0:
-          if param.attrib.get('name') == 'DSTOutput':
-            subparams = param.findall('parameter')
-            for subparam in subparams:
-              if subparam.attrib.get('name') == 'LCIOOutputFile':
-                subparam.text = outputDST
-                com = Comment("DST file changed")
-                param.insert(0, com)
-      # OverlayTiming  processor treatment
-      if param.attrib.get('name', '').lower().count('overlaytiming'):
-        subparams = param.findall('parameter')
-        for subparam in subparams:
-          if subparam.attrib.get('name') == 'NumberBackground' and subparam.attrib['value'] == '0.0':
-            overlay = False
-          if subparam.attrib.get('name') == 'NBunchtrain' and subparam.attrib['value'] == '0':
-            overlay = False
-        if overlay: 
-          files = getOverlayFiles()
-          if not len(files):
-            return S_ERROR('Could not find any overlay files')
-          for subparam in subparams:
-            if subparam.attrib.get('name') == "BackgroundFileNames":
-              subparam.text = "\n".join(files)
-              com = Comment("Overlay files changed")
-              param.insert(0, com)
-      # BGOverlay Processor Treatment
-      if param.attrib.get('name','').lower().count('bgoverlay'):
-        bkg_Type = 'aa_lowpt' #specific to ILD_DBD #FIXME
-        subparams = param.findall('parameter')
-        for subparam in subparams:
-          if subparam.attrib.get('name') == 'expBG' and (subparam.text == '0' or subparam.text == '0.0'):
-            overlay = False
-        if overlay: 
-          files = getOverlayFiles(bkg_Type)
-          if not len(files):
-            return S_ERROR('Could not find any overlay files')
-          for subparam in subparams:
-            if subparam.attrib.get('name') == "InputFileNames":
-              subparam.text = "\n".join(files)
-              com = Comment("Overlay files changed")
-              param.insert(0, com)
-            if subparam.attrib.get('name') == "NSkipEventsRandom" and len(files) > 0:
-              com = Comment("NSkipEventsRandom Changed")
-              subparam.text = "%d" % int( len(files) * eventsPerBackgroundFile )
+  resOF = setOutputFileParameter( tree, outputFile, outputREC, outputDST )
+  if not resOF['OK']:
+    return resOF
+  resOver = setOverlayFilesParameter( tree, overlayParam )
+  if not resOver['OK']:
+    return resOver
 
-      ## Deal with the InitializeDD4hep parameter value for the XML File
-      if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
-        for subparam in param.findall('parameter'):
-          if subparam.attrib.get('name') == "DD4hepXMLFile":
-            subparam.text = dd4hepGeoFile
-            com = Comment("DD4hepGeoFile changed")
-            param.insert(0, com)
+  for param in tree.findall('processor'):
+    if 'name' not in param.attrib:
+      continue
+    ## Deal with the InitializeDD4hep parameter value for the XML File
+    if param.attrib.get('type') == "InitializeDD4hep" and dd4hepGeoFile is not None:
+      for subparam in param.findall('parameter'):
+        if subparam.attrib.get('name') == "DD4hepXMLFile":
+          subparam.text = dd4hepGeoFile
+          com = Comment("DD4hepGeoFile changed")
+          param.insert(0, com)
+
+
 
   #now, we need to de-escape some characters as otherwise LCFI goes crazy because it does not unescape
+  root = tree.getroot()
   root_str = fixedXML(tostring(root))
   with open(finalxml,"w") as of:
     of.write(root_str)
@@ -495,7 +439,7 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
       output.write("/lcio/filename %s\n" % outputlcio)
     output.write("/lcio/runNumber %s\n" % randomseed)
     output.write(finaltext)
-    if len(stdhep) > 0:
+    if stdhep:
       output.write("/generator/filename %s\n" % stdhep)
     output.write("/generator/skipEvents %s\n" % startfrom)
     output.write("/random/seed %s\n" % (randomseed))
@@ -535,7 +479,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   except Exception, x:
     print "Found Exception %s %s" % (Exception, x)
     return S_ERROR("Found Exception %s %s" % (Exception, x))
-  if not len(inputslcio):
+  if not inputslcio:
     return S_ERROR("Empty input file list")
   baseelem = tree.getroot()
   if baseelem is None:
@@ -556,7 +500,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
     filesinlcsim.append(newfile)
   #filesinlcsim.append(set)
 
-  if jars and len(jars) > 0:
+  if jars:
     classpath = tree.find("classpath")
     if classpath is not None:
       classpath.clear() #pylint: disable=E1101
@@ -670,7 +614,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
             return res
         driver.remove(driver.find('overlayFiles'))
         files = getOverlayFiles(bkg_Type)
-        if not len(files):
+        if not files:
           return S_ERROR('Could not find any overlay files')
         overlay = Element('overlayFiles')
         overlay.text = "\n".join(files)

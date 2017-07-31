@@ -216,13 +216,13 @@ class JobTestCase( unittest.TestCase ):
 
 #pylint: disable=protected-access
 class InternalJobTestCase( unittest.TestCase ):
-  """ Test the methods of the Job class that require a TestJob instance
+  """ Test the methods of the Job class that require a IntrospectJob instance
   """
   def setUp(self):
     """set up the objects"""
     import DIRAC
     with patch.object(DIRAC.ConfigurationSystem.Client.Helpers.Resources, 'getDIRACPlatforms', return_value=S_OK(['x86_64-slc5-gcc43-opt'])):
-      self.job = TestJob( '' )
+      self.job = IntrospectJob( '' )
       self.job.check = True
 
   def test_checkargs_1( self ):
@@ -265,12 +265,12 @@ class InternalJobTestCase( unittest.TestCase ):
     my_arg_dict = self.job.indirection_for_getargsdict( arg1=1, arg2=True, arg3='mystring' )
     assertEqualsImproved( my_arg_dict, { 'arg1' : 1, 'arg2' : True, 'arg3' : 'mystring' }, self )
 
-class TestJob( Job ):
+class IntrospectJob( Job ):
   """ Used to easily test the introspective methods (e.g. _checkArgs)
   """
 
   def __init__( self, script = None ):
-    super( TestJob, self ).__init__( script )
+    super( IntrospectJob, self ).__init__( script )
 
   def indirection_for_checkArgs( self, arg_to_check, argtype ):
     """ Method that uses the _checkArgs method so it can be tested.

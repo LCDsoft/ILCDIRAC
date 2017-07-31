@@ -1,21 +1,33 @@
 before_script:
-    #pre-installation script
-    - cd ..
-    - shopt -s extglob
-    - rm -rf !(ILCDIRAC)
-    - rm -rf .installCache
+  - source /cvmfs/clicdp.cern.ch/software/git/2.13.2/x86_64-slc6-gcc7-opt/setup.sh
+  - shopt -s extglob
+
+stages:
+  - install
+  - unittest
+  - manualdeploy
+  - integration
+  - create
+  - deploy
+
+install:SL6:
+  stage: install
+  tags:
+    - docker
+  image: ilcdirac/slc6-base
+  script:
+    - cd ../
+    - rm -rf !(ILCDIRAC) .installCache
     - mv ILCDIRAC ILCDIRAC_commit
+    - mkdir ILCDIRAC; cd ILCDIRAC
+    - mkdir installation; cd installation
     - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
-    - ./dirac-install -V ILCDIRAC -r v27r0-pre1 -g 2017-01-27
+    - ./dirac-install -V ILCDIRAC -r v27r0-pre5 -g 2017-01-27
     - rm -rf DIRAC
-    - mkdir DIRAC
-    - cd DIRAC
-    - git clone https://github.com/DIRACGrid/DIRAC.git .
-    - git checkout origin/rel-v6r17
-    - cd ..
+    - git clone https://github.com/DIRACGrid/DIRAC.git --single-branch -b rel-v6r17 DIRAC
     - rm -rf ILCDIRAC
-    - mv ILCDIRAC_commit ILCDIRAC
+    - mv ../../ILCDIRAC_commit ILCDIRAC
     - source bashrc
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
@@ -23,105 +35,321 @@ before_script:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - echo "done with setuptools"
-    - pip install --upgrade pylint mock MySQL-python
-    - pip install --upgrade pytest-cov pytest-randomly
-    - cd ILCDIRAC
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly
+    - cd ..
+  artifacts:
+     paths:
+       - installation
+     expire_in: 2 hours
+
+
+install:CC7:
+  stage: install
+  except:
+    - tags
+  tags:
+    - docker
+  image: ilcdirac/cc7-base
+  script:
+    - cd ../
+    - rm -rf !(ILCDIRAC) .installCache
+    - mv ILCDIRAC ILCDIRAC_commit
+    - mkdir ILCDIRAC; cd ILCDIRAC
+    - mkdir installation; cd installation
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - chmod +x dirac-install
+    - ./dirac-install -V ILCDIRAC -r v27r0-pre5 -g 2017-01-27
+    - rm -rf DIRAC
+    - git clone https://github.com/DIRACGrid/DIRAC.git --single-branch -b rel-v6r17 DIRAC
+    - rm -rf ILCDIRAC
+    - mv ../../ILCDIRAC_commit ILCDIRAC
+    - source bashrc
+    - dirac-deploy-scripts
+    - unset REQUESTS_CA_BUNDLE
+    - pip install --upgrade pip
+    - pip uninstall -y distribute
+    - pip install --upgrade setuptools || echo "done"
+    - pip install --upgrade setuptools_scm || echo "done scm"
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly
+    - cd ..
+  artifacts:
+     paths:
+       - installation
+     expire_in: 2 hours
+
+
+unittest:SL6:
+  stage: unittest
+  except:
+    - tags
+  tags:
+    - docker
+  dependencies:
+    - install:SL6
+  image: ilcdirac/slc6-base
+  script:
     - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-unittests.sh
+  coverage: '/\d+\%\s*$/'
+  artifacts:
+     paths:
+       - installation/ILCDIRAC/.coverage
+       - installation/ILCDIRAC/htmlcov
+     expire_in: 2 hours
 
 
-stages:
-    - test
+unittest:CC7:
+  stage: unittest
+  except:
+    - tags
+  tags:
+    - docker
+  dependencies:
+    - install:CC7
+  image: ilcdirac/cc7-base
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-unittests.sh
+  coverage: '/\d+\%\s*$/'
+  artifacts:
+     paths:
+       - installation/ILCDIRAC/.coverage
+       - installation/ILCDIRAC/htmlcov
+     expire_in: 2 hours
 
-pylint6:
-  stage: test
+
+pylint:SL6:
+  stage: integration
+  except:
+    - tags
+  dependencies:
+   - install:SL6
   tags:
     - docker
   image: ilcdirac/slc6-base
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
 
-unittest6:
-  stage: test
+
+pylint:CC7:
+  stage: integration
+  except:
+    - tags
   tags:
     - docker
-  image: ilcdirac/slc6-base
+  image: ilcdirac/cc7-base
+  dependencies:
+    - install:CC7
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-unittests.sh
+    - .gitlab-ci.d/run-pylint.sh
 
-cvmfstests6:
-  stage: test
+
+cvmfstests:SL6:
+  stage: integration
+  except:
+    - tags
   tags:
     - docker
+  dependencies:
+    - install:SL6
+    - unittest:SL6
   image: ilcdirac/slc6-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
-cvmfstests7:
-  stage: test
+
+cvmfstests:CC7:
+  stage: integration
+  except:
+    - tags
   tags:
     - docker
+  dependencies:
+    - install:CC7
+    - unittest:CC7
   image: ilcdirac/cc7-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
-pylint7:
-  stage: test
+
+setests:SL6:
+  stage: integration
+  except:
+    - tags
   tags:
     - docker
-  image: ilcdirac/cc7-base
+  dependencies:
+    - install:SL6
+    - unittest:SL6
+  image: ilcdirac/slc6-base
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
-    - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-pylint.sh
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - .gitlab-ci.d/run-setests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
-unittest7:
-  stage: test
+
+setests:CC7:
+  stage: integration
+  except:
+    - tags
   tags:
     - docker
-  image: ilcdirac/cc7-base
+  dependencies:
+    - install:CC7
+    - unittest:CC7
+  image: ilcdirac/cc7-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
+    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init <<< $CERT_PASSPHRASE
     - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-unittests.sh
+    - .gitlab-ci.d/run-setests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: true
 
-setests6:
-  stage: test
+
+compiledoc:
+  stage: unittest
   tags:
     - docker
   image: ilcdirac/slc6-base
+  dependencies:
+    - install:SL6
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
     - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
-    - dirac-proxy-init <<< $CERT_PASSPHRASE
-    - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-setests.sh
+    - unset REQUESTS_CA_BUNDLE
+    - pip install sphinx==1.5.2
+    - yum install -y which patch
+    - rm -rf ILCDIRAC ## removes just the folder with the links
+    - git checkout origin/master -- release.notes ## get release notes from the master
+    - cd docs
+    - export PYTHONPATH=$PWD/source:$PYTHONPATH
+    - bash patchSphinx.sh
+    - make completeDocumentation
+    - mv build/html ../../../ilcdiracdoc
+  artifacts:
+    paths:
+      - ilcdiracdoc
+    expire_in: 2 hours
 
-
-setests7:
-  stage: test
+maketarballs:
+  stage: create
+  only:
+    - tags
   tags:
     - docker
+  dependencies:
+    - install:SL6
   image: ilcdirac/cc7-extra
   script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - if [ -d "ILCDIRAC" ]; then echo "ILCDIRAC links still present! Failing!"; exit 1; fi
     - source ../bashrc
     - dirac-proxy-init -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init <<< $CERT_PASSPHRASE
-    - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-setests.sh
+    - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../ILCDIRACTars
+
+  artifacts:
+    paths:
+      - ILCDIRACTars
+    expire_in: 2 hours
+
+
+deploydoc:
+  stage: deploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  only:
+    - tags
+  dependencies:
+    - compiledoc
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
+    CI_OUTPUT_DIR: "ilcdiracdoc"
+  script:
+    - deploy-eos
+  before_script: []
+  after_script: []
+
+
+deploydocManual:
+  stage: manualdeploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  when: manual
+  dependencies:
+    - compiledoc
+    - unittest:SL6
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
+    CI_OUTPUT_DIR: "ilcdiracdoc"
+  script:
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - deploy-eos
+  before_script: []
+  after_script: []
+
+
+deploytag:
+  stage: deploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  only:
+    - tags
+  dependencies:
+    - maketarballs
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/ILCDIRACTars/"
+    CI_OUTPUT_DIR: "ILCDIRACTars"
+  script:
+    - deploy-eos
+  before_script: []
+  after_script: []

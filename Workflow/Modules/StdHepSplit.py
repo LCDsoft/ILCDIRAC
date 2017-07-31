@@ -36,6 +36,7 @@ class StdHepSplit(ModuleBase):
     self.listoutput = {}
     self.OutputFile = []
     self.log.info("%s initialized" % ( self.__str__() ))
+    self.maxRead = 0
 
   def applicationSpecificInputs(self):
     """ Resolve LCIO concatenate specific parameters, called from ModuleBase
@@ -115,7 +116,12 @@ class StdHepSplit(ModuleBase):
     new_ld_lib = getNewLDLibs(self.platform, "stdhepsplit", self.applicationVersion)
     LD_LIBRARY_PATH = os.path.join(mysplitDir, "lib") + ":" + new_ld_lib
 
-    
+
+    maxReadString = ''
+    ## hepsplit has a off-by-one error so we add 1 to max read to actually read maxRead events
+    if self.maxRead:
+      self.maxRead += 1
+      maxReadString = " --maxread %s" % self.maxRead
 
     scriptContent = """
 #!/bin/sh
@@ -126,7 +132,7 @@ class StdHepSplit(ModuleBase):
 
 declare -x LD_LIBRARY_PATH=%s
 
-%s/hepsplit --infile %s --nw_per_file %s --outpref %s
+%s/hepsplit --infile %s --nw_per_file %s --outpref %s%s
 
 exit $?
 
@@ -135,7 +141,8 @@ exit $?
   mysplitDir,
   runonstdhep,
   self.nbEventsPerSlice,
-  prefix
+  prefix,
+  maxReadString,
 )
 
     # Write script to file

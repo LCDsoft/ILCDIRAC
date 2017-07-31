@@ -5,9 +5,11 @@ Create a production to move files from one storage elment to another
 Example::
 
   dirac-ilc-moving-transformation <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName
+  dirac-ilc-moving-transformation --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F]
 
 Options:
    -N, --Extraname string      String to append to transformation name in case one already exists with that name
+   -A, --AllFor    list        Comma separated list of production IDs. For each prodID three moving productions are created: ProdID/Gen, ProdID+1/SIM, ProdID+2/REC
 
 :since:  Dec 4, 2015
 :author: A. Sailer
@@ -29,14 +31,22 @@ def _createTrafo():
     gLogger.error("ERROR: Missing settings")
     return 1
   from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
-  resCreate = createMovingTransformation( clip.targetSE,
-                                          clip.sourceSE,
-                                          clip.prodID,
-                                          clip.datatype,
-                                          clip.extraname,
-                                          clip.forcemoving )
-  if not resCreate['OK']:
-    return 1
+  for index, prodID in enumerate( clip.prodIDs ):
+    datatype = clip.datatype if clip.datatype else ['GEN', 'SIM', 'REC'][ index % 3 ]
+    retData = clip.checkDatatype( prodID, datatype )
+    if not retData['OK']:
+      gLogger.error( "Failed to check datatype", retData['Message'] )
+      return 1
+
+    resCreate = createMovingTransformation( clip.targetSE,
+                                            clip.sourceSE,
+                                            prodID,
+                                            datatype,
+                                            clip.extraname,
+                                            clip.forcemoving )
+    if not resCreate['OK']:
+      return 1
+
   return 0
 
 if __name__ == '__main__':

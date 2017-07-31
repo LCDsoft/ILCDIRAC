@@ -43,6 +43,7 @@ class OverlayInput(LCUtilityApplication):
     self.accountInProduction = False
     self._paramsToExclude.append('_ops')
     self.pathToOverlayFiles = ''
+    self.processorName = ''
 
   def setMachine(self, machine):
     """ Define the machine to use, clic_cdr or ilc_dbd
@@ -172,6 +173,19 @@ class OverlayInput(LCUtilityApplication):
     """
     return self.setBkgEvtType(backgroundType)
 
+  def setProcessorName(self, processorName):
+    """Set the processorName to set the input files for. Necessary if multiple
+    invocations of the overlay processor happen in marlin for example.
+    Different processors must use different background types
+
+    :param string processorName: Name of the Processor these input files are for
+
+    """
+    self._checkArgs( { 'processorName' : types.StringTypes } )
+    self.processorName = processorName
+    return S_OK()
+
+
   def setNumberOfSignalEventsPerJob(self, numberSignalEvents):
     """Alternative to :func:`setNbSigEvtsPerJob`
     Number used to determine the number of background files needed.
@@ -209,6 +223,8 @@ class OverlayInput(LCUtilityApplication):
                               "useEnergy to look for background files: True or False"))
     m1.addParameter(Parameter("pathToOverlayFiles", "", "string", "", "", False, False,
                               "use overlay files from this path"))
+    m1.addParameter(Parameter("processorName",     "", "string", "", "", False, False,
+                              "Processor Name"))
 
     m1.addParameter(Parameter("debug",          False,   "bool", "", "", False, False, "debug mode"))
     return m1
@@ -225,6 +241,7 @@ class OverlayInput(LCUtilityApplication):
     moduleinstance.setValue('machine',           self.machine  )
     moduleinstance.setValue('useEnergyForFileLookup', self.useEnergyForFileLookup  )
     moduleinstance.setValue('pathToOverlayFiles', self.pathToOverlayFiles )
+    moduleinstance.setValue('processorName', self.processorName )
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)

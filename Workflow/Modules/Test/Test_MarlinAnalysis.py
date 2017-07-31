@@ -14,6 +14,8 @@ from DIRAC import S_OK, S_ERROR
 
 __RCSID__ = "$Id$"
 
+#pylint: disable=missing-docstring, protected-access
+
 MODULE_NAME = 'ILCDIRAC.Workflow.Modules.MarlinAnalysis'
 
 class MarlinAnalysisFixture( object ):
@@ -165,7 +167,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     assertDiracFailsWith( result, 'env script', self )
 
   @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123')))
-  @patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_ERROR('missing slcio file')))
+  @patch("%s.MarlinAnalysis._getInputFiles" % MODULE_NAME, new=Mock(return_value=S_ERROR('missing slcio file')))
   def test_runit_getInputFilesFails( self ):
     self.marAna.platform = "Testplatform123"
     self.marAna.applicationLog = "testlog123"
@@ -193,7 +195,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     log_mock = Mock()
     self.marAna.log = log_mock
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('envscript_path.test'))), \
-         patch('%s.MarlinAnalysis.GetInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
+         patch('%s.MarlinAnalysis._getInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
          patch('%s.getSteeringFileDirName' % MODULE_NAME, new=Mock(return_value=S_OK('/steeringdir'))), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)), \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(side_effect=EnvironmentError('shutil_test_fail'))) as copy_mock, \
@@ -220,7 +222,7 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     log_mock = Mock()
     self.marAna.log = log_mock
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('envscript_path.test'))), \
-         patch('%s.MarlinAnalysis.GetInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
+         patch('%s.MarlinAnalysis._getInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
          patch('%s.getSteeringFileDirName' % MODULE_NAME, new=Mock(return_value=S_ERROR('mytesterr'))), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=replace_exists)), \
          patch('%s.shutil.copy' % MODULE_NAME, new=Mock(side_effect=EnvironmentError('shutil_test_fail'))) as copy_mock, \
@@ -269,16 +271,16 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
 
   def test_getinputfiles_ignore( self ):
     self.marAna.ignoremissingInput = True
-    assertDiracSucceeds( self.marAna.GetInputFiles(), self )
+    assertDiracSucceeds( self.marAna._getInputFiles(), self )
 
   def test_getinputfiles_resolvepathsfails( self ):
     with patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_ERROR())):
-      result = self.marAna.GetInputFiles()
+      result = self.marAna._getInputFiles()
       assertDiracFailsWith( result, 'missing slcio', self )
 
   def test_getinputfiles_complete( self ):
     with patch("%s.resolveIFpaths" % MODULE_NAME, new=Mock(return_value=S_OK(['1.slcio', '2.slcio']))):
-      res = self.marAna.GetInputFiles()
+      res = self.marAna._getInputFiles()
       assertDiracSucceedsWith_equals( res, '1.slcio 2.slcio', self )
 
   def assertInMultiple( self, listOfStrings, bigString):
@@ -295,7 +297,7 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
   def setUp( self ):
     super( MarlinAnalysisPatchTestCase, self ).setUp()
     patches = [ patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))), \
-                patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
+                patch("%s.MarlinAnalysis._getInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
                 patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
                 patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, False, True, False, False])) ]
     for patcher in patches:
@@ -376,7 +378,7 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.workflowStatus = S_OK()
     self.marAna.detectorModel = "someDetector.xml"
     with patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))), \
-         patch("%s.MarlinAnalysis.GetInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
+         patch("%s.MarlinAnalysis._getInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
          patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
          patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, True, True, True, True])), \
          patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \

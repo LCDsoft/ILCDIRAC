@@ -16,7 +16,7 @@ from mock import patch, MagicMock as Mock
 import pytest
 from DIRAC import S_OK
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceeds, running_on_docker
-#from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater, CLIParams
+#from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import JobCreater, CLIParams
 
 __RCSID__ = "$Id$"
 
@@ -78,8 +78,8 @@ class JobTestCase( unittest.TestCase ):
                           inputFilesPath = 'LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
                           rootVersion="ILCSoft-01-17-08"
                         )
-    from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import TestCreater
-    self.myTests = TestCreater(clip, parameterDict)
+    from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import JobCreater
+    self.myTests = JobCreater(clip, parameterDict)
     # Differentiate between local execution and execution in docker
     localsitelocalarea = ''
     uid = os.getuid()

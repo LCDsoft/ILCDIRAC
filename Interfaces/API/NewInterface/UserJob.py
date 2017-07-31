@@ -85,7 +85,7 @@ class UserJob(Job):
     :param lfns: Logical File Names
     :type lfns: Single LFN string or list of LFNs
     """
-    if isinstance( lfns, list ) and len( lfns ):
+    if isinstance( lfns, list ) and lfns:
       for i, lfn in enumerate( lfns ):
         lfns[i] = lfn.replace( 'LFN:', '' )
       #inputData = map( lambda x: 'LFN:' + x, lfns )
@@ -138,7 +138,7 @@ class UserJob(Job):
     :type OutputSE: `python:list` or `str`
     """
     kwargs = {'lfns' : lfns, 'OutputSE' : OutputSE, 'OutputPath' : OutputPath}
-    if isinstance( lfns, list ) and len(lfns):
+    if isinstance( lfns, list ) and lfns:
       outputDataStr = ';'.join(lfns)
       description = 'List of output data files'
       self._addParameter(self.workflow, 'UserOutputData', 'JDL', outputDataStr, description)
@@ -191,7 +191,7 @@ class UserJob(Job):
     :type files: Single `str` or `python:list` of strings ['','']
 
     """
-    if isinstance( files, list ) and len( files ):
+    if isinstance( files, list ) and files:
       fileList = ";".join( files )
       description = 'Output sandbox file list'
       self._addParameter( self.workflow, 'OutputSandbox', 'JDL', fileList, description )
@@ -212,5 +212,16 @@ class UserJob(Job):
     
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()
-  
-  
+
+
+  def setCLICConfig(self, version):
+    """Define the CLIC Configuration package to obtain, copies steering files
+    from CLIC Configuration folder to working directory
+
+    :param str version: version string, e.g.: 'ILCSoft-2017-07-27'
+    """
+    appName = 'ClicConfig'
+    self._addSoftware(appName.lower(), version)
+
+    self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'CLIC Config package' )
+    return S_OK()

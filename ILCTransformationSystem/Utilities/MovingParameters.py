@@ -10,16 +10,27 @@ VALIDDATATYPES = ('GEN','SIM','REC','DST')
 class Params(object):
   """Parameter Object"""
   def __init__(self):
-    self.prodID = None
+    self.prodIDs = []
     self.targetSE = []
     self.sourceSE = None
     self.datatype = None
     self.errorMessages = []
     self.extraname = ''
     self.forcemoving = False
+    self.allFor = []
 
-  def setProdID(self,prodID):
-    self.prodID = prodID
+  def setProdIDs(self,prodID):
+    if isinstance( prodID, list ):
+      self.prodIDs = prodID
+    elif isinstance( prodID, int ):
+      self.prodIDs = [ prodID ]
+    else:
+      self.prodIDs = [ int(pID) for pID in prodID.split(",") ]
+
+    return S_OK()
+
+  def setAllFor(self,allFor):
+    self.allFor = allFor
     return S_OK()
 
   def setSourceSE(self, sourceSE):
@@ -53,20 +64,38 @@ class Params(object):
     """
 
     script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
+    script.registerSwitch("A:", "AllFor=", "Create usual set of moving transformations for prodID/GEN, prodID+1/SIM, prodID+2/REC", self.setAllFor)
     script.registerSwitch("F", "Forcemoving", "Move GEN or SIM files even if they do not have descendents", self.setForcemoving)
-    script.setUsageMessage("""%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F]""" % script.scriptName)
+
+    useMessage = []
+    useMessage.append("%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F]"% script.scriptName)
+    useMessage.extend([ '', 'or', ''])
+    useMessage.append('%s --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F]' %script.scriptName )
+    script.setUsageMessage( '\n'.join( useMessage ) )
 
   def checkSettings(self, script):
     """check if all required parameters are set, print error message and return S_ERROR if not"""
 
     args = script.getPositionalArgs()
-    if len(args) < 4:
-      self.errorMessages.append("ERROR: Not enough arguments")
-    else:
-      self.setProdID( args[0] )
+    if len(args) == 4:
+      self.setProdIDs( args[0] )
       self.setTargetSE( args[1] )
       self.setSourceSE( args[2] )
       self.setDatatype( args[3] )
+    elif len(args) == 2 and self.allFor:
+      self.setProdIDs( self.allFor )
+      ## place the indiviual entries as well.
+      prodTemp = list( self.prodIDs )
+      for prodID in prodTemp:
+        self.prodIDs.append( prodID+1 )
+        self.prodIDs.append( prodID+2 )
+      self.prodIDs = sorted( self.prodIDs )
+
+      self.setTargetSE( args[0] )
+      self.setSourceSE( args[1] )
+    else:
+      self.errorMessages.append("ERROR: Not enough arguments")
+
     from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkAndGetProdProxy
     ret = checkAndGetProdProxy()
     if not ret['OK']:
@@ -77,3 +106,27 @@ class Params(object):
     gLogger.error("\n".join(self.errorMessages))
     script.showHelp()
     return S_ERROR()
+
+
+  def checkDatatype( self, prodID, datatype ):
+    """ check if the datatype makes sense for given production """
+    from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+    tClient = TransformationClient()
+    cond = dict( TransformationID=prodID )
+    trafo = tClient.getTransformations( cond )
+    if not trafo['OK']:
+      return trafo
+    if len(trafo['Value']) != 1:
+      return S_ERROR( "Did not get unique production for this prodID" )
+
+    trafoType = trafo['Value'][0]['Type'].split("_")[0]
+
+    dataTypes = { 'MCGeneration': ['GEN'],
+                  'MCSimulation': ['SIM'],
+                  'MCReconstruction': ['REC', 'DST'],
+                }.get( trafoType, [] )
+
+    if datatype not in dataTypes:
+      return S_ERROR( "Datatype %s doesn't fit production type %s" %( datatype, trafoType ) )
+
+    return S_OK()

@@ -72,12 +72,12 @@ class TestOverlayEos( unittest.TestCase ):
     print "self result", self.over.result
     assertDiracSucceedsWith_equals( res, os.path.basename( testLFN ), self )
     with open("overlayinput.sh") as overscript:
-      self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/clicdp/grid%s" % testLFN , overscript.read() )
+      self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/experiment/clicdp/grid%s" % testLFN , overscript.read() )
 
   @patch("%s.shellCall" % MODULE_NAME, new=Mock(side_effect=createFile))
   def test_overlayinput_getEosFile_fullpath_success( self ):
     """ test that we don't predent if we get a fullpath for eos, however that might happen"""
-    testLFN = "/eos/clicdp/grid/lfn/to/overlay/overlayFile.slcio"
+    testLFN = "/eos/experiment/clicdp/grid/lfn/to/overlay/overlayFile.slcio"
     res = self.over.getEOSFile( testLFN )
     print res
     print "self result", self.over.result
@@ -94,7 +94,7 @@ class TestOverlayEos( unittest.TestCase ):
     print "self result", self.over.result
     assertDiracFailsWith( res, 'Failed', self )
     with open("overlayinput.sh") as overscript:
-      self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/clicdp/grid%s" % testLFN , overscript.read() )
+      self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/experiment/clicdp/grid%s" % testLFN , overscript.read() )
 
 #pylint: disable=too-many-public-methods
 class TestOverlayUnittests( unittest.TestCase ):
@@ -173,7 +173,9 @@ class TestOverlayUnittests( unittest.TestCase ):
   def test_applicationSpecificInputs_with_setters( self ):
     tmp_dict = { 'Detector' : 'othertestdetectorv3000', 'Energy' : '10000GeV',
                  'BXOverlay' : '651', 'ggtohadint' : 9.5, 'ProdID' : 429875,
-                 'NbSigEvtsPerJob' : 94, 'BkgEvtType' : 'bgoijaf' }
+                 'NbSigEvtsPerJob' : 94, 'BkgEvtType' : 'bgoijaf',
+                 'STEP_NUMBER':1,
+               }
     self.over.step_commons = tmp_dict
     self.over.InputData = [ 'abc' ]
     self.over.NumberOfEvents = 15
@@ -367,6 +369,8 @@ class TestOverlayExecute( unittest.TestCase ):
     self.over.ggtohadint = 5
     self.over.nbofeventsperfile = 21
     self.over.nbinputsigfile = 2
+    self.over.site = "SomeSite"
+    self.over.step_commons = dict( STEP_NUMBER=3 )
 
 
   mockretval =  S_OK({'Successful' : {'testfile1.txt' : ['CERN-DIP-4' , 'KEK'],

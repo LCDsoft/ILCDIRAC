@@ -411,7 +411,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
         assertEqualsImproved( proc[0].text, 'output file changed', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
-  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[]))
+  @patch("ILCDIRAC.Core.Utilities.MarlinXML.getOverlayFiles", new=Mock(return_value=[]))
   def test_prepareXMLFile_getoverlayEmpty( self ):
     #pylint: disable=unused-argument
     def parseModified( self, source, parser=None ):
@@ -421,11 +421,11 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile(
         'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
-        'outputfile', 'outputREC', 'outputdst', True )
+        'outputfile', 'outputREC', 'outputdst', True, overlayParam=[( 'gghad', 0, None) ] )
       assertDiracFailsWith( result, 'could not find any overlay files', self )
 
   @patch("%s.open" % MODULE_NAME, mock_open(), create=True)
-  @patch("%s.getOverlayFiles" % MODULE_NAME, new=Mock(return_value=[ 'overlayfile1', 'verycomplicated_other_file.txt' ]))
+  @patch("ILCDIRAC.Core.Utilities.MarlinXML.getOverlayFiles", new=Mock(return_value=[ 'overlayfile1', 'verycomplicated_other_file.txt' ]))
   def test_prepareXMLFile_getoverlayUsed( self ):
     #pylint: disable=unused-argument
     def parseModified( self, source, parser=None ):
@@ -435,7 +435,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     with patch("%s.ElementTree.parse" % MODULE_NAME, new=parseModified):
       result = PrepareOptionFiles.prepareXMLFile(
         'finalxml', 'inputxml', 'inputGEAR', ['input slcio file list'], 1,
-        'outputfile', 'outputREC', 'outputdst', True )
+        'outputfile', 'outputREC', 'outputdst', True, overlayParam=[( 'gghad', 0, None) ] )
       assertDiracSucceeds( result, self )
       mytree = TestPrepareOptionsFile.currenttree
       procs = mytree.findall('processor')
@@ -1317,8 +1317,8 @@ def createXMLTreeForXML( flag = 0 ):
   """Creates a XML Tree to test prepareXMLFile()"""
   root = ET.Element("root")
   ex = ET.SubElement(root, 'execute')
-  ET.SubElement(ex, 'processor', name='OVERLAYTIMING')
-  ET.SubElement(ex, 'processor', name='BGoverlAY')
+  ET.SubElement(ex, 'processor', name='MYOVERLAYTIMING', type='OverlayTiming')
+  ET.SubElement(ex, 'processor', name='BGoverlAY', type='Overlay')
   glob = ET.SubElement(root, 'global')
   if flag >= 0:
     ET.SubElement(glob, 'parameter', name='LCIOInputFiles')
@@ -1330,8 +1330,8 @@ def createXMLTreeForXML( flag = 0 ):
   ET.SubElement(mlop, 'parameter', name='LCIOOutputFile')
   dst = ET.SubElement(root, 'processor', name='DSTOutput')
   ET.SubElement(dst, 'parameter', name='LCIOOutputFile')
-  olt = ET.SubElement(root, 'processor', name='OVERLAYTIMING')
-  bgo = ET.SubElement(root, 'processor', name='BGoverlAY')
+  olt = ET.SubElement(root, 'processor', name='MYOVERLAYTIMING', type='OVERLAYTIMING')
+  bgo = ET.SubElement(root, 'processor', name='BGoverlAY', type='OVERLAY')
   nbbgVal = '0.0'
   nbbtVal = '0'
   expbgVal = '0.0'

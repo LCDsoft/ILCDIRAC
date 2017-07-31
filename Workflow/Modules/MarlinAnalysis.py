@@ -41,7 +41,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     self.outputREC = ''
     self.outputDST = ''
     self.applicationName = "Marlin"
-    self.eventstring = ['ProgressHandler','event']
+    self.eventstring = ['ProgressHandler','event', 'EventNumber', 'StatusMonitor']
     self.envdict = {}
     self.ProcessorListToUse = []
     self.ProcessorListToExclude = []
@@ -56,7 +56,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     if 'ParametricInputSandbox' in self.workflow_commons:
       paramsb = self.workflow_commons['ParametricInputSandbox']
       if not isinstance( paramsb, list ):
-        if len(paramsb):
+        if paramsb:
           paramsb = paramsb.split(";")
         else:
           paramsb = []
@@ -68,7 +68,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     self.outputDST = self.step_commons.get('outputDST', self.outputDST)
       
     if 'IS_PROD' in self.workflow_commons:
-      if self.workflow_commons["IS_PROD"] and len(self.OutputFile)==0:
+      if self.workflow_commons["IS_PROD"] and not self.OutputFile:
         #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
         #                                 int(self.workflow_commons["JOB_ID"]))
         #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
@@ -97,7 +97,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
                                             int(self.workflow_commons["JOB_ID"]))]
           
         
-    if not len(self.InputFile) and len(self.InputData):
+    if not self.InputFile and self.InputData:
       for files in self.InputData:
         if files.lower().find(".slcio") > -1:
           self.InputFile.append(files)
@@ -144,7 +144,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       return res
     env_script_path = res["Value"]
 
-    res = self.GetInputFiles()
+    res = self._getInputFiles()
     if not res['OK']:
       self.log.error("Failed getting input files:", res['Message'])
       return res
@@ -185,14 +185,18 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       self.log.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
 
-    eventsPerBackgroundFile=self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
-    self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+
+
+    resOver = self._checkRunOverlay()
+    if not resOver['OK']:
+      return resOver
+    overlayParam = resOver['Value']
 
     res = prepareXMLFile(finalXML, self.SteeringFile, self.inputGEAR, listofslcio,
                          self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST, 
                          self.debug,
                          dd4hepGeoFile=compactFile,
-                         eventsPerBackgroundFile=eventsPerBackgroundFile,
+                         overlayParam=overlayParam,
                         )
     if not res['OK']:
       self.log.error('Something went wrong with XML generation because %s' % res['Message'])
@@ -281,7 +285,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     finallist = []
     items = marlindll.split(":")
     #Care for user defined list of processors, useful when someone does not want to run the full reco
-    if len(self.ProcessorListToUse):
+    if self.ProcessorListToUse:
       for processor in self.ProcessorListToUse:
         for item in items:
           if item.count(processor):
@@ -290,7 +294,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       finallist = items
     items = finallist
     #Care for user defined excluded list of processors, useful when someone does not want to run the full reco
-    if len(self.ProcessorListToExclude):
+    if self.ProcessorListToExclude:
       for item in items:
         for processor in self.ProcessorListToExclude:
           if item.count(processor):
@@ -387,7 +391,7 @@ fi
     res = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)    
     return res
   
-  def GetInputFiles(self):
+  def _getInputFiles(self):
     """ Resolve the input files. But not if in the application definition it was decided
     that it should forget about the input.
     """
@@ -402,7 +406,25 @@ fi
     listofslcio = " ".join(runonslcio)
     
     return S_OK(listofslcio)
-  
+
+  def _checkRunOverlay( self ):
+    """ checks if overlay should be run and which overlay parameters are there, allows running multiple overlay input steps """
+    softwarePackages = self.workflow_commons.get('SoftwarePackages','').split(';')
+    overlayParam = []
+    for package in softwarePackages:
+      if package.lower().startswith('overlayinput'):
+        stepNumber = int( package.split('.')[1] ) + 1 # softwarepackages start at 0, STEP_NUMBER at 1
+        eventsPerBackgroundFile = self.workflow_commons.get("OI_%i_eventsPerBackgroundFile" % stepNumber)
+        backgroundType = self.workflow_commons.get("OI_%i_eventType" % stepNumber )
+        processorName = self.workflow_commons.get("OI_%i_processorName" % stepNumber, None )
+        self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+        self.log.info( "Background type: %s " % backgroundType )
+        overlayParam.append( (backgroundType, eventsPerBackgroundFile, processorName) )
+
+    #By default return False
+    return S_OK( overlayParam )
+
+
   def getEnvScript(self, sysconfig, appname, appversion):
     """ Called if CVMFS is not available
     """
