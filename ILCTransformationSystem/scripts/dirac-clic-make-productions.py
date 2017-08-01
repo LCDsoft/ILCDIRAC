@@ -23,6 +23,18 @@ from DIRAC import S_OK
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
 
+def energyWithUnit( energy ):
+  """ return energy with unit, GeV below 1000, TeV above """
+  energyString = ''
+  if energy < 1000.:
+    energyString = "%dGeV" % int( energy )
+  elif float( energy/1000. ).is_integer():
+    energyString = "%dTeV" % int( energy/1000.0 )
+  else:
+    energyString = "%1.1fTeV" % float( energy/1000.0 )
+
+  return energyString
+
 class Params(object):
   """Parameter Object"""
   def __init__(self):
@@ -371,6 +383,13 @@ finalOutputSE = %(finalOutputSE)s
     }
 
   @staticmethod
+  def addOverlayOptionsToMarlin( marlin, energy ):
+    """ add options to marlin that are needed for running with overlay """
+    energyString = energyWithUnit( energy )
+    cliOptions = ' --Config.Overlay=%s ' % energyString
+    marlin.setExtraCLIArgument( cliOptions )
+
+  @staticmethod
   def createSplitApplication( eventsPerJob, eventsPerBaseFile, splitType='stdhep' ):
     """ create Split application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit, SLCIOSplit
@@ -415,10 +434,6 @@ finalOutputSE = %(finalOutputSE)s
 
     return overlay
 
-  def createMarlinWithOverlay( self, energy ):
-    """ create Marlin Application when overlay is enabled """
-    ## no difference between with and without overlay at the moment
-    return self.createMarlinApplication( energy )
 
 
   def createMarlinApplication( self, energy ):
@@ -429,6 +444,9 @@ finalOutputSE = %(finalOutputSE)s
     marlin.setVersion( self.softwareVersion )
     marlin.setDetectorModel( self.detectorModel )
     marlin.detectortype = self.detectorModel
+
+    if self._flags.over:
+      self.addOverlayOptionsToMarlin( marlin, energy )
 
     steeringFile = {
       350. : "clicReconstruction.xml",
