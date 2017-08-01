@@ -137,7 +137,7 @@ class CLICDetProdChain( object ):
       return self._rec and not self._over
     @property
     def over( self ): #pylint: disable=missing-docstring
-      return self._rec and self._over
+      return self._over
     @property
     def move( self ): #pylint: disable=missing-docstring
       return not self._dryRun and self._moves
@@ -375,7 +375,8 @@ finalOutputSE = %(finalOutputSE)s
     values are lambda functions acting on an overlay application object
     """
     return {
-      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
+      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay350GeV') ] ),
+      380. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
       420. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.17 ),   overlay.setProcessorName( 'Overlay420GeV') ] ),
       500. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.3 ),    overlay.setProcessorName( 'Overlay500GeV') ] ),
       1400.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 1.3 ),    overlay.setProcessorName( 'Overlay1.4TeV') ] ),
@@ -387,7 +388,7 @@ finalOutputSE = %(finalOutputSE)s
     """ add options to marlin that are needed for running with overlay """
     energyString = energyWithUnit( energy )
     cliOptions = ' --Config.Overlay=%s ' % energyString
-    marlin.setExtraCLIArgument( cliOptions )
+    marlin.setExtraCLIArguments( cliOptions )
 
   @staticmethod
   def createSplitApplication( eventsPerJob, eventsPerBaseFile, splitType='stdhep' ):
