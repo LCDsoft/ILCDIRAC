@@ -772,3 +772,18 @@ class MarlinAnalysisRunTestCase( MarlinAnalysisFixture, unittest.TestCase ):
                                           bufferLimit=20971520 )
       chmod_mock.assert_called_once_with( 'Marlin_VT_Run_935.sh', 0755)
       appstat_mock.assert_called_once_with( 'Marlin VT step 935' )
+
+
+  def test_checkRunOverlay( self ):
+    self.marAna.workflow_commons[ 'OI_2_eventType' ] = 'p'
+    self.marAna.workflow_commons[ 'OI_1_eventType' ] = 'g'
+
+    self.marAna.workflow_commons[ 'OI_2_eventsPerBackgroundFile' ] = 2
+    self.marAna.workflow_commons[ 'OI_1_eventsPerBackgroundFile' ] = 1
+
+    self.marAna.workflow_commons[ 'OI_2_processorName' ] = 'P'
+    self.marAna.workflow_commons[ 'OI_1_processorName' ] = 'G'
+
+    expectedTuple = [ ('g', 1, 'G'), ('p', 2, 'P') ]
+    result = self.marAna._checkRunOverlay()
+    assertDiracSucceedsWith_equals( result, expectedTuple, self )
