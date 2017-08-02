@@ -149,10 +149,10 @@ class CLICDetProdChain( object ):
       return not self._dryRun and self._sim and self._moves and self._moveSim
     @property
     def moveRec( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._moves and self._moveRec
+      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveRec
     @property
     def moveDst( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._moves and self._moveDst
+      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveDst
 
 
     def __str__( self ):
@@ -608,9 +608,6 @@ finalOutputSE = %(finalOutputSE)s
 
   def createMovingTransformation( self, meta, prodType ):
     """ create moving transformations for output files """
-    gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
-    if not self._flags.move:
-      return
 
     sourceSE = self.outputSE
     targetSE = self.finalOutputSE
@@ -623,6 +620,12 @@ finalOutputSE = %(finalOutputSE)s
                  }[prodType]
     except KeyError:
       raise RuntimeError( "ERROR creating MovingTransformation" + repr(prodType) + "unknown" )
+
+    if not getattr( self._flags, "move%s" % dataType.capitalize() ):
+      gLogger.notice( "*"*80 + "\nNot creating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
+      return
+
+    gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
 
     from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
     createMovingTransformation( targetSE, sourceSE, prodID, dataType )
@@ -648,19 +651,27 @@ finalOutputSE = %(finalOutputSE)s
     prodName = process
 
     for parameterDict in self.getParameterDictionary( prodName ):
+      splitMeta, simMeta, recMeta = None, None, None
+
       if self._flags.spl:
         splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, eventsPerJob,
                                                 eventsPerBaseFile, limited=False )
-        self.createMovingTransformation( splitMeta, 'MCGeneration' )
         self._updateMeta( metaInput, splitMeta, eventsPerJob )
 
       if self._flags.sim:
         simMeta = self.createSimulationProduction( metaInput, prodName, parameterDict )
-        self.createMovingTransformation( simMeta, 'MCSimulation' )
         self._updateMeta( metaInput, simMeta, eventsPerJob )
 
       if self._flags.rec or self._flags.over:
         recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
+
+      if splitMeta:
+        self.createMovingTransformation( splitMeta, 'MCGeneration' )
+
+      if simMeta:
+        self.createMovingTransformation( simMeta, 'MCSimulation' )
+
+      if recMeta:
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
 
 
