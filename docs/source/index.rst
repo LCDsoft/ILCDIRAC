@@ -53,6 +53,7 @@ Here are scripts and notes for production managers
    :maxdepth: 2
 
    DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
+   DOC/Files/Prod/prodNotes.rst
    DOC/Files/Prod/clicProdNotes.rst
 
 Contents
