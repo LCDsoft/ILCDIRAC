@@ -315,7 +315,7 @@ deploydoc:
   after_script: []
 
 
-deploydocManual:
+docDev:
   stage: manualdeploy
   tags:
     - docker
@@ -332,6 +332,26 @@ deploydocManual:
     - deploy-eos
   before_script: []
   after_script: []
+
+
+docProd:
+  stage: manualdeploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  when: manual
+  dependencies:
+    - compiledoc
+    - unittest:SL6
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
+    CI_OUTPUT_DIR: "ilcdiracdoc"
+  script:
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - deploy-eos
+  before_script: []
+  after_script: []
+
 
 
 deploytag:
