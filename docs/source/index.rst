@@ -8,8 +8,19 @@ ILCDIRAC Documentation
 
 Welcome to the ILCDIRAC Documentation. 
 
+Getting Started, Tutorials, etc.
+================================
+
+.. toctree::
+   :maxdepth: 1
+
+   DOC/Files/registration
+   DOC/Files/SubmittingJobs
+   DOC/Files/acknowledgements
+
+
 Interfaces for User Jobs
-========================
+------------------------
 
 If you are looking for how to submit jobs
 for Linear Collider Software please look at the
@@ -24,7 +35,6 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
    DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob.rst
    DOC/ILCDIRAC/Interfaces/API/DiracILC.rst
    DOC/Examples/ExampleJobs.rst
-   DOC/Files/acknowledgements
 
 Scripts
 -------
@@ -35,6 +45,7 @@ Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRA
    :maxdepth: 2
 
    DOC/ILCDIRAC/Interfaces/scripts/scripts.rst
+
 
 Acknowledgements and References
 ===============================
@@ -48,6 +59,11 @@ Productions
 ===========
 
 Here are scripts and notes for production managers
+
+.. toctree::
+   :maxdepth: 1
+
+   DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
 
 .. toctree::
    :maxdepth: 2
