@@ -198,6 +198,8 @@ MoveTypes = %(moveTypes)s
       """ load flags values from configfile """
       self.__splitStringToOptions( config, self._prodTypes, 'ProdTypes', prefix='_' )
       self.__splitStringToOptions( config, self._moveTypes, 'MoveTypes', prefix='_' )
+      self._moves = config.getboolean( PP, 'move' )
+
 
   def __init__( self, params=None):
 
