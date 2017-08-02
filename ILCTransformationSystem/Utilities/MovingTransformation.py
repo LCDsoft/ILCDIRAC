@@ -11,7 +11,8 @@ def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=
   """Creates the replication transformation based on the given parameters
 
   
-  :param str targetSE: Destination for files
+  :param targetSE: Destination for files
+  :type targetSE: python:list or str
   :param str sourceSE: Origin of files. Files will be removed from this SE
   :param int prodID: Production ID of files to be moved
   :param str datatype: DataType of files to be moved
@@ -21,6 +22,9 @@ def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=
   """
 
   metadata = {"Datatype":datatype, "ProdID":prodID}
+
+  if isinstance( targetSE, basestring ):
+    targetSE = [ targetSE ]
 
   trans = Transformation()
   transName = 'Move_%s_%s_%s' % ( datatype, str(prodID), ",".join(targetSE) )
