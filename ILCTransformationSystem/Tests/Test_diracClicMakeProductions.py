@@ -51,6 +51,7 @@ class TestMaking( unittest.TestCase ):
       'NumberOfEventsInBaseFiles': '5000, 6000',
       'ProdTypes': 'Gen, RecOver',
       'MoveTypes': '',
+      'overlayEvents': '',
     }
 
     self.pMockMod = Mock()

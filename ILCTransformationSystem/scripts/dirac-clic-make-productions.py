@@ -215,6 +215,8 @@ MoveTypes = %(moveTypes)s
 
     self.additionalName = params.additionalName
 
+    self.overlayEvents = ''
+
     self._flags = self.Flags()
 
     self.loadParameters( params )
@@ -258,6 +260,9 @@ MoveTypes = %(moveTypes)s
 
       if config.has_option(PP, 'additionalName'):
         self.additionalName = config.get(PP, 'additionalName')
+
+      self.overlayEvents = config.get(PP, 'overlayEvents') if config.has_option(PP, 'overlayEvents') else ''
+      self._overlayEventType = 'gghad' + self.overlayEvents.lower()
 
       if config.has_option(PP, 'prodIDs'):
         self.prodIDs = config.get(PP, 'prodIDs').split(',')
@@ -328,6 +333,10 @@ finalOutputSE = %(finalOutputSE)s
 ## optional additional name
 # additionalName = %(additionalName)s
 
+## optional energy to use for overlay: e.g. 3TeV
+# overlayEvents = %(overlayEvents)s
+
+
 %(_flags)s
 
 
@@ -376,13 +385,6 @@ finalOutputSE = %(finalOutputSE)s
     }
 
   @staticmethod
-  def addOverlayOptionsToMarlin( marlin, energy ):
-    """ add options to marlin that are needed for running with overlay """
-    energyString = energyWithUnit( energy )
-    cliOptions = ' --Config.Overlay=%s ' % energyString
-    marlin.setExtraCLIArguments( cliOptions )
-
-  @staticmethod
   def createSplitApplication( eventsPerJob, eventsPerBaseFile, splitType='stdhep' ):
     """ create Split application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit, SLCIOSplit
@@ -402,6 +404,12 @@ finalOutputSE = %(finalOutputSE)s
 
     raise NotImplementedError( 'unknown splitType: %s ' % splitType )
 
+  def addOverlayOptionsToMarlin( self, marlin, energy ):
+    """ add options to marlin that are needed for running with overlay """
+    energyString = self.overlayEvents if self.overlayEvents else energyWithUnit( energy )
+    cliOptions = ' --Config.Overlay=%s ' % energyString
+    marlin.setExtraCLIArguments( cliOptions )
+
   def createDDSimApplication( self ):
     """ create DDSim Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
@@ -418,12 +426,16 @@ finalOutputSE = %(finalOutputSE)s
     overlay = OverlayInput()
     overlay.setMachine( 'clic_opt' )
     overlay.setEnergy( energy )
-    overlay.setBkgEvtType( 'gghad' )
+    overlay.setBackgroundType( self._overlayEventType )
     overlay.setDetectorModel( self.detectorModel )
     try:
-      self.overlayParameterDict().get( energy ) ( overlay )
+      overlayEnergy = energyToInt( self.overlayEvents ) if self.overlayEvents else energy
+      self.overlayParameterDict().get( overlayEnergy ) ( overlay )
     except TypeError:
-      raise RuntimeError( "No overlay parameters defined for %s GeV" % energy )
+      raise RuntimeError( "No overlay parameters defined for %r GeV and %s " % ( energy, self._overlayEventType ) )
+
+    if self.overlayEvents:
+      overlay.setUseEnergyForFileLookup( False )
 
     return overlay
 
