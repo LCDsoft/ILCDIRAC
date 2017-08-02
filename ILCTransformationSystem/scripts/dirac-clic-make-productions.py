@@ -18,7 +18,7 @@ Options:
 import ConfigParser
 
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK
+from DIRAC import S_OK, gLogger
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
@@ -465,6 +465,7 @@ finalOutputSE = %(finalOutputSE)s
 
   def createSimulationProduction( self, meta, prodName, parameterDict ):
     """ create simulation production """
+    gLogger.notice( "*"*80 + "\nCreating simulation production: %s " % prodName )
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     simProd = ProductionJob()
     simProd.dryrun = self._flags.dryRun
@@ -502,10 +503,12 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( "Error finalizing simulation production: %s" % res[ 'Message' ] )
 
     simulationMeta = simProd.getMetadata()
+    self._isFirst = False
     return simulationMeta
 
   def createReconstructionProduction( self, meta, prodName, parameterDict ):
     """ create reconstruction production """
+    gLogger.notice( "*"*80 + "\nCreating reconstruction production: %s " % prodName )
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     recProd = ProductionJob()
     recProd.dryrun = self._flags.dryRun
@@ -561,6 +564,7 @@ finalOutputSE = %(finalOutputSE)s
 
   def createSplitProduction( self, meta, prodName, parameterDict, eventsPerJob, eventsPerBaseFile, limited=False ):
     """ create splitting transformation for splitting files """
+    gLogger.notice( "*"*80 + "\nCreating split production: %s " % prodName )
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     splitProd = ProductionJob()
     splitProd.setProdPlugin( 'Limited' if limited else 'Standard' )
@@ -604,6 +608,7 @@ finalOutputSE = %(finalOutputSE)s
 
   def createMovingTransformation( self, meta, prodType ):
     """ create moving transformations for output files """
+    gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
     if not self._flags.move:
       return
 
