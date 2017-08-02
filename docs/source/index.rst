@@ -44,15 +44,16 @@ and references for iLCDirac and DIRAC can be found `here
 <DOC/Files/acknowledgements>`.
 
 
-Production Scripts
-==================
+Productions
+===========
 
-Some scripts used to control and check productions are only useful for production managers
+Here are scripts and notes for production managers
 
 .. toctree::
    :maxdepth: 2
 
    DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
+   DOC/Files/Prod/clicProdNotes.rst
 
 Contents
 ========
