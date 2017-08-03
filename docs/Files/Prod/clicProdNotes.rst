@@ -7,7 +7,9 @@ Creating New GG Hadron Simulation Files
 ---------------------------------------
 
 1. Simulate gg->hadron files via the usual production script
-   `dirac-clic-make-productions` using this configuration for different energies::
+   `dirac-clic-make-productions` using this configuration for different energies:
+
+   .. code-block:: ini
    
       ## background simulation
       prodGroup = GGhadronSimulation_%(detectorModel)s
@@ -24,3 +26,21 @@ Creating New GG Hadron Simulation Files
    :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-filecatalog-cli` ::
 
      meta set /ilc/prod/clic/<energy>/gghad/<detectorModel>/ DetectorModel <DetectorModel>
+
+3. If overlay events at a certain energy are to be used for jobs with a
+   different energy, add them to the configuration system with a name like
+   *gghad3tev* in the
+   ``/Operations/Defaults/Overlay/clic_opt/500gev/CLIC_o3_v12/gghad3tev`` section:
+
+   .. code-block:: ini
+
+     prodGroup = DiJets_%(detectorModel)s
+     ProdTypes = Split, Sim, RecOver
+     energies =                       91,    100,    200,    380,    500,    750,   1000,  1500,    2000,   3000,
+     processes =                   Z_uds,  Z_uds,  Z_uds,  Z_uds,  Z_uds,  Z_uds,  Z_uds, Z_uds,   Z_uds,  Z_uds,
+     eventsPerJobs =                  50,     50,     50,     50,     50,     50,     50,    50,      50,     50,
+     prodids =                    600001, 600002, 600003, 600004, 600005, 600006, 600007, 600008, 600009, 600010,
+     NumberOfEventsInBaseFiles =    1000,   1000,   1000,   1000,   2500,   1000,   1000,   2500,   1000,   1000,
+     MoveTypes = Gen, Sim, Rec
+     move = True
+     overlayEnergy = 3000
