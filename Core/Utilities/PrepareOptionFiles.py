@@ -17,7 +17,7 @@ from DIRAC import S_OK, gLogger, S_ERROR, gConfig
 
 from ILCDIRAC.Core.Utilities.ResolveDependencies          import resolveDeps
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
-from ILCDIRAC.Core.Utilities.GetOverlayFiles              import getOverlayFiles
+from ILCDIRAC.Core.Utilities.OverlayFiles                 import getOverlayFiles
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder
 from ILCDIRAC.Core.Utilities.MarlinXML                    import setOverlayFilesParameter, setOutputFileParameter
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg

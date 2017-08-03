@@ -377,20 +377,6 @@ class TestMakingParams( unittest.TestCase ):
     self.assertEqual( self.params.additionalName, 'addName')
 
 
-class TestHelper( unittest.TestCase ):
-  """Test helper functions in the script"""
-
-  def setUp ( self ):
-    pass
-
-  def test_energyWithUnit( self ):
-    self.assertEqual( theScript.energyWithUnit( 300.0 ), '300GeV' )
-    self.assertEqual( theScript.energyWithUnit( 380.0 ), '380GeV' )
-    self.assertEqual( theScript.energyWithUnit( 3000.0 ), '3TeV' )
-    self.assertEqual( theScript.energyWithUnit( 1000.0 ), '1TeV' )
-    self.assertEqual( theScript.energyWithUnit( 1400.0 ), '1.4TeV' )
-    self.assertEqual( theScript.energyWithUnit( 2500.0 ), '2.5TeV' )
-
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestMaking )

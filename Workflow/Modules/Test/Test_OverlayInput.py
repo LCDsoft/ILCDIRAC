@@ -157,10 +157,10 @@ class TestOverlayUnittests( unittest.TestCase ):
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       assertEqualsImproved( self.over.energytouse, '123gev', self )
-      self.over.energy = 6872
+      self.over.energy = 6800
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
-      assertEqualsImproved( self.over.energytouse, '6.872tev', self )
+      assertEqualsImproved( self.over.energytouse, '6.8tev', self )
       self.over.energy = 100000
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )

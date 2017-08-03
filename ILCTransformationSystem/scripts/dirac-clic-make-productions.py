@@ -20,20 +20,10 @@ import ConfigParser
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, gLogger
 
+from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
+
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
-
-def energyWithUnit( energy ):
-  """ return energy with unit, GeV below 1000, TeV above """
-  energyString = ''
-  if energy < 1000.:
-    energyString = "%dGeV" % int( energy )
-  elif float( energy/1000. ).is_integer():
-    energyString = "%dTeV" % int( energy/1000.0 )
-  else:
-    energyString = "%1.1fTeV" % float( energy/1000.0 )
-
-  return energyString
 
 class Params(object):
   """Parameter Object"""
@@ -373,7 +363,7 @@ finalOutputSE = %(finalOutputSE)s
   def overlayParameterDict():
     """ return dictionary that sets the parameters for the overlay application
 
-    keys are floats
+    keys are float or int
     values are lambda functions acting on an overlay application object
     """
     return {

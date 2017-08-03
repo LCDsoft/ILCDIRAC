@@ -7,7 +7,7 @@ from xml.etree.ElementTree import Comment
 
 from DIRAC import S_OK, S_ERROR
 
-from ILCDIRAC.Core.Utilities.GetOverlayFiles import getOverlayFiles
+from ILCDIRAC.Core.Utilities.OverlayFiles import getOverlayFiles
 
 DEFAULT_OVERLAY_PROCESSORS = [ 'overlaytiming', 'bgoverlay' ]
 

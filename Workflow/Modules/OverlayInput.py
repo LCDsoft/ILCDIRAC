@@ -5,14 +5,14 @@ Get the overlay files
 
 :author: sposs
 '''
-from decimal import Decimal
+
 
 import glob
 import os
 import random
 import subprocess
 import time
-from math import ceil, modf
+from math import ceil
 
 import DIRAC
 from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
@@ -24,7 +24,7 @@ from DIRAC                                                   import S_OK, S_ERRO
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycles
-
+from ILCDIRAC.Core.Utilities.OverlayFiles                    import energyWithLowerCaseUnit
 
 
 __RCSID__ = "$Id$"
@@ -98,13 +98,7 @@ class OverlayInput (ModuleBase):
       self.energytouse = self.step_commons['Energy']
 
     if self.energy:
-      fracappen = modf(self.energy / 1000.)
-      if fracappen[1] > 0:
-        self.energytouse = "%stev" % (Decimal(str(self.energy)) / Decimal("1000."))
-      else:
-        self.energytouse = "%sgev" % (Decimal(str(self.energy)))
-      if self.energytouse.count(".0"):
-        self.energytouse = self.energytouse.replace(".0", "")
+      self.energytouse = energyWithLowerCaseUnit( self.energy )
             
     if not self.energytouse and not self.pathToOverlayFiles:
       return S_ERROR("Energy not set anywhere!")
