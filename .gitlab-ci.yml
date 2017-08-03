@@ -275,7 +275,7 @@ compiledoc:
 maketarballs:
   stage: create
   only:
-    - tags
+    - tags@clicdp
   tags:
     - docker
   dependencies:
@@ -303,7 +303,7 @@ deploydoc:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
-    - tags
+    - tags@clicdp
   dependencies:
     - compiledoc
   variables:
@@ -360,7 +360,7 @@ deploytag:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
-    - tags
+    - tags@clicdp
   dependencies:
     - maketarballs
   variables:
