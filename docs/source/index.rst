@@ -58,7 +58,7 @@ and references for iLCDirac and DIRAC can be found `here
 Productions
 ===========
 
-Here are scripts and notes for production managers
+In this section are scripts and notes for production managers
 
 .. toctree::
    :maxdepth: 1
@@ -68,14 +68,12 @@ Here are scripts and notes for production managers
 .. toctree::
    :maxdepth: 2
 
-   DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
-   DOC/Files/Prod/prodNotes.rst
-   DOC/Files/Prod/clicProdNotes.rst
+   DOC/Files/Prod/index.rst
 
-Contents
-========
+Code Documentation
+==================
 
-This is the full table of contents for the documentation
+This is the full table of contents for the code documentation
 
 .. toctree::
    :maxdepth: 2
