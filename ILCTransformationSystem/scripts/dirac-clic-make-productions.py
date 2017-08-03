@@ -505,7 +505,6 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( "Error finalizing simulation production: %s" % res[ 'Message' ] )
 
     simulationMeta = simProd.getMetadata()
-    self._isFirst = False
     return simulationMeta
 
   def createReconstructionProduction( self, meta, prodName, parameterDict ):
