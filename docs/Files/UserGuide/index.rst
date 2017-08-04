@@ -13,10 +13,10 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
 .. toctree::
    :maxdepth: 1
 
-   /DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications.rst
-   /DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob.rst
-   /DOC/ILCDIRAC/Interfaces/API/DiracILC.rst
-   /DOC/Examples/ExampleJobs.rst
+   /DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications
+   /DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob
+   /DOC/ILCDIRAC/Interfaces/API/DiracILC
+   examplejobs
 
 Scripts
 -------
@@ -26,7 +26,7 @@ Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRA
 .. toctree::
    :maxdepth: 2
 
-   DOC/ILCDIRAC/Interfaces/scripts/scripts.rst
+   /DOC/ILCDIRAC/Interfaces/scripts/scripts
 
 
 .. toctree::

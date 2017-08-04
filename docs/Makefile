@@ -58,7 +58,6 @@ html:
 
 newhtml:
 	rsync --delete -art DOC/ source/DOC
-	rsync --delete -art Examples source/DOC
 	rsync --delete -art Files source/DOC
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
@@ -207,7 +206,6 @@ completeDocumentation: releasenotes
 	rm -rf DOC
 	python MakeDoc.py
 	rsync --delete -art DOC/ source/DOC
-	rsync --delete -art Examples source/DOC
 	rsync --delete -art Files source/DOC
 	make clean
 	make html

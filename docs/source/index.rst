@@ -3,72 +3,50 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-ILCDIRAC Documentation
+iLCDirac Documentation
 ######################
 
-Welcome to the ILCDIRAC Documentation. 
-
-Getting Started, Tutorials, etc.
-================================
+Welcome to the iLCDirac Documentation.
 
 .. toctree::
    :maxdepth: 1
 
-   DOC/Files/registration
-   DOC/Files/SubmittingJobs
+   DOC/Files/UserGuide/index
+   DOC/Files/ProdGuide/index
+   Code Documenation <DOC/ILCDIRAC/ILCDIRAC>
    DOC/Files/acknowledgements
 
+User Guide
+==========
 
-Interfaces for User Jobs
-------------------------
-
-If you are looking for how to submit jobs
-for Linear Collider Software please look at the
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` class and the
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications` modules and finally at
-the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
+Documentation about registration, job submission, file handling can be found in
+the `user guide <DOC/Files/UserGuide/index>`_
 
 .. toctree::
    :maxdepth: 1
 
-   DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications.rst
-   DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob.rst
-   DOC/ILCDIRAC/Interfaces/API/DiracILC.rst
-   DOC/Examples/ExampleJobs.rst
+   DOC/Files/UserGuide/registration
+   DOC/Files/UserGuide/submittingjobs
+   DOC/Files/UserGuide/support
+   DOC/Files/acknowledgements
 
-Scripts
--------
+Production Manager Guide
+========================
 
-Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRAC.Interfaces.scripts>` module
+In this section are scripts and notes for production managers
+
 
 .. toctree::
    :maxdepth: 2
 
-   DOC/ILCDIRAC/Interfaces/scripts/scripts.rst
+   DOC/Files/Prod/index.rst
 
-
-Acknowledgements and References
-===============================
-
-Suggested acknowledgements for the grid resources accessible through iLCDirac
-and references for iLCDirac and DIRAC can be found `here
-<DOC/Files/acknowledgements>`.
-
-
-Productions
-===========
-
-In this section are scripts and notes for production managers
 
 .. toctree::
    :maxdepth: 1
 
    DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
 
-.. toctree::
-   :maxdepth: 2
-
-   DOC/Files/Prod/index.rst
 
 Code Documentation
 ==================
@@ -92,10 +70,18 @@ Release notes can be found here
    Latest Version <releasenotes>
    Complete history <relnotes>
 
+
+Acknowledgements and References
+===============================
+
+Suggested acknowledgements for the grid resources accessible through iLCDirac
+and references for iLCDirac and DIRAC can be found `here
+<DOC/Files/acknowledgements>`.
+
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
