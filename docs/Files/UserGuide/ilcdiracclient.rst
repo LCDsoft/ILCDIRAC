@@ -153,7 +153,7 @@ Alternative to LCG-Bundles For some operating systems the lcg-bundles will not
 be available (OSX, Ubuntu, ...). Job submission is not affected by this. To
 access files you can configure dirac to use the StorageElementProxy service.
 
-See here: `IlcDiracSEProxy`
+See here: `ilcdiracseproxy`
 
 Or even better install a docker container (get the image ilcdirac/slc6-base) and
 install an iLCDirac container inside the container.

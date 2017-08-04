@@ -53,5 +53,6 @@ Full Index
    submittingjobs
    faq
    storageelements
+   ilcdiracseproxy
    support
    userlibraries
