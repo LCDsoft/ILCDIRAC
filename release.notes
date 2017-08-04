@@ -1,3 +1,106 @@
+[v26r0p11]
+*Interface
+
+NEW: (!136) new attribute *processorName* for :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput.OverlayInput`. Set the name of the Marlin processor the input files belong to. This enables multiple use of the OverlayInput application to download files for different Marlin processors.
+CHANGE: (!136) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` change capitalisation of the *version* argument of :func:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob.setConfig`
+
+*ILCTransformationSystem
+
+NEW: (!128) `dirac-clic-make-productions` script to create productions for the new ddsim/marlin software chain
+NEW: (!124) `dirac-ilc-get-prod-log` new options to get all files in a folder (-A) and to automatically start downloading without confirmation (-N)
+NEW: (!126) `dirac-ilc-moving-transformation`: new option (--allFor) to set a prodID and have the three corresponding moving transformations: prodID/GEN, prodID+1/SIM and prodID+2/REC created. Added consistency check for Datatype
+
+*Interfaces
+
+NEW: (!125) :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit.StdHepSplit`: new property to set maxRead flag for the hepsplit application
+
+*Workflow
+
+CHANGE: (!135) The output parser for :class:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis.MarlinAnalysis` will now pass lines containing 'EventNumber' or 'StatusMonitor' to the standard output, in addition to 'event' and 'ProgressHandler'
+CHANGE: (!136) :class:`~ILCDIRAC.Workflow.Modules.OverlayInput.OverlayInput` fix the path for /eos/experiment/clicdp to get files directly from EOS
+CHANGE: (!136) :class:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis` can now handle setting of parameters for Overlay processors defined in a processor group. Implemented in the new module `Core.Utilities.MarlinXML`
+NEW: (!125) :class:`~ILCDIRAC.Workflow.Modules.StdHepSplit.StdHepSplit`: set "--maxread" if maxRead is set for the application, no changes if maxRead is 0 for backward compatibility
+CHANGE: (!127) Marlin the DST/REC files for processors called Output_DST/Output_REC files in production environments are now handled as well. For Users all processors of Type LCIOOutputProcessor should be used to change the output file name, not just the one called 'MyLCIOOutputProcessor'
+
+*Docs
+
+NEW: (!130) import documentation from ILCDIRAC-Ops repo, always compile docs
+NEW: (!137) *docs/GetReleaseNotes.py* script to get the release notes from the merged merge requests since given date
+
+
+[v26r0p10]
+
+* Interfaces:
+
+CHANGE: DDSim: use *detectorModel* as the *detectorType*, needed in CLIC productions
+NEW ProctionJob: add :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setCLICConfig` function to add ClicConfigPackage to productions
+
+* Core:
+
+CHANGE: :mod:`~ILCDIRAC.Core.Utilities.InstalledFiles`: allow using arbitrary ConfigPackage to provide steering files. For now ILDConfig or ClicConfig defined in ConfigurationSystem
+
+* Workflow:
+
+NEW: :class:`~ILCDIRAC.Workflow.Modules.ModuleBase.ModuleBase`: General :func:`~ILCDIRAC.Workflow.Modules.ModuleBase.ModuleBase.treatConfigPackage` function to replace treatILDConfigPackage backward compatible
+
+[v26r0p9]
+
+* Workflow:
+
+NEW: :class:`~ILCDIRAC.Workflow.Modules.SLICAnalysis`: allow user to preload libraries for SLIC. Add a tarball with folder 'preload' to the Sandbox. Libraries (files containing '.so' in that folder will be added to the LD_PRELOAD environment variable.
+
+
+[v26r0p8]
+
+* Core:
+
+NEW: Based on v6r15p27
+
+NEW: ILD FilenameEncoder now also hadles files for Split transformations
+
+* ILCTransformationSystem
+
+FIX: DataRecoveryAgent: No longer send messages if nothing changed.
+FIX: DataRecoveryAgent: Deal with MCSimulation/MCReconstruction jobs where the inputFile does not exist
+
+* Interfaces
+
+FIX: Changes to ILDProductionChainOpt2017 and DBD: Define output SEs, limit number of jobs for all productions
+
+[v26r0p7]
+
+* Workflow
+
+NEW: DDSim: ddsim now allows a user to add their own plugins.
+     A tarball with the content lib/libmydd4hepplugin.so, lib/libmydd4hepplugin.components can be added to the input sandbox
+
+NEW: Marlin: Marlin also can use the dd4hep plugins provided by a users
+
+FIX: detector model zipfiles/tarballs for marlin were not working before
+
+[v26r0p6]
+
+* Core
+
+NEW: FilenameEncoder by Akiya Miyamoto
+CHANGE: OutputDataPolicy: "\*_ILD" production types use FilenameEncoder
+
+* Interfaces:
+
+CHANGE: Rename ILDProductionJob to ILDProductionJobDBD for DBD productions
+CHANGE: Rename ILDProductionChain to ILDProductionChainDBD
+
+NEW: ILDProductionJobOpt2017: Production job class using the FilenameEncoder
+NEW: ILDProductionChainOpt2017: using ILDProductionJobOpt2017
+
+* ILCTransformationSystem:
+
+FIX: DataRecoveryAgent: Fixed a bug that caused files to be reset too often
+
+* Workflow:
+
+CHANGE: DDSim Workflow module is now picking up ProductionOutputdata from WorkflowCommons instead of re-creating the filename
+
 [v26r0p5]
 
 * Core:
@@ -56,7 +159,7 @@ FIX: Hopefully clearer message when packages are not found directly on CVMFS, IL
 NEW: More Unite tests
 NEW: Based on DIRAC v6r15p12 (-alpha?) Fixe for ILCDIRAC-703
 
-FIX: `dirac-ilc-list-users` needed to be adapted for interface change in `VOMSService`, ILCDIRAC-702
+FIX: `dirac-ilc-list-users` needed to be adapted for interface change in :mod:`DIRAC.Core.Security.VOMSService`, ILCDIRAC-702
 
 * ILCTransformationSystem:
 
@@ -138,25 +241,25 @@ NEW: Based on DIRAC v6r14p35
 
 * Workflow:
 
-FIX: :any:`DDSim`: Fix for running ddsim when init script is needed. The LD_LIBRARY_PATH was not put together correctly and on some sites the local libstdc++.so was picked up.
+FIX: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim`: Fix for running ddsim when init script is needed. The LD_LIBRARY_PATH was not put together correctly and on some sites the local libstdc++.so was picked up.
 
 [v25r0p7]
 
 * Workflow:
 
-FIX: `OverlayInput` for KEK was not getting the correct path to copy files.
-FIX: `DDSim`: Enable use of tarballs with non-system compiler, ILCDIRAC-671
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput` for KEK was not getting the correct path to copy files.
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.DDSimAnalysis`: Enable use of tarballs with non-system compiler, ILCDIRAC-671
 
 * Interface:
 
-NEW: :any:`Marlin` has the new function :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel` that works the same way as the :any:`DDSim` function and can be used to set the dd4hep geometry based model. (ILCDIRAC-659)
+NEW: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin` has the new function :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel` that works the same way as the :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim` function and can be used to set the dd4hep geometry based model. (ILCDIRAC-659)
 
 [v25r0p6]
 
 * Workflow:
 
-FIX: `Mokka` outputfile event parameters were not properly set for Polarisation
-CHANGE: `OverlayInput` files are taken from cern eos instead of castor, when running at cern  (ILCDIRAC-636)
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis` outputfile event parameters were not properly set for Polarisation
+CHANGE: :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput` files are taken from cern eos instead of castor, when running at cern  (ILCDIRAC-636)
 
 * Interfaces:
 
@@ -166,13 +269,13 @@ FIX: Files from the ParametricInputData should now be handled correctly
 
 * WorkloadManagement:
 
-FIX: Copy `getCPUNormalization` from DIRAC and reduce memory footprint ILCDIRAC-661
+FIX: Copy :func:`getCPUNormalization` from DIRAC and reduce memory footprint ILCDIRAC-661
 
 [v25r0p4]
 
 * WorkloadManagement:
 
-FIX: Copy `DownloadInputData` from DIRAC and fix ILCDIRAC-655
+FIX: Copy :mod:`DownloadInputData` from DIRAC and fix ILCDIRAC-655
 
 [v25r0p3]
 
@@ -182,11 +285,11 @@ NEW: Based on dirac v6r14p26
 
 * ILCTransformationSystem:
 
-FIX: `DataRecoveryAgent` now properly sets MaxReset for files with a large ErrorCount
+FIX: :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent` now properly sets MaxReset for files with a large ErrorCount
 
 * Workflow:
 
-FIX: `DDSim` Add DD4hepInstall environment variable to script for TarBallBased installations. Fixes problem for running these jobs locally.
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.DDSimAnalysis` Add DD4hepInstall environment variable to script for TarBallBased installations. Fixes problem for running these jobs locally.
 
 [v25r0p2]
 
@@ -196,13 +299,13 @@ NEW: Based on dirac v6r14p24
 
 * Workflow:
 
-FIX: `DDSim`: correctly handle the tarball
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.DDSimAnalysis`: correctly handle the tarball
 
 [v25r0p1]
 
 * Interfaces:
 
-FIX: Correctly handle `DDSim` detector models
+FIX: Correctly handle :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim` detector models
 
 
 [v25r0p0]
@@ -212,10 +315,10 @@ NEW: These release notes are the summary of every pre-release after the last v23
 NEW: Based on dirac v6r14p18, many changes in Dirac
 
 *Interfaces
-NEW: Added :any:`DDSim` Interfaces, ILCDIRAC-507
+NEW: Added :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim` Interfaces, ILCDIRAC-507
 
 *Workflow
-NEW: Added :any:`DDSimAnalysis` Workflow Module, ILCDIRAC-507
+NEW: Added :mod:`~ILCDIRAC.Workflow.Modules.DDSimAnalysis` Workflow Module, ILCDIRAC-507
 
 *ILCTransformation
 FIX: Adapt to interface changes in DIRAC/Transformation, ILCDIRAC-599
@@ -224,10 +327,10 @@ FIX: Adapt to interface changes in DIRAC/Transformation, ILCDIRAC-599
 [v25-pre3]
 
 *Interfaces
-NEW: Added :any:`DDSim` Interfaces, ILCDIRAC-507
+NEW: Added :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim` Interfaces, ILCDIRAC-507
 
 *Workflow
-NEW: Added :any:`DDSimAnalysis` Workflow Module, ILCDIRAC-507
+NEW: Added :mod:`~ILCDIRAC.Workflow.Modules.DDSimAnalysis` Workflow Module, ILCDIRAC-507
 
 [v25-pre2]
 
@@ -279,14 +382,14 @@ CHANGE: Moved many scripts to different locations (ILCDIRAC-581) for easier
 
 *Interfaces
 
-CHANGE: Removed RemoveFileAndDaughtersWhenFileHasNoAncestor.py, script superseded by one in ILCDIRAC-Ops and `DataRecoveryAgent`
+CHANGE: Removed RemoveFileAndDaughtersWhenFileHasNoAncestor.py, script superseded by one in ILCDIRAC-Ops and :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent`
 CHANGE: Moved :any:`dirac-ilc-get-info` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 CHANGE: Moved `dirac-ilc-get-prod-log` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 CHANGE: Moved `dirac-ilc-production-summary` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 CHANGE: Moved `dirac-ilc-replication-transformation` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 CHANGE: Moved `dirac-ilc-upload-gen-files` to `ILCTransformationSystem <ILCDIRAC.ILCTransformationSystem.scripts>`
 
-FIX: Updated `Marlin` documentation
+FIX: Updated :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin` documentation
 FIX: Fix a typo `UserJob.setInputSandbox` documentation
 
 *Core
@@ -308,25 +411,25 @@ Based von DIRAC v6r12p53, see also v6r12p52
 
 *Workflow
 
-FIX: :any:`RootMacro` and :any:`RootScript` can now use the software versions natively installed on CVMFS (ILCDIRAC-582)
-FIX: :any:`RootScript` can now also be used to run binaries located in the PATH, e.g., 'hadd' to join root files
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.RootMacro` and :mod:`~ILCDIRAC.Workflow.Modules.RootScript` can now use the software versions natively installed on CVMFS (ILCDIRAC-582)
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.RootScript` can now also be used to run binaries located in the PATH, e.g., 'hadd' to join root files
 
 *ILCTransformationSystem
 
 NEW: :any:`dirac-ilc-get-prod-log` now accepts -P prodID to get log files for given productionID (C. Calancha, ILCDIRAC-585)
-FIX: :any:`DataRecoveryAgent` now ignores productions where nothing has changed since the last cycle, (ILCDIRAC-588)
+FIX: :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent` now ignores productions where nothing has changed since the last cycle, (ILCDIRAC-588)
 
 [v23r0p10]
 Based on DIRAC v6r12p51
 
 *WorkloadManagement
-NEW: :any:`SoftwareVersions` Executor: Takes care to ban sites which are not compatible with the SofwarePackages required for any given job
+NEW: :mod:`~ILCDIRAC.WorkloadManagementSystem.Executor.SoftwareVersions` Executor: Takes care to ban sites which are not compatible with the SofwarePackages required for any given job
 
 *ILCTransformation
-FIX: :any:`DataRecoveryAgent`: Fixes for notification, updates configuration before every cycle
+FIX: :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent`: Fixes for notification, updates configuration before every cycle
 
 *RequestManagement
-FIX: :any:`RestartReqExeAgent` deal with multiple PIDs
+FIX: :mod:`~ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent` deal with multiple PIDs
 
 [v23r0p9]
 
@@ -339,10 +442,10 @@ FIX: DIRAC FileCatalog CLI: fixes for path arguments
 [v23r0p8]
 
 *Workflow
-FIX: Set OMP_NUM_THREADS=1 for all in :any:`ModuleBase` and in the execution of the Script in :any:`ApplicationScript`
+FIX: Set OMP_NUM_THREADS=1 for all in :mod:`~ILCDIRAC.Workflow.Modules.ModuleBase` and in the execution of the Script in :mod:`~ILCDIRAC.Workflow.Modules.ApplicationScript`
 
 *ILCTransformation
-NEW: Rewrite of the :any:`DataRecoveryAgent`
+NEW: Rewrite of the :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent`
 
 [v23r0p6]
 
@@ -350,10 +453,10 @@ NEW: Rewrite of the :any:`DataRecoveryAgent`
 FIX: :any:`dirac-ilc-upload-gen-files`: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
 
 *RequestManagement
-NEW: RestartReqExeAgent to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
+NEW: :mod:`~ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent` to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
 
 *Workflow
-FIX: ILCDIRAC-576: ApplicationScript: Set OMP_NUM_THREADS=1
+FIX: ILCDIRAC-576: :mod:`~ILCDIRAC.Workflow.Modules.ApplicationScript`: Set OMP_NUM_THREADS=1
 
 [v23r0p5]
 
