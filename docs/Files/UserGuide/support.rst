@@ -29,7 +29,10 @@ When sending an error report or support request, please provide as much informat
 
   * If certain jobs are failing:
 
-    * Give a list of job IDs (In the JobMonitor Select the jobs and click on the "square button with three horizontal lines" just above the check boxes...)
+    * Give a list of job IDs (In the `JobMonitor
+      <https://voilcdiracwebapp.cern.ch/DIRAC/?view=tabs&theme=Grey&url_state=1|*DIRAC.JobMonitor.classes.JobMonitor:,>`_
+      Select the jobs and click on the "square button with three horizontal
+      lines" just above the check boxes...)
 
     * Provide the python script you used for submission
 
