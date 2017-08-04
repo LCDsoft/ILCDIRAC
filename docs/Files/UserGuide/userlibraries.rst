@@ -1,18 +1,47 @@
-User-Created Libraries with existing Applications
+User-Created Libraries with Existing Applications
 =================================================
 
 Libraries have dedicated support. This mostly depends on the application, in
-particular for ``Marlin``, Please check if the application you want to run for has
-specificities. All applications come with their own dependencies, so a user does
-not need to take care of those. He should only take care of those libraries that
-are not part of the software stack.
+particular for ``Marlin`` processors, Please check if the application you want
+to run for has some special requirements. All applications come with their own
+dependencies, so a user does not need to take care of those. He should only take
+care of those libraries that are not part of the software stack.
+
+Required Folder Structures
+--------------------------
+
+Marlin Processors
+`````````````````
+
+If you want to run with your own processors, the lib directory **must** have the
+following structure because Marlin is sensitive to the difference between a
+processor library and a non processor library
+
+* Libraries that your processors depend on must go under ``lib/lddlib/``. It is
+  recommended to put the versioned libraries here as well, i.e., something like
+  ``libUser.so``, as well as ``libUser.so.5.7``
+
+* The processor libraries **must** be under ``lib/marlin_dll/``. Any file that is
+  added to the ``MARLIN_DLL`` environment variable must end on ``.so`` (not
+  ``.so.xyz``)
+
+And then ``tar`` the ``lib`` folder into ``myProcessorLib.tar.gz`` or some other
+name::
+
+  tar czf myProcessorLib.tar.gz lib
+
+Other Libraries
+```````````````
 
 Let's say you have an application that depends on ``libSomething.so`` that is
-not a default library (in the Marlin case, one can replace existing processors,
-so this is covered in the Marlin section, in the Marlin case on also needs a
-special directory structure is mandatory! See here).
+not a library contained in an existing application installation.
+Simply place your library ``libSomething.so`` into a ``lib`` directory.
 
-You will copy this ``libSomething.so`` into a ``lib`` directory. Now, 2 solutions are possible:
+
+How to use the Library in a Job
+-------------------------------
+
+There are two options to use your library in a job
 
 1.) Just one job:
 
@@ -30,7 +59,7 @@ You will copy this ``libSomething.so`` into a ``lib`` directory. Now, 2 solution
   Only directly add files if you have one job and you are testing your
   libraries. Because every job submitted uploads its sandbox to the main iLCDirac
   servers, filling its hard drive, and slowing down your job submission. All files
-  are uploaded except those that start with LFN:.
+  are uploaded except those that start with ``LFN:``.
 
 2.) More than one job:
 
@@ -59,7 +88,7 @@ You will copy this ``libSomething.so`` into a ``lib`` directory. Now, 2 solution
 
     job.setInputSandbox("LFN:/ilc/user/i/initial/some/path/lib.tar.gz")
 
-  Notice the LFN: part that is used by DIRAC to identify the files that must be
+  Notice the ``LFN:`` part that is used by DIRAC to identify the files that must be
   downloaded from the grid. If you omit it, the job submission should fail
   because an input sandbox file will be missing. The fact that it's a tar ball
   does not matter, it will be untarred automatically.
@@ -74,18 +103,21 @@ You will copy this ``libSomething.so`` into a ``lib`` directory. Now, 2 solution
       dirac-dms-replicate-lfn /ilc/user/i/initial/some/path/lib.tar.gz RAL-SRM
       dirac-dms-replicate-lfn /ilc/user/i/initial/some/path/lib.tar.gz CERN-DIP-4
       dirac-dms-replicate-lfn /ilc/user/i/initial/some/path/lib.tar.gz CERN-DST-EOS
-      dirac-dms-replicate-lfn /ilc/user/i/initial/some/path/lib.tar.gz PNNL-SRM
+      dirac-dms-replicate-lfn /ilc/user/i/initial/some/path/lib.tar.gz PNNL2-SRM
 
   * Replacing your files:
 
-    If you wish to replace the file, you cannot overwrite the file, you need
-    first to issue a dirac-dms-remove-files
-    /ilc/user/i/initial/some/path/lib.tar.gz then re upload. The
-    dirac-dms-remove-files command will remove the file from all storage
-    elements.
+    If you wish to replace the file, you cannot overwrite the file, you have to
+    first remove the files::
+
+      dirac-dms-remove-files /ilc/user/i/initial/some/path/lib.tar.gz
+
+    then re-upload. The
+    :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-remove-files`
+    command will remove the file from all storage elements.
 
     Moving a file cannot be done on the GRID: if really needed, you need to get
-    the file (dirac-dms-get-file /ilc/...) then remove it from the GRID (same as
+    the file (``dirac-dms-get-file /ilc/...``) then remove it from the GRID (same as
     above), then re upload it to the new location. Don't forget to replicate the
     files again.
 
@@ -96,17 +128,3 @@ You will copy this ``libSomething.so`` into a ``lib`` directory. Now, 2 solution
     not a valid storage element for CALICE users, so DESY-SRM or IN2P3-SRM must
     be preferred.
 
-
-Custom Marlin Processors
-------------------------
-
-If you want to run with your own processors, the lib directory **must** have the
-following structure because Marlin is sensitive to the difference between a
-Processor library and a non processor library
-
-* Libraries that your processors depend on must go under ``lib/lddlib/``. It is
-  recommended to put the versioned libraries here as well, i.e., something like
-  ``libUser.so``, as well as ``libUser.so.5.7``
-
-* The processor libraries **must** be under ``lib/marlin_dll/``
-  Any ``MARLIN_DLL`` file must end on ``.so`` (not ``.so.xyz``)
