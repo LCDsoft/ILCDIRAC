@@ -27,8 +27,10 @@ the `user guide <DOC/Files/UserGuide/index>`_
    :maxdepth: 1
 
    DOC/Files/UserGuide/registration
-   DOC/Files/UserGuide/ilcdiracclient
-   DOC/Files/UserGuide/submittingjobs
+   Application Interfaces </DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications>
+   UserJob Interface </DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob>
+   DOC/Files/UserGuide/examplejobs
+   DOC/Files/UserGuide/faq
    DOC/Files/UserGuide/support
 
 
@@ -47,7 +49,7 @@ In this section are scripts and notes for production managers
 .. toctree::
    :maxdepth: 1
 
-   DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
+   Production Related Scripts <DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts>
 
 
 Code Documentation
