@@ -272,6 +272,7 @@ compiledoc:
     paths:
       - ilcdiracdoc
     expire_in: 2 hours
+  allow_failure: true
 
 maketarballs:
   stage: create
