@@ -273,4 +273,31 @@ class DiracILC(Dirac):
       else:
         self.log.info('All LFN files have replicas available')
     return S_OK()
-  
+
+
+  def submitJob( self, job, mode='wms' ):
+    """Submit jobs to DIRAC WMS.
+       These can be either:
+
+        - Instances of the Job Class
+           - VO Application Jobs
+           - Inline scripts
+           - Scripts as executables
+           - Scripts inside an application environment
+
+        - JDL File
+        - JDL String
+
+       Example usage:
+
+       >>> print dirac.submitJob(job)
+       {'OK': True, 'Value': '12345'}
+
+       :param job: Instance of Job class or JDL string
+       :type job: `ILCDIRAC.Interfaces.API.NewInterface.Job.Job` or str
+       :param mode: Submit job locally with mode = 'wms' (default), 'local' to run workflow or 'agent' to run full Job Wrapper locally
+       :type mode: str
+       :returns: S_OK,S_ERROR
+    """
+    self.log.debug( "Submitting job" )
+    return super(DiracILC, self).submitJob(job, mode)
