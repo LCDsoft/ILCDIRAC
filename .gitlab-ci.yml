@@ -265,7 +265,8 @@ compiledoc:
     - cd docs
     - export PYTHONPATH=$PWD/source:$PYTHONPATH
     - bash patchSphinx.sh
-    - make completeDocumentation
+    - SPHINXOPTS=-wsphinxWarnings make completeDocumentation
+    - if [ -s sphinxWarnings ]; then cat sphinxWarnings; echo "Warnings When Creating Doc"; exit 1; fi
     - mv build/html ../../../ilcdiracdoc
   artifacts:
     paths:
