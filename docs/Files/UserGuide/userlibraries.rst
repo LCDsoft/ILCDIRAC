@@ -7,7 +7,7 @@ specificities. All applications come with their own dependencies, so a user does
 not need to take care of those. He should only take care of those libraries that
 are not part of the software stack.
 
-Let's say you have an application that depends in ``libSomething.so`` that is
+Let's say you have an application that depends on ``libSomething.so`` that is
 not a default library (in the Marlin case, one can replace existing processors,
 so this is covered in the Marlin section, in the Marlin case on also needs a
 special directory structure is mandatory! See here).
@@ -94,20 +94,19 @@ You will copy this ``libSomething.so`` into a ``lib`` directory. Now, 2 solution
     Warning, important When running with the CALICE VO, the path has a different
     beginning: ``/calice/users/i/initial``. Notice the s at users. Also, CERN-SRM is
     not a valid storage element for CALICE users, so DESY-SRM or IN2P3-SRM must
-    be prefered.
+    be preferred.
 
 
 Custom Marlin Processors
 ------------------------
 
-If you want to run with your own libs (LD libs and/or MARLIN_DLL), the lib
-directory MUST have the following structure
-because Marlin is sensitive to the difference between a Processor librarye and a
-non processor library
+If you want to run with your own processors, the lib directory **must** have the
+following structure because Marlin is sensitive to the difference between a
+Processor library and a non processor library
 
-* The libraries must go under ``lib/lddlib/``. It is recommended to put the versioned
-  libraries here as well, i.e., something like libUser.so, as well as
-  libUser.so.5.7
+* Libraries that your processors depend on must go under ``lib/lddlib/``. It is
+  recommended to put the versioned libraries here as well, i.e., something like
+  ``libUser.so``, as well as ``libUser.so.5.7``
 
-* The processor libraries MUST be under ``lib/marlin_dll/``
+* The processor libraries **must** be under ``lib/marlin_dll/``
   Any ``MARLIN_DLL`` file must end on ``.so`` (not ``.so.xyz``)

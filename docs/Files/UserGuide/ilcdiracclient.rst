@@ -4,7 +4,7 @@ Setting up an iLCDirac environment
 .. warning::
 
    The DIRAC environment is usually incompatible with other environments, and
-   therefore requires a dedicated terminal/shell. Do not add the iLCDirac bashrc
+   therefore requires a dedicated terminal/shell. Do not add the iLCDirac ``bashrc``
    file to your default shell environment. Only source the iLCDirac setup scrip
    when you need it
 
@@ -79,12 +79,12 @@ environment that you obtain with::
 
 Then you need to configure DIRAC (make the client know where to get the services
 from). This requires the presence of a valid grid proxy. First, if you don't
-have the pem files, you can get them with::
+have the ``pem`` files, you can get them with::
 
   dirac-cert-convert.sh grid.p12
 
 where ``grid.p12`` is the file you got from the web browser export. If you
-already have the pem files, this can be skipped.
+already have the ``pem`` files, this can be skipped.
 
 To get a valid proxy, run::
 
