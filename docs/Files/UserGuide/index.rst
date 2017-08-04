@@ -1,8 +1,19 @@
 User Guide
 ==========
 
-Interfaces for User Jobs
-------------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   registration
+   ilcdiracclient
+   submittingjobs
+   faq
+   support
+
+
+Submitting User Jobs
+--------------------
 
 If you are looking for how to submit jobs
 for Linear Collider Software please look at the
@@ -13,10 +24,10 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
 .. toctree::
    :maxdepth: 1
 
-   /DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications
-   /DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob
-   /DOC/ILCDIRAC/Interfaces/API/DiracILC
-   examplejobs
+   Application Interfaces </DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications>
+   UserJob Interface </DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob>
+   DiracILC Interface </DOC/ILCDIRAC/Interfaces/API/DiracILC>
+   Examples for job submission <examplejobs>
 
 Scripts
 -------
@@ -29,9 +40,18 @@ Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRA
    /DOC/ILCDIRAC/Interfaces/scripts/scripts
 
 
+
+
+Full Index
+----------
+
 .. toctree::
    :maxdepth: 1
-              
+
    registration
+   ilcdiracclient
    submittingjobs
+   faq
+   storageelements
    support
+   userlibraries

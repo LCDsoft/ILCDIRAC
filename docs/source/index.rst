@@ -14,6 +14,7 @@ Welcome to the iLCDirac Documentation.
    DOC/Files/UserGuide/index
    DOC/Files/ProdGuide/index
    Code Documenation <DOC/ILCDIRAC/ILCDIRAC>
+   Release Notes <releasenotes>
    DOC/Files/acknowledgements
 
 User Guide
@@ -26,9 +27,10 @@ the `user guide <DOC/Files/UserGuide/index>`_
    :maxdepth: 1
 
    DOC/Files/UserGuide/registration
+   DOC/Files/UserGuide/ilcdiracclient
    DOC/Files/UserGuide/submittingjobs
    DOC/Files/UserGuide/support
-   DOC/Files/acknowledgements
+
 
 Production Manager Guide
 ========================
@@ -39,7 +41,7 @@ In this section are scripts and notes for production managers
 .. toctree::
    :maxdepth: 2
 
-   DOC/Files/Prod/index.rst
+   DOC/Files/ProdGuide/index
 
 
 .. toctree::
