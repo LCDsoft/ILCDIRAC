@@ -489,7 +489,7 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
     simProd.setOutputSE( self.outputSE )
     simProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'sim') )
-    simProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy( meta['Energy'] ) )
+    simProd.setProdGroup( self.prodGroup )
     #Add the application
     res = simProd.append( self.createDDSimApplication() )
     if not res['OK']:
@@ -535,7 +535,7 @@ finalOutputSE = %(finalOutputSE)s
     recProd.setOutputSE( self.outputSE )
     recType = 'rec_overlay' if self._flags.over else 'rec'
     recProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, recType ) )
-    recProd.setProdGroup( "%s_%s" %( self.prodGroup, self.metaEnergy( meta['Energy'] ) ) )
+    recProd.setProdGroup( self.prodGroup )
 
     #Add overlay if needed
     if self._flags.over:
@@ -588,7 +588,7 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( 'Split production: failed to set inputDataQuery: %s' % res['Message'] )
     splitProd.setOutputSE( self.outputSE )
     splitProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'stdhepSplit' ) )
-    splitProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy( meta['Energy'] ) )
+    splitProd.setProdGroup( self.prodGroup )
 
     #Add the application
     res = splitProd.append( self.createSplitApplication( eventsPerJob, eventsPerBaseFile, 'stdhep' ) )
