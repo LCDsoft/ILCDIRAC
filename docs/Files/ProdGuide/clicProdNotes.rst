@@ -18,7 +18,6 @@ Creating New GG Hadron Simulation Files
       processes =                  gghad,   gghad,    gghad
       eventsPerJobs =               1000,    1000,      100
       prodids =                        1,       2,        1
-      NumberOfEventsInBaseFiles =  
       
 2. When the productions are created add the *DetectorModel* meta tag to the
    folder of the DetectorModel. By itself on the *DetectorType* is set for
@@ -40,7 +39,7 @@ Creating New GG Hadron Simulation Files
      processes =                   Z_uds,  Z_uds,  Z_uds,  Z_uds,  Z_uds,  Z_uds,  Z_uds, Z_uds,   Z_uds,  Z_uds,
      eventsPerJobs =                  50,     50,     50,     50,     50,     50,     50,    50,      50,     50,
      prodids =                    600001, 600002, 600003, 600004, 600005, 600006, 600007, 600008, 600009, 600010,
-     NumberOfEventsInBaseFiles =    1000,   1000,   1000,   1000,   2500,   1000,   1000,   2500,   1000,   1000,
+     eventsInSplitFiles        =    1000,   1000,   1000,   1000,   2500,   1000,   1000,   2500,   1000,   1000,
      MoveTypes = Gen, Sim, Rec
      move = True
      overlayEnergy = 3000

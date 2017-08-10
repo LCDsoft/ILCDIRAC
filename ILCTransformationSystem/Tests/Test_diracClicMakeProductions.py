@@ -48,7 +48,7 @@ class TestMaking( unittest.TestCase ):
       'finalOutputSE': 'VAULT-101',
       'additionalName': 'waitForIt',
       'prodIDs': '123, 456',
-      'NumberOfEventsInBaseFiles': '5000, 6000',
+      'eventsInSplitFiles': '5000, 6000',
       'ProdTypes': 'Gen, RecOver',
       'MoveTypes': '',
       'overlayEvents': '',
@@ -107,7 +107,7 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual( c.prodIDs, [123, 456] )
     self.assertEqual( c.energies, [100, 200] )
     self.assertEqual( c.eventsPerJobs, [1000, 2000] )
-    self.assertEqual( c.eventsPerBaseFiles, [5000, 6000] )
+    self.assertEqual( c.eventsInSplitFiles, [5000, 6000] )
 
     self.configDict['prodIDs'] = "123, 456, 789"
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
@@ -122,11 +122,11 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual( c.prodIDs, [1, 1] )
 
 
-    self.configDict['NumberOfEventsInBaseFiles'] = "1000"
+    self.configDict['eventsInSplitFiles'] = "1000"
     c._flags._spl = True
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
                 new=Mock(return_value=cpMock ) ), \
-      self.assertRaisesRegexp( AttributeError, "Length of eventsPerBaseFiles"):
+      self.assertRaisesRegexp( AttributeError, "Length of eventsInSplitFiles"):
       c.loadParameters( parameter )
 
 

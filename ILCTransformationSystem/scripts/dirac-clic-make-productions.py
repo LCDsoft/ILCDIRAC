@@ -216,7 +216,7 @@ MoveTypes = %(moveTypes)s
     self.energies = ''
     self.processes = ''
     self.prodIDs = ''
-    self.eventsPerBaseFiles = ''
+    self.eventsInSplitFiles = ''
 
     # final destination for files once they have been used
     self.finalOutputSE = self._ops.getValue( 'Production/CLIC/FailOverSE' )
@@ -280,7 +280,7 @@ MoveTypes = %(moveTypes)s
         self.prodIDs = []
 
       ##for split only
-      self.eventsPerBaseFiles = config.get(PP, 'NumberOfEventsInBaseFiles').split(',')
+      self.eventsInSplitFiles = config.get(PP, 'eventsInSplitFiles').split(',')
 
       self.processes = [ process.strip() for process in self.processes if process.strip() ]
       self.energies = [ float(eng.strip()) for eng in self.energies if eng.strip() ]
@@ -294,12 +294,12 @@ MoveTypes = %(moveTypes)s
          len( self.prodIDs) != len(self.eventsPerJobs):
         raise AttributeError( "Lengths of Processes, Energies, and EventsPerJobs do not match" )
 
-      self.eventsPerBaseFiles = [ int( epb.strip() ) for epb in self.eventsPerBaseFiles if epb.strip() ]
-      self.eventsPerBaseFiles = self.eventsPerBaseFiles if self.eventsPerBaseFiles else [ -1 for _ in self.energies ]
+      self.eventsInSplitFiles = [ int( epb.strip() ) for epb in self.eventsInSplitFiles if epb.strip() ]
+      self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [ -1 for _ in self.energies ]
 
-      if self._flags.spl and len(self.eventsPerBaseFiles) != len(self.energies):
-        raise AttributeError( "Length of eventsPerBaseFiles does not match: %d vs %d" %(
-          len(self.eventsPerBaseFiles), \
+      if self._flags.spl and len(self.eventsInSplitFiles) != len(self.energies):
+        raise AttributeError( "Length of eventsInSplitFiles does not match: %d vs %d" %(
+          len(self.eventsInSplitFiles), \
           len(self.energies) ) )
 
     if parameter.dumpConfigFile:
@@ -333,7 +333,7 @@ processes = %(processes)s
 # prodIDs =
 
 ## number of events for input files to split productions
-NumberOfEventsInBaseFiles = %(eventsPerBaseFiles)s
+eventsInSplitFiles = %(eventsInSplitFiles)s
 
 productionLogLevel = %(productionLogLevel)s
 outputSE = %(outputSE)s
@@ -694,7 +694,7 @@ finalOutputSE = %(finalOutputSE)s
       process = self.processes[index]
       prodID = self.prodIDs[index]
       eventsPerJob = self.eventsPerJobs[index]
-      eventsPerBaseFile = self.eventsPerBaseFiles[index]
+      eventsPerBaseFile = self.eventsInSplitFiles[index]
 
       self.createTransformations( prodID, process, energy, eventsPerJob, eventsPerBaseFile )
 
