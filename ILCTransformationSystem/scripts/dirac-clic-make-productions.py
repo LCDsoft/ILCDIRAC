@@ -107,8 +107,8 @@ class CLICDetProdChain( object ):
       self._moveDst = False
 
       ## list of tuple to preserve order
-      self._prodTypes = [ ('gen','Gen'), ('spl','Split'), ('sim','Sim'), ('rec','Rec'), ('over','RecOver') ]
-      self._moveTypes = [ ('moveGen','Gen'), ('moveSim','Sim'), ('moveRec','Rec'), ('moveDst','Dst') ]
+      self._prodTypes = [ ('gen', 'Gen'), ('spl', 'Split'), ('sim', 'Sim'), ('rec', 'Rec'), ('over', 'RecOver') ]
+      self._moveTypes = [ ('moveGen', 'Gen'), ('moveSim', 'Sim'), ('moveRec', 'Rec'), ('moveDst', 'Dst') ]
 
     @property
     def dryRun( self ): #pylint: disable=missing-docstring
