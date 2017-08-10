@@ -147,16 +147,7 @@ class CLICDetProdChain( object ):
 
     def __str__( self ):
       pDict = vars(self)
-      pDict.update( prodOpts = ", ".join([ pTuple[1] \
-                                           for pTuple in self._prodTypes ] ) )
-      pDict.update( prodTypes = ", ".join([ pTuple[1] \
-                                            for pTuple in self._prodTypes \
-                                            if getattr( self, pTuple[0]) ] ) )
-      pDict.update( moveOpts = ", ".join([ pTuple[1] \
-                                            for pTuple in self._moveTypes ] ) )
-      pDict.update( moveTypes = ", ".join([ pTuple[1] \
-                                            for pTuple in self._moveTypes \
-                                            if getattr( self, '_'+pTuple[0] ) ] ) )
+      self.updateDictWithFlags( pDict )
       return """
 
 #Productions to create: %(prodOpts)s
@@ -167,6 +158,23 @@ move = %(_moves)s
 #Datatypes to move: %(moveOpts)s
 MoveTypes = %(moveTypes)s
 """ %( vars(self) )
+
+    def updateDictWithFlags( self, pDict ):
+      """ add flags and values to pDict """
+      for attr in dir(self):
+        if isinstance( getattr(type(self), attr, None), property):
+          pDict.update( { attr: str(getattr(self, attr)) } )
+
+      pDict.update( prodOpts = ", ".join([ pTuple[1] \
+                                           for pTuple in self._prodTypes ] ) )
+      pDict.update( prodTypes = ", ".join([ pTuple[1] \
+                                            for pTuple in self._prodTypes \
+                                            if getattr( self, pTuple[0]) ] ) )
+      pDict.update( moveOpts = ", ".join([ pTuple[1] \
+                                            for pTuple in self._moveTypes ] ) )
+      pDict.update( moveTypes = ", ".join([ pTuple[1] \
+                                            for pTuple in self._moveTypes \
+                                            if getattr( self, '_'+pTuple[0] ) ] ) )
 
 
     def __splitStringToOptions( self, config, tuples, optString, prefix='_'):
@@ -239,7 +247,9 @@ MoveTypes = %(moveTypes)s
     """ load parameters from config file """
 
     if parameter.prodConfigFilename is not None:
-      config = ConfigParser.SafeConfigParser( defaults=vars(self), dict_type=dict )
+      defaultValueDict = vars(self)
+      self._flags.updateDictWithFlags( defaultValueDict )
+      config = ConfigParser.SafeConfigParser( defaults=defaultValueDict, dict_type=dict )
       config.read( parameter.prodConfigFilename )
       self._flags.loadFlags( config )
 
