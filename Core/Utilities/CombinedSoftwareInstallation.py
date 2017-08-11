@@ -335,7 +335,9 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   :param function fcn_env: function provided by the Application daughter class
     to create its own environment in case there is no environment script in the
     application version. Signature has to be *fcn_env(platform, appname,
-    appversion)* and has to return *S_OK(pathToScript)*
+    appversion)* and has to return *S_OK(pathToScript)*. If you do not want to
+    provide such a function you can set fcn_env=S_ERROR('User must provide script')
+    and the error will be returned.
 
   """
   res = checkCVMFS(platform, [appname, appversion])
@@ -344,6 +346,11 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
     DIRAC.gLogger.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
     if cvmfsenv:
       return S_OK( cvmfsenv )
+
+  # If user does not provide enviroment creation function return the dictionary
+  if isinstance(fcn_env, dict):
+    return fcn_env
+
   #if CVMFS script is not here, the module produces its own.
   return fcn_env(platform, appname, appversion)
 

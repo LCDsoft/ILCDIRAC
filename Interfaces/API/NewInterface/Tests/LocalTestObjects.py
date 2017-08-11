@@ -21,6 +21,7 @@ class CLIParams( object ):
     """
     self.submitMode = "local"
     self.testWhizard = False
+    self.testWhizard2 = False
     self.testInputData = False
     self.testUtilities = False
     self.testMokka = False
@@ -48,6 +49,12 @@ class CLIParams( object ):
     """ Test whizard
     """
     self.testWhizard = True
+    return S_OK()
+
+  def setTestWhizard2(self, dummy_opt):
+    """ Test whizard2
+    """
+    self.testWhizard2 = True
     return S_OK()
 
   def setTestInputData(self, dummy_opt):
@@ -133,6 +140,7 @@ class CLIParams( object ):
     """
     self.testInputData = True
     self.testWhizard = True
+    self.testWhizard2 = True
     self.testUtilities = True
     self.testMokka = True
     self.testMarlin = True
@@ -153,6 +161,7 @@ class CLIParams( object ):
     from DIRAC.Core.Base import Script
     Script.registerSwitch("", "submitmode=", "Submission mode: local or WMS", self.setSubmitMode)
     Script.registerSwitch('', 'whizard', "Test Whizard", self.setTestWhizard)
+    Script.registerSwitch('', 'whizard2', "Test Whizard2", self.setTestWhizard2)
     Script.registerSwitch("", "mokka", 'Test Mokka', self.setTestMokka)
     Script.registerSwitch("", "marlin", 'Test Marlin', self.setTestMarlin)
     Script.registerSwitch("", "slic", 'Test SLIC', self.setTestSLIC)
@@ -198,6 +207,9 @@ class JobCreater(object):
     self.lcsimVersion = params.get( "lcsimVersion" )
     self.steeringFileVersion = params.get( "steeringFileVersion", None )
     self.rootVersion = params["rootVersion"]
+
+    self.whizard2Version = params.get( "whizard2Version" )
+    self.whizard2SinFile = params.get( "whizard2SinFile" )
 
     self.energy = params.get("energy")
     self.backgroundType = params.get("backgroundType")
@@ -255,6 +267,21 @@ class JobCreater(object):
       self.log.error("Failed adding DDSim:", res['Message'])
       return S_ERROR("Failed adding DDSim to Job")
     
+    return S_OK(jobdd)
+
+  def createWhizard2Test( self ):
+    """Create a job running Whizard2"""
+    jobdd = self.getJob()
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2 import Whizard2
+    whiz = Whizard2()
+    whiz.setVersion(self.whizard2Version)
+    whiz.setNumberOfEvents(1)
+    whiz.setSinFile(self.whizard2SinFile)
+    whiz.setOutputFile("test.stdhep")
+    res = jobdd.append(whiz)
+    if not res['OK']:
+      self.log.error("Failed adding Whizard2:", res['Message'])
+      return S_ERROR("Failed adding Whizard2 to Job")
     return S_OK(jobdd)
 
   def createMokkaTest(self):
@@ -904,7 +931,7 @@ class JobCreater(object):
       return S_ERROR()
     if localarea.find("/afs") == 0:
       self.log.error("Don't set /LocalSite/LocalArea set to /afs/... as you'll get to install there")
-      self.log.error("check ${HOME}/.dirac.cfg")
+      self.log.error("check ${HOME}/.dirac.cfg and ${DIRAC}/etc/dirac.cfg")
       return S_ERROR()
     self.log.notice("To run locally, I will create a temp directory here.")
     curdir = os.getcwd()

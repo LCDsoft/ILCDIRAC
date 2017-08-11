@@ -1,0 +1,28 @@
+!Model and Process block
+model = SM
+process decay_proc = "A", "A" => "b", "B"
+
+compile
+
+!Beam block
+sqrts = 350 GeV
+!use Circe2_file for the beam spectrum
+beams = A, A => circe2 
+$circe2_file = "/cvmfs/clicdp.cern.ch/software/WHIZARD/circe_files/CLIC/0.35TeVggMapPB0.67E0.0Mi0.0.circe" 
+$circe2_design = "CLIC/GG"
+?circe2_polarized = false
+?keep_beams=true
+?isr_recoil = false
+!isr_order = 1
+
+!cuts block
+cuts = all E > 10 GeV and Theta > 10 degree and Theta < 170 degree ["b":"B"]
+
+?ps_fsr_active = true
+?ps_isr_active = false
+?hadronization_active = true
+$shower_method = "PYTHIA6"
+!?ps_PYTHIA_verbose = true
+
+integrate (decay_proc) 
+
