@@ -85,6 +85,20 @@ class TestMaking( unittest.TestCase ):
                        'Machine': 'clic',
                       }, ret )
 
+
+  def test_overlayParameter( self ):
+    self.assertEqual( self.chain.checkOverlayParameter( '300GeV' ), '300GeV' )
+    self.assertEqual( self.chain.checkOverlayParameter( '3TeV' ), '3TeV' )
+    self.assertEqual( self.chain.checkOverlayParameter( '' ), '' )
+
+    with self.assertRaisesRegexp( RuntimeError, "does not end with unit" ):
+      self.chain.checkOverlayParameter( '3000' )
+
+    with self.assertRaisesRegexp( RuntimeError, "does not end with unit" ):
+      self.chain.checkOverlayParameter( '3tev' )
+
+
+
   def test_loadParameters( self ):
     parameter = Mock()
     parameter.prodConfigFilename = None
