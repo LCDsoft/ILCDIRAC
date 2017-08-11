@@ -27,13 +27,23 @@ __RCSID__ = "$Id$"
 class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
-  def __init__(self, script = None):
+  def __init__(self, script = None, split = None, njobs = None, eventsPerJob = None, nevents = 0):
     super(UserJob, self).__init__( script )
     self.type = 'User'
     self.diracinstance = None
     self.usergroup = ['ilc_user', 'calice_user']
     self.proxyinfo = getProxyInfo()
-    
+
+    ########## SPLITTING STUFF : ATTRIBUTES ##########
+    self._data = set()
+    self.split = split
+    self._switch = {}
+    self.njobs = njobs
+    self.totalNumberOfEvents = nevents
+    self.eventsPerJob = eventsPerJob
+    self._userApplications = set()
+    self.logLevel = "ALWAYS"
+
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
     add the job to DIRAC.
@@ -46,6 +56,11 @@ class UserJob(Job):
       The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
 
     """
+    if self.split:
+      result = self._split()
+      if 'OK' in result and not result['OK']:
+        return result
+        
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
       self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
@@ -85,6 +100,10 @@ class UserJob(Job):
     :param lfns: Logical File Names
     :type lfns: Single LFN string or list of LFNs
     """
+
+    if self.split:
+      return self._saveInputData(lfns)
+
     if isinstance( lfns, list ) and lfns:
       for i, lfn in enumerate( lfns ):
         lfns[i] = lfn.replace( 'LFN:', '' )
@@ -225,3 +244,343 @@ class UserJob(Job):
 
     self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'CLIC Config package' )
     return S_OK()
+
+  
+  ##############################  SPLITTING STUFF : METHODS ##############################
+  # Some methods have been added/redefined :
+  #
+  # 1) append
+  # 2) _split
+  # 3) _atomicSubmission
+  # 4) _checkJobConsistency
+  # 5) _splitByData
+  # 6) _splitByEvents
+  # 7) _toInt
+  #
+  # Most of them are called when split attribute is set to a valid value.
+  # Splitting stuff computes the number of jobs according to the input parameters
+  # like the number of events or the input data.
+  ##############################  SPLITTING STUFF : Job() METHOD REDEFINITION ##############################
+  def append(self, application):
+    """Redefinition of Dirac.Interfaces.API.Job.append()
+    in order to save applications into a set to detect doublons.
+
+    """
+
+    if application in self._userApplications:
+      errorMessage = "Append : You try to append many times the same application, please fix it !"     
+      self.log.error(errorMessage)
+      return self._reportError(errorMessage)
+
+    self._userApplications.add(application)
+
+    if not application.numberOfEvents:
+      application.numberOfEvents = self.totalNumberOfEvents
+
+    appName = application.__class__.__name__
+
+    debugMessage = "Append : Application '%s' registering ..." % appName 
+    self.log.debug(debugMessage)
+    return super(UserJob, self).append(application)
+
+  ##############################  SPLITTING STUFF : UserJob() NEW METHODS ##############################
+  def _saveInputData(self, lfns):
+    """Save input data into a set.
+
+    The user can specify input data to tell DIRAC to download input data
+    (stored in DESY-SRM for example) on the CE.
+
+    Data are registered to the DIRAC catalog and have a tape backend (OutputSE)
+    Please refer to the documentation to see how to add files to the catalog.
+
+    """
+
+    self._data = self._data.union(lfns) if isinstance(lfns, list) else self._data.union([lfns])
+    debugMessage = "Input Data : Input data set to :\n%s" % "\n".join(lfns)
+    self.log.debug(debugMessage)
+    return S_OK(debugMessage)
+    
+  #############################################################################
+  def _split(self):
+    """This function computes right input parameters for the parametric method. 
+
+    There are 3 types of submission :
+
+    - local without agent machinery
+    - local with agent machinery
+    - grid
+
+    The advantage of the Local submission mode is
+    that jobs are immediately executed on the local resource.
+
+    """
+
+    # In Splitting :
+    # By pass user prompt before submission
+    # self.dontPromptMe()
+
+    self.eventsPerJob = self._toInt(self.eventsPerJob)
+    self.njobs = self._toInt(self.njobs)
+
+    if False is self.njobs or False is self.eventsPerJob:
+      return self._reportError("Splitting : Invalid values for splitting")
+
+    # Switch case python emulation
+    self._switch = {"byEvents" : self._splitByEvents,
+                    "byData" : self._splitByData, None : self._atomicSubmission}
+
+    self.log.info("DIRAC : DIRAC submission beginning...")
+
+    if not self._checkJobConsistency():
+      errorMessage = "DIRAC : DIRAC submission failed"
+      self.log.error(errorMessage)
+      return self._reportError(errorMessage)
+
+    sequence = self._switch[self.split]()
+
+    if not sequence:
+      errorMessage = "DIRAC : DIRAC submission failed"
+      self.log.error(errorMessage)
+      return self._reportError(errorMessage)
+
+    sequenceType, sequenceList = sequence[0], sequence[1]
+   
+    if sequenceType != "Atomic":
+      self.setParameterSequence(sequenceType, sequenceList)
+
+    infoMessage = "DIRAC : DIRAC submission ending"
+    self.log.info(infoMessage)
+
+    return S_OK(infoMessage)
+
+  #############################################################################
+  def _atomicSubmission(self):
+    """This function does not do splitting."""
+
+    infoMessage = "Job splitting : No splitting to apply, then 'atomic submission' will be used"
+    self.log.info(infoMessage)
+
+    return "Atomic", []
+
+  #############################################################################
+  def _checkJobConsistency(self):
+    """This function :
+
+    - Checks if Job parameters are valid.
+
+    :return: success or failure of the consistency checking
+    :rtype: bool
+
+    :Example:
+
+    >>> self._checkJobConsistency()
+
+    """
+
+    self.log.info("Job consistency : _checkJobConsistency()...")
+
+    if not self._userApplications:
+      errorMessage = (
+        "Job : Your job is empty !\n"
+        "You have to append at least one application\n"
+        "Job consistency : _checkJobConsistency failed"
+      )
+      self.log.error(errorMessage)
+      return False
+
+    if self.split not in self._switch:
+      errorMessage = (
+        "Job splitting : Bad split value\n"
+        "Possible values are :\n"
+        "- byData\n"
+        "- byEvents\n"
+        "- None\n"
+        "Job consistency : _checkJobConsistency failed"
+      )
+      self.log.error(errorMessage)
+      return False
+
+    # If the user sets these parameters so deduce that he wants
+    # to use "byEvents" method
+    if self.njobs or self.eventsPerJob:
+      self.split = "byEvents"
+
+    # All applications should have the same number of events
+    # We can get this number from the first application for example
+    sameNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
+
+    if not all(app.numberOfEvents == sameNumberOfEvents for app in self._userApplications):
+      self.log.warn("Job : Applications should all have the same number of events")
+
+    if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:
+      warnMessage = (
+        "Job : You set the number of events to -1 without input data\n"
+        "Was that intentional ?"
+      )
+      self.log.warn(warnMessage)
+
+    infoMessage = "Job consistency : _checkJobConsistency() successfull"
+    self.log.info(infoMessage)
+
+    return True
+
+  #############################################################################
+  def _splitByData(self):
+    """This function wants that a job is submitted per input data."""
+
+    # reset split attribute to avoid infinite loop
+    self.split = None
+
+    infoMessage = "Job splitting : Splitting 'byData' method..."
+    self.log.info(infoMessage)
+
+    # Ensure that data have been specified by setInputData() method
+    if not self._data:
+      errorMessage = (
+        "Job splitting : Can not continue, missing input data\n"
+        "splitting 'byData' method needs input data"
+      )
+      self.log.error(errorMessage)
+      return False
+
+    self.log.info("Job splitting : Your submission consists of %d job(s)" % len(self._data))
+
+    return ["InputData", list(self._data)]
+
+  #############################################################################
+  def _splitByEvents(self):
+    """This function wants that a job is submitted per subset of events."""
+
+    # reset split attribute to avoid infinite loop
+    self.split = None
+
+    infoMessage = "Job splitting : splitting 'byEvents' method..."
+    self.log.info(infoMessage)
+
+    if self.eventsPerJob and self.njobs:
+      
+      # 1st case : (njobs=3, eventsPerJob=10)
+      # trivial case => each job (total of 3) run applications of 10 events each
+      # Do not consider number of event of the application (overwrite it)
+      # it is done after.
+      
+      
+      debugMessage = (
+        "Job splitting : 1st case\n"
+        "events per job and number of jobs have been given (easy)"
+      )
+      self.log.debug(debugMessage)
+
+      mapEventJob = [self.eventsPerJob] * self.njobs
+
+    elif self.eventsPerJob and self.totalNumberOfEvents:
+      
+      # 2nd case : (split="byEvents", eventsPerJob=10)
+      # In this case, the number of events has to be set inside applications
+      # otherwise outputs error.
+      # Given the number of events per job and total of number of event we want,
+      # we can compute the unknown which is the number of jobs.
+      
+
+      debugMessage = (
+        "Job splitting : 2nd case\n"
+        "Only events per job has been given but we know the total"
+        " number of events, so we have to compute the number of jobs required"
+      )
+      self.log.debug(debugMessage)
+
+      if self.eventsPerJob > self.totalNumberOfEvents:
+        errorMessage = (
+          "Job splitting : The number of events per job has to be"
+          " lower than or equal to the total number of events"
+        )
+        self.log.error(errorMessage)
+        return False
+
+
+      numberOfJobsIntDiv = self.totalNumberOfEvents / self.eventsPerJob
+      numberOfJobsRest = self.totalNumberOfEvents % self.eventsPerJob
+
+      mapEventJob = [self.eventsPerJob] * numberOfJobsIntDiv
+
+      mapEventJob += [numberOfJobsRest] if numberOfJobsRest != 0 else []
+
+    else:
+      
+      # 3rd case : (split='byEvents', njobs=10)
+      # So the total number of events has to be set inside application.
+      # If not then outputs error.
+      
+
+      debugMessage = (
+        "Job splitting : 3rd case\n"
+        "The number of jobs has to be given and the total number"
+        " of events has to be set"
+      )
+      self.log.debug(debugMessage)
+
+      if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.njobs):
+        errorMessage = (
+          "Job splitting : The number of events has to be set\n"
+          "It has to be greater than or equal to the number of jobs"
+        )
+        self.log.error(errorMessage)
+        return False
+
+      eventPerJobIntDiv = self.totalNumberOfEvents / self.njobs
+      eventPerJobRest = self.totalNumberOfEvents % self.njobs
+
+      mapEventJob = [eventPerJobIntDiv] * self.njobs
+
+      if eventPerJobRest != 0:
+        for suplement in range(eventPerJobRest):
+          mapEventJob[suplement] += 1
+
+
+    debugMessage = (
+      "Job splitting : Here is the 'distribution' of events over the jobs\n"
+      "A list element corresponds to a job and the element value"
+      " is the related number of events :\n%(map)s" % {'map':str(mapEventJob)}
+    )
+    self.log.debug(debugMessage)
+
+    infoMessage = (
+      "Job splitting : Your submission consists"
+      " of %(number)d job(s)" % {'number':len(mapEventJob)}
+    )
+    self.log.info(infoMessage)
+
+    return ["NumberOfEvents", mapEventJob]
+
+  #############################################################################
+  def _toInt(self, number):
+    """This function casts number parameter to an integer.
+    It also accepts 'string integer' parameter.
+
+    :param number: the number to cast (number of events, number of jobs)
+    :type number: str or int
+
+    :return: success or failure of the casting
+    :rtype: bool, int or None
+
+    :Example:
+
+    >>> number = self._toInt("1000")
+    """
+
+    if None is number:
+      return number
+
+    try:
+      number = int(number)
+      if number <= 0:
+        raise ValueError
+    except ValueError:
+      errorMessage = (
+        "Job splitting : Please, enter valid numbers :\n"
+        "'events per job' and 'number of jobs' must be positive integers"
+      )
+      self.log.error(errorMessage)
+      return False
+
+    return number

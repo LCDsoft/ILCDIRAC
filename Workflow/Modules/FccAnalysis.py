@@ -3,14 +3,13 @@
      - ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc
      - ILCDIRAC.Workflow.Modules.FccAnalysis (this module)
 
-   This module is called by 'DIRAC' that know it via the
-   attribute '_modulename' of the Fcc module.
-
 """
 
 # standard libraries
 import os
 import stat
+import glob
+import shutil
 
 # DIRAC libraries
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
@@ -39,42 +38,91 @@ class FccAnalysis(ModuleBase):
     self.fccConfFile = ''
     self.gaudiOptionsFile = ''
     self.fccAppIndex = ''
-    self.split = ''
+    self.STEP_NUMBER = ''
+    self.RandomSeed = 0
+    self.outputFile = ''
+    self.read = False
 
     self.environmentScript = ''
 
-    self.software = ''
-    self.version = ''
     self.platform = ''
     self.debug = True
     self.log = gLogger.getSubLogger("FccAnalysis")
 
-    self.applicationScript = os.path.join(os.getcwd(), 'user_temp_job.sh')
+    self.applicationScript = ''
+    self.applicationFolder = ''
 
-  def execute(self):
+    # Gaudi log levels
+    self.logLevels = ['DEBUG', 'INFO', 'ERROR', 'FATAL']
+
+    # User log level chosen
+    self.logLevel = None
+
+  def runIt(self):
     """Main method called by the Agent.
        The Application's call must reside here.
 
-       In fact, an FCC application consists on calling a bash script executing
-       an executable followed by arguments provided by the Fcc module via module parameters.
+       This module consists on creating a bash script calling
+       an executable followed by arguments provided by the Fcc module.
 
     :return: The success or failure of the execution
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
 
+    self.result = S_OK()
+    if not self.platform:
+      errorMessage = 'No ILC platform selected'
+      self.log.error(errorMessage)
+      self.result = S_ERROR( errorMessage )
+    elif not self.applicationLog:
+      errorMessage = 'No Log file provided'
+      self.log.error(errorMessage)
+      self.result = S_ERROR( errorMessage )
+    if not self.result['OK']:
+      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      return self.result
+
+    if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
+
     # Worflow parameters given on the fly by parametric job functions
-    if 'split' in self.workflow_commons:
+    if 'InputData' in self.workflow_commons:
+      self.InputData = self.workflow_commons['InputData']
+
       debugMessage = (
-        "Environment : Parameter 'split' given successfully"
-        " with this value '%(split)s'" % {'split':self.workflow_commons['split']}
+        "Parametric : Parameter 'InputData' given successfully"
+        " with this value '%(InputData)s'" % {'InputData':self.InputData}
       )
       self.log.debug(debugMessage)
 
+    if 'NumberOfEvents' in self.workflow_commons:
+      self.NumberOfEvents = self.workflow_commons['NumberOfEvents']
+
+      debugMessage = (
+      "Parametric : Parameter 'NumberOfEvents' given successfully"
+      " with this value '%(NumberOfEvents)s'" % {'NumberOfEvents':self.NumberOfEvents}
+      )
+
+      self.log.debug(debugMessage)
+
+    if 'IS_PROD' in self.workflow_commons:
+      self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
+    elif self.jobID:
+      self.RandomSeed = self.jobID
+
+    debugMessage = (
+    "Parametric : Parameter 'RandomSeed' given successfully"
+    " with this value '%(RandomSeed)s'" % {'RandomSeed':self.RandomSeed}
+    )
+
+    self.log.debug(debugMessage)
+    
     self.log.info("Environment : Environment script look up...")
 
     # Try to locate environment script in 'dirac.cfg' file
-    if not self._getEnvironmentScript():
+    if not self.getEnvironmentScript():
       errorMessage = (
         "Environment : Environment script look up failed\n"
         "Failed to get environment"
@@ -87,8 +135,17 @@ class FccAnalysis(ModuleBase):
 
     self.log.info("Environment : Environment script look up successfull")
 
-    if not self.fccConfFile.startswith('/cvmfs/'):
-      self.fccConfFile = os.path.abspath(os.path.basename(self.fccConfFile))
+    if 'InputFile' in self.step_commons:
+      getInputFile = self.step_commons.get('InputFile', self.InputFile)
+      if getInputFile:
+        inputFile = "JobID_%s_%s" % (self.jobID, os.path.basename(getInputFile))
+        self.InputFile = os.path.join(os.path.dirname(getInputFile), inputFile)
+    
+    if self.InputFile:
+      self.fccConfFile = self.InputFile
+      self.log.debug("Application : Configuration file taken from the input file '%s'" % self.InputFile)
+    elif self.fccConfFile and not self.fccConfFile.startswith('/cvmfs/'):
+      self.fccConfFile = os.path.realpath(os.path.basename(self.fccConfFile))
 
     if not os.path.exists(self.fccConfFile):
       errorMessage = (
@@ -98,19 +155,29 @@ class FccAnalysis(ModuleBase):
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    # FCC PHYSICS does not need this file so do not resolve it if it is not given
-    # else 'abspath' will results in cwd.
-    if self.gaudiOptionsFile:
-      self.gaudiOptionsFile = os.path.abspath(os.path.basename(self.gaudiOptionsFile))
+    # Each Fcc application has its own folder to stock results etc...
+    self.fccAppIndex = "%s_%s_Step_%s" % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
+    self.applicationFolder = os.path.realpath(self.fccAppIndex)
 
+    debugMessage = "Application : Creation of the application folder '%s'..." % self.applicationFolder
+    self.log.debug(debugMessage)
 
-      if not os.path.exists(self.gaudiOptionsFile):
-        errorMessage = (
-          "Environment : Gaudi option file does not exist,"
-          " can not run FCC application"
-        )
-        self.log.error(errorMessage)
-        return S_ERROR(errorMessage)
+    if os.path.exists(self.applicationFolder):
+      errorMessage = "Application : Application folder '%s' already exists !" % self.applicationFolder
+      self.log.error(errorMessage)
+      return S_ERROR(errorMessage)
+
+    try:
+      os.makedirs(self.applicationFolder)
+    except OSError:
+      errorMessage = "Application : Creation of the application folder '%s' failed" % self.applicationFolder
+      self.log.error(errorMessage)
+      return S_ERROR(errorMessage)
+
+    debugMessage = "Application : Creation of the application folder '%s' successfull" % self.applicationFolder
+    self.log.debug(debugMessage)
+
+    self.applicationScript = os.path.join(self.applicationFolder, "%s.sh" % self.fccAppIndex)
 
     debugMessage = (
       "Application code : Creation of the bash script"
@@ -118,57 +185,83 @@ class FccAnalysis(ModuleBase):
     )
     self.log.debug(debugMessage)
 
+    # FCC PHYSICS does not need this file so do not resolve it if it is not given
+    # else 'realpath of "" ' will result in cwd.
+    if self.gaudiOptionsFile:
+      if not self.generateGaudiConfFile():
+        errorMessage = "ApplicationgGaudi options : generateGaudiConfFile() failed"
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
+
     # Main command
     bashCommands = ['%s %s %s' %
                     (self.fccExecutable, self.fccConfFile, self.gaudiOptionsFile)]
 
 
-    if not self._generateBashScript(bashCommands):
+    if not self.generateBashScript(bashCommands):
       errorMessage = "Application code : Creation of the bash script failed"
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
     self.log.debug("Application code : Creation of the bash script successfull")
 
+    self.log.debug("Application : Application execution and log file creation...")
     # Call of the application
-    call = shellCall(0, self.applicationScript)
-
+    # Redirect log file to application folder
+    self.applicationLog = os.path.join( self.applicationFolder, self.applicationLog)
+    call = shellCall(0, self.applicationScript, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
     if 'OK' in call and not call['OK']:
-      errorMessage = "Application code : Execution of application's script failed"
+      errorMessage = "Application : Application execution failed"
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    infoMessage = (
-      "Application code : Execution of application's script successfull\n"
-      "standard output is written to '%(idx)s.out'\n"
-      "standard error is written to '%(idx)s.err'" % {'idx':self.fccAppIndex}
-    )
-    self.log.info(infoMessage)
+    self.log.debug("Application : Application execution successfull")
 
-    self.log.debug("Application : Standard output creation...")
+    if not os.path.exists(self.applicationLog):
+      errorMessage = "Application : Log file creation failed"
+      self.log.error(errorMessage)
+      if not self.ignoreapperrors:
+        errorMessage = '%s did not produce the expected log %s' % (self.applicationName, self.applicationLog)
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
 
-    # If error in writting standard output/error, let the application run successfully
+    self.log.debug("Application : Log file creation successfull")
 
-    if not self._writeToFile('w', os.path.join(os.getcwd(), '%s.out' % self.fccAppIndex), str(call['Value'][1])):
-      self.log.error("Application : Standard output creation failed")
+    # Check if root file has been generated
+    rootFiles = glob.glob('*.root')
+
+    if not rootFiles:
+      self.log.warn("Application : no root file has been generated, is that normal ?")
     else:
-      self.log.debug("Application : Standard output creation successfull")
+      # Rename the last root file created
+      rootFilesSorted = [(os.path.getctime(f), f) for f in rootFiles]
+      rootFilesSorted.sort()
+      lastCreatedRootFileTimeName = rootFilesSorted[-1]
+      lastCreatedRootFileName = lastCreatedRootFileTimeName[1]
+      old = os.path.realpath(lastCreatedRootFileName)
 
+      debugMessage = "Application : Root file '%s' moving..." % old
+      self.log.debug(debugMessage)
 
-    self.log.debug("Application : Standard error creation...")
+      outputFile = "JobID_%s_%s" % (self.jobID, os.path.basename(self.outputFile))
+      new = os.path.join(os.path.dirname(self.outputFile), outputFile)
 
-    if not self._writeToFile('w', os.path.join(os.getcwd(), '%s.err' % self.fccAppIndex), str(call['Value'][2])):
-      self.log.error("Application : Standard error creation failed")
-    else:
-      self.log.debug("Application : Standard error creation successfull")
+      # Move root file
+      try:
+        shutil.move(old, new)
+      except IOError, shutil.Error:
+        errorMessage = "Application : Root file '%s' moving failed" % old
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
 
+      debugMessage = "Application : Root file '%s' moved successfully to '%s'" % (old, new)
+      self.log.debug(debugMessage)
 
     return S_OK("Execution of the FCC application successfull")
 
 ###############################  FccAnalysis FUNCTIONS #############################################
-
-  def _chmod(self, file, permission):
+  def chmod(self, file, permission):
     """This function sets the permission of a file.
     We want to make the bash script executable.
 
@@ -177,6 +270,9 @@ class FccAnalysis(ModuleBase):
 
     :param permisssion: The permission ('W', 'R' or 'X')
     :type permission: str
+
+    :return: success or failure of setting the permission
+    :rtype: bool
 
     """
 
@@ -188,17 +284,21 @@ class FccAnalysis(ModuleBase):
 
     permission = userPermission | groupPermission | otherPermission
 
-    # Get actual mode of the file
-    mode = os.stat(file).st_mode
+    try:
+      # Get actual mode of the file
+      mode = os.stat(file).st_mode
+      # Merge the new permission with the existing one
+      os.chmod(file, mode | permission)
+    except OSError:
+      return False
 
-    # Merge the new permission with the existing one
-    os.chmod(file, mode | permission)
+    return True
 
-  def _generateBashScript(self, commands):
+  def generateBashScript(self, commands):
     """This function generates a bash script containing the environment setup
     and the command related to the FCC application.
 
-    :param commands: The commands to call the application
+    :param commands: The commands for calling the application
     :type commands: list
 
     :return: success or failure of the bash script creation
@@ -217,32 +317,102 @@ class FccAnalysis(ModuleBase):
     # Write the temporary application's script
     self.log.debug("Application code : Bash script creation...")
 
-    if not self._writeToFile('w', self.applicationScript, '\n'.join(bashScriptText) + '\n'):
+    if not self.writeToFile('w', self.applicationScript, '\n'.join(bashScriptText) + '\n'):
       self.log.error("Application code : Bash script creation failed")
       return False
 
     self.log.debug("Application code : Bash script creation successfull")
 
+    self.log.debug("Application file : Bash script rights setting...")
+
     # Make the script executable and readable for all
-    self._chmod(self.applicationScript, 'R')
-    self._chmod(self.applicationScript, 'X')
+    if not (self.chmod(self.applicationScript, 'R') and self.chmod(self.applicationScript, 'X')):
+      self.log.error("Application file : Bash script rights setting failed")
+      return False
+
+    self.log.debug("Application file : Bash script rights setting successfull")
 
     return True
 
-  def _generateScriptOnTheFly(self, sysConfig="", appName="", appVersion=""):
-    """Normally, this function generates dynamically the
+  def generateGaudiConfFile(self):
+    """Generation of the Gaudi configuration file
+    with the setting of :
+
+      -  The number of event
+      -  The gaudi log level
+      -  The input file for FCCDataSvc
+
+    There is 2 ways for configuring gaudirun.py :
+    1) By using gaudirun.py options :
+    e.g. ./gaudirun.py --option "ApplicationMgr().EvtMax=10"
+    
+    2) By creating a new python script containing the gaudi configuration :
+    This script has to be given as a second argument to gaudirun.py
+    e.g. ./gaudirun.py geant_pgun_fullsim.py gaudi_options.py
+    It then contains the event setting etc...
+    We decided to choose the second one.
+
+    :return: success or failure of the gaudi option file creation
+    :rtype: bool
+
+    """
+
+    gaudiOptions = ["from Configurables import ApplicationMgr"]
+    gaudiOptions += ["from Gaudi.Configuration import *"]
+
+    # In putting -1, gaudi read all event of the file given to FCCDataSvc
+    eventSetting = "ApplicationMgr().EvtMax=%s" % self.NumberOfEvents
+    gaudiOptions += [eventSetting]
+
+    if self.logLevel:
+      if self.logLevel.upper() in self.logLevels:
+        levelSetting = "ApplicationMgr().OutputLevel=%s" % self.logLevel
+        gaudiOptions += [levelSetting]
+      else:
+        message = (
+          "FCCSW specific consistency : Invalid value for the log level\n"
+          "Possible values for the log level are :\n%(log)s" % {'log' : " ".join(self.logLevels)}
+        )
+        self.log.error(message)
+        return False
+
+    fccswPodioOptions = ["from Gaudi.Configuration import *"]
+    fccswPodioOptions += ["from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput"]
+    fccswPodioOptions += ["import os"]
+
+    # If it is an application that read events and there are input data
+    if self.read and self.InputData:
+      fccInputDataSubstitution = [ '%s' for data in self.InputData]
+      fccInputData = ["os.path.realpath(os.path.basename('%s'))" % data
+                  for data in self._fccInputData]
+      # We can provide many input files to FCCDataSvc() like this :
+      inputSetting = "FCCDataSvc().input='%s' %% (%s)" % (" ".join(fccInputDataSubstitution), ", ".join(fccInputData))
+      fccswPodioOptions += [inputSetting]
+      gaudiOptions += fccswPodioOptions
+
+    self.gaudiOptionsFile = os.path.join(self.applicationFolder,
+                         '%s_gaudiOptions.py' % self.fccAppIndex)
+
+    debugMessage = 'FCCSW configuration : Gaudi configuration file creation...'
+    self.log.debug(debugMessage)
+
+    return self.writeToFile('w', self.gaudiOptionsFile,
+                "\n".join(gaudiOptions) + '\n')
+
+  def generateScriptOnTheFly(self, sysConfig="", appName="", appVersion=""):
+    """Normally, this function has to generate dynamically the
     FCC environment script but nothing for the moment.
 
     Called if CVMFS is not available
-    (CVMFS should be always available else FCC software can't run).
+    (CVMFS should be always available else FCC application can't run).
 
-    :param sysConfig: The platform required by the software
+    :param sysConfig: The platform required by the application
     :type sysConfig: str
 
-    :param appName: The name of the software
+    :param appName: The name of the application
     :type appName: str
 
-    :param appVersion: The version of the software
+    :param appVersion: The version of the application
     :type appVersion: str
 
     """
@@ -256,25 +426,32 @@ class FccAnalysis(ModuleBase):
       "for this configuration : %(conf)s, %(name)s, %(version)s\n"
       "Can not generate one dynamically" % {'conf':sysConfig, 'name':appName, 'version':appVersion}
     )
+
+    # Put intentionally in debug level
+    self.log.debug(errorMessage)
     return S_ERROR(errorMessage)
 
-  def _getEnvironmentScript(self):
+  def getEnvironmentScript(self):
     """This function gets environment script path from 'dirac.cfg' file
-    according to the version, software and platform.
+    according to the version, application name and platform.
+
+    :return: The success or failure of the environment script creation
+    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
 
-    environmentScript = getEnvironmentScript(self.platform, self.software,
-                                             self.version, self._generateScriptOnTheFly)
+    environmentScript = getEnvironmentScript(self.platform, self.applicationName.lower(),
+                                             self.applicationVersion, self.generateScriptOnTheFly)
 
     if 'OK' in environmentScript and not environmentScript['OK']:
+      self.log.error("Environment : 'dirac.cfg' file look up failed")
       return False
 
     self.environmentScript = environmentScript["Value"]
 
     return os.path.exists(self.environmentScript)
 
-  def _writeToFile(self, operation, fileName, fileText):
+  def writeToFile(self, operation, fileName, fileText):
     """This function creates a new file and
     writes the given content into this file.
 
