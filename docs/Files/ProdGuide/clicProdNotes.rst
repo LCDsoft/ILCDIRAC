@@ -42,4 +42,4 @@ Creating New GG Hadron Simulation Files
      eventsInSplitFiles        =    1000,   1000,   1000,   1000,   2500,   1000,   1000,   2500,   1000,   1000,
      MoveTypes = Gen, Sim, Rec
      move = True
-     overlayEnergy = 3000
+     overlayEvents = 3TeV
