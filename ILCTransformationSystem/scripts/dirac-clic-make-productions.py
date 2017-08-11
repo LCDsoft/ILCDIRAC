@@ -271,7 +271,9 @@ MoveTypes = %(moveTypes)s
       if config.has_option(PP, 'additionalName'):
         self.additionalName = config.get(PP, 'additionalName')
 
-      self.overlayEvents = config.get(PP, 'overlayEvents') if config.has_option(PP, 'overlayEvents') else ''
+      self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
+                           if config.has_option(PP, 'overlayEvents') else ''
+
       self._overlayEventType = 'gghad' + self.overlayEvents.lower()
 
       if config.has_option(PP, 'prodIDs'):
@@ -356,6 +358,16 @@ finalOutputSE = %(finalOutputSE)s
   def metaEnergy( energy ):
     """ return string of the energy with no digits """
     return str( int( energy ) )
+
+  @staticmethod
+  def checkOverlayParameter( overlayParameter ):
+    """ check that the overlay parameter has the right formatting, XTeV or YYYGeV """
+    if not overlayParameter:
+      return overlayParameter
+    if not any( overlayParameter.endswith( unit ) for unit in ('GeV', 'TeV') ):
+      raise RuntimeError( "OverlayParameter %r does not end with unit: X.YTeV, ABCGeV" % overlayParameter )
+
+    return overlayParameter
 
 
   @staticmethod
