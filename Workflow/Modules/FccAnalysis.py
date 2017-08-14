@@ -43,7 +43,7 @@ class FccAnalysis(ModuleBase):
     self.RandomSeed = 0
     self.outputFile = ''
     self.read = False
-    self.cardFile = ''
+    self.cardFiles = []
     self.environmentScript = ''
 
     self.platform = ''
@@ -155,37 +155,41 @@ class FccAnalysis(ModuleBase):
       )
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
-
+  
     # Set the seed of the application in overwritting Pyhtia card file
-    if self.cardFile:
-      content, message = self.readFromFile(self.fccConfFile)
+    if self.cardFiles:
+      for cardFile in self.cardFiles :
+        absoluteCardFile = os.path.realpath(cardFile)    
+        content, message = self.readFromFile( absoluteCardFile  )
 
-      if not content:
-        self.log.error(message)
-        return S_ERROR(message)
+        if not content:
+          self.log.error(message)
+          return S_ERROR(message)
 
-      self.fccConfFile = os.path.realpath(os.path.basename(self.fccConfFile))
+        self.log.debug(message)
 
-      self.log.debug(message)
+        if 'Main:numberOfEvents' in content and self.NumberOfEvents:
+          eventSetting = "Main:numberOfEvents = %d" % self.NumberOfEvents
+          contentWithEventSet = re.sub(r'Main:numberOfEvents *= *\d+', eventSetting, content)
+        else:
+          # add the card line  
+          eventSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER SETTING"]
+          eventSetting += ["Main:numberOfEvents = %d         ! number of events to generate" % self.NumberOfEvents]
+          contentWithEventSet = "%s\n%s\n" % (content, "\n".join(eventSetting))
 
-      if 'Main:numberOfEvents' in content and self.NumberOfEvents:
-        eventSetting = "Main:numberOfEvents = %d" % self.NumberOfEvents
-        contentWithEventSet = re.sub(r'Main:numberOfEvents *= *\d+', eventSetting, content)
-      else:
-        # add the card line  
-        eventSetting = "Main:numberOfEvents = %d         ! number of events to generate" % self.NumberOfEvents
-        contentWithEventSet = "%s\n%s\n" % (content, eventSetting)
-
-      if self.RandomSeed:
-        seedSetting = ["Random:setSeed = on         ! random flag"]
-        seedSetting += ["Random:seed = %d         ! random mode" % self.RandomSeed]
+        if "Random:setSeed" in contentWithEventSet and "Random:seed" in contentWithEventSet and self.RandomSeed:
+          seedSetting = "Random:seed = %d" % self.RandomSeed
+          contentWithEventSeedSet = re.sub(r'Random:seed *= *\d+', seedSetting, contentWithEventSet)
+        else:
+          seedSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR SEED SETTING"]
+          seedSetting += ["Random:setSeed = on         ! apply user-set seed everytime the Pythia::init is called"]
+          seedSetting += ["Random:seed = %d         ! -1=default seed, 0=seed based on time, >0 user seed number" % self.RandomSeed]
+          contentWithEventSeedSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
       
-        contentWithEventSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
-    
-      if not self.writeToFile('w', self.fccConfFile, contentWithEventSet):
-        errorMessage = "Application : Card file overwitting failed"
-        self.log.error(errorMessage)
-        return S_ERROR(errorMessage)
+        if not self.writeToFile('w', absoluteCardFile, contentWithEventSeedSet):
+          errorMessage = "Application : Card file overwitting failed"
+          self.log.error(errorMessage)
+          return S_ERROR(errorMessage)
             
     # Each Fcc application has its own folder to store results etc...
     self.fccAppIndex = "%s_%s_Step_%s" % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
@@ -438,6 +442,7 @@ class FccAnalysis(ModuleBase):
     fccswPodioOptions = ["from Gaudi.Configuration import *"]
     fccswPodioOptions += ["from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput"]
     fccswPodioOptions += ["import os"]
+
 
     # If it is an application that read events and there are input data
     if self.read and self.InputData:

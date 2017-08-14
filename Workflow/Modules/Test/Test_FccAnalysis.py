@@ -606,7 +606,8 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_cardfile( self ):
-    self.fccAna.cardFile = True
+    self.fccAna.cardFiles = ["/path/to/cardFile"]
+    card_file = os.path.realpath(self.fccAna.cardFiles[0])
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -617,7 +618,7 @@ class TestFccAnalysis( unittest.TestCase ):
          patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value={'OK' : True, 'Value' : ["", "stdout", "stderr"]})) as mock_shellcall:
 
       mock_exists.side_effect = self.replace_exists
-      content = "******************"
+      content = "! CONTENT OF THE CARD FILE"
       message = 'Application : Card file reading successfull'
       mock_read.return_value = (content, message)
       mock_write.return_value = True
@@ -631,23 +632,27 @@ class TestFccAnalysis( unittest.TestCase ):
       self.log_mock.warn.assert_any_call( "Application : no root file has been generated, is that normal ?" )
       mock_shellcall.assert_called_once_with( 0, self.fccAna.applicationScript, callbackFunction = self.fccAna.redirectLogOutput, bufferLimit = 20971520 )
 
-      eventSetting = "Main:numberOfEvents = 42         ! number of events to generate"
-      contentWithEventSet = "%s\n%s\n" % (content, eventSetting)
+      eventSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER SETTING"]
+      eventSetting += ["Main:numberOfEvents = 42         ! number of events to generate"]
+      contentWithEventSet = "%s\n%s\n" % (content, "\n".join(eventSetting))
 
-      seedSetting = ["Random:setSeed = on         ! random flag"]
-      seedSetting += ["Random:seed = 1234         ! random mode"]
-      
+      seedSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR SEED SETTING"]
+      seedSetting += ["Random:setSeed = on         ! apply user-set seed everytime the Pythia::init is called"]
+      seedSetting += ["Random:seed = 1234         ! -1=default seed, 0=seed based on time, >0 user seed number"]
+      contentWithEventSeedSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
+        
       contentWithEventSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
 
       self.log_mock.debug.assert_any_call( message )
-      mock_read.assert_called_once_with( self.fccAna.fccConfFile)
-      mock_write.assert_any_call( 'w', self.fccAna.fccConfFile, contentWithEventSet )
+      mock_read.assert_called_once_with( card_file )
+      mock_write.assert_any_call( 'w', card_file, contentWithEventSet )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_cardfile_readfailed( self ):
-    self.fccAna.cardFile = True
+    self.fccAna.cardFiles = ["/path/to/cardFile"]
+    card_file = os.path.realpath(self.fccAna.cardFiles[0])
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -663,14 +668,15 @@ class TestFccAnalysis( unittest.TestCase ):
       assertDiracFailsWith( self.fccAna.runIt(), message, self )
       
       self.log_mock.error.assert_called_once_with( message )
-      mock_read.assert_called_once_with( self.fccAna.fccConfFile)
+      mock_read.assert_called_once_with( card_file )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   @patch("%s.FccAnalysis.writeToFile" % MODULE_NAME, new=Mock(return_value=False))
   def test_runit_cardfile_writefailed( self ):
-    self.fccAna.cardFile = True
+    self.fccAna.cardFiles = ["/path/to/cardFile"]
+    card_file = os.path.realpath(self.fccAna.cardFiles[0])
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -686,7 +692,7 @@ class TestFccAnalysis( unittest.TestCase ):
       assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
       
       self.log_mock.error.assert_called_once_with( error_message )
-      mock_read.assert_called_once_with( self.fccAna.fccConfFile)
+      mock_read.assert_called_once_with( card_file )
 
   @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
   def test_readfromfile_failed( self ):
