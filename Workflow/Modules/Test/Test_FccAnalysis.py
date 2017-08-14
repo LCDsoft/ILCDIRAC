@@ -606,8 +606,8 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_cardfile( self ):
-    self.fccAna.cardFiles = ["/path/to/cardFile"]
-    card_file = os.path.realpath(self.fccAna.cardFiles[0])
+    card_file = "/path/to/cardFile"
+    self.fccAna.cardFiles = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -651,8 +651,8 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_cardfile_readfailed( self ):
-    self.fccAna.cardFiles = ["/path/to/cardFile"]
-    card_file = os.path.realpath(self.fccAna.cardFiles[0])
+    card_file = "/path/to/cardFile"
+    self.fccAna.cardFiles = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -675,8 +675,8 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   @patch("%s.FccAnalysis.writeToFile" % MODULE_NAME, new=Mock(return_value=False))
   def test_runit_cardfile_writefailed( self ):
-    self.fccAna.cardFiles = ["/path/to/cardFile"]
-    card_file = os.path.realpath(self.fccAna.cardFiles[0])
+    card_file = "/path/to/cardFile"
+    self.fccAna.cardFiles = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     

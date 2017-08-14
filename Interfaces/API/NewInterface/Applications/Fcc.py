@@ -51,7 +51,7 @@ class Fcc(Application):
     self.read = False
 
     # Card file used to set Pythia seed and Pythia number of events
-    self.cardFiles = []
+    self.cardFiles = {}
 
     # Final input sandbox
     self._inputSandbox = set()
@@ -126,7 +126,7 @@ class Fcc(Application):
     md1.addParameter(Parameter("read", "", "string", "", "", False, False,
                    "Application can read or generate events"))
 
-    md1.addParameter(Parameter("cardFiles", [], "list", "", "", False, False,
+    md1.addParameter(Parameter("cardFiles", {}, "dict", "", "", False, False,
                    "Pythia card files"))
 
     return md1
@@ -659,8 +659,8 @@ class FccSw(Fcc):
     # Find all additional files specified in the fccsw configuration file
     #xml_files = re.findall(r'file:(.*.xml)',content)
 
-    txtFiles = re.findall(r'(.*) *= *"(.*.txt)', content)
-    cmdFiles = re.findall(r'(.*) *= *"(.*.cmd)', content)
+    txtFiles = re.findall(r'(.*) *= *"(.*.txt)"', content)
+    cmdFiles = re.findall(r'(.*) *= *"(.*.cmd)"', content)
 
     # Upload file not commented
     txtFiles = [txtFile[1] for txtFile in txtFiles if not txtFile[0].startswith("#")]
@@ -668,9 +668,11 @@ class FccSw(Fcc):
 
     isPythiaGeneratorUsed = re.search('PythiaInterface', content)
 
-    if cmdFiles and isPythiaGeneratorUsed:
-      self.cardFiles = cmdFiles
-
+    if isPythiaGeneratorUsed and cmdFiles:
+      self.cardFiles["Pythia"] = cmdFiles
+    elif "SimG4Svc" in content:
+      self.cardFiles["Geant4"] = True
+      
     # From these paths we re-create the tree in the temporary sandbox
     # with only the desired file.
     # In the configuration file, these paths are relative to FCCSW installation.
@@ -994,7 +996,7 @@ class FccAnalysis(Fcc):
     if executable != 'fcc-pythia8-generate':
       self.read = True
     else:
-      self.cardFiles = [os.path.basename(fccConfFile)]
+      self.cardFiles = {"Pythia":[os.path.basename(fccConfFile)]}
 
   def _setFilterToFolders(self):
     """FccAnalysis does not need extra folders to filter

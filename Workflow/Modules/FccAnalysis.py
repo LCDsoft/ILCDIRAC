@@ -43,7 +43,7 @@ class FccAnalysis(ModuleBase):
     self.RandomSeed = 0
     self.outputFile = ''
     self.read = False
-    self.cardFiles = []
+    self.cardFiles = {}
     self.environmentScript = ''
 
     self.platform = ''
@@ -145,7 +145,9 @@ class FccAnalysis(ModuleBase):
     if self.InputFile:
       self.fccConfFile = self.InputFile
       self.log.debug("Application : Configuration file taken from the input file '%s'" % self.InputFile)
-    elif self.fccConfFile and not self.fccConfFile.startswith('/cvmfs/'):
+    #elif self.fccConfFile and not self.fccConfFile.startswith('/cvmfs/'):
+    # We uploaded even cvmfs file to sandbox in Fcc module
+    elif self.fccConfFile:
       self.fccConfFile = os.path.realpath(os.path.basename(self.fccConfFile))
 
     if not os.path.exists(self.fccConfFile):
@@ -155,10 +157,10 @@ class FccAnalysis(ModuleBase):
       )
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
-  
+    self.RandomSeed = 1234
     # Set the seed of the application in overwritting Pyhtia card file
-    if self.cardFiles:
-      for cardFile in self.cardFiles :
+    if "Pythia" in self.cardFiles:
+      for cardFile in self.cardFiles["Pythia"] :
         absoluteCardFile = os.path.realpath(cardFile)    
         content, message = self.readFromFile( absoluteCardFile  )
 
@@ -168,29 +170,31 @@ class FccAnalysis(ModuleBase):
 
         self.log.debug(message)
 
-        if 'Main:numberOfEvents' in content and self.NumberOfEvents:
+        tempContent = content
+
+        if 'Main:numberOfEvents' in tempContent and self.NumberOfEvents:
           eventSetting = "Main:numberOfEvents = %d" % self.NumberOfEvents
-          contentWithEventSet = re.sub(r'Main:numberOfEvents *= *\d+', eventSetting, content)
-        else:
+          tempContent = re.sub(r'Main:numberOfEvents *= *\d+', eventSetting, tempContent)
+        elif self.NumberOfEvents:
           # add the card line  
           eventSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER SETTING"]
           eventSetting += ["Main:numberOfEvents = %d         ! number of events to generate" % self.NumberOfEvents]
-          contentWithEventSet = "%s\n%s\n" % (content, "\n".join(eventSetting))
+          tempContent = "%s\n%s\n" % (tempContent, "\n".join(eventSetting))
 
-        if "Random:setSeed" in contentWithEventSet and "Random:seed" in contentWithEventSet and self.RandomSeed:
+        if "Random:setSeed" in tempContent and "Random:seed" in tempContent and self.RandomSeed:
           seedSetting = "Random:seed = %d" % self.RandomSeed
-          contentWithEventSeedSet = re.sub(r'Random:seed *= *\d+', seedSetting, contentWithEventSet)
-        else:
+          tempContent = re.sub(r'Random:seed *= *\d+', seedSetting, tempContent)
+        elif self.RandomSeed:
           seedSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR SEED SETTING"]
           seedSetting += ["Random:setSeed = on         ! apply user-set seed everytime the Pythia::init is called"]
           seedSetting += ["Random:seed = %d         ! -1=default seed, 0=seed based on time, >0 user seed number" % self.RandomSeed]
-          contentWithEventSeedSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
+          tempContent = "%s\n%s\n" % (tempContent, "\n".join(seedSetting))
       
-        if not self.writeToFile('w', absoluteCardFile, contentWithEventSeedSet):
+        if tempContent != content and not self.writeToFile('w', absoluteCardFile, tempContent):
           errorMessage = "Application : Card file overwitting failed"
           self.log.error(errorMessage)
           return S_ERROR(errorMessage)
-            
+
     # Each Fcc application has its own folder to store results etc...
     self.fccAppIndex = "%s_%s_Step_%s" % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
     self.applicationFolder = os.path.realpath(self.fccAppIndex)
@@ -420,12 +424,16 @@ class FccAnalysis(ModuleBase):
 
     """
 
-    gaudiOptions = ["from Configurables import ApplicationMgr"]
+    gaudiOptions = ["from Configurables import ApplicationMgr, SimG4Svc"]
     gaudiOptions += ["from Gaudi.Configuration import *"]
 
     # In putting -1, gaudi read all event of the file given to FCCDataSvc
     eventSetting = "ApplicationMgr().EvtMax=%s" % self.NumberOfEvents
     gaudiOptions += [eventSetting]
+
+    if "Geant4" in self.cardFiles and self.RandomSeed:
+      seedSetting = "SimG4Svc().G4commands  += ['/random/setSeeds %d %d']" % (self.RandomSeed, self.RandomSeed)
+      gaudiOptions += [seedSetting]
 
     if self.logLevel:
       if self.logLevel.upper() in self.logLevels:
@@ -452,6 +460,7 @@ class FccAnalysis(ModuleBase):
       # We can provide many input files to FCCDataSvc() like this :
       inputSetting = "FCCDataSvc().input='%s' %% (%s)" % (" ".join(fccInputDataSubstitution), ", ".join(fccInputData))
       fccswPodioOptions += [inputSetting]
+
       gaudiOptions += fccswPodioOptions
 
     self.gaudiOptionsFile = os.path.join(self.applicationFolder,
