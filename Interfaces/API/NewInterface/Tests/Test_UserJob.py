@@ -159,7 +159,7 @@ class UserJobTestCase( unittest.TestCase ):
 
     with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
   
-      info_message = "DIRAC : DIRAC submission ending"
+      info_message = "Job : Job submission successfull"
       assertDiracSucceedsWith( self.ujo._split(), info_message, self )
       self.log_mock.info.assert_called_with( info_message )
       mock_parametric.assert_called_once_with( "InputData", ["/ilc/user/u/username/data1"] )
@@ -172,7 +172,7 @@ class UserJobTestCase( unittest.TestCase ):
  
     with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
   
-      info_message = "DIRAC : DIRAC submission ending"
+      info_message = "Job : Job submission successfull"
       assertDiracSucceedsWith( self.ujo._split(), info_message, self )
       self.log_mock.info.assert_called_with( info_message )
       mock_parametric.assert_called_once_with( "NumberOfEvents", [1, 2] )
@@ -182,7 +182,7 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=("Atomic", [])))
   def test_split_atomicsubmission( self ):
     self.ujo.split = None
-    info_message = "DIRAC : DIRAC submission ending"
+    info_message = "Job : Job submission successfull"
     assertDiracSucceedsWith( self.ujo._split(), info_message, self )
     self.log_mock.info.assert_called_with( info_message )
 
@@ -193,7 +193,10 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_checkjobconsistency_failed( self ):
-    error_message = "DIRAC : DIRAC submission failed"
+    error_message = (
+        "Job : Job submission failed"
+        "Job : _checkJobConsistency() failed"
+    )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )  
 
@@ -202,7 +205,10 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._splitByData" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_bydata_failed( self ):
     self.ujo.split = "byData"
-    error_message = "DIRAC : DIRAC submission failed"
+    error_message = (
+        "Job : job submission failed"
+        "Job : _splitBySomething() failed"
+    )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
 
@@ -211,7 +217,10 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._splitByEvents" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_byevents_failed( self ):
     self.ujo.split = "byEvents"
-    error_message = "DIRAC : DIRAC submission failed"
+    error_message = (
+        "Job : job submission failed"
+        "Job : _splitBySomething() failed"
+    )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
   
@@ -220,16 +229,12 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_atomicsubmission_failed( self ):
     self.ujo.split = None
-    error_message = "DIRAC : DIRAC submission failed"
+    error_message = (
+        "Job : job submission failed"
+        "Job : _splitBySomething() failed"
+    )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
-
-  def test_saveinputdata( self ):
-    input_data = ["data1", "data2"]
-    assertDiracSucceedsWith( self.ujo._saveInputData(input_data), "Input Data : Input data set to :\n%s" % "\n".join(input_data), self )
-    
-    for data in input_data:
-      self.assertIn( data, self.ujo._data )    
 
   def test_append( self ):
 
@@ -278,7 +283,7 @@ class UserJobTestCase( unittest.TestCase ):
     error_message = (
       "Job : Your job is empty !\n"
       "You have to append at least one application\n"
-      "Job consistency : _checkJobConsistency failed"
+      "Job consistency : _checkJobConsistency() failed"
     )
     self.log_mock.error.assert_called_once_with( error_message )
 
@@ -295,7 +300,7 @@ class UserJobTestCase( unittest.TestCase ):
       "- byData\n"
       "- byEvents\n"
       "- None\n"
-      "Job consistency : _checkJobConsistency failed"
+      "Job consistency : _checkJobConsistency() failed"
     )
     self.log_mock.error.assert_called_once_with( error_message )
 

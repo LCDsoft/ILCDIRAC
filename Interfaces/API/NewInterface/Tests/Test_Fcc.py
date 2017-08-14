@@ -29,7 +29,8 @@ class FccFixture( object ):
     def replace_realpath( path ):
           return os.path.join("/test/realpath", path)
         
-    patches = [ patch("os.getcwd",  new=Mock(return_value="/test/curdir")), \
+    patches = [ patch("os.getcwd",  new=Mock(return_value="/test/curdir")),
+                patch("os.path.dirname", new=Mock(return_value="/test/dirname")),
                 patch("os.path.realpath", new=Mock(side_effect=replace_realpath))
               ]
 
@@ -441,7 +442,6 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
       self.log_mock.error.assert_called_once_with( error_message )
       mock_shutil.assert_called_once_with( source, destination )
 
-
   @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=True))
   def test_importtosandbox( self ):
@@ -798,6 +798,22 @@ class FccAnalysisTestCase( FccFixture, unittest.TestCase ):
 
     self.fcc = fccphysics
     self.fcc._log = self.log_mock
+
+  def test_readeventfalse( self ):
+    self.assertFalse( self.fcc.read )
+
+  def test_readeventtrue( self ):
+    fccphysics_read = FccAnalysis(
+      executable = 'fcc-physics-read',
+      fccConfFile="/path/to/confFile"
+    )    
+    self.assertTrue( fccphysics_read.read )
+
+    fccphysics_read_delphes = FccAnalysis(
+      executable = 'fcc-physics-read-delphes',
+      fccConfFile="/path/to/confFile"
+    )    
+    self.assertTrue( fccphysics_read_delphes.read )
 
   def test_setfiltertofolders( self ):
     self.assertTrue( self.fcc._setFilterToFolders() )

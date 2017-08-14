@@ -7,6 +7,7 @@
 
 # standard libraries
 import os
+import re
 import stat
 import glob
 import shutil
@@ -42,7 +43,7 @@ class FccAnalysis(ModuleBase):
     self.RandomSeed = 0
     self.outputFile = ''
     self.read = False
-
+    self.cardFile = ''
     self.environmentScript = ''
 
     self.platform = ''
@@ -155,7 +156,38 @@ class FccAnalysis(ModuleBase):
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    # Each Fcc application has its own folder to stock results etc...
+    # Set the seed of the application in overwritting Pyhtia card file
+    if self.cardFile:
+      content, message = self.readFromFile(self.fccConfFile)
+
+      if not content:
+        self.log.error(message)
+        return S_ERROR(message)
+
+      self.fccConfFile = os.path.realpath(os.path.basename(self.fccConfFile))
+
+      self.log.debug(message)
+
+      if 'Main:numberOfEvents' in content and self.NumberOfEvents:
+        eventSetting = "Main:numberOfEvents = %d" % self.NumberOfEvents
+        contentWithEventSet = re.sub(r'Main:numberOfEvents *= *\d+', eventSetting, content)
+      else:
+        # add the card line  
+        eventSetting = "Main:numberOfEvents = %d         ! number of events to generate" % self.NumberOfEvents
+        contentWithEventSet = "%s\n%s\n" % (content, eventSetting)
+
+      if self.RandomSeed:
+        seedSetting = ["Random:setSeed = on         ! random flag"]
+        seedSetting += ["Random:seed = %d         ! random mode" % self.RandomSeed]
+      
+        contentWithEventSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
+    
+      if not self.writeToFile('w', self.fccConfFile, contentWithEventSet):
+        errorMessage = "Application : Card file overwitting failed"
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
+            
+    # Each Fcc application has its own folder to store results etc...
     self.fccAppIndex = "%s_%s_Step_%s" % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
     self.applicationFolder = os.path.realpath(self.fccAppIndex)
 
@@ -241,21 +273,48 @@ class FccAnalysis(ModuleBase):
       lastCreatedRootFileName = lastCreatedRootFileTimeName[1]
       old = os.path.realpath(lastCreatedRootFileName)
 
-      debugMessage = "Application : Root file '%s' moving..." % old
+      outputFile = "JobID_%s_%s" % (self.jobID, os.path.basename(self.outputFile))
+
+      if 'UserOutputData' in self.workflow_commons:
+        outputData = self.workflow_commons['UserOutputData'].split(";")
+
+        for idx, data in enumerate(outputData):
+          if data.endswith(".root"):
+            lfnTree = os.path.dirname(data)
+            outputData[idx] = os.path.join(lfnTree, outputFile)
+
+        self.workflow_commons['UserOutputData'] = ";".join(outputData)
+
+      debugMessage = "Application : Root file '%s' renaming..." % old
       self.log.debug(debugMessage)
 
-      outputFile = "JobID_%s_%s" % (self.jobID, os.path.basename(self.outputFile))
-      new = os.path.join(os.path.dirname(self.outputFile), outputFile)
+      renamedRootFile = os.path.realpath(outputFile)
 
-      # Move root file
+      # Rename root file to make it unique
       try:
-        shutil.move(old, new)
+        shutil.move(old, renamedRootFile)
       except IOError, shutil.Error:
-        errorMessage = "Application : Root file '%s' moving failed" % old
+        errorMessage = "Application : Root file '%s' renaming failed" % old
         self.log.error(errorMessage)
         return S_ERROR(errorMessage)
 
-      debugMessage = "Application : Root file '%s' moved successfully to '%s'" % (old, new)
+      debugMessage = "Application : Root file '%s' renamed successfully to '%s'" % (old, renamedRootFile)
+      self.log.debug(debugMessage)
+
+      debugMessage = "Application : Root file '%s' copy..." % renamedRootFile
+      self.log.debug(debugMessage)
+
+      copiedRootFile = os.path.join(os.path.dirname(self.outputFile), outputFile)
+
+      # Copy root file to the Application folder
+      try:
+        shutil.copy(renamedRootFile, copiedRootFile)
+      except IOError, shutil.Error:
+        errorMessage = "Application : Root file '%s' copy failed" % renamedRootFile
+        self.log.error(errorMessage)
+        return S_ERROR(errorMessage)
+
+      debugMessage = "Application : Root file '%s' copied successfully to '%s'" % (renamedRootFile, copiedRootFile)
       self.log.debug(debugMessage)
 
     return S_OK("Execution of the FCC application successfull")
@@ -482,3 +541,24 @@ class FccAnalysis(ModuleBase):
     self.log.debug(debugMessage)
     return True
     
+  def readFromFile(self, fileName):
+    """This function reads a file and returns its content.
+
+    :param fileName: The path of the file to read
+    :type fileName: str
+
+    :return: The content of the file
+    :rtype: str, str
+
+    """
+
+    try:
+      with open(fileName, 'r') as file:
+        content = file.read()
+    except IOError:
+      errorMessage = 'Application : Card file reading failed'
+      return None, errorMessage
+
+    debugMessage = 'Application : Card file reading successfull'
+    return content, debugMessage
+   

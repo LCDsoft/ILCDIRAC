@@ -50,6 +50,9 @@ class Fcc(Application):
     # Read or generate events
     self.read = False
 
+    # Card file used to set Pythia seed and Pythia number of events
+    self.cardFile = False
+
     # Final input sandbox
     self._inputSandbox = set()
 
@@ -123,6 +126,9 @@ class Fcc(Application):
     md1.addParameter(Parameter("read", "", "string", "", "", False, False,
                    "Application can read or generate events"))
 
+    md1.addParameter(Parameter("cardFile", "", "string", "", "", False, False,
+                   "Pythia card file"))
+
     return md1
 
   def _applicationModuleValues(self, moduleinstance):
@@ -139,6 +145,7 @@ class Fcc(Application):
     moduleinstance.setValue("outputFile", self.outputFile)
     moduleinstance.setValue("logLevel", self.logLevel)
     moduleinstance.setValue("read", self.read)
+    moduleinstance.setValue("cardFile", self.cardFile)
 
   def _checkConsistency(self, job=None):
     """This function checks the minimum requirements of the application
@@ -369,6 +376,7 @@ class Fcc(Application):
     self._tempInputSandbox.clear()
     self._inputSandbox.clear()
     self._outputSandbox.clear()
+    
     self.logFile = None
 
   def _findPath(self, path):
@@ -977,6 +985,8 @@ class FccAnalysis(Fcc):
      
     if executable != 'fcc-pythia8-generate':
       self.read = True
+    else:
+      self.cardFile = True
 
   def _setFilterToFolders(self):
     """FccAnalysis does not need extra folders to filter

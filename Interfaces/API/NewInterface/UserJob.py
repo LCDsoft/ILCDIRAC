@@ -100,10 +100,6 @@ class UserJob(Job):
     :param lfns: Logical File Names
     :type lfns: Single LFN string or list of LFNs
     """
-
-    if self.split:
-      return self._saveInputData(lfns)
-
     if isinstance( lfns, list ) and lfns:
       for i, lfn in enumerate( lfns ):
         lfns[i] = lfn.replace( 'LFN:', '' )
@@ -111,14 +107,21 @@ class UserJob(Job):
       inputData = lfns #because we don't need the LFN: for inputData, and it breaks the 
       #resolution of the metadata in the InputFilesUtilities
       inputDataStr = ';'.join( inputData )
+      dataJDL = inputDataStr
+      dataSplit = self._data.union(lfns)
       description = 'List of input data specified by LFNs'
-      self._addParameter( self.workflow, 'InputData', 'JDL', inputDataStr, description )
     elif isinstance( lfns, basestring ): #single LFN
+      dataJDL = lfns
+      dataSplit = self._data.union([lfns])
       description = 'Input data specified by LFN'
-      self._addParameter( self.workflow, 'InputData', 'JDL', lfns, description )
     else:
       kwargs = {'lfns':lfns}
       return self._reportError( 'Expected lfn string or list of lfns for input data', **kwargs )
+
+    if self.split:
+      self._data = dataSplit
+    else:  
+      self._addParameter( self.workflow, 'InputData', 'JDL', dataJDL, description )
 
     return S_OK()
    
@@ -250,20 +253,25 @@ class UserJob(Job):
   # Some methods have been added/redefined :
   #
   # 1) append
-  # 2) _split
-  # 3) _atomicSubmission
-  # 4) _checkJobConsistency
+  # 2) _atomicSubmission
+  # 3) _checkJobConsistency
+  # 4) _split
   # 5) _splitByData
   # 6) _splitByEvents
   # 7) _toInt
   #
-  # Most of them are called when split attribute is set to a valid value.
-  # Splitting stuff computes the number of jobs according to the input parameters
-  # like the number of events or the input data.
-  ##############################  SPLITTING STUFF : Job() METHOD REDEFINITION ##############################
+  # Given the type of splitting (byEvents, byData), these functions compute
+  # the right parameters of the method 'setParameterSequence()'
+  ##############################  SPLITTING STUFF : Job.append() METHOD REDEFINITION ##############################
   def append(self, application):
     """Redefinition of Dirac.Interfaces.API.Job.append()
-    in order to save applications into a set to detect doublons.
+    in order to save applications into a set to detect duplicates.
+
+    :param application: The application to append
+    :type application: ILCDIRAC.Interfaces.API.NewInterface.Application
+
+    :return: The success or failure of the consistency checking
+    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
 
@@ -283,35 +291,12 @@ class UserJob(Job):
     self.log.debug(debugMessage)
     return super(UserJob, self).append(application)
 
-  ##############################  SPLITTING STUFF : UserJob() NEW METHODS ##############################
-  def _saveInputData(self, lfns):
-    """Save input data into a set.
-
-    The user can specify input data to tell DIRAC to download input data
-    (stored in DESY-SRM for example) on the CE.
-
-    Data are registered to the DIRAC catalog and have a tape backend (OutputSE)
-    Please refer to the documentation to see how to add files to the catalog.
-
-    """
-
-    self._data = self._data.union(lfns) if isinstance(lfns, list) else self._data.union([lfns])
-    debugMessage = "Input Data : Input data set to :\n%s" % "\n".join(lfns)
-    self.log.debug(debugMessage)
-    return S_OK(debugMessage)
-    
-  #############################################################################
+  ##############################  SPLITTING STUFF : NEW METHODS ##############################
   def _split(self):
-    """This function computes right input parameters for the parametric method. 
+    """This function checks the consistency of the job and call the right split method. 
 
-    There are 3 types of submission :
-
-    - local without agent machinery
-    - local with agent machinery
-    - grid
-
-    The advantage of the Local submission mode is
-    that jobs are immediately executed on the local resource.
+    :return: The success or failure of the consistency checking
+    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
 
@@ -329,17 +314,23 @@ class UserJob(Job):
     self._switch = {"byEvents" : self._splitByEvents,
                     "byData" : self._splitByData, None : self._atomicSubmission}
 
-    self.log.info("DIRAC : DIRAC submission beginning...")
+    self.log.info("Job : Job submission...")
 
     if not self._checkJobConsistency():
-      errorMessage = "DIRAC : DIRAC submission failed"
+      errorMessage = (
+        "Job : Job submission failed"
+        "Job : _checkJobConsistency() failed"
+      )
       self.log.error(errorMessage)
       return self._reportError(errorMessage)
 
     sequence = self._switch[self.split]()
 
     if not sequence:
-      errorMessage = "DIRAC : DIRAC submission failed"
+      errorMessage = (
+        "Job : job submission failed"
+        "Job : _splitBySomething() failed"
+      )
       self.log.error(errorMessage)
       return self._reportError(errorMessage)
 
@@ -348,14 +339,19 @@ class UserJob(Job):
     if sequenceType != "Atomic":
       self.setParameterSequence(sequenceType, sequenceList)
 
-    infoMessage = "DIRAC : DIRAC submission ending"
+    infoMessage = "Job : Job submission successfull"
     self.log.info(infoMessage)
 
     return S_OK(infoMessage)
 
   #############################################################################
   def _atomicSubmission(self):
-    """This function does not do splitting."""
+    """This function does not do splitting so do not return valid parameters fot setParameterSequence().
+    
+    :return: parameter name and parameter values for setParameterSequence()
+    :rtype: str, list
+
+    """
 
     infoMessage = "Job splitting : No splitting to apply, then 'atomic submission' will be used"
     self.log.info(infoMessage)
@@ -383,7 +379,7 @@ class UserJob(Job):
       errorMessage = (
         "Job : Your job is empty !\n"
         "You have to append at least one application\n"
-        "Job consistency : _checkJobConsistency failed"
+        "Job consistency : _checkJobConsistency() failed"
       )
       self.log.error(errorMessage)
       return False
@@ -395,7 +391,7 @@ class UserJob(Job):
         "- byData\n"
         "- byEvents\n"
         "- None\n"
-        "Job consistency : _checkJobConsistency failed"
+        "Job consistency : _checkJobConsistency() failed"
       )
       self.log.error(errorMessage)
       return False
@@ -426,7 +422,12 @@ class UserJob(Job):
 
   #############################################################################
   def _splitByData(self):
-    """This function wants that a job is submitted per input data."""
+    """This function wants that a job is submitted per input data.
+
+    :return: parameter name and parameter values for setParameterSequence()
+    :rtype: str, list
+
+    """
 
     # reset split attribute to avoid infinite loop
     self.split = None
@@ -449,7 +450,12 @@ class UserJob(Job):
 
   #############################################################################
   def _splitByEvents(self):
-    """This function wants that a job is submitted per subset of events."""
+    """This function wants that a job is submitted per subset of events.
+    
+    :return: parameter name and parameter values for setParameterSequence()
+    :rtype: str, list
+
+    """
 
     # reset split attribute to avoid infinite loop
     self.split = None
@@ -566,6 +572,7 @@ class UserJob(Job):
     :Example:
 
     >>> number = self._toInt("1000")
+
     """
 
     if None is number:
