@@ -7,7 +7,12 @@ guidelines below.
 
 * Check the `faq`
 * `iLCDirac Jira <https://its.cern.ch/jira/browse/ILCDIRAC>`_ -
-  (`see here for access rights <https://twiki.cern.ch/twiki/bin/view/CLIC/IlcDiracJira>`_)
+  (`see here for access rights
+  <https://twiki.cern.ch/twiki/bin/view/CLIC/IlcDiracJira>`_)
+
+  * Use the Jira Issue collector button on the right of this and other
+    documentation pages
+
 * `Email the iLCDirac support <mailto:ilcdirac-support@cern.ch>`_
 
 Required Information
