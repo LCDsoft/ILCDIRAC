@@ -144,13 +144,13 @@ class FccFixture( object ):
     self.log_mock.error.assert_called_once_with( error_message )
 
   @patch("os.path.exists", new=Mock(return_value=True))
-  def test_checkconsistency_badcfgfile( self ):
+  def test_checkconsistency_many_cfgfile( self ):
     self.fcc.fccConfFile = ["/path/to/cfg/file"]
     error_message = (
       "Consistency : Fcc Application accepts only one input configuration file:\n"
       "If you want to run the application '%(name)s' with many configurations then\n"
       "Create an new application with the other configuration\n"
-      "You can also use 'getInputFromApp' function for linked applications" % {'name':self.fcc.appname}
+      "You can also use 'getInputFromApp' function to link applications" % {'name':self.fcc.appname}
     )
     assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
@@ -191,7 +191,7 @@ class FccFixture( object ):
       "Please ensure that your path exists in an accessible file system "
       "(AFS or CVMFS)"
     )
-    self.log_mock.error.assert_called_with( error_message )
+    self.log_mock.error.assert_called_once_with( error_message )
 
   @patch("%s._findPath" % MODULE_NAME, new=Mock(return_value=('/afs/sandbox_file1', True)))
   def test_importfiles_afs_warn_check( self ):
@@ -204,7 +204,7 @@ class FccFixture( object ):
     )
 
     self.assertIn('/afs/sandbox_file1', self.fcc._inputSandbox) 
-    self.log_mock.warn.assert_called_with( warn_message )
+    self.log_mock.warn.assert_called_once_with( warn_message )
 
     debug_message = (
       "Sandboxing : The path '/afs/sandbox_file1' required by the application"
@@ -230,13 +230,6 @@ class FccFixture( object ):
     error_message = "Sandboxing : _importFiles() failed"
     self.log_mock.error.assert_called_once_with( error_message )
 
-  @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
-  def test_readfromfile_failed( self ):
-    content, message  = self.fcc._readFromFile("/my/file/to/read")    
-    assertEqualsImproved( None, content, self )   
-    error_message = 'Sandboxing : FCC configuration file reading failed'
-    assertEqualsImproved( error_message, message, self )   
-
   def test_readfromfile( self ):
     with patch('__builtin__.open') as mock_open:
       manager = mock_open.return_value.__enter__.return_value
@@ -246,6 +239,13 @@ class FccFixture( object ):
       mock_open.assert_called_with( "/my/file/to/read", 'r' )
       debug_message = 'Sandboxing : FCC configuration file reading successfull'
       assertEqualsImproved( message, debug_message, self )   
+
+  @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
+  def test_readfromfile_failed( self ):
+    content, message  = self.fcc._readFromFile("/my/file/to/read")    
+    assertEqualsImproved( None, content, self )   
+    error_message = 'Sandboxing : FCC configuration file reading failed'
+    assertEqualsImproved( error_message, message, self )
 
   @patch('os.path.exists', new=Mock(return_value=True) )
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=False))
@@ -461,11 +461,46 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
       self.assertFalse( self.fcc._importToSandbox() )
       self.log_mock.error.assert_called_once_with(  "Sandboxing : _importToSandbox() failed" )  
 
-  @patch("%s._readFromFile" % MODULE_NAME, new=Mock(return_value=("some content", "some message")))
+
+  @patch("%s._readFromFile" % MODULE_NAME, new=Mock(return_value=('some content', 'Sandboxing : FCC configuration file reading successfull')))
   def test_importfccswfiles( self ):
-    with patch.object(self.fcc, '_resolveTreeOfFiles', new=Mock(return_value=True)):
-      self.assertTrue( self.fcc._importFccswFiles() )  
-    
+    with patch.object(self.fcc, '_resolveTreeOfFiles') as mock_resolve:
+
+      mock_resolve.return_value = True      
+      self.assertTrue( self.fcc._importFccswFiles() )
+      mock_resolve.assert_any_call(  [], '.txt' )  
+      mock_resolve.assert_called_with(  [], '.cmd' )  
+
+  def test_importfccswfiles_useof_pythia_generator( self ):
+    cmdFiles = ["Generation/data/Pythia_standard.cmd"]
+    file_content = 'pythia8gentool = PythiaInterface("Pythia8Interface", Filename=pythiafile)\npythiafile="%s"' % cmdFiles[0]
+    debug_message = 'Sandboxing : FCC configuration file reading successfull'
+
+    with patch.object(self.fcc, '_resolveTreeOfFiles') as mock_resolve, \
+         patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
+
+      mock_resolve.return_value = True
+      mock_read.return_value = (file_content, debug_message)
+      self.assertTrue( self.fcc._importFccswFiles() )
+      assertEqualsImproved( self.fcc.randomGenerator["Pythia"], cmdFiles, self )
+      mock_resolve.assert_called_with(  cmdFiles, '.cmd' )  
+      mock_resolve.assert_any_call(  [], '.txt' )  
+
+  def test_importfccswfiles_useof_gaudi_generator( self ):
+    cmdFiles = ["Generation/data/Pythia_standard.cmd"]
+    file_content = 'Pythia is not used, it is commented\n#pythia8gentool = PythiaInterface("Pythia8Interface", Filename=pythiafile)\npythiafile="%s"\nGaudi ParticleGun somewhere' % cmdFiles[0]
+    debug_message = 'Sandboxing : FCC configuration file reading successfull'
+
+    with patch.object(self.fcc, '_resolveTreeOfFiles') as mock_resolve, \
+         patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
+
+      mock_resolve.return_value = True
+      mock_read.return_value = (file_content, debug_message)
+      self.assertTrue( self.fcc._importFccswFiles() )
+      self.assertTrue( self.fcc.randomGenerator["Gaudi"] )
+      mock_resolve.assert_called_with(  cmdFiles, '.cmd' )  
+      mock_resolve.assert_any_call(  [], '.txt' )  
+
   @patch("%s._readFromFile" % MODULE_NAME, new=Mock(return_value=("", "error message")))
   def test_importfccswfiles_read_failed( self ):
     with patch.object(self.fcc, '_resolveTreeOfFiles', new=Mock(return_value=True)):      
@@ -490,7 +525,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
     self.fcc._foldersToFilter = None
     self.assertTrue( self.fcc._setFilterToFolders() )
     debug_message = "Sandboxing : No filtering required"
-    self.log_mock.debug.assert_called_with( debug_message )
+    self.log_mock.debug.assert_called_once_with( debug_message )
 
   @patch("os.path.exists", new=Mock(return_value=False))  
   def test_setfiltertofolders_exists_failed( self ):
@@ -799,6 +834,9 @@ class FccAnalysisTestCase( FccFixture, unittest.TestCase ):
     self.fcc = fccphysics
     self.fcc._log = self.log_mock
 
+  def test_randomGenerator( self ):
+    assertEqualsImproved( self.fcc.randomGenerator, {"Pythia":[os.path.basename(self.fcc.fccConfFile)]}, self ) 
+
   def test_readeventfalse( self ):
     self.assertFalse( self.fcc.read )
 
@@ -818,5 +856,5 @@ class FccAnalysisTestCase( FccFixture, unittest.TestCase ):
   def test_setfiltertofolders( self ):
     self.assertTrue( self.fcc._setFilterToFolders() )
     debug_message = "Sandboxing : FccAnalysis does not need extra folders to filter"
-    self.log_mock.debug.assert_called_with( debug_message )
+    self.log_mock.debug.assert_called_once_with( debug_message )
   

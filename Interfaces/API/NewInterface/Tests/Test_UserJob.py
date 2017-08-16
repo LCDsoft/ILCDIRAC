@@ -237,12 +237,8 @@ class UserJobTestCase( unittest.TestCase ):
     self.log_mock.error.assert_called_once_with( error_message )
 
   def test_append( self ):
-
     self.ujo.split = True
     app1 = Fcc()
-    
-    wf_mock = Mock()
-    self.ujo.workflow = wf_mock
     
     PARENT_MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Job'
     with patch('%s.Job.append' % PARENT_MODULE_NAME) as mock_append:
@@ -394,8 +390,8 @@ class UserJobTestCase( unittest.TestCase ):
 
     debug_message = (
       "Job splitting : 2nd case\n"
-      "Only events per job has been given but we know the total"
-      " number of events, so we have to compute the number of jobs required"
+      "Events per job and total number of events have been given"
+      " so we have to compute the number of jobs required"
     )
 
     self.log_mock.debug.assert_any_call( debug_message )
@@ -425,8 +421,8 @@ class UserJobTestCase( unittest.TestCase ):
 
     debug_message = (
       "Job splitting : 2nd case\n"
-      "Only events per job has been given but we know the total"
-      " number of events, so we have to compute the number of jobs required"
+      "Events per job and total number of events have been given"
+      " so we have to compute the number of jobs required"
     )
 
     self.log_mock.debug.assert_any_call( debug_message )
@@ -451,10 +447,10 @@ class UserJobTestCase( unittest.TestCase ):
 
     debug_message = (
       "Job splitting : 3rd case\n"
-      "The number of jobs has to be given and the total number"
-      " of events has to be set"
+      "The number of jobs and the total number of events"
+      " have been given"
     )
-
+    
     self.log_mock.debug.assert_any_call( debug_message )
 
     debug_message = (
@@ -483,8 +479,8 @@ class UserJobTestCase( unittest.TestCase ):
 
     debug_message = (
       "Job splitting : 3rd case\n"
-      "The number of jobs has to be given and the total number"
-      " of events has to be set"
+      "The number of jobs and the total number of events"
+      " have been given"
     )
 
     self.log_mock.debug.assert_any_call( debug_message )       

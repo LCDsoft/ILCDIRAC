@@ -210,6 +210,48 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.logLevel = "DEBUG"
     self.assertTrue( self.fccAna.generateGaudiConfFile() )
 
+  def test_generategaudiconffile_gaudioptions( self ):
+    self.fccAna.logLevel = "DEBUG"
+    self.fccAna.NumberOfEvents = 42
+    self.fccAna.RandomSeed = 1234
+    self.fccAna.randomGenerator["Gaudi"] = True
+    self.fccAna.read = True
+    self.fccAna.InputData = ["/path/to/data"]
+
+    gaudiOptions = ["# N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER AND SEED SETTING"]
+    gaudiOptions += ["from Configurables import ApplicationMgr, RndmGenSvc"]
+    gaudiOptions += ["from Gaudi.Configuration import *"]
+
+    eventSetting = "ApplicationMgr().EvtMax=%s" % self.fccAna.NumberOfEvents
+    gaudiOptions += [eventSetting]
+
+    seedSetting = ['from GaudiSvc.GaudiSvcConf import HepRndm__Engine_CLHEP__RanluxEngine_']
+    seedSetting += ["randomEngine = eval('HepRndm__Engine_CLHEP__RanluxEngine_')"]
+    seedSetting += ["randomEngine = randomEngine('RndmGenSvc.Engine')"]
+    seedSetting += ["randomEngine.Seeds = [%d]  " % self.fccAna.RandomSeed]
+
+    gaudiOptions += seedSetting
+
+    levelSetting = "ApplicationMgr().OutputLevel=%s" % self.fccAna.logLevel
+    gaudiOptions += [levelSetting]
+
+    fccswPodioOptions = ["from Configurables import FCCDataSvc, PodioOutput"]
+    fccswPodioOptions += ["import os"]
+
+    fccInputDataSubstitution = [ '%s' for data in self.fccAna.InputData]
+    fccInputData = ["os.path.realpath(os.path.basename('%s'))" % data
+                for data in self.fccAna.InputData]
+    # We can provide many input files to FCCDataSvc() like this :
+    inputSetting = "FCCDataSvc().input='%s' %% (%s)" % (" ".join(fccInputDataSubstitution), ", ".join(fccInputData))
+    fccswPodioOptions += [inputSetting]
+
+    gaudiOptions += fccswPodioOptions
+
+    with patch("%s.FccAnalysis.writeToFile" % MODULE_NAME) as mock_write:
+      mock_write.return_value = True
+      self.assertTrue( self.fccAna.generateGaudiConfFile() )
+      mock_write.assert_called_once_with( 'w', self.fccAna.gaudiOptionsFile, "\n".join(gaudiOptions) + '\n' )  
+      
   def test_generategaudiconffile_levelfailed( self ):
     self.fccAna.logLevel = "GUBED"
     self.assertFalse( self.fccAna.generateGaudiConfFile() )
@@ -251,6 +293,7 @@ class TestFccAnalysis( unittest.TestCase ):
     error_message = "Application : Application folder '%s' already exists !" % self.fccAna.applicationFolder
     assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
+    self.log_mock.info.assert_any_call( "Environment : Environment script look up successfull" )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
@@ -411,6 +454,11 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_exists.side_effect = self.replace_exists
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
       assertEqualsImproved( self.fccAna.InputData, input_data, self )
+      debug_message = (
+        "Splitting : Parameter 'InputData' given successfully"
+        " with this value '%(InputData)s'" % {'InputData':self.fccAna.InputData}
+      )
+      self.log_mock.debug.assert_any_call( debug_message )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
@@ -438,6 +486,11 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_exists.side_effect = self.replace_exists
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
       assertEqualsImproved( self.fccAna.NumberOfEvents, number_of_events, self )
+      debug_message = (
+        "Splitting : Parameter 'NumberOfEvents' given successfully"
+        " with this value '%(NumberOfEvents)s'" % {'NumberOfEvents':self.fccAna.NumberOfEvents}
+      )
+      self.log_mock.debug.assert_any_call( debug_message )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
@@ -607,7 +660,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_cardfile( self ):
     card_file = "/path/to/cardFile"
-    self.fccAna.cardFiles = {"Pythia" : [card_file]}
+    self.fccAna.randomGenerator = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -652,7 +705,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_cardfile_readfailed( self ):
     card_file = "/path/to/cardFile"
-    self.fccAna.cardFiles = {"Pythia" : [card_file]}
+    self.fccAna.randomGenerator = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -676,7 +729,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.FccAnalysis.writeToFile" % MODULE_NAME, new=Mock(return_value=False))
   def test_runit_cardfile_writefailed( self ):
     card_file = "/path/to/cardFile"
-    self.fccAna.cardFiles = {"Pythia" : [card_file]}
+    self.fccAna.randomGenerator = {"Pythia" : [card_file]}  
     self.fccAna.RandomSeed = 1234
     self.fccAna.NumberOfEvents = 42
     
@@ -694,13 +747,6 @@ class TestFccAnalysis( unittest.TestCase ):
       self.log_mock.error.assert_called_once_with( error_message )
       mock_read.assert_called_once_with( card_file )
 
-  @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
-  def test_readfromfile_failed( self ):
-    content, message  = self.fccAna.readFromFile("/my/file/to/read")    
-    assertEqualsImproved( None, content, self )   
-    error_message = 'Application : Card file reading failed'
-    assertEqualsImproved( error_message, message, self )   
-
   def test_readfromfile( self ):
     with patch('__builtin__.open') as mock_open:
       manager = mock_open.return_value.__enter__.return_value
@@ -710,3 +756,10 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_open.assert_called_with( "/my/file/to/read", 'r' )
       debug_message = 'Application : Card file reading successfull'
       assertEqualsImproved( message, debug_message, self )   
+
+  @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
+  def test_readfromfile_failed( self ):
+    content, message  = self.fccAna.readFromFile("/my/file/to/read")    
+    assertEqualsImproved( None, content, self )   
+    error_message = 'Application : Card file reading failed'
+    assertEqualsImproved( error_message, message, self )   

@@ -31,7 +31,7 @@ class Fcc(Application):
   -   FccSw
   -   FccAnalysis
 
-  Look their definition at the bottom of this module.
+  Look their definition at the end of this module.
 
   """
 
@@ -50,19 +50,18 @@ class Fcc(Application):
     # Read or generate events
     self.read = False
 
-    # Card file used to set Pythia seed and Pythia number of events
-    self.cardFiles = {}
+    # Random generator service used to set seed and number of events
+    self.randomGenerator = {}
 
-    # Final input sandbox
+    # Final FCC input sandbox
     self._inputSandbox = set()
 
-    # Temporary input sandbox
+    # Temporary FCC input sandbox
     # contains user files/folders not yet checked
     self._tempInputSandbox = set()
 
-    # Temporary input sandbox
-    # contains user files/folders not yet checked
-    # and that need to be filtered (like 'Detector' folder of FCCSW installation)
+    # Some folders have to be filtered (like 'Detector' folder of FCCSW installation)
+    # to avoid sandbox overload (sandbox max size = 10 Mb)
     self._foldersToFilter = set()
 
     # Folder filters
@@ -126,7 +125,7 @@ class Fcc(Application):
     md1.addParameter(Parameter("read", "", "string", "", "", False, False,
                    "Application can read or generate events"))
 
-    md1.addParameter(Parameter("cardFiles", {}, "dict", "", "", False, False,
+    md1.addParameter(Parameter("randomGenerator", {}, "dict", "", "", False, False,
                    "Pythia card files"))
 
     return md1
@@ -145,7 +144,7 @@ class Fcc(Application):
     moduleinstance.setValue("outputFile", self.outputFile)
     moduleinstance.setValue("logLevel", self.logLevel)
     moduleinstance.setValue("read", self.read)
-    moduleinstance.setValue("cardFiles", self.cardFiles)
+    moduleinstance.setValue("randomGenerator", self.randomGenerator)
 
   def _checkConsistency(self, job=None):
     """This function checks the minimum requirements of the application
@@ -184,17 +183,16 @@ class Fcc(Application):
       )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
-    
+
     if True is not self.fccConfFile and not isinstance(self.fccConfFile, str):
       errorMessage = (
         "Consistency : Fcc Application accepts only one input configuration file:\n"
         "If you want to run the application '%(name)s' with many configurations then\n"
         "Create an new application with the other configuration\n"
-        "You can also use 'getInputFromApp' function for linked applications" % {'name':self.appname}
+        "You can also use 'getInputFromApp' function to link applications" % {'name':self.appname}
       )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
-      
 
     debugMessage = (
       "Consistency : Executable and configuration of the application set to :"
@@ -203,8 +201,8 @@ class Fcc(Application):
     )
     self._log.debug(debugMessage)
 
-    # All input files are put in the temporary sandbox for a
-    # pre-checking before being added to the final sandbox
+    # All input files are put in the FCC temporary sandbox for a
+    # pre-checking before being added to the FCC final sandbox
     if True is not self.fccConfFile:
       self._tempInputSandbox.add(self.fccConfFile)
 
@@ -315,7 +313,7 @@ class Fcc(Application):
     """Summary of the application done in
     _checkConsistency() method.
 
-    :return: The success or failure of _checkRequiredApp()
+    :return: The success or the failure of _checkRequiredApp()
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
@@ -364,7 +362,7 @@ class Fcc(Application):
       return S_ERROR('userjobmodules failed')
     return S_OK()
 
-###############################  Fcc FUNCTIONS #####################################################
+###############################  Fcc METHODS #####################################################
   def _flushSandboxes(self):
     """ Clear all sandboxes.
     Usefull when the same application is appended many times,
@@ -408,7 +406,7 @@ class Fcc(Application):
       return True
 
     for path in self._tempInputSandbox:
-      # We made a pre-checking of files in reachable filesystems (e.g. AFS, CVMFS)
+      # We make a pre-checking of files in reachable filesystems (e.g. AFS, CVMFS)
       path, isExist = self._findPath(path)
 
       # If file does not exist then consistency fails
@@ -454,7 +452,7 @@ class Fcc(Application):
 
   def _importToSandbox(self):
     """This function checks all the files and folders
-    of the temporary sandbox and add them to the 'final' sandbox.
+    of the FCC temporary sandbox and add them to the FCC 'final' sandbox.
 
     :return: The success or the failure of the import
     :rtype: bool
@@ -528,7 +526,7 @@ class FccSw(Fcc):
     :param job: The job containing the application
     :type job: DIRAC.Interfaces.API.Job.Job
 
-    :return: The success or failure of the consistency checking
+    :return: The success or the failure of the consistency checking
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
@@ -632,6 +630,7 @@ class FccSw(Fcc):
     """
     
     #installAreaFolder already resolved and added in FccSw class
+    # It is present in CVMFS
     #installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
     detectorFolder = os.path.join(self.fccSwPath, 'Detector')
 
@@ -666,26 +665,28 @@ class FccSw(Fcc):
     txtFiles = [txtFile[1] for txtFile in txtFiles if not txtFile[0].startswith("#")]
     cmdFiles = [cmdFile[1] for cmdFile in cmdFiles if not cmdFile[0].startswith("#")]
 
-    isPythiaGeneratorUsed = re.search('PythiaInterface', content)
+    lookForPythia = re.findall(r'.* *= *PythiaInterface *\(', content)
+
+    # Check if PythiaInterface is instantiated somewhere and not commented
+    isPythiaGeneratorUsed = True if lookForPythia and not lookForPythia[0].startswith("#") else False
 
     if isPythiaGeneratorUsed and cmdFiles:
-      self.cardFiles["Pythia"] = cmdFiles
-    elif "SimG4Svc" in content:
-      self.cardFiles["Geant4"] = True
+      self.randomGenerator["Pythia"] = cmdFiles
+    else:
+      self.randomGenerator["Gaudi"] = True
       
     # From these paths we re-create the tree in the temporary sandbox
     # with only the desired file.
     # In the configuration file, these paths are relative to FCCSW installation.
     # e.g. Generation/data/foo.xml
     
-
     if not self._resolveTreeOfFiles(txtFiles, '.txt'):
       errorMessage = "Sandboxing : _resolveTreeOfFiles() failed"
       self._log.error(errorMessage)
       return False
       # Do not continue remaining checks
 
-    # We do the same now for '.cmd' files specified in the configuration file
+    # We do the same now for '.cmd' files that may be specified in the configuration file
     return self._resolveTreeOfFiles(cmdFiles, '.cmd')
 
   def _resolveTreeOfFiles(self, files, extension):
@@ -894,7 +895,7 @@ class FccSw(Fcc):
     :param excludeOrInclude: extension is excluded or included
     :type excludeOrInclude: bool
 
-    :return: success or failure of filtering
+    :return: The success or the failure of the filtering
     :rtype: bool
 
     """
@@ -996,7 +997,7 @@ class FccAnalysis(Fcc):
     if executable != 'fcc-pythia8-generate':
       self.read = True
     else:
-      self.cardFiles = {"Pythia":[os.path.basename(fccConfFile)]}
+      self.randomGenerator = {"Pythia":[os.path.basename(fccConfFile)]}
 
   def _setFilterToFolders(self):
     """FccAnalysis does not need extra folders to filter

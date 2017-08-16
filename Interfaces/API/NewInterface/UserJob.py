@@ -118,9 +118,9 @@ class UserJob(Job):
       kwargs = {'lfns':lfns}
       return self._reportError( 'Expected lfn string or list of lfns for input data', **kwargs )
 
-    if self.split:
-      self._data = dataSplit
-    else:  
+    self._data = dataSplit
+ 
+    if self.split != "byData":  
       self._addParameter( self.workflow, 'InputData', 'JDL', dataJDL, description )
 
     return S_OK()
@@ -261,7 +261,7 @@ class UserJob(Job):
   # 7) _toInt
   #
   # Given the type of splitting (byEvents, byData), these functions compute
-  # the right parameters of the method 'setParameterSequence()'
+  # the right parameters of the method 'Job.setParameterSequence()'
   ##############################  SPLITTING STUFF : Job.append() METHOD REDEFINITION ##############################
   def append(self, application):
     """Redefinition of Dirac.Interfaces.API.Job.append()
@@ -270,7 +270,7 @@ class UserJob(Job):
     :param application: The application to append
     :type application: ILCDIRAC.Interfaces.API.NewInterface.Application
 
-    :return: The success or failure of the consistency checking
+    :return: The success or the failure of the consistency checking
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
@@ -295,7 +295,7 @@ class UserJob(Job):
   def _split(self):
     """This function checks the consistency of the job and call the right split method. 
 
-    :return: The success or failure of the consistency checking
+    :return: The success or the failure of the consistency checking
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
 
     """
@@ -364,7 +364,7 @@ class UserJob(Job):
 
     - Checks if Job parameters are valid.
 
-    :return: success or failure of the consistency checking
+    :return: The success or the failure of the consistency checking
     :rtype: bool
 
     :Example:
@@ -467,9 +467,6 @@ class UserJob(Job):
       
       # 1st case : (njobs=3, eventsPerJob=10)
       # trivial case => each job (total of 3) run applications of 10 events each
-      # Do not consider number of event of the application (overwrite it)
-      # it is done after.
-      
       
       debugMessage = (
         "Job splitting : 1st case\n"
@@ -481,17 +478,15 @@ class UserJob(Job):
 
     elif self.eventsPerJob and self.totalNumberOfEvents:
       
-      # 2nd case : (split="byEvents", eventsPerJob=10)
-      # In this case, the number of events has to be set inside applications
-      # otherwise outputs error.
+      # 2nd case : (split="byEvents", eventsPerJob=10, nevents=10)
       # Given the number of events per job and total of number of event we want,
       # we can compute the unknown which is the number of jobs.
       
 
       debugMessage = (
         "Job splitting : 2nd case\n"
-        "Only events per job has been given but we know the total"
-        " number of events, so we have to compute the number of jobs required"
+        "Events per job and total number of events have been given"
+        " so we have to compute the number of jobs required"
       )
       self.log.debug(debugMessage)
 
@@ -513,15 +508,13 @@ class UserJob(Job):
 
     else:
       
-      # 3rd case : (split='byEvents', njobs=10)
-      # So the total number of events has to be set inside application.
-      # If not then outputs error.
-      
+      # 3rd case : (split='byEvents', njobs=10, nevents=10)
+      # Then compute the right number of events per job  
 
       debugMessage = (
         "Job splitting : 3rd case\n"
-        "The number of jobs has to be given and the total number"
-        " of events has to be set"
+        "The number of jobs and the total number of events"
+        " have been given"
       )
       self.log.debug(debugMessage)
 
@@ -566,7 +559,7 @@ class UserJob(Job):
     :param number: the number to cast (number of events, number of jobs)
     :type number: str or int
 
-    :return: success or failure of the casting
+    :return: The success or the failure of the casting
     :rtype: bool, int or None
 
     :Example:
