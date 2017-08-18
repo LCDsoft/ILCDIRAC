@@ -284,7 +284,7 @@ class UserJob(Job):
     return super(UserJob, self).append(application)
 
   ##############################  SPLITTING STUFF : NEW METHODS ##############################
-  def setSplitEvents( self, eventsPerJob=None, numberOfJobs=1, totalNumberOfEvents=0 ):
+  def setSplitEvents( self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None ):
     """This function sets split parameters for doing splitting over events
 
     Example usage:
@@ -309,7 +309,7 @@ class UserJob(Job):
 
     self.splittingOption = "byEvents"
 
-  def setSplitInputData( self, lfns, numberOfFilesPerJob = 0):
+  def setSplitInputData( self, lfns, numberOfFilesPerJob = 1):
     """This function sets split parameters for doing splitting over input data
     
     Example usage:
@@ -470,7 +470,7 @@ class UserJob(Job):
       return False
 
 
-    if self.numberOfFilesPerJob and self.numberOfFilesPerJob > len(self._data):
+    if self.numberOfFilesPerJob > len(self._data):
       errorMessage = (
         "Job splitting : The number of input data file per job 'numberOfFilesPerJob'\n"
         "must be equal or lower than the number of input data you specify"
@@ -478,8 +478,7 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return False
           
-    if self.numberOfFilesPerJob:      
-      self._data = breakListIntoChunks(self._data, self.numberOfFilesPerJob)
+    self._data = breakListIntoChunks(self._data, self.numberOfFilesPerJob)
 
     self.log.info("Job splitting : Your submission consists of %d job(s)" % len(self._data))
 
