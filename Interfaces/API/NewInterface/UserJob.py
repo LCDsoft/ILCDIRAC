@@ -21,6 +21,7 @@ from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+from DIRAC.Core.Utilities.List import breakListIntoChunks
 
 __RCSID__ = "$Id$"
 
@@ -468,9 +469,8 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return False
 
-    numberOfFiles = len(self._data)
 
-    if self.numberOfFilesPerJob and self.numberOfFilesPerJob > numberOfFiles:
+    if self.numberOfFilesPerJob and self.numberOfFilesPerJob > len(self._data):
       errorMessage = (
         "Job splitting : The number of input data file per job 'numberOfFilesPerJob'\n"
         "must be equal or lower than the number of input data you specify"
@@ -478,26 +478,12 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return False
           
-    filePerJobIntDiv = numberOfFiles / self.numberOfFilesPerJob
-    filePerJobRest = numberOfFiles % self.numberOfFilesPerJob
+    if self.numberOfFilesPerJob:      
+      self._data = breakListIntoChunks(self._data, self.numberOfFilesPerJob)
 
-    mapFileJob = [filePerJobIntDiv] * self.numberOfFilesPerJob
+    self.log.info("Job splitting : Your submission consists of %d job(s)" % len(self._data))
 
-    if filePerJobRest != 0:
-      for suplement in range(filePerJobRest):
-        mapFileJob[suplement] += 1
-
-    chunks = []
-    for howManyLfns in mapFileJob:
-      chunk = []
-      for lfnIndex in range(howManyLfns):
-        chunk+= [self._data[lfnIndex]] 
-      chunks +=[chunk]  
-
-    print chunks
-    self.log.info("Job splitting : Your submission consists of %d job(s)" % len(mapFileJob))
-
-    return ["InputData", chunks, False]
+    return ["InputData", self._data , False]
 
   #############################################################################
   def _splitByEvents(self):
