@@ -155,7 +155,7 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._splitByData" % MODULE_NAME, new=Mock(return_value=["InputData", ["/ilc/user/u/username/data1"]]))
   def test_split_bydata( self ):
-    self.ujo.split = "byData"
+    self.ujo.splittingOption = "byData"
 
     with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
   
@@ -166,22 +166,22 @@ class UserJobTestCase( unittest.TestCase ):
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.UserJob._splitByEvents" % MODULE_NAME, new=Mock(return_value=["NumberOfEvents", [1, 2]]))
+  @patch("%s.UserJob._splitByEvents" % MODULE_NAME, new=Mock(return_value=['NbOfEvts', [1, 2]]))
   def test_split_byevents( self ):
-    self.ujo.split = "byEvents"
+    self.ujo.splittingOption = "byEvents"
  
     with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
   
       info_message = "Job : Job submission successfull"
       assertDiracSucceedsWith( self.ujo._split(), info_message, self )
       self.log_mock.info.assert_called_with( info_message )
-      mock_parametric.assert_called_once_with( "NumberOfEvents", [1, 2] )
+      mock_parametric.assert_called_once_with( 'NbOfEvts', [1, 2] )
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=("Atomic", [])))
   def test_split_atomicsubmission( self ):
-    self.ujo.split = None
+    self.ujo.splittingOption = None
     info_message = "Job : Job submission successfull"
     assertDiracSucceedsWith( self.ujo._split(), info_message, self )
     self.log_mock.info.assert_called_with( info_message )
@@ -204,7 +204,7 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._splitByData" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_bydata_failed( self ):
-    self.ujo.split = "byData"
+    self.ujo.splittingOption = "byData"
     error_message = (
         "Job : job submission failed"
         "Job : _splitBySomething() failed"
@@ -216,7 +216,7 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._splitByEvents" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_byevents_failed( self ):
-    self.ujo.split = "byEvents"
+    self.ujo.splittingOption = "byEvents"
     error_message = (
         "Job : job submission failed"
         "Job : _splitBySomething() failed"
@@ -228,7 +228,7 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_atomicsubmission_failed( self ):
-    self.ujo.split = None
+    self.ujo.splittingOption = None
     error_message = (
         "Job : job submission failed"
         "Job : _splitBySomething() failed"
@@ -237,7 +237,7 @@ class UserJobTestCase( unittest.TestCase ):
     self.log_mock.error.assert_called_once_with( error_message )
 
   def test_append( self ):
-    self.ujo.split = True
+    self.ujo.splittingOption = True
     app1 = Fcc()
     
     PARENT_MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Job'
@@ -248,7 +248,7 @@ class UserJobTestCase( unittest.TestCase ):
       mock_append.assert_called_once_with( app1 )
 
   def test_append_failed( self ):
-    self.ujo.split = True
+    self.ujo.splittingOption = True
     app1 = Fcc()
     app2 = Fcc()    
     self.ujo.applicationlist = [app1, app2]
@@ -268,27 +268,17 @@ class UserJobTestCase( unittest.TestCase ):
     app2 = Fcc()    
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
-    self.ujo.split = "byEvents"
+    self.ujo.splittingOption = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency() )
     info_message = "Job consistency : _checkJobConsistency() successfull"
     self.log_mock.info.assert_called_with( info_message )
-
-  def test_checkjobconsistency_no_applications( self ):
-    self.ujo.applicationlist = set()
-    self.assertFalse( self.ujo._checkJobConsistency() )
-    error_message = (
-      "Job : Your job is empty !\n"
-      "You have to append at least one application\n"
-      "Job consistency : _checkJobConsistency() failed"
-    )
-    self.log_mock.error.assert_called_once_with( error_message )
 
   def test_checkjobconsistency_bad_split_parameter( self ):
     app1 = Fcc()
     app2 = Fcc()    
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
-    self.ujo.split = "byHand"
+    self.ujo.splittingOption = "byHand"
     self.assertFalse( self.ujo._checkJobConsistency() )
     error_message = (
       "Job splitting : Bad split value\n"
@@ -307,7 +297,7 @@ class UserJobTestCase( unittest.TestCase ):
     app2.numberOfEvents = 2   
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
-    self.ujo.split = "byEvents"
+    self.ujo.splittingOption = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency())
     self.log_mock.warn.assert_called_once_with( "Job : Applications should all have the same number of events" )
 
@@ -317,7 +307,7 @@ class UserJobTestCase( unittest.TestCase ):
     app1.numberOfEvents = app2.numberOfEvents = -1    
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
-    self.ujo.split = "byEvents"
+    self.ujo.splittingOption = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency() )
     info_message = "Job consistency : _checkJobConsistency() successfull"
     self.log_mock.info.assert_called_with( info_message )
@@ -343,17 +333,27 @@ class UserJobTestCase( unittest.TestCase ):
     )
     self.log_mock.error.assert_called_once_with( error_message )
 
+  def test_splitbydata_incorrectparameter( self ):
+    self.ujo._data = ["/path/to/data1","/path/to/data2"]
+    self.ujo.numberOfFilesPerJob = 3
+    self.assertFalse( self.ujo._splitByData() )
+    error_message = (
+      "Job splitting : The number of input data file per job 'numberOfFilesPerJob'\n"
+      "must be equal or lower than the number of input data you specify"
+    )
+    self.log_mock.error.assert_called_once_with( error_message )
+
   def test_splitbyevents_1st_case( self ):
     app1 = Fcc()
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
 
     self.ujo.eventsPerJob = 2
-    self.ujo.njobs = 2
+    self.ujo.numberOfJobs = 2
 
     map_event_job = [2, 2]
 
-    assertEqualsImproved( self.ujo._splitByEvents(), ["NumberOfEvents", map_event_job], self )
+    assertEqualsImproved( self.ujo._splitByEvents(), ['NbOfEvts', map_event_job], self )
 
     debug_message = (
       "Job splitting : 1st case\n"
@@ -386,7 +386,7 @@ class UserJobTestCase( unittest.TestCase ):
 
     map_event_job = [2]
 
-    assertEqualsImproved( self.ujo._splitByEvents(), ["NumberOfEvents", map_event_job], self )
+    assertEqualsImproved( self.ujo._splitByEvents(), ['NbOfEvts', map_event_job], self )
 
     debug_message = (
       "Job splitting : 2nd case\n"
@@ -438,12 +438,12 @@ class UserJobTestCase( unittest.TestCase ):
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
 
-    self.ujo.njobs = 2
+    self.ujo.numberOfJobs = 2
     self.ujo.totalNumberOfEvents = 2
 
     map_event_job = [1, 1]
 
-    assertEqualsImproved( self.ujo._splitByEvents(), ["NumberOfEvents", map_event_job], self )
+    assertEqualsImproved( self.ujo._splitByEvents(), ['NbOfEvts', map_event_job], self )
 
     debug_message = (
       "Job splitting : 3rd case\n"
@@ -472,7 +472,7 @@ class UserJobTestCase( unittest.TestCase ):
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
 
-    self.ujo.njobs = 2
+    self.ujo.numberOfJobs = 2
     self.ujo.totalNumberOfEvents = None
 
     self.assertFalse( self.ujo._splitByEvents() )
@@ -501,3 +501,18 @@ class UserJobTestCase( unittest.TestCase ):
       "'events per job' and 'number of jobs' must be positive integers"
     )
     self.log_mock.error.assert_called_once_with( error_message )
+
+  def test_setsplitevents( self ):
+    self.ujo.setSplitEvents( 42, 42, 126 )
+    assertEqualsImproved( self.ujo.totalNumberOfEvents, 126, self )
+    assertEqualsImproved( self.ujo.eventsPerJob, 42, self )
+    assertEqualsImproved( self.ujo.numberOfJobs, 42, self )
+    assertEqualsImproved( self.ujo.splittingOption, "byEvents", self )
+
+  def test_setsplitInputdata( self ):
+    input_data = ["/path/to/data1","/path/to/data2"]
+    self.ujo.setSplitInputData( input_data )
+    for data in input_data:
+      self.assertIn( data, self.ujo._data )
+
+    assertEqualsImproved( self.ujo.splittingOption, "byData", self )  

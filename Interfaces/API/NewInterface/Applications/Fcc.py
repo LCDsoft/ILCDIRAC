@@ -40,8 +40,7 @@ class Fcc(Application):
 
     # Required
     self.fccExecutable = ''
-    self.steeringFile = ''
-
+    
     self.isGaudiOptionsFileNeeded = False
 
     # Path of FCCSW installation
@@ -110,9 +109,6 @@ class Fcc(Application):
     md1.addParameter(Parameter("fccExecutable", "", "string", "", "", False, False,
                    "The executable to run"))
 
-    md1.addParameter(Parameter("fccConfFile", "", "string", "", "", False, False,
-                   "FCC configuration file"))
-
     md1.addParameter(Parameter("isGaudiOptionsFileNeeded", False, "bool", "", "", False, False,
                    "Gaudi configuration file"))
 
@@ -136,7 +132,6 @@ class Fcc(Application):
     """
 
     moduleinstance.setValue("fccExecutable", self.fccExecutable)
-    moduleinstance.setValue("fccConfFile", self.steeringFile)
     moduleinstance.setValue("isGaudiOptionsFileNeeded", self.isGaudiOptionsFileNeeded)
     moduleinstance.setValue("logLevel", self.logLevel)
     moduleinstance.setValue("read", self.read)

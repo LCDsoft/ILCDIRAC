@@ -27,7 +27,7 @@ __RCSID__ = "$Id$"
 class UserJob(Job):
   """ User job class. To be used by users, not for production.
   """
-  def __init__(self, script = None, split = None, njobs = None, eventsPerJob = None, nevents = 0):
+  def __init__(self, script = None):
     super(UserJob, self).__init__( script )
     self.type = 'User'
     self.diracinstance = None
@@ -35,12 +35,13 @@ class UserJob(Job):
     self.proxyinfo = getProxyInfo()
 
     ########## SPLITTING STUFF : ATTRIBUTES ##########
-    self._data = set()
-    self.split = split
+    self._data = []
+    self.splittingOption = None
     self._switch = {}
-    self.njobs = njobs
-    self.totalNumberOfEvents = nevents
-    self.eventsPerJob = eventsPerJob
+    self.numberOfJobs = None
+    self.totalNumberOfEvents = None
+    self.eventsPerJob = None
+    self.numberOfFilesPerJob = None
 
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
@@ -54,7 +55,7 @@ class UserJob(Job):
       The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
 
     """
-    if self.split:
+    if self.splittingOption :
       result = self._split()
       if 'OK' in result and not result['OK']:
         return result
@@ -105,24 +106,17 @@ class UserJob(Job):
       inputData = lfns #because we don't need the LFN: for inputData, and it breaks the 
       #resolution of the metadata in the InputFilesUtilities
       inputDataStr = ';'.join( inputData )
-      dataJDL = inputDataStr
-      dataSplit = self._data.union(lfns)
       description = 'List of input data specified by LFNs'
+      self._addParameter( self.workflow, 'InputData', 'JDL', inputDataStr, description )
     elif isinstance( lfns, basestring ): #single LFN
-      dataJDL = lfns
-      dataSplit = self._data.union([lfns])
       description = 'Input data specified by LFN'
+      self._addParameter( self.workflow, 'InputData', 'JDL', lfns, description )
     else:
       kwargs = {'lfns':lfns}
       return self._reportError( 'Expected lfn string or list of lfns for input data', **kwargs )
 
-    self._data = dataSplit
- 
-    if self.split != "byData":  
-      self._addParameter( self.workflow, 'InputData', 'JDL', dataJDL, description )
-
     return S_OK()
-   
+
   def setInputSandbox(self, flist):
     """ Add files to the input sandbox, can be on the local machine or on the grid
 
@@ -289,6 +283,53 @@ class UserJob(Job):
     return super(UserJob, self).append(application)
 
   ##############################  SPLITTING STUFF : NEW METHODS ##############################
+  def setSplitEvents( self, eventsPerJob=None, numberOfJobs=1, totalNumberOfEvents=0 ):
+    """This function sets split parameters for doing splitting over events
+
+    Example usage:
+
+    >>> job = UserJob()
+    >>> job.setSplitEvents( numberOfJobs=42, totalNumberOfEvents=126 )
+    
+    :param eventsPerJob: The events processed by a single job
+    :type eventsPerJob: int
+    
+    :param numberOfJobs: The number of jobs
+    :type numberOfJobs: int
+    
+    :param totalNumberOfEvents: The total number of events processed by all jobs
+    :type totalNumberOfEvents: int
+
+    """
+
+    self.totalNumberOfEvents =  totalNumberOfEvents
+    self.eventsPerJob =  eventsPerJob
+    self.numberOfJobs =  numberOfJobs
+
+    self.splittingOption = "byEvents"
+
+  def setSplitInputData( self, lfns, numberOfFilesPerJob = 0):
+    """This function sets split parameters for doing splitting over input data
+    
+    Example usage:
+
+    >>> job = UserJob()
+    >>> job.setSplitInputData(['/ilc/prod/whizard/processlist.whiz'])
+
+    :param lfns: Logical File Names
+    :type lfns: Single LFN string or list of LFNs
+
+    :param numberOfFilesPerJob: The number of input data processed by a single job
+    :type numberOfFilesPerJob: int
+
+    """
+
+    self._data += lfns if isinstance(lfns, list) else [lfns]
+
+    self.numberOfFilesPerJob =  numberOfFilesPerJob
+
+    self.splittingOption = "byData"
+
   def _split(self):
     """This function checks the consistency of the job and call the right split method. 
 
@@ -302,9 +343,9 @@ class UserJob(Job):
     # self.dontPromptMe()
 
     self.eventsPerJob = self._toInt(self.eventsPerJob)
-    self.njobs = self._toInt(self.njobs)
+    self.numberOfJobs = self._toInt(self.numberOfJobs)
 
-    if False is self.njobs or False is self.eventsPerJob:
+    if False is self.numberOfJobs or False is self.eventsPerJob:
       return self._reportError("Splitting : Invalid values for splitting")
 
     # Switch case python emulation
@@ -321,7 +362,7 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return self._reportError(errorMessage)
 
-    sequence = self._switch[self.split]()
+    sequence = self._switch[self.splittingOption ]()
 
     if not sequence:
       errorMessage = (
@@ -331,10 +372,10 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return self._reportError(errorMessage)
 
-    sequenceType, sequenceList = sequence[0], sequence[1]
+    sequenceType, sequenceList, addToWorkflow = sequence[0], sequence[1], sequence[2] 
    
     if sequenceType != "Atomic":
-      self.setParameterSequence(sequenceType, sequenceList)
+      self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
 
     infoMessage = "Job : Job submission successfull"
     self.log.info(infoMessage)
@@ -353,7 +394,7 @@ class UserJob(Job):
     infoMessage = "Job splitting : No splitting to apply, then 'atomic submission' will be used"
     self.log.info(infoMessage)
 
-    return "Atomic", []
+    return "Atomic", [], False
 
   #############################################################################
   def _checkJobConsistency(self):
@@ -372,16 +413,7 @@ class UserJob(Job):
 
     self.log.info("Job consistency : _checkJobConsistency()...")
 
-    if not self.applicationlist:
-      errorMessage = (
-        "Job : Your job is empty !\n"
-        "You have to append at least one application\n"
-        "Job consistency : _checkJobConsistency() failed"
-      )
-      self.log.error(errorMessage)
-      return False
-
-    if self.split not in self._switch:
+    if self.splittingOption not in self._switch:
       errorMessage = (
         "Job splitting : Bad split value\n"
         "Possible values are :\n"
@@ -393,17 +425,12 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return False
 
-    # If the user sets these parameters so deduce that he wants
-    # to use "byEvents" method
-    if self.njobs or self.eventsPerJob:
-      self.split = "byEvents"
-
     # All applications should have the same number of events
     # We can get this number from the first application for example
     sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
 
     if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
-      self.log.warn("Job : Applications should all have the same number of events")
+          self.log.warn("Job : Applications should all have the same number of events")
 
     if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:
       warnMessage = (
@@ -427,7 +454,7 @@ class UserJob(Job):
     """
 
     # reset split attribute to avoid infinite loop
-    self.split = None
+    self.splittingOption = None
 
     infoMessage = "Job splitting : Splitting 'byData' method..."
     self.log.info(infoMessage)
@@ -441,9 +468,36 @@ class UserJob(Job):
       self.log.error(errorMessage)
       return False
 
-    self.log.info("Job splitting : Your submission consists of %d job(s)" % len(self._data))
+    numberOfFiles = len(self._data)
 
-    return ["InputData", list(self._data)]
+    if self.numberOfFilesPerJob and self.numberOfFilesPerJob > numberOfFiles:
+      errorMessage = (
+        "Job splitting : The number of input data file per job 'numberOfFilesPerJob'\n"
+        "must be equal or lower than the number of input data you specify"
+      )
+      self.log.error(errorMessage)
+      return False
+          
+    filePerJobIntDiv = numberOfFiles / self.numberOfFilesPerJob
+    filePerJobRest = numberOfFiles % self.numberOfFilesPerJob
+
+    mapFileJob = [filePerJobIntDiv] * self.numberOfFilesPerJob
+
+    if filePerJobRest != 0:
+      for suplement in range(filePerJobRest):
+        mapFileJob[suplement] += 1
+
+    chunks = []
+    for howManyLfns in mapFileJob:
+      chunk = []
+      for lfnIndex in range(howManyLfns):
+        chunk+= [self._data[lfnIndex]] 
+      chunks +=[chunk]  
+
+    print chunks
+    self.log.info("Job splitting : Your submission consists of %d job(s)" % len(mapFileJob))
+
+    return ["InputData", chunks, False]
 
   #############################################################################
   def _splitByEvents(self):
@@ -455,14 +509,14 @@ class UserJob(Job):
     """
 
     # reset split attribute to avoid infinite loop
-    self.split = None
+    self.splittingOption = None
 
     infoMessage = "Job splitting : splitting 'byEvents' method..."
     self.log.info(infoMessage)
 
-    if self.eventsPerJob and self.njobs:
+    if self.eventsPerJob and self.numberOfJobs:
       
-      # 1st case : (njobs=3, eventsPerJob=10)
+      # 1st case : (numberOfJobs=3, eventsPerJob=10)
       # trivial case => each job (total of 3) run applications of 10 events each
       
       debugMessage = (
@@ -471,11 +525,11 @@ class UserJob(Job):
       )
       self.log.debug(debugMessage)
 
-      mapEventJob = [self.eventsPerJob] * self.njobs
+      mapEventJob = [self.eventsPerJob] * self.numberOfJobs
 
     elif self.eventsPerJob and self.totalNumberOfEvents:
       
-      # 2nd case : (split="byEvents", eventsPerJob=10, nevents=10)
+      # 2nd case : (split="byEvents", eventsPerJob=10, totalNumberOfEvents=10)
       # Given the number of events per job and total of number of event we want,
       # we can compute the unknown which is the number of jobs.
       
@@ -505,7 +559,7 @@ class UserJob(Job):
 
     else:
       
-      # 3rd case : (split='byEvents', njobs=10, nevents=10)
+      # 3rd case : (split='byEvents', njobs=10, totalNumberOfEvents=10)
       # Then compute the right number of events per job  
 
       debugMessage = (
@@ -515,7 +569,7 @@ class UserJob(Job):
       )
       self.log.debug(debugMessage)
 
-      if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.njobs):
+      if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.numberOfJobs):
         errorMessage = (
           "Job splitting : The number of events has to be set\n"
           "It has to be greater than or equal to the number of jobs"
@@ -523,10 +577,10 @@ class UserJob(Job):
         self.log.error(errorMessage)
         return False
 
-      eventPerJobIntDiv = self.totalNumberOfEvents / self.njobs
-      eventPerJobRest = self.totalNumberOfEvents % self.njobs
+      eventPerJobIntDiv = self.totalNumberOfEvents / self.numberOfJobs
+      eventPerJobRest = self.totalNumberOfEvents % self.numberOfJobs
 
-      mapEventJob = [eventPerJobIntDiv] * self.njobs
+      mapEventJob = [eventPerJobIntDiv] * self.numberOfJobs
 
       if eventPerJobRest != 0:
         for suplement in range(eventPerJobRest):
@@ -546,7 +600,7 @@ class UserJob(Job):
     )
     self.log.info(infoMessage)
 
-    return ["NumberOfEvents", mapEventJob]
+    return ['NumberOfEvents', mapEventJob, 'NbOfEvts']
 
   #############################################################################
   def _toInt(self, number):

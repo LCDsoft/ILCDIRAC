@@ -88,24 +88,10 @@ class FccAnalysis(ModuleBase):
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     # Worflow parameters given on the fly thanks to Job.setParameterSequence() method
-    if 'InputData' in self.workflow_commons:
-      self.InputData = self.workflow_commons['InputData']
+    self.InputData = self.workflow_commons['InputData']
 
-      debugMessage = (
-        "Splitting : Parameter 'InputData' given successfully"
-        " with this value '%(InputData)s'" % {'InputData':self.InputData}
-      )
-      self.log.debug(debugMessage)
+    self.NumberOfEvents = self.workflow_commons['NbOfEvts']
 
-    if 'NumberOfEvents' in self.workflow_commons:
-      self.NumberOfEvents = self.workflow_commons['NumberOfEvents']
-
-      debugMessage = (
-      "Splitting : Parameter 'NumberOfEvents' given successfully"
-      " with this value '%(NumberOfEvents)s'" % {'NumberOfEvents':self.NumberOfEvents}
-      )
-
-      self.log.debug(debugMessage)
 
     if 'IS_PROD' in self.workflow_commons:
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))

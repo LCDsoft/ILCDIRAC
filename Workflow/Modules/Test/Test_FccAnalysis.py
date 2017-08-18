@@ -49,6 +49,8 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.fccAppIndex = "%s_%s_Step_%s" % (self.fccAna.applicationName, self.fccAna.applicationVersion, self.fccAna.STEP_NUMBER)
     self.fccAna.applicationFolder = os.path.realpath(self.fccAna.fccAppIndex)
     self.fccAna.applicationScript = os.path.join(self.fccAna.applicationFolder, "%s.sh" % self.fccAna.fccAppIndex)
+    self.fccAna.workflow_commons['InputData'] = ''
+    self.fccAna.workflow_commons['NbOfEvts'] = 0
 
     self.exists_dict = { self.fccAna.SteeringFile : True, self.fccAna.applicationFolder : False, self.fccAna.applicationLog : True}
     
@@ -389,31 +391,27 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_exists.side_effect = self.replace_exists
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
       assertEqualsImproved( self.fccAna.InputData, input_data, self )
-      debug_message = (
-        "Splitting : Parameter 'InputData' given successfully"
-        " with this value '%(InputData)s'" % {'InputData':self.fccAna.InputData}
-      )
-      self.log_mock.debug.assert_any_call( debug_message )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_without_inputdata( self ):
+    self.fccAna.workflow_commons['InputData'] = ''    
     with patch('os.makedirs') as mock_makedirs, \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
-      assertEqualsImproved( self.fccAna.InputData, [], self )
+      assertEqualsImproved( self.fccAna.InputData, '', self )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_with_numberofevents( self ):
-    number_of_events = "3"    
-    self.fccAna.workflow_commons['NumberOfEvents'] = number_of_events
+    number_of_events = 126    
+    self.fccAna.workflow_commons['NbOfEvts'] = number_of_events
 
     with patch('os.makedirs') as mock_makedirs, \
          patch('os.path.exists') as  mock_exists :
@@ -421,17 +419,14 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_exists.side_effect = self.replace_exists
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
       assertEqualsImproved( self.fccAna.NumberOfEvents, number_of_events, self )
-      debug_message = (
-        "Splitting : Parameter 'NumberOfEvents' given successfully"
-        " with this value '%(NumberOfEvents)s'" % {'NumberOfEvents':self.fccAna.NumberOfEvents}
-      )
-      self.log_mock.debug.assert_any_call( debug_message )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_without_numberofevents( self ):
+    self.fccAna.workflow_commons['NbOfEvts'] = 0
+
     with patch('os.makedirs') as mock_makedirs, \
          patch('os.path.exists') as  mock_exists :
 
@@ -597,7 +592,8 @@ class TestFccAnalysis( unittest.TestCase ):
     card_file = "/path/to/cardFile"
     self.fccAna.randomGenerator = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
-    self.fccAna.NumberOfEvents = 42
+    self.fccAna.workflow_commons['NbOfEvts'] = 42
+
     
     with patch('%s.FccAnalysis.readFromFile'  % MODULE_NAME) as mock_read, \
          patch('%s.FccAnalysis.writeToFile'  % MODULE_NAME) as mock_write, \
