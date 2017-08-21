@@ -19,7 +19,7 @@ __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc'
 
 
-class FccFixture( object ):
+class FccMixin( object ):
   """ Base class for the Fcc test cases
   """
 
@@ -252,7 +252,7 @@ class FccFixture( object ):
     assertEqualsImproved( self.fcc._findPath(filename), (filename, False), self )
 
 
-class FccSwTestCase( FccFixture, unittest.TestCase ):
+class FccSwTestCase( FccMixin, unittest.TestCase ):
   """ Tests for FccSw """
 
 
@@ -785,7 +785,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
       self.log_mock.debug.assert_called_with( debug_message )
 
 
-class FccAnalysisTestCase( FccFixture, unittest.TestCase ):
+class FccAnalysisTestCase( FccMixin, unittest.TestCase ):
   """ Tests for FccAnalysis"""
 
 
