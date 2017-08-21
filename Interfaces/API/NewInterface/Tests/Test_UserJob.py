@@ -251,7 +251,7 @@ class UserJobTestCase( unittest.TestCase ):
     self.ujo.split = True
     app1 = Fcc()
     app2 = Fcc()    
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     error_message = "Append : You try to append many times the same application, please fix it !"
     assertDiracFailsWith( self.ujo.append(app1), error_message, self )
     self.log_mock.error.assert_called_with( error_message )
@@ -259,14 +259,14 @@ class UserJobTestCase( unittest.TestCase ):
   def test_atomicsubmission( self ):
     app1 = Fcc()
     app2 = Fcc()    
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     assertEqualsImproved( self.ujo._atomicSubmission(), ("Atomic", []), self )
     self.log_mock.info.assert_called_with( "Job splitting : No splitting to apply, then 'atomic submission' will be used" )
 
   def test_checkjobconsistency( self ):
     app1 = Fcc()
     app2 = Fcc()    
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
     self.ujo.split = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency() )
@@ -274,7 +274,7 @@ class UserJobTestCase( unittest.TestCase ):
     self.log_mock.info.assert_called_with( info_message )
 
   def test_checkjobconsistency_no_applications( self ):
-    self.ujo._userApplications = set()
+    self.ujo.applicationlist = set()
     self.assertFalse( self.ujo._checkJobConsistency() )
     error_message = (
       "Job : Your job is empty !\n"
@@ -286,7 +286,7 @@ class UserJobTestCase( unittest.TestCase ):
   def test_checkjobconsistency_bad_split_parameter( self ):
     app1 = Fcc()
     app2 = Fcc()    
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
     self.ujo.split = "byHand"
     self.assertFalse( self.ujo._checkJobConsistency() )
@@ -305,7 +305,7 @@ class UserJobTestCase( unittest.TestCase ):
     app2 = Fcc()
     app1.numberOfEvents = 1
     app2.numberOfEvents = 2   
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
     self.ujo.split = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency())
@@ -315,7 +315,7 @@ class UserJobTestCase( unittest.TestCase ):
     app1 = Fcc()
     app2 = Fcc()
     app1.numberOfEvents = app2.numberOfEvents = -1    
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
     self.ujo.split = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency() )
@@ -331,7 +331,7 @@ class UserJobTestCase( unittest.TestCase ):
     self.ujo._data = ['data1', 'data2']
     app1 = Fcc()
     app2 = Fcc()
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
     assertEqualsImproved( self.ujo._splitByData(), ["InputData", self.ujo._data], self )
 
   def test_splitbydata_no_data( self ):
@@ -346,7 +346,7 @@ class UserJobTestCase( unittest.TestCase ):
   def test_splitbyevents_1st_case( self ):
     app1 = Fcc()
     app2 = Fcc()
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
 
     self.ujo.eventsPerJob = 2
     self.ujo.njobs = 2
@@ -379,7 +379,7 @@ class UserJobTestCase( unittest.TestCase ):
   def test_splitbyevents_2nd_case( self ):
     app1 = Fcc()
     app2 = Fcc()
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
 
     self.ujo.eventsPerJob = 2
     self.ujo.totalNumberOfEvents = 2
@@ -413,7 +413,7 @@ class UserJobTestCase( unittest.TestCase ):
   def test_splitbyevents_2nd_case_failed( self ):
     app1 = Fcc()
     app2 = Fcc()
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
 
     self.ujo.eventsPerJob = 3
     self.ujo.totalNumberOfEvents = 2
@@ -436,7 +436,7 @@ class UserJobTestCase( unittest.TestCase ):
   def test_splitbyevents_3rd_case( self ):
     app1 = Fcc()
     app2 = Fcc()
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
 
     self.ujo.njobs = 2
     self.ujo.totalNumberOfEvents = 2
@@ -470,7 +470,7 @@ class UserJobTestCase( unittest.TestCase ):
   def test_splitbyevents_3rd_case_failed( self ):
     app1 = Fcc()
     app2 = Fcc()
-    self.ujo._userApplications = set([app1, app2])
+    self.ujo.applicationlist = [app1, app2]
 
     self.ujo.njobs = 2
     self.ujo.totalNumberOfEvents = None

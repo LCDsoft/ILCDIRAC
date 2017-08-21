@@ -99,22 +99,6 @@ class FccFixture( object ):
       self.log_mock.info.assert_any_call( info_message )
 
   @patch("os.path.exists", new=Mock(return_value=True))
-  @patch("%s._flushSandboxes" % MODULE_NAME, new=Mock())
-  def test_checkconsistency_no_flushing( self ):
-    with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)),\
-         patch.object(self.fcc, '_setFilterToFolders', new=Mock(return_value=True)):
-
-      info_message = (
-        "Application general consistency : _checkConsistency()"
-        " on '%(name)s' successfull" % {'name':self.fcc.appname}
-      )    
-      assertDiracSucceedsWith( self.fcc._checkConsistency(), info_message, self )
-      self.assertIn(self.fcc.fccConfFile, self.fcc._tempInputSandbox)
-      self.log_mock.info.assert_called_with( info_message )
-      info_message = "Sandboxing : Sandboxing successfull"
-      self.log_mock.info.assert_any_call( info_message )
-
-  @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency_noversion( self ):
     self.fcc.version = None
     error_message = 'Version not set!'
@@ -134,7 +118,7 @@ class FccFixture( object ):
 
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency_nocfgfile( self ):
-    self.fcc.fccConfFile = None
+    self.fcc.steeringFile = None
     error_message = (
       "Consistency : Error in parsing '%(name)s' application :\n"
       "You have to provide at least an executable"
@@ -145,7 +129,7 @@ class FccFixture( object ):
 
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency_many_cfgfile( self ):
-    self.fcc.fccConfFile = ["/path/to/cfg/file"]
+    self.fcc.steeringFile = ["/path/to/cfg/file"]
     error_message = (
       "Consistency : Fcc Application accepts only one input configuration file:\n"
       "If you want to run the application '%(name)s' with many configurations then\n"
@@ -172,9 +156,6 @@ class FccFixture( object ):
     outputFile = os.path.join(self.fcc.applicationFolder, "%s.root" % self.fcc.applicationFolder)
     self.assertIn( self.fcc.logFile, self.fcc._outputSandbox ) 
     self.assertIn( "%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox ) 
-
-  def test_getinputfromApp( self ):
-    self.assertTrue( self.fcc.fccConfFile )
 
   def test_importfiles_no_sandbox( self ):
     self.fcc._tempInputSandbox = None
@@ -240,11 +221,11 @@ class FccFixture( object ):
       debug_message = 'Sandboxing : FCC configuration file reading successfull'
       assertEqualsImproved( message, debug_message, self )   
 
-  @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
+  @patch('__builtin__.open', new=Mock(side_effect=IOError("ioerror")) )
   def test_readfromfile_failed( self ):
     content, message  = self.fcc._readFromFile("/my/file/to/read")    
     assertEqualsImproved( None, content, self )   
-    error_message = 'Sandboxing : FCC configuration file reading failed'
+    error_message = 'Sandboxing : FCC configuration file reading failed\nioerror'
     assertEqualsImproved( error_message, message, self )
 
   @patch('os.path.exists', new=Mock(return_value=True) )
@@ -259,16 +240,6 @@ class FccFixture( object ):
 
       assertDiracFailsWith( self.fcc._checkConsistency(), "_setFilterToFolders() failed" , self )
       self.log_mock.info.assert_called_with( "Sandboxing : Sandboxing successfull" )
-
-  def test_flushsandboxes( self ):
-    self.fcc._tempInputSandbox = set(['foo','bar'])
-    self.fcc._inputSandbox = set(['foo','bar'])
-    self.fcc._outputSandbox = set(['foo','bar'])   
-    self.fcc._flushSandboxes()
-    assertEqualsImproved( self.fcc._tempInputSandbox, set(), self )
-    assertEqualsImproved( self.fcc._inputSandbox, set(), self )
-    assertEqualsImproved( self.fcc._outputSandbox, set(), self )
-    assertEqualsImproved( self.fcc.logFile, None, self )
 
   @patch('os.path.exists', new=Mock(return_value=True) )
   def test_findPath( self ):
@@ -331,9 +302,9 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
       
       mock_exists.side_effect = replace_exists
       # Throw OS error   
-      mock_makedirs.side_effect = OSError()
+      mock_makedirs.side_effect = OSError("oserror")
 
-      error_message = "FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder failed"
+      error_message = "FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder failed\noserror"
       assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
       self.log_mock.error.assert_called_once_with( error_message )
       mock_makedirs.assert_called_once_with( self.fcc._tempCwd )
@@ -376,7 +347,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
     self.log_mock.warn.assert_called_once_with( warn_message )
 
   @patch('os.path.exists', new=Mock(return_value=False) )
-  @patch('os.makedirs', new=Mock(side_effect=OSError()))
+  @patch('os.makedirs', new=Mock(side_effect=OSError("oserror")))
   def test_resolvetreeoffiles_makedirs_failed( self ):
     files = ['file1']
     tree = os.path.dirname(files[0])
@@ -385,7 +356,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
     self.assertFalse( self.fcc._resolveTreeOfFiles(files, ".ext") )
     error_message = (
       "Sandboxing : Tree '%(tree)s' of additionnal"
-      " '.ext' files creation failed" % {'tree':tree_full_path}
+      " '.ext' files creation failed\noserror" % {'tree':tree_full_path}
     )
     self.log_mock.error.assert_called_once_with( error_message )
 
@@ -430,13 +401,13 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
       
       mock_exists.side_effect = replace_exists   
       # throw OS error
-      mock_shutil.side_effect = IOError()
+      mock_shutil.side_effect = IOError("ioerror")
 
       self.assertFalse( self.fcc._resolveTreeOfFiles(files, ".ext") )
 
       error_message = (
         "Sandboxing : Additionnal files"
-        " '%(src)s' copy failed" % {'src':source}
+        " '%(src)s' copy failed\nioerror" % {'src':source}
       )
 
       self.log_mock.error.assert_called_once_with( error_message )
@@ -519,7 +490,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
 
   def test_checkfinalconsistency( self ):
     self.fcc._checkFinalConsistency()
-    self.assertTrue( self.fcc.gaudiOptionsFile )
+    self.assertTrue( self.fcc.isGaudiOptionsFileNeeded )
 
   def test_setfiltertofolders( self ):
     self.fcc._foldersToFilter = None
@@ -646,13 +617,13 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
 
     with patch('os.makedirs') as  mock_makedirs:
   
-      mock_makedirs.side_effect = OSError()
+      mock_makedirs.side_effect = OSError("oserror")
 
       self.assertFalse( self.fcc._filterFolders(temp_folder, actual_folder, ".ext", False) )
 
       error_message = (
         "Sandboxing : Creation of the filtered folder"
-        " '%(temp)s' failed" % {'temp':temp_folder}
+        " '%(temp)s' failed\noserror" % {'temp':temp_folder}
       )    
       self.log_mock.error.assert_called_once_with( error_message )
 
@@ -683,7 +654,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
          patch('os.path.isfile') as mock_isfile: 
       
       # throw OS error
-      mock_shutil.side_effect = IOError()
+      mock_shutil.side_effect = IOError("ioerror")
 
       mock_listdir.side_effect = replace_listdir
       mock_isfile.side_effect = replace_isfile
@@ -701,7 +672,7 @@ class FccSwTestCase( FccFixture, unittest.TestCase ):
 
       mock_shutil.assert_called_once_with( source, destination )
 
-      error_message = "Sandboxing : The copy of the file '%s' failed" % destination
+      error_message = "Sandboxing : The copy of the file '%s' failed\nioerror" % destination
       self.log_mock.error.assert_called_once_with( error_message )
 
   def test_filterfolders_exclude_txt( self ):
@@ -835,7 +806,7 @@ class FccAnalysisTestCase( FccFixture, unittest.TestCase ):
     self.fcc._log = self.log_mock
 
   def test_randomGenerator( self ):
-    assertEqualsImproved( self.fcc.randomGenerator, {"Pythia":[os.path.basename(self.fcc.fccConfFile)]}, self ) 
+    assertEqualsImproved( self.fcc.randomGenerator, {"Pythia":[os.path.basename(self.fcc.steeringFile)]}, self )
 
   def test_readeventfalse( self ):
     self.assertFalse( self.fcc.read )

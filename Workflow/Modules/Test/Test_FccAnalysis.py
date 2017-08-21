@@ -42,7 +42,7 @@ class TestFccAnalysis( unittest.TestCase ):
 
     self.fccAna.platform = os.path.realpath("Testplatform123")
     self.fccAna.applicationLog = os.path.realpath("testlog123")
-    self.fccAna.fccConfFile = os.path.realpath("fccConfFile.cfg")
+    self.fccAna.SteeringFile = os.path.realpath("fccConfFile.cfg")
     self.fccAna.applicationName = "fccApp"
     self.fccAna.applicationVersion = "v1.0"
     self.fccAna.STEP_NUMBER = "1"
@@ -50,7 +50,7 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.applicationFolder = os.path.realpath(self.fccAna.fccAppIndex)
     self.fccAna.applicationScript = os.path.join(self.fccAna.applicationFolder, "%s.sh" % self.fccAna.fccAppIndex)
 
-    self.exists_dict = { self.fccAna.fccConfFile : True, self.fccAna.applicationFolder : False, self.fccAna.applicationLog : True}
+    self.exists_dict = { self.fccAna.SteeringFile : True, self.fccAna.applicationFolder : False, self.fccAna.applicationLog : True}
     
   def replace_exists( self, path ):
     return self.exists_dict[path]
@@ -104,11 +104,11 @@ class TestFccAnalysis( unittest.TestCase ):
       debug_message = "Application : File write operation successfull"
       self.log_mock.debug.assert_called_once_with( debug_message )
 
-  @patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError()), create=True )
+  @patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError("ioerror")), create=True )
   def test_writetofile_failed( self ):
     self.assertFalse( self.fccAna.writeToFile("w", "", "") )   
 
-    error_message = "Application : File write operation failed"
+    error_message = "Application : File write operation failed\nioerror"
     self.log_mock.error.assert_called_once_with( error_message )
 
   def test_generatescriptonthefly( self ):
@@ -123,12 +123,11 @@ class TestFccAnalysis( unittest.TestCase ):
 
   def test_generatebashscript( self ):      
     with patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True)) as mock_write, \
-         patch('%s.FccAnalysis.chmod' % MODULE_NAME, new=Mock(return_value=True)) as mock_chmod:
+         patch('%s.os.chmod' % MODULE_NAME) as mock_chmod:
 
       self.assertTrue( self.fccAna.generateBashScript(["command1", "command2"]) )
       mock_write.assert_called_once_with( 'w', self.fccAna.applicationScript, '#!/bin/bash\nsource \ncommand1\ncommand2\n' )   
-      mock_chmod.assert_any_call( self.fccAna.applicationScript, 'X' )
-      mock_chmod.assert_any_call( self.fccAna.applicationScript , 'R' )   
+      mock_chmod.assert_any_call( self.fccAna.applicationScript, 0755 )
       self.log_mock.debug.assert_any_call( "Application code : Bash script creation successfull" )
       self.log_mock.debug.assert_any_call( "Application file : Bash script rights setting successfull" )
 
@@ -140,70 +139,6 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_write.assert_called_once_with( 'w', self.fccAna.applicationScript, '#!/bin/bash\nsource \ncommand1\ncommand2\n' )   
       error_message = "Application code : Bash script creation failed"
       self.log_mock.error.assert_called_once_with( error_message )
-
-  def test_generatebashscript_chmod_failed( self ):
-    with patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True)) as mock_write, \
-         patch('%s.FccAnalysis.chmod' % MODULE_NAME, new=Mock(return_value=False)) as mock_chmod:    
-
-      
-      self.assertFalse( self.fccAna.generateBashScript(["command1", "command2"]) )   
-
-      mock_write.assert_called_once_with( 'w', self.fccAna.applicationScript, '#!/bin/bash\nsource \ncommand1\ncommand2\n' )
-      # The 'False' returned by the left part of the condition make second part non executed
-      mock_chmod.assert_called_once_with( self.fccAna.applicationScript, 'R' )   
-      self.log_mock.error.assert_called_once_with( "Application file : Bash script rights setting failed" )
-    
-  def test_chmod( self ):
-    with patch('%s.eval' % MODULE_NAME) as mock_eval,\
-         patch('%s.os.stat' % MODULE_NAME) as mock_stat,\
-         patch('%s.os.chmod' % MODULE_NAME) as mock_chmod:
-
-      mock_eval.return_value =  33152
-      mock_stat.return_value.st_mode =  64
-      self.assertTrue( self.fccAna.chmod("file2chmod", "X") )
- 
-      mock_eval.assert_any_call( 'stat.S_IXUSR' ) 
-      mock_eval.assert_any_call( 'stat.S_IXGRP' )
-      mock_eval.assert_any_call( 'stat.S_IXOTH' )
-
-      mock_stat.assert_called_with( "file2chmod" )
-      # 33152|33152|33152|64 = 33216
-      mock_chmod.assert_called_with( "file2chmod", 33216 )
-
-  def test_chmod_osstat_failed( self ):
-    with patch('%s.eval' % MODULE_NAME) as mock_eval,\
-      patch('%s.os.stat' % MODULE_NAME) as mock_stat,\
-      patch('%s.os.chmod' % MODULE_NAME) as mock_chmod:
-
-      mock_eval.return_value =  33152
-      mock_stat.side_effect = OSError()
-
-      self.assertFalse( self.fccAna.chmod("file2chmod", "X") )
-
-      mock_eval.assert_any_call( 'stat.S_IXUSR' ) 
-      mock_eval.assert_any_call( 'stat.S_IXGRP' )
-      mock_eval.assert_any_call( 'stat.S_IXOTH' )
-
-      mock_stat.assert_called_with( "file2chmod" ) 
-
-  def test_chmod_builtin_failed( self ):
-    with patch('%s.eval' % MODULE_NAME) as mock_eval,\
-      patch('%s.os.stat' % MODULE_NAME) as mock_stat,\
-      patch('%s.os.chmod' % MODULE_NAME) as mock_chmod:
-
-      mock_eval.return_value =  33152
-      mock_stat.return_value.st_mode =  64
-      mock_chmod.side_effect = OSError()
-
-      self.assertFalse( self.fccAna.chmod("file2chmod", "X") )
-
-      mock_eval.assert_any_call( 'stat.S_IXUSR' ) 
-      mock_eval.assert_any_call( 'stat.S_IXGRP' )
-      mock_eval.assert_any_call( 'stat.S_IXOTH' )
-
-      mock_stat.assert_called_with( "file2chmod" )
-      # 33152|33152|33152|64 = 33216
-      mock_chmod.assert_called_with( "file2chmod", 33216 )
 
   @patch("%s.FccAnalysis.writeToFile" % MODULE_NAME, new=Mock(return_value=True))
   def test_generategaudiconffile( self ):
@@ -289,7 +224,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.os.path.exists" % MODULE_NAME, new=Mock(return_value=True))
   def test_runit_applicationfolder_exists( self ):
-    self.fccAna.fccConfFile = os.path.realpath("fccConfFile.cfg")
+    self.fccAna.SteeringFile = os.path.realpath("fccConfFile.cfg")
     error_message = "Application : Application folder '%s' already exists !" % self.fccAna.applicationFolder
     assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
@@ -316,13 +251,13 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.FccAnalysis.generateGaudiConfFile' % MODULE_NAME, new=Mock(return_value=False))
   def test_runit_generategaudiconffile_failed( self ):
-    self.fccAna.gaudiOptionsFile = True
+    self.fccAna.isGaudiOptionsFileNeeded = True
 
     with patch('os.path.exists') as  mock_exists, \
          patch('os.makedirs') as mock_makedirs:
  
       mock_exists.side_effect = self.replace_exists
-      error_message = "ApplicationgGaudi options : generateGaudiConfFile() failed"
+      error_message = "Application code : generateGaudiConfFile() failed"
       assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
       self.log_mock.error.assert_called_once_with( error_message )
       self.log_mock.info.assert_any_call( "Environment : Environment script look up successfull" )
@@ -336,8 +271,8 @@ class TestFccAnalysis( unittest.TestCase ):
          patch('os.makedirs') as mock_makedirs:
  
       mock_exists.side_effect = self.replace_exists
-      mock_makedirs.side_effect = OSError()
-      error_message = "Application : Creation of the application folder '%s' failed" % self.fccAna.applicationFolder
+      mock_makedirs.side_effect = OSError("oserror")
+      error_message = "Application : Creation of the application folder '%s' failed\noserror" % self.fccAna.applicationFolder
       assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
       self.log_mock.error.assert_called_once_with( error_message )
       self.log_mock.info.assert_any_call( "Environment : Environment script look up successfull" )
@@ -525,7 +460,7 @@ class TestFccAnalysis( unittest.TestCase ):
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
 
       assertEqualsImproved( self.fccAna.InputFile, input_file, self )
-      assertEqualsImproved( self.fccAna.fccConfFile, self.fccAna.InputFile, self )
+      assertEqualsImproved( self.fccAna.SteeringFile, self.fccAna.InputFile, self )
       self.log_mock.debug.assert_any_call( "Application : Configuration file taken from the input file '%s'" % self.fccAna.InputFile )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
@@ -568,7 +503,7 @@ class TestFccAnalysis( unittest.TestCase ):
       old = os.path.realpath(root_files[0])
       self.log_mock.debug.assert_any_call( "Application : Root file '%s' renaming..." % old )
 
-      outputFile = "JobID_%s_%s" % (self.fccAna.jobID, os.path.basename(self.fccAna.outputFile))
+      outputFile = "JobID_%s_%s" % (self.fccAna.jobID, os.path.basename(self.fccAna.OutputFile))
       renamedRootFile = os.path.realpath(outputFile)
             
       mock_move.assert_called_once_with( old, renamedRootFile )
@@ -576,7 +511,7 @@ class TestFccAnalysis( unittest.TestCase ):
 
       self.log_mock.debug.assert_any_call( "Application : Root file '%s' copy..." % renamedRootFile )
 
-      copiedRootFile = os.path.join(os.path.dirname(self.fccAna.outputFile), outputFile)
+      copiedRootFile = os.path.join(os.path.dirname(self.fccAna.OutputFile), outputFile)
 
       mock_copy.assert_called_once_with( renamedRootFile, copiedRootFile )
       self.log_mock.debug.assert_any_call( "Application : Root file '%s' copied successfully to '%s'" % (renamedRootFile, copiedRootFile) )
@@ -604,11 +539,11 @@ class TestFccAnalysis( unittest.TestCase ):
 
       mock_exists.side_effect = self.replace_exists
       mock_getctime.side_effect = replace_getctime
-      mock_move.side_effect = IOError()
+      mock_move.side_effect = IOError("ioerror")
       mock_glob.return_value = root_files
 
       old = os.path.realpath(root_files[0])
-      error_message = "Application : Root file '%s' renaming failed" % old
+      error_message = "Application : Root file '%s' renaming failed\nioerror" % old
       assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
 
       self.log_mock.error.assert_called_once_with( error_message )
@@ -632,18 +567,18 @@ class TestFccAnalysis( unittest.TestCase ):
 
       mock_exists.side_effect = self.replace_exists
       mock_getctime.side_effect = replace_getctime
-      mock_copy.side_effect = IOError()
+      mock_copy.side_effect = IOError("ioerror")
       mock_glob.return_value = root_files
 
       old = os.path.realpath(root_files[0])
 
-      outputFile = "JobID_%s_%s" % (self.fccAna.jobID, os.path.basename(self.fccAna.outputFile))
+      outputFile = "JobID_%s_%s" % (self.fccAna.jobID, os.path.basename(self.fccAna.OutputFile))
       renamedRootFile = os.path.realpath(outputFile)
             
-      copiedRootFile = os.path.join(os.path.dirname(self.fccAna.outputFile), outputFile)
+      copiedRootFile = os.path.join(os.path.dirname(self.fccAna.OutputFile), outputFile)
 
 
-      error_message = "Application : Root file '%s' copy failed" % renamedRootFile
+      error_message = "Application : Root file '%s' copy failed\nioerror" % renamedRootFile
 
       assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
 
@@ -757,9 +692,9 @@ class TestFccAnalysis( unittest.TestCase ):
       debug_message = 'Application : Card file reading successfull'
       assertEqualsImproved( message, debug_message, self )   
 
-  @patch('__builtin__.open', new=Mock(side_effect=IOError()) )
+  @patch('__builtin__.open', new=Mock(side_effect=IOError("ioerror")) )
   def test_readfromfile_failed( self ):
     content, message  = self.fccAna.readFromFile("/my/file/to/read")    
     assertEqualsImproved( None, content, self )   
-    error_message = 'Application : Card file reading failed'
+    error_message = 'Application : Card file reading failed\nioerror'
     assertEqualsImproved( error_message, message, self )   

@@ -41,8 +41,6 @@ class UserJob(Job):
     self.njobs = njobs
     self.totalNumberOfEvents = nevents
     self.eventsPerJob = eventsPerJob
-    self._userApplications = set()
-    self.logLevel = "ALWAYS"
 
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
@@ -275,12 +273,10 @@ class UserJob(Job):
 
     """
 
-    if application in self._userApplications:
+    if application in self.applicationlist:
       errorMessage = "Append : You try to append many times the same application, please fix it !"     
       self.log.error(errorMessage)
       return self._reportError(errorMessage)
-
-    self._userApplications.add(application)
 
     if not application.numberOfEvents:
       application.numberOfEvents = self.totalNumberOfEvents
@@ -289,6 +285,7 @@ class UserJob(Job):
 
     debugMessage = "Append : Application '%s' registering ..." % appName 
     self.log.debug(debugMessage)
+
     return super(UserJob, self).append(application)
 
   ##############################  SPLITTING STUFF : NEW METHODS ##############################
@@ -375,7 +372,7 @@ class UserJob(Job):
 
     self.log.info("Job consistency : _checkJobConsistency()...")
 
-    if not self._userApplications:
+    if not self.applicationlist:
       errorMessage = (
         "Job : Your job is empty !\n"
         "You have to append at least one application\n"
@@ -403,9 +400,9 @@ class UserJob(Job):
 
     # All applications should have the same number of events
     # We can get this number from the first application for example
-    sameNumberOfEvents = next(iter(self._userApplications)).numberOfEvents
+    sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
 
-    if not all(app.numberOfEvents == sameNumberOfEvents for app in self._userApplications):
+    if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
       self.log.warn("Job : Applications should all have the same number of events")
 
     if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:

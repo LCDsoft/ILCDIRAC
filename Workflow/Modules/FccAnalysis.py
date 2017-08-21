@@ -36,12 +36,11 @@ class FccAnalysis(ModuleBase):
     self.enable = True
 
     self.fccExecutable = ''
-    self.fccConfFile = ''
+    self.isGaudiOptionsFileNeeded = False
     self.gaudiOptionsFile = ''
     self.fccAppIndex = ''
     self.STEP_NUMBER = ''
     self.RandomSeed = 0
-    self.outputFile = ''
     self.read = False
     self.randomGenerator = {}
     self.environmentScript = ''
@@ -143,14 +142,14 @@ class FccAnalysis(ModuleBase):
         self.InputFile = os.path.join(os.path.dirname(getInputFile), inputFile)
     
     if self.InputFile:
-      self.fccConfFile = self.InputFile
+      self.SteeringFile = self.InputFile
       self.log.debug("Application : Configuration file taken from the input file '%s'" % self.InputFile)
-    #elif self.fccConfFile and not self.fccConfFile.startswith('/cvmfs/'):
+    #elif self.SteeringFile and not self.SteeringFile.startswith('/cvmfs/'):
     # We uploaded even cvmfs file to sandbox in Fcc module
-    elif self.fccConfFile:
-      self.fccConfFile = os.path.realpath(os.path.basename(self.fccConfFile))
+    elif self.SteeringFile:
+      self.SteeringFile = os.path.realpath(os.path.basename(self.SteeringFile))
 
-    if not os.path.exists(self.fccConfFile):
+    if not os.path.exists(self.SteeringFile):
       errorMessage = (
         "Environment : FCC configuration file does not exist,"
         " can not run FCC application"
@@ -209,8 +208,8 @@ class FccAnalysis(ModuleBase):
 
     try:
       os.makedirs(self.applicationFolder)
-    except OSError:
-      errorMessage = "Application : Creation of the application folder '%s' failed" % self.applicationFolder
+    except OSError as e:
+      errorMessage = "Application : Creation of the application folder '%s' failed\n%s" % (self.applicationFolder, e)
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
@@ -227,15 +226,15 @@ class FccAnalysis(ModuleBase):
 
     # FCC PHYSICS does not need this file so do not resolve it if it is not given
     # else 'realpath of "" ' will result in cwd.
-    if self.gaudiOptionsFile:
+    if self.isGaudiOptionsFileNeeded:
       if not self.generateGaudiConfFile():
-        errorMessage = "ApplicationgGaudi options : generateGaudiConfFile() failed"
+        errorMessage = "Application code : generateGaudiConfFile() failed"
         self.log.error(errorMessage)
         return S_ERROR(errorMessage)
 
     # Main command
     bashCommands = ['%s %s %s' %
-                    (self.fccExecutable, self.fccConfFile, self.gaudiOptionsFile)]
+                    (self.fccExecutable, self.SteeringFile, self.gaudiOptionsFile)]
 
 
     if not self.generateBashScript(bashCommands):
@@ -283,7 +282,7 @@ class FccAnalysis(ModuleBase):
       old = os.path.realpath(lastCreatedRootFileName)
 
       # Output file renaming with the JOB_ID pre-pended to make it "unique"
-      outputFile = "JobID_%s_%s" % (self.jobID, os.path.basename(self.outputFile))
+      outputFile = "JobID_%s_%s" % (self.jobID, os.path.basename(self.OutputFile))
 
       # Update output data name else job will never find output data specified
       # at the user level through Job.setOutputData("myOutput.root") because we are renaming it
@@ -305,8 +304,8 @@ class FccAnalysis(ModuleBase):
       # Rename root file to make it unique
       try:
         shutil.move(old, renamedRootFile)
-      except IOError, shutil.Error:
-        errorMessage = "Application : Root file '%s' renaming failed" % old
+      except (IOError, shutil.Error) as e:
+        errorMessage = "Application : Root file '%s' renaming failed\n%s" % (old, e)
         self.log.error(errorMessage)
         return S_ERROR(errorMessage)
 
@@ -316,13 +315,13 @@ class FccAnalysis(ModuleBase):
       debugMessage = "Application : Root file '%s' copy..." % renamedRootFile
       self.log.debug(debugMessage)
 
-      copiedRootFile = os.path.join(os.path.dirname(self.outputFile), outputFile)
+      copiedRootFile = os.path.join(os.path.dirname(self.OutputFile), outputFile)
 
       # Copy root file to the Application folder
       try:
         shutil.copy(renamedRootFile, copiedRootFile)
-      except IOError, shutil.Error:
-        errorMessage = "Application : Root file '%s' copy failed" % renamedRootFile
+      except (IOError, shutil.Error) as e:
+        errorMessage = "Application : Root file '%s' copy failed\n%s" % (renamedRootFile, e)
         self.log.error(errorMessage)
         return S_ERROR(errorMessage)
 
@@ -332,39 +331,6 @@ class FccAnalysis(ModuleBase):
     return S_OK("Execution of the FCC application successfull")
 
 ###############################  FccAnalysis METHODS #############################################
-  def chmod(self, file, permission):
-    """This function sets the permission of a file.
-    We want to make the bash script executable.
-
-    :param file: The file to set the permission
-    :type file: str
-
-    :param permisssion: The permission ('W', 'R' or 'X')
-    :type permission: str
-
-    :return: The success or the failure of setting the permission
-    :rtype: bool
-
-    """
-
-    # Reflet chmod a+permission
-    # Make the file x,r, or w for everyone
-    userPermission = eval('stat.S_I%sUSR' % permission)
-    groupPermission = eval('stat.S_I%sGRP' % permission)
-    otherPermission = eval('stat.S_I%sOTH' % permission)
-
-    permission = userPermission | groupPermission | otherPermission
-
-    try:
-      # Get actual mode of the file
-      mode = os.stat(file).st_mode
-      # Merge the new permission with the existing one
-      os.chmod(file, mode | permission)
-    except OSError:
-      return False
-
-    return True
-
   def generateBashScript(self, commands):
     """This function generates a bash script containing the environment setup
     and the command related to the FCC application.
@@ -396,10 +362,7 @@ class FccAnalysis(ModuleBase):
 
     self.log.debug("Application file : Bash script rights setting...")
 
-    # Make the script executable and readable for all
-    if not (self.chmod(self.applicationScript, 'R') and self.chmod(self.applicationScript, 'X')):
-      self.log.error("Application file : Bash script rights setting failed")
-      return False
+    os.chmod( self.applicationScript, 0755 )
 
     self.log.debug("Application file : Bash script rights setting successfull")
 
@@ -566,8 +529,8 @@ class FccAnalysis(ModuleBase):
       # Create file with 'operation' permission
       with open(fileName, operation) as textFile:
         textFile.write(fileText)
-    except IOError:
-      errorMessage = "Application : File write operation failed"
+    except IOError as  e:
+      errorMessage = "Application : File write operation failed\n%s" % e
       self.log.error(errorMessage)
       return False
 
@@ -589,8 +552,8 @@ class FccAnalysis(ModuleBase):
     try:
       with open(fileName, 'r') as file:
         content = file.read()
-    except IOError:
-      errorMessage = 'Application : Card file reading failed'
+    except IOError as e:
+      errorMessage = 'Application : Card file reading failed\n%s' % e
       return None, errorMessage
 
     debugMessage = 'Application : Card file reading successfull'
