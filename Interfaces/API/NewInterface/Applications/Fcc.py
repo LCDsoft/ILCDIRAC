@@ -107,19 +107,19 @@ class Fcc(Application):
     md1 = self._createModuleDefinition()
 
     md1.addParameter(Parameter("fccExecutable", "", "string", "", "", False, False,
-                   "The executable to run"))
+                               "The executable to run"))
 
     md1.addParameter(Parameter("isGaudiOptionsFileNeeded", False, "bool", "", "", False, False,
-                   "Gaudi configuration file"))
+                               "Gaudi configuration file"))
 
     md1.addParameter(Parameter("logLevel", "", "string", "", "", False, False,
-                   "Gaudi Log Level"))
+                               "Gaudi Log Level"))
 
     md1.addParameter(Parameter("read", "", "string", "", "", False, False,
-                   "Application can read or generate events"))
+                               "Application can read or generate events"))
 
     md1.addParameter(Parameter("randomGenerator", {}, "dict", "", "", False, False,
-                   "Pythia card files"))
+                               "Pythia card files"))
 
     return md1
 
@@ -338,7 +338,8 @@ class Fcc(Application):
     return S_OK()
 
 ###############################  Fcc METHODS #####################################################
-  def _findPath(self, path):
+  @staticmethod
+  def _findPath(path):
     """This function checks if file/folder exists.
 
     :param path: The path to look for
@@ -437,7 +438,8 @@ class Fcc(Application):
 
     return True
 
-  def _readFromFile(self, fileName):
+  @staticmethod
+  def _readFromFile(fileName):
     """This function reads a file and returns its content.
 
     :param fileName: The path of the file to read
@@ -819,7 +821,7 @@ class FccSw(Fcc):
     return True
 
   def _filterFolders(self, tempFolder, actualFolder,
-            filteredExtension, excludeOrInclude):
+                     filteredExtension, excludeOrInclude):
     """Knowing the filter for each folder, we copy the 'filtered'
     folder in the temporary folder 'temp_fcc_dirac'.
 

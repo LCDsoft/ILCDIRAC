@@ -194,8 +194,8 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_checkjobconsistency_failed( self ):
     error_message = (
-        "Job : Job submission failed"
-        "Job : _checkJobConsistency() failed"
+      "Job : Job submission failed"
+      "Job : _checkJobConsistency() failed"
     )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )  
@@ -206,8 +206,8 @@ class UserJobTestCase( unittest.TestCase ):
   def test_split_bydata_failed( self ):
     self.ujo.splittingOption = "byData"
     error_message = (
-        "Job : job submission failed"
-        "Job : _splitBySomething() failed"
+      "Job : job submission failed"
+      "Job : _splitBySomething() failed"
     )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
@@ -218,8 +218,8 @@ class UserJobTestCase( unittest.TestCase ):
   def test_split_byevents_failed( self ):
     self.ujo.splittingOption = "byEvents"
     error_message = (
-        "Job : job submission failed"
-        "Job : _splitBySomething() failed"
+      "Job : job submission failed"
+      "Job : _splitBySomething() failed"
     )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
@@ -230,31 +230,11 @@ class UserJobTestCase( unittest.TestCase ):
   def test_split_atomicsubmission_failed( self ):
     self.ujo.splittingOption = None
     error_message = (
-        "Job : job submission failed"
-        "Job : _splitBySomething() failed"
+      "Job : job submission failed"
+      "Job : _splitBySomething() failed"
     )
     assertDiracFailsWith( self.ujo._split(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
-
-  def test_append( self ):
-    self.ujo.splittingOption = True
-    app1 = Fcc()
-    
-    PARENT_MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Job'
-    with patch('%s.Job.append' % PARENT_MODULE_NAME) as mock_append:
-
-      self.ujo.append(app1)
-      self.log_mock.debug.assert_called_once_with( "Append : Application '%s' registering ..." % app1.__class__.__name__ )
-      mock_append.assert_called_once_with( app1 )
-
-  def test_append_failed( self ):
-    self.ujo.splittingOption = True
-    app1 = Fcc()
-    app2 = Fcc()    
-    self.ujo.applicationlist = [app1, app2]
-    error_message = "Append : You try to append many times the same application, please fix it !"
-    assertDiracFailsWith( self.ujo.append(app1), error_message, self )
-    self.log_mock.error.assert_called_with( error_message )
 
   def test_atomicsubmission( self ):
     app1 = Fcc()
@@ -515,4 +495,5 @@ class UserJobTestCase( unittest.TestCase ):
     for data in input_data:
       self.assertIn( data, self.ujo._data )
 
-    assertEqualsImproved( self.ujo.splittingOption, "byData", self )  
+    assertEqualsImproved( self.ujo.splittingOption, "byData", self )
+    

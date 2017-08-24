@@ -27,7 +27,7 @@ class FccMixin( object ):
     """set up the objects"""
 
     def replace_realpath( path ):
-          return os.path.join("/test/realpath", path)
+      return os.path.join("/test/realpath", path)
         
     patches = [ patch("os.getcwd",  new=Mock(return_value="/test/curdir")),
                 patch("os.path.dirname", new=Mock(return_value="/test/dirname")),
@@ -144,7 +144,6 @@ class FccMixin( object ):
     self.fcc.outputFile = "outputFileName"
 
     self.fcc._checkFinalConsistency()
-    outputFile = os.path.join(self.fcc.applicationFolder, self.fcc.outputFile)
     self.assertIn( self.fcc.logFile, self.fcc._outputSandbox ) 
     self.assertIn( "%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox ) 
       
@@ -153,7 +152,6 @@ class FccMixin( object ):
     self.fcc.logFile = "logFile"
 
     self.fcc._checkFinalConsistency()
-    outputFile = os.path.join(self.fcc.applicationFolder, "%s.root" % self.fcc.applicationFolder)
     self.assertIn( self.fcc.logFile, self.fcc._outputSandbox ) 
     self.assertIn( "%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox ) 
 
@@ -272,7 +270,7 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
 
   def test_checkconsistency_noexecutable( self ):
     # NOTHING TO DO
-    self.assertTrue( True )
+    pass
 
   def test_checkconsistency_nofccswpath( self ):
     self.fcc.fccSwPath = None
@@ -542,8 +540,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     
     with patch('os.path.exists') as  mock_exists, \
          patch('os.listdir') as mock_listdir, \
-         patch('os.makedirs') as mock_makedirs, \
-         patch('shutil.copyfile') as mock_shutil, \
+         patch('os.makedirs') , \
+         patch('shutil.copyfile'), \
          patch('os.path.isfile') as mock_isfile: 
 
       mock_exists.return_value = True
@@ -678,7 +676,6 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   def test_filterfolders_exclude_txt( self ):
     temp_folder = "/my/temp/folder"
     actual_folder = "/my/actual/folder"
-    actual_sub_folder = os.path.join(actual_folder, 'folder2')
 
     source1 = os.path.realpath(os.path.join(actual_folder, 'file11.txt'))
     destination1 = os.path.realpath(os.path.join(temp_folder, 'file11.txt'))

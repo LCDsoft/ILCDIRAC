@@ -8,7 +8,6 @@
 # standard libraries
 import os
 import re
-import stat
 import glob
 import shutil
 
@@ -99,8 +98,8 @@ class FccAnalysis(ModuleBase):
       self.RandomSeed = self.jobID
 
     debugMessage = (
-    "Splitting : Parameter 'RandomSeed' given successfully"
-    " with this value '%(RandomSeed)s'" % {'RandomSeed':self.RandomSeed}
+      "Splitting : Parameter 'RandomSeed' given successfully"
+      " with this value '%(RandomSeed)s'" % {'RandomSeed':self.RandomSeed}
     )
 
     self.log.debug(debugMessage)
@@ -348,8 +347,8 @@ class FccAnalysis(ModuleBase):
 
     self.log.debug("Application file : Bash script rights setting...")
 
-    os.chmod( self.applicationScript, 0755 )
-
+    os.chmod( self.applicationScript, 0o755 )
+    
     self.log.debug("Application file : Bash script rights setting successfull")
 
     return True
@@ -391,11 +390,10 @@ class FccAnalysis(ModuleBase):
 
       randomEngineName = "HepRndm::Engine<CLHEP::RanluxEngine>"
 
-      def munge(x):
-        if x == ':' or x == '<' or x == '>': return '_'
-        return x
+      charsToReplace = [':', '<', '>']
 
-      randomEngineName = ''.join(map(munge,randomEngineName))
+      for char in charsToReplace:
+        randomEngineName = randomEngineName.replace(char, "_")
 
       seedSetting = ['from GaudiSvc.GaudiSvcConf import %s' % randomEngineName]
       seedSetting += ["randomEngine = eval('%s')" % randomEngineName]
@@ -425,7 +423,7 @@ class FccAnalysis(ModuleBase):
     
       fccInputDataSubstitution = [ '%s' for data in self.InputData]
       fccInputData = ["os.path.realpath(os.path.basename('%s'))" % data
-                  for data in self.InputData]
+                      for data in self.InputData]
       # We can provide many input files to FCCDataSvc() like this :
       inputSetting = "FCCDataSvc().input='%s' %% (%s)" % (" ".join(fccInputDataSubstitution), ", ".join(fccInputData))
       fccswPodioOptions += [inputSetting]
@@ -433,13 +431,13 @@ class FccAnalysis(ModuleBase):
       gaudiOptions += fccswPodioOptions
 
     self.gaudiOptionsFile = os.path.join(self.applicationFolder,
-                         '%s_gaudiOptions.py' % self.fccAppIndex)
+                                         '%s_gaudiOptions.py' % self.fccAppIndex)
 
     debugMessage = 'FCCSW configuration : Gaudi configuration file creation...'
     self.log.debug(debugMessage)
 
     return self.writeToFile('w', self.gaudiOptionsFile,
-                "\n".join(gaudiOptions) + '\n')
+                            "\n".join(gaudiOptions) + '\n')
 
   def generateScriptOnTheFly(self, sysConfig="", appName="", appVersion=""):
     """Normally, this function has to generate dynamically the
@@ -524,7 +522,8 @@ class FccAnalysis(ModuleBase):
     self.log.debug(debugMessage)
     return True
     
-  def readFromFile(self, fileName):
+  @staticmethod  
+  def readFromFile(fileName):
     """This function reads a file and returns its content.
 
     :param fileName: The path of the file to read
@@ -536,8 +535,8 @@ class FccAnalysis(ModuleBase):
     """
 
     try:
-      with open(fileName, 'r') as file:
-        content = file.read()
+      with open(fileName, 'r') as fileToRead:
+        content = fileToRead.read()
     except IOError as e:
       errorMessage = 'Application : Card file reading failed\n%s' % e
       return None, errorMessage

@@ -42,7 +42,7 @@ class UserJob(Job):
     self.numberOfJobs = None
     self.totalNumberOfEvents = None
     self.eventsPerJob = None
-    self.numberOfFilesPerJob = None
+    self.numberOfFilesPerJob = 1
 
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
@@ -243,45 +243,17 @@ class UserJob(Job):
 
   
   ##############################  SPLITTING STUFF : METHODS ##############################
-  # Some methods have been added/redefined :
+  # Some methods have been added :
   #
-  # 1) append
-  # 2) _atomicSubmission
-  # 3) _checkJobConsistency
-  # 4) _split
-  # 5) _splitByData
-  # 6) _splitByEvents
+  # 1) _atomicSubmission
+  # 2) _checkJobConsistency
+  # 3) _split
+  # 4) _splitByData
+  # 5) _splitByEvents
   # 7) _toInt
   #
   # Given the type of splitting (byEvents, byData), these functions compute
   # the right parameters of the method 'Job.setParameterSequence()'
-  ##############################  SPLITTING STUFF : Job.append() METHOD REDEFINITION ##############################
-  def append(self, application):
-    """Redefinition of Dirac.Interfaces.API.Job.append()
-    in order to save applications into a set to detect duplicates.
-
-    :param application: The application to append
-    :type application: ILCDIRAC.Interfaces.API.NewInterface.Application
-
-    :return: The success or the failure of the consistency checking
-    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
-
-    """
-
-    if application in self.applicationlist:
-      errorMessage = "Append : You try to append many times the same application, please fix it !"     
-      self.log.error(errorMessage)
-      return self._reportError(errorMessage)
-
-    if not application.numberOfEvents:
-      application.numberOfEvents = self.totalNumberOfEvents
-
-    appName = application.__class__.__name__
-
-    debugMessage = "Append : Application '%s' registering ..." % appName 
-    self.log.debug(debugMessage)
-
-    return super(UserJob, self).append(application)
 
   ##############################  SPLITTING STUFF : NEW METHODS ##############################
   def setSplitEvents( self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None ):
@@ -431,7 +403,7 @@ class UserJob(Job):
     sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
 
     if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
-          self.log.warn("Job : Applications should all have the same number of events")
+      self.log.warn("Job : Applications should all have the same number of events")
 
     if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:
       warnMessage = (

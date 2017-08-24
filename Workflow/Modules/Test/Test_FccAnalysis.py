@@ -4,7 +4,7 @@ Unit tests for the FccAnalysis.py file
 
 import unittest
 import os
-from mock import patch, mock_open, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.FccAnalysis import FccAnalysis
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, \
 assertDiracFailsWith, assertDiracSucceedsWith
@@ -28,10 +28,10 @@ class TestFccAnalysis( unittest.TestCase ):
       return os.path.join("/test/realpath", path)
         
     patches = [ 
-                patch("%s.os.path.realpath" % MODULE_NAME, new=Mock(side_effect=replace_realpath)),
-                patch("%s.os.path.dirname" % MODULE_NAME, new=Mock(return_value="/test/dirname")),
-                patch("%s.FccAnalysis.redirectLogOutput" % MODULE_NAME, new=Mock())
-              ]
+      patch("%s.os.path.realpath" % MODULE_NAME, new=Mock(side_effect=replace_realpath)),
+      patch("%s.os.path.dirname" % MODULE_NAME, new=Mock(return_value="/test/dirname")),
+      patch("%s.FccAnalysis.redirectLogOutput" % MODULE_NAME, new=Mock())
+    ]
 
     for patcher in patches:
       patcher.start()
@@ -129,7 +129,7 @@ class TestFccAnalysis( unittest.TestCase ):
 
       self.assertTrue( self.fccAna.generateBashScript(["command1", "command2"]) )
       mock_write.assert_called_once_with( 'w', self.fccAna.applicationScript, '#!/bin/bash\nsource \ncommand1\ncommand2\n' )   
-      mock_chmod.assert_any_call( self.fccAna.applicationScript, 0755 )
+      mock_chmod.assert_any_call( self.fccAna.applicationScript, 0o775 )
       self.log_mock.debug.assert_any_call( "Application code : Bash script creation successfull" )
       self.log_mock.debug.assert_any_call( "Application file : Bash script rights setting successfull" )
 
@@ -177,7 +177,7 @@ class TestFccAnalysis( unittest.TestCase ):
 
     fccInputDataSubstitution = [ '%s' for data in self.fccAna.InputData]
     fccInputData = ["os.path.realpath(os.path.basename('%s'))" % data
-                for data in self.fccAna.InputData]
+                    for data in self.fccAna.InputData]
     # We can provide many input files to FCCDataSvc() like this :
     inputSetting = "FCCDataSvc().input='%s' %% (%s)" % (" ".join(fccInputDataSubstitution), ", ".join(fccInputData))
     fccswPodioOptions += [inputSetting]
@@ -324,7 +324,7 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.ignoreapperrors = True
     self.exists_dict[self.fccAna.applicationLog] = False
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists, \
          patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value={'OK' : True, 'Value' : ["", "stdout", "stderr"]})) as mock_shellcall:
 
@@ -344,7 +344,7 @@ class TestFccAnalysis( unittest.TestCase ):
     self.exists_dict[self.fccAna.applicationLog] = False
     self.fccAna.ignoreapperrors = False
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists, \
          patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value={'OK' : True, 'Value' : ["", "stdout", "stderr"]})) as mock_shellcall:
 
@@ -363,7 +363,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.glob.glob" % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit( self ):
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists, \
          patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value={'OK' : True, 'Value' : ["", "stdout", "stderr"]})) as mock_shellcall:
 
@@ -385,7 +385,7 @@ class TestFccAnalysis( unittest.TestCase ):
   def test_runit_with_inputdata( self ):
     input_data = "/ilc/user/u/username/jobID/data1"    
     self.fccAna.workflow_commons['InputData'] = input_data
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
@@ -398,7 +398,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_without_inputdata( self ):
     self.fccAna.workflow_commons['InputData'] = ''    
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
@@ -413,7 +413,7 @@ class TestFccAnalysis( unittest.TestCase ):
     number_of_events = 126    
     self.fccAna.workflow_commons['NbOfEvts'] = number_of_events
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
@@ -427,7 +427,7 @@ class TestFccAnalysis( unittest.TestCase ):
   def test_runit_without_numberofevents( self ):
     self.fccAna.workflow_commons['NbOfEvts'] = 0
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
@@ -448,7 +448,7 @@ class TestFccAnalysis( unittest.TestCase ):
 
     self.exists_dict[input_file] = True
     
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
@@ -463,9 +463,7 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_without_inputfile( self ):
-    input_file = os.path.realpath("inputFile1")
-
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists
@@ -483,7 +481,7 @@ class TestFccAnalysis( unittest.TestCase ):
     def replace_getctime( path ):
       return getctime_dict[path]
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch("%s.glob.glob" % MODULE_NAME) as mock_glob, \
          patch("os.path.getctime") as mock_getctime, \
          patch("shutil.move") as mock_move, \
@@ -526,7 +524,7 @@ class TestFccAnalysis( unittest.TestCase ):
     def replace_getctime( path ):
       return getctime_dict[path]
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch("%s.glob.glob" % MODULE_NAME) as mock_glob, \
          patch("os.path.getctime") as mock_getctime, \
          patch("shutil.move") as mock_move, \
@@ -553,7 +551,7 @@ class TestFccAnalysis( unittest.TestCase ):
     def replace_getctime( path ):
       return getctime_dict[path]
 
-    with patch('os.makedirs') as mock_makedirs, \
+    with patch('os.makedirs'), \
          patch("%s.glob.glob" % MODULE_NAME) as mock_glob, \
          patch("os.path.getctime") as mock_getctime, \
          patch("shutil.move") as mock_move, \
@@ -597,7 +595,7 @@ class TestFccAnalysis( unittest.TestCase ):
     
     with patch('%s.FccAnalysis.readFromFile'  % MODULE_NAME) as mock_read, \
          patch('%s.FccAnalysis.writeToFile'  % MODULE_NAME) as mock_write, \
-         patch('os.makedirs') as mock_makedirs, \
+         patch('os.makedirs'), \
          patch('os.path.exists') as  mock_exists, \
          patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value={'OK' : True, 'Value' : ["", "stdout", "stderr"]})) as mock_shellcall:
 
@@ -625,11 +623,9 @@ class TestFccAnalysis( unittest.TestCase ):
       seedSetting += ["Random:seed = 1234         ! -1=default seed, 0=seed based on time, >0 user seed number"]
       contentWithEventSeedSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
         
-      contentWithEventSet = "%s\n%s\n" % (contentWithEventSet, "\n".join(seedSetting))
-
       self.log_mock.debug.assert_any_call( message )
       mock_read.assert_called_once_with( card_file )
-      mock_write.assert_any_call( 'w', card_file, contentWithEventSet )
+      mock_write.assert_any_call( 'w', card_file, contentWithEventSeedSet )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
