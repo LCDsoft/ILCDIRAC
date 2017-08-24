@@ -75,7 +75,7 @@ def mkModuleRest( classname, fullclassname ):
     lines.append("   :inherited-members:" )
     lines.append("   :undoc-members:" )
     lines.append("   :show-inheritance:" )
-    if classname.startswith("_"):
+    if classname.startswith("_") or any( name == classname for name in ('UserJob', 'Application' ) ):
       lines.append( "   :private-members:" )
     rst.write("\n".join(lines))
 
@@ -131,7 +131,7 @@ def createDoc():
     for filename in files:
       if "test" in filename.lower():
         continue
-      if "__init__.py" == filename:
+      if filename == "__init__.py":
         continue
       if not filename.endswith(".py"):
         continue
