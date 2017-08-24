@@ -86,8 +86,7 @@ class FccMixin( object ):
 
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency( self ):
-    with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)),\
-         patch.object(self.fcc, '_setFilterToFolders', new=Mock(return_value=True)):
+    with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)):
       
       info_message = (
         "Application general consistency : _checkConsistency()"
@@ -197,18 +196,6 @@ class FccMixin( object ):
     )
     self.log_mock.debug.assert_called_with( debug_message )
 
-  @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
-  def test_importtosandbox( self ):
-    self.assertTrue( super(type(self.fcc), self.fcc)._importToSandbox() )
-    debug_message = "Sandboxing : Importation of user files/folders successfull"
-    self.log_mock.debug.assert_called_with( debug_message )
-
-  @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=False))
-  def test_importtosandbox_failed( self ):
-    self.assertFalse( super(type(self.fcc), self.fcc)._importToSandbox() )
-    error_message = "Sandboxing : _importFiles() failed"
-    self.log_mock.error.assert_called_once_with( error_message )
-
   def test_readfromfile( self ):
     with patch('__builtin__.open') as mock_open:
       manager = mock_open.return_value.__enter__.return_value
@@ -230,14 +217,6 @@ class FccMixin( object ):
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=False))
   def test_checkconsistency_importtosandbox_failed( self ):
     assertDiracFailsWith( self.fcc._checkConsistency(), "_importToSandbox() failed" , self )
-
-  @patch('os.path.exists', new=Mock(return_value=True) )
-  def test_checkconsistency_setfiltertofolders_failed( self ):
-    with patch.object( self.fcc, '_importToSandbox', new=Mock(return_value=True) ),\
-         patch.object(self.fcc, '_setFilterToFolders', new=Mock(return_value=False)):
-
-      assertDiracFailsWith( self.fcc._checkConsistency(), "_setFilterToFolders() failed" , self )
-      self.log_mock.info.assert_called_with( "Sandboxing : Sandboxing successfull" )
 
   @patch('os.path.exists', new=Mock(return_value=True) )
   def test_findPath( self ):
@@ -424,6 +403,16 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       self.assertFalse( self.fcc._importToSandbox() )  
 
   @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
+  @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=True))
+  def test_importtosandbox_setfiltertofolders_failed( self ):
+    with patch.object(self.fcc, '_importFccswFiles', new=Mock(return_value=True)), \
+         patch.object(self.fcc, '_setFilterToFolders', new=Mock(return_value=False)):
+
+      self.assertFalse( self.fcc._importToSandbox() )
+      error_message = "_setFilterToFolders() failed"
+      self.log_mock.error.assert_called_once_with( error_message )
+
+  @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=False))
   def test_importtosandbox_super_method_failed( self ):
     with patch.object(self.fcc, '_importFccswFiles', new=Mock(return_value=True)):    
@@ -489,12 +478,6 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   def test_checkfinalconsistency( self ):
     self.fcc._checkFinalConsistency()
     self.assertTrue( self.fcc.isGaudiOptionsFileNeeded )
-
-  def test_setfiltertofolders( self ):
-    self.fcc._foldersToFilter = None
-    self.assertTrue( self.fcc._setFilterToFolders() )
-    debug_message = "Sandboxing : No filtering required"
-    self.log_mock.debug.assert_called_once_with( debug_message )
 
   @patch("os.path.exists", new=Mock(return_value=False))  
   def test_setfiltertofolders_exists_failed( self ):
@@ -821,8 +804,14 @@ class FccAnalysisTestCase( FccMixin, unittest.TestCase ):
     )    
     self.assertTrue( fccphysics_read_delphes.read )
 
-  def test_setfiltertofolders( self ):
-    self.assertTrue( self.fcc._setFilterToFolders() )
-    debug_message = "Sandboxing : FccAnalysis does not need extra folders to filter"
-    self.log_mock.debug.assert_called_once_with( debug_message )
-  
+  @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
+  def test_importtosandbox( self ):
+    self.assertTrue( self.fcc._importToSandbox() )
+    debug_message = "Sandboxing : Importation of user files/folders successfull"
+    self.log_mock.debug.assert_called_with( debug_message )
+
+  @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=False))
+  def test_importtosandbox_failed( self ):
+    self.assertFalse( self.fcc._importToSandbox() )
+    error_message = "Sandboxing : _importFiles() failed"
+    self.log_mock.error.assert_called_once_with( error_message )

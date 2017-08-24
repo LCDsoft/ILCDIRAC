@@ -49,8 +49,6 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.fccAppIndex = "%s_%s_Step_%s" % (self.fccAna.applicationName, self.fccAna.applicationVersion, self.fccAna.STEP_NUMBER)
     self.fccAna.applicationFolder = os.path.realpath(self.fccAna.fccAppIndex)
     self.fccAna.applicationScript = os.path.join(self.fccAna.applicationFolder, "%s.sh" % self.fccAna.fccAppIndex)
-    self.fccAna.workflow_commons['InputData'] = ''
-    self.fccAna.workflow_commons['NbOfEvts'] = 0
 
     self.exists_dict = { self.fccAna.SteeringFile : True, self.fccAna.applicationFolder : False, self.fccAna.applicationLog : True}
     
@@ -382,62 +380,6 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
-  def test_runit_with_inputdata( self ):
-    input_data = "/ilc/user/u/username/jobID/data1"    
-    self.fccAna.workflow_commons['InputData'] = input_data
-    with patch('os.makedirs'), \
-         patch('os.path.exists') as  mock_exists :
-
-      mock_exists.side_effect = self.replace_exists
-      assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
-      assertEqualsImproved( self.fccAna.InputData, input_data, self )
-
-  @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
-  def test_runit_without_inputdata( self ):
-    self.fccAna.workflow_commons['InputData'] = ''    
-    with patch('os.makedirs'), \
-         patch('os.path.exists') as  mock_exists :
-
-      mock_exists.side_effect = self.replace_exists
-      assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
-      assertEqualsImproved( self.fccAna.InputData, '', self )
-
-  @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
-  def test_runit_with_numberofevents( self ):
-    number_of_events = 126    
-    self.fccAna.workflow_commons['NbOfEvts'] = number_of_events
-
-    with patch('os.makedirs'), \
-         patch('os.path.exists') as  mock_exists :
-
-      mock_exists.side_effect = self.replace_exists
-      assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
-      assertEqualsImproved( self.fccAna.NumberOfEvents, number_of_events, self )
-
-  @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
-  def test_runit_without_numberofevents( self ):
-    self.fccAna.workflow_commons['NbOfEvts'] = 0
-
-    with patch('os.makedirs'), \
-         patch('os.path.exists') as  mock_exists :
-
-      mock_exists.side_effect = self.replace_exists
-      assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
-      assertEqualsImproved( self.fccAna.NumberOfEvents, 0, self )
-
-  @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=[]))
   def test_runit_with_inputfile( self ):
     get_input_file = os.path.realpath("inputFile1")
     self.fccAna.step_commons['InputFile'] = get_input_file
@@ -590,7 +532,7 @@ class TestFccAnalysis( unittest.TestCase ):
     card_file = "/path/to/cardFile"
     self.fccAna.randomGenerator = {"Pythia" : [card_file]}
     self.fccAna.RandomSeed = 1234
-    self.fccAna.workflow_commons['NbOfEvts'] = 42
+    self.fccAna.NumberOfEvents = 42
 
     
     with patch('%s.FccAnalysis.readFromFile'  % MODULE_NAME) as mock_read, \

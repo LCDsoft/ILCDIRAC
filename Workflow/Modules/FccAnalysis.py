@@ -86,12 +86,6 @@ class FccAnalysis(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
-    # Worflow parameters given on the fly thanks to Job.setParameterSequence() method
-    self.InputData = self.workflow_commons['InputData']
-
-    self.NumberOfEvents = self.workflow_commons['NbOfEvts']
-
-
     if 'IS_PROD' in self.workflow_commons:
       self.RandomSeed = int(str(int(self.workflow_commons["PRODUCTION_ID"])) + str(int(self.workflow_commons["JOB_ID"])))
     elif self.jobID:

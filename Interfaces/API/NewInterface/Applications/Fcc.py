@@ -91,7 +91,7 @@ class Fcc(Application):
     self._moduledescription = "Module running FCC software"
     self.appname = self.__class__.__name__
     self.applicationFolder = ''
-    self.version = "v1.0"
+    self.version = "v0.8.1"
     self.energy = 0
     self.numberOfEvents = 0
 
@@ -215,13 +215,6 @@ class Fcc(Application):
     # This output can be used as input for another application.
     # In this way, app2.getInputFromApp(app1) method knows the ouput file of the given application
     # app1 thanks to its method setOutputFile().
-    
-    # Before submitting the job, we filter some folders required by applications
-    # and we import the filtered folders to the sandbox.
-    if not self._setFilterToFolders():
-      errorMessage = "_setFilterToFolders() failed"
-      self._log.error(errorMessage)
-      return S_ERROR(errorMessage)
     
     # self.inputSB is an attribute of the DIRAC Application and not of FCC.
     # The description file of the job (JDL file) contains a section for the input sandbox
@@ -574,7 +567,17 @@ class FccSw(Fcc):
       self._log.error(errorMessage)
       return False
 
-    return self._importFccswFiles()
+    if not self._importFccswFiles():
+      return False
+
+    # After sandboxing, we filter some folders required by applications
+    # and we import the filtered folders to the sandbox.
+    if not self._setFilterToFolders():
+      errorMessage = "_setFilterToFolders() failed"
+      self._log.error(errorMessage)
+      return False
+
+    return True
 
   def _importFccswFiles(self):
     """FCCSW application needs additional files specified in the configuration file
@@ -954,13 +957,3 @@ class FccAnalysis(Fcc):
       self.read = True
     else:
       self.randomGenerator = {"Pythia":[os.path.basename(fccConfFile)]}
-
-  def _setFilterToFolders(self):
-    """FccAnalysis does not need extra folders to filter
-
-    :return: The success value
-    :rtype: bool
-
-    """
-    self._log.debug("Sandboxing : FccAnalysis does not need extra folders to filter")
-    return True
