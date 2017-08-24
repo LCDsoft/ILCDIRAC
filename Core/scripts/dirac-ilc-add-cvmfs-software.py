@@ -2,7 +2,7 @@
 '''
 Add software from CVMFS to the CS
 
-Give list of applications, init_script path, MokkaDBSlice, ILDConfigPath (if set)
+Give list of applications, init_script path, MokkaDBSlice, [Clic|ILD]ConfigPath (if set)
 
 Created on Feb 18, 2015
 '''
@@ -23,7 +23,8 @@ class Params(object):
     self.dbSliceLocation = ''
     self.initScriptLocation = ''
     self.basePath = ''
-    self.ildConfigPath = ''
+    self.configPath = ''
+    self.dryRun = False
 
   def setVersion(self, optionValue):
     self.version = optionValue
@@ -54,8 +55,12 @@ class Params(object):
     self.basePath = optionValue
     return S_OK()
 
-  def setILDConfig(self, optionValue):
-    self.ildConfigPath = optionValue
+  def setConfig(self, optionValue):
+    self.configPath = optionValue
+    return S_OK()
+
+  def setDryrun(self, _):
+    self.dryRun = True
     return S_OK()
 
 
@@ -70,7 +75,9 @@ class Params(object):
 
     appListLower = { _.lower() for _ in self.applicationSet }
 
-    if 'ildconfig' not in appListLower or len(appListLower) > 1:
+    ## if we have only config applications we do not need the initScript or the
+    ## basepath, just the config path
+    if all( not app.endswith('config') for app in appListLower ):
 
       if not self.initScriptLocation:
         return S_ERROR("Initscript location is not defined")
@@ -81,10 +88,11 @@ class Params(object):
     if 'mokka' in appListLower and not self.dbSliceLocation:
       return S_ERROR("Mokka in application list, but not dbSlice location given")
 
-    if 'ildconfig' in appListLower and not self.ildConfigPath:
-      return S_ERROR("ILDConfig in application list, but no location given")
+    ## if we have a config package we need the configPath
+    if any( app.endswith('config') for app in appListLower ) and not self.configPath:
+      return S_ERROR("Config in application list, but no location given")
 
-    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation, self.ildConfigPath ):
+    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation, self.configPath ):
       if val and not os.path.exists(val):
         gLogger.error("Cannot find this path:", val)
         return S_ERROR("CVMFS not mounted, or path is misstyped")
@@ -101,9 +109,12 @@ class Params(object):
     Script.registerSwitch("S:", "Script=", "Full path to initScript", self.setInitScript)
     Script.registerSwitch("B:", "Base=", "Path to Installation Base", self.setBasePath)
 
-    Script.registerSwitch("O:", "ILDConfig=", "Path To ILDConfig (if it is in ApplicationPath)", self.setILDConfig)
+    Script.registerSwitch("O:", "Config=", "Path To [Clic|ILD]Config (if it is in ApplicationPath)", self.setConfig)
+    Script.registerSwitch("", "ILDConfig=", "Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]", self.setConfig)
 
     Script.registerSwitch("Q:", "DBSlice=", "Path to Mokka DB Slice", self.setDBSlice)
+
+    Script.registerSwitch("N", "dry-run", "DryRun: do not commit to CS", self.dryRun)
 
 
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
@@ -168,7 +179,7 @@ class CVMFSAdder(object):
 
   def commitToCS(self):
     """write changes to the CS to the server"""
-    if self.modifiedCS:
+    if self.modifiedCS and not self.cliParams.dryRun:
       gLogger.notice("Commiting changes to the CS")
       result = self.csAPI.commit()
       if not result[ 'OK' ]:
@@ -199,9 +210,9 @@ class CVMFSAdder(object):
         insertCSSection( self.csAPI, csPathModels, csModels )
         self.modifiedCS = True
 
-      elif application == 'ildconfig':
+      elif application.endswith('config'):
         del csParameter['CVMFSEnvScript']
-        csParameter['CVMFSPath'] = self.cliParams.ildConfigPath
+        csParameter['CVMFSPath'] = self.cliParams.configPath
         if self.cliParams.dbSliceLocation:
           csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
 
