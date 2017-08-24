@@ -213,3 +213,35 @@ Running Overlay and Marlin with CLIC_o3_v12
 
 
   job.submit( dIlc )
+
+
+Automatic Job Splitting
+-----------------------
+
+.. code:: python
+
+  from DIRAC.Core.Base import Script
+  Script.parseCommandLine()
+
+  from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+  from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+  from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin, OverlayInput
+
+  dIlc = DiracILC()
+
+  job = UserJob()
+  job.setInputData( "/ilc/prod/clic/3tev/qqqq/CLIC_o3_v12/SIM/00008298/000/qqqq_sim_8298_1.slcio" )
+  job.setOutputSandbox( "*.log" )
+  job.setOutputData( "myReco_1.slcio" )
+  job.setCLICConfig( "ILCSoft-2017-07-27" )
+  job.setParameterSequence('NbOfEvts', [10,10])
+
+  ddsim = DDSim()
+  ddsim.setVersion("ILCSoft-2017-07-27_gcc62")
+  ddsim.setDetectorModel("CLIC_o3_v13")
+  ddsim.setInputFile("LFN:/ilc/prod/clic/500gev/Z_uds/gen/0/00.stdhep")
+  ddsim.setNumberOfEvents( 10 )
+  ddsim.setSteeringFile( "clic_steer.py" )
+  ddsim.setOutputFile( "ddsimout.slcio" )
+  myJob.append(ddsim)
+  myJob.submit( dIlc )
