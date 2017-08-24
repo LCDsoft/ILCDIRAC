@@ -140,6 +140,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     appName = 'ClicConfig'
     self._addSoftware(appName.lower(), version)
     self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'ClicConfig package' )
+    self.prodparameters['ClicConfigVersion'] = version
     return S_OK()
 
 
@@ -529,6 +530,13 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       info.append('- SW tags %s' % self.prodparameters["SoftwareTag"])
     if "ILDConfigVersion" in self.prodparameters:
       info.append('- ILDConfig %s' % self.prodparameters['ILDConfigVersion'])  
+
+    if 'ClicConfigVersion' in self.prodparameters:
+      info.append('- ClicConfig %s' % self.prodparameters['ClicConfigVersion'] )
+
+    if 'extraCLIArguments' in self.prodparameters:
+      info.append('- ExtraCLIArguments %s' % self.prodparameters['extraCLIArguments'] )
+
     # as this is the very last call all applications are registered, so all software packages are known
     #add them the the metadata registration
     for finalpath in self.finalpaths:
@@ -812,6 +820,10 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       self.prodparameters.update(application.prodparameters)
     except Exception as x:
       return S_ERROR("Exception: %r" % x )
+
+    if hasattr( application, 'extraCLIArguments' ) and application.extraCLIArguments:
+      self.prodparameters['extraCLIArguments'] = repr(application.extraCLIArguments)
+
     return S_OK()
 
   def _jobSpecificModules(self, application, step):

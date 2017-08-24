@@ -70,6 +70,8 @@ class CLICDetProdChain( object ):
   :param str finalOutputSE: final destination for files when moving transformations are enabled
   :param str additionalName: additionalName to add to the transformation name in case a
         transformation with that name already exists
+  :param str cliReco: additional CLI options for reconstruction, optional
+
   """
 
   class Flags( object ):
@@ -224,6 +226,9 @@ MoveTypes = %(moveTypes)s
     self.additionalName = params.additionalName
 
     self.overlayEvents = ''
+    self._overlayEventType = None
+
+    self.cliReco = ''
 
     self._flags = self.Flags()
 
@@ -270,6 +275,10 @@ MoveTypes = %(moveTypes)s
 
       if config.has_option(PP, 'additionalName'):
         self.additionalName = config.get(PP, 'additionalName')
+
+      if config.has_option(PP, 'cliReco'):
+        self.cliReco = config.get(PP, 'cliReco')
+
 
       self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
                            if config.has_option(PP, 'overlayEvents') else ''
@@ -345,6 +354,9 @@ finalOutputSE = %(finalOutputSE)s
 ## optional additional name
 # additionalName = %(additionalName)s
 
+## optional marlin CLI options
+# cliReco = %(cliReco)s
+
 ## optional energy to use for overlay: e.g. 3TeV
 # overlayEvents = %(overlayEvents)s
 
@@ -397,6 +409,7 @@ finalOutputSE = %(finalOutputSE)s
     keys are float or int
     values are lambda functions acting on an overlay application object
     """
+
     return {
       350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay350GeV') ] ),
       380. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
@@ -426,11 +439,10 @@ finalOutputSE = %(finalOutputSE)s
 
     raise NotImplementedError( 'unknown splitType: %s ' % splitType )
 
-  def addOverlayOptionsToMarlin( self, marlin, energy ):
+  def addOverlayOptionsToMarlin( self, energy ):
     """ add options to marlin that are needed for running with overlay """
     energyString = self.overlayEvents if self.overlayEvents else energyWithUnit( energy )
-    cliOptions = ' --Config.Overlay=%s ' % energyString
-    marlin.setExtraCLIArguments( cliOptions )
+    self.cliReco += ' --Config.Overlay=%s ' % energyString
 
   def createDDSimApplication( self ):
     """ create DDSim Application """
@@ -473,7 +485,9 @@ finalOutputSE = %(finalOutputSE)s
     marlin.detectortype = self.detectorModel
 
     if self._flags.over:
-      self.addOverlayOptionsToMarlin( marlin, energy )
+      self.addOverlayOptionsToMarlin( energy )
+
+    marlin.setExtraCLIArguments( self.cliReco )
 
     steeringFile = {
       350. : "clicReconstruction.xml",
