@@ -250,7 +250,7 @@ class UserJob(Job):
   # 3) _split
   # 4) _splitByData
   # 5) _splitByEvents
-  # 7) _toInt
+  # 6) _toInt
   #
   # Given the type of splitting (byEvents, byData), these functions compute
   # the right parameters of the method 'Job.setParameterSequence()'

@@ -129,7 +129,7 @@ class TestFccAnalysis( unittest.TestCase ):
 
       self.assertTrue( self.fccAna.generateBashScript(["command1", "command2"]) )
       mock_write.assert_called_once_with( 'w', self.fccAna.applicationScript, '#!/bin/bash\nsource \ncommand1\ncommand2\n' )   
-      mock_chmod.assert_any_call( self.fccAna.applicationScript, 0o775 )
+      mock_chmod.assert_called_once_with( self.fccAna.applicationScript, 0o755 )
       self.log_mock.debug.assert_any_call( "Application code : Bash script creation successfull" )
       self.log_mock.debug.assert_any_call( "Application file : Bash script rights setting successfull" )
 
