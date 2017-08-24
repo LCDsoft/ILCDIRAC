@@ -431,7 +431,8 @@ class TestMakingParams( unittest.TestCase ):
     self.assertIsNone( self.params.additionalName )
 
   def test_settters( self ):
-    self.assertTrue( self.params.setProdConf( 'myconf' )['OK'] )
+    with patch( "%s.os.path.exists" % THE_SCRIPT, new=Mock(return_value=True)):
+      self.assertTrue( self.params.setProdConf( 'myconf' )['OK'] )
     self.assertEqual( self.params.prodConfigFilename, 'myconf' )
     self.assertTrue( self.params.setDumpConf( '_' )['OK'] )
     self.assertTrue( self.params.dumpConfigFile )

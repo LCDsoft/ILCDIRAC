@@ -16,9 +16,10 @@ Options:
 #pylint disable=wrong-import-position
 
 import ConfigParser
+import os
 
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK, gLogger
+from DIRAC import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 
@@ -34,6 +35,8 @@ class Params(object):
     self.additionalName = None
 
   def setProdConf(self,fileName):
+    if not os.path.exists( fileName ):
+      return S_ERROR("ERROR: File %r not found" % fileName )
     self.prodConfigFilename = fileName
     return S_OK()
   def setDumpConf(self, _):
