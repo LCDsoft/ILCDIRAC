@@ -165,7 +165,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     """ Sets the number of files to be input to each job created.
     """
     if self.checked:
-      return self._reportError("This input is needed at the beginning of the production definition: it's \
+      return self._reportError("This input is needed at the beginning of the production definition: it is \
       needed for total number of evts.")
     self.jobFileGroupSize = files
     self.prodparameters['NbInputFiles'] = files
