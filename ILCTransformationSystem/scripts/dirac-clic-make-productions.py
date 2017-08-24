@@ -650,22 +650,24 @@ finalOutputSE = %(finalOutputSE)s
     targetSE = self.finalOutputSE
     prodID = meta['ProdID']
     try:
-      dataType = { 'MCReconstruction': 'REC',
-                   'MCReconstruction_Overlay': 'REC',
-                   'MCSimulation': 'SIM',
-                   'MCGeneration': 'GEN',
-                 }[prodType]
+      dataTypes = { 'MCReconstruction': ('DST', 'REC'),
+                    'MCReconstruction_Overlay': ('DST', 'REC'),
+                    'MCSimulation': ('SIM',),
+                    'MCGeneration': ('GEN',),
+                  }[prodType]
     except KeyError:
       raise RuntimeError( "ERROR creating MovingTransformation" + repr(prodType) + "unknown" )
 
-    if not getattr( self._flags, "move%s" % dataType.capitalize() ):
+    if not any( getattr( self._flags, "move%s" % dataType.capitalize() ) for dataType in dataTypes ):
       gLogger.notice( "*"*80 + "\nNot creating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
       return
 
     gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
 
     from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
-    createMovingTransformation( targetSE, sourceSE, prodID, dataType )
+    for dataType in dataTypes:
+      if getattr( self._flags, "move%s" % dataType.capitalize() ):
+        createMovingTransformation( targetSE, sourceSE, prodID, dataType )
 
 
   def _updateMeta( self, outputDict, inputDict, eventsPerJob ):

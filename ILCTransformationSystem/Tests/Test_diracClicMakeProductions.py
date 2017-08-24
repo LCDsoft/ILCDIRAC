@@ -9,8 +9,8 @@ from mock import MagicMock as Mock, patch
 from DIRAC import S_OK
 
 #pylint: disable=protected-access, invalid-name
-
-theScript = importlib.import_module("ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions")
+THE_SCRIPT = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions"
+theScript = importlib.import_module(THE_SCRIPT)
 
 __RCSID__ = "$Id$"
 
@@ -288,6 +288,36 @@ class TestMaking( unittest.TestCase ):
         parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
       )
     self.assertEqual( retMeta, {} )
+
+
+  def test_createMovingTransformation( self ):
+    self.chain.outputSE = "Source"
+    self.chain.finalOutputSE = "Target"
+    self.chain._flags._rec=True
+    self.chain._flags._sim=True
+    self.chain._flags._moveDst=True
+    self.chain._flags._moveRec=False
+    self.chain._flags._moveSim=True
+    self.chain._flags._moves=True
+    self.chain._flags._dryRun=False
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+      self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
+      moveMock.assert_called_once_with( "Target", "Source", 666, "DST" )
+
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+      self.chain.createMovingTransformation( {'ProdID':666}, 'MCSimulation' )
+      moveMock.assert_called_once_with( "Target", "Source", 666, "SIM" )
+
+
+    self.chain._flags._rec=True
+    self.chain._flags._moves=False
+    self.chain._flags._dryRun=False
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+      self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
+      moveMock.assert_not_called()
+
+    with self.assertRaisesRegexp( RuntimeError, 'ERROR creating Moving'):
+      self.chain.createMovingTransformation( {'ProdID':666}, "Split" )
 
 
 
