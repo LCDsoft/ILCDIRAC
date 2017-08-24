@@ -6,13 +6,12 @@ Give list of applications, init_script path, MokkaDBSlice, ILDConfigPath (if set
 
 Created on Feb 18, 2015
 '''
-
-__RCSID__ = "$Id$"
+import os
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, gConfig, S_OK, S_ERROR, exit as dexit
 
-import os
+__RCSID__ = "$Id$"
 
 class Params(object):
   """Collection of Parameters set via CLI switches"""
