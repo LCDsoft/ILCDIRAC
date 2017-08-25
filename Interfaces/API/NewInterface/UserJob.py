@@ -35,7 +35,7 @@ class UserJob(Job):
     self.usergroup = ['ilc_user', 'calice_user']
     self.proxyinfo = getProxyInfo()
 
-    ########## SPLITTING STUFF : ATTRIBUTES ##########
+    ########## SPLITTING STUFF: ATTRIBUTES ##########
     self._data = []
     self.splittingOption = None
     self._switch = {}
@@ -56,7 +56,7 @@ class UserJob(Job):
       The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
 
     """
-    if self.splittingOption :
+    if self.splittingOption:
       result = self._split()
       if 'OK' in result and not result['OK']:
         return result
@@ -242,8 +242,8 @@ class UserJob(Job):
     return S_OK()
 
   
-  ##############################  SPLITTING STUFF : METHODS ##############################
-  # Some methods have been added :
+  ##############################  SPLITTING STUFF: METHODS ##############################
+  # Some methods have been added:
   #
   # 1) _atomicSubmission
   # 2) _checkJobConsistency
@@ -255,7 +255,7 @@ class UserJob(Job):
   # Given the type of splitting (byEvents, byData), these functions compute
   # the right parameters of the method 'Job.setParameterSequence()'
 
-  ##############################  SPLITTING STUFF : NEW METHODS ##############################
+  ##############################  SPLITTING STUFF: NEW METHODS ##############################
   def setSplitEvents( self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None ):
     """This function sets split parameters for doing splitting over events
 
@@ -263,15 +263,12 @@ class UserJob(Job):
 
     >>> job = UserJob()
     >>> job.setSplitEvents( numberOfJobs=42, totalNumberOfEvents=126 )
+
+    Exactly two of the parmeters should be set
     
-    :param eventsPerJob: The events processed by a single job
-    :type eventsPerJob: int
-    
-    :param numberOfJobs: The number of jobs
-    :type numberOfJobs: int
-    
-    :param totalNumberOfEvents: The total number of events processed by all jobs
-    :type totalNumberOfEvents: int
+    :param int eventsPerJob: The events processed by a single job
+    :param int numberOfJobs: The number of jobs
+    :param int totalNumberOfEvents: The total number of events processed by all jobs
 
     """
 
@@ -282,29 +279,25 @@ class UserJob(Job):
     self.splittingOption = "byEvents"
 
   def setSplitInputData( self, lfns, numberOfFilesPerJob = 1):
-    """This function sets split parameters for doing splitting over input data
+    """sets split parameters for doing splitting over input data
     
     Example usage:
 
     >>> job = UserJob()
-    >>> job.setSplitInputData(['/ilc/prod/whizard/processlist.whiz'])
+    >>> job.setSplitInputData( listOfLFNs )
 
     :param lfns: Logical File Names
-    :type lfns: Single LFN string or list of LFNs
-
-    :param numberOfFilesPerJob: The number of input data processed by a single job
-    :type numberOfFilesPerJob: int
+    :type lfns: list of LFNs
+    :param int numberOfFilesPerJob: The number of input data processed by a single job
 
     """
-
-    self._data += lfns if isinstance(lfns, list) else [lfns]
-
-    self.numberOfFilesPerJob =  numberOfFilesPerJob
+    self._data = lfns if isinstance(lfns, list) else [lfns]
+    self.numberOfFilesPerJob = numberOfFilesPerJob
 
     self.splittingOption = "byData"
 
   def _split(self):
-    """This function checks the consistency of the job and call the right split method. 
+    """checks the consistency of the job and call the right split method.
 
     :return: The success or the failure of the consistency checking
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
@@ -317,7 +310,7 @@ class UserJob(Job):
     if self.numberOfJobs is False or self.eventsPerJob is False:
       return self._reportError("Splitting: Invalid values for splitting")
 
-    # Switch case python emulation
+    # FIXME: move somewhere more prominent
     self._switch = { "byEvents": self._splitByEvents,
                      "byData": self._splitByData,
                      None: self._atomicSubmission,
@@ -348,20 +341,18 @@ class UserJob(Job):
 
   #############################################################################
   def _atomicSubmission(self):
-    """This function does not do splitting so do not return valid parameters fot setParameterSequence().
+    """called when no splitting is necessary, do not return valid parameters fot setParameterSequence().
     
     :return: parameter name and parameter values for setParameterSequence(), addToWorkflow flag
     :rtype: tuple of (str, list, bool/str)
-
     """
+
     self.log.verbose("Job splitting: No splitting to apply, 'atomic submission' will be used")
     return "Atomic", [], False
 
   #############################################################################
   def _checkJobConsistency(self):
-    """This function :
-
-    - Checks if Job parameters are valid.
+    """checks if Job parameters are valid.
 
     :return: The success or the failure of the consistency checking
     :rtype: bool
@@ -372,7 +363,7 @@ class UserJob(Job):
 
     """
 
-    self.log.info("Job consistency : _checkJobConsistency()...")
+    self.log.info("Job consistency: _checkJobConsistency()...")
 
     if self.splittingOption not in self._switch:
       splitOptions = ",".join( self._switch.keys() )
@@ -396,10 +387,10 @@ class UserJob(Job):
 
   #############################################################################
   def _splitByData(self):
-    """This function wants that a job is submitted per input data.
+    """a job is submitted per input data.
 
     :return: parameter name and parameter values for setParameterSequence()
-    :rtype: str, list
+    :rtype: tuple of (str, list, bool/str)
 
     """
 
@@ -428,10 +419,10 @@ class UserJob(Job):
 
   #############################################################################
   def _splitByEvents(self):
-    """This function wants that a job is submitted per subset of events.
+    """a job is submitted per subset of events.
     
     :return: parameter name and parameter values for setParameterSequence()
-    :rtype: str, list
+    :rtype: tuple of (str, list, bool/str)
 
     """
 
@@ -492,7 +483,8 @@ class UserJob(Job):
 
   #############################################################################
   def _toInt(self, number):
-    """This function casts number parameter to an integer.
+    """casts number parameter to an integer.
+
     It also accepts 'string integer' parameter.
 
     :param number: the number to cast (number of events, number of jobs)
