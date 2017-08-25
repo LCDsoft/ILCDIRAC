@@ -20,6 +20,8 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.UserJob'
 
+#pylint: disable=protected-access
+
 class UserJobTestCase( unittest.TestCase ):
   """ Base class for the UserJob test cases
   """
@@ -159,8 +161,8 @@ class UserJobTestCase( unittest.TestCase ):
 
     with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
   
-      info_message = "Job : Job submission successfull"
-      assertDiracSucceedsWith( self.ujo._split(), info_message, self )
+      info_message = "Job splitting successful"
+      assertDiracSucceeds( self.ujo._split(), self )
       self.log_mock.info.assert_called_with( info_message )
       mock_parametric.assert_called_once_with( "InputData", ["/ilc/user/u/username/data1"], True )
 
@@ -172,8 +174,8 @@ class UserJobTestCase( unittest.TestCase ):
  
     with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
   
-      info_message = "Job : Job submission successfull"
-      assertDiracSucceedsWith( self.ujo._split(), info_message, self )
+      info_message = "Job splitting successful"
+      assertDiracSucceeds( self.ujo._split(), self )
       self.log_mock.info.assert_called_with( info_message )
       mock_parametric.assert_called_once_with( 'NumberOfEvents', [1, 2], 'NbOfEvts' )
 
@@ -182,93 +184,66 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=("Atomic", [], False)))
   def test_split_atomicsubmission( self ):
     self.ujo.splittingOption = None
-    info_message = "Job : Job submission successfull"
-    assertDiracSucceedsWith( self.ujo._split(), info_message, self )
+    info_message = "Job splitting successful"
+    assertDiracSucceeds( self.ujo._split(), self )
     self.log_mock.info.assert_called_with( info_message )
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_inputparameters_failed( self ):
-    assertDiracFailsWith( self.ujo._split(), "Splitting : Invalid values for splitting", self )    
+    assertDiracFailsWith( self.ujo._split(), "Splitting: Invalid values for splitting", self )
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_checkjobconsistency_failed( self ):
-    error_message = (
-      "Job : Job submission failed"
-      "Job : _checkJobConsistency() failed"
-    )
-    assertDiracFailsWith( self.ujo._split(), error_message, self )
-    self.log_mock.error.assert_called_once_with( error_message )  
+    assertDiracFailsWith( self.ujo._split(), "failed", self )
+    self.log_mock.error.assert_called_once()
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._splitByData" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_bydata_failed( self ):
     self.ujo.splittingOption = "byData"
-    error_message = (
-      "Job : job submission failed"
-      "Job : _splitBySomething() failed"
-    )
-    assertDiracFailsWith( self.ujo._split(), error_message, self )
-    self.log_mock.error.assert_called_once_with( error_message )
+    assertDiracFailsWith( self.ujo._split(), "_splitBySomething() failed", self )
+    self.log_mock.error.assert_called_once()
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._splitByEvents" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_byevents_failed( self ):
     self.ujo.splittingOption = "byEvents"
-    error_message = (
-      "Job : job submission failed"
-      "Job : _splitBySomething() failed"
-    )
-    assertDiracFailsWith( self.ujo._split(), error_message, self )
-    self.log_mock.error.assert_called_once_with( error_message )
+    assertDiracFailsWith( self.ujo._split(), "_splitBySomething() failed", self )
+    self.log_mock.error.assert_called_once()
   
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_atomicsubmission_failed( self ):
     self.ujo.splittingOption = None
-    error_message = (
-      "Job : job submission failed"
-      "Job : _splitBySomething() failed"
-    )
-    assertDiracFailsWith( self.ujo._split(), error_message, self )
-    self.log_mock.error.assert_called_once_with( error_message )
+    assertDiracFailsWith( self.ujo._split(), "_splitBySomething() failed", self )
+    self.log_mock.error.assert_called_once()
 
   def test_atomicsubmission( self ):
     app1 = Fcc()
-    app2 = Fcc()    
+    app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
     assertEqualsImproved( self.ujo._atomicSubmission(), ("Atomic", [], False), self )
-    self.log_mock.info.assert_called_with( "Job splitting : No splitting to apply, then 'atomic submission' will be used" )
 
   def test_checkjobconsistency( self ):
     app1 = Fcc()
-    app2 = Fcc()    
+    app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
-    self.ujo._switch = ["byEvents"]
+    self.ujo._switch = {"byEvents": lambda x: x }
     self.ujo.splittingOption = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency() )
-    info_message = "Job consistency : _checkJobConsistency() successfull"
-    self.log_mock.info.assert_called_with( info_message )
 
   def test_checkjobconsistency_bad_split_parameter( self ):
     app1 = Fcc()
-    app2 = Fcc()    
+    app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
-    self.ujo._switch = ["byEvents"]
+    self.ujo._switch = {"byEvents": lambda x: x }
     self.ujo.splittingOption = "byHand"
     self.assertFalse( self.ujo._checkJobConsistency() )
-    error_message = (
-      "Job splitting : Bad split value\n"
-      "Possible values are :\n"
-      "- byData\n"
-      "- byEvents\n"
-      "- None\n"
-      "Job consistency : _checkJobConsistency() failed"
-    )
-    self.log_mock.error.assert_called_once_with( error_message )
+    self.log_mock.error.assert_called_once()
 
   def test_checkjobconsistency_no_same_events( self ):
     app1 = Fcc()
@@ -276,52 +251,37 @@ class UserJobTestCase( unittest.TestCase ):
     app1.numberOfEvents = 1
     app2.numberOfEvents = 2   
     self.ujo.applicationlist = [app1, app2]
-    self.ujo._switch = ["byEvents"]
+    self.ujo._switch = {"byEvents": lambda x: x }
     self.ujo.splittingOption = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency())
-    self.log_mock.warn.assert_called_once_with( "Job : Applications should all have the same number of events" )
+    self.log_mock.warn.assert_called_once_with( "Job: Applications should all have the same number of events" )
 
   def test_checkjobconsistency_negative_events( self ):
     app1 = Fcc()
     app2 = Fcc()
-    app1.numberOfEvents = app2.numberOfEvents = -1    
+    app1.numberOfEvents = app2.numberOfEvents = -1
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = ["byEvents"]
     self.ujo.splittingOption = "byEvents"
     self.assertTrue( self.ujo._checkJobConsistency() )
-    info_message = "Job consistency : _checkJobConsistency() successfull"
-    self.log_mock.info.assert_called_with( info_message )
-    warn_message = (
-      "Job : You set the number of events to -1 without input data\n"
-      "Was that intentional ?"
-    )
-    self.log_mock.warn.assert_called_once_with( warn_message )
 
   def test_splitbydata( self ):
     self.ujo._data = ['data1', 'data2']
     app1 = Fcc()
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
-    assertEqualsImproved( self.ujo._splitByData(), ["InputData", self.ujo._data, False], self )
+    assertEqualsImproved( self.ujo._splitByData(), ["InputData", [['data1'],['data2']], False], self )
 
   def test_splitbydata_no_data( self ):
     self.ujo._data = None
     self.assertFalse( self.ujo._splitByData() )
-    error_message = (
-      "Job splitting : Can not continue, missing input data\n"
-      "splitting 'byData' method needs input data"
-    )
-    self.log_mock.error.assert_called_once_with( error_message )
+    self.log_mock.error.assert_called_once()
 
   def test_splitbydata_incorrectparameter( self ):
     self.ujo._data = ["/path/to/data1","/path/to/data2"]
     self.ujo.numberOfFilesPerJob = 3
     self.assertFalse( self.ujo._splitByData() )
-    error_message = (
-      "Job splitting : The number of input data file per job 'numberOfFilesPerJob'\n"
-      "must be equal or lower than the number of input data you specify"
-    )
-    self.log_mock.error.assert_called_once_with( error_message )
+    self.log_mock.error.assert_called_once()
 
   def test_splitbyevents_1st_case( self ):
     app1 = Fcc()
@@ -329,66 +289,23 @@ class UserJobTestCase( unittest.TestCase ):
     self.ujo.applicationlist = [app1, app2]
 
     self.ujo.eventsPerJob = 2
-    self.ujo.numberOfJobs = 2
+    self.ujo.numberOfJobs = 3
 
-    map_event_job = [2, 2]
+    map_event_job = [2, 2, 2]
 
     assertEqualsImproved( self.ujo._splitByEvents(), ['NumberOfEvents', map_event_job, 'NbOfEvts'], self )
-
-    debug_message = (
-      "Job splitting : 1st case\n"
-      "events per job and number of jobs have been given (easy)"
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )
-
-    debug_message = (
-      "Job splitting : Here is the 'distribution' of events over the jobs\n"
-      "A list element corresponds to a job and the element value"
-      " is the related number of events :\n%(map)s" % {'map':str(map_event_job)}
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )
-
-    info_message = (
-      "Job splitting : Your submission consists"
-      " of %(number)d job(s)" % {'number':len(map_event_job)}
-    )
-    self.log_mock.info.assert_any_call( info_message )
 
   def test_splitbyevents_2nd_case( self ):
     app1 = Fcc()
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
 
-    self.ujo.eventsPerJob = 2
-    self.ujo.totalNumberOfEvents = 2
+    self.ujo.eventsPerJob = 3
+    self.ujo.totalNumberOfEvents = 5
 
-    map_event_job = [2]
+    map_event_job = [3, 2]
 
     assertEqualsImproved( self.ujo._splitByEvents(), ['NumberOfEvents', map_event_job, 'NbOfEvts'], self )
-
-    debug_message = (
-      "Job splitting : 2nd case\n"
-      "Events per job and total number of events have been given"
-      " so we have to compute the number of jobs required"
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )
-
-    debug_message = (
-      "Job splitting : Here is the 'distribution' of events over the jobs\n"
-      "A list element corresponds to a job and the element value"
-      " is the related number of events :\n%(map)s" % {'map':str(map_event_job)}
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )   
-    
-    info_message = (
-      "Job splitting : Your submission consists"
-      " of %(number)d job(s)" % {'number':len(map_event_job)}
-    )
-    self.log_mock.info.assert_any_call( info_message )
 
   def test_splitbyevents_2nd_case_failed( self ):
     app1 = Fcc()
@@ -399,88 +316,29 @@ class UserJobTestCase( unittest.TestCase ):
     self.ujo.totalNumberOfEvents = 2
     self.assertFalse( self.ujo._splitByEvents() )
 
-    debug_message = (
-      "Job splitting : 2nd case\n"
-      "Events per job and total number of events have been given"
-      " so we have to compute the number of jobs required"
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )
-
-    error_message = (
-      "Job splitting : The number of events per job has to be"
-      " lower than or equal to the total number of events"
-    )
-    self.log_mock.error.assert_called_once_with(  error_message )
-
   def test_splitbyevents_3rd_case( self ):
     app1 = Fcc()
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
-
     self.ujo.numberOfJobs = 2
     self.ujo.totalNumberOfEvents = 2
-
     map_event_job = [1, 1]
-
     assertEqualsImproved( self.ujo._splitByEvents(), ['NumberOfEvents', map_event_job, 'NbOfEvts'], self )
-
-    debug_message = (
-      "Job splitting : 3rd case\n"
-      "The number of jobs and the total number of events"
-      " have been given"
-    )
-    
-    self.log_mock.debug.assert_any_call( debug_message )
-
-    debug_message = (
-      "Job splitting : Here is the 'distribution' of events over the jobs\n"
-      "A list element corresponds to a job and the element value"
-      " is the related number of events :\n%(map)s" % {'map':str(map_event_job)}
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )       
-
-    info_message = (
-      "Job splitting : Your submission consists"
-      " of %(number)d job(s)" % {'number':len(map_event_job)}
-    )
-    self.log_mock.info.assert_any_call( info_message )
     
   def test_splitbyevents_3rd_case_failed( self ):
     app1 = Fcc()
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
-
     self.ujo.numberOfJobs = 2
     self.ujo.totalNumberOfEvents = None
-
     self.assertFalse( self.ujo._splitByEvents() )
-
-    debug_message = (
-      "Job splitting : 3rd case\n"
-      "The number of jobs and the total number of events"
-      " have been given"
-    )
-
-    self.log_mock.debug.assert_any_call( debug_message )       
-
-    error_message = (
-      "Job splitting : The number of events has to be set\n"
-      "It has to be greater than or equal to the number of jobs"
-    )
-    self.log_mock.error.assert_called_with( error_message )
 
   def test_toint( self ):
     assertEqualsImproved( self.ujo._toInt("2"), 2, self )
 
   def test_toint_negative( self ):
     self.assertFalse( self.ujo._toInt("-2") )
-    error_message = (
-      "Job splitting : Please, enter valid numbers :\n"
-      "'events per job' and 'number of jobs' must be positive integers"
-    )
-    self.log_mock.error.assert_called_once_with( error_message )
+    self.log_mock.error.assert_called_once()
 
   def test_setsplitevents( self ):
     self.ujo.setSplitEvents( 42, 42, 126 )
