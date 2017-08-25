@@ -18,10 +18,10 @@ Example usage:
 
 from DIRAC import S_OK
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
+from DIRAC.Core.Utilities.List import breakListIntoChunks
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-from DIRAC.Core.Utilities.List import breakListIntoChunks
 
 __RCSID__ = "$Id$"
 
