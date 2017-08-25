@@ -4,7 +4,23 @@ Add software from CVMFS to the CS
 
 Give list of applications, init_script path, MokkaDBSlice, [Clic|ILD]ConfigPath (if set)
 
-Created on Feb 18, 2015
+
+Options:
+
+  -P, --Platform <value>        Platform ex. x86_64-slc5-gcc43-opt
+  -A, --Applications <value>    Comma separated list of applications
+  -V, --Version <value>         Version name
+  -C, --Comment <value>         Comment
+  -S, --Script <value>          Full path to initScript
+  -B, --Base <value>            Path to Installation Base
+  -O, --Config <value>          Path To [Clic|ILD]Config (if it is in ApplicationPath)
+  --ILDConfig <value>           Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]
+  -Q, --DBSlice <value>         Path to Mokka DB Slice
+  -N, --dry-run                 DryRun: do not commit to CS
+
+
+:since: Feb 18, 2015
+
 '''
 import os
 
