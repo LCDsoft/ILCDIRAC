@@ -334,6 +334,8 @@ class UserJob(Job):
    
     if sequenceType != "Atomic":
       self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
+      self.setParameterSequence( 'JobIndexList', range(len(sequenceList)), addToWorkflow='JobIndex' )
+      self._addParameter( self.workflow, 'JobIndex', 'int', 0, 'JobIndex' )
 
     self.log.info("Job splitting successful")
 

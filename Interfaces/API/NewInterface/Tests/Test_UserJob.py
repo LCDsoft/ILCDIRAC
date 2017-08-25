@@ -164,7 +164,7 @@ class UserJobTestCase( unittest.TestCase ):
       info_message = "Job splitting successful"
       assertDiracSucceeds( self.ujo._split(), self )
       self.log_mock.info.assert_called_with( info_message )
-      mock_parametric.assert_called_once_with( "InputData", ["/ilc/user/u/username/data1"], True )
+      mock_parametric.assert_any_call( "InputData", ["/ilc/user/u/username/data1"], True )
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
@@ -177,7 +177,7 @@ class UserJobTestCase( unittest.TestCase ):
       info_message = "Job splitting successful"
       assertDiracSucceeds( self.ujo._split(), self )
       self.log_mock.info.assert_called_with( info_message )
-      mock_parametric.assert_called_once_with( 'NumberOfEvents', [1, 2], 'NbOfEvts' )
+      mock_parametric.assert_any_call( 'NumberOfEvents', [1, 2], 'NbOfEvts' )
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=True))
