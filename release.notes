@@ -167,7 +167,7 @@ FIX: DataRecoveryAgent using DiraAPI getJobJDL function to get dictionary of JDL
 
 * Interfaces:
 
-FIX: Fix exception in internal `_reportError` function when function argument is 'name'
+FIX: Fix exception in internal `DIRAC.Core.Base.API.API._reportError` function when function argument is 'name'
 
 [v26r0p1]
 
