@@ -144,7 +144,7 @@ class FccMixin( object ):
 
     self.fcc._checkFinalConsistency()
     self.assertIn( self.fcc.logFile, self.fcc._outputSandbox ) 
-    self.assertIn( "%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox ) 
+    self.assertIn( "JobID_ID_%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox )
       
   def test_checkfinalconsistency_autooutputfile( self ):
     self.fcc.outputFile = None
@@ -152,7 +152,7 @@ class FccMixin( object ):
 
     self.fcc._checkFinalConsistency()
     self.assertIn( self.fcc.logFile, self.fcc._outputSandbox ) 
-    self.assertIn( "%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox ) 
+    self.assertIn( "JobID_ID_%s (%s)" % (os.path.basename(self.fcc.outputFile), "Name of the eventual output root file"), self.fcc._outputSandbox )
 
   def test_importfiles_no_sandbox( self ):
     self.fcc._tempInputSandbox = None

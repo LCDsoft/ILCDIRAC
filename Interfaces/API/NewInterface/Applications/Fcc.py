@@ -78,7 +78,7 @@ class Fcc(Application):
     self._outputSandbox = set()
 
     # User log level
-    self.logLevel = None
+    self.logLevel = ""
 
     self.datatype = 'REC'
     self.detectortype = 'ILD'
@@ -90,7 +90,7 @@ class Fcc(Application):
     #self._importLocation = 'ILCDIRAC.Workflow.Modules'
     self._moduledescription = "Module running FCC software"
     self.appname = self.__class__.__name__
-    self.applicationFolder = ''
+    self.applicationIndex = ''
     self.version = "v0.8.1"
     self.energy = 0
     self.numberOfEvents = 0
@@ -177,7 +177,7 @@ class Fcc(Application):
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    if True is not self.steeringFile and not isinstance(self.steeringFile, str):
+    if not isinstance(self.steeringFile, str):
       errorMessage = (
         "Consistency : Fcc Application accepts only one input configuration file:\n"
         "If you want to run the application '%(name)s' with many configurations then\n"
@@ -196,7 +196,7 @@ class Fcc(Application):
 
     # All input files are put in the FCC temporary sandbox for a
     # pre-checking before being added to the FCC final sandbox
-    if self.steeringFile and not self._inputapp:
+    if self.steeringFile :
       self._tempInputSandbox.add(self.steeringFile)
 
     infoMessage = "Sandboxing : Sandboxing in progress..."
@@ -253,17 +253,17 @@ class Fcc(Application):
     """
 
     applicationStep = len(self._jobapps) + 1
-    self.applicationFolder = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
+    self.applicationIndex = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
     # Take in priority output file given in setOutputFile
     if self.outputFile :
-      self.setOutputFile(os.path.join(self.applicationFolder, self.outputFile))
+      self.setOutputFile("%s_%s" % (self.applicationIndex, self.outputFile))
     else:
       # Compute root file name    
-      self.setOutputFile(os.path.join(self.applicationFolder, "%s.root" % self.applicationFolder))
+      self.setOutputFile("%s.root" % self.applicationIndex)
 
     # We add the log file and the output file to the output sandbox
     self._outputSandbox.add(self.logFile)
-    self._outputSandbox.add("%s (%s)" % (os.path.basename(self.outputFile), "Name of the eventual output root file") )
+    self._outputSandbox.add("JobID_ID_%s (%s)" % (os.path.basename(self.outputFile), "Name of the eventual output root file") )
       
     infoMessage = (
       "\n********************************FCC SUMMARY******************************\n"
