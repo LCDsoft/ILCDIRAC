@@ -5,6 +5,11 @@
 def addJobIndexToFilename( filename, jobIndex ):
   """ add the jobIndex number to the filename before the extension or replace %n with jobIndex
 
+  For example::
+
+    'myOutputFile.root' --> 'myOutputFile_123.root'
+    'myOutput_%n_File.root' --> 'myOutput_123_File.root'
+
   :param str filename: the original name of the file
   :param int jobIndex: the jobIndex number
   :returns: new filename with jobIndex
