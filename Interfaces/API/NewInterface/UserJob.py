@@ -296,6 +296,16 @@ class UserJob(Job):
 
     self.splittingOption = "byData"
 
+  def setSplitDoNotAlterOutputFilename( self, value=True):
+    """if this option is set the output data lfns will _not_ include the JobIndex
+
+    :param bool value: if *True* disable the changing of the output data
+        filenames. If *False* the JobIndex will be added at the end of
+        OutputData LFNs before the extension. Or replace '%n' with the jobIndex
+        in the fileName. See :func:`Core.Utilities.Splitting.addJobIndexToFilename`
+    """
+    self._addParameter( self.workflow, 'DoNotAlterOutputData', 'JDL', value, 'Do Not Change Output Data' )
+
   def _split(self):
     """checks the consistency of the job and call the right split method.
 
