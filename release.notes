@@ -1,3 +1,37 @@
+[v26r0p12]
+
+*Core
+
+CHANGE: (!141) **GetOverlayFiles** module renamed to :mod:`~ILCDIRAC.Core.Utilities.OverlayFiles` and added some helper functions to it; reduce code duplication in the OverlayInput interface and workflow module
+CHANGE: (!151) `dirac-ilc-add-cvmfs-software` add dryrun option, add possibility to add any Config package
+
+*Workflow
+
+NEW: (!153) if some kind of jobSplitting is done the OutputData LFNs are automatically injected with the JobIndex in the splitting sequence. See :mod:`ILCDIRAC.Core.Utilities.Splitting`
+
+*ILCTransformationSystem
+
+FIX: (!140) :mod:`~ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation`: fix the *targetSE* argument type; fix if *targetSE* is a string
+FIX: (!140) `dirac-clic-make-productions`: *Move* parameter was not parsed before, now moving transformations are also created if it is True
+FIX: (!144) `dirac-clic-make-productions` make more parameters optional
+CHANGE: (!144) `dirac-clic-make-productions` change parameter name *NumberOfEventsInBaseFiles* to *eventsInSplitFiles*
+CHANGE: (!144) `dirac-clic-make-productions` change parameter *overlayEnergy* to *overlayEvents*
+CHANGE: (!144) `dirac-clic-make-productions` Produciton Group is now taking only from the config file, no additional string is added. Use string replacements for automatic group names
+FIX: (!152) `dirac-clic-make-productions`: allow moving of DST files
+NEW: (!152) `dirac-clic-make-productions`: add cliReco option to set extraCLIArguments for Marlin
+
+*Docs
+
+CHANGE: (!140) move production manager notes from the twiki to the ilcdirac docs
+NEW: (!140) CLIC Production manager guide with some notes for CLIC productions
+CHANGE: (!142) restructuring of the documentation; additional example script
+NEW: (!147) Add JIRA issue collector to the doc pages.
+
+*Interface
+
+NEW: (!153) `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitDoNotAlterOutputFilename`: function to disable the injecting of the JobIndex into the filename
+NEW: (!146) `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob`: new functions to ease the automatic splitting of jobs `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitInputData`, `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitEvents`
+
 [v26r0p11]
 *Interface
 
