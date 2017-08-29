@@ -409,11 +409,10 @@ fi
 
   def _checkRunOverlay( self ):
     """ checks if overlay should be run and which overlay parameters are there, allows running multiple overlay input steps """
-    softwarePackages = self.workflow_commons.get('SoftwarePackages','').split(';')
     overlayParam = []
-    for package in softwarePackages:
-      if package.lower().startswith('overlayinput'):
-        stepNumber = int( package.split('.')[1] ) + 1 # softwarepackages start at 0, STEP_NUMBER at 1
+    for parameter in sorted( self.workflow_commons ):
+      if parameter.startswith('OI_') and parameter.endswith('_eventType'):
+        stepNumber = int( parameter.split('_')[1] )
         eventsPerBackgroundFile = self.workflow_commons.get("OI_%i_eventsPerBackgroundFile" % stepNumber)
         backgroundType = self.workflow_commons.get("OI_%i_eventType" % stepNumber )
         processorName = self.workflow_commons.get("OI_%i_processorName" % stepNumber, None )
@@ -421,7 +420,6 @@ fi
         self.log.info( "Background type: %s " % backgroundType )
         overlayParam.append( (backgroundType, eventsPerBackgroundFile, processorName) )
 
-    #By default return False
     return S_OK( overlayParam )
 
 

@@ -9,8 +9,8 @@ from mock import MagicMock as Mock, patch
 from DIRAC import S_OK
 
 #pylint: disable=protected-access, invalid-name
-
-theScript = importlib.import_module("ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions")
+THE_SCRIPT = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions"
+theScript = importlib.import_module(THE_SCRIPT)
 
 __RCSID__ = "$Id$"
 
@@ -48,9 +48,11 @@ class TestMaking( unittest.TestCase ):
       'finalOutputSE': 'VAULT-101',
       'additionalName': 'waitForIt',
       'prodIDs': '123, 456',
-      'NumberOfEventsInBaseFiles': '5000, 6000',
+      'eventsInSplitFiles': '5000, 6000',
       'ProdTypes': 'Gen, RecOver',
       'MoveTypes': '',
+      'overlayEvents': '',
+      'cliReco': '--Config.Tracking=Tracked',
     }
 
     self.pMockMod = Mock()
@@ -84,6 +86,20 @@ class TestMaking( unittest.TestCase ):
                        'Machine': 'clic',
                       }, ret )
 
+
+  def test_overlayParameter( self ):
+    self.assertEqual( self.chain.checkOverlayParameter( '300GeV' ), '300GeV' )
+    self.assertEqual( self.chain.checkOverlayParameter( '3TeV' ), '3TeV' )
+    self.assertEqual( self.chain.checkOverlayParameter( '' ), '' )
+
+    with self.assertRaisesRegexp( RuntimeError, "does not end with unit" ):
+      self.chain.checkOverlayParameter( '3000' )
+
+    with self.assertRaisesRegexp( RuntimeError, "does not end with unit" ):
+      self.chain.checkOverlayParameter( '3tev' )
+
+
+
   def test_loadParameters( self ):
     parameter = Mock()
     parameter.prodConfigFilename = None
@@ -106,7 +122,7 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual( c.prodIDs, [123, 456] )
     self.assertEqual( c.energies, [100, 200] )
     self.assertEqual( c.eventsPerJobs, [1000, 2000] )
-    self.assertEqual( c.eventsPerBaseFiles, [5000, 6000] )
+    self.assertEqual( c.eventsInSplitFiles, [5000, 6000] )
 
     self.configDict['prodIDs'] = "123, 456, 789"
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
@@ -119,13 +135,14 @@ class TestMaking( unittest.TestCase ):
                 new=Mock(return_value=cpMock ) ):
       c.loadParameters( parameter )
     self.assertEqual( c.prodIDs, [1, 1] )
+    self.assertEqual( c.cliReco, '--Config.Tracking=Tracked' )
 
 
-    self.configDict['NumberOfEventsInBaseFiles'] = "1000"
+    self.configDict['eventsInSplitFiles'] = "1000"
     c._flags._spl = True
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
                 new=Mock(return_value=cpMock ) ), \
-      self.assertRaisesRegexp( AttributeError, "Length of eventsPerBaseFiles"):
+      self.assertRaisesRegexp( AttributeError, "Length of eventsInSplitFiles"):
       c.loadParameters( parameter )
 
 
@@ -156,6 +173,20 @@ class TestMaking( unittest.TestCase ):
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
+    self.assertEqual( self.chain.cliReco, '--Config.Tracking=Tracked --Config.Overlay=300GeV ' )
+
+    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+                new=Mock(return_value=cpMock ) ):
+      self.chain.loadParameters( parameter )
+    self.chain._flags._over = False
+
+    ret = self.chain.createMarlinApplication( 300.0 )
+    self.assertIsInstance( ret, Marlin )
+    self.assertEqual( ret.detectortype, 'myDetectorModel' )
+    self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
+    self.assertEqual( self.chain.cliReco, '--Config.Tracking=Tracked' )
+
+
 
   def test_createDDSimApplication( self ):
 
@@ -236,15 +267,18 @@ class TestMaking( unittest.TestCase ):
 
   def test_createRecoProduction( self ):
 
+    self.chain._flags._over = True
+    self.assertTrue( self.chain._flags.over )
+    self.chain.overlayEvents = '1.4TeV'
     with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
       retMeta = self.chain.createReconstructionProduction(
         meta = { 'ProdID':23, 'Energy':350 },
         prodName = "prodJamesProd",
         parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
       )
-
     self.assertEqual( retMeta, {} )
 
+    self.assertEqual( self.chain.cliReco, ' --Config.Overlay=1.4TeV ' )
 
   def test_createSimProduction( self ):
     with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
@@ -254,6 +288,36 @@ class TestMaking( unittest.TestCase ):
         parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
       )
     self.assertEqual( retMeta, {} )
+
+
+  def test_createMovingTransformation( self ):
+    self.chain.outputSE = "Source"
+    self.chain.finalOutputSE = "Target"
+    self.chain._flags._rec=True
+    self.chain._flags._sim=True
+    self.chain._flags._moveDst=True
+    self.chain._flags._moveRec=False
+    self.chain._flags._moveSim=True
+    self.chain._flags._moves=True
+    self.chain._flags._dryRun=False
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+      self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
+      moveMock.assert_called_once_with( "Target", "Source", 666, "DST" )
+
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+      self.chain.createMovingTransformation( {'ProdID':666}, 'MCSimulation' )
+      moveMock.assert_called_once_with( "Target", "Source", 666, "SIM" )
+
+
+    self.chain._flags._rec=True
+    self.chain._flags._moves=False
+    self.chain._flags._dryRun=False
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+      self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
+      moveMock.assert_not_called()
+
+    with self.assertRaisesRegexp( RuntimeError, 'ERROR creating Moving'):
+      self.chain.createMovingTransformation( {'ProdID':666}, "Split" )
 
 
 
@@ -367,7 +431,8 @@ class TestMakingParams( unittest.TestCase ):
     self.assertIsNone( self.params.additionalName )
 
   def test_settters( self ):
-    self.assertTrue( self.params.setProdConf( 'myconf' )['OK'] )
+    with patch( "%s.os.path.exists" % THE_SCRIPT, new=Mock(return_value=True)):
+      self.assertTrue( self.params.setProdConf( 'myconf' )['OK'] )
     self.assertEqual( self.params.prodConfigFilename, 'myconf' )
     self.assertTrue( self.params.setDumpConf( '_' )['OK'] )
     self.assertTrue( self.params.dumpConfigFile )
@@ -375,6 +440,8 @@ class TestMakingParams( unittest.TestCase ):
     self.assertFalse( self.params.dryRun )
     self.assertTrue( self.params.setAddName( 'addName')['OK'] )
     self.assertEqual( self.params.additionalName, 'addName')
+
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestMaking )

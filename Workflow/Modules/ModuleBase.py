@@ -413,7 +413,7 @@ class ModuleBase(object):
       ### This must stay, otherwise, linking between steps is impossible: OutputFile is a string
       inputf = self.step_commons['InputFile']
       if not isinstance( inputf, list ):
-        if len(inputf):
+        if inputf:
           inputf = inputf.split(";")
         else:
           inputf = []
@@ -424,7 +424,7 @@ class ModuleBase(object):
     if 'InputData' in self.workflow_commons:
       inputdata = self.workflow_commons['InputData']
       if not isinstance( inputdata, list ):
-        if len(inputdata):
+        if inputdata:
           self.InputData = inputdata.split(";")
           self.InputData = [x.replace("LFN:","") for x in self.InputData]
       else:
@@ -433,7 +433,7 @@ class ModuleBase(object):
     if 'ParametricInputData' in self.workflow_commons:
       paramdata = self.workflow_commons['ParametricInputData']
       if not isinstance( paramdata, list ):
-        if len(paramdata):
+        if paramdata:
           self.InputData = [x.replace("LFN:","") for x in paramdata.split(";")]
       else:
         ## paramdata is a list, and we might need to get rid of "LFN:"
@@ -566,7 +566,7 @@ class ModuleBase(object):
         self.setApplicationStatus("Creating Removal Requests")
         self._cleanUp(prodOutputLFNs)
 
-    if not len( request ):
+    if not len(request): #pylint: disable=len-as-condition
       self.log.info("No Requests to process ")
       return S_OK()
 
@@ -619,7 +619,7 @@ class ModuleBase(object):
     if self.eventstring is None:
       print message
 
-    elif len(self.eventstring) and len(self.eventstring[0]):
+    elif self.eventstring and self.eventstring[0]:
       for mystring in self.eventstring:
         if re.search(re.escape(mystring), message):
           print message

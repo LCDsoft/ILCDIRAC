@@ -74,6 +74,14 @@ class ProductionJobCompleteTestCase( unittest.TestCase ):
     assertDiracSucceeds( res, self )
     assertEqualsImproved(self.prodJob.prodparameters['ILDConfigVersion'], ver, self)
 
+
+  def test_setclicconfig( self ):
+    ver = '2017-99-99'
+    res = self.prodJob.setClicConfig(ver)
+    assertDiracSucceeds( res, self )
+    assertEqualsImproved(self.prodJob.prodparameters['ClicConfigVersion'], ver, self)
+
+
 class ProductionJobSetJobFileGroupSizeTest( ProductionJobTestCase ):
   """ Tests the setJobFileGroupSize method
   """
@@ -463,6 +471,8 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.prodparameters = { 'JobType' : [ 'mytest' ], 'lumi' : 12, 'NbInputFiles' : 1,
                            'FCInputQuery' : { 'sampleKey' : 'sampleValue' }, 'SWPackages' : 'mytestpackages',
                            'SoftwareTag' : 'Monday', 'ILDConfigVersion' : 'goodILDConfversion123.2' }
+    job.prodparameters['ClicConfigVersion'] = 'better3.14'
+    job.prodparameters['extraCLIArguments'] = '--Config.Tracking=Awesome'
     job.finalpaths = [ 'testpath123/a/b/c', 'othertestpath/many_dirs/file.txt' ]
     job.slicesize = 561
     job.metadict_external = { 'additional_entry' : 'swpackage_value' }
@@ -680,16 +690,55 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
       self.prodJob.detector = 'mycooldetector'
       assertDiracFailsWith( self.prodJob.append(self.myapp), 'some_prodparam_err', self )
 
+
+  def hasAttrMocks( self, *args, **kwargs ): #pylint: disable=unused-argument
+    """ mock the operations getConfig calls """
+    print "arguments",args, kwargs
+    opsDict={
+      'extraCLIArguments': False,
+      'detectorModel': False,
+      'detectortype': False,
+      'eventType': True,
+      'outputFile': True,
+      'datatype': True,
+      'setOutputRecFile': False,
+      'setOutputDstFile': False,
+    }
+    self.assertIn( args[1], opsDict )
+    return opsDict[ args[1] ]
+
+  def hasAttrMocks_2( self, *args, **kwargs ): #pylint: disable=unused-argument
+    """ mock the operations getConfig calls """
+    print "arguments",args, kwargs
+    opsDict={
+      'extraCLIArguments': False,
+      'detectorModel': False,
+      'detectortype': True,
+      'eventType': True,
+      'outputFile': True,
+      'datatype': True,
+      'setOutputRecFile': False,
+      'setOutputDstFile': False,
+    }
+    self.assertIn( args[1], opsDict )
+    return opsDict[ args[1] ]
+
   def test_jobSpecificParams_detector_and_datatype( self ):
     self.myapp.setOutputSE.return_value = S_OK(True)
     self.prodJob.evttype = ''
     self.myapp.willBeCut = False
     self.myapp.outputFile = False
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, False]), create=True), \
+    self.myapp.extraCLIArguments = ''
+    hasAttrMock = Mock()
+    hasAttrMock.side_effect = self.hasAttrMocks
+    with patch('%s.hasattr' % MODULE_NAME, new=hasAttrMock, create=True), \
          patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
     self.prodJob.evttype = ''
-    with patch('%s.hasattr' % MODULE_NAME, new=Mock(side_effect=[True, False, True, True, True]), create=True):
+
+    hasAttrMock = Mock()
+    hasAttrMock.side_effect = self.hasAttrMocks_2
+    with patch('%s.hasattr' % MODULE_NAME, new=hasAttrMock, create=True):
       self.myapp.detectortype = 'application_detectortype'
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
 

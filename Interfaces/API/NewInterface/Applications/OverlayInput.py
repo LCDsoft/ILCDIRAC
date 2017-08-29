@@ -1,17 +1,17 @@
 """
 OverlayInput : Helper call to define Overlay processor/driver inputs
 """
-__RCSID__ = "$Id$"
+import types
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
 from ILCDIRAC.Workflow.Modules.OverlayInput import allowedBkg
+from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithLowerCaseUnit
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC import S_OK, S_ERROR
-from decimal import Decimal
-from math import modf
-import types
+
+__RCSID__ = "$Id$"
 
 class OverlayInput(LCUtilityApplication):
   """ Helper call to define Overlay processor/driver inputs.
@@ -307,13 +307,7 @@ class OverlayInput(LCUtilityApplication):
     if self.machine not in sections:
       return S_ERROR("Machine %s does not have overlay data, use any of %s" % (self.machine, sections))
 
-    fracappen = modf(float(self.energy)/1000.)
-    if fracappen[1] > 0:
-      energytouse = "%stev" % (Decimal(str(self.energy))/Decimal("1000."))
-    else:
-      energytouse =  "%sgev" % (Decimal(str(self.energy)))
-    if energytouse.count(".0"):
-      energytouse = energytouse.replace(".0", "")
+    energytouse = energyWithLowerCaseUnit( self.energy )
     res = self._ops.getSections("/Overlay/%s" % self.machine)
     if energytouse not in res['Value']:
       return S_ERROR("No overlay files corresponding to %s" % energytouse)

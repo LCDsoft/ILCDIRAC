@@ -20,6 +20,7 @@ import DIRAC
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData               import constructUserLFNs
 from ILCDIRAC.Core.Utilities.ResolveSE                    import getDestinationSEList
+from ILCDIRAC.Core.Utilities.Splitting                    import addJobIndexToFilename
 
 __RCSID__ = "$Id$"
 
@@ -183,6 +184,8 @@ class UserJobFinalization(ModuleBase):
     if not self.enable:
       return S_OK('Module is disabled by control flag')
 
+    self.injectJobIndex( final )
+
     #Instantiate the failover transfer client with the global request object
     failoverTransfer = FailoverTransfer(self._getRequestContainer())
 
@@ -324,6 +327,19 @@ class UserJobFinalization(ModuleBase):
       self.log.info('--------%s--------' % fileName)
       for metaName, metaValue in metadata.iteritems():
         self.log.info('%s = %s' %(metaName, metaValue))
+
+  def injectJobIndex(self, final):
+    """ add the jobIndex to the output file name """
+    if self.workflow_commons.get( 'JobIndex' ) is None:
+      return
+    if not self.workflow_commons.get( 'DoNotAlterOutputData' ):
+      return
+
+    jobIndex = self.workflow_commons.get( 'JobIndex' )
+    for _, metaInfo in final.iteritems():
+      orgLFN = metaInfo['lfn']
+      metaInfo['lfn'] = addJobIndexToFilename( orgLFN, jobIndex )
+      self.log.info( "Changing '%s' to '%s'" % ( orgLFN, metaInfo['lfn'] ) )
 
   def transferAndRegisterFiles(self, final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate):
     """transfer and register files to storage elements

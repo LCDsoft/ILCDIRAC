@@ -16,9 +16,12 @@ Options:
 #pylint disable=wrong-import-position
 
 import ConfigParser
+import os
 
 from DIRAC.Core.Base import Script
-from DIRAC import S_OK
+from DIRAC import S_OK, S_ERROR, gLogger
+
+from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
@@ -32,6 +35,8 @@ class Params(object):
     self.additionalName = None
 
   def setProdConf(self,fileName):
+    if not os.path.exists( fileName ):
+      return S_ERROR("ERROR: File %r not found" % fileName )
     self.prodConfigFilename = fileName
     return S_OK()
   def setDumpConf(self, _):
@@ -68,6 +73,8 @@ class CLICDetProdChain( object ):
   :param str finalOutputSE: final destination for files when moving transformations are enabled
   :param str additionalName: additionalName to add to the transformation name in case a
         transformation with that name already exists
+  :param str cliReco: additional CLI options for reconstruction, optional
+
   """
 
   class Flags( object ):
@@ -105,8 +112,8 @@ class CLICDetProdChain( object ):
       self._moveDst = False
 
       ## list of tuple to preserve order
-      self._prodTypes = [ ('gen','Gen'), ('spl','Split'), ('sim','Sim'), ('rec','Rec'), ('over','RecOver') ]
-      self._moveTypes = [ ('moveGen','Gen'), ('moveSim','Sim'), ('moveRec','Rec'), ('moveDst','Dst') ]
+      self._prodTypes = [ ('gen', 'Gen'), ('spl', 'Split'), ('sim', 'Sim'), ('rec', 'Rec'), ('over', 'RecOver') ]
+      self._moveTypes = [ ('moveGen', 'Gen'), ('moveSim', 'Sim'), ('moveRec', 'Rec'), ('moveDst', 'Dst') ]
 
     @property
     def dryRun( self ): #pylint: disable=missing-docstring
@@ -125,7 +132,7 @@ class CLICDetProdChain( object ):
       return self._rec and not self._over
     @property
     def over( self ): #pylint: disable=missing-docstring
-      return self._rec and self._over
+      return self._over
     @property
     def move( self ): #pylint: disable=missing-docstring
       return not self._dryRun and self._moves
@@ -137,24 +144,15 @@ class CLICDetProdChain( object ):
       return not self._dryRun and self._sim and self._moves and self._moveSim
     @property
     def moveRec( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._moves and self._moveRec
+      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveRec
     @property
     def moveDst( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._rec and self._moves and self._moveDst
+      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveDst
 
 
     def __str__( self ):
       pDict = vars(self)
-      pDict.update( prodOpts = ", ".join([ pTuple[1] \
-                                           for pTuple in self._prodTypes ] ) )
-      pDict.update( prodTypes = ", ".join([ pTuple[1] \
-                                            for pTuple in self._prodTypes \
-                                            if getattr( self, pTuple[0]) ] ) )
-      pDict.update( moveOpts = ", ".join([ pTuple[1] \
-                                            for pTuple in self._moveTypes ] ) )
-      pDict.update( moveTypes = ", ".join([ pTuple[1] \
-                                            for pTuple in self._moveTypes \
-                                            if getattr( self, '_'+pTuple[0] ) ] ) )
+      self.updateDictWithFlags( pDict )
       return """
 
 #Productions to create: %(prodOpts)s
@@ -165,6 +163,23 @@ move = %(_moves)s
 #Datatypes to move: %(moveOpts)s
 MoveTypes = %(moveTypes)s
 """ %( vars(self) )
+
+    def updateDictWithFlags( self, pDict ):
+      """ add flags and values to pDict """
+      for attr in dir(self):
+        if isinstance( getattr(type(self), attr, None), property):
+          pDict.update( { attr: str(getattr(self, attr)) } )
+
+      pDict.update( prodOpts = ", ".join([ pTuple[1] \
+                                           for pTuple in self._prodTypes ] ) )
+      pDict.update( prodTypes = ", ".join([ pTuple[1] \
+                                            for pTuple in self._prodTypes \
+                                            if getattr( self, pTuple[0]) ] ) )
+      pDict.update( moveOpts = ", ".join([ pTuple[1] \
+                                            for pTuple in self._moveTypes ] ) )
+      pDict.update( moveTypes = ", ".join([ pTuple[1] \
+                                            for pTuple in self._moveTypes \
+                                            if getattr( self, '_'+pTuple[0] ) ] ) )
 
 
     def __splitStringToOptions( self, config, tuples, optString, prefix='_'):
@@ -186,6 +201,8 @@ MoveTypes = %(moveTypes)s
       """ load flags values from configfile """
       self.__splitStringToOptions( config, self._prodTypes, 'ProdTypes', prefix='_' )
       self.__splitStringToOptions( config, self._moveTypes, 'MoveTypes', prefix='_' )
+      self._moves = config.getboolean( PP, 'move' )
+
 
   def __init__( self, params=None):
 
@@ -204,12 +221,17 @@ MoveTypes = %(moveTypes)s
     self.energies = ''
     self.processes = ''
     self.prodIDs = ''
-    self.eventsPerBaseFiles = ''
+    self.eventsInSplitFiles = ''
 
     # final destination for files once they have been used
     self.finalOutputSE = self._ops.getValue( 'Production/CLIC/FailOverSE' )
 
     self.additionalName = params.additionalName
+
+    self.overlayEvents = ''
+    self._overlayEventType = None
+
+    self.cliReco = ''
 
     self._flags = self.Flags()
 
@@ -233,7 +255,9 @@ MoveTypes = %(moveTypes)s
     """ load parameters from config file """
 
     if parameter.prodConfigFilename is not None:
-      config = ConfigParser.SafeConfigParser( defaults=vars(self), dict_type=dict )
+      defaultValueDict = vars(self)
+      self._flags.updateDictWithFlags( defaultValueDict )
+      config = ConfigParser.SafeConfigParser( defaults=defaultValueDict, dict_type=dict )
       config.read( parameter.prodConfigFilename )
       self._flags.loadFlags( config )
 
@@ -255,13 +279,22 @@ MoveTypes = %(moveTypes)s
       if config.has_option(PP, 'additionalName'):
         self.additionalName = config.get(PP, 'additionalName')
 
+      if config.has_option(PP, 'cliReco'):
+        self.cliReco = config.get(PP, 'cliReco')
+
+
+      self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
+                           if config.has_option(PP, 'overlayEvents') else ''
+
+      self._overlayEventType = 'gghad' + self.overlayEvents.lower()
+
       if config.has_option(PP, 'prodIDs'):
         self.prodIDs = config.get(PP, 'prodIDs').split(',')
       else:
         self.prodIDs = []
 
       ##for split only
-      self.eventsPerBaseFiles = config.get(PP, 'NumberOfEventsInBaseFiles').split(',')
+      self.eventsInSplitFiles = config.get(PP, 'eventsInSplitFiles').split(',')
 
       self.processes = [ process.strip() for process in self.processes if process.strip() ]
       self.energies = [ float(eng.strip()) for eng in self.energies if eng.strip() ]
@@ -275,12 +308,12 @@ MoveTypes = %(moveTypes)s
          len( self.prodIDs) != len(self.eventsPerJobs):
         raise AttributeError( "Lengths of Processes, Energies, and EventsPerJobs do not match" )
 
-      self.eventsPerBaseFiles = [ int( epb.strip() ) for epb in self.eventsPerBaseFiles if epb.strip() ]
-      self.eventsPerBaseFiles = self.eventsPerBaseFiles if self.eventsPerBaseFiles else [ -1 for _ in self.energies ]
+      self.eventsInSplitFiles = [ int( epb.strip() ) for epb in self.eventsInSplitFiles if epb.strip() ]
+      self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [ -1 for _ in self.energies ]
 
-      if self._flags.spl and len(self.eventsPerBaseFiles) != len(self.energies):
-        raise AttributeError( "Length of eventsPerBaseFiles does not match: %d vs %d" %(
-          len(self.eventsPerBaseFiles), \
+      if self._flags.spl and len(self.eventsInSplitFiles) != len(self.energies):
+        raise AttributeError( "Length of eventsInSplitFiles does not match: %d vs %d" %(
+          len(self.eventsInSplitFiles), \
           len(self.energies) ) )
 
     if parameter.dumpConfigFile:
@@ -314,7 +347,7 @@ processes = %(processes)s
 # prodIDs =
 
 ## number of events for input files to split productions
-NumberOfEventsInBaseFiles = %(eventsPerBaseFiles)s
+eventsInSplitFiles = %(eventsInSplitFiles)s
 
 productionLogLevel = %(productionLogLevel)s
 outputSE = %(outputSE)s
@@ -323,6 +356,13 @@ finalOutputSE = %(finalOutputSE)s
 
 ## optional additional name
 # additionalName = %(additionalName)s
+
+## optional marlin CLI options
+# cliReco = %(cliReco)s
+
+## optional energy to use for overlay: e.g. 3TeV
+# overlayEvents = %(overlayEvents)s
+
 
 %(_flags)s
 
@@ -333,6 +373,16 @@ finalOutputSE = %(finalOutputSE)s
   def metaEnergy( energy ):
     """ return string of the energy with no digits """
     return str( int( energy ) )
+
+  @staticmethod
+  def checkOverlayParameter( overlayParameter ):
+    """ check that the overlay parameter has the right formatting, XTeV or YYYGeV """
+    if not overlayParameter:
+      return overlayParameter
+    if not any( overlayParameter.endswith( unit ) for unit in ('GeV', 'TeV') ):
+      raise RuntimeError( "OverlayParameter %r does not end with unit: X.YTeV, ABCGeV" % overlayParameter )
+
+    return overlayParameter
 
 
   @staticmethod
@@ -359,11 +409,13 @@ finalOutputSE = %(finalOutputSE)s
   def overlayParameterDict():
     """ return dictionary that sets the parameters for the overlay application
 
-    keys are floats
+    keys are float or int
     values are lambda functions acting on an overlay application object
     """
+
     return {
-      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
+      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay350GeV') ] ),
+      380. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
       420. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.17 ),   overlay.setProcessorName( 'Overlay420GeV') ] ),
       500. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.3 ),    overlay.setProcessorName( 'Overlay500GeV') ] ),
       1400.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 1.3 ),    overlay.setProcessorName( 'Overlay1.4TeV') ] ),
@@ -390,6 +442,11 @@ finalOutputSE = %(finalOutputSE)s
 
     raise NotImplementedError( 'unknown splitType: %s ' % splitType )
 
+  def addOverlayOptionsToMarlin( self, energy ):
+    """ add options to marlin that are needed for running with overlay """
+    energyString = self.overlayEvents if self.overlayEvents else energyWithUnit( energy )
+    self.cliReco += ' --Config.Overlay=%s ' % energyString
+
   def createDDSimApplication( self ):
     """ create DDSim Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
@@ -406,19 +463,19 @@ finalOutputSE = %(finalOutputSE)s
     overlay = OverlayInput()
     overlay.setMachine( 'clic_opt' )
     overlay.setEnergy( energy )
-    overlay.setBkgEvtType( 'gghad' )
+    overlay.setBackgroundType( self._overlayEventType )
     overlay.setDetectorModel( self.detectorModel )
     try:
-      self.overlayParameterDict().get( energy ) ( overlay )
+      overlayEnergy = energyToInt( self.overlayEvents ) if self.overlayEvents else energy
+      self.overlayParameterDict().get( overlayEnergy ) ( overlay )
     except TypeError:
-      raise RuntimeError( "No overlay parameters defined for %s GeV" % energy )
+      raise RuntimeError( "No overlay parameters defined for %r GeV and %s " % ( energy, self._overlayEventType ) )
+
+    if self.overlayEvents:
+      overlay.setUseEnergyForFileLookup( False )
 
     return overlay
 
-  def createMarlinWithOverlay( self, energy ):
-    """ create Marlin Application when overlay is enabled """
-    ## no difference between with and without overlay at the moment
-    return self.createMarlinApplication( energy )
 
 
   def createMarlinApplication( self, energy ):
@@ -429,6 +486,11 @@ finalOutputSE = %(finalOutputSE)s
     marlin.setVersion( self.softwareVersion )
     marlin.setDetectorModel( self.detectorModel )
     marlin.detectortype = self.detectorModel
+
+    if self._flags.over:
+      self.addOverlayOptionsToMarlin( energy )
+
+    marlin.setExtraCLIArguments( self.cliReco )
 
     steeringFile = {
       350. : "clicReconstruction.xml",
@@ -444,6 +506,7 @@ finalOutputSE = %(finalOutputSE)s
 
   def createSimulationProduction( self, meta, prodName, parameterDict ):
     """ create simulation production """
+    gLogger.notice( "*"*80 + "\nCreating simulation production: %s " % prodName )
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     simProd = ProductionJob()
     simProd.dryrun = self._flags.dryRun
@@ -455,7 +518,7 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
     simProd.setOutputSE( self.outputSE )
     simProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'sim') )
-    simProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy( meta['Energy'] ) )
+    simProd.setProdGroup( self.prodGroup )
     #Add the application
     res = simProd.append( self.createDDSimApplication() )
     if not res['OK']:
@@ -485,6 +548,7 @@ finalOutputSE = %(finalOutputSE)s
 
   def createReconstructionProduction( self, meta, prodName, parameterDict ):
     """ create reconstruction production """
+    gLogger.notice( "*"*80 + "\nCreating reconstruction production: %s " % prodName )
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     recProd = ProductionJob()
     recProd.dryrun = self._flags.dryRun
@@ -500,7 +564,7 @@ finalOutputSE = %(finalOutputSE)s
     recProd.setOutputSE( self.outputSE )
     recType = 'rec_overlay' if self._flags.over else 'rec'
     recProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, recType ) )
-    recProd.setProdGroup( "%s_%s" %( self.prodGroup, self.metaEnergy( meta['Energy'] ) ) )
+    recProd.setProdGroup( self.prodGroup )
 
     #Add overlay if needed
     if self._flags.over:
@@ -540,6 +604,7 @@ finalOutputSE = %(finalOutputSE)s
 
   def createSplitProduction( self, meta, prodName, parameterDict, eventsPerJob, eventsPerBaseFile, limited=False ):
     """ create splitting transformation for splitting files """
+    gLogger.notice( "*"*80 + "\nCreating split production: %s " % prodName )
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     splitProd = ProductionJob()
     splitProd.setProdPlugin( 'Limited' if limited else 'Standard' )
@@ -552,7 +617,7 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( 'Split production: failed to set inputDataQuery: %s' % res['Message'] )
     splitProd.setOutputSE( self.outputSE )
     splitProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'stdhepSplit' ) )
-    splitProd.setProdGroup( self.prodGroup+"_"+self.metaEnergy( meta['Energy'] ) )
+    splitProd.setProdGroup( self.prodGroup )
 
     #Add the application
     res = splitProd.append( self.createSplitApplication( eventsPerJob, eventsPerBaseFile, 'stdhep' ) )
@@ -583,23 +648,28 @@ finalOutputSE = %(finalOutputSE)s
 
   def createMovingTransformation( self, meta, prodType ):
     """ create moving transformations for output files """
-    if not self._flags.move:
-      return
 
     sourceSE = self.outputSE
     targetSE = self.finalOutputSE
     prodID = meta['ProdID']
     try:
-      dataType = { 'MCReconstruction': 'REC',
-                   'MCReconstruction_Overlay': 'REC',
-                   'MCSimulation': 'SIM',
-                   'MCGeneration': 'GEN',
-                 }[prodType]
+      dataTypes = { 'MCReconstruction': ('DST', 'REC'),
+                    'MCReconstruction_Overlay': ('DST', 'REC'),
+                    'MCSimulation': ('SIM',),
+                    'MCGeneration': ('GEN',),
+                  }[prodType]
     except KeyError:
       raise RuntimeError( "ERROR creating MovingTransformation" + repr(prodType) + "unknown" )
 
+    if not any( getattr( self._flags, "move%s" % dataType.capitalize() ) for dataType in dataTypes ):
+      gLogger.notice( "*"*80 + "\nNot creating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
+      return
+
     from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
-    createMovingTransformation( targetSE, sourceSE, prodID, dataType )
+    for dataType in dataTypes:
+      if getattr( self._flags, "move%s" % dataType.capitalize() ):
+        gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s, %s " % (meta['ProdID'], prodType, dataType ) )
+        createMovingTransformation( targetSE, sourceSE, prodID, dataType )
 
 
   def _updateMeta( self, outputDict, inputDict, eventsPerJob ):
@@ -622,19 +692,27 @@ finalOutputSE = %(finalOutputSE)s
     prodName = process
 
     for parameterDict in self.getParameterDictionary( prodName ):
+      splitMeta, simMeta, recMeta = None, None, None
+
       if self._flags.spl:
         splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, eventsPerJob,
                                                 eventsPerBaseFile, limited=False )
-        self.createMovingTransformation( splitMeta, 'MCGeneration' )
         self._updateMeta( metaInput, splitMeta, eventsPerJob )
 
       if self._flags.sim:
         simMeta = self.createSimulationProduction( metaInput, prodName, parameterDict )
-        self.createMovingTransformation( simMeta, 'MCSimulation' )
         self._updateMeta( metaInput, simMeta, eventsPerJob )
 
       if self._flags.rec or self._flags.over:
         recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
+
+      if splitMeta:
+        self.createMovingTransformation( splitMeta, 'MCGeneration' )
+
+      if simMeta:
+        self.createMovingTransformation( simMeta, 'MCSimulation' )
+
+      if recMeta:
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
 
 
@@ -646,7 +724,7 @@ finalOutputSE = %(finalOutputSE)s
       process = self.processes[index]
       prodID = self.prodIDs[index]
       eventsPerJob = self.eventsPerJobs[index]
-      eventsPerBaseFile = self.eventsPerBaseFiles[index]
+      eventsPerBaseFile = self.eventsInSplitFiles[index]
 
       self.createTransformations( prodID, process, energy, eventsPerJob, eventsPerBaseFile )
 

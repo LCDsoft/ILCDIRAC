@@ -18,6 +18,7 @@ Example usage:
 
 from DIRAC import S_OK
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
+from DIRAC.Core.Utilities.List import breakListIntoChunks
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
@@ -33,7 +34,16 @@ class UserJob(Job):
     self.diracinstance = None
     self.usergroup = ['ilc_user', 'calice_user']
     self.proxyinfo = getProxyInfo()
-    
+
+    ########## SPLITTING STUFF: ATTRIBUTES ##########
+    self._data = []
+    self.splittingOption = None
+    self._switch = {}
+    self.numberOfJobs = None
+    self.totalNumberOfEvents = None
+    self.eventsPerJob = None
+    self.numberOfFilesPerJob = 1
+
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
     add the job to DIRAC.
@@ -46,6 +56,11 @@ class UserJob(Job):
       The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
 
     """
+    if self.splittingOption:
+      result = self._split()
+      if 'OK' in result and not result['OK']:
+        return result
+        
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
       self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
@@ -102,7 +117,7 @@ class UserJob(Job):
       return self._reportError( 'Expected lfn string or list of lfns for input data', **kwargs )
 
     return S_OK()
-   
+
   def setInputSandbox(self, flist):
     """ Add files to the input sandbox, can be on the local machine or on the grid
 
@@ -225,3 +240,286 @@ class UserJob(Job):
 
     self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'CLIC Config package' )
     return S_OK()
+
+  
+  ##############################  SPLITTING STUFF: METHODS ##############################
+  # Some methods have been added:
+  #
+  # 1) _atomicSubmission
+  # 2) _checkJobConsistency
+  # 3) _split
+  # 4) _splitByData
+  # 5) _splitByEvents
+  # 6) _toInt
+  #
+  # Given the type of splitting (byEvents, byData), these functions compute
+  # the right parameters of the method 'Job.setParameterSequence()'
+
+  ##############################  SPLITTING STUFF: NEW METHODS ##############################
+  def setSplitEvents( self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None ):
+    """This function sets split parameters for doing splitting over events
+
+    Example usage:
+
+    >>> job = UserJob()
+    >>> job.setSplitEvents( numberOfJobs=42, totalNumberOfEvents=126 )
+
+    Exactly two of the parmeters should be set
+    
+    :param int eventsPerJob: The events processed by a single job
+    :param int numberOfJobs: The number of jobs
+    :param int totalNumberOfEvents: The total number of events processed by all jobs
+
+    """
+
+    self.totalNumberOfEvents =  totalNumberOfEvents
+    self.eventsPerJob =  eventsPerJob
+    self.numberOfJobs =  numberOfJobs
+
+    self.splittingOption = "byEvents"
+
+  def setSplitInputData( self, lfns, numberOfFilesPerJob = 1):
+    """sets split parameters for doing splitting over input data
+    
+    Example usage:
+
+    >>> job = UserJob()
+    >>> job.setSplitInputData( listOfLFNs )
+
+    :param lfns: Logical File Names
+    :type lfns: list of LFNs
+    :param int numberOfFilesPerJob: The number of input data processed by a single job
+
+    """
+    self._data = lfns if isinstance(lfns, list) else [lfns]
+    self.numberOfFilesPerJob = numberOfFilesPerJob
+
+    self.splittingOption = "byData"
+
+  def setSplitDoNotAlterOutputFilename( self, value=True):
+    """if this option is set the output data lfns will _not_ include the JobIndex
+
+    :param bool value: if *True* disable the changing of the output data
+        filenames. If *False* the JobIndex will be added at the end of
+        OutputData LFNs before the extension. Or replace '%n' with the jobIndex
+        in the fileName. See :func:`Core.Utilities.Splitting.addJobIndexToFilename`
+    """
+    self._addParameter( self.workflow, 'DoNotAlterOutputData', 'JDL', value, 'Do Not Change Output Data' )
+
+  def _split(self):
+    """checks the consistency of the job and call the right split method.
+
+    :return: The success or the failure of the consistency checking
+    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
+
+    """
+
+    self.eventsPerJob = self._toInt(self.eventsPerJob)
+    self.numberOfJobs = self._toInt(self.numberOfJobs)
+
+    if self.numberOfJobs is False or self.eventsPerJob is False:
+      return self._reportError("Splitting: Invalid values for splitting")
+
+    # FIXME: move somewhere more prominent
+    self._switch = { "byEvents": self._splitByEvents,
+                     "byData": self._splitByData,
+                     None: self._atomicSubmission,
+                   }
+
+    self.log.info("Job splitting...")
+
+    if not self._checkJobConsistency():
+      errorMessage = "Job._checkJobConsistency() failed"
+      self.log.error(errorMessage)
+      return self._reportError(errorMessage)
+
+    sequence = self._switch[self.splittingOption ]()
+
+    if not sequence:
+      errorMessage = "Job._splitBySomething() failed"
+      self.log.error(errorMessage)
+      return self._reportError(errorMessage)
+
+    sequenceType, sequenceList, addToWorkflow = sequence[0], sequence[1], sequence[2] 
+   
+    if sequenceType != "Atomic":
+      self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
+      self.setParameterSequence( 'JobIndexList', range(len(sequenceList)), addToWorkflow='JobIndex' )
+      self._addParameter( self.workflow, 'JobIndex', 'int', 0, 'JobIndex' )
+
+    self.log.info("Job splitting successful")
+
+    return S_OK()
+
+  #############################################################################
+  def _atomicSubmission(self):
+    """called when no splitting is necessary, do not return valid parameters fot setParameterSequence().
+    
+    :return: parameter name and parameter values for setParameterSequence(), addToWorkflow flag
+    :rtype: tuple of (str, list, bool/str)
+    """
+
+    self.log.verbose("Job splitting: No splitting to apply, 'atomic submission' will be used")
+    return "Atomic", [], False
+
+  #############################################################################
+  def _checkJobConsistency(self):
+    """checks if Job parameters are valid.
+
+    :return: The success or the failure of the consistency checking
+    :rtype: bool
+
+    :Example:
+
+    >>> self._checkJobConsistency()
+
+    """
+
+    self.log.info("Job consistency: _checkJobConsistency()...")
+
+    if self.splittingOption not in self._switch:
+      splitOptions = ",".join( self._switch.keys() )
+      errorMessage = "checkJobConsistency failed: Bad split value: possible values are %s" % splitOptions
+      self.log.error(errorMessage)
+      return False
+
+    # All applications should have the same number of events
+    # We can get this number from the first application for example
+    sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
+
+    if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
+      self.log.warn("Job: Applications should all have the same number of events")
+
+    if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:
+      self.log.warn("Job: Number of events is -1 without input data. Was that intentional?")
+
+    self.log.info("job._checkJobConsistency successful")
+
+    return True
+
+  #############################################################################
+  def _splitByData(self):
+    """a job is submitted per input data.
+
+    :return: parameter name and parameter values for setParameterSequence()
+    :rtype: tuple of (str, list, bool/str)
+
+    """
+
+    # reset split attribute to avoid infinite loop
+    self.splittingOption = None
+
+    self.log.info("Job splitting: Splitting 'byData' method...")
+
+    # Ensure that data have been specified by setInputData() method
+    if not self._data:
+      errorMessage = "Job splitting: missing input data"
+      self.log.error(errorMessage)
+      return False
+
+
+    if self.numberOfFilesPerJob > len(self._data):
+      errorMessage = "Job splitting: 'numberOfFilesPerJob' must be less/equal than the number of input data"
+      self.log.error(errorMessage)
+      return False
+          
+    self._data = breakListIntoChunks(self._data, self.numberOfFilesPerJob)
+
+    self.log.info("Job splitting: submission consists of %d job(s)" % len(self._data))
+
+    return ["InputData", self._data , False]
+
+  #############################################################################
+  def _splitByEvents(self):
+    """a job is submitted per subset of events.
+    
+    :return: parameter name and parameter values for setParameterSequence()
+    :rtype: tuple of (str, list, bool/str)
+
+    """
+
+    # reset split attribute to avoid infinite loop
+    self.splittingOption = None
+
+    self.log.info("Job splitting: splitting 'byEvents' method...")
+
+    if self.eventsPerJob and self.numberOfJobs:
+      # 1st case: (numberOfJobs=3, eventsPerJob=10)
+      # trivial case => each job (total of 3) run applications of 10 events each
+      self.log.debug("Job splitting: events per job and number of jobs")
+
+      mapEventJob = [self.eventsPerJob] * self.numberOfJobs
+
+    elif self.eventsPerJob and self.totalNumberOfEvents:
+      # 2nd case: (split="byEvents", eventsPerJob=10, totalNumberOfEvents=10)
+      # Given the number of events per job and total of number of event we want,
+      # we can compute the unknown which is the number of jobs.
+
+      self.log.debug("Job splitting: Events per job and total number of events")
+
+      if self.eventsPerJob > self.totalNumberOfEvents:
+        self.log.error("Job splitting: The number of events per job has to be lower than or equal to the total number of events")
+        return False
+
+      numberOfJobsIntDiv = self.totalNumberOfEvents / self.eventsPerJob
+      numberOfJobsRest = self.totalNumberOfEvents % self.eventsPerJob
+
+      mapEventJob = [self.eventsPerJob] * numberOfJobsIntDiv
+
+      mapEventJob += [numberOfJobsRest] if numberOfJobsRest != 0 else []
+
+    else:
+      
+      # 3rd case: (split='byEvents', njobs=10, totalNumberOfEvents=10)
+      # Then compute the right number of events per job  
+      self.log.debug("Job splitting: The number of jobs and the total number of events")
+
+      if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.numberOfJobs):
+        self.log.error("Job splitting: The number of events has to be greater than or equal to the number of jobs")
+        return False
+
+      eventPerJobIntDiv = self.totalNumberOfEvents / self.numberOfJobs
+      eventPerJobRest = self.totalNumberOfEvents % self.numberOfJobs
+
+      mapEventJob = [eventPerJobIntDiv] * self.numberOfJobs
+
+      if eventPerJobRest != 0:
+        for suplement in xrange(eventPerJobRest):
+          mapEventJob[suplement] += 1
+
+    self.log.debug("Job splitting: events over the jobs: %s" % mapEventJob)
+
+    self.log.info("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
+
+    return ['NumberOfEvents', mapEventJob, 'NbOfEvts']
+
+  #############################################################################
+  def _toInt(self, number):
+    """casts number parameter to an integer.
+
+    It also accepts 'string integer' parameter.
+
+    :param number: the number to cast (number of events, number of jobs)
+    :type number: str or int
+
+    :return: The success or the failure of the casting
+    :rtype: bool, int or None
+
+    :Example:
+
+    >>> number = self._toInt("1000")
+
+    """
+
+    if number is None:
+      return number
+
+    try:
+      number = int(number)
+      if number <= 0:
+        raise ValueError
+    except ValueError:
+      self.log.error("Job splitting: arguments must be positive integers")
+      return False
+
+    return number

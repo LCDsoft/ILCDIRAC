@@ -39,7 +39,7 @@ __all__ = ['GenericApplication', 'GetSRMFile', '_Root', 'RootScript', 'RootMacro
            'Whizard', 'Pythia', 'PostGenSelection', 'StdhepCut', 'StdhepCutJava',
            'Mokka', 'SLIC', 'OverlayInput', 'Marlin', 'LCSIM', 'SLICPandora',
            'CheckCollections', 'SLCIOConcatenate', 'SLCIOSplit', 'StdHepSplit',
-           'Tomato', 'CheckWNs', 'DDSim']
+           'Tomato', 'CheckWNs', 'DDSim', 'Fcc', 'FccSw', 'FccAnalysis']
 
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GenericApplication import GenericApplication
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.GetSRMFile import GetSRMFile
@@ -64,3 +64,6 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.StdHepSplit import StdHep
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Tomato import Tomato
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.CheckWNs import CheckWNs
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim import DDSim
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc import Fcc
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc import FccSw
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc import FccAnalysis

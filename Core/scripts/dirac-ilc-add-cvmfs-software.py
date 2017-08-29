@@ -2,17 +2,32 @@
 '''
 Add software from CVMFS to the CS
 
-Give list of applications, init_script path, MokkaDBSlice, ILDConfigPath (if set)
+Give list of applications, init_script path, MokkaDBSlice, [Clic|ILD]ConfigPath (if set)
 
-Created on Feb 18, 2015
+
+Options:
+
+  -P, --Platform <value>        Platform ex. x86_64-slc5-gcc43-opt
+  -A, --Applications <value>    Comma separated list of applications
+  -V, --Version <value>         Version name
+  -C, --Comment <value>         Comment
+  -S, --Script <value>          Full path to initScript
+  -B, --Base <value>            Path to Installation Base
+  -O, --Config <value>          Path To [Clic|ILD]Config (if it is in ApplicationPath)
+  --ILDConfig <value>           Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]
+  -Q, --DBSlice <value>         Path to Mokka DB Slice
+  -N, --dry-run                 DryRun: do not commit to CS
+
+
+:since: Feb 18, 2015
+
 '''
-
-__RCSID__ = "$Id$"
+import os
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, gConfig, S_OK, S_ERROR, exit as dexit
 
-import os
+__RCSID__ = "$Id$"
 
 class Params(object):
   """Collection of Parameters set via CLI switches"""
@@ -20,11 +35,12 @@ class Params(object):
     self.version = ''
     self.platform = 'x86_64-slc5-gcc43-opt'
     self.comment = ''
-    self.applicationList = ''
+    self.applicationSet = set()
     self.dbSliceLocation = ''
     self.initScriptLocation = ''
     self.basePath = ''
-    self.ildConfigPath = ''
+    self.configPath = ''
+    self.dryRun = False
 
   def setVersion(self, optionValue):
     self.version = optionValue
@@ -36,7 +52,7 @@ class Params(object):
 
   def setName(self, optionValue):
     apps = optionValue.split(',')
-    self.applicationList = [ _.strip() for _ in apps ]
+    self.applicationSet = { _.strip() for _ in apps }
     return S_OK()
 
   def setComment(self, optionValue):
@@ -55,34 +71,44 @@ class Params(object):
     self.basePath = optionValue
     return S_OK()
 
-  def setILDConfig(self, optionValue):
-    self.ildConfigPath = optionValue
+  def setConfig(self, optionValue):
+    self.configPath = optionValue
+    return S_OK()
+
+  def setDryrun(self, _):
+    self.dryRun = True
     return S_OK()
 
 
   def checkConsistency(self):
     """Check if all necessary parameter were defined"""
+
+    if not self.applicationSet:
+      return S_ERROR("No applications have beend defined")
+
     if not self.version:
       return S_ERROR("Version must be given")
 
-    if not self.initScriptLocation:
-      return S_ERROR("Initscript location is not defined")
+    appListLower = { _.lower() for _ in self.applicationSet }
 
-    if not self.basePath:
-      return S_ERROR("BasePath is not defined")
+    ## if we have only config applications we do not need the initScript or the
+    ## basepath, just the config path
+    if all( not app.endswith('config') for app in appListLower ):
 
-    if not self.applicationList:
-      return S_ERROR("No applications have beend defined")
+      if not self.initScriptLocation:
+        return S_ERROR("Initscript location is not defined")
 
-    appListLower = [ _.lower() for _ in self.applicationList ]
+      if not self.basePath:
+        return S_ERROR("BasePath is not defined")
 
     if 'mokka' in appListLower and not self.dbSliceLocation:
       return S_ERROR("Mokka in application list, but not dbSlice location given")
 
-    if 'ildconfig' in appListLower and not self.ildConfigPath and not self.dbSliceLocation:
-      return S_ERROR("ILDConfig in application list, but no location given")
+    ## if we have a config package we need the configPath
+    if any( app.endswith('config') for app in appListLower ) and not self.configPath:
+      return S_ERROR("Config in application list, but no location given")
 
-    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation ):
+    for val in ( self.initScriptLocation, self.basePath, self.dbSliceLocation, self.configPath ):
       if val and not os.path.exists(val):
         gLogger.error("Cannot find this path:", val)
         return S_ERROR("CVMFS not mounted, or path is misstyped")
@@ -99,9 +125,12 @@ class Params(object):
     Script.registerSwitch("S:", "Script=", "Full path to initScript", self.setInitScript)
     Script.registerSwitch("B:", "Base=", "Path to Installation Base", self.setBasePath)
 
-    Script.registerSwitch("O:", "ILDConfig=", "Path To ILDConfig (if it is in ApplicationPath)", self.setILDConfig)
+    Script.registerSwitch("O:", "Config=", "Path To [Clic|ILD]Config (if it is in ApplicationPath)", self.setConfig)
+    Script.registerSwitch("", "ILDConfig=", "Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]", self.setConfig)
 
     Script.registerSwitch("Q:", "DBSlice=", "Path to Mokka DB Slice", self.setDBSlice)
+
+    Script.registerSwitch("N", "dry-run", "DryRun: do not commit to CS", self.dryRun)
 
 
     Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
@@ -122,7 +151,7 @@ class CVMFSAdder(object):
                            basepath = cliParams.basePath,
                            initsctipt = cliParams.initScriptLocation
                          )
-    self.applications = cliParams.applicationList
+    self.applications = cliParams.applicationSet
     self.detmodels = {}
     self.csAPI = CSAPI()
 
@@ -166,7 +195,7 @@ class CVMFSAdder(object):
 
   def commitToCS(self):
     """write changes to the CS to the server"""
-    if self.modifiedCS:
+    if self.modifiedCS and not self.cliParams.dryRun:
       gLogger.notice("Commiting changes to the CS")
       result = self.csAPI.commit()
       if not result[ 'OK' ]:
@@ -197,10 +226,11 @@ class CVMFSAdder(object):
         insertCSSection( self.csAPI, csPathModels, csModels )
         self.modifiedCS = True
 
-      elif application == 'ildconfig':
+      elif application.endswith('config'):
         del csParameter['CVMFSEnvScript']
-        csParameter['CVMFSPath'] = self.cliParams.ildConfigPath
-        csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
+        csParameter['CVMFSPath'] = self.cliParams.configPath
+        if self.cliParams.dbSliceLocation:
+          csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
 
       resInsert = self.insertApplicationToCS(application, csParameter)
       if not resInsert['OK']:

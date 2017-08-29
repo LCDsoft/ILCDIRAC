@@ -96,9 +96,9 @@ def makeDIRACLink( text ):
   return text
 
 def makeILCDIRACMRLink( text ):
-  """ turn (#123) into link to merge request """
+  """ turn (!123) into link to merge request """
   ilcdiracLinkBase="https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/merge_requests/"
-  text = re.sub( r"\(#([0-9]+)\)", r"`(#\g<1>) <%s\g<1>>`_" %(ilcdiracLinkBase, ) , text )
+  text = re.sub( r"\(!([0-9]+)\)", r"`(!\g<1>) <%s\g<1>>`_" %(ilcdiracLinkBase, ) , text )
   return text
 
   

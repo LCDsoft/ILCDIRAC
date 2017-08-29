@@ -169,15 +169,15 @@ class OverlayInputTestCase( unittest.TestCase ):
   def test_checkfinalconsistency_detectormodelnotfound( self ):
     self.olin.energy = 981324
     section_dict = { '/Overlay' : [ 'myTestMachineVeryRare' ],
-                     '/Overlay/myTestMachineVeryRare' : [ 'other_energy_tev', '981.324gev' ],
-                     '/Overlay/myTestMachineVeryRare/981.324tev' : [ 'some_other_detector_model',
-                                                                     'neither_this' ] }
+                     '/Overlay/myTestMachineVeryRare' : [ 'other_energy_tev', '981.3gev' ],
+                     '/Overlay/myTestMachineVeryRare/981.3tev' : [ 'some_other_detector_model',
+                                                                   'neither_this' ] }
     ops_mock = Mock()
     ops_mock.getSections.side_effect=lambda path: S_OK( section_dict[path] )
     self.olin._ops = ops_mock
     self.olin.machine = 'myTestMachineVeryRare'
     assertDiracFailsWith( self.olin._checkFinalConsistency(),
-                          'no overlay files corresponding to 981.324tev', self )
+                          'no overlay files corresponding to 981.3tev', self )
 
   def test_checkfinalconsistency_nobkg( self ):
     self.olin.detectorModel = 'testDetMod'

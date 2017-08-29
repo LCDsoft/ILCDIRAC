@@ -462,7 +462,7 @@ class ILDProductionJobOpt2017( ProductionJob ):
 
 
     def append( self, application ):
-        """ Append application to production job, in addition to `Job.Append` calls checkProductionMetadata for applications
+        """ Append application to production job, in addition to `Job.append` calls checkProductionMetadata for applications
 
         :param application: Application instance
         :type application: :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Application`

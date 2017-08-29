@@ -264,21 +264,23 @@ compiledoc:
     - pip install sphinx==1.5.2
     - yum install -y which patch
     - rm -rf ILCDIRAC ## removes just the folder with the links
-    - git checkout origin/master -- release.notes ## get release notes from the master
+    - wget -O release.notes https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/raw/master/release.notes ## get release notes from the master
     - cd docs
     - export PYTHONPATH=$PWD/source:$PYTHONPATH
     - bash patchSphinx.sh
-    - make completeDocumentation
+    - SPHINXOPTS=-wsphinxWarnings make completeDocumentation
+    - if [ -s sphinxWarnings ]; then cat sphinxWarnings; echo "Warnings When Creating Doc"; exit 1; fi
     - mv build/html ../../../ilcdiracdoc
   artifacts:
     paths:
       - ilcdiracdoc
     expire_in: 2 hours
+  allow_failure: true
 
 maketarballs:
   stage: create
   only:
-    - tags
+    - tags@CLICdp/iLCDirac/ILCDIRAC
   tags:
     - docker
   dependencies:
@@ -306,7 +308,7 @@ deploydoc:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
-    - tags
+    - tags@CLICdp/iLCDirac/ILCDIRAC
   dependencies:
     - compiledoc
   variables:
@@ -318,7 +320,7 @@ deploydoc:
   after_script: []
 
 
-deploydocManual:
+docDev:
   stage: manualdeploy
   tags:
     - docker
@@ -337,13 +339,35 @@ deploydocManual:
   after_script: []
 
 
+docProd:
+  stage: manualdeploy
+  tags:
+    - docker
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  only:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
+  when: manual
+  dependencies:
+    - compiledoc
+    - unittest:SL6
+  variables:
+    EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
+    CI_OUTPUT_DIR: "ilcdiracdoc"
+  script:
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - deploy-eos
+  before_script: []
+  after_script: []
+
+
+
 deploytag:
   stage: deploy
   tags:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
-    - tags
+    - tags@CLICdp/iLCDirac/ILCDIRAC
   dependencies:
     - maketarballs
   variables:

@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+#SPHINXOPTS   =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
@@ -55,6 +55,14 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+newhtml:
+	rsync --delete -art DOC/ source/DOC
+	rsync --delete -art Files source/DOC
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
@@ -198,7 +206,6 @@ completeDocumentation: releasenotes
 	rm -rf DOC
 	python MakeDoc.py
 	rsync --delete -art DOC/ source/DOC
-	rsync --delete -art Examples source/DOC
 	rsync --delete -art Files source/DOC
 	make clean
 	make html

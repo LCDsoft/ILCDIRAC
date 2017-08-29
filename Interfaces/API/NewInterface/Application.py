@@ -427,7 +427,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
     that all required parameters are defined.
 
     :param job: The instance of the job
-    :type job: `Job`
+    :type job: :func:`~Interfaces.API.NewInterface.Job.Job`
     :returns: S_OK/S_ERROR
 
     """
@@ -550,7 +550,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
 
   def _resolveLinkedStepParameters(self, stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. 
-    OuputFile and InputFile). See :any:`StdHepCut` for example.
+    OuputFile and InputFile). See :class:`~Interfaces.API.NewInterface.Applications.StdhepCut.StdhepCut` for example.
     Called from Job.
     """
     return S_OK()
