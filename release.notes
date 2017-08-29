@@ -29,8 +29,8 @@ NEW: (!147) Add JIRA issue collector to the doc pages.
 
 *Interface
 
-NEW: (!153) `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitDoNotAlterOutputFilename`: function to disable the injecting of the JobIndex into the filename
-NEW: (!146) `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob`: new functions to ease the automatic splitting of jobs `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitInputData`, `~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitEvents`
+NEW: (!153) :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitDoNotAlterOutputFilename`: function to disable the injecting of the JobIndex into the filename
+NEW: (!146) :class:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob`: new functions to ease the automatic splitting of jobs :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitInputData`, :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitEvents`
 
 [v26r0p11]
 *Interface
