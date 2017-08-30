@@ -21,6 +21,10 @@ class Splittingtest( unittest.TestCase ):
     jobIndex=123
     self.assertEqual( "output_123.slcio", addJobIndexToFilename( fileIn, jobIndex ) )
 
+    fileIn = "output_%n.slcio"
+    jobIndex=0
+    self.assertEqual( "output_0.slcio", addJobIndexToFilename( fileIn, jobIndex ) )
+
     fileIn = "output.slcio"
     jobIndex=123
     self.assertEqual( "output_123.slcio", addJobIndexToFilename( fileIn, jobIndex ) )
