@@ -304,17 +304,18 @@ def runDDSimTest():
   suite.addTest(JobTestCase('test_ddsim'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
   print testResult
-  
-def runFccSwTest():
-  """runs the ddsim test only"""
-  #Script.parseCommandLine()
-  suite = unittest.TestSuite()
-  suite.addTest(JobTestCase('test_fccsw'))
-  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
-  print testResult
+
+# TO UNCOMMENT when Detector folder of FCCSW will be on CVMFS
+#def runFccSwTest():
+#  """runs the fccsw test only"""
+#  #Script.parseCommandLine()
+#  suite = unittest.TestSuite()
+#  suite.addTest(JobTestCase('test_fccsw'))
+#  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
+#  print testResult
 
 def runFccAnalysisTest():
-  """runs the ddsim test only"""
+  """runs the fccanalysis test only"""
   #Script.parseCommandLine()
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_fccanalysis'))

@@ -1,4 +1,4 @@
-
+#pylint: skip-file
 ### \file
 ### \ingroup SimulationExamples
 ### | **input (alg)**                 | other algorithms                   |                                                                           |                                                                           |                                               | **output (alg)**                                |
