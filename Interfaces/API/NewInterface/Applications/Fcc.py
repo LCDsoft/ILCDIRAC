@@ -240,8 +240,6 @@ class Fcc(Application):
     )
     self._log.info(infoMessage)
 
-    # Flush application sandboxes
-
     return S_OK(infoMessage)
 
   def _checkFinalConsistency(self):
@@ -254,17 +252,22 @@ class Fcc(Application):
 
     applicationStep = len(self._jobapps) + 1
     self.applicationIndex = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
+
     # Take in priority output file given in setOutputFile
+    # Many output files can be managed if setOutputFile accepts list
     if self.outputFile :
-      self.setOutputFile("%s_%s" % (self.applicationIndex, self.outputFile))
-    else:
-      # Compute root file name    
-      self.setOutputFile("%s.root" % self.applicationIndex)
+      if isinstance(self.outputFile, str):
+        outputFile = "%s_%s" % (self.applicationIndex, self.outputFile)
+      elif isinstance(self.outputFile, list):
+        outputFile = [ "%s_%s" % (self.applicationIndex, outputFile) for outputFile in  self.outputFile]
+      self.setOutputFile(outputFile)
+
+      outputFiles = [outputFile] if isinstance(outputFile, str) else outputFile
+      self._outputSandbox.add("JobID_ID_%s (%s)" % ( "\n".join(outputFiles), "Name of the eventual output root file(s)") )
 
     # We add the log file and the output file to the output sandbox
     self._outputSandbox.add(self.logFile)
-    self._outputSandbox.add("JobID_ID_%s (%s)" % (os.path.basename(self.outputFile), "Name of the eventual output root file") )
-      
+
     infoMessage = (
       "\n********************************FCC SUMMARY******************************\n"
       "You plan to submit this application with its corresponding log :\n"
@@ -520,13 +523,20 @@ class FccSw(Fcc):
       debugMessage = "FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists"
       self._log.debug(debugMessage)
 
-    # If InstallArea folder is on cvmfs so nothing to do
-    # else download it because 'FCCSW.xenv' needs libraries from this folder
+    # InstallArea folder is present on CVMFS so nothing to do
+    # else if local FCCSW installation is used
+    # download it because 'FCCSW.xenv' needs libraries from this folder
 
     if not self.fccSwPath.startswith('/cvmfs/'):
       installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
       # We do not need all the content of these folders hence the filtering
       self._foldersToFilter.add(installAreaFolder)
+
+      # Explanation
+      # InstallAreaFolder : all dbg files are excluded
+      # detectorFolder : only xml files are included
+      self._filteredExtensions += ['.dbg']
+      self._excludesOrIncludes += [True]
 
     # Actually FCCSW CVMFS run successfully only with configuration files that do not need additionnal files
     # like Generation/data/ParticleTable.txt
@@ -593,14 +603,24 @@ class FccSw(Fcc):
     #installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
     detectorFolder = os.path.join(self.fccSwPath, 'Detector')
 
-    # We do not need all the content of these folders hence the filtering
-    self._foldersToFilter.add(detectorFolder)
+    # As CVMFS installation is not complete (Detector folder missing in release v0.8.1)
+    # we do this check
+    if not os.path.exists(detectorFolder):
+      warnMessage = (
+        "Sandboxing : The folder 'Detector' does not exist,"
+        " it is not present in the FCCSW installation"
+        "\nThen you should have added it manually to the input sandbox !"
+      )
+      self._log.warn(warnMessage)
+    else:
+      # We do not need all the content of these folders hence the filtering
+      self._foldersToFilter.add(detectorFolder)
 
-    # Explanation
-    # InstallAreaFolder : all dbg files are excluded
-    # detectorFolder : only xml files are included
-    self._filteredExtensions += ['.dbg', '.xml']
-    self._excludesOrIncludes += [True, False]
+      # Explanation
+      # InstallAreaFolder : all dbg files are excluded
+      # detectorFolder : only xml files are included
+      self._filteredExtensions += ['.xml']
+      self._excludesOrIncludes += [False]
 
     debugMessage = "Sandboxing : FCC configuration file reading..."
     self._log.debug(debugMessage)
@@ -633,7 +653,7 @@ class FccSw(Fcc):
       self.randomGenerator["Pythia"] = cmdFiles
     else:
       self.randomGenerator["Gaudi"] = True
-      
+
     # From these paths we re-create the tree in the temporary sandbox
     # with only the desired file.
     # In the configuration file, these paths are relative to FCCSW installation.
@@ -685,6 +705,19 @@ class FccSw(Fcc):
       return True
 
     for file in files:
+
+      source = os.path.realpath(os.path.join(self.fccSwPath, file))
+      destination = os.path.realpath(os.path.join(self._tempCwd, file))
+
+      if not os.path.exists(source):
+        warnMessage = (
+          "Sandboxing : The file '%s' does not exist,"
+          " it is not present in the FCCSW installation"
+          "\nThen you should have added it manually to the input sandbox !" % {'source' : source}
+        )
+        self._log.warn(warnMessage)
+        continue
+
       # We save the relative path of the file
       # e.g. Generation/data/
       tree = os.path.dirname(file)
@@ -726,14 +759,6 @@ class FccSw(Fcc):
       rootFolderFullPath = os.path.join(self._tempCwd, rootFolder)
 
       self._inputSandbox.add(rootFolderFullPath)
-
-      source = os.path.realpath(os.path.join(self.fccSwPath, file))
-      destination = os.path.realpath(os.path.join(self._tempCwd, file))
-
-      if not os.path.exists(source):
-        errorMessage = "Sandboxing : The file '%s' does not exist" % source
-        self._log.error(errorMessage)
-        return False
 
       # if paths already exists do not copy it
       # go to the next file  
@@ -952,7 +977,7 @@ class FccAnalysis(Fcc):
     # - fcc-physics-read-delphes or
     # - fcc-physics-read
     # So find card file and set the seed !
-     
+
     if executable != 'fcc-pythia8-generate':
       self.read = True
     else:

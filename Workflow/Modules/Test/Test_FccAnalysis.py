@@ -155,7 +155,7 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.InputFile = []
 
     gaudiOptions = ["# N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER AND SEED SETTING"]
-    gaudiOptions += ["from Configurables import ApplicationMgr, RndmGenSvc"]
+    gaudiOptions += ["from Configurables import ApplicationMgr, SimG4Svc, RndmGenSvc"]
     gaudiOptions += ["from Gaudi.Configuration import *"]
 
     eventSetting = "ApplicationMgr().EvtMax=%s" % self.fccAna.NumberOfEvents
@@ -322,7 +322,7 @@ class TestFccAnalysis( unittest.TestCase ):
       self.log_mock.debug.assert_any_call( "Application : Application execution and log file creation..." )
       self.log_mock.debug.assert_any_call( "Application : Application execution successfull" )
       self.log_mock.debug.assert_any_call( "Application : Log file creation successfull" )
-      self.log_mock.warn.assert_called_once_with( "Application : no root files have been generated, is that normal ?" )
+      self.log_mock.warn.assert_called_once_with( "Application : no root files have been generated, was that intentional ?" )
       mock_shellcall.assert_called_once_with( 0, self.fccAna.applicationScript, callbackFunction = self.fccAna.redirectLogOutput, bufferLimit = 20971520 )
     
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
@@ -485,7 +485,7 @@ class TestFccAnalysis( unittest.TestCase ):
       mock_glob.return_value = self.root_files
       assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
 
-      self.log_mock.warn.assert_called_once_with( "Application : This application did not generate any root files, is that normal ?" )
+      self.log_mock.warn.assert_called_once_with( "Application : This application did not generate any root files, was that intentional ?" )
 
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
@@ -515,7 +515,7 @@ class TestFccAnalysis( unittest.TestCase ):
       self.log_mock.debug.assert_any_call( "Application : Application execution and log file creation..." )
       self.log_mock.debug.assert_any_call( "Application : Application execution successfull" )
       self.log_mock.debug.assert_any_call( "Application : Log file creation successfull" )
-      self.log_mock.warn.assert_called_once_with( "Application : no root files have been generated, is that normal ?" )
+      self.log_mock.warn.assert_called_once_with( "Application : no root files have been generated, was that intentional ?" )
       mock_shellcall.assert_called_once_with( 0, self.fccAna.applicationScript, callbackFunction = self.fccAna.redirectLogOutput, bufferLimit = 20971520 )
 
       eventSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER SETTING"]
@@ -585,12 +585,10 @@ class TestFccAnalysis( unittest.TestCase ):
       content, message  = self.fccAna.readFromFile("/my/file/to/read")
       assertEqualsImproved( content, 'some data', self )   
       mock_open.assert_called_with( "/my/file/to/read", 'r' )
-      debug_message = 'Application : Card file reading successfull'
-      assertEqualsImproved( message, debug_message, self )   
+      assertEqualsImproved( message, 'Application : Card file reading successfull', self )
 
   @patch('__builtin__.open', new=Mock(side_effect=IOError("ioerror")) )
   def test_readfromfile_failed( self ):
     content, message  = self.fccAna.readFromFile("/my/file/to/read")    
     assertEqualsImproved( None, content, self )   
-    error_message = 'Application : Card file reading failed\nioerror'
-    assertEqualsImproved( error_message, message, self )   
+    assertEqualsImproved( 'Application : Card file reading failed\nioerror', message, self )

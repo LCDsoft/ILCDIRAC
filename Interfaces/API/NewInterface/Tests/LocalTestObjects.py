@@ -33,6 +33,8 @@ class CLIParams( object ):
     self.testRoot = False
     self.testall  = False
     self.nocleanup = False
+    self.testFccSw = False
+    self.testFccAnalysis = False
 
   def setSubmitMode(self, opt):
     """ Define the submit mode
@@ -114,6 +116,18 @@ class CLIParams( object ):
     self.nocleanup = True
     return S_OK()
 
+  def setTestFccSw(self, dummy_opt):
+    """ Test FccSw
+    """
+    self.testFccSw = True
+    return S_OK()
+
+  def setTestFccAnalysis(self, dummy_opt):
+    """ Test FccAnalysis
+    """
+    self.testFccAnalysis = True
+    return S_OK()
+
   def setTestAll(self, dummy_opt):
     """ As name suggests, test everything
     """
@@ -128,6 +142,9 @@ class CLIParams( object ):
     self.testSlicPandora = True
     self.testChain = True
     self.testall = True
+    self.testFccSw = True
+    self.testFccAnalysis = True
+
     return S_OK()
 
   def registerSwitches(self):
@@ -149,6 +166,8 @@ class CLIParams( object ):
     Script.registerSwitch("", 'nocleanup', 'Do not clean the tmp directories', self.setNoCleanup)
     Script.registerSwitch("a", "all", "Test them ALL!", self.setTestAll)
     Script.setUsageMessage("%s --all --submitmode=local" % Script.scriptName)
+    Script.registerSwitch("", "fccsw", 'Test FccSw', self.setTestFccSw)
+    Script.registerSwitch("", "fccanalysis", 'Test FccAnalysis', self.setTestFccAnalysis)
 
 
 # pylint: disable=too-many-public-methods
@@ -190,6 +209,12 @@ class JobCreater(object):
 
     self.lcsimPreSteeringFile  = params.get( "lcsimPreSteeringFile" )
     self.lcsimPostSteeringFile = params.get( "lcsimPostSteeringFile" )
+
+    self.fccSwPath = params.get( "fccSwPath" )
+    self.fccSwSteeringFile = params.get( "fccSwSteeringFile" )
+
+    self.fccAnalysisSteeringFile = params.get( "fccAnalysisSteeringFile" )
+
     ### other things needed to run tests
     self.log = gLogger.getSubLogger("JobCreater")
 
@@ -433,7 +458,22 @@ class JobCreater(object):
     lcsim.setTrackingStrategy("defaultStrategies_clic_sid_cdr.xml")
     return lcsim
 
+  def getFccSw( self ):
+    """ Define a fccsw step
+    """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import FccSw
+    fccsw = FccSw()
+    fccsw.fccSwPath = self.fccSwPath
+    fccsw.setSteeringFile(self.fccSwSteeringFile)
+    return fccsw
 
+  def getFccAnalysis( self ):
+    """ Define a fccanalysis step
+    """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import FccAnalysis
+    fccanalysis = FccAnalysis()
+    fccanalysis.setSteeringFile(self.fccAnalysisSteeringFile)
+    return fccanalysis
 
   @staticmethod
   def getStdhepcut(generated):
@@ -828,6 +868,31 @@ class JobCreater(object):
     self.jobList['concat'] = jobconcat
     return S_OK((jobconcat, joblciosplit,jobwcut,jobwsplit))
 
+  def createFccSwTest(self):
+    """create tests for fccsw"""
+    self.log.notice("Creating jobs for FccSW")
+    #### FccSwJob
+    jobfccsw = self.getJob()
+    fccsw = self.getFccSw()
+    res = jobfccsw.append(fccsw)
+    if not res['OK']:
+      self.log.error("Failed adding FccSw:", res['Message'])
+      return S_ERROR()
+    self.jobList['FccSw1'] = jobfccsw
+    return S_OK(jobfccsw)
+
+  def createFccAnalysisTest(self):
+    """create tests for fccanalysis"""
+    self.log.notice("Creating jobs for FccAnalysis")
+    #### FccAnalysisJob
+    jobfccanalysis = self.getJob()
+    fccanalysis = self.getFccAnalysis()
+    res = jobfccanalysis.append(fccanalysis)
+    if not res['OK']:
+      self.log.error("Failed adding FccAnalysis:", res['Message'])
+      return S_ERROR()
+    self.jobList['FccAnalysis1'] = jobfccanalysis
+    return S_OK(jobfccanalysis)
 
   def runJobLocally(self, job, jobName="unknown"):
     """run a job locally"""
@@ -952,6 +1017,16 @@ class JobCreater(object):
 
       resRoot = self.createRootMacroTest()
       if not resRoot['OK']:
+        return S_ERROR()
+
+    if self.clip.testFccSw:
+      resFccSw = self.createFccSwTest()
+      if not resFccSw['OK']:
+        return S_ERROR()
+
+    if self.clip.testFccAnalysis:
+      resFccAnalysis = self.createFccAnalysisTest()
+      if not resFccAnalysis['OK']:
         return S_ERROR()
 
     return S_OK()
