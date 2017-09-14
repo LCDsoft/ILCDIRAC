@@ -80,7 +80,7 @@ class TestMaking( unittest.TestCase ):
 
   def test_meta( self ):
     ret = self.chain.meta( 123, 'process', 555.5 )
-    self.assertEqual( {'ProdID': 123,
+    self.assertEqual( {'ProdID': '123',
                        'EvtType': 'process',
                        'Energy': '555',
                        'Machine': 'clic',

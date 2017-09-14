@@ -244,7 +244,7 @@ MoveTypes = %(moveTypes)s
 
   def meta( self, prodID, process, energy ):
     """ return meta data dictionary, always new"""
-    return { 'ProdID': prodID,
+    return { 'ProdID': str(prodID),
              'EvtType': process,
              'Energy' : self.metaEnergy( energy ),
              'Machine': self._machine,
