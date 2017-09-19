@@ -242,7 +242,7 @@ class UserJob(Job):
     return S_OK()
 
   
-  ##############################  SPLITTING STUFF : METHODS ################################
+  ##############################  SPLITTING STUFF: METHODS ################################
   # Some methods have been added :
   #
   # * _atomicSubmission
