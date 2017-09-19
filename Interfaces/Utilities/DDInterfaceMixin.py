@@ -21,15 +21,21 @@ class DDInterfaceMixin( object ):
   def setDetectorModel(self, detectorModel):
     """Define detector model to use for ddsim simulation
 
-    The detector model can be a collection of XML files Either one has to use a
+    The detector model can be a collection of XML files. Either one has to use a
     detector model provided by LCGeo or DD4hep, which can be found on CVMFS or
     the complete XML needs to be passed as a tarball in the input sandbox or on the grid
 
-    The tarball name must be detectorModel plus extension
+    >>> ddsim.setDetectorModel("CLIC_o3_v13") # detector model part of lcgeo
+
+    >>> ddsim.setDetectorModel("CLIC_o3_v13.tar.gz") # local tarball, will be added to input sandbox
+
+    >>> ddsim.setDetectorModel("LFN:/ilc/user/u/username/CLIC_o3_v13.tar.gz") # tarball on the grid
+
+    The tarball name must be detectorModel plus extension.
     The tarball must contain all xml files inside a folder called detectorModel.
-    That is the main file is located in detectorModel/detectorModel.xml
+    That is the main file is located in *detectorModel/detectorModel.xml*
     
-    :param string detectorModel: Detector Model to use for DDSim simulation. Can
+    :param string detectorModel: Detector Model to use for simulation or reconstruction. Can
       be on CVMFS, tarball LFN or inputSandbox tarball
     
     """
