@@ -61,7 +61,7 @@ class JobTestCase( unittest.TestCase ):
     myLCSimPreSteeringFile = "clic_cdr_prePandoraOverlay_1400.0.lcsim" if overlayrun else "clic_cdr_prePandora.lcsim"
     myLCSimPostSteeringFile = "clic_cdr_postPandoraOverlay.lcsim"
     myFccSwSteeringFile = os.path.join(os.environ['DIRAC'],'ILCDIRAC','Testfiles','geant_fastsim.py')
-    myFccAnalysisSteeringFile = os.path.join(os.environ['DIRAC'],'ILCDIRAC','Testfiles','ee_ZH_Zmumu_Hbb.txt')
+    myFccAnalysisSteeringFile = '/cvmfs/fcc.cern.ch/sw/0.8.1/fcc-physics/0.2.1/x86_64-slc6-gcc62-opt/share/ee_ZH_Zmumu_Hbb.txt'
     myFccSwPath = "/cvmfs/fcc.cern.ch/sw/0.8.1/fccsw/0.8.1/x86_64-slc6-gcc62-opt"
 
     parameterDict = dict( mokkaVersion="ILCSoft-01-17-06",

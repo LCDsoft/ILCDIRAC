@@ -195,8 +195,11 @@ class Fcc(Application):
 
     # All input files are put in the FCC temporary sandbox for a
     # pre-checking before being added to the FCC final sandbox
-    if self.steeringFile :
+    if self.steeringFile:
       self._tempInputSandbox.add(self.steeringFile)
+      # Once steeringFile is given, we set the random generator for 'fcc-physics-read'
+      if not self.read and "Pythia" in self.randomGenerator:
+        self.randomGenerator["Pythia"].append(os.path.basename(self.steeringFile))
 
     self._log.info("Sandboxing : Sandboxing in progress...")
 
@@ -964,4 +967,4 @@ class FccAnalysis(Fcc):
     if executable != 'fcc-pythia8-generate':
       self.read = True
     else: # Set the seed for the generation of events
-      self.randomGenerator = {"Pythia":[os.path.basename(fccConfFile)]}
+      self.randomGenerator = {"Pythia":[]}

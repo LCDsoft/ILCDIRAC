@@ -809,7 +809,7 @@ class FccAnalysisTestCase( FccMixin, unittest.TestCase ):
     self.fcc._log = self.log_mock
 
   def test_randomGenerator( self ):
-    assertEqualsImproved( self.fcc.randomGenerator, {"Pythia":[os.path.basename(self.fcc.steeringFile)]}, self )
+    assertEqualsImproved( self.fcc.randomGenerator, {"Pythia":[]}, self )
 
   def test_readeventfalse( self ):
     self.assertFalse( self.fcc.read )
