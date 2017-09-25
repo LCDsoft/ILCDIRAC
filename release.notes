@@ -1,3 +1,24 @@
+[v26r0p13]
+
+*Interface
+
+NEW: (!153) `ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitDoNotAlterOutputFilename`: function to disable the injecting of the JobIndex into the filename
+
+*ILCTransformationSystem
+
+FIX: (!155) DataRecoveryAgent: fix problem to get canceled request status. Fixes problem were the request cannot be successful, and thus some jobs were not dealt with properly.
+FIX: (!156) `dirac-clic-make-productions` use ProdID as string, fixes problem if ProdID is 0
+CHANGE: (!156) `dirac-clic-make-productions` *_productionname* function no longer has *prodname* argument
+
+*Interfaces
+
+CHANGE: (!156) Updated docstring for :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel` to include examples of the different options
+
+*Workflow
+
+NEW: (!153) if some kind of jobSplitting is done the OutputData LFNs are automatically injected with the JobIndex in the splitting sequence. See :mod:`ILCDIRAC.Core.Utilities.Splitting`
+
+
 [v26r0p12]
 
 *Core
