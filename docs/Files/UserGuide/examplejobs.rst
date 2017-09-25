@@ -218,6 +218,14 @@ Running Overlay and Marlin with CLIC_o3_v12
 Automatic Job Splitting
 -----------------------
 
+This example shows how the automatic job splitting can be used to quickly create
+a larger number of jobs that each simulate a given number of events. The random
+seed for each job is based on the iLCDIRAC jobID, the output filenames are
+injected with the job index, 0 to 9 in this example.
+
+There is also the option to automatically split jobs over inputfiles, see
+:func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitInputData`.
+
 .. code:: python
 
   from DIRAC.Core.Base import Script
@@ -230,17 +238,18 @@ Automatic Job Splitting
   dIlc = DiracILC()
 
   job = UserJob()
-  job.setInputData( "/ilc/prod/clic/3tev/qqqq/CLIC_o3_v12/SIM/00008298/000/qqqq_sim_8298_1.slcio" )
   job.setOutputSandbox( "*.log" )
-  job.setOutputData( "myReco_1.slcio" )
+  ## output data name is automatically changed to, e.g., ddsimout_5.slcio
+  job.setOutputData( "ddsimout.slcio", outputPath="sim1" )
   job.setCLICConfig( "ILCSoft-2017-07-27" )
-  job.setParameterSequence('NbOfEvts', [10,10])
+  ## creates 10 jobs with 100 events each
+  job.setSplitEvents( eventsPerJob=100, numberOfJobs=10 )
 
   ddsim = DDSim()
   ddsim.setVersion("ILCSoft-2017-07-27_gcc62")
   ddsim.setDetectorModel("CLIC_o3_v13")
-  ddsim.setInputFile("LFN:/ilc/prod/clic/500gev/Z_uds/gen/0/00.stdhep")
-  ddsim.setNumberOfEvents( 10 )
+  ddsim.setExtraCLIArguments( " --enableGun --gun.particle=mu- " )
+  ddsim.setNumberOfEvents( 100 )
   ddsim.setSteeringFile( "clic_steer.py" )
   ddsim.setOutputFile( "ddsimout.slcio" )
   myJob.append(ddsim)

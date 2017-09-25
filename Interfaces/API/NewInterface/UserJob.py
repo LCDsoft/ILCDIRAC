@@ -242,20 +242,22 @@ class UserJob(Job):
     return S_OK()
 
   
-  ##############################  SPLITTING STUFF: METHODS ##############################
-  # Some methods have been added:
+  ##############################  SPLITTING STUFF: METHODS ################################
+  # Some methods have been added :
   #
-  # 1) _atomicSubmission
-  # 2) _checkJobConsistency
-  # 3) _split
-  # 4) _splitByData
-  # 5) _splitByEvents
-  # 6) _toInt
+  # * _atomicSubmission
+  # * _checkJobConsistency
+  # * setSplitEvents
+  # * setSplitInputData
+  # * setSplitDoNotAlterOutputFilename
+  # * _split
+  # * _splitByData
+  # * _splitByEvents
+  # * _toInt
   #
-  # Given the type of splitting (byEvents, byData), these functions compute
+  # Given the type of splitting (Events or Data), these methods compute
   # the right parameters of the method 'Job.setParameterSequence()'
-
-  ##############################  SPLITTING STUFF: NEW METHODS ##############################
+  ##########################################################################################
   def setSplitEvents( self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None ):
     """This function sets split parameters for doing splitting over events
 

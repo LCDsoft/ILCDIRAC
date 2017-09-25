@@ -332,7 +332,7 @@ class UserJobFinalization(ModuleBase):
     """ add the jobIndex to the output file name """
     if self.workflow_commons.get( 'JobIndex' ) is None:
       return
-    if not self.workflow_commons.get( 'DoNotAlterOutputData' ):
+    if self.workflow_commons.get( 'DoNotAlterOutputData' ):
       return
 
     jobIndex = self.workflow_commons.get( 'JobIndex' )

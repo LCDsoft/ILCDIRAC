@@ -14,10 +14,10 @@ Creating New GG Hadron Simulation Files
       ## background simulation
       prodGroup = GGhadronSimulation_%(detectorModel)s
       ProdTypes = Sim
-      energies =                     350,    1400,     3000
-      processes =                  gghad,   gghad,    gghad
-      eventsPerJobs =               1000,    1000,      100
-      prodids =                        1,       2,        1
+      energies =                     350,     500,   1400,     3000
+      processes =                  gghad,   gghad,  gghad,    gghad
+      eventsPerJobs =               1000,     100,   1000,      100
+      prodids =                        1,       0,      2,        1
       
 2. When the productions are created add the *DetectorModel* meta tag to the
    folder of the DetectorModel. By itself on the *DetectorType* is set for

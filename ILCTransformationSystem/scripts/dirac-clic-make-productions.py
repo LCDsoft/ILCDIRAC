@@ -244,7 +244,7 @@ MoveTypes = %(moveTypes)s
 
   def meta( self, prodID, process, energy ):
     """ return meta data dictionary, always new"""
-    return { 'ProdID': prodID,
+    return { 'ProdID': str(prodID),
              'EvtType': process,
              'Energy' : self.metaEnergy( energy ),
              'Machine': self._machine,
@@ -320,12 +320,12 @@ MoveTypes = %(moveTypes)s
       print self
       raise RuntimeError('')
 
-  def _productionName( self, prodName, metaDict, parameterDict, prodType ):
+  def _productionName( self, metaDict, parameterDict, prodType ):
     """ create the production name """
-    workflowName = "%s_%s_clic_%s_%s" %( parameterDict['process'],
-                                         metaDict['Energy'],
-                                         prodType,
-                                         prodName )
+    workflowName = "%s_%s_clic_%s" %( parameterDict['process'],
+                                      metaDict['Energy'],
+                                      prodType,
+                                    )
     if isinstance( self.additionalName, basestring):
       workflowName += "_" + self.additionalName
     return workflowName
@@ -517,7 +517,7 @@ finalOutputSE = %(finalOutputSE)s
     if not res['OK']:
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
     simProd.setOutputSE( self.outputSE )
-    simProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'sim') )
+    simProd.setWorkflowName( self._productionName( meta, parameterDict, 'sim') )
     simProd.setProdGroup( self.prodGroup )
     #Add the application
     res = simProd.append( self.createDDSimApplication() )
@@ -563,7 +563,7 @@ finalOutputSE = %(finalOutputSE)s
 
     recProd.setOutputSE( self.outputSE )
     recType = 'rec_overlay' if self._flags.over else 'rec'
-    recProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, recType ) )
+    recProd.setWorkflowName( self._productionName( meta, parameterDict, recType ) )
     recProd.setProdGroup( self.prodGroup )
 
     #Add overlay if needed
@@ -616,7 +616,7 @@ finalOutputSE = %(finalOutputSE)s
     if not res['OK']:
       raise RuntimeError( 'Split production: failed to set inputDataQuery: %s' % res['Message'] )
     splitProd.setOutputSE( self.outputSE )
-    splitProd.setWorkflowName( self._productionName( prodName, meta, parameterDict, 'stdhepSplit' ) )
+    splitProd.setWorkflowName( self._productionName( meta, parameterDict, 'stdhepSplit' ) )
     splitProd.setProdGroup( self.prodGroup )
 
     #Add the application

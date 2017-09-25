@@ -55,9 +55,15 @@ class JobTestCase( unittest.TestCase ):
     clip.testUtilities = True
     overlayrun = clip.testOverlay
     clip.testRoot = True
+    clip.testFccSw = True
+    clip.testFccAnalysis = True
     myMarlinSteeringFile = "bbudsc_3evt_stdreco.xml"
     myLCSimPreSteeringFile = "clic_cdr_prePandoraOverlay_1400.0.lcsim" if overlayrun else "clic_cdr_prePandora.lcsim"
     myLCSimPostSteeringFile = "clic_cdr_postPandoraOverlay.lcsim"
+    myFccSwSteeringFile = os.path.join(os.environ['DIRAC'],'ILCDIRAC','Testfiles','geant_fastsim.py')
+    myFccAnalysisSteeringFile = '/cvmfs/fcc.cern.ch/sw/0.8.1/fcc-physics/0.2.1/x86_64-slc6-gcc62-opt/share/ee_ZH_Zmumu_Hbb.txt'
+    myFccSwPath = "/cvmfs/fcc.cern.ch/sw/0.8.1/fccsw/0.8.1/x86_64-slc6-gcc62-opt"
+
     parameterDict = dict( mokkaVersion="ILCSoft-01-17-06",
                           mokkaSteeringFile="bbudsc_3evt.steer",
                           detectorModel="ILD_o1_v05",
@@ -76,7 +82,10 @@ class JobTestCase( unittest.TestCase ):
                           ddsimDetectorModel="CLIC_o2_v03",
                           ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep",
                           inputFilesPath = 'LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
-                          rootVersion="ILCSoft-01-17-08"
+                          rootVersion="ILCSoft-01-17-08",
+                          fccSwSteeringFile=myFccSwSteeringFile,
+                          fccAnalysisSteeringFile=myFccAnalysisSteeringFile,
+                          fccSwPath=myFccSwPath
                         )
     from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import JobCreater
     self.myTests = JobCreater(clip, parameterDict)
@@ -229,6 +238,32 @@ class JobTestCase( unittest.TestCase ):
     res = self.myTests.runJobLocally(thisJob, "Root")
     assertDiracSucceeds( res, self )
 
+  #@unittest.skip("Temporarily disabled due to length")
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
+  def test_fccsw(self):
+    """create test for fccsw"""
+    print "fccsw test"
+    jobs = self.myTests.createFccSwTest()
+    assertDiracSucceeds( jobs, self )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "FccSw")
+    assertDiracSucceeds( res, self )
+
+  #@unittest.skip("Temporarily disabled due to length")
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
+  def test_fccanalysis(self):
+    """create test for fccanalysis"""
+    print "fccanalysis test"
+    jobs = self.myTests.createFccAnalysisTest()
+    assertDiracSucceeds( jobs, self )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "FccAnalysis")
+    assertDiracSucceeds( res, self )
+
 def runTests():
   """runs the tests"""
   #clip = CLIParams()          # See setUpClass
@@ -269,7 +304,23 @@ def runDDSimTest():
   suite.addTest(JobTestCase('test_ddsim'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
   print testResult
-  
+
+# TO UNCOMMENT when Detector folder of FCCSW will be on CVMFS
+#def runFccSwTest():
+#  """runs the fccsw test only"""
+#  #Script.parseCommandLine()
+#  suite = unittest.TestSuite()
+#  suite.addTest(JobTestCase('test_fccsw'))
+#  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
+#  print testResult
+
+def runFccAnalysisTest():
+  """runs the fccanalysis test only"""
+  #Script.parseCommandLine()
+  suite = unittest.TestSuite()
+  suite.addTest(JobTestCase('test_fccanalysis'))
+  testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
+  print testResult
 
 if __name__ == '__main__':
   runTests()

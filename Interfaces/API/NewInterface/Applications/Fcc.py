@@ -40,16 +40,17 @@ class Fcc(Application):
 
     # Required
     self.fccExecutable = ''
-    
-    self.isGaudiOptionsFileNeeded = False
 
-    # Path of FCCSW installation
+    # Path of the FCCSW installation (Local or in CVMFS)
     self.fccSwPath = ''
+
+    # FccSw generates an additionnal configuration file
+    self.isGaudiOptionsFileNeeded = False
 
     # Read or generate events
     self.read = False
 
-    # Random generator service used to set seed and number of events
+    # Random generator service used to set the seed and the number of events
     self.randomGenerator = {}
 
     # Final FCC input sandbox
@@ -70,36 +71,34 @@ class Fcc(Application):
     # What operation to do for each extension (include it or exclude it)
     self._excludesOrIncludes = []
 
-    # Local path for the temporary sandbox
+    # Local path of the temporary sandbox
     self._tempCwd = os.path.realpath('temp_fcc_dirac')
 
     # Output sandbox (not the real one)
     # used just for printing informations to the user
     self._outputSandbox = set()
 
-    # User log level
-    self.logLevel = None
+    # Default application log level
+    self.logLevel = "DEBUG"
 
     self.datatype = 'REC'
     self.detectortype = 'ILD'
 
-
     super(Fcc, self).__init__()
-    # Those 5 need to come after default constructor
+    # Those 6 need to come after default constructor
     self._modulename = 'FccAnalysis'
     #self._importLocation = 'ILCDIRAC.Workflow.Modules'
     self._moduledescription = "Module running FCC software"
     self.appname = self.__class__.__name__
-    self.applicationFolder = ''
     self.version = "v0.8.1"
     self.energy = 0
     self.numberOfEvents = 0
 
   def _applicationModule(self):
-    """It transfers parameter names of the module
+    """It transfers parameter names from the module
        Fcc to the module FccAnalysis.
 
-    :return: The module for which we give the parameters
+    :return: The module that takes these parameters
     :rtype: moduleinstance
 
     """
@@ -124,10 +123,10 @@ class Fcc(Application):
     return md1
 
   def _applicationModuleValues(self, moduleinstance):
-    """It transfers parameter values of the module
+    """It transfers parameter values from the module
     Fcc to the module FccAnalysis.
 
-    :param moduleinstance: The module we load (FCCAnalysis)
+    :param moduleinstance: The module we load (FccAnalysis)
 
     """
 
@@ -177,12 +176,12 @@ class Fcc(Application):
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    if True is not self.steeringFile and not isinstance(self.steeringFile, str):
+    if not isinstance(self.steeringFile, str):
       errorMessage = (
         "Consistency : Fcc Application accepts only one input configuration file:\n"
         "If you want to run the application '%(name)s' with many configurations then\n"
         "Create an new application with the other configuration\n"
-        "You can also use 'getInputFromApp' function to link applications" % {'name':self.appname}
+        "You can also use the 'getInputFromApp' method to link applications" % {'name':self.appname}
       )
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
@@ -196,11 +195,13 @@ class Fcc(Application):
 
     # All input files are put in the FCC temporary sandbox for a
     # pre-checking before being added to the FCC final sandbox
-    if self.steeringFile and not self._inputapp:
+    if self.steeringFile:
       self._tempInputSandbox.add(self.steeringFile)
+      # Once steeringFile is given, we set the random generator for 'fcc-physics-read'
+      if not self.read and "Pythia" in self.randomGenerator:
+        self.randomGenerator["Pythia"].append(os.path.basename(self.steeringFile))
 
-    infoMessage = "Sandboxing : Sandboxing in progress..."
-    self._log.info(infoMessage)
+    self._log.info("Sandboxing : Sandboxing in progress...")
 
     # We update the sandbox with files/folders required by the application
     if not self._importToSandbox():
@@ -208,8 +209,7 @@ class Fcc(Application):
       self._log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    infoMessage = "Sandboxing : Sandboxing successfull"
-    self._log.info(infoMessage)
+    self._log.info("Sandboxing : Sandboxing successfull")
     
     # setOutputFile() method informs the job that this application has an output file
     # This output can be used as input for another application.
@@ -223,24 +223,19 @@ class Fcc(Application):
     # files checked in the temporary sandbox, we set
     # the DIRAC application input sandbox : self.inputSB
     
-    
     self._inputSandbox = self._inputSandbox.union(self._foldersToFilter)
     self.inputSB = list(self._inputSandbox)
-
     
     # Sandbox can be set at the application level or at the job level.
     # Whatever the level choosed, sandbox files are all put
     # in the same final destination which is a list of paths
     # in the JDL file (see Input Sandbox parameter of the JDL file).
     
-
     infoMessage = (
       "Application general consistency : _checkConsistency()"
       " on '%(name)s' successfull" % {'name':self.appname}
     )
     self._log.info(infoMessage)
-
-    # Flush application sandboxes
 
     return S_OK(infoMessage)
 
@@ -253,18 +248,24 @@ class Fcc(Application):
     """
 
     applicationStep = len(self._jobapps) + 1
-    self.applicationFolder = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
-    # Take in priority output file given in setOutputFile
+    applicationIndex = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
+
+    # Take in priority output file given in setOutputFile('output file')
+    # Many output files can be managed if setOutputFile() method accepts list
     if self.outputFile :
-      self.setOutputFile(os.path.join(self.applicationFolder, self.outputFile))
-    else:
-      # Compute root file name    
-      self.setOutputFile(os.path.join(self.applicationFolder, "%s.root" % self.applicationFolder))
+      if isinstance(self.outputFile, str):
+        outputFile = "%s_%s.root" % (os.path.splitext(self.outputFile)[0], applicationIndex)
+      elif isinstance(self.outputFile, list):
+        outputFile = [ "%s_%s.root" % (os.path.splitext(outputFile)[0], applicationIndex) for outputFile in self.outputFile]
+      self.setOutputFile(outputFile)
+
+      outputFiles = [outputFile] if isinstance(outputFile, str) else outputFile
+      for outputFile in outputFiles:
+        self._outputSandbox.add("%s_JobID.root (%s)" % ( os.path.splitext(outputFile)[0], "Name of the eventual output root file") )
 
     # We add the log file and the output file to the output sandbox
     self._outputSandbox.add(self.logFile)
-    self._outputSandbox.add("%s (%s)" % (os.path.basename(self.outputFile), "Name of the eventual output root file") )
-      
+
     infoMessage = (
       "\n********************************FCC SUMMARY******************************\n"
       "You plan to submit this application with its corresponding log :\n"
@@ -347,8 +348,7 @@ class Fcc(Application):
     return (tempPath, True) if os.path.exists(tempPath) else (path, False)
 
   def _importFiles(self):
-    """This function adds folders/files specified by the user for an application
-    to the sandbox.
+    """This function adds folders/files to the sandbox specified by the user.
 
     :return: The success or the failure of the import
     :rtype: bool
@@ -414,20 +414,17 @@ class Fcc(Application):
 
     """
 
-    debugMessage = "Sandboxing : Importation of user files/folders..."
-    self._log.debug(debugMessage)
+    self._log.debug("Sandboxing : Importation of user files/folders...")
 
     # Import files required by the application
     # If import process fails for some reasons (see functions above for more details)
     # then consistency fails
     if not self._importFiles():
-      errorMessage = "Sandboxing : _importFiles() failed"
-      self._log.error(errorMessage)
+      self._log.error("Sandboxing : _importFiles() failed")
       return False
       # Do not continue remaining checks
 
-    debugMessage = "Sandboxing : Importation of user files/folders successfull"
-    self._log.debug(debugMessage)
+    self._log.debug("Sandboxing : Importation of user files/folders successfull")
 
     return True
 
@@ -447,11 +444,9 @@ class Fcc(Application):
       with open(fileName, 'r') as fileToRead:
         content = fileToRead.read()
     except IOError as e:
-      errorMessage = 'Sandboxing : FCC configuration file reading failed\n%s' % e
-      return None, errorMessage
+      return None, 'Sandboxing : FCC configuration file reading failed\n%s' % e
 
-    debugMessage = 'Sandboxing : FCC configuration file reading successfull'
-    return content, debugMessage
+    return content, 'Sandboxing : FCC configuration file reading successfull'
 
 ###############################  Fcc DAUGHTER CLASSES ##############################################
 
@@ -514,24 +509,31 @@ class FccSw(Fcc):
         self._log.error(errorMessage)
         return S_ERROR(errorMessage)
 
-      debugMessage = "FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder successfull"
-      self._log.debug(debugMessage)
+      self._log.debug("FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder successfull")
     else:
-      debugMessage = "FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists"
-      self._log.debug(debugMessage)
+      self._log.debug("FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists")
 
-    # If InstallArea folder is on cvmfs so nothing to do
-    # else download it because 'FCCSW.xenv' needs libraries from this folder
+    # InstallArea folder is present on CVMFS so nothing to do
+    # else if local FCCSW installation is used
+    # download it because 'FCCSW.xenv' needs libraries from this folder
 
     if not self.fccSwPath.startswith('/cvmfs/'):
       installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
       # We do not need all the content of these folders hence the filtering
       self._foldersToFilter.add(installAreaFolder)
 
-    # Actually FCCSW CVMFS run successfully only with configuration files that do not need additionnal files
-    # like Generation/data/ParticleTable.txt
-    # Release made after 31/08/2017 will put a complete installation of FCCSW to make successfull
-    # All examples of Examples/options
+      # Explanation
+      # InstallAreaFolder : all dbg files are excluded
+      # detectorFolder : only xml files are included
+      self._filteredExtensions += ['.dbg']
+      self._excludesOrIncludes += [True]
+
+    # 'Detector' folder is not present on CVMFS in release v0.8.1 so the user has to add this
+    # folder to the sandbox ('cf the corresponding warning message')
+    # Actually, FCCSW installation of CVMFS run successfully only with configuration files that
+    # do not need additionnal files like 'Generation/data/ParticleTable.txt' or folders like 'Detector'
+    # FCCSW release made after 31/08/2017 will put a complete installation of FCCSW
+    # And all examples of Examples/options should run successfully
 
     self.fccExecutable = '%s/run gaudirun.py' % self.fccSwPath
 
@@ -542,7 +544,7 @@ class FccSw(Fcc):
   def _checkFinalConsistency(self):
     """Redefinition of ILCDIRAC.Workflow.Modules.Fcc._checkFinalConsistency().
     Setting True 'isGaudiOptionsFileNeeded' attribute tells that the application needs to generate
-    the gaudi option file like for FccSw.
+    the gaudi option file of FccSw.
 
     :return: The success of the final consistency checking
     :rtype: DIRAC.S_OK
@@ -588,26 +590,35 @@ class FccSw(Fcc):
 
     """
     
-    #installAreaFolder already resolved and added in FccSw class
-    # It is present in CVMFS
+    # 'InstallArea' Folder already resolved and added in FccSw class
+    # It is present in CVMFS contrary to 'Detector' folder
     #installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
     detectorFolder = os.path.join(self.fccSwPath, 'Detector')
 
-    # We do not need all the content of these folders hence the filtering
-    self._foldersToFilter.add(detectorFolder)
+    # As CVMFS installation is not complete ('Detector' folder missing in release v0.8.1)
+    # we do this check
+    if not os.path.exists(detectorFolder):
+      warnMessage = (
+        "Sandboxing : The folder 'Detector' does not exist,"
+        " it is not present in the FCCSW installation"
+        "\nThen you should have added it manually to the input sandbox !"
+      )
+      self._log.warn(warnMessage)
+    else:
+      # We do not need all the content of these folders hence the filtering
+      self._foldersToFilter.add(detectorFolder)
 
-    # Explanation
-    # InstallAreaFolder : all dbg files are excluded
-    # detectorFolder : only xml files are included
-    self._filteredExtensions += ['.dbg', '.xml']
-    self._excludesOrIncludes += [True, False]
+      # Explanation
+      # InstallAreaFolder : all dbg files are excluded
+      # detectorFolder : only xml files are included
+      self._filteredExtensions += ['.xml']
+      self._excludesOrIncludes += [False]
 
-    debugMessage = "Sandboxing : FCC configuration file reading..."
-    self._log.debug(debugMessage)
+    self._log.debug("Sandboxing : FCC configuration file reading...")
 
     content, message = self._readFromFile(self.steeringFile)
 
-    # If configuration file is not valid then consistency fails
+    # If the configuration file is not valid then consistency fails
     if not content:
       self._log.error(message)
       return False
@@ -633,15 +644,14 @@ class FccSw(Fcc):
       self.randomGenerator["Pythia"] = cmdFiles
     else:
       self.randomGenerator["Gaudi"] = True
-      
+
     # From these paths we re-create the tree in the temporary sandbox
     # with only the desired file.
     # In the configuration file, these paths are relative to FCCSW installation.
     # e.g. Generation/data/foo.xml
     
     if not self._resolveTreeOfFiles(txtFiles, '.txt'):
-      errorMessage = "Sandboxing : _resolveTreeOfFiles() failed"
-      self._log.error(errorMessage)
+      self._log.error("Sandboxing : _resolveTreeOfFiles() failed")
       return False
       # Do not continue remaining checks
 
@@ -649,7 +659,7 @@ class FccSw(Fcc):
     return self._resolveTreeOfFiles(cmdFiles, '.cmd')
 
   def _resolveTreeOfFiles(self, files, extension):
-    """FCC configuration file like 'geant_pgun_fullsim.py'
+    """FCC configuration file like 'Examples/options/geant_pgun_fullsim.py'
     needs files coming from FCCSW installation. The path of these files
     are hard-coded in the FCC configuration file with a relative path to FCCSW installation.
 
@@ -671,7 +681,7 @@ class FccSw(Fcc):
     :param extension: The extension of file to resolve
     :type extension: str
 
-    :return: success or failure of checking file
+    :return: success or failure of the file copy
     :rtype: bool
 
     """
@@ -684,10 +694,23 @@ class FccSw(Fcc):
       self._log.warn(warnMessage)
       return True
 
-    for file in files:
+    for afile in files:
+
+      source = os.path.realpath(os.path.join(self.fccSwPath, afile))
+      destination = os.path.realpath(os.path.join(self._tempCwd, afile))
+
+      if not os.path.exists(source):
+        warnMessage = (
+          "Sandboxing : The file '%s' does not exist,"
+          " it is not present in the FCCSW installation"
+          "\nThen you should have added it manually to the input sandbox !" % {'source' : source}
+        )
+        self._log.warn(warnMessage)
+        continue
+
       # We save the relative path of the file
       # e.g. Generation/data/
-      tree = os.path.dirname(file)
+      tree = os.path.dirname(afile)
       # We prepend the temporary sandbox to the tree
       # which will become the new location of the file.
       treeFullPath = os.path.join(self._tempCwd, tree)
@@ -727,14 +750,6 @@ class FccSw(Fcc):
 
       self._inputSandbox.add(rootFolderFullPath)
 
-      source = os.path.realpath(os.path.join(self.fccSwPath, file))
-      destination = os.path.realpath(os.path.join(self._tempCwd, file))
-
-      if not os.path.exists(source):
-        errorMessage = "Sandboxing : The file '%s' does not exist" % source
-        self._log.error(errorMessage)
-        return False
-
       # if paths already exists do not copy it
       # go to the next file  
       if os.path.exists(destination):
@@ -771,7 +786,7 @@ class FccSw(Fcc):
 
     This function maps the folders with their corresponding filters if there are.
 
-    :return: The success or the failure of the filter setting
+    :return: The success or the failure of the filter's setting
     :rtype: bool
 
     """
@@ -806,16 +821,13 @@ class FccSw(Fcc):
       # DIRAC already compress the sandbox before submitting the job
       # do not compress folders
 
-      debugMessage = "Sandboxing : Folders filtering..."
-      self._log.debug(debugMessage)
+      self._log.debug("Sandboxing : Folders filtering...")
 
       if not self._filterFolders(tempFolder, actualFolder, filteredExtension, excludeOrInclude):
-        errorMessage = "Sandboxing : _filterFolders() failed"
-        self._log.error(errorMessage)
+        self._log.error("Sandboxing : _filterFolders() failed")
         return False
 
-      debugMessage = "Sandboxing : Folders filtering successfull"
-      self._log.debug(debugMessage)
+      self._log.debug("Sandboxing : Folders filtering successfull")
 
       copiedFolders.add(tempFolder)
 
@@ -895,8 +907,7 @@ class FccSw(Fcc):
       if not os.path.isfile(source):
         # Recursive call for folders
         if not self._filterFolders(destination, source, filteredExtension, excludeOrInclude):
-          errorMessage = "Sandboxing : _filterFolders() failed"
-          self._log.error(errorMessage)
+          self._log.error("Sandboxing : _filterFolders() failed")
           return False
       else:
         if os.path.exists(destination):
@@ -952,8 +963,8 @@ class FccAnalysis(Fcc):
     # - fcc-physics-read-delphes or
     # - fcc-physics-read
     # So find card file and set the seed !
-     
+
     if executable != 'fcc-pythia8-generate':
       self.read = True
-    else:
-      self.randomGenerator = {"Pythia":[os.path.basename(fccConfFile)]}
+    else: # Set the seed for the generation of events
+      self.randomGenerator = {"Pythia":[]}
