@@ -278,6 +278,8 @@ class UserJob(Job):
     self.eventsPerJob =  eventsPerJob
     self.numberOfJobs =  numberOfJobs
 
+    self._addParameter( self.workflow, 'NbOfEvts', 'JDL', -1, 'Number of Events' )
+
     self.splittingOption = "byEvents"
 
   def setSplitInputData( self, lfns, numberOfFilesPerJob = 1):
