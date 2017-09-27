@@ -62,7 +62,7 @@ class Fcc(Application):
 
     # Some folders have to be filtered (like 'Detector' folder of FCCSW installation)
     # to avoid sandbox overload (sandbox max size = 10 Mb)
-    self._foldersToFilter = set()
+    self._foldersToFilter = []
 
     # Folder filters
     # which extension to filter
@@ -517,10 +517,28 @@ class FccSw(Fcc):
     # else if local FCCSW installation is used
     # download it because 'FCCSW.xenv' needs libraries from this folder
 
+    self.fccExecutable = '%s/run gaudirun.py' % self.fccSwPath
+
     if not self.fccSwPath.startswith('/cvmfs/'):
+      # **** TO DO ****
+      # 'FCCSW/run' script calls another 'run' script inside 'build.$BINARY_TAG' folder
+      # The command works with a '.xenv' file using local FCCSW installation which is not present on the GRID
+      # So we hardcode the command using another '.xenv' file
+      # But the command is still specific to 0.8.1 release
+      # Someone has to export 2 new environment variables into the FCC environment script :
+      # For example, something like :
+      #export XENV=/cvmfs/xenv
+      #export PYTHON_BIN=/cvmfs/python
+
+      #python = '$PYTHON_BIN'
+      python = '/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc62-opt/bin/python'
+      #xenv = '$XENV'
+      xenv = '/cvmfs/fcc.cern.ch/sw/0.8.1/gaudi/v28r2/x86_64-slc6-gcc62-opt/scripts/xenv'
+      argXenv = 'InstallArea/FCCSW.xenv'
+      self.fccExecutable = 'exec %s %s --xml %s gaudirun.py' % (python, xenv, argXenv)
       installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
       # We do not need all the content of these folders hence the filtering
-      self._foldersToFilter.add(installAreaFolder)
+      self._foldersToFilter.append(installAreaFolder)
 
       # Explanation
       # InstallAreaFolder : all dbg files are excluded
@@ -534,8 +552,6 @@ class FccSw(Fcc):
     # do not need additionnal files like 'Generation/data/ParticleTable.txt' or folders like 'Detector'
     # FCCSW release made after 31/08/2017 will put a complete installation of FCCSW
     # And all examples of Examples/options should run successfully
-
-    self.fccExecutable = '%s/run gaudirun.py' % self.fccSwPath
 
     self._log.debug("FCCSW specific consistency : _checkConsistency() successfull")
 
@@ -606,7 +622,7 @@ class FccSw(Fcc):
       self._log.warn(warnMessage)
     else:
       # We do not need all the content of these folders hence the filtering
-      self._foldersToFilter.add(detectorFolder)
+      self._foldersToFilter.append(detectorFolder)
 
       # Explanation
       # InstallAreaFolder : all dbg files are excluded
@@ -796,7 +812,7 @@ class FccSw(Fcc):
       self._log.debug(debugMessage)
       return True
 
-    copiedFolders = set()
+    copiedFolders = []
 
     for idx, actualFolder in enumerate(self._foldersToFilter):
 
@@ -829,7 +845,7 @@ class FccSw(Fcc):
 
       self._log.debug("Sandboxing : Folders filtering successfull")
 
-      copiedFolders.add(tempFolder)
+      copiedFolders.append(tempFolder)
 
     self._foldersToFilter = copiedFolders
 
@@ -914,29 +930,34 @@ class FccSw(Fcc):
           debugMessage = "Sandboxing : The file '%s' already exists" % source
           self._log.debug(debugMessage)
         else:
-          debugMessage = "Sandboxing : File '%s' copy..." % source
-          self._log.debug(debugMessage)
 
           if ((excludeOrInclude and not path.endswith(filteredExtension))
               or (not excludeOrInclude and path.endswith(filteredExtension))
               or not filteredExtension):
 
+            warn = False
+            debugMessage = "Sandboxing : File '%s' copy..." % source
+            self._log.debug(debugMessage)
+
             # Copy considering filters to apply
             try:
               shutil.copyfile(source, destination)
             except (IOError, shutil.Error) as e:
-              errorMessage = "Sandboxing : The copy of the file '%s' failed\n%s" % (destination, e)
-              self._log.error(errorMessage)
-              return False
+              warnMessage = "Sandboxing : The copy of the file '%s' failed\n%s" % (destination, e)
+              self._log.warn(warnMessage)
+              warn = True
+              #return False
 
-            debugMessage = (
-              "Sandboxing : Copy of the file"
-              " '%(src)s' successfull to '%(dst)s'" % {'src':source, 'dst':destination}
-            )
-            self._log.debug(debugMessage)
+            if not warn:
+              debugMessage = (
+                "Sandboxing : Copy of the file"
+                " '%(src)s' successfull to '%(dst)s'" % {'src':source, 'dst':destination}
+              )
+              self._log.debug(debugMessage)
 
     debugMessage = "Sandboxing : Folder '%s' filtering successfull" % tempFolder
     self._log.debug(debugMessage)
+
     return True
 
 class FccAnalysis(Fcc):

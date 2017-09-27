@@ -665,7 +665,7 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       mock_isfile.side_effect = replace_isfile
       mock_exists.side_effect = replace_exists
 
-      self.assertFalse( self.fcc._filterFolders(temp_folder, actual_folder, ".ext", True) )
+      self.assertTrue( self.fcc._filterFolders(temp_folder, actual_folder, ".ext", True) )
 
       mock_exists.assert_any_call( temp_folder )
       mock_exists.assert_any_call( source )
@@ -677,8 +677,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
 
       mock_shutil.assert_called_once_with( source, destination )
 
-      error_message = "Sandboxing : The copy of the file '%s' failed\nioerror" % destination
-      self.log_mock.error.assert_called_once_with( error_message )
+      warn_message = "Sandboxing : The copy of the file '%s' failed\nioerror" % destination
+      self.log_mock.warn.assert_called_once_with( warn_message )
 
   def test_filterfolders_exclude_txt( self ):
     temp_folder = "/my/temp/folder"
