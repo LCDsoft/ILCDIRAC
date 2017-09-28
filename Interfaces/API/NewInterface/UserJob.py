@@ -431,7 +431,7 @@ class UserJob(Job):
 
     self.log.info("Job splitting: submission consists of %d job(s)" % len(self._data))
 
-    return ["InputData", self._data , False]
+    return ["InputData", self._data , 'ParametricInputData']
 
   #############################################################################
   def _splitByEvents(self):

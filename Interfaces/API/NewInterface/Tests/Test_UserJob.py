@@ -270,7 +270,7 @@ class UserJobTestCase( unittest.TestCase ):
     app1 = Fcc()
     app2 = Fcc()
     self.ujo.applicationlist = [app1, app2]
-    assertEqualsImproved( self.ujo._splitByData(), ["InputData", [['data1'],['data2']], False], self )
+    assertEqualsImproved( self.ujo._splitByData(), ["InputData", [['data1'],['data2']], 'ParametricInputData'], self )
 
   def test_splitbydata_no_data( self ):
     self.ujo._data = None
