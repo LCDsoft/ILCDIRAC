@@ -391,15 +391,13 @@ class FccAnalysis(ModuleBase):
     #gaudiOptions += outputSetting
 
     # If it is an application that reads events and there are input data/files to read
-    if self.read and (self.InputFile or self.InputData or self.ParametricInputData):
+    if self.read and (self.InputFile or self.InputData):
           
       fccswPodioOptions = ["# N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR INPUT FILE SETTING"]
       fccswPodioOptions += ["from Configurables import FCCDataSvc"]
       fccswPodioOptions += ["import os"]
 
-      data = self.InputData if self.InputData else self.ParametricInputData
-
-      dataToRead = data if data else self.InputFile
+      dataToRead = self.InputData if self.InputData else self.InputFile
 
       dataToList = [dataToRead] if isinstance(dataToRead, str) else dataToRead
 

@@ -14,7 +14,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications import Fcc
 
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracFailsWith, \
   assertDiracSucceeds, assertDiracSucceedsWith_equals, assertMockCalls, \
-  assertEqualsImproved, assertDiracSucceedsWith
+  assertEqualsImproved
 
 __RCSID__ = "$Id$"
 
