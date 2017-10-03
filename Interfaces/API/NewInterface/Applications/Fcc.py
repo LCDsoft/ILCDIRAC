@@ -247,18 +247,11 @@ class Fcc(Application):
 
     """
 
-    # Take in priority output file given in setOutputFile('output file')
     # Many output files can be managed if setOutputFile() method accepts list
-    if self.outputFile :
-      if isinstance(self.outputFile, str):
-        outputFile = "%s.root" % os.path.splitext(self.outputFile)[0]
-      elif isinstance(self.outputFile, list):
-        outputFile = [ "%s.root" % os.path.splitext(outputFile)[0] for outputFile in self.outputFile]
-      self.setOutputFile(outputFile)
-
-      outputFiles = [outputFile] if isinstance(outputFile, str) else outputFile
+    if self.outputFile:
+      outputFiles = [self.outputFile] if isinstance(self.outputFile, str) else self.outputFile
       for outputFile in outputFiles:
-        self._outputSandbox.add("%s_JobID.root (%s)" % ( os.path.splitext(outputFile)[0], "Name of the eventual output root file") )
+        self._outputSandbox.add("%s(_JobID).root (%s)" % ( os.path.splitext(outputFile)[0], "Name of the eventual output root file") )
 
     # We add the log file and the output file to the output sandbox
     self._outputSandbox.add(self.logFile)

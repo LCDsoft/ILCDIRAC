@@ -144,25 +144,20 @@ class FccMixin( object ):
   def test_checkfinalconsistency_outputfile( self ):
     self.fcc.logFile = "logFile"
     self.fcc.outputFile = "output.root"
-    applicationStep = len(self.fcc._jobapps) + 1
 
-    with patch("%s.setOutputFile" % MODULE_NAME) as  mock_setoutput:
-      self.fcc._checkFinalConsistency()
-      self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
-      self.assertIn( "output_JobID.root (Name of the eventual output root file)", self.fcc._outputSandbox )
-      mock_setoutput.assert_any_call( "output.root")
+    self.fcc._checkFinalConsistency()
+    self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
+    self.assertIn( "output(_JobID).root (Name of the eventual output root file)", self.fcc._outputSandbox )
 
   # During release v0.8.1 of FCCSW, 'Application.setOutputFile' does not accept list
   def test_checkfinalconsistency_outputfiles( self ):
     self.fcc.logFile = "logFile"
     self.fcc.outputFile = ["output1.root", "output2.root"]
 
-    with patch("%s.setOutputFile" % MODULE_NAME) as  mock_setoutput:
-      self.fcc._checkFinalConsistency()
-      self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
-      self.assertIn( "output1_JobID.root (Name of the eventual output root file)", self.fcc._outputSandbox )
-      self.assertIn( "output2_JobID.root (Name of the eventual output root file)", self.fcc._outputSandbox )
-      mock_setoutput.assert_any_call( ["output1.root", "output2.root"] )
+    self.fcc._checkFinalConsistency()
+    self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
+    self.assertIn( "output1(_JobID).root (Name of the eventual output root file)", self.fcc._outputSandbox )
+    self.assertIn( "output2(_JobID).root (Name of the eventual output root file)", self.fcc._outputSandbox )
 
   def test_importfiles_no_sandbox( self ):
     self.fcc._tempInputSandbox = None
@@ -293,7 +288,7 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       self.log_mock.error.assert_called_once_with( error_message )
       mock_makedirs.assert_called_once_with( self.fcc._tempCwd )
 
-  def test_checkconsistency_getting_executable_from_run( self ):
+  def test_checkconsistency_run_read( self ):
 
     file_content = (
       '#!/bin/sh\n'
@@ -333,7 +328,7 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       mock_read.assert_called_once_with( executable_path )
       self.log_mock.debug.assert_any_call( read_message )
 
-  def test_checkconsistency_getting_executable_from_run_read_failed( self ):
+  def test_checkconsistency_run_read_failed( self ):
 
     build_folder = 'build.x86_64-slc6-gcc49-opt'
     build_path = os.path.join(self.fcc.fccSwPath, build_folder)
