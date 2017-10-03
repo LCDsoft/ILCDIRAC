@@ -247,16 +247,13 @@ class Fcc(Application):
 
     """
 
-    applicationStep = len(self._jobapps) + 1
-    applicationIndex = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
-
     # Take in priority output file given in setOutputFile('output file')
     # Many output files can be managed if setOutputFile() method accepts list
     if self.outputFile :
       if isinstance(self.outputFile, str):
-        outputFile = "%s_%s.root" % (os.path.splitext(self.outputFile)[0], applicationIndex)
+        outputFile = "%s.root" % os.path.splitext(self.outputFile)[0]
       elif isinstance(self.outputFile, list):
-        outputFile = [ "%s_%s.root" % (os.path.splitext(outputFile)[0], applicationIndex) for outputFile in self.outputFile]
+        outputFile = [ "%s.root" % os.path.splitext(outputFile)[0] for outputFile in self.outputFile]
       self.setOutputFile(outputFile)
 
       outputFiles = [outputFile] if isinstance(outputFile, str) else outputFile
@@ -444,9 +441,9 @@ class Fcc(Application):
       with open(fileName, 'r') as fileToRead:
         content = fileToRead.read()
     except IOError as e:
-      return None, 'Sandboxing : FCC configuration file reading failed\n%s' % e
+      return None, 'Sandboxing : FCC file reading failed\n%s' % e
 
-    return content, 'Sandboxing : FCC configuration file reading successfull'
+    return content, 'Sandboxing : FCC file reading successfull'
 
 ###############################  Fcc DAUGHTER CLASSES ##############################################
 
@@ -520,21 +517,42 @@ class FccSw(Fcc):
     self.fccExecutable = '%s/run gaudirun.py' % self.fccSwPath
 
     if not self.fccSwPath.startswith('/cvmfs/'):
-      # **** TO DO ****
       # 'FCCSW/run' script calls another 'run' script inside 'build.$BINARY_TAG' folder
-      # The command works with a '.xenv' file using local FCCSW installation which is not present on the GRID
-      # So we hardcode the command using another '.xenv' file
-      # But the command is still specific to 0.8.1 release
-      # Someone has to export 2 new environment variables into the FCC environment script :
-      # For example, something like :
-      #export XENV=/cvmfs/xenv
-      #export PYTHON_BIN=/cvmfs/python
+      # The command works with a '.xenv' file located into 'build.$BINARY_TAG' relative to files of the cwd
+      # We read the command of the 'run' script and we use the 'xenv' file of InstallArea instead
+      # which is only related to CVMFS
+      # If the reading of the command failed, we execute by default the command of the 0.8.1 release
 
       #python = '$PYTHON_BIN'
       python = '/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc62-opt/bin/python'
       #xenv = '$XENV'
       xenv = '/cvmfs/fcc.cern.ch/sw/0.8.1/gaudi/v28r2/x86_64-slc6-gcc62-opt/scripts/xenv'
       argXenv = 'InstallArea/FCCSW.xenv'
+
+      executablePath = ''
+
+      for path in os.listdir(self.fccSwPath):
+        absPath = os.path.join(self.fccSwPath, path)
+        if path.startswith('build.') and not os.path.isfile(absPath):
+          executablePath = os.path.join(absPath, 'run')
+
+      if executablePath and os.path.exists(executablePath):
+        executableContent, message = self._readFromFile(executablePath)
+
+        if not executableContent:
+          self._log.warn(message)
+          self._log.debug('FCCSW specific consistency : Using by default the command of the 0.8.1 release !')
+        else:
+          self._log.debug(message)
+
+          # Separate shebang (0) and command of the executable (1)
+          executableCommand = executableContent.split('\n')[1]
+          # Break command of the executable into parts
+          executableParts = executableCommand.split()
+
+          python = executableParts[1]
+          xenv = executableParts[2]
+
       self.fccExecutable = 'exec %s %s --xml %s gaudirun.py' % (python, xenv, argXenv)
       installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
       # We do not need all the content of these folders hence the filtering
