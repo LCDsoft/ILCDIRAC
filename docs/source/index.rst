@@ -21,7 +21,7 @@ User Guide
 ==========
 
 Documentation about registration, job submission, file handling can be found in
-the `user guide <DOC/Files/UserGuide/index>`_
+the :doc:`DOC/Files/UserGuide/index`
 
 .. toctree::
    :maxdepth: 1
