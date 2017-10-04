@@ -172,7 +172,7 @@ cvmfstests:SL6:
     - export HOME=/root/
     - cd installation/ILCDIRAC
     - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
@@ -195,7 +195,7 @@ cvmfstests:CC7:
     - export HOME=/root/
     - cd installation/ILCDIRAC
     - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
@@ -218,9 +218,9 @@ setests:SL6:
     - export HOME=/root/
     - cd installation/ILCDIRAC
     - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
-    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
   allow_failure: true
@@ -240,9 +240,9 @@ setests:CC7:
     - export HOME=/root/
     - cd installation/ILCDIRAC
     - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
-    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
@@ -291,9 +291,9 @@ maketarballs:
     - cd installation/ILCDIRAC
     - if [ -d "ILCDIRAC" ]; then echo "ILCDIRAC links still present! Failing!"; exit 1; fi
     - source ../bashrc
-    - dirac-proxy-init -x <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
-    - dirac-proxy-init <<< $CERT_PASSPHRASE
+    - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../ILCDIRACTars
 
   artifacts:
