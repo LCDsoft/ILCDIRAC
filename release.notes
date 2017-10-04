@@ -1,3 +1,10 @@
+[v26r0p14]
+
+*Interfaces
+
+NEW: (!150) :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2.Whizard2` interface (ILCDIRAC-467)
+
+
 [v26r0p13]
 
 *Interface
