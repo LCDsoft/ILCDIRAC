@@ -392,93 +392,19 @@ class TestFccAnalysis( unittest.TestCase ):
   @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
   @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
-  def test_runit_with_rootfiles( self ):
-    getctime_dict = {
-      os.path.realpath(self.root_files[1]) : 1501667507.9749944,
-      os.path.realpath(self.root_files[0]) : 1501667510.7510207,
-      os.path.realpath(self.applicationScript) : 1501667508.7510207
-      }
-
-    self.fccAna.workflow_commons['UserOutputData'] = "/vo/user/initial/username/outputFile.root;/vo/user/initial/username/outputFile.txt"
-    self.fccAna.OutputFile = "outputFile_%s.root" % (self.fccAppIndex)
-
-    def replace_getctime( path ):
-      return getctime_dict[os.path.realpath(path)]
-
-    with patch('os.makedirs'), \
-         patch("%s.glob.glob" % MODULE_NAME) as mock_glob, \
-         patch("os.path.getctime") as mock_getctime, \
-         patch("shutil.move") as mock_move, \
-         patch('os.path.exists') as  mock_exists :
-
-      mock_exists.side_effect = self.replace_exists
-      mock_getctime.side_effect = replace_getctime
-      mock_glob.return_value = self.root_files
-      assertDiracSucceedsWith( self.fccAna.runIt(), "Execution of the FCC application successfull", self )
-
-      old = os.path.realpath(self.root_files[0])
-      self.log_mock.debug.assert_any_call( "Application : Root file '%s' renaming..." % old )
-
-      renamedRootFile = os.path.realpath(self.fccAna.OutputFile)
-
-      mock_move.assert_called_once_with( old, renamedRootFile )
-      self.log_mock.debug.assert_any_call( "Application : Application unique root file '%s' renamed successfully to '%s'" % (old, renamedRootFile) )
-
-      lfnTree = os.path.dirname("/vo/user/initial/username/outputFile.root")
-      indexedOutput = os.path.join(lfnTree, self.fccAna.OutputFile )
-
-      assertEqualsImproved( self.fccAna.workflow_commons['UserOutputData'], "%s;/vo/user/initial/username/outputFile.txt" % indexedOutput, self )
-
-  @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
-  def test_runit_with_rootfiles_shutil_renaming_failed( self ):
-    getctime_dict = {
-      os.path.realpath(self.root_files[1]) : 1501667507.9749944,
-      os.path.realpath(self.root_files[0]) : 1501667510.7510207,
-      os.path.realpath(self.applicationScript) : 1501667508.7510207
-      }
-
-    def replace_getctime( path ):
-      return getctime_dict[os.path.realpath(path)]
-
-    with patch('os.makedirs'), \
-         patch("%s.glob.glob" % MODULE_NAME) as mock_glob, \
-         patch("os.path.getctime") as mock_getctime, \
-         patch("shutil.move") as mock_move, \
-         patch('os.path.exists') as  mock_exists :
-
-      mock_exists.side_effect = self.replace_exists
-      mock_getctime.side_effect = replace_getctime
-      mock_move.side_effect = IOError("ioerror")
-      mock_glob.return_value = self.root_files
-
-      old = os.path.realpath(self.root_files[0])
-      error_message = "Application : Application unique root file '%s' renaming failed\nioerror" % old
-
-      assertDiracFailsWith( self.fccAna.runIt(), error_message, self )
-
-      self.log_mock.error.assert_called_once_with( error_message )
-
-  @patch('%s.FccAnalysis.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=True))
-  @patch("%s.FccAnalysis.generateBashScript" % MODULE_NAME, new=Mock(return_value=True))
-  @patch('%s.FccAnalysis.writeToFile' % MODULE_NAME, new=Mock(return_value=True))
   def test_runit_without_current_rootfiles( self ):
     getctime_dict = {
       os.path.realpath(self.root_files[1]) : 1501667507.9749944,
       os.path.realpath(self.root_files[0]) : 1501667510.7510207,
       os.path.realpath(self.applicationScript) : 1501667512.7510207
       }
-    #self.fccAna.workflow_commons['UserOutputData'] = "/vo/user/initial/username/outputFile.root;/vo/user/initial/username/outputFile.txt"
-    self.fccAna.OutputFile = "outputFile_%s.root" % (self.fccAna.fccAppIndex)
-    
+
     def replace_getctime( path ):
       return getctime_dict[os.path.realpath(path)]
 
     with patch('os.makedirs'), \
          patch("%s.glob.glob" % MODULE_NAME) as mock_glob, \
          patch("os.path.getctime") as mock_getctime, \
-         patch("shutil.move"), \
          patch('os.path.exists') as  mock_exists :
 
       mock_exists.side_effect = self.replace_exists

@@ -62,7 +62,7 @@ class Fcc(Application):
 
     # Some folders have to be filtered (like 'Detector' folder of FCCSW installation)
     # to avoid sandbox overload (sandbox max size = 10 Mb)
-    self._foldersToFilter = set()
+    self._foldersToFilter = []
 
     # Folder filters
     # which extension to filter
@@ -247,21 +247,11 @@ class Fcc(Application):
 
     """
 
-    applicationStep = len(self._jobapps) + 1
-    applicationIndex = "%s_%s_Step_%s" % (self.appname, self.version, applicationStep)
-
-    # Take in priority output file given in setOutputFile('output file')
     # Many output files can be managed if setOutputFile() method accepts list
-    if self.outputFile :
-      if isinstance(self.outputFile, str):
-        outputFile = "%s_%s.root" % (os.path.splitext(self.outputFile)[0], applicationIndex)
-      elif isinstance(self.outputFile, list):
-        outputFile = [ "%s_%s.root" % (os.path.splitext(outputFile)[0], applicationIndex) for outputFile in self.outputFile]
-      self.setOutputFile(outputFile)
-
-      outputFiles = [outputFile] if isinstance(outputFile, str) else outputFile
+    if self.outputFile:
+      outputFiles = [self.outputFile] if isinstance(self.outputFile, str) else self.outputFile
       for outputFile in outputFiles:
-        self._outputSandbox.add("%s_JobID.root (%s)" % ( os.path.splitext(outputFile)[0], "Name of the eventual output root file") )
+        self._outputSandbox.add("%s(_JobID).root (%s)" % ( os.path.splitext(outputFile)[0], "Name of the eventual output root file") )
 
     # We add the log file and the output file to the output sandbox
     self._outputSandbox.add(self.logFile)
@@ -444,9 +434,9 @@ class Fcc(Application):
       with open(fileName, 'r') as fileToRead:
         content = fileToRead.read()
     except IOError as e:
-      return None, 'Sandboxing : FCC configuration file reading failed\n%s' % e
+      return None, 'Sandboxing : FCC file reading failed\n%s' % e
 
-    return content, 'Sandboxing : FCC configuration file reading successfull'
+    return content, 'Sandboxing : FCC file reading successfull'
 
 ###############################  Fcc DAUGHTER CLASSES ##############################################
 
@@ -517,10 +507,49 @@ class FccSw(Fcc):
     # else if local FCCSW installation is used
     # download it because 'FCCSW.xenv' needs libraries from this folder
 
+    self.fccExecutable = '%s/run gaudirun.py' % self.fccSwPath
+
     if not self.fccSwPath.startswith('/cvmfs/'):
+      # 'FCCSW/run' script calls another 'run' script inside 'build.$BINARY_TAG' folder
+      # The command works with a '.xenv' file located into 'build.$BINARY_TAG' relative to files of the cwd
+      # We read the command of the 'run' script and we use the 'xenv' file of InstallArea instead
+      # which is only related to CVMFS
+      # If the reading of the command failed, we execute by default the command of the 0.8.1 release
+
+      #python = '$PYTHON_BIN'
+      python = '/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc62-opt/bin/python'
+      #xenv = '$XENV'
+      xenv = '/cvmfs/fcc.cern.ch/sw/0.8.1/gaudi/v28r2/x86_64-slc6-gcc62-opt/scripts/xenv'
+      argXenv = 'InstallArea/FCCSW.xenv'
+
+      executablePath = ''
+
+      for path in os.listdir(self.fccSwPath):
+        absPath = os.path.join(self.fccSwPath, path)
+        if path.startswith('build.') and not os.path.isfile(absPath):
+          executablePath = os.path.join(absPath, 'run')
+
+      if executablePath and os.path.exists(executablePath):
+        executableContent, message = self._readFromFile(executablePath)
+
+        if not executableContent:
+          self._log.warn(message)
+          self._log.debug('FCCSW specific consistency : Using by default the command of the 0.8.1 release !')
+        else:
+          self._log.debug(message)
+
+          # Separate shebang (0) and command of the executable (1)
+          executableCommand = executableContent.split('\n')[1]
+          # Break command of the executable into parts
+          executableParts = executableCommand.split()
+
+          python = executableParts[1]
+          xenv = executableParts[2]
+
+      self.fccExecutable = 'exec %s %s --xml %s gaudirun.py' % (python, xenv, argXenv)
       installAreaFolder = os.path.join(self.fccSwPath, 'InstallArea')
       # We do not need all the content of these folders hence the filtering
-      self._foldersToFilter.add(installAreaFolder)
+      self._foldersToFilter.append(installAreaFolder)
 
       # Explanation
       # InstallAreaFolder : all dbg files are excluded
@@ -534,8 +563,6 @@ class FccSw(Fcc):
     # do not need additionnal files like 'Generation/data/ParticleTable.txt' or folders like 'Detector'
     # FCCSW release made after 31/08/2017 will put a complete installation of FCCSW
     # And all examples of Examples/options should run successfully
-
-    self.fccExecutable = '%s/run gaudirun.py' % self.fccSwPath
 
     self._log.debug("FCCSW specific consistency : _checkConsistency() successfull")
 
@@ -606,7 +633,7 @@ class FccSw(Fcc):
       self._log.warn(warnMessage)
     else:
       # We do not need all the content of these folders hence the filtering
-      self._foldersToFilter.add(detectorFolder)
+      self._foldersToFilter.append(detectorFolder)
 
       # Explanation
       # InstallAreaFolder : all dbg files are excluded
@@ -796,7 +823,7 @@ class FccSw(Fcc):
       self._log.debug(debugMessage)
       return True
 
-    copiedFolders = set()
+    copiedFolders = []
 
     for idx, actualFolder in enumerate(self._foldersToFilter):
 
@@ -829,7 +856,7 @@ class FccSw(Fcc):
 
       self._log.debug("Sandboxing : Folders filtering successfull")
 
-      copiedFolders.add(tempFolder)
+      copiedFolders.append(tempFolder)
 
     self._foldersToFilter = copiedFolders
 
@@ -914,29 +941,34 @@ class FccSw(Fcc):
           debugMessage = "Sandboxing : The file '%s' already exists" % source
           self._log.debug(debugMessage)
         else:
-          debugMessage = "Sandboxing : File '%s' copy..." % source
-          self._log.debug(debugMessage)
 
           if ((excludeOrInclude and not path.endswith(filteredExtension))
               or (not excludeOrInclude and path.endswith(filteredExtension))
               or not filteredExtension):
 
+            warn = False
+            debugMessage = "Sandboxing : File '%s' copy..." % source
+            self._log.debug(debugMessage)
+
             # Copy considering filters to apply
             try:
               shutil.copyfile(source, destination)
             except (IOError, shutil.Error) as e:
-              errorMessage = "Sandboxing : The copy of the file '%s' failed\n%s" % (destination, e)
-              self._log.error(errorMessage)
-              return False
+              warnMessage = "Sandboxing : The copy of the file '%s' failed\n%s" % (destination, e)
+              self._log.warn(warnMessage)
+              warn = True
+              #return False
 
-            debugMessage = (
-              "Sandboxing : Copy of the file"
-              " '%(src)s' successfull to '%(dst)s'" % {'src':source, 'dst':destination}
-            )
-            self._log.debug(debugMessage)
+            if not warn:
+              debugMessage = (
+                "Sandboxing : Copy of the file"
+                " '%(src)s' successfull to '%(dst)s'" % {'src':source, 'dst':destination}
+              )
+              self._log.debug(debugMessage)
 
     debugMessage = "Sandboxing : Folder '%s' filtering successfull" % tempFolder
     self._log.debug(debugMessage)
+
     return True
 
 class FccAnalysis(Fcc):

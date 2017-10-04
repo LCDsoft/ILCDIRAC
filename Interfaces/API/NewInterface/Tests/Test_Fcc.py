@@ -84,6 +84,7 @@ class FccMixin( object ):
     self.fcc._jobsteps = [ None, Mock() ]
     assertDiracSucceeds( self.fcc._resolveLinkedStepParameters( step_mock() ), self )
 
+  @patch("os.listdir", new=Mock(return_value=[]))
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency( self ):
     with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)):
@@ -96,6 +97,7 @@ class FccMixin( object ):
       self.log_mock.info.assert_called_with( info_message )
       self.log_mock.info.assert_any_call( "Sandboxing : Sandboxing successfull" )
 
+  @patch("os.listdir", new=Mock(return_value=[]))
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency_noversion( self ):
     self.fcc.version = None
@@ -114,8 +116,9 @@ class FccMixin( object ):
     assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
 
+  @patch("os.listdir", new=Mock(return_value=[]))
   @patch("os.path.exists", new=Mock(return_value=True))
-  def test_checkconsistency_nocfgfile( self ):
+  def test_checkconsistency_no_cfgfile( self ):
     self.fcc.steeringFile = None
     error_message = (
       "Consistency : Error in parsing '%(name)s' application :\n"
@@ -125,6 +128,7 @@ class FccMixin( object ):
     assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
     self.log_mock.error.assert_called_once_with( error_message )
 
+  @patch("os.listdir", new=Mock(return_value=[]))
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency_many_cfgfiles( self ):
     self.fcc.steeringFile = ["/path/to/cfgFile1", "/path/to/cfgFile2"]
@@ -140,28 +144,20 @@ class FccMixin( object ):
   def test_checkfinalconsistency_outputfile( self ):
     self.fcc.logFile = "logFile"
     self.fcc.outputFile = "output.root"
-    applicationStep = len(self.fcc._jobapps) + 1
-    applicationIndex = "%s_%s_Step_%s" % (self.fcc.appname, self.fcc.version, applicationStep)
 
-    with patch("%s.setOutputFile" % MODULE_NAME) as  mock_setoutput:
-      self.fcc._checkFinalConsistency()
-      self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
-      self.assertIn( "output_%s_JobID.root (Name of the eventual output root file)" % applicationIndex, self.fcc._outputSandbox )
-      mock_setoutput.assert_any_call( "output_%s.root" % applicationIndex)
+    self.fcc._checkFinalConsistency()
+    self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
+    self.assertIn( "output(_JobID).root (Name of the eventual output root file)", self.fcc._outputSandbox )
 
   # During release v0.8.1 of FCCSW, 'Application.setOutputFile' does not accept list
   def test_checkfinalconsistency_outputfiles( self ):
     self.fcc.logFile = "logFile"
     self.fcc.outputFile = ["output1.root", "output2.root"]
-    applicationStep = len(self.fcc._jobapps) + 1
-    applicationIndex = "%s_%s_Step_%s" % (self.fcc.appname, self.fcc.version, applicationStep)
 
-    with patch("%s.setOutputFile" % MODULE_NAME) as  mock_setoutput:
-      self.fcc._checkFinalConsistency()
-      self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
-      self.assertIn( "output1_%s_JobID.root (Name of the eventual output root file)" % applicationIndex, self.fcc._outputSandbox )
-      self.assertIn( "output2_%s_JobID.root (Name of the eventual output root file)" % applicationIndex, self.fcc._outputSandbox )
-      mock_setoutput.assert_any_call( ["output1_%s.root" % applicationIndex, "output2_%s.root" % applicationIndex] )
+    self.fcc._checkFinalConsistency()
+    self.assertIn( self.fcc.logFile, self.fcc._outputSandbox )
+    self.assertIn( "output1(_JobID).root (Name of the eventual output root file)", self.fcc._outputSandbox )
+    self.assertIn( "output2(_JobID).root (Name of the eventual output root file)", self.fcc._outputSandbox )
 
   def test_importfiles_no_sandbox( self ):
     self.fcc._tempInputSandbox = None
@@ -211,14 +207,15 @@ class FccMixin( object ):
       content, message  = self.fcc._readFromFile("/my/file/to/read")
       assertEqualsImproved( content, 'some data', self )   
       mock_open.assert_called_with( "/my/file/to/read", 'r' )
-      assertEqualsImproved( message, 'Sandboxing : FCC configuration file reading successfull', self )
+      assertEqualsImproved( message, 'Sandboxing : FCC file reading successfull', self )
 
   @patch('__builtin__.open', new=Mock(side_effect=IOError("ioerror")) )
   def test_readfromfile_failed( self ):
     content, message  = self.fcc._readFromFile("/my/file/to/read")    
     assertEqualsImproved( None, content, self )   
-    assertEqualsImproved( 'Sandboxing : FCC configuration file reading failed\nioerror', message, self )
+    assertEqualsImproved( 'Sandboxing : FCC file reading failed\nioerror', message, self )
 
+  @patch("os.listdir", new=Mock(return_value=[]))
   @patch('os.path.exists', new=Mock(return_value=True) )
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=False))
   def test_checkconsistency_importtosandbox_failed( self ):
@@ -290,6 +287,78 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
       self.log_mock.error.assert_called_once_with( error_message )
       mock_makedirs.assert_called_once_with( self.fcc._tempCwd )
+
+  def test_checkconsistency_run_read( self ):
+
+    file_content = (
+      '#!/bin/sh\n'
+      'exec  /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/bin/python'
+      ' /cvmfs/fcc.cern.ch/sw/0.8/gaudi/v28r2/x86_64-slc6-gcc49-opt/scripts/xenv '
+      '--xml /afs/cern.ch/user/s/sfernana/FCC/FCCSW/build.x86_64-slc6-gcc49-opt/config/FCCSW-build.xenv "$@"\n'
+    )
+
+    build_folder = 'build.x86_64-slc6-gcc49-opt'
+    build_path = os.path.join(self.fcc.fccSwPath, build_folder)
+    executable_path = os.path.join(build_path, 'run')
+
+    info_message = (
+      "Application general consistency : _checkConsistency()"
+      " on '%(name)s' successfull" % {'name':self.fcc.appname}
+    )
+
+    read_message = 'Sandboxing : FCC file reading successfull'
+
+    with patch('os.path.exists') as  mock_exists, \
+         patch('os.listdir') as mock_listdir, \
+         patch('os.path.isfile') as mock_isfile, \
+         patch("%s._checkConsistency" % MODULE_NAME) as mock_check, \
+         patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
+
+      mock_exists.return_value = True
+      mock_listdir.return_value = [build_folder]
+      mock_isfile.return_value = False
+      mock_read.return_value = (file_content, read_message)
+      mock_check.return_value = S_OK(info_message)
+
+      assertDiracSucceedsWith( self.fcc._checkConsistency(), info_message, self )
+      self.log_mock.debug.assert_any_call( "FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists" )
+      mock_listdir.assert_called_once_with( self.fcc.fccSwPath )
+      mock_isfile.assert_called_once_with( build_path )
+      mock_exists.assert_any_call( executable_path )
+      mock_read.assert_called_once_with( executable_path )
+      self.log_mock.debug.assert_any_call( read_message )
+
+  def test_checkconsistency_run_read_failed( self ):
+
+    build_folder = 'build.x86_64-slc6-gcc49-opt'
+    build_path = os.path.join(self.fcc.fccSwPath, build_folder)
+    executable_path = os.path.join(build_path, 'run')
+
+    info_message = (
+      "Application general consistency : _checkConsistency()"
+      " on '%(name)s' successfull" % {'name':self.fcc.appname}
+    )
+
+    with patch('os.path.exists') as  mock_exists, \
+         patch('os.listdir') as mock_listdir, \
+         patch('os.path.isfile') as mock_isfile, \
+         patch("%s._checkConsistency" % MODULE_NAME) as mock_check, \
+         patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
+
+      mock_exists.return_value = True
+      mock_listdir.return_value = [build_folder]
+      mock_isfile.return_value = False
+      mock_read.return_value = (None, 'DO NOT READ ME !')
+      mock_check.return_value = S_OK(info_message)
+
+      assertDiracSucceedsWith( self.fcc._checkConsistency(), info_message, self )
+      self.log_mock.debug.assert_any_call( "FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists" )
+      mock_listdir.assert_called_once_with( self.fcc.fccSwPath )
+      mock_isfile.assert_called_once_with( build_path )
+      mock_exists.assert_any_call( executable_path )
+      mock_read.assert_called_once_with( executable_path )
+      self.log_mock.warn.assert_called_once_with( 'DO NOT READ ME !' )
+      self.log_mock.debug.assert_any_call( 'FCCSW specific consistency : Using by default the command of the 0.8.1 release !' )
 
   def test_resolvetreeoffiles( self ):
     files = ['file1']
@@ -444,7 +513,7 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
          patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
 
       mock_resolve.return_value = True
-      mock_read.return_value = (file_content,  'Sandboxing : FCC configuration file reading successfull')
+      mock_read.return_value = (file_content,  'Sandboxing : FCC file reading successfull')
       self.assertTrue( self.fcc._importFccswFiles() )
       assertEqualsImproved( self.fcc.randomGenerator["Pythia"], cmdFiles, self )
       mock_resolve.assert_called_with(  cmdFiles, '.cmd' )  
@@ -665,7 +734,7 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       mock_isfile.side_effect = replace_isfile
       mock_exists.side_effect = replace_exists
 
-      self.assertFalse( self.fcc._filterFolders(temp_folder, actual_folder, ".ext", True) )
+      self.assertTrue( self.fcc._filterFolders(temp_folder, actual_folder, ".ext", True) )
 
       mock_exists.assert_any_call( temp_folder )
       mock_exists.assert_any_call( source )
@@ -677,8 +746,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
 
       mock_shutil.assert_called_once_with( source, destination )
 
-      error_message = "Sandboxing : The copy of the file '%s' failed\nioerror" % destination
-      self.log_mock.error.assert_called_once_with( error_message )
+      warn_message = "Sandboxing : The copy of the file '%s' failed\nioerror" % destination
+      self.log_mock.warn.assert_called_once_with( warn_message )
 
   def test_filterfolders_exclude_txt( self ):
     temp_folder = "/my/temp/folder"

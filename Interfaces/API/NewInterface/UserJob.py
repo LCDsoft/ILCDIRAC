@@ -278,6 +278,8 @@ class UserJob(Job):
     self.eventsPerJob =  eventsPerJob
     self.numberOfJobs =  numberOfJobs
 
+    self._addParameter( self.workflow, 'NbOfEvts', 'JDL', -1, 'Number of Events' )
+
     self.splittingOption = "byEvents"
 
   def setSplitInputData( self, lfns, numberOfFilesPerJob = 1):
@@ -429,7 +431,7 @@ class UserJob(Job):
 
     self.log.info("Job splitting: submission consists of %d job(s)" % len(self._data))
 
-    return ["InputData", self._data , False]
+    return ["InputData", self._data , 'ParametricInputData']
 
   #############################################################################
   def _splitByEvents(self):

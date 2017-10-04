@@ -83,9 +83,14 @@ class JobTestCase( unittest.TestCase ):
                           ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep",
                           inputFilesPath = 'LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
                           rootVersion="ILCSoft-01-17-08",
+
                           fccSwSteeringFile=myFccSwSteeringFile,
                           fccAnalysisSteeringFile=myFccAnalysisSteeringFile,
-                          fccSwPath=myFccSwPath
+                          fccSwPath=myFccSwPath,
+
+                          whizard2Version="2.3.1",
+                          whizard2SinFile="Testfiles/whizard2_sample.sin",
+
                         )
     from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import JobCreater
     self.myTests = JobCreater(clip, parameterDict)
@@ -262,6 +267,19 @@ class JobTestCase( unittest.TestCase ):
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "FccAnalysis")
+
+  #@unittest.skip("Temporarily disabled due to length")
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group":"ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
+  def test_whizard2(self):
+    """create tests for whizard2"""
+    print "whizard2test"
+    # First run, all files available
+    jobs = self.myTests.createWhizard2Test()
+    assertDiracSucceeds( jobs, self )
+    thisJob = jobs['Value']
+    res = self.myTests.runJobLocally(thisJob, "Whizard2")
     assertDiracSucceeds( res, self )
 
 def runTests():
@@ -319,6 +337,12 @@ def runFccAnalysisTest():
   #Script.parseCommandLine()
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_fccanalysis'))
+
+def runWhizard2Test():
+  """runs the Whizard test only"""
+  #Script.parseCommandLine()
+  suite = unittest.TestSuite()
+  suite.addTest(JobTestCase('test_whizard2'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
   print testResult
 
@@ -327,3 +351,4 @@ if __name__ == '__main__':
   #runUtilitiesTest()
   #runMokkaTest()
   #runDDSimTest()
+  #runWhizard2Test()
