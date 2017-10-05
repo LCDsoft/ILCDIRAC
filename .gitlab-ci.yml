@@ -11,9 +11,9 @@ stages:
   - deploy
 
 variables:
-  LCG_BUNDLE_VERSION: "2017-01-27"
-  ILCDIRAC_VERSION: "v27r0-pre5"
-  DIRAC_BRANCH: "rel-v6r17"
+  LCG_BUNDLE_VERSION: "v13r0"
+  ILCDIRAC_VERSION: "v28r0-pre1"
+  DIRAC_BRANCH: "rel-v6r19"
 
 install:SL6:
   stage: install
