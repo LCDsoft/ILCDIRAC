@@ -13,6 +13,8 @@ from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent import DataRecoveryAgent
 from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import TaskInfoException
 
+from ILCDIRAC.Tests.Utilities.GeneralUtils import MatchStringWith
+
 __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent'
@@ -31,6 +33,7 @@ class TestDRA( unittest.TestCase ):
     self.dra.fcClient=Mock( name="fcMock", spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
     self.dra.jobMon=Mock( name="jobMonMock", spec=DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient.JobMonitoringClient)
     self.dra.printEveryNJobs = 10
+    self.dra.log = Mock( name="LogMock" )
 
   def tearDown ( self ):
     pass
@@ -107,11 +110,9 @@ class TestDRA( unittest.TestCase ):
     tinfoMock = Mock( name = "infoMock", return_value = getJobMock )
     self.dra.checkAllJobs = Mock()
     #catch the printout to check path taken
-    out = StringIO()
-    sys.stdout = out
     with patch("%s.TransformationInfo" % MODULE_NAME, new=tinfoMock ):
       self.dra.treatProduction( prodID=1234, transName="TestProd12", transType="MCReconstruction" ) ##returns None
-    self.assertIn( "Getting tasks...", out.getvalue().strip().splitlines()[0] )
+    self.dra.log.notice.assert_any_call( MatchStringWith("Getting tasks...") )
 
   def test_treatProduction3( self ):
     """test for DataRecoveryAgent treatProduction skip.............................................."""
@@ -120,13 +121,12 @@ class TestDRA( unittest.TestCase ):
     self.dra.checkAllJobs = Mock()
     self.dra.jobCache[1234] = (50, 50)
     #catch the printout to check path taken
-    out = StringIO()
-    sys.stdout = out
     with patch("%s.TransformationInfo" % MODULE_NAME,
                autospec=True,
                return_value=getJobMock ):
       self.dra.treatProduction( prodID=1234, transName="TestProd12", transType="MCReconstruction" ) ##returns None
-    self.assertIn( "Skipping production 1234", out.getvalue().strip().splitlines()[0] )
+      #self.assertIn( "Skipping production 1234", out.getvalue().strip().splitlines()[0] )
+    self.dra.log.notice.assert_called_with( MatchStringWith("Skipping production 1234") )
 
 
   def test_checkJob( self ):
@@ -717,8 +717,6 @@ class TestDRA( unittest.TestCase ):
     from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
 
     ### test with additional task dicts
-    out = StringIO()
-    sys.stdout = out
     from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
     tInfoMock = Mock( name = "tInfoMock", spec=TransformationInfo )
     mockJobs = dict([ (i, self.getTestMock() ) for i in xrange(11) ] )
@@ -728,29 +726,28 @@ class TestDRA( unittest.TestCase ):
     taskDict = True
     lfnTaskDict = True
     self.dra.checkAllJobs( mockJobs, tInfoMock, taskDict, lfnTaskDict )
-    self.assertIn( "ERROR: +++++ Exception:  ARGJob1", out.getvalue().strip() )
-    self.assertIn( "Skip Task, due to TaskInfoException: ARG1", out.getvalue().strip() )
+    self.dra.log.error.assert_any_call( MatchStringWith('+++++ Exception'), 'ARGJob1')
+    self.dra.log.error.assert_any_call( MatchStringWith("Skip Task, due to TaskInfoException: ARG1") )
+    self.dra.log.reset_mock()
 
     ### test without additional task dicts
-    out = StringIO()
-    sys.stdout = out
     mockJobs = dict([ (i, self.getTestMock() ) for i in xrange(5) ] )
     mockJobs[2].pendingRequest = True
     mockJobs[3].getJobInformation = Mock( side_effect = ( RuntimeError("ARGJob2"), None ) )
     tInfoMock.reset_mock()
     self.dra.checkAllJobs( mockJobs, tInfoMock )
-    self.assertIn( "ERROR: +++++ Exception:  ARGJob2", out.getvalue().strip() )
+    self.dra.log.error.assert_any_call( MatchStringWith('+++++ Exception'), 'ARGJob2')
+    self.dra.log.reset_mock()
 
     ### test inputFile None
-    out = StringIO()
-    sys.stdout = out
     mockJobs = dict([ (i, self.getTestMock(nameID=i) ) for i in xrange(5) ] )
     mockJobs[1].inputFile = None
     mockJobs[1].getTaskInfo = Mock( side_effect = ( TaskInfoException("NoInputFile"), None ) )
     mockJobs[1].tType = "MCSimulation"
     tInfoMock.reset_mock()
     self.dra.checkAllJobs( mockJobs, tInfoMock, taskDict, lfnTaskDict = True )
-    self.assertIn( "Failing job hard", out.getvalue().strip() )
+    print "mock calls",self.dra.log.mock_calls
+    self.dra.log.notice.assert_any_call( MatchStringWith( "Failing job hard" ) )
 
   def test_execute( self ):
     """test for DataRecoveryAgent execute .........................................................."""

@@ -169,3 +169,12 @@ def running_on_docker():
     return False
   else:
     return True
+
+class MatchStringWith(str):
+  """ helper class to match sub strings in a mock.assert_called_with
+
+  >>> myMock.log.error.assert_called_with( MatchStringWith('error mess') )
+  """
+
+  def __eq__(self, other):
+    return self in str(other)
