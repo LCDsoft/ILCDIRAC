@@ -314,6 +314,8 @@ deploydoc:
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
     - tags@CLICdp/iLCDirac/ILCDIRAC
+  except:
+    - /.*-pre[0-9]*/
   dependencies:
     - compiledoc
   variables:
