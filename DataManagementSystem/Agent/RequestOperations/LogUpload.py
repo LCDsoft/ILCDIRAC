@@ -107,3 +107,12 @@ class LogUpload( OperationHandlerBase ):
         self.log.info( "Uploaded %s to %s" % ( lfn, targetSE ) )
 
     return S_OK()
+
+
+  def setOperation( self, operation ): #pylint: disable=useless-super-delegation
+    """ operation and request setter
+
+      :param ~DIRAC.RequestManagementSystem.Client.Operation.Operation operation: operation instance
+      :raises TypeError: if ``operation`` in not an instance of :class:`~DIRAC.RequestManagementSystem.Client.Operation.Operation`
+    """
+    super( LogUpload, self ).setOperation( operation )
