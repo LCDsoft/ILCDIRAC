@@ -153,12 +153,12 @@ class FccAnalysis(ModuleBase):
         tempContent = content
 
         if 'Main:numberOfEvents' in tempContent and self.NumberOfEvents:
-          eventSetting = "Main:numberOfEvents = %d" % self.NumberOfEvents
+          eventSetting = "Main:numberOfEvents = %s" % self.NumberOfEvents
           tempContent = re.sub(r'Main:numberOfEvents *= *\d+', eventSetting, tempContent)
         elif self.NumberOfEvents:
           # add the card line  
           eventSetting = ["! N) AUTOMATIC GENERATION OF CODE DONE BY FCC APPLICATION FOR EVENT NUMBER SETTING"]
-          eventSetting += ["Main:numberOfEvents = %d         ! number of events to generate" % self.NumberOfEvents]
+          eventSetting += ["Main:numberOfEvents = %s         ! number of events to generate" % self.NumberOfEvents]
           tempContent = "%s\n%s\n" % (tempContent, "\n".join(eventSetting))
 
         if "Random:setSeed" in tempContent and "Random:seed" in tempContent and self.RandomSeed:
