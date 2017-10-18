@@ -63,6 +63,29 @@ Or use the replicate command in the :doc:`UserGuide/CommandReference/DataManagem
 See the list of available :ref:`storageelements`
 
 
+How to stage files
+``````````````````
+
+If a Storage Element uses a tape back-end file access can be slow (e.g.:
+CERN-SRM). To speed up the access the :ref:`storageelements` should be told
+which files will be used. This is done via the
+:doc:`AdministratorGuide/CommandReference/dirac-stager-stage-files` command.
+
+First obtain the list of files. Check on which Storage Element the files are
+located by identifying available file replicas. This can be done for example
+with the :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-lfn-replicas`
+command or in the :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-filecatalog-cli`. Then issue the command.
+
+.. note::
+
+   The command will not give an error if wrong files or Storage Elements are
+   given as input.
+
+To see if files are being staged use **dirac-stager-monitor-file**. Once the
+file has been staged the staging request is removed from the Database and this
+command will return that the file has no staging request pending.
+
+
 Jobs
 ----
 
