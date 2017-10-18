@@ -194,7 +194,7 @@ cvmfstests:SL6:
     - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
-cvmfstests:SL6:
+cvmfstests:SL6Prod:
   stage: integration
   except:
     - tags
@@ -247,7 +247,7 @@ cvmfstests:CC7:
 
 
 
-cvmfstests:CC7:
+cvmfstests:CC7Prod:
   stage: integration
   except:
     - tags
@@ -297,7 +297,7 @@ setests:SL6:
     - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
-setests:SL6:
+setests:SL6Prod:
   stage: integration
   except:
     - tags
@@ -347,7 +347,7 @@ setests:CC7:
   except:
     - branches@CLICdp/iLCDirac/ILCDIRAC
 
-setests:CC7:
+setests:CC7Prod:
   stage: integration
   except:
     - tags
