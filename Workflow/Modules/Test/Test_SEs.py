@@ -11,15 +11,65 @@ import unittest
 import random
 import string
 
+from itertools import permutations
+
 from DIRAC.Core.Security import ProxyInfo
 from DIRAC.Core.Base import Script
 import pytest
 
 __RCSID__ = "$Id$"
 
+STORAGEELEMENTS = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
+SE_PAIRS = list(permutations(STORAGEELEMENTS, 2))
+
 def randomFolder():
   """ create a random string of 8 characters """
   return ''.join(random.SystemRandom().choice(string.ascii_lowercase) for _ in xrange(8))
+
+class MetaCreator(type):
+  """ meta class to create all tests for all combination of SEs """
+  # last argument has to be dict
+  def __new__(mcs, name, bases, functionDict): #pylint: disable=redefined-builtin
+
+    def gen_storing(site):
+      """ create storing test for given site """
+      def test(self): #pylint: disable=missing-docstring
+        self.storing_test(site)
+      return test
+
+    def gen_removal(sitePairs):
+      """ create removal test for given sites """
+      def test(self): #pylint: disable=missing-docstring
+        self.removal_test(*sitePairs)
+      return test
+
+    def gen_replication(sitePairs):
+      """ create replication test for given sites """
+      def test(self): #pylint: disable=missing-docstring
+        self.replication_test(*sitePairs)
+      return test
+
+    ##all storing tests
+    for site in STORAGEELEMENTS:
+      testName = "test_storing_%s" % site
+      testName = testName.ljust(70, '.')
+      functionDict[testName] = gen_storing(site)
+
+    ##all removal tests
+    for sitePairs in SE_PAIRS:
+      testName = "test_removal_%s_%s" % (sitePairs[0], sitePairs[1])
+      testName = testName.ljust(70, '.')
+      functionDict[testName] = gen_removal(sitePairs)
+
+    ##all replication tests
+    for sitePairs in SE_PAIRS:
+      testName = "test_replication_%s_%s" % (sitePairs[0], sitePairs[1])
+      testName = testName.ljust(70, '.')
+      functionDict[testName] = gen_replication(sitePairs)
+
+    return type.__new__(mcs, name, bases, functionDict)
+
+
 
 @pytest.mark.integration
 class SETestCase( unittest.TestCase ):
@@ -27,13 +77,12 @@ class SETestCase( unittest.TestCase ):
   requires dirac proxy
   """
 
+  __metaclass__ = MetaCreator
 
   localtestfile = 'testfile'
   lfntestfilename = "testfile_uploaded.txt"
   lfntestfilepath = "/ilc/user/"
   lfntestfile = ''
-  storageelements = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
-  #storageelements = [ "CERN-DST-EOS" ]
   options = [ '-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive",
               '-o', "/DIRAC/Setup=ILC-Test",
             ]
@@ -81,12 +130,6 @@ class SETestCase( unittest.TestCase ):
 #proc = subprocess.Popen(['python', 'printbob.py',  'arg1 arg2 arg3 arg4'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 #print proc.communicate()[0]
 
-  def test_storing_all( self ):
-    print "Testing on sites:"
-    for site in self.storageelements:
-      print site
-      self.storing_test(site)
-
   def storing_test( self, site ):
     """Uploads the file to a given SE, then retrieves it and checks for equality
     """
@@ -98,12 +141,6 @@ class SETestCase( unittest.TestCase ):
 
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename), "Received wrong file")
     self.removeFile()
-
-  def test_replication_all( self ):
-    for (site1, site2) in self.getDistinctPairsOfSites():
-      print "Testing for sites %s, %s" % (site1, site2)
-      self.replication_test( site1, site2 )
-      self.removeFile()
 
   def replication_test( self, site1, site2 ):
     """Replicates file to other SE, checks if it is replicated there.
@@ -123,19 +160,13 @@ class SETestCase( unittest.TestCase ):
     self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename),
                     "Received wrong file")
     self.removeDownloadedFile()
-  
-  #@unittest.skip("demonstrating skipping")
-  def test_removal_all( self ):
-    for (site1, site2) in self.getDistinctPairsOfSites():
-      print "Testing for sites %s, %s" % (site1, site2)
-      self.removal_test(site1, site2)
 
   def removal_test( self, site1, site2 ):
     """Uploads file to SE1, replicates to SE2, removes file and checks if retrieve fails
     """
     self.uploadFile(site1)
     self.replicateTo(site2)
- 
+
     result = subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
     self.assertTrue(result.count("Successfully removed 1 files") == 1,
                     "Removal of random file failed: " + result)
@@ -194,13 +225,6 @@ class SETestCase( unittest.TestCase ):
       subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
     except subprocess.CalledProcessError:
       sys.exc_clear()
-
-  def getDistinctPairsOfSites( self ):
-    """Returns a list containing all pairs of different sites in self.storageelements.
-    Contains (a,b) and (b,a)
-    """
-    return [(site1, site2) for site1 in self.storageelements for site2 in
-            self.storageelements if site1 != site2]
 
   def removeDownloadedFile( self ):
     """ remove the lfn test file if it exists locally """
