@@ -1,4 +1,5 @@
 before_script:
+  - echo $LCG_BUNDLE_VERSION $ILCDIRAC_VERSION $DIRAC_BRANCH $SETUP
   - source /cvmfs/clicdp.cern.ch/software/git/2.13.2/x86_64-slc6-gcc7-opt/setup.sh
   - shopt -s extglob
 
@@ -14,6 +15,8 @@ variables:
   LCG_BUNDLE_VERSION: "v13r0"
   ILCDIRAC_VERSION: "v28r0-pre1"
   DIRAC_BRANCH: "integration"
+  SETUP: "ILC-Development"
+
 
 install:SL6:
   stage: install
@@ -46,7 +49,7 @@ install:SL6:
      paths:
        - installation
      expire_in: 2 hours
-
+  retry: 2
 
 install:CC7:
   stage: install
@@ -81,6 +84,7 @@ install:CC7:
      paths:
        - installation
      expire_in: 2 hours
+  retry: 2
 
 
 unittest:SL6:
@@ -104,6 +108,7 @@ unittest:SL6:
        - installation/ILCDIRAC/.coverage
        - installation/ILCDIRAC/htmlcov
      expire_in: 2 hours
+  retry: 2
 
 
 unittest:CC7:
@@ -127,6 +132,7 @@ unittest:CC7:
        - installation/ILCDIRAC/.coverage
        - installation/ILCDIRAC/htmlcov
      expire_in: 2 hours
+  retry: 2
 
 
 pylint:SL6:
@@ -144,6 +150,7 @@ pylint:SL6:
     - source ../bashrc
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
+  retry: 2
 
 
 pylint:CC7:
@@ -161,6 +168,7 @@ pylint:CC7:
     - source ../bashrc
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
+  retry: 2
 
 
 cvmfstests:SL6:
@@ -178,12 +186,41 @@ cvmfstests:SL6:
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
   coverage: '/\d+\%\s*$/'
   allow_failure: true
+  retry: 2
+  except:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
+
+
+cvmfstests:SL6Prod:
+  stage: integration
+  except:
+    - tags
+  tags:
+    - docker
+  dependencies:
+    - install:SL6
+    - unittest:SL6
+  image: ilcdirac/slc6-extra
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-cvmfstests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: false
+  retry: 2
+  only:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
 cvmfstests:CC7:
@@ -201,13 +238,42 @@ cvmfstests:CC7:
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
   coverage: '/\d+\%\s*$/'
   allow_failure: true
+  retry: 2
+  except:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
 
+
+
+cvmfstests:CC7Prod:
+  stage: integration
+  except:
+    - tags
+  tags:
+    - docker
+  dependencies:
+    - install:CC7
+    - unittest:CC7
+  image: ilcdirac/cc7-extra
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-cvmfstests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: false
+  retry: 2
+  only:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 setests:SL6:
   stage: integration
@@ -224,11 +290,39 @@ setests:SL6:
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
   allow_failure: true
+  retry: 2
+  except:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
+
+
+setests:SL6Prod:
+  stage: integration
+  except:
+    - tags
+  tags:
+    - docker
+  dependencies:
+    - install:SL6
+    - unittest:SL6
+  image: ilcdirac/slc6-base
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
+    - .gitlab-ci.d/run-setests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: false
+  retry: 2
+  only:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
 setests:CC7:
@@ -246,13 +340,40 @@ setests:CC7:
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
   allow_failure: true
+  retry: 2
+  except:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
 
+setests:CC7Prod:
+  stage: integration
+  except:
+    - tags
+  tags:
+    - docker
+  dependencies:
+    - install:CC7
+    - unittest:CC7
+  image: ilcdirac/cc7-extra
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-setests.sh
+  coverage: '/\d+\%\s*$/'
+  allow_failure: false
+  retry: 2
+  only:
+    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 compiledoc:
   stage: unittest
@@ -281,6 +402,7 @@ compiledoc:
       - ilcdiracdoc
     expire_in: 2 hours
   allow_failure: true
+  retry: 2
 
 maketarballs:
   stage: create
@@ -297,14 +419,14 @@ maketarballs:
     - if [ -d "ILCDIRAC" ]; then echo "ILCDIRAC links still present! Failing!"; exit 1; fi
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
-    - dirac-configure -S ILC-Production -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../ILCDIRACTars
-
   artifacts:
     paths:
       - ILCDIRACTars
     expire_in: 2 hours
+  retry: 2
 
 
 deploydoc:
@@ -325,6 +447,7 @@ deploydoc:
     - deploy-eos
   before_script: []
   after_script: []
+  retry: 2
 
 
 docDev:
@@ -344,6 +467,7 @@ docDev:
     - deploy-eos
   before_script: []
   after_script: []
+  retry: 2
 
 
 docProd:
@@ -365,6 +489,7 @@ docProd:
     - deploy-eos
   before_script: []
   after_script: []
+  retry: 2
 
 
 
@@ -384,3 +509,4 @@ deploytag:
     - deploy-eos
   before_script: []
   after_script: []
+  retry: 2
