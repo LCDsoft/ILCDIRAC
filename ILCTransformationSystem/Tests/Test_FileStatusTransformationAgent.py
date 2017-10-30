@@ -102,8 +102,6 @@ class TestFSTAgent( unittest.TestCase ):
 
     self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'CERN-SRM'} })
     self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'DESY-SRM'} })
-    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'CERN-SRM'} })
-    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'DESY-SRM'} })
 
     self.fstAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
     self.fstAgent.fcClient.removeFile.assert_called_once_with(['/ilc/prod/file1'])
@@ -130,8 +128,6 @@ class TestFSTAgent( unittest.TestCase ):
 
     self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'DESY-SRM'} })
     self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'DESY-SRM'} })
-    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'CERN-SRM'} })
-    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'CERN-SRM'} })
 
     self.fstAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
     self.fstAgent.fcClient.removeFile.assert_not_called()
