@@ -1,5 +1,4 @@
 ########################################################################
-# $HeadURL$
 # File :    DownloadInputData.py
 # Author :  Stuart Paterson
 ########################################################################
@@ -9,22 +8,30 @@
     defined in the CS for the VO.
 """
 
-__RCSID__ = "$Id$"
+import os
+import tempfile
+import random
 
+from DIRAC                                                          import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RPCClient                                     import RPCClient
 from DIRAC.Resources.Storage.StorageElement                         import StorageElement
 from DIRAC.Core.Utilities.Os                                        import getDiskSpace
-from DIRAC                                                          import S_OK, S_ERROR, gLogger
+from DIRAC.DataManagementSystem.Utilities.DMSHelpers                import DMSHelpers
 
-import os, tempfile, random
+__RCSID__ = "$Id$"
 
 COMPONENT_NAME = 'DownloadInputData'
 
 def _isCached( lfn, seName ):
   result = StorageElement( seName ).getFileMetadata( lfn )
-  return result['OK'] and result['Value']['Successful'].get( lfn, {} ).get( 'Cached', False )
+  if not result['OK']:
+    return False
+  if lfn in result['Value']['Failed']:
+    return False
+  metadata = result['Value']['Successful'][lfn]
+  return metadata.get( 'Cached', metadata['Accessible'] )
 
-class DownloadInputData:
+class DownloadInputData( object ):
   """
    retrieve InputData LFN from localSEs (if available) or from elsewhere.
   """
@@ -37,12 +44,13 @@ class DownloadInputData:
     self.log = gLogger.getSubLogger( self.name )
     self.inputData = argumentsDict['InputData']
     self.configuration = argumentsDict['Configuration']
+    # Warning: this contains not only the SEs but also the file metadata
     self.fileCatalogResult = argumentsDict['FileCatalog']
     # By default put each input data file into a separate directory
     self.inputDataDirectory = argumentsDict.get( 'InputDataDirectory', 'PerFile' )
     self.jobID = None
     self.counter = 1
-
+    self.availableSEs = DMSHelpers().getStorageElements()
 
   #############################################################################
   def execute( self, dataToResolve = None ):
@@ -60,7 +68,7 @@ class DownloadInputData:
       self.log.verbose( 'Data to resolve passed directly to DownloadInputData module' )
       self.inputData = dataToResolve  # e.g. list supplied by another module
 
-    self.inputData = sorted( [x.replace( 'LFN:', '' ) for x in self.inputData] )
+    self.inputData = sorted( lfn.replace( 'LFN:', '' ) for lfn in self.inputData )
     self.log.info( 'InputData to be downloaded is:\n%s' % '\n'.join( self.inputData ) )
 
     replicas = self.fileCatalogResult['Value']['Successful']
@@ -74,13 +82,16 @@ class DownloadInputData:
     diskSEs = set()
     tapeSEs = set()
     for localSE in [se for se in localSEList if se]:
-      seStatus = StorageElement( localSE ).getStatus()['Value']
+      seStatus = StorageElement( localSE ).getStatus()
+      if not seStatus['OK']:
+        return seStatus
+      seStatus = seStatus['Value']
       if seStatus['Read'] and seStatus['DiskSE']:
         diskSEs.add( localSE )
       elif seStatus['Read'] and seStatus['TapeSE']:
         tapeSEs.add( localSE )
 
-    for lfn, reps in replicas.items():
+    for lfn, reps in replicas.iteritems():
       if lfn not in self.inputData:
         self.log.verbose( 'LFN %s is not in requested input data to download' )
         failedReplicas.add( lfn )
@@ -94,6 +105,10 @@ class DownloadInputData:
       # Get and remove size and GUIS
       size = reps.pop( 'Size' )
       guid = reps.pop( 'GUID' )
+      # Remove all other items that are not SEs
+      for item in reps.keys():
+        if item not in self.availableSEs:
+          reps.pop( item )
       downloadReplicas[lfn] = {'SE':[], 'Size':size, 'GUID':guid}
       # First get Disk replicas
       for seName in diskSEs:
@@ -107,8 +122,8 @@ class DownloadInputData:
             downloadReplicas[lfn]['SE'].append( seName )
 
     totalSize = 0
-    self.log.verbose( 'Replicas to download are:' )
-    for lfn, reps in downloadReplicas.items():
+    verbose = self.log.verbose( 'Replicas to download are:' )
+    for lfn, reps in downloadReplicas.iteritems():
       self.log.verbose( lfn )
       if not reps['SE']:
         self.log.info( 'Failed to find data at local SEs, will try to download from anywhere', lfn )
@@ -120,9 +135,10 @@ class DownloadInputData:
         # get SE and pfn from tuple
         reps['SE'] = reps['SE'][0]
       totalSize += int( reps.get( 'Size', 0 ) )
-      for item, value in sorted( reps.items() ):
-        if value:
-          self.log.verbose( '\t%s %s' % ( item, value ) )
+      if verbose:
+        for item, value in sorted( reps.items() ):
+          if value:
+            self.log.verbose( '\t%s %s' % ( item, value ) )
 
     self.log.info( 'Total size of files to be downloaded is %s bytes' % ( totalSize ) )
     for lfn in failedReplicas:
@@ -144,9 +160,9 @@ class DownloadInputData:
 
     resolvedData = {}
     localSECount = 0
-    for lfn in downloadReplicas:
-      seName = downloadReplicas[lfn]['SE']
-      guid = downloadReplicas[lfn]['GUID']
+    for lfn, info in downloadReplicas.iteritems():
+      seName = info['SE']
+      guid = info['GUID']
       reps = replicas.get( lfn, {} )
       if seName:
         result = StorageElement( seName ).getFileMetadata( lfn )
@@ -159,11 +175,11 @@ class DownloadInputData:
           failedReplicas.add( lfn )
           continue
         metadata = result['Value']['Successful'][lfn]
-        if metadata['Lost']:
+        if metadata.get( 'Lost', False ):
           error = "PFN has been Lost by the StorageElement"
-        elif metadata['Unavailable']:
+        elif metadata.get( 'Unavailable', False ):
           error = "PFN is declared Unavailable by the StorageElement"
-        elif seName in tapeSEs and not metadata['Cached']:
+        elif seName in tapeSEs and not metadata.get( 'Cached', metadata['Accessible'] ):
           error = "PFN is no longer in StorageElement Cache"
         else:
           error = ''
@@ -205,16 +221,22 @@ class DownloadInputData:
 
     # Report datasets that could not be downloaded
     report = ''
-    if failedReplicas:
-      self.log.warn( 'The following LFN(s) could not be downloaded to the WN:\n%s' % 'n'.join( sorted( failedReplicas ) ) )
-
     if resolvedData:
-      report = 'Successfully downloaded LFN(s):\n'
+      report += 'Successfully downloaded %d LFN(s)' % len( resolvedData )
+      if localSECount != len( resolvedData ):
+        report += ' (%d from local SEs):\n' % localSECount
+      else:
+        report += ' from local SEs:\n'
       report += '\n'.join( sorted( resolvedData ) )
-      report += '\nDownloaded %d / %d files from local Storage Elements on first attempt.' % ( localSECount, len( resolvedData ) )
+    failedReplicas = sorted( failedReplicas.difference( resolvedData ) )
+    if failedReplicas:
+      self.log.warn( 'The following LFN(s) could not be downloaded to the WN:\n%s' % 'n'.join( failedReplicas ) )
+      report += '\nFailed to download %d LFN(s):\n' % len( failedReplicas )
+      report += '\n'.join( failedReplicas )
+
+    if report:
       self.__setJobParam( COMPONENT_NAME, report )
 
-    failedReplicas = [lfn for lfn in sorted( failedReplicas ) if lfn not in resolvedData]
     return S_OK( {'Successful': resolvedData, 'Failed':failedReplicas} )
 
   #############################################################################
@@ -253,11 +275,11 @@ class DownloadInputData:
     """ Download a local copy of a single LFN from a list of Storage Elements.
         This is used as a last resort to attempt to retrieve the file.
     """
-    self.log.verbose( "Attempting to download file from all SEs (%s):" % ','.join( reps.keys() ), lfn )
+    self.log.verbose( "Attempting to download file from all SEs (%s):" % ','.join( reps ), lfn )
     diskSEs = set()
     tapeSEs = set()
     for seName in reps:
-      seStatus = StorageElement( seName ).getStatus()['Value']
+      seStatus = StorageElement( seName ).status()
       # FIXME: This is simply terrible - this notion of "DiskSE" vs "TapeSE" should NOT be used here!
       if seStatus['Read'] and seStatus['DiskSE']:
         diskSEs.add( seName )
