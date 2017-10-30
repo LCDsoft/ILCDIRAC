@@ -156,7 +156,7 @@ class FileStatusTransformationAgent( AgentModule ):
     """ sets transformation file status to Deleted """
     _newLFNStatuses = {lfn: 'Deleted' for lfn in lfns}
 
-    if not _newLFNStatuses:
+    if self.enabled and _newLFNStatuses:
       res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
       if not res['OK']:
         self.log.error('Failed to set statuses for LFNs ', res['Message'])
@@ -199,19 +199,15 @@ class FileStatusTransformationAgent( AgentModule ):
         self.log.error('Failed to determine if Files %s exist on SE %s' % (seLfnsDict[se], se))
         continue
 
-      for lfn in res['Value']['Successful']:
-        if not res['Value']['Successful'][lfn]:
-          self.log.notice("File %s does not physically exists on SE %s " % (lfn , se))
-          #remove replica from catalog
+      for lfn in res['Value']:
+        self.log.notice("File %s does not physically exists on SE %s " % (lfn , se))
+        #remove replica from catalog
+        if self.enabled:
           res = self.fcClient.removeReplica( { lfn:{'SE': se} } )
           if not res['OK']:
             self.log.error('Failed to remove Replica %s on SE %s from File Catalog ' % (lfn, se))
             continue
-
           self.log.notice('Successfully removed Replica %s on SE %s from File Catalog ' %(lfn, se))
-          #maybe send an email?
-        else:
-          self.log.notice("File %s physically exists on SE %s " % (lfn , se))
 
     res = self.getReplicasForLFNs(lfns.keys())
     if not res['OK']:
@@ -225,7 +221,7 @@ class FileStatusTransformationAgent( AgentModule ):
         self.log.notice('LFN %s does not have any replicas, removing file from File Catalog' % lfn)
         _filesToBeRemoved.append(lfn)
 
-    if _filesToBeRemoved:
+    if self.enabled and _filesToBeRemoved:
       res = self.fcClient.removeFile( _filesToBeRemoved )
       if not res['OK']:
         self.log.notice('Failed to remove files from File Catalog', res['Message'])

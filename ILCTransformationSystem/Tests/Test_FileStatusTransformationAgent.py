@@ -24,6 +24,7 @@ class TestFSTAgent( unittest.TestCase ):
     self.fstAgent.tClient = MagicMock( name = "transMock",spec=DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient)
     self.fstAgent.fcClient = MagicMock( name = "fcMock" , spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
     self.fstAgent.reqClient = MagicMock( name = "reqMock" , spec=DIRAC.RequestManagementSystem.Client.ReqClient )
+    self.fstAgent.enabled = True
 
     self.transformations = [{'Status':'Active',
                              'TransformationID': 1L,
@@ -31,7 +32,6 @@ class TestFSTAgent( unittest.TestCase ):
                              'Type':'Replication',
                              'TransformationName':'replicate_777_CERN-DST-EOS'}]
     self.fakeTransID = 1L
-
 
   def tearDown(self):
     pass
@@ -41,7 +41,7 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertIsInstance( self.fstAgent.tClient, MagicMock )
     self.assertIsInstance( self.fstAgent.fcClient, MagicMock )
     self.assertIsInstance( self.fstAgent.reqClient, MagicMock )
-    self.assertFalse( self.fstAgent.enabled )
+    self.assertTrue( self.fstAgent.enabled )
     self.assertEquals( self.fstAgent.transformationTypes, ['Replication'])
     self.assertEquals( self.fstAgent.transformationStatuses, ['Active'])
 
