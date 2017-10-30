@@ -174,6 +174,7 @@ cvmfstests:SL6:
   stage: integration
   except:
     - tags
+    - branches@CLICdp/iLCDirac/ILCDIRAC
   tags:
     - docker
   dependencies:
@@ -192,8 +193,6 @@ cvmfstests:SL6:
   coverage: '/\d+\%\s*$/'
   allow_failure: true
   retry: 2
-  except:
-    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
 cvmfstests:SL6Prod:
@@ -226,6 +225,7 @@ cvmfstests:CC7:
   stage: integration
   except:
     - tags
+    - branches@CLICdp/iLCDirac/ILCDIRAC
   tags:
     - docker
   dependencies:
@@ -244,8 +244,6 @@ cvmfstests:CC7:
   coverage: '/\d+\%\s*$/'
   allow_failure: true
   retry: 2
-  except:
-    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
 
@@ -278,6 +276,7 @@ setests:SL6:
   stage: integration
   except:
     - tags
+    - branches@CLICdp/iLCDirac/ILCDIRAC
   tags:
     - docker
   dependencies:
@@ -295,8 +294,6 @@ setests:SL6:
   coverage: '/\d+\%\s*$/'
   allow_failure: true
   retry: 2
-  except:
-    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 
 setests:SL6Prod:
@@ -328,6 +325,7 @@ setests:CC7:
   stage: integration
   except:
     - tags
+    - branches@CLICdp/iLCDirac/ILCDIRAC
   tags:
     - docker
   dependencies:
@@ -346,8 +344,6 @@ setests:CC7:
   coverage: '/\d+\%\s*$/'
   allow_failure: true
   retry: 2
-  except:
-    - branches@CLICdp/iLCDirac/ILCDIRAC
 
 setests:CC7Prod:
   stage: integration
