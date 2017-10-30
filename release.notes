@@ -1,3 +1,10 @@
+[v27r0p1]
+
+*WorkloadManagementSystem
+
+FIX: (!166) Adapt DownloadInputData for GFAL2 plugins, ILCDIRAC-796
+
+
 [v27r0]
 
 *Core
