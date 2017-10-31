@@ -12,8 +12,8 @@ stages:
   - deploy
 
 variables:
-  LCG_BUNDLE_VERSION: "2017-01-27"
-  ILCDIRAC_VERSION: "v27r0-pre5"
+  LCG_BUNDLE_VERSION: "v13r0"
+  ILCDIRAC_VERSION: "v27r0p1"
   DIRAC_BRANCH: "rel-v6r17"
   SETUP: "ILC-Production"
 
