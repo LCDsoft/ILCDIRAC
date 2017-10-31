@@ -43,9 +43,12 @@ def getProdFilenameFromInput( inputfile, outfileOriginal, prodID, jobID ) :
     outfile = finp.convert( "sim", "file", inpitem )
   elif originalOutputBaseName.startswith("r"):
     inpitem["r"] = origitem["r"]
+    inpitem["m"] = origitem["m"] if "m" in origitem else inpitem["m"] #Use model name defined by reconstruction
     inpitem["d"] = origitem["d"]
     inpitem["t"] = str(prodID).zfill(8)
-    inpitem["j"] = str(jobID)
+    if "n" not in inpitem: # For DBD sim files ad input
+      inpitem["n"] = inpitem["j"] if "j" in inpitem else "0"
+    inpitem["j"] = str(jobID) # Allways use jobID given by production.
     outfile  = finp.convert( origitem["d"], "file", inpitem )
   elif originalOutputBaseName.startswith("E"):
     inpitem["d"] = "gen"

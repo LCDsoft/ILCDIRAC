@@ -66,6 +66,30 @@ class ResolvePathsAndNamesTests(unittest.TestCase):
     out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
     self.assertEqual(out_lfn, outfile_new)
 
+  def test_ildprod_rec_mcopt(self):
+    """test getProdFilenameFromInput Rec, when sim model and rec model is different.........................."""
+    indir = "/ilc/prod/ilc/mc-opt/ild/sim/500-TDR_ws/3f/ILD_l5_v02/v01-19-05/00001234/000/"
+    outdir = "/ilc/prod/ilc/mc-opt/ild/rec/500-TDR_ws/3f/ILD_l5_o1_v02/v01-19-05/00001235/000/"
+    input_file = indir + "sv01-19-05.mILD_l5_v02.E500-TDR_ws.I37540.Pae_ell.eB.pR.n01_002.d_sim_00001234_62.slcio" ## LFN
+    outfile_original = outdir + "rv01-19-05.sv01-19-05.mILD_l5_o1_v02.E500-TDR_ws_rec_1235_421.slcio"
+    prodid = 1235
+    jobid = 421
+    outfile_new = outdir + "rv01-19-05.sv01-19-05.mILD_l5_o1_v02.E500-TDR_ws.I37540.Pae_ell.eB.pR.n01_002.d_rec_00001235_421.slcio"
+    out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
+    self.assertEqual(out_lfn, outfile_new)
+
+  def test_ildprod_dbdrec(self):
+    """test getProdFilenameFromInput Rec for DBD Sim data .........................................."""
+    indir = "/ilc/prod/ilc/mc-dbd/ild/sim/250-TDR_ws/4f_WW_semileptonic/ILD_o1_v05/v01-14-01-p00/"
+    outdir = "/ilc/prod/ilc/mc-dbd/ild/250-TDR_ws/4f_WW_semileptonic/ILD_o1_v05/v01-16-02-p01/00001235/000/"
+    input_file = indir + "sv01-14-01-p00.mILD_o1_v05.E250-TDR_ws.I106577.P4f_ww_sl.eL.pR-01935.slcio" ## LFN
+    outfile_original = outdir + "rv01-16-01-p01.sv01-14-01-p00.mILD_o1_v05.E250-TDR_ws_rec_1235_783.slcio"
+    prodid = 1235
+    jobid = 783
+    outfile_new = outdir + "rv01-16-01-p01.sv01-14-01-p00.mILD_o1_v05.E250-TDR_ws.I106577.P4f_ww_sl.eL.pR.n01935.d_rec_00001235_783.slcio"
+    out_lfn = getProdFilenameFromInput(input_file, outfile_original, prodid, jobid)
+    self.assertEqual(out_lfn, outfile_new)
+
   def test_ildprod_dst(self):
     """test getProdFilenameFromInput DST ..........................................................."""
     indir = "/ilc/prod/ilc/test/ild/sim/500-TDR_ws/3f/ILD_o1_v05/v01-19_lcgeo/00001234/000/"
