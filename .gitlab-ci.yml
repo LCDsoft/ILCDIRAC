@@ -383,7 +383,6 @@ compiledoc:
     - source ../bashrc
     - unset REQUESTS_CA_BUNDLE
     - pip install sphinx==1.5.2
-    - yum install -y which patch
     - rm -rf ILCDIRAC ## removes just the folder with the links
     - wget -O release.notes https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/raw/master/release.notes ## get release notes from the master
     - cd docs
