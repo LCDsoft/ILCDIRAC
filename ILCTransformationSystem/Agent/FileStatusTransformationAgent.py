@@ -68,47 +68,48 @@ class FileStatusTransformationAgent( AgentModule ):
     for trans in transformations:
 
       transID = trans['TransformationID']
-
-      self.log.notice('Processing Transformation ID: %s' % transID)
-      self.log.notice( "Get all tasks for transformation ID %s " % transID )
-
-      res = self.getTransformationTasks(transID)
+      res = self.processTransformation( transID )
       if not res['OK']:
-        self.log.error('Failure to get Tasks for transformation', res['Message'])
+        self.log.error('Failure to process transformation with ID: %s' % transID)
         continue
-
-      tasks = res['Value']
-      if not tasks:
-        self.log.notice('No Tasks found for transformation %s' % transID)
-        continue
-
-      self.log.notice("Number of tasks %d for trans ID %d" %(len(tasks), transID))
-
-      res = self.getRequestsForTasks(tasks, transID)
-      requests = res['Value']
-      if not requests:
-        self.log.notice("No Requests found in RMS for transformation ID %s" % transID)
-        continue
-
-      lfns = [f.LFN for request in requests for op in request.__operations__ for f in op.__files__]
-      lfns.append('/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio')
-
-      res = self.getReplicasForLFNs(lfns)
-      if not res['OK']:
-        self.log.error('Failure to find replicas for LFNs', res['Message'])
-        continue
-      
-      self.treatFilesNotInFileCatalog( transID, res['Value']['Failed'] )
-
-      #debug
-      #res['Value']['Successful']['/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio']=\
-      #{'CERN-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio', \
-      #'CERN-DST-EOS':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio', \
-      #'DESY-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio'}
-
-      self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
-
     return S_OK()
+
+  def processTransformation(self, transID):
+    """ process transformation for a given transformation ID """
+
+    self.log.notice('Processing Transformation ID: %s' % transID)
+    self.log.notice( "Get all tasks for transformation ID %s " % transID )
+
+    res = self.getTransformationTasks(transID)
+    if not res['OK']:
+      self.log.error('Failure to get Tasks for transformation', res['Message'])
+      return res
+
+    tasks = res['Value']
+    if not tasks:
+      self.log.notice('No Tasks found for transformation %s' % transID)
+      return res
+
+    self.log.notice("Number of tasks %d for trans ID %d" %(len(tasks), transID))
+
+    res = self.getRequestsForTasks(tasks)
+    requests = res['Value']
+    if not requests:
+      self.log.notice("No Requests found in RMS for transformation ID %s" % transID)
+      return res
+
+    lfns = [f.LFN for request in requests for op in request.__operations__ for f in op.__files__]
+
+    res = self.getReplicasForLFNs(lfns)
+    if not res['OK']:
+      self.log.error('Failure to find replicas for LFNs', res['Message'])
+      return res
+
+    if res['Value']['Failed']:
+      self.setFileStatusDeleted( transID, res['Value']['Failed'].keys() )
+
+    if res['Value']['Successful']:
+      self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
 
   def getTransformations(self):
     """ returns transformations of a given type and status """
@@ -149,7 +150,7 @@ class FileStatusTransformationAgent( AgentModule ):
     if not res['OK']:
       self.log.error('Failure to get Replicas for lfns')
       return res
-    
+
     return S_OK(res['Value'])
 
   def setFileStatusDeleted(self, transID, lfns):
@@ -185,18 +186,18 @@ class FileStatusTransformationAgent( AgentModule ):
     _newLFNStatuses = {}
     _filesToBeRemoved = []
 
-    for lfn in lfns:
-      storageElements = lfns[lfn].keys()
+    for lfn, replicas in lfns.items():
+      storageElements = replicas.keys()
       for se in storageElements:
         if not se in seLfnsDict:
           seLfnsDict[se] = list()
         seLfnsDict[se].append(lfn)
 
     #check if files exists on storage elements
-    for se in seLfnsDict:
-      res = self.getDanglingLFNs(se, seLfnsDict[se])
+    for se, files in seLfnsDict.items():
+      res = self.getDanglingLFNs(se, files)
       if not res['OK']:
-        self.log.error('Failed to determine if Files %s exist on SE %s' % (seLfnsDict[se], se))
+        self.log.error('Failed to determine if Files %s exist on SE %s' % (files, se))
         continue
 
       for lfn in res['Value']:
