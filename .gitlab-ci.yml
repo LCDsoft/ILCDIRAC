@@ -21,7 +21,7 @@ install:SL6:
   stage: install
   tags:
     - docker
-  image: ilcdirac/slc6-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - cd ../
     - rm -rf !(ILCDIRAC) .installCache
@@ -56,7 +56,7 @@ install:CC7:
     - tags
   tags:
     - docker
-  image: ilcdirac/cc7-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - cd ../
     - rm -rf !(ILCDIRAC) .installCache
@@ -94,7 +94,7 @@ unittest:SL6:
     - docker
   dependencies:
     - install:SL6
-  image: ilcdirac/slc6-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -118,7 +118,7 @@ unittest:CC7:
     - docker
   dependencies:
     - install:CC7
-  image: ilcdirac/cc7-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -142,7 +142,7 @@ pylint:SL6:
    - install:SL6
   tags:
     - docker
-  image: ilcdirac/slc6-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -158,7 +158,7 @@ pylint:CC7:
     - tags
   tags:
     - docker
-  image: ilcdirac/cc7-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   dependencies:
     - install:CC7
   script:
@@ -180,7 +180,7 @@ cvmfstests:SL6:
   dependencies:
     - install:SL6
     - unittest:SL6
-  image: ilcdirac/slc6-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -204,7 +204,7 @@ cvmfstests:SL6Prod:
   dependencies:
     - install:SL6
     - unittest:SL6
-  image: ilcdirac/slc6-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -231,7 +231,7 @@ cvmfstests:CC7:
   dependencies:
     - install:CC7
     - unittest:CC7
-  image: ilcdirac/cc7-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -256,7 +256,7 @@ cvmfstests:CC7Prod:
   dependencies:
     - install:CC7
     - unittest:CC7
-  image: ilcdirac/cc7-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -282,7 +282,7 @@ setests:SL6:
   dependencies:
     - install:SL6
     - unittest:SL6
-  image: ilcdirac/slc6-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -305,7 +305,7 @@ setests:SL6Prod:
   dependencies:
     - install:SL6
     - unittest:SL6
-  image: ilcdirac/slc6-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -331,7 +331,7 @@ setests:CC7:
   dependencies:
     - install:CC7
     - unittest:CC7
-  image: ilcdirac/cc7-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -354,7 +354,7 @@ setests:CC7Prod:
   dependencies:
     - install:CC7
     - unittest:CC7
-  image: ilcdirac/cc7-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -374,7 +374,7 @@ compiledoc:
   stage: unittest
   tags:
     - docker
-  image: ilcdirac/slc6-base
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   dependencies:
     - install:SL6
   script:
@@ -407,7 +407,7 @@ maketarballs:
     - docker
   dependencies:
     - install:SL6
-  image: ilcdirac/cc7-extra
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
