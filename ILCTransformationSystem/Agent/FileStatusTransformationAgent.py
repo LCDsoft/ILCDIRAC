@@ -77,13 +77,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
       self.log.notice("Number of tasks %d for trans ID %d" %(len(tasks), transID))
 
-      res = self.getRequestIDsForTasks(tasks, transID)
-      requestIDs = res['Value']
-      if not requestIDs:
-        self.log.error("No request IDs found for tasks %s for transformation %s" % (tasks, transID))
-        continue
-
-      res = self.getRequestsForTasks(requestIDs)
+      res = self.getRequestsForTasks(tasks)
       requests = res['Value']
       if not requests:
         self.log.notice("No Requests found in RMS for transformation ID %s" % transID)
@@ -127,21 +121,9 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK(res['Value'])
 
-  def getRequestIDsForTasks(self, tasks, transID):
+  def getRequestsForTasks(self, tasks):
 
-    requestIDs = []
-    for task in tasks:
-      requestName = '%08d_%08d' % (transID, task['TaskID'])
-      res = self.reqClient.getRequestIDForName( requestName )
-      if not res['OK']:
-        self.log.error("Failure to get request ID for request name %s" % requestName)
-        continue
-      requestIDs.append( res['Value'] )
-
-    return S_OK(requestIDs)
-
-  def getRequestsForTasks(self, requestIDs):
-
+    requestIDs = [task['ExternalID'] for task in tasks]
     requests = []
     for reqID in requestIDs:
       res = self.reqClient.peekRequest( reqID )
@@ -150,7 +132,6 @@ class FileStatusTransformationAgent( AgentModule ):
         continue
       #only consider done and failed requests
       request = res['Value']
-      self.log.notice('Status %s '%request.Status)
       if request.Status in ['Done', 'Failed']:
         requests.append( request )
 
@@ -179,6 +160,18 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
+  def _getDanglingLFNs(self, se, lfns):
+    seObj = None
+    if se not in self.seObjDict:
+      self.seObjDict[se] = StorageElement(se)
+    seObj = self.seObjDict[se]
+
+    res = seObj.exists(lfns)
+    if not res['OK']:
+      return res
+
+    filesNotFound = [lfn for lfn in res['Value']['Successful'] if not res['Value']['Successful'][lfn]]
+    return S_OK(filesNotFound)
 
   def treatFilesFoundInFileCatalog(self, transID, lfns):
 
@@ -196,31 +189,21 @@ class FileStatusTransformationAgent( AgentModule ):
 
     #check if files exists on storage elements
     for se in seLfnsDict:
-
-      seObj = None
-      if se not in self.seObjDict:
-        self.seObjDict[se] = StorageElement(se)
-
-      seObj = self.seObjDict[se]
-
-      res = seObj.exists(seLfnsDict[se])
+      res = self._getDanglingLFNs(se, seLfnsDict[se])
       if not res['OK']:
         self.log.error('Failed to determine if Files %s exist on SE %s' % (seLfnsDict[se], se))
         continue
 
-      for lfn in res['Value']['Successful']:
-        if not res['Value']['Successful'][lfn]:
-          self.log.notice("File %s does not physically exists on SE %s " % (lfn , se))
+      danglingLFNs = res['Value']
+      for lfn in danglingLFNs:
           #remove replica from catalog
-          res = self.fcClient.removeReplica( { lfn:{'SE': se} } )
+          argsDict = {lfn: {'SE':se}}
+          res = self.fcClient.removeReplica( argsDict )
           if not res['OK']:
             self.log.error('Failed to remove Replica %s on SE %s from File Catalog ' % (lfn, se))
             continue
 
           self.log.notice('Successfully removed Replica %s on SE %s from File Catalog ' %(lfn, se))
-          #maybe send an email?
-        else:
-          self.log.notice("File %s physically exists on SE %s " % (lfn , se))
 
     res = self.getReplicasForLFNs(lfns.keys())
     if not res['OK']:
