@@ -22,8 +22,10 @@ class FileStatusTransformationAgent( AgentModule ):
     AgentModule.__init__( self, *args, **kwargs )
     self.name = 'FileStatusTransformationAgent'
     self.enabled = False
-    self.transformationTypes = ["Replication"]
-    self.transformationStatuses = ["Active"]
+    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
+
+    self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
+    self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
     self.seObjDict = {}
 
     self.fcClient = FileCatalogClient()
@@ -34,8 +36,6 @@ class FileStatusTransformationAgent( AgentModule ):
     """Resets defaults after one cycle
     """
     self.enabled = self.am_getOption('EnableFlag', False)
-
-    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
     self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
     self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
 
@@ -43,21 +43,23 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def execute( self ):
 
+    if not self.enabled:
+      return S_OK()
+
     res = self.getTransformations()
     if not res['OK']:
       self.log.error('Failure to get transformations', res['Message'])
       return S_ERROR( "Failure to get transformations" )
 
     transformations = res['Value']
-
     if not transformations:
       self.log.notice('No transformations found with Status %s and Type %s ' % (self.transformationStatuses, self.transformationTypes))
-      return S_OK("No transformations found")
+      return S_OK()
 
-    #debug
-    #transformations.append({'TransformationID': 401003L})
-    #self.log.notice(transformations)
-
+    #d#ebug
+    transformations.append({'TransformationID': 401003L})
+    self.log.notice(transformations)
+    requestIDs = []
     for trans in transformations:
 
       transID = trans['TransformationID']
@@ -77,7 +79,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
       self.log.notice("Number of tasks %d for trans ID %d" %(len(tasks), transID))
 
-      res = self.getRequestsForTasks(tasks)
+      res = self.getRequestsForTasks(tasks, transID)
       requests = res['Value']
       if not requests:
         self.log.notice("No Requests found in RMS for transformation ID %s" % transID)
@@ -91,17 +93,10 @@ class FileStatusTransformationAgent( AgentModule ):
         self.log.error('Failure to find replicas for LFNs', res['Message'])
         continue
       
-      if res['Value']['Failed']:
-        self.treatFilesNotInFileCatalog( transID, res['Value']['Failed'] )
+      self.treatFilesNotInFileCatalog( res['Value']['Failed'] )
 
-      #debug
-      #res['Value']['Successful']['/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio']=\
-      #{'CERN-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio', \
-      #'CERN-DST-EOS':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio', \
-      #'DESY-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio'}
-
-      if res['Value']['Successful']:
-        self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
+      #res['Value']['Successful']['/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio']={'CERN-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio', 'CERN-DST-EOS':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio','DESY-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio'}
+      self.treatFilesFoundInFileCatalog( res['Value']['Successful'])
 
     return S_OK()
 
@@ -121,15 +116,25 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK(res['Value'])
 
-  def getRequestsForTasks(self, tasks):
+  def getRequestsForTasks(self, tasks, transID):
 
-    requestIDs = [task['ExternalID'] for task in tasks]
+    requestIDs = []
+    for task in tasks:
+      requestName = '%08d_%08d' % (transID, task['TaskID'])
+      
+      res = self.reqClient.getRequestIDForName( requestName )
+      if not res['OK']:
+        self.log.error("Failure to get request ID for request name %s" % requestName)
+        continue
+      requestIDs.append( res['Value'] )
+
     requests = []
     for reqID in requestIDs:
       res = self.reqClient.peekRequest( reqID )
       if not res['OK']:
         self.log.error("Failure to get request data for request ID %s" % reqID)
         continue
+      
       #only consider done and failed requests
       request = res['Value']
       if request.Status in ['Done', 'Failed']:
@@ -145,90 +150,44 @@ class FileStatusTransformationAgent( AgentModule ):
     
     return S_OK(res['Value'])
 
-  def treatFilesNotInFileCatalog(self, transID, lfns):
+  def treatFilesNotInFileCatalog(self, lfns):
 
-    _newLFNStatuses = {}
     for lfn in lfns:
       self.log.notice('No Record found in file catalog for LFN: %s' %lfn)
+      # check if status of file is deleted, if not ,then set the status 'Deleted'
       # assumption file does not exist on SE
-      _newLFNStatuses[lfn] = 'Deleted'
 
-    if not _newLFNStatuses:
-      res = self.tClient(transID, newLFNsStatus=_newLFNStatuses)
-      if not res['OK']:
-        self.log.error('Failed to set statuses for LFNs ', res['Message'])
-      else:
-        self.log.notice('File Statuses updated Successfully %s' % res['Value'])
+  def treatFilesFoundInFileCatalog(self, lfns):
+  
+      #key is SE, value is list of LFNs which supposedly exist on SE
+      seLfnsDict = {}
+      for lfn in lfns:
+        SEsContainingReplicas = [se for se in lfns[lfn]]
+        for se in SEsContainingReplicas:
+          if not se in seLfnsDict:
+            seLfnsDict[se] = [lfn]
+          else:
+            seLfnsDict[se].append(lfn)
 
-  def _getDanglingLFNs(self, se, lfns):
-    seObj = None
-    if se not in self.seObjDict:
-      self.seObjDict[se] = StorageElement(se)
-    seObj = self.seObjDict[se]
-
-    res = seObj.exists(lfns)
-    if not res['OK']:
-      return res
-
-    filesNotFound = [lfn for lfn in res['Value']['Successful'] if not res['Value']['Successful'][lfn]]
-    return S_OK(filesNotFound)
-
-  def treatFilesFoundInFileCatalog(self, transID, lfns):
-
-    #key is SE, value is list of LFNs which supposedly exist on SE
-    seLfnsDict = {}
-    _newLFNStatuses = {}
-    _filesToBeRemoved = []
-
-    for lfn in lfns:
-      SEsContainingReplicas = [se for se in lfns[lfn]]
-      for se in SEsContainingReplicas:
-        if not se in seLfnsDict:
-          seLfnsDict[se] = list()
-        seLfnsDict[se].append(lfn)
-
-    #check if files exists on storage elements
-    for se in seLfnsDict:
-      res = self._getDanglingLFNs(se, seLfnsDict[se])
-      if not res['OK']:
-        self.log.error('Failed to determine if Files %s exist on SE %s' % (seLfnsDict[se], se))
-        continue
-
-      danglingLFNs = res['Value']
-      for lfn in danglingLFNs:
-          #remove replica from catalog
-          argsDict = {lfn: {'SE':se}}
-          res = self.fcClient.removeReplica( argsDict )
-          if not res['OK']:
-            self.log.error('Failed to remove Replica %s on SE %s from File Catalog ' % (lfn, se))
-            continue
-
-          self.log.notice('Successfully removed Replica %s on SE %s from File Catalog ' %(lfn, se))
-
-    res = self.getReplicasForLFNs(lfns.keys())
-    if not res['OK']:
-      self.log.error('Failure to find replicas for LFNs', res['Message'])
-      return S_ERROR()
-
-    result = res['Value']['Successful']
-
-    for lfn in result:
-      if not result[lfn]:
-        self.log.notice('LFN %s does not have any replicas, removing file from File Catalog' % lfn)
-        _filesToBeRemoved.append(lfn)
-
-    if _filesToBeRemoved:
-      res = self.fcClient.removeFile( _filesToBeRemoved )
-      if not res['OK']:
-        self.log.notice('Failed to remove files from File Catalog', res['Message'])
-
-      for lfn in res['Value']['Successful']:
-        self.log.notice('File %s successfully removed from File Catalog' % lfn)
-        _newLFNStatuses[lfn] = 'Deleted'
-
-      if _newLFNStatuses:
-        res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
-        if not res['OK']:
-          self.log.error('Failed to set statuses for LFNs ', res['Message'])
+      #check if files exists on storage elements
+      for se in seLfnsDict:
+        seObj = None
+        if se in self.seObjDict:
+          seObj = self.seObjDict[se]
         else:
-          self.log.notice('File Statuses updated Successfully %s' % res['Value'])
+          seObj = StorageElement(se)
+          self.seObjDict[se] = seObj
+
+        res = seObj.exists(seLfnsDict[se])
+        if not res['OK']:
+          self.log.error('Failed to determine if LFNs %s exist on SE %s' % (seLfnsDict[se], se))
+          continue
+      
+        for lfn in res['Value']['Successful']:
+          if not res['Value']['Successful'][lfn]:
+            self.log.notice("LFN %s does not physically exists on SE %s " % (lfn , se))
+            self.log.notice(res['Value']['Successful'][lfn])
+            #remove from file catalog
+            #set file status to deleted
+          else:
+            self.log.notice("LFN %s physically exists on SE %s " % (lfn , se))
