@@ -8,8 +8,8 @@ from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import
 from mock import MagicMock
 
 from DIRAC import S_OK, S_ERROR
-
-from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
+from DIRAC import gLogger
+import DIRAC
 
 __RCSID__ = "$Id$"
 

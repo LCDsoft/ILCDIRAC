@@ -30,10 +30,8 @@ class FileStatusTransformationAgent( AgentModule ):
     AgentModule.__init__( self, *args, **kwargs )
     self.name = 'FileStatusTransformationAgent'
     self.enabled = False
-    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
-
-    self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
-    self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
+    self.transformationTypes = ["Replication"]
+    self.transformationStatuses = ["Active"]
     self.seObjDict = {}
 
     self.fcClient = FileCatalogClient()
@@ -60,11 +58,6 @@ class FileStatusTransformationAgent( AgentModule ):
       self.log.notice('No transformations found with Status %s and Type %s ' % (self.transformationStatuses, self.transformationTypes))
       return S_OK()
 
-    #debug
-    #transformations.append({'TransformationID': 401003L})
-    #self.log.notice(transformations)
-
-    requestIDs = []
     for trans in transformations:
 
       transID = trans['TransformationID']
@@ -136,7 +129,6 @@ class FileStatusTransformationAgent( AgentModule ):
       if not res['OK']:
         self.log.error("Failure to get request data for request ID %s" % reqID)
         continue
-      
       #only consider done and failed requests
       request = res['Value']
       if request.Status in ['Done', 'Failed']:
@@ -183,7 +175,7 @@ class FileStatusTransformationAgent( AgentModule ):
         the file is deleted from FC and it's status is set to Deleted """
     #key is SE, value is list of LFNs which supposedly exist on SE
     seLfnsDict = {}
-    _newLFNStatuses = {}
+    _filesRemoved = []
     _filesToBeRemoved = []
 
     for lfn, replicas in lfns.items():
@@ -213,7 +205,7 @@ class FileStatusTransformationAgent( AgentModule ):
     res = self.getReplicasForLFNs(lfns.keys())
     if not res['OK']:
       self.log.error('Failure to find replicas for LFNs', res['Message'])
-      continue
+      return S_ERROR()
 
     result = res['Value']['Successful']
 
@@ -229,11 +221,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
       for lfn in res['Value']['Successful']:
         self.log.notice('File %s successfully removed from File Catalog' % lfn)
-        _newLFNStatuses[lfn] = 'Deleted'
+        _filesRemoved.append(lfn)
 
-      if _newLFNStatuses:
-        res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
-        if not res['OK']:
-          self.log.error('Failed to set statuses for LFNs ', res['Message'])
-        else:
-          self.log.notice('File Statuses updated Successfully %s' % res['Value'])
+      if _filesRemoved:
+        self.setFileStatusDeleted(transID, _filesRemoved)
